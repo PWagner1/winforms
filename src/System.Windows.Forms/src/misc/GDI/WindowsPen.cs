@@ -1,143 +1,100 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#if WINFORMS_NAMESPACE
+using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
+using static Interop;
+
 namespace System.Windows.Forms.Internal
-#elif DRAWING_NAMESPACE
-namespace System.Drawing.Internal
-#else
-namespace System.Experimental.Gdi
-#endif
 {
-    using System;
-    using System.Internal;
-    using System.Runtime.InteropServices;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.Drawing;
-    using System.Drawing.Drawing2D;
-    using System.Globalization;
-    using System.Runtime.Versioning;
-
-    /// <devdoc>
-    ///     <para>
-    ///         Encapsulates a GDI Pen object.
-    ///     </para>
-    /// </devdoc>
-#if WINFORMS_PUBLIC_GRAPHICS_LIBRARY
-    public
-#else
-    internal
-#endif
-    sealed partial class WindowsPen : MarshalByRefObject, ICloneable, IDisposable
+    /// <summary>
+    ///  Encapsulates a GDI Pen object.
+    /// </summary>
+    internal sealed partial class WindowsPen : MarshalByRefObject, ICloneable, IDisposable
     {
-        //
-        // Handle to the native Windows pen object.
-        // 
-        private IntPtr nativeHandle;
+        private IntPtr _nativeHandle;
 
-        private const int dashStyleMask = 0x0000000F;
-        private const int endCapMask    = 0x00000F00;
-        private const int joinMask      = 0x0000F000;
+        private readonly DeviceContext _dc;
 
-        private DeviceContext dc;
-        
-        //
-        // Fields with default values
-        //
-        private WindowsBrush wndBrush;
-        private WindowsPenStyle style;
-        private Color color;
-        private int width;  
-        
-        private const int cosmeticPenWidth = 1;  // Cosmetic pen width.
+        private WindowsBrush _wndBrush;
+        private Gdi32.PS _style;
+        private readonly Color _color;
+        private readonly int _width;
+
+        private const int CosmeticPenWidth = 1;
 
 #if GDI_FINALIZATION_WATCH
         private string AllocationSite = DbgUtil.StackTrace;
 #endif
 
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
         public WindowsPen(DeviceContext dc) :
-            this( dc, WindowsPenStyle.Default, cosmeticPenWidth, Color.Black )
-        { 
-        }
-
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        public WindowsPen(DeviceContext dc, Color color ) :
-            this( dc, WindowsPenStyle.Default, cosmeticPenWidth, color )
+            this(dc, default, CosmeticPenWidth, Color.Black)
         {
         }
 
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        public WindowsPen(DeviceContext dc, WindowsBrush windowsBrush ) :
-            this( dc, WindowsPenStyle.Default, cosmeticPenWidth, windowsBrush )
+        public WindowsPen(DeviceContext dc, Color color) :
+            this(dc, default, CosmeticPenWidth, color)
         {
         }
 
-        [ResourceExposure(ResourceScope.Process)]
-        public WindowsPen(DeviceContext dc, WindowsPenStyle style, int width, Color color)
+        public WindowsPen(DeviceContext dc, WindowsBrush windowsBrush) :
+            this(dc, default, CosmeticPenWidth, windowsBrush)
         {
-            this.style = style;
-            this.width = width;
-            this.color = color;
-            this.dc    = dc;
-
-            // CreatePen() created on demand.
         }
 
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        public WindowsPen(DeviceContext dc, WindowsPenStyle style, int width, WindowsBrush windowsBrush )
+        public WindowsPen(DeviceContext dc, Gdi32.PS style, int width, Color color)
         {
-            Debug.Assert(windowsBrush != null, "null windowsBrush" );
-            
-            this.style    = style;
-            this.wndBrush = (WindowsBrush) windowsBrush.Clone();
-            this.width    = width;
-            this.color    = windowsBrush.Color;
-            this.dc       = dc;
-            
-            // CreatePen() created on demand.
+            _style = style;
+            _width = width;
+            _color = color;
+            _dc = dc;
         }
 
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        private void CreatePen()
-        { 
-            if (this.width > 1)    // Geometric pen.
+        public WindowsPen(DeviceContext dc, Gdi32.PS style, int width, WindowsBrush windowsBrush)
+        {
+            Debug.Assert(windowsBrush != null, "null windowsBrush");
+
+            _style = style;
+            _wndBrush = (WindowsBrush)windowsBrush.Clone();
+            _width = width;
+            _color = windowsBrush.Color;
+            _dc = dc;
+        }
+
+        private unsafe void CreatePen()
+        {
+            if (_width > 1)
             {
-                // From MSDN: if width > 1, the style must be PS_NULL, PS_SOLID, or PS_INSIDEFRAME. 
-                this.style |= WindowsPenStyle.Geometric | WindowsPenStyle.Solid;
+                // Geometric pen.
+                // From MSDN: if width > 1, the style must be PS_NULL, PS_SOLID, or PS_INSIDEFRAME.
+                _style |= Gdi32.PS.GEOMETRIC | Gdi32.PS.SOLID;
             }
 
-            if (this.wndBrush == null)
+            if (_wndBrush == null)
             {
-                this.nativeHandle = IntSafeNativeMethods.CreatePen((int) this.style, this.width, ColorTranslator.ToWin32(this.color) );
+                _nativeHandle = Gdi32.CreatePen(_style, _width, ColorTranslator.ToWin32(_color));
             }
             else
-            { 
-                IntNativeMethods.LOGBRUSH lb = new IntNativeMethods.LOGBRUSH();
+            {
+                var lb = new Gdi32.LOGBRUSH
+                {
+                    lbColor = ColorTranslator.ToWin32(_wndBrush.Color),
+                    lbStyle = Gdi32.BS.SOLID,
+                    lbHatch = IntPtr.Zero
+                };
 
-                lb.lbColor = ColorTranslator.ToWin32( this.wndBrush.Color );
-                lb.lbStyle = IntNativeMethods.BS_SOLID;
-                lb.lbHatch = 0; 
-                
                 // Note: We currently don't support custom styles, that's why 0 and null for last two params.
-                this.nativeHandle = IntSafeNativeMethods.ExtCreatePen((int)this.style, this.width, lb, 0, null );
+                _nativeHandle = Gdi32.ExtCreatePen(_style, _width, ref lb, 0, null);
             }
         }
 
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
         public object Clone()
         {
-            return (this.wndBrush != null) ? 
-                new WindowsPen(this.dc, this.style, this.width, (WindowsBrush) this.wndBrush.Clone()) : 
-                new WindowsPen(this.dc, this.style, this.width, this.color);
+            return (_wndBrush != null) ?
+                new WindowsPen(_dc, _style, _width, (WindowsBrush)_wndBrush.Clone()) :
+                new WindowsPen(_dc, _style, _width, _color);
         }
 
         ~WindowsPen()
@@ -152,18 +109,18 @@ namespace System.Experimental.Gdi
 
         void Dispose(bool disposing)
         {
-            if (this.nativeHandle != IntPtr.Zero && dc != null)
+            if (_nativeHandle != IntPtr.Zero && _dc != null)
             {
                 DbgUtil.AssertFinalization(this, disposing);
 
-                dc.DeleteObject(this.nativeHandle, GdiObjectType.Pen);
-                this.nativeHandle = IntPtr.Zero;
+                _dc.DeleteObject(_nativeHandle, GdiObjectType.Pen);
+                _nativeHandle = IntPtr.Zero;
             }
 
-            if (this.wndBrush != null)
+            if (_wndBrush != null)
             {
-                this.wndBrush.Dispose();
-                this.wndBrush = null;
+                _wndBrush.Dispose();
+                _wndBrush = null;
             }
 
             if (disposing)
@@ -173,27 +130,26 @@ namespace System.Experimental.Gdi
         }
 
         public IntPtr HPen
-        { 
+        {
             get
             {
-                if( this.nativeHandle == IntPtr.Zero )
+                if (_nativeHandle == IntPtr.Zero)
                 {
                     CreatePen();
                 }
-                
-                return this.nativeHandle;
+
+                return _nativeHandle;
             }
         }
 
         public override string ToString()
         {
-            return String.Format( CultureInfo.InvariantCulture, "{0}: Style={1}, Color={2}, Width={3}, Brush={4}", 
-                this.GetType().Name, 
-                this.style, 
-                this.color, 
-                this.width, 
-                this.wndBrush != null ? this.wndBrush.ToString() : "null" );
+            return string.Format(CultureInfo.InvariantCulture, "{0}: Style={1}, Color={2}, Width={3}, Brush={4}",
+                GetType().Name,
+                _style,
+                _color,
+                _width,
+                _wndBrush != null ? _wndBrush.ToString() : "null");
         }
     }
-
 }

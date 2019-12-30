@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -7,54 +7,53 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Design;
-using System.Security;
-using System.Security.Permissions;
-using System.Windows.Forms.Design.Editors.Resources;
 
 namespace System.Windows.Forms.Design
 {
-    /// <internalonly />
     /// <summary>
-    ///     Provides an editor for picking shortcut keys.
+    ///  Provides an editor for picking shortcut keys.
     /// </summary>
-    [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.UnmanagedCode)]
-    [SecurityCritical]
     [CLSCompliant(false)]
     public class ShortcutKeysEditor : UITypeEditor
     {
-        private ShortcutKeysUI shortcutKeysUI;
+        private ShortcutKeysUI _shortcutKeysUI;
 
         /// <summary>
-        ///     Edits the given object value using the editor style provided by ShortcutKeysEditor.GetEditStyle.
+        ///  Edits the given object value using the editor style provided by ShortcutKeysEditor.GetEditStyle.
         /// </summary>
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
         {
-            if (provider != null)
+            if (provider == null)
             {
-                IWindowsFormsEditorService edSvc =
-                    (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
-                if (edSvc != null)
-                {
-                    if (shortcutKeysUI == null)
-                    {
-                        shortcutKeysUI = new ShortcutKeysUI(this);
-                        shortcutKeysUI.BackColor = SystemColors.Control;
-                    }
-
-                    shortcutKeysUI.Start(edSvc, value);
-                    edSvc.DropDownControl(shortcutKeysUI);
-
-                    if (shortcutKeysUI.Value != null) value = shortcutKeysUI.Value;
-                    shortcutKeysUI.End();
-                }
+                return value;
+            }
+            if (!(provider.GetService(typeof(IWindowsFormsEditorService)) is IWindowsFormsEditorService edSvc))
+            {
+                return value;
             }
 
+            if (_shortcutKeysUI == null)
+            {
+                _shortcutKeysUI = new ShortcutKeysUI(this)
+                {
+                    BackColor = SystemColors.Control
+                };
+            }
+
+            _shortcutKeysUI.Start(edSvc, value);
+            edSvc.DropDownControl(_shortcutKeysUI);
+
+            if (_shortcutKeysUI.Value != null)
+            {
+                value = _shortcutKeysUI.Value;
+            }
+
+            _shortcutKeysUI.End();
             return value;
         }
 
         /// <summary>
-        ///     Gets the editing style of the Edit method. If the method
-        ///     is not supported, this will return UITypeEditorEditStyle.None.
+        ///  Gets the editing style of the Edit method.
         /// </summary>
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
         {
@@ -62,12 +61,12 @@ namespace System.Windows.Forms.Design
         }
 
         /// <summary>
-        ///     Editor UI for the shortcut keys editor.
+        ///  Editor UI for the shortcut keys editor.
         /// </summary>
         private class ShortcutKeysUI : UserControl
         {
             /// <summary>
-            ///     Array of keys that are present in the drop down list of the combo box.
+            ///  Array of keys that are present in the drop down list of the combo box.
             /// </summary>
             private static readonly Keys[] validKeys =
             {
@@ -95,7 +94,7 @@ namespace System.Windows.Forms.Design
             private CheckBox chkCtrl;
             private CheckBox chkShift;
             private ComboBox cmbKey;
-            private ShortcutKeysEditor editor;
+            private readonly ShortcutKeysEditor editor;
             private TypeConverter keysConverter;
             private Label lblKey;
             private Label lblModifiers;
@@ -117,49 +116,60 @@ namespace System.Windows.Forms.Design
                 // Looking for duplicates in validKeys
                 int keyCount = validKeys.Length;
                 for (int key1 = 0; key1 < keyCount - 1; key1++)
+                {
                     for (int key2 = key1 + 1; key2 < keyCount; key2++)
+                    {
                         Debug.Assert((int)validKeys[key1] != (int)validKeys[key2]);
+                    }
+                }
 #endif
             }
 
             /// <summary>
-            ///     Allows someone else to close our dropdown.
+            ///  Allows someone else to close our dropdown.
             /// </summary>
             // Can be called through reflection.
             public IWindowsFormsEditorService EditorService
             {
-                [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
                 get;
                 private set;
             }
 
             /// <summary>
-            ///     Returns the Keys' type converter.
+            ///  Returns the Keys' type converter.
             /// </summary>
             private TypeConverter KeysConverter
             {
                 get
                 {
-                    if (keysConverter == null) keysConverter = TypeDescriptor.GetConverter(typeof(Keys));
+                    if (keysConverter == null)
+                    {
+                        keysConverter = TypeDescriptor.GetConverter(typeof(Keys));
+                    }
+
                     Debug.Assert(keysConverter != null);
                     return keysConverter;
                 }
             }
 
             /// <summary>
-            ///     Returns the selected keys. If only modifers were selected, we return Keys.None.
+            ///  Returns the selected keys. If only modifers were selected, we return Keys.None.
             /// </summary>
             public object Value
             {
                 get
                 {
-                    if (((Keys)currentValue & Keys.KeyCode) == 0) return Keys.None;
+                    if (currentValue is Keys currentKeys && (currentKeys & Keys.KeyCode) == 0)
+                    {
+                        return Keys.None;
+                    }
+
                     return currentValue;
                 }
             }
 
             /// <summary>
-            ///     Triggered when the user clicks the Reset button. The value is set to Keys.None
+            ///  Triggered when the user clicks the Reset button. The value is set to Keys.None
             /// </summary>
             private void btnReset_Click(object sender, EventArgs e)
             {
@@ -209,9 +219,9 @@ namespace System.Windows.Forms.Design
                 tlpInner.SuspendLayout();
                 SuspendLayout();
 
-                // 
+                //
                 // tlpOuter
-                // 
+                //
                 resources.ApplyResources(tlpOuter, "tlpOuter");
                 tlpOuter.ColumnCount = 3;
                 tlpOuter.ColumnStyles.Add(new ColumnStyle());
@@ -226,16 +236,16 @@ namespace System.Windows.Forms.Design
                 tlpOuter.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
                 tlpOuter.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
 
-                // 
+                //
                 // lblModifiers
-                // 
+                //
                 resources.ApplyResources(lblModifiers, "lblModifiers");
                 tlpOuter.SetColumnSpan(lblModifiers, 3);
                 lblModifiers.Name = "lblModifiers";
 
-                // 
+                //
                 // chkCtrl
-                // 
+                //
                 resources.ApplyResources(chkCtrl, "chkCtrl");
                 chkCtrl.Name = "chkCtrl";
                 // this margin setting makes this control left-align with cmbKey and indented from lblModifiers/lblKey
@@ -243,25 +253,25 @@ namespace System.Windows.Forms.Design
 
                 chkCtrl.CheckedChanged += chkModifier_CheckedChanged;
 
-                // 
+                //
                 // chkAlt
-                // 
+                //
                 resources.ApplyResources(chkAlt, "chkAlt");
                 chkAlt.Name = "chkAlt";
 
                 chkAlt.CheckedChanged += chkModifier_CheckedChanged;
 
-                // 
+                //
                 // chkShift
-                // 
+                //
                 resources.ApplyResources(chkShift, "chkShift");
                 chkShift.Name = "chkShift";
 
                 chkShift.CheckedChanged += chkModifier_CheckedChanged;
 
-                // 
+                //
                 // tlpInner
-                // 
+                //
                 resources.ApplyResources(tlpInner, "tlpInner");
                 tlpInner.ColumnCount = 2;
                 tlpInner.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -274,16 +284,16 @@ namespace System.Windows.Forms.Design
                 tlpInner.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
                 tlpInner.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-                // 
+                //
                 // lblKey
-                // 
+                //
                 resources.ApplyResources(lblKey, "lblKey");
                 tlpInner.SetColumnSpan(lblKey, 2);
                 lblKey.Name = "lblKey";
 
-                // 
+                //
                 // cmbKey
-                // 
+                //
                 resources.ApplyResources(cmbKey, "cmbKey");
                 cmbKey.DropDownStyle = ComboBoxStyle.DropDownList;
                 cmbKey.Name = "cmbKey";
@@ -292,12 +302,16 @@ namespace System.Windows.Forms.Design
                 cmbKey.Margin = new Padding(12, 4, 3, 3);
                 cmbKey.Padding = cmbKey.Margin;
 
-                foreach (Keys keyCode in validKeys) cmbKey.Items.Add(KeysConverter.ConvertToString(keyCode));
+                foreach (Keys keyCode in validKeys)
+                {
+                    cmbKey.Items.Add(KeysConverter.ConvertToString(keyCode));
+                }
+
                 cmbKey.SelectedIndexChanged += cmbKey_SelectedIndexChanged;
 
-                // 
+                //
                 // btnReset
-                // 
+                //
                 resources.ApplyResources(btnReset, "btnReset");
                 btnReset.Name = "btnReset";
 
@@ -324,19 +338,24 @@ namespace System.Windows.Forms.Design
             }
 
             /// <summary>
-            ///     Returns True if the given key is part of the valid keys array.
+            ///  Returns True if the given key is part of the valid keys array.
             /// </summary>
             private static bool IsValidKey(Keys keyCode)
             {
                 Debug.Assert((keyCode & Keys.KeyCode) == keyCode);
                 foreach (Keys validKeyCode in validKeys)
+                {
                     if (validKeyCode == keyCode)
+                    {
                         return true;
+                    }
+                }
+
                 return false;
             }
 
             /// <summary>
-            ///     The Ctrl checkbox gets the focus by default.
+            ///  The Ctrl checkbox gets the focus by default.
             /// </summary>
             protected override void OnGotFocus(EventArgs e)
             {
@@ -345,7 +364,7 @@ namespace System.Windows.Forms.Design
             }
 
             /// <summary>
-            ///     Fix keyboard navigation and handle escape key
+            ///  Fix keyboard navigation and handle escape key
             /// </summary>
             protected override bool ProcessDialogKey(Keys keyData)
             {
@@ -366,11 +385,13 @@ namespace System.Windows.Forms.Design
 
                     case Keys.Left:
                         if ((keyModifiers & (Keys.Control | Keys.Alt)) == 0)
+                        {
                             if (chkCtrl.Focused)
                             {
                                 btnReset.Focus();
                                 return true;
                             }
+                        }
 
                         break;
 
@@ -396,7 +417,10 @@ namespace System.Windows.Forms.Design
                         if (!cmbKey.Focused ||
                             (keyModifiers & (Keys.Control | Keys.Alt)) != 0 ||
                             !cmbKey.DroppedDown)
+                        {
                             currentValue = originalValue;
+                        }
+
                         break;
                 }
 
@@ -404,17 +428,16 @@ namespace System.Windows.Forms.Design
             }
 
             /// <summary>
-            ///     Triggered whenever the user drops down the editor.
+            ///  Triggered whenever the user drops down the editor.
             /// </summary>
             public void Start(IWindowsFormsEditorService edSvc, object value)
             {
                 Debug.Assert(edSvc != null);
-                Debug.Assert(value is Keys);
                 Debug.Assert(!updateCurrentValue);
                 EditorService = edSvc;
                 originalValue = currentValue = value;
 
-                Keys keys = (Keys)value;
+                Keys keys = value is Keys ? (Keys)value : Keys.None;
                 chkCtrl.Checked = (keys & Keys.Control) != 0;
                 chkAlt.Checked = (keys & Keys.Alt) != 0;
                 chkShift.Checked = (keys & Keys.Shift) != 0;
@@ -439,20 +462,41 @@ namespace System.Windows.Forms.Design
             }
 
             /// <summary>
-            ///     Update the current value based on the state of the UI controls.
+            ///  Update the current value based on the state of the UI controls.
             /// </summary>
             private void UpdateCurrentValue()
             {
-                if (!updateCurrentValue) return;
+                if (!updateCurrentValue)
+                {
+                    return;
+                }
+
                 int cmbKeySelectedIndex = cmbKey.SelectedIndex;
                 Keys valueKeys = Keys.None;
-                if (chkCtrl.Checked) valueKeys |= Keys.Control;
-                if (chkAlt.Checked) valueKeys |= Keys.Alt;
-                if (chkShift.Checked) valueKeys |= Keys.Shift;
+                if (chkCtrl.Checked)
+                {
+                    valueKeys |= Keys.Control;
+                }
+
+                if (chkAlt.Checked)
+                {
+                    valueKeys |= Keys.Alt;
+                }
+
+                if (chkShift.Checked)
+                {
+                    valueKeys |= Keys.Shift;
+                }
+
                 if (unknownKeyCode != Keys.None && cmbKeySelectedIndex == 0)
+                {
                     valueKeys |= unknownKeyCode;
+                }
                 else if (cmbKeySelectedIndex != -1)
+                {
                     valueKeys |= validKeys[unknownKeyCode == Keys.None ? cmbKeySelectedIndex : cmbKeySelectedIndex - 1];
+                }
+
                 currentValue = valueKeys;
             }
         }

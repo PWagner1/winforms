@@ -1,88 +1,49 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Runtime.InteropServices;
+using static Interop;
 
-namespace System.Windows.Forms {
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ///  Specifies the sides of a rectangle to apply a three-dimensional border to.
+    /// </summary>
+    [ComVisible(true)]
+    [Flags]
+    public enum Border3DSide
+    {
+        /// <summary>
+        ///  A three-dimensional border on the left edge of the control.
+        /// </summary>
+        Left = (int)User32.BF.LEFT,
 
-    using System.Diagnostics;
+        /// <summary>
+        ///  A three-dimensional border on the top edge of the rectangle.
+        /// </summary>
+        Top = (int)User32.BF.TOP,
 
-    using System;
-    using System.Drawing;
-    using Microsoft.Win32;
+        /// <summary>
+        ///  A three-dimensional border on the right side of the rectangle.
+        /// </summary>
+        Right = (int)User32.BF.RIGHT,
 
+        /// <summary>
+        ///  A three-dimensional border on the bottom side of the rectangle.
+        /// </summary>
+        Bottom = (int)User32.BF.BOTTOM,
 
-    /// <include file='doc\Border3DSide.uex' path='docs/doc[@for="Border3DSide"]/*' />
-    /// <devdoc>
-    ///    <para>
-    ///       Specifies
-    ///       the sides of a rectangle to apply a three-dimensional border to.
-    ///    </para>
-    /// </devdoc>
-    [System.Runtime.InteropServices.ComVisible(true), Flags]
-    public enum Border3DSide {
+        /// <summary>
+        ///  The interior of the rectangle is filled with the color defined for
+        ///  three-dimensional controls instead of the background color for the form.
+        /// </summary>
+        Middle = (int)User32.BF.MIDDLE,
 
-        /// <include file='doc\Border3DSide.uex' path='docs/doc[@for="Border3DSide.Left"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       A three-dimensional border on
-        ///       the left edge
-        ///       of the control.
-        ///    </para>
-        /// </devdoc>
-        Left = NativeMethods.BF_LEFT,
-
-        /// <include file='doc\Border3DSide.uex' path='docs/doc[@for="Border3DSide.Top"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       A three-dimensional border on
-        ///       the top edge
-        ///       of the rectangle.
-        ///    </para>
-        /// </devdoc>
-        Top = NativeMethods.BF_TOP,
-
-        /// <include file='doc\Border3DSide.uex' path='docs/doc[@for="Border3DSide.Right"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       A three-dimensional border on
-        ///       the right side
-        ///       of the rectangle.
-        ///    </para>
-        /// </devdoc>
-        Right = NativeMethods.BF_RIGHT,
-
-        /// <include file='doc\Border3DSide.uex' path='docs/doc[@for="Border3DSide.Bottom"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       A three-dimensional border on
-        ///       the bottom side
-        ///       of the rectangle.
-        ///    </para>
-        /// </devdoc>
-        Bottom = NativeMethods.BF_BOTTOM,
-
-        /// <include file='doc\Border3DSide.uex' path='docs/doc[@for="Border3DSide.Middle"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The interior of the rectangle is filled with the
-        ///       color defined for three-dimensional controls instead of the
-        ///       background color
-        ///       for the form.
-        ///    </para>
-        /// </devdoc>
-        Middle = NativeMethods.BF_MIDDLE,
-
-        /// <include file='doc\Border3DSide.uex' path='docs/doc[@for="Border3DSide.All"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       A three-dimensional border on all four
-        ///       edges and fill the middle of
-        ///       the rectangle with
-        ///       the color defeined for three-dimensional controls.
-        ///    </para>
-        /// </devdoc>
-        All  = Left | Top | Right | Bottom | Middle,
-
+        /// <summary>
+        ///  A three-dimensional border on all four edges and fill the middle of
+        ///  the rectangle with the color defeined for three-dimensional controls.
+        /// </summary>
+        All = Left | Top | Right | Bottom | Middle,
     }
 }

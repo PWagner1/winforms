@@ -1,29 +1,21 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Windows.Forms.VisualStyles;
+using static Interop;
 
-namespace System.Windows.Forms {
-    using System.Runtime.Serialization.Formatters;
-    using System.Runtime.InteropServices;
-    using System.Runtime.Remoting;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System;
-    using System.Security.Permissions;
-    using System.Drawing;
-    using System.Collections;
-    using Microsoft.Win32;
-    using System.Windows.Forms.VisualStyles;
-    using System.Globalization;
-
-
-    /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar"]/*' />
-    /// <devdoc>
-    ///    <para>
-    ///       Represents a Windows status bar control.
-    ///    </para>
-    /// </devdoc>
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ///  Represents a Windows status bar control.
+    /// </summary>
     [
     ComVisible(true),
     ClassInterface(ClassInterfaceType.AutoDispatch),
@@ -31,35 +23,33 @@ namespace System.Windows.Forms {
     DefaultProperty(nameof(Text)),
     Designer("System.Windows.Forms.Design.StatusBarDesigner, " + AssemblyRef.SystemDesign),
     ]
-    public class StatusBar : Control {
-
+    public class StatusBar : Control
+    {
         private int sizeGripWidth = 0;
         private const int SIMPLE_INDEX = 0xFF;
 
         private static readonly object EVENT_PANELCLICK = new object();
         private static readonly object EVENT_SBDRAWITEM = new object();
 
-        private bool                         showPanels;
-        private bool                         layoutDirty;
-        private int                          panelsRealized;
-        private bool                         sizeGrip = true;
-        private string                       simpleText;
-        private Point                        lastClick = new Point(0, 0);
-        private IList                        panels = new ArrayList();
-        private StatusBarPanelCollection     panelsCollection;
-        private ControlToolTip               tooltips;
+        private bool showPanels;
+        private bool layoutDirty;
+        private int panelsRealized;
+        private bool sizeGrip = true;
+        private string simpleText;
+        private Point lastClick = new Point(0, 0);
+        private readonly IList panels = new ArrayList();
+        private StatusBarPanelCollection panelsCollection;
+        private ControlToolTip tooltips;
 
         private ToolTip mainToolTip = null;
         private bool toolTipSet = false;
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBar"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Initializes a new default instance of the <see cref='System.Windows.Forms.StatusBar'/> class.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Initializes a new default instance of the <see cref='StatusBar'/> class.
+        /// </summary>
         public StatusBar()
-        : base() {
+        : base()
+        {
             base.SetStyle(ControlStyles.UserPaint | ControlStyles.Selectable, false);
 
             Dock = DockStyle.Bottom;
@@ -68,17 +58,22 @@ namespace System.Windows.Forms {
 
         private static VisualStyleRenderer renderer = null;
 
-        /// <devdoc>
-        ///     A VisualStyleRenderer we can use to get information about the current UI theme
-        /// </devdoc>
-        private static VisualStyleRenderer VisualStyleRenderer {
-            get {
-                if (VisualStyleRenderer.IsSupported) {
-                    if (renderer == null) {
+        /// <summary>
+        ///  A VisualStyleRenderer we can use to get information about the current UI theme
+        /// </summary>
+        private static VisualStyleRenderer VisualStyleRenderer
+        {
+            get
+            {
+                if (VisualStyleRenderer.IsSupported)
+                {
+                    if (renderer == null)
+                    {
                         renderer = new VisualStyleRenderer(VisualStyleElement.ToolBar.Button.Normal);
                     }
                 }
-                else {
+                else
+                {
                     renderer = null;
                 }
                 return renderer;
@@ -86,10 +81,14 @@ namespace System.Windows.Forms {
 
         }
 
-        private int SizeGripWidth {
-            get {
-                if (sizeGripWidth == 0) {
-                    if (Application.RenderWithVisualStyles && VisualStyleRenderer != null){
+        private int SizeGripWidth
+        {
+            get
+            {
+                if (sizeGripWidth == 0)
+                {
+                    if (Application.RenderWithVisualStyles && VisualStyleRenderer != null)
+                    {
                         // Need to build up accurate gripper width to avoid cutting off other panes.
                         VisualStyleRenderer vsRenderer = VisualStyleRenderer;
                         VisualStyleElement thisElement;
@@ -98,19 +97,20 @@ namespace System.Windows.Forms {
                         // gripper pane width...
                         thisElement = VisualStyleElement.Status.GripperPane.Normal;
                         vsRenderer.SetParameters(thisElement);
-                        elementSize = vsRenderer.GetPartSize(Graphics.FromHwndInternal(this.Handle), ThemeSizeType.True);
+                        elementSize = vsRenderer.GetPartSize(Graphics.FromHwndInternal(Handle), ThemeSizeType.True);
                         sizeGripWidth = elementSize.Width;
 
                         // ...plus gripper width
                         thisElement = VisualStyleElement.Status.Gripper.Normal;
                         vsRenderer.SetParameters(thisElement);
-                        elementSize = vsRenderer.GetPartSize(Graphics.FromHwndInternal(this.Handle), ThemeSizeType.True);
+                        elementSize = vsRenderer.GetPartSize(Graphics.FromHwndInternal(Handle), ThemeSizeType.True);
                         sizeGripWidth += elementSize.Width;
 
                         // Either GetPartSize could have returned a width of zero, so make sure we have a reasonable number:
                         sizeGripWidth = Math.Max(sizeGripWidth, 16);
                     }
-                    else {
+                    else
+                    {
                         sizeGripWidth = 16;
                     }
                 }
@@ -118,110 +118,93 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.BackColor"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The background color of this control. This is an ambient property and will
-        ///       always return a non-null value.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  The background color of this control. This is an ambient property and will
+        ///  always return a non-null value.
+        /// </summary>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public override Color BackColor {
-            get {
+        public override Color BackColor
+        {
+            get
+            {
                 // not supported, always return CONTROL
                 return SystemColors.Control;
             }
-
-            set {
+            set
+            {
                 // no op, not supported.
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.BackColorChanged"]/*' />
-        /// <internalonly/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler BackColorChanged {
-            add {
-                base.BackColorChanged += value;
-            }
-            remove {
-                base.BackColorChanged -= value;
-            }
+        new public event EventHandler BackColorChanged
+        {
+            add => base.BackColorChanged += value;
+            remove => base.BackColorChanged -= value;
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.BackgroundImage"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets or sets the image rendered on the background of the
-        ///    <see cref='System.Windows.Forms.StatusBar'/>
-        ///    control.
-        /// </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Gets or sets the image rendered on the background of the
+        ///  <see cref='StatusBar'/>
+        ///  control.
+        /// </summary>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public override Image BackgroundImage {
-            get {
+        public override Image BackgroundImage
+        {
+            get
+            {
                 return base.BackgroundImage;
             }
-            set {
+            set
+            {
                 base.BackgroundImage = value;
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.BackgroundImageChanged"]/*' />
-        /// <internalonly/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler BackgroundImageChanged {
-            add {
-                base.BackgroundImageChanged += value;
-            }
-            remove {
-                base.BackgroundImageChanged -= value;
-            }
+        new public event EventHandler BackgroundImageChanged
+        {
+            add => base.BackgroundImageChanged += value;
+            remove => base.BackgroundImageChanged -= value;
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.BackgroundImageLayout"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public override ImageLayout BackgroundImageLayout {
-            get {
+        public override ImageLayout BackgroundImageLayout
+        {
+            get
+            {
                 return base.BackgroundImageLayout;
             }
-            set {
+            set
+            {
                 base.BackgroundImageLayout = value;
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.BackgroundImageLayoutChanged"]/*' />
-        /// <internalonly/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler BackgroundImageLayoutChanged {
-            add {
-                base.BackgroundImageLayoutChanged += value;
-            }
-            remove {
-                base.BackgroundImageLayoutChanged -= value;
-            }
+        new public event EventHandler BackgroundImageLayoutChanged
+        {
+            add => base.BackgroundImageLayoutChanged += value;
+            remove => base.BackgroundImageLayoutChanged -= value;
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.CreateParams"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Returns the CreateParams used to create the handle for this control.
-        ///       Inheriting classes should call base.getCreateParams in the manor below:
-        ///    </para>
-        /// </devdoc>
-        protected override CreateParams CreateParams {
-            [SecurityPermission(SecurityAction.LinkDemand, Flags=SecurityPermissionFlag.UnmanagedCode)]
-            get {
+        /// <summary>
+        ///  Returns the CreateParams used to create the handle for this control.
+        ///  Inheriting classes should call base.getCreateParams in the manor below:
+        /// </summary>
+        protected override CreateParams CreateParams
+        {
+            get
+            {
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = NativeMethods.WC_STATUSBAR;
+                cp.ClassName = ComCtl32.WindowClasses.WC_STATUSBAR;
 
-                if (this.sizeGrip) {
+                if (sizeGrip)
+                {
                     cp.Style |= NativeMethods.SBARS_SIZEGRIP;
                 }
-                else {
+                else
+                {
                     cp.Style &= (~NativeMethods.SBARS_SIZEGRIP);
                 }
                 cp.Style |= NativeMethods.CCS_NOPARENTALIGN | NativeMethods.CCS_NORESIZE;
@@ -230,137 +213,129 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.DefaultImeMode"]/*' />
-        protected override ImeMode DefaultImeMode {
-            get {
+        protected override ImeMode DefaultImeMode
+        {
+            get
+            {
                 return ImeMode.Disable;
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.DefaultSize"]/*' />
-        /// <devdoc>
-        ///     Deriving classes can override this to configure a default size for their control.
-        ///     This is more efficient than setting the size in the control's constructor.
-        /// </devdoc>
-        protected override Size DefaultSize {
-            get {
+        /// <summary>
+        ///  Deriving classes can override this to configure a default size for their control.
+        ///  This is more efficient than setting the size in the control's constructor.
+        /// </summary>
+        protected override Size DefaultSize
+        {
+            get
+            {
                 return new Size(100, 22);
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.DoubleBuffered"]/*' />
-        /// <devdoc>
-        ///     This property is overridden and hidden from statement completion
-        ///     on controls that are based on Win32 Native Controls.
-        /// </devdoc>
+        /// <summary>
+        ///  This property is overridden and hidden from statement completion
+        ///  on controls that are based on Win32 Native Controls.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override bool DoubleBuffered {
-            get {
+        protected override bool DoubleBuffered
+        {
+            get
+            {
                 return base.DoubleBuffered;
             }
-            set {
+            set
+            {
                 base.DoubleBuffered = value;
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.Dock"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets or sets the docking behavior of the <see cref='System.Windows.Forms.StatusBar'/> control.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Gets or sets the docking behavior of the <see cref='StatusBar'/> control.
+        /// </summary>
         [
         Localizable(true),
         DefaultValue(DockStyle.Bottom)
         ]
-        public override DockStyle Dock {
-            get {
+        public override DockStyle Dock
+        {
+            get
+            {
                 return base.Dock;
             }
-            set {
+            set
+            {
                 base.Dock = value;
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.Font"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets or sets the font the <see cref='System.Windows.Forms.StatusBar'/>
-        ///       control will use to display
-        ///       information.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Gets or sets the font the <see cref='StatusBar'/>
+        ///  control will use to display
+        ///  information.
+        /// </summary>
         [
         Localizable(true)
         ]
-        public override Font Font {
-            get { return base.Font;}
-            set {
+        public override Font Font
+        {
+            get { return base.Font; }
+            set
+            {
                 base.Font = value;
                 SetPanelContentsWidths(false);
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ForeColor"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets or sets
-        ///       the forecolor for the control.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Gets or sets
+        ///  the forecolor for the control.
+        /// </summary>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public override Color ForeColor {
-            get {
+        public override Color ForeColor
+        {
+            get
+            {
                 return base.ForeColor;
             }
-            set {
+            set
+            {
                 base.ForeColor = value;
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ForeColorChanged"]/*' />
-        /// <internalonly/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler ForeColorChanged {
-            add {
-                base.ForeColorChanged += value;
-            }
-            remove {
-                base.ForeColorChanged -= value;
-            }
+        new public event EventHandler ForeColorChanged
+        {
+            add => base.ForeColorChanged += value;
+            remove => base.ForeColorChanged -= value;
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ImeMode"]/*' />
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        new public ImeMode ImeMode {
-            get {
+        new public ImeMode ImeMode
+        {
+            get
+            {
                 return base.ImeMode;
             }
-            set {
+            set
+            {
                 base.ImeMode = value;
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ImeModeChanged"]/*' />
-        /// <internalonly/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler ImeModeChanged {
-            add {
-                base.ImeModeChanged += value;
-            }
-            remove {
-                base.ImeModeChanged -= value;
-            }
+        public new event EventHandler ImeModeChanged
+        {
+            add => base.ImeModeChanged += value;
+            remove => base.ImeModeChanged -= value;
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.Panels"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets the collection of <see cref='System.Windows.Forms.StatusBar'/>
-        ///       panels contained within the
-        ///       control.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Gets the collection of <see cref='StatusBar'/>
+        ///  panels contained within the
+        ///  control.
+        /// </summary>
         [
         DesignerSerializationVisibility(DesignerSerializationVisibility.Content),
         SRDescription(nameof(SR.StatusBarPanelsDescr)),
@@ -368,9 +343,12 @@ namespace System.Windows.Forms {
         SRCategory(nameof(SR.CatAppearance)),
         MergableProperty(false)
         ]
-        public StatusBarPanelCollection Panels {
-            get {
-                if (panelsCollection == null) {
+        public StatusBarPanelCollection Panels
+        {
+            get
+            {
+                if (panelsCollection == null)
+                {
                     panelsCollection = new StatusBarPanelCollection(this);
                 }
 
@@ -378,74 +356,72 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.Text"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The status bar text.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  The status bar text.
+        /// </summary>
         [
         Localizable(true)
         ]
-        public override string Text {
-            get {
-                if (simpleText == null) {
+        public override string Text
+        {
+            get
+            {
+                if (simpleText == null)
+                {
                     return "";
                 }
-                else {
+                else
+                {
                     return simpleText;
                 }
             }
-            set {
+            set
+            {
                 SetSimpleText(value);
-                if (simpleText != value) {
+                if (simpleText != value)
+                {
                     simpleText = value;
                     OnTextChanged(EventArgs.Empty);
                 }
             }
         }
 
-        /* No one is calling this, so it is ok to comment it out
-        private IntPtr ToolTipHandle {
-            get {
-                EnumChildren c = new EnumChildren( this );
-                UnsafeNativeMethods.EnumChildWindows(new HandleRef(null, UnsafeNativeMethods.GetDesktopWindow()), new NativeMethods.EnumChildrenProc(c.Callback), NativeMethods.NullHandleRef);
-                return c.hWndFound;
-            }
-        }
-        */
-
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ShowPanels"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets or sets a value indicating whether panels should be shown.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Gets or sets a value indicating whether panels should be shown.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         DefaultValue(false),
         SRDescription(nameof(SR.StatusBarShowPanelsDescr))
         ]
-        public bool ShowPanels {
-            get {
+        public bool ShowPanels
+        {
+            get
+            {
                 return showPanels;
             }
-            set {
-                if (showPanels != value) {
+            set
+            {
+                if (showPanels != value)
+                {
                     showPanels = value;
 
                     layoutDirty = true;
-                    if (IsHandleCreated) {
+                    if (IsHandleCreated)
+                    {
                         int bShowPanels = (!showPanels) ? 1 : 0;
 
                         SendMessage(NativeMethods.SB_SIMPLE, bShowPanels, 0);
 
-                        if (showPanels) {
+                        if (showPanels)
+                        {
                             PerformLayout();
                             RealizePanels();
                         }
-                        else if (tooltips != null) {
-                            for (int i=0; i<panels.Count; i++) {
+                        else if (tooltips != null)
+                        {
+                            for (int i = 0; i < panels.Count; i++)
+                            {
                                 tooltips.SetTool(panels[i], null);
                             }
                         }
@@ -456,144 +432,131 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.SizingGrip"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets or sets a value indicating whether a sizing grip
-        ///       will be rendered on the corner of the <see cref='System.Windows.Forms.StatusBar'/>
-        ///       control.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Gets or sets a value indicating whether a sizing grip
+        ///  will be rendered on the corner of the <see cref='StatusBar'/>
+        ///  control.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatAppearance)),
         DefaultValue(true),
         SRDescription(nameof(SR.StatusBarSizingGripDescr))
         ]
-        public bool SizingGrip {
-            get {
+        public bool SizingGrip
+        {
+            get
+            {
                 return sizeGrip;
             }
-            set {
-                if (value != sizeGrip) {
+            set
+            {
+                if (value != sizeGrip)
+                {
                     sizeGrip = value;
                     RecreateHandle();
                 }
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.TabStop"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets or sets a value indicating whether the user will be able to tab to the
-        ///    <see cref='System.Windows.Forms.StatusBar'/> .
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Gets or sets a value indicating whether the user will be able to tab to the
+        ///  <see cref='StatusBar'/> .
+        /// </summary>
         [DefaultValue(false)]
-        new public bool TabStop {
-            get {
+        new public bool TabStop
+        {
+            get
+            {
                 return base.TabStop;
             }
-            set {
+            set
+            {
                 base.TabStop = value;
             }
         }
 
-        internal bool ToolTipSet {
-            get {
+        internal bool ToolTipSet
+        {
+            get
+            {
                 return toolTipSet;
             }
         }
 
-        internal ToolTip MainToolTip {
-            get {
+        internal ToolTip MainToolTip
+        {
+            get
+            {
                 return mainToolTip;
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.DrawItem"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Occurs when a visual aspect of an owner-drawn status bar changes.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Occurs when a visual aspect of an owner-drawn status bar changes.
+        /// </summary>
         [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.StatusBarDrawItem))]
-        public event StatusBarDrawItemEventHandler DrawItem {
-            add {
-                Events.AddHandler(EVENT_SBDRAWITEM, value);
-            }
-            remove {
-                Events.RemoveHandler(EVENT_SBDRAWITEM, value);
-            }
+        public event StatusBarDrawItemEventHandler DrawItem
+        {
+            add => Events.AddHandler(EVENT_SBDRAWITEM, value);
+            remove => Events.RemoveHandler(EVENT_SBDRAWITEM, value);
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.PanelClick"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Occurs when a panel on the status bar is clicked.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Occurs when a panel on the status bar is clicked.
+        /// </summary>
         [SRCategory(nameof(SR.CatMouse)), SRDescription(nameof(SR.StatusBarOnPanelClickDescr))]
-        public event StatusBarPanelClickEventHandler PanelClick {
-            add {
-                Events.AddHandler(EVENT_PANELCLICK, value);
-            }
-            remove {
-                Events.RemoveHandler(EVENT_PANELCLICK, value);
-            }
+        public event StatusBarPanelClickEventHandler PanelClick
+        {
+            add => Events.AddHandler(EVENT_PANELCLICK, value);
+            remove => Events.RemoveHandler(EVENT_PANELCLICK, value);
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.OnPaint"]/*' />
-        /// <devdoc>
-        ///     StatusBar Onpaint.
-        /// </devdoc>
-        /// <internalonly/><hideinheritance/>
+        /// <summary>
+        ///  StatusBar Onpaint.
+        /// </summary>
+        /// <hideinheritance/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public new event PaintEventHandler Paint {
-            add {
-                base.Paint += value;
-            }
-            remove {
-                base.Paint -= value;
-            }
+        public new event PaintEventHandler Paint
+        {
+            add => base.Paint += value;
+            remove => base.Paint -= value;
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ArePanelsRealized"]/*' />
-        /// <devdoc>
-        ///     Tells whether the panels have been realized.
-        /// </devdoc>
-        /// <internalonly/>
-        internal bool ArePanelsRealized() {
-            return this.showPanels && IsHandleCreated;
+        /// <summary>
+        ///  Tells whether the panels have been realized.
+        /// </summary>
+        internal bool ArePanelsRealized()
+        {
+            return showPanels && IsHandleCreated;
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.DirtyLayout"]/*' />
-        /// <devdoc>
-        /// </devdoc>
-        /// <internalonly/>
-        internal void DirtyLayout() {
+        internal void DirtyLayout()
+        {
             layoutDirty = true;
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ApplyPanelWidths"]/*' />
-        /// <devdoc>
-        ///     Makes the panel according to the sizes in the panel list.
-        /// </devdoc>
-        /// <internalonly/>
-        private void ApplyPanelWidths() {
+        /// <summary>
+        ///  Makes the panel according to the sizes in the panel list.
+        /// </summary>
+        private void ApplyPanelWidths()
+        {
             // This forces handle creation every time any time the StatusBar
             // has to be re-laidout.
-            //
             if (!IsHandleCreated)
+            {
                 return;
+            }
 
-            StatusBarPanel  panel = null;
-            int length = this.panels.Count;
+            StatusBarPanel panel = null;
+            int length = panels.Count;
 
-            if (length == 0) {
+            if (length == 0)
+            {
                 Size sz = Size;
                 int[] offsets = new int[1];
                 offsets[0] = sz.Width;
-                if (sizeGrip) {
+                if (sizeGrip)
+                {
                     offsets[0] -= SizeGripWidth;
                 }
                 UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.SB_SETPARTS, 1, offsets);
@@ -604,8 +567,9 @@ namespace System.Windows.Forms {
 
             int[] offsets2 = new int[length];
             int currentOffset = 0;
-            for (int i = 0; i < length; i++) {
-                panel = (StatusBarPanel) this.panels[i];
+            for (int i = 0; i < length; i++)
+            {
+                panel = (StatusBarPanel)panels[i];
                 currentOffset += panel.Width;
                 offsets2[i] = currentOffset;
                 panel.Right = offsets2[i];
@@ -613,48 +577,53 @@ namespace System.Windows.Forms {
             UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.SB_SETPARTS, length, offsets2);
 
             // Tooltip setup...
-            //
-            for (int i=0; i<length; i++) {
-                panel = (StatusBarPanel) this.panels[i];
+            for (int i = 0; i < length; i++)
+            {
+                panel = (StatusBarPanel)panels[i];
                 UpdateTooltip(panel);
             }
 
             layoutDirty = false;
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.CreateHandle"]/*' />
-        /// <devdoc>
-        /// </devdoc>
-        /// <internalonly/>
-        protected override void CreateHandle() {
-            if (!RecreatingHandle) {
-                IntPtr userCookie = UnsafeNativeMethods.ThemingScope.Activate();
-            
-                try {
-                    NativeMethods.INITCOMMONCONTROLSEX icc = new NativeMethods.INITCOMMONCONTROLSEX();
-                    icc.dwICC = NativeMethods.ICC_BAR_CLASSES;
-                    SafeNativeMethods.InitCommonControlsEx(icc);
+        protected override void CreateHandle()
+        {
+            if (!RecreatingHandle)
+            {
+                IntPtr userCookie = ThemingScope.Activate();
+
+                try
+                {
+                    var icc = new ComCtl32.INITCOMMONCONTROLSEX
+                    {
+                        dwICC = ComCtl32.ICC.BAR_CLASSES
+                    };
+                    ComCtl32.InitCommonControlsEx(ref icc);
                 }
-                finally {
-                    UnsafeNativeMethods.ThemingScope.Deactivate(userCookie);
+                finally
+                {
+                    ThemingScope.Deactivate(userCookie);
                 }
             }
-            
+
             base.CreateHandle();
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.Dispose"]/*' />
-        /// <devdoc>
-        ///     Disposes this control
-        /// </devdoc>
-        protected override void Dispose(bool disposing) {
-            if (disposing) {
-                if (panelsCollection != null) {
+        /// <summary>
+        ///  Disposes this control
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (panelsCollection != null)
+                {
                     StatusBarPanel[] panelCopy = new StatusBarPanel[panelsCollection.Count];
                     ((ICollection)panelsCollection).CopyTo(panelCopy, 0);
                     panelsCollection.Clear();
 
-                    foreach(StatusBarPanel p in panelCopy) {
+                    foreach (StatusBarPanel p in panelCopy)
+                    {
                         p.Dispose();
                     }
                 }
@@ -662,13 +631,13 @@ namespace System.Windows.Forms {
             base.Dispose(disposing);
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ForcePanelUpdate"]/*' />
-        /// <devdoc>
-        ///     Forces the panels to be updated, location, repainting, etc.
-        /// </devdoc>
-        /// <internalonly/>
-        private void ForcePanelUpdate() {
-            if (ArePanelsRealized()) {
+        /// <summary>
+        ///  Forces the panels to be updated, location, repainting, etc.
+        /// </summary>
+        private void ForcePanelUpdate()
+        {
+            if (ArePanelsRealized())
+            {
                 layoutDirty = true;
                 SetPanelContentsWidths(true);
                 PerformLayout();
@@ -676,190 +645,167 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.OnHandleCreated"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Raises the <see cref='System.Windows.Forms.Control.CreateHandle'/>
-        ///       event.
-        ///    </para>
-        /// </devdoc>
-        protected override void OnHandleCreated(EventArgs e) {
+        /// <summary>
+        ///  Raises the <see cref='Control.CreateHandle'/>
+        ///  event.
+        /// </summary>
+        protected override void OnHandleCreated(EventArgs e)
+        {
             base.OnHandleCreated(e);
-            if (!DesignMode) {
+            if (!DesignMode)
+            {
                 tooltips = new ControlToolTip(this);
             }
 
-            if (!this.showPanels) {
+            if (!showPanels)
+            {
                 SendMessage(NativeMethods.SB_SIMPLE, 1, 0);
                 SetSimpleText(simpleText);
             }
-            else {
+            else
+            {
                 ForcePanelUpdate();
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.OnHandleDestroyed"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Raises the <see cref='System.Windows.Forms.StatusBar.OnHandleDestroyed'/> event.
-        ///    </para>
-        /// </devdoc>
-        protected override void OnHandleDestroyed(EventArgs e) {
+        /// <summary>
+        ///  Raises the <see cref='OnHandleDestroyed'/> event.
+        /// </summary>
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
             base.OnHandleDestroyed(e);
-            if (tooltips != null) {
+            if (tooltips != null)
+            {
                 tooltips.Dispose();
                 tooltips = null;
             }
         }
 
-        /* Not used
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.EnumChildren"]/*' />
-        /// <devdoc>
-        /// </devdoc>
-        private sealed class EnumChildren {
-
-            public IntPtr hWndFound = IntPtr.Zero;
-
-            private StatusBar peer;
-
-            public EnumChildren( StatusBar peer ) {
-                if (peer == null)
-                    throw new ArgumentNullException(nameof(peer));
-                this.peer = peer;
-            }
-
-            public bool Callback(IntPtr hWnd, IntPtr lparam) {
-                if (UnsafeNativeMethods.GetParent(new HandleRef(null, hWnd)) == peer.Handle) {
-                    hWndFound = hWnd;
-                    return false;
-                }
-
-                return true;
-            }
-        }*/
-
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.OnMouseDown"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Raises the <see cref='System.Windows.Forms.StatusBar.OnMouseDown'/> event.
-        ///    </para>
-        /// </devdoc>
-        protected override void OnMouseDown(MouseEventArgs e) {
+        /// <summary>
+        ///  Raises the <see cref='OnMouseDown'/> event.
+        /// </summary>
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
             lastClick.X = e.X;
             lastClick.Y = e.Y;
             base.OnMouseDown(e);
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.OnPanelClick"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Raises the <see cref='System.Windows.Forms.StatusBar.OnPanelClick'/> event.
-        ///    </para>
-        /// </devdoc>
-        protected virtual void OnPanelClick(StatusBarPanelClickEventArgs e) {
-            StatusBarPanelClickEventHandler handler = (StatusBarPanelClickEventHandler)Events[EVENT_PANELCLICK];
-            if (handler != null) handler(this,e);
+        /// <summary>
+        ///  Raises the <see cref='PanelClick'/> event.
+        /// </summary>
+        protected virtual void OnPanelClick(StatusBarPanelClickEventArgs e)
+        {
+            ((StatusBarPanelClickEventHandler)Events[EVENT_PANELCLICK])?.Invoke(this, e);
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.OnLayout"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Raises the Layout event.
-        ///    </para>
-        /// </devdoc>
-        protected override void OnLayout(LayoutEventArgs levent) {
-            if (this.showPanels) {
+        protected override void OnLayout(LayoutEventArgs levent)
+        {
+            if (showPanels)
+            {
                 LayoutPanels();
-                if (IsHandleCreated && panelsRealized != panels.Count) {
+                if (IsHandleCreated && panelsRealized != panels.Count)
+                {
                     RealizePanels();
                 }
             }
             base.OnLayout(levent);
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.RealizePanels"]/*' />
-        /// <devdoc>
-        ///     This function sets up all the panel on the status bar according to
-        ///     the internal this.panels List.
-        /// </devdoc>
-        /// <internalonly/>
-        internal void RealizePanels() {
-            StatusBarPanel  panel = null;
-            int             length = this.panels.Count;
-            int             old = panelsRealized;
+        /// <summary>
+        ///  This function sets up all the panel on the status bar according to
+        ///  the internal this.panels List.
+        /// </summary>
+        internal void RealizePanels()
+        {
+            StatusBarPanel panel = null;
+            int length = panels.Count;
+            int old = panelsRealized;
 
             panelsRealized = 0;
 
-            if (length == 0) {
+            if (length == 0)
+            {
                 SendMessage(NativeMethods.SB_SETTEXT, 0, "");
             }
 
             int i;
-            for (i = 0; i < length; i++) {
-                panel = (StatusBarPanel) this.panels[i];
-                try {
+            for (i = 0; i < length; i++)
+            {
+                panel = (StatusBarPanel)panels[i];
+                try
+                {
                     panel.Realize();
                     panelsRealized++;
                 }
-                catch {
+                catch
+                {
                 }
             }
-            for (; i<old; i++) {
+            for (; i < old; i++)
+            {
                 SendMessage(NativeMethods.SB_SETTEXT, 0, null);
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.RemoveAllPanelsWithoutUpdate"]/*' />
-        /// <devdoc>
-        ///     Remove the internal list of panels without updating the control.
-        /// </devdoc>
-        /// <internalonly/>
-        internal void RemoveAllPanelsWithoutUpdate() {
-            int size = this.panels.Count;
+        /// <summary>
+        ///  Remove the internal list of panels without updating the control.
+        /// </summary>
+        internal void RemoveAllPanelsWithoutUpdate()
+        {
+            int size = panels.Count;
             // remove the parent reference
-            for (int i = 0; i < size; i++) {
-                StatusBarPanel sbp = (StatusBarPanel) this.panels[i];
+            for (int i = 0; i < size; i++)
+            {
+                StatusBarPanel sbp = (StatusBarPanel)panels[i];
                 sbp.ParentInternal = null;
             }
 
-            this.panels.Clear();
-            if (this.showPanels == true) {
+            panels.Clear();
+            if (showPanels == true)
+            {
                 ApplyPanelWidths();
                 ForcePanelUpdate();
             }
 
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.SetPanelContentsWidths"]/*' />
-        /// <devdoc>
-        ///     Sets the widths of any panels that have the
-        ///     StatusBarPanelAutoSize.CONTENTS property set.
-        /// </devdoc>
-        /// <internalonly/>
-        internal void SetPanelContentsWidths(bool newPanels) {
+        /// <summary>
+        ///  Sets the widths of any panels that have the
+        ///  StatusBarPanelAutoSize.CONTENTS property set.
+        /// </summary>
+        internal void SetPanelContentsWidths(bool newPanels)
+        {
             int size = panels.Count;
             bool changed = false;
-            for (int i = 0; i < size; i++) {
-                StatusBarPanel sbp = (StatusBarPanel) panels[i];
-                if (sbp.AutoSize == StatusBarPanelAutoSize.Contents) {
+            for (int i = 0; i < size; i++)
+            {
+                StatusBarPanel sbp = (StatusBarPanel)panels[i];
+                if (sbp.AutoSize == StatusBarPanelAutoSize.Contents)
+                {
                     int newWidth = sbp.GetContentsWidth(newPanels);
-                    if (sbp.Width != newWidth) {
+                    if (sbp.Width != newWidth)
+                    {
                         sbp.Width = newWidth;
                         changed = true;
                     }
                 }
             }
-            if (changed) {
+            if (changed)
+            {
                 DirtyLayout();
                 PerformLayout();
             }
         }
 
-        private void SetSimpleText(string simpleText) {
-            if (!showPanels && IsHandleCreated) {
+        private void SetSimpleText(string simpleText)
+        {
+            if (!showPanels && IsHandleCreated)
+            {
 
                 int wparam = SIMPLE_INDEX + NativeMethods.SBT_NOBORDERS;
-                if (RightToLeft == RightToLeft.Yes) {
+                if (RightToLeft == RightToLeft.Yes)
+                {
                     wparam |= NativeMethods.SBT_RTLREADING;
                 }
 
@@ -867,61 +813,76 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.LayoutPanels"]/*' />
-        /// <devdoc>
-        ///     Sizes the the panels appropriately.  It looks at the SPRING AutoSize
-        ///     property.
-        /// </devdoc>
-        /// <internalonly/>
-        private void LayoutPanels() {
-            StatusBarPanel      panel = null;
-            int                 barPanelWidth = 0;
-            int                 springNum = 0;
-            StatusBarPanel[]    pArray = new StatusBarPanel[this.panels.Count];
-            bool             changed = false;
+        /// <summary>
+        ///  Sizes the the panels appropriately.  It looks at the SPRING AutoSize
+        ///  property.
+        /// </summary>
+        private void LayoutPanels()
+        {
+            StatusBarPanel panel = null;
+            int barPanelWidth = 0;
+            int springNum = 0;
+            StatusBarPanel[] pArray = new StatusBarPanel[panels.Count];
+            bool changed = false;
 
-            for (int i = 0; i < pArray.Length; i++) {
-                panel = (StatusBarPanel) this.panels[i];
-                if (panel.AutoSize == StatusBarPanelAutoSize.Spring) {
+            for (int i = 0; i < pArray.Length; i++)
+            {
+                panel = (StatusBarPanel)panels[i];
+                if (panel.AutoSize == StatusBarPanelAutoSize.Spring)
+                {
                     pArray[springNum] = panel;
                     springNum++;
                 }
                 else
+                {
                     barPanelWidth += panel.Width;
+                }
             }
 
-
-            if (springNum > 0) {
+            if (springNum > 0)
+            {
                 Rectangle rect = Bounds;
                 int springPanelsLeft = springNum;
                 int leftoverWidth = rect.Width - barPanelWidth;
-                if (sizeGrip) {
+                if (sizeGrip)
+                {
                     leftoverWidth -= SizeGripWidth;
                 }
                 int copyOfLeftoverWidth = unchecked((int)0x80000000);
-                while (springPanelsLeft > 0) {
+                while (springPanelsLeft > 0)
+                {
 
                     int widthOfSpringPanel = (leftoverWidth) / springPanelsLeft;
                     if (leftoverWidth == copyOfLeftoverWidth)
+                    {
                         break;
+                    }
+
                     copyOfLeftoverWidth = leftoverWidth;
 
-                    for (int i = 0; i < springNum; i++) {
+                    for (int i = 0; i < springNum; i++)
+                    {
                         panel = pArray[i];
                         if (panel == null)
+                        {
                             continue;
+                        }
 
-                        if (widthOfSpringPanel < panel.MinWidth) {
-                            if (panel.Width != panel.MinWidth) {
+                        if (widthOfSpringPanel < panel.MinWidth)
+                        {
+                            if (panel.Width != panel.MinWidth)
+                            {
                                 changed = true;
                             }
                             panel.Width = panel.MinWidth;
                             pArray[i] = null;
-                            springPanelsLeft --;
+                            springPanelsLeft--;
                             leftoverWidth -= panel.MinWidth;
                         }
-                        else {
-                            if (panel.Width != widthOfSpringPanel) {
+                        else
+                        {
+                            if (panel.Width != widthOfSpringPanel)
+                            {
                                 changed = true;
                             }
                             panel.Width = widthOfSpringPanel;
@@ -930,142 +891,144 @@ namespace System.Windows.Forms {
                 }
             }
 
-            if (changed || layoutDirty) {
+            if (changed || layoutDirty)
+            {
                 ApplyPanelWidths();
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.OnDrawItem"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Raises the <see cref='System.Windows.Forms.StatusBar.OnDrawItem'/>
-        ///       event.
-        ///    </para>
-        /// </devdoc>
-        protected virtual void OnDrawItem(StatusBarDrawItemEventArgs sbdievent) {
-            StatusBarDrawItemEventHandler handler = (StatusBarDrawItemEventHandler)Events[EVENT_SBDRAWITEM];
-            if (handler != null) handler(this,sbdievent);
+        /// <summary>
+        ///  Raises the <see cref='OnDrawItem'/>
+        ///  event.
+        /// </summary>
+        protected virtual void OnDrawItem(StatusBarDrawItemEventArgs sbdievent)
+        {
+            ((StatusBarDrawItemEventHandler)Events[EVENT_SBDRAWITEM])?.Invoke(this, sbdievent);
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.OnResize"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Raises the <see cref='System.Windows.Forms.StatusBar.OnResize'/>
-        ///       event.
-        ///    </para>
-        /// </devdoc>
-        protected override void OnResize(EventArgs e) {
+        /// <summary>
+        ///  Raises the <see cref='OnResize'/> event.
+        /// </summary>
+        protected override void OnResize(EventArgs e)
+        {
             Invalidate();
             base.OnResize(e);
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ToString"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Returns a string representation for this control.
-        ///    </para>
-        /// </devdoc>
-        public override string ToString() {
-
+        /// <summary>
+        ///  Returns a string representation for this control.
+        /// </summary>
+        public override string ToString()
+        {
             string s = base.ToString();
-            if (Panels != null) {
+            if (Panels != null)
+            {
                 s += ", Panels.Count: " + Panels.Count.ToString(CultureInfo.CurrentCulture);
                 if (Panels.Count > 0)
+                {
                     s += ", Panels[0]: " + Panels[0].ToString();
+                }
             }
             return s;
         }
 
-        //call this when System.Windows.forms.toolTip is Associated with Statusbar....
-        internal void SetToolTip(ToolTip t) {
-            this.mainToolTip = t;
+        // call this when System.Windows.forms.toolTip is Associated with Statusbar....
+        internal void SetToolTip(ToolTip t)
+        {
+            mainToolTip = t;
             toolTipSet = true;
 
         }
 
-        internal void UpdateTooltip(StatusBarPanel panel) {
-            if (tooltips == null) {
-                if (IsHandleCreated && !DesignMode) {
-                    //This shouldn't happen: tooltips should've already been set.  The best we can 
+        internal void UpdateTooltip(StatusBarPanel panel)
+        {
+            if (tooltips == null)
+            {
+                if (IsHandleCreated && !DesignMode)
+                {
+                    //This shouldn't happen: tooltips should've already been set.  The best we can
                     //do here is reset it.
                     tooltips = new ControlToolTip(this);
                 }
-                else {
+                else
+                {
                     return;
                 }
             }
 
-            if (panel.Parent == this && panel.ToolTipText.Length > 0) {
+            if (panel.Parent == this && panel.ToolTipText.Length > 0)
+            {
                 int border = SystemInformation.Border3DSize.Width;
                 ControlToolTip.Tool t = tooltips.GetTool(panel);
-                if (t == null) {
+                if (t == null)
+                {
                     t = new ControlToolTip.Tool();
                 }
                 t.text = panel.ToolTipText;
-                t.rect = new Rectangle(panel.Right-panel.Width + border, 0, panel.Width - border, Height);
+                t.rect = new Rectangle(panel.Right - panel.Width + border, 0, panel.Width - border, Height);
                 tooltips.SetTool(panel, t);
             }
-            else {
+            else
+            {
                 tooltips.SetTool(panel, null);
             }
         }
 
-        private void UpdatePanelIndex() {
+        private void UpdatePanelIndex()
+        {
             int length = panels.Count;
-            for (int i=0; i<length; i++) {
+            for (int i = 0; i < length; i++)
+            {
                 ((StatusBarPanel)panels[i]).Index = i;
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.WmDrawItem"]/*' />
-        /// <internalonly/>
-        /// <devdoc>
-        ///     Processes messages for ownerdraw panels.
-        /// </devdoc>
-        private void WmDrawItem(ref Message m) {
-            NativeMethods.DRAWITEMSTRUCT dis = (NativeMethods.DRAWITEMSTRUCT)m.GetLParam(typeof(NativeMethods.DRAWITEMSTRUCT));
+        /// <summary>
+        ///  Processes messages for ownerdraw panels.
+        /// </summary>
+        private unsafe void WmDrawItem(ref Message m)
+        {
+            User32.DRAWITEMSTRUCT* dis = (User32.DRAWITEMSTRUCT*)m.LParam;
 
-            int length = this.panels.Count;
-            if (dis.itemID < 0 || dis.itemID >= length)
+            int length = panels.Count;
+            if (dis->itemID < 0 || dis->itemID >= length)
+            {
                 Debug.Fail("OwnerDraw item out of range");
+            }
 
-            StatusBarPanel panel = (StatusBarPanel)
-                                   this.panels[dis.itemID];
-
-            Graphics g = Graphics.FromHdcInternal(dis.hDC);
-            Rectangle r = Rectangle.FromLTRB(dis.rcItem.left, dis.rcItem.top, dis.rcItem.right, dis.rcItem.bottom);
-
-            //The itemstate is not defined for a statusbar control
-            OnDrawItem(new StatusBarDrawItemEventArgs(g, Font, r, dis.itemID, DrawItemState.None, panel, this.ForeColor, this.BackColor));
-            g.Dispose();
+            // The itemState is not defined for a statusbar control
+            StatusBarPanel panel = (StatusBarPanel)panels[(int)dis->itemID];
+            Graphics g = Graphics.FromHdcInternal(dis->hDC);
+            OnDrawItem(new StatusBarDrawItemEventArgs(g, Font, dis->rcItem, (int)dis->itemID, DrawItemState.None, panel, ForeColor, BackColor));
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.WmNotifyNMClick"]/*' />
-        /// <internalonly/>
-        /// <devdoc>
-        /// </devdoc>
-        private void WmNotifyNMClick(NativeMethods.NMHDR note) {
-
-            if (!showPanels) {
+        private void WmNotifyNMClick(User32.NMHDR note)
+        {
+            if (!showPanels)
+            {
                 return;
             }
 
             int size = panels.Count;
             int currentOffset = 0;
             int index = -1;
-            for (int i = 0; i < size; i++) {
-                StatusBarPanel panel = (StatusBarPanel) panels[i];
+            for (int i = 0; i < size; i++)
+            {
+                StatusBarPanel panel = (StatusBarPanel)panels[i];
                 currentOffset += panel.Width;
-                if (lastClick.X < currentOffset) {
+                if (lastClick.X < currentOffset)
+                {
                     // this is where the mouse was clicked.
                     index = i;
                     break;
                 }
             }
-            if (index != -1) {
+            if (index != -1)
+            {
                 MouseButtons button = MouseButtons.Left;
                 int clicks = 0;
-                switch (note.code) {
+                switch (note.code)
+                {
                     case NativeMethods.NM_CLICK:
                         button = MouseButtons.Left;
                         clicks = 1;
@@ -1085,7 +1048,7 @@ namespace System.Windows.Forms {
                 }
 
                 Point pt = lastClick;
-                StatusBarPanel panel = (StatusBarPanel) panels[index];
+                StatusBarPanel panel = (StatusBarPanel)panels[index];
 
                 StatusBarPanelClickEventArgs sbpce = new StatusBarPanelClickEventArgs(panel,
                                                                                       button, clicks, pt.X, pt.Y);
@@ -1093,40 +1056,48 @@ namespace System.Windows.Forms {
             }
         }
 
-        private void WmNCHitTest(ref Message m) {
-            int x = NativeMethods.Util.LOWORD(m.LParam);
+        private void WmNCHitTest(ref Message m)
+        {
+            int x = PARAM.SignedLOWORD(m.LParam);
             Rectangle bounds = Bounds;
             bool callSuper = true;
 
             // The default implementation of the statusbar
-            //       : will let you size the form when it is docked on the bottom,
-            //       : but when it is anywhere else, the statusbar will be resized.
-            //       : to prevent that we provide a little bit a sanity to only
-            //       : allow resizing, when it would resize the form.
-            //
-            if (x > bounds.X + bounds.Width - SizeGripWidth) {
+            // will let you size the form when it is docked on the bottom,
+            // but when it is anywhere else, the statusbar will be resized.
+            // to prevent that we provide a little bit a sanity to only
+            // allow resizing, when it would resize the form.
+            if (x > bounds.X + bounds.Width - SizeGripWidth)
+            {
                 Control parent = ParentInternal;
-                if (parent != null && parent is Form) {
+                if (parent != null && parent is Form)
+                {
                     FormBorderStyle bs = ((Form)parent).FormBorderStyle;
 
                     if (bs != FormBorderStyle.Sizable
-                        && bs != FormBorderStyle.SizableToolWindow) {
+                        && bs != FormBorderStyle.SizableToolWindow)
+                    {
                         callSuper = false;
                     }
 
                     if (!((Form)parent).TopLevel
-                        || Dock != DockStyle.Bottom) {
+                        || Dock != DockStyle.Bottom)
+                    {
 
                         callSuper = false;
                     }
 
-                    if (callSuper) {
-                        Control.ControlCollection children = parent.Controls;
+                    if (callSuper)
+                    {
+                        ControlCollection children = parent.Controls;
                         int c = children.Count;
-                        for (int i=0; i<c; i++) {
+                        for (int i = 0; i < c; i++)
+                        {
                             Control ctl = children[i];
-                            if (ctl != this && ctl.Dock == DockStyle.Bottom) {
-                                if (ctl.Top > Top) {
+                            if (ctl != this && ctl.Dock == DockStyle.Bottom)
+                            {
+                                if (ctl.Top > Top)
+                                {
                                     callSuper = false;
                                     break;
                                 }
@@ -1134,40 +1105,42 @@ namespace System.Windows.Forms {
                         }
                     }
                 }
-                else {
+                else
+                {
                     callSuper = false;
                 }
             }
 
-            if (callSuper) {
+            if (callSuper)
+            {
                 base.WndProc(ref m);
             }
-            else {
+            else
+            {
                 m.Result = (IntPtr)NativeMethods.HTCLIENT;
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.WndProc"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Base wndProc. All messages are sent to wndProc after getting filtered through
-        ///       the preProcessMessage function. Inheriting controls should call base.wndProc
-        ///       for any messages that they don't handle.
-        ///    </para>
-        /// </devdoc>
-        [SecurityPermission(SecurityAction.LinkDemand, Flags=SecurityPermissionFlag.UnmanagedCode)]
-        protected override void WndProc(ref Message m) {
-            switch (m.Msg) {
-                case NativeMethods.WM_NCHITTEST:
+        /// <summary>
+        ///  Base wndProc. All messages are sent to wndProc after getting filtered through
+        ///  the preProcessMessage function. Inheriting controls should call base.wndProc
+        ///  for any messages that they don't handle.
+        /// </summary>
+        protected override void WndProc(ref Message m)
+        {
+            switch (m.Msg)
+            {
+                case WindowMessages.WM_NCHITTEST:
                     WmNCHitTest(ref m);
                     break;
-                case NativeMethods.WM_REFLECT + NativeMethods.WM_DRAWITEM:
+                case WindowMessages.WM_REFLECT + WindowMessages.WM_DRAWITEM:
                     WmDrawItem(ref m);
                     break;
-                case NativeMethods.WM_NOTIFY:
-                case NativeMethods.WM_NOTIFY + NativeMethods.WM_REFLECT:
-                    NativeMethods.NMHDR note = (NativeMethods.NMHDR)m.GetLParam(typeof(NativeMethods.NMHDR));
-                    switch (note.code) {
+                case WindowMessages.WM_NOTIFY:
+                case WindowMessages.WM_NOTIFY + WindowMessages.WM_REFLECT:
+                    User32.NMHDR note = (User32.NMHDR)m.GetLParam(typeof(User32.NMHDR));
+                    switch (note.code)
+                    {
                         case NativeMethods.NM_CLICK:
                         case NativeMethods.NM_RCLICK:
                         case NativeMethods.NM_DBLCLK:
@@ -1186,282 +1159,289 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The collection of StatusBarPanels that the StatusBar manages.
-        ///       event.
-        ///    </para>
-        /// </devdoc>
-        [
-        ListBindable(false)
-        ]
-        public class StatusBarPanelCollection : IList {
-            private StatusBar owner;
-            /// A caching mechanism for key accessor
-            /// We use an index here rather than control so that we don't have lifetime
-            /// issues by holding on to extra references.
+        /// <summary>
+        ///  The collection of StatusBarPanels that the StatusBar manages.
+        ///  event.
+        /// </summary>
+        [ListBindable(false)]
+        public class StatusBarPanelCollection : IList
+        {
+            private readonly StatusBar owner;
+
+            // A caching mechanism for key accessor
+            // We use an index here rather than control so that we don't have lifetime
+            // issues by holding on to extra references.
             private int lastAccessedIndex = -1;
 
-
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.StatusBarPanelCollection"]/*' />
-            /// <devdoc>
-            ///    <para>
-            ///       Constructor for the StatusBarPanelCollection class
-            ///    </para>
-            /// </devdoc>
-            public StatusBarPanelCollection(StatusBar owner) {
+            /// <summary>
+            ///  Constructor for the StatusBarPanelCollection class
+            /// </summary>
+            public StatusBarPanelCollection(StatusBar owner)
+            {
                 this.owner = owner;
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.this"]/*' />
-            /// <devdoc>
-            ///       This method will return an individual StatusBarPanel with the appropriate index.
-            /// </devdoc>
-            public virtual StatusBarPanel this[int index] {
-                get {
-                    return(StatusBarPanel)owner.panels[index];
+            /// <summary>
+            ///  This method will return an individual StatusBarPanel with the appropriate index.
+            /// </summary>
+            public virtual StatusBarPanel this[int index]
+            {
+                get
+                {
+                    return (StatusBarPanel)owner.panels[index];
                 }
-                set {
+                set
+                {
 
                     if (value == null)
+                    {
                         throw new ArgumentNullException(nameof(StatusBarPanel));
+                    }
 
                     owner.layoutDirty = true;
 
-                    if (value.Parent != null) {
+                    if (value.Parent != null)
+                    {
                         throw new ArgumentException(SR.ObjectHasParent, "value");
                     }
 
                     int length = owner.panels.Count;
 
-                    if (index < 0|| index >= length)
-                        throw new ArgumentOutOfRangeException(nameof(index), string.Format(SR.InvalidArgument, "index", index.ToString(CultureInfo.CurrentCulture)));
+                    if (index < 0 || index >= length)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
+                    }
 
-                    StatusBarPanel oldPanel = (StatusBarPanel) owner.panels[index];
+                    StatusBarPanel oldPanel = (StatusBarPanel)owner.panels[index];
                     oldPanel.ParentInternal = null;
                     value.ParentInternal = owner;
-                    if (value.AutoSize == StatusBarPanelAutoSize.Contents) {
+                    if (value.AutoSize == StatusBarPanelAutoSize.Contents)
+                    {
                         value.Width = value.GetContentsWidth(true);
                     }
                     owner.panels[index] = value;
                     value.Index = index;
 
-                    if (owner.ArePanelsRealized()) {
+                    if (owner.ArePanelsRealized())
+                    {
                         owner.PerformLayout();
                         value.Realize();
                     }
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBarPanelCollection.IList.this"]/*' />
-            /// <internalonly/>
-            object IList.this[int index] {
-                get {
+            object IList.this[int index]
+            {
+                get
+                {
                     return this[index];
                 }
-                set {
-                    if (value is StatusBarPanel) {
+                set
+                {
+                    if (value is StatusBarPanel)
+                    {
                         this[index] = (StatusBarPanel)value;
                     }
-                    else {
+                    else
+                    {
                         throw new ArgumentException(SR.StatusBarBadStatusBarPanel, "value");
                     }
                 }
             }
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.this"]/*' />
-            /// <devdoc>
-            ///     <para>Retrieves the child control with the specified key.</para>
-            /// </devdoc>
-            public virtual StatusBarPanel this[string key] {
-                get {
+
+            /// <summary>
+            ///  Retrieves the child control with the specified key.
+            /// </summary>
+            public virtual StatusBarPanel this[string key]
+            {
+                get
+                {
                     // We do not support null and empty string as valid keys.
-                    if (string.IsNullOrEmpty(key)){
+                    if (string.IsNullOrEmpty(key))
+                    {
                         return null;
                     }
 
                     // Search for the key in our collection
                     int index = IndexOfKey(key);
-                    if (IsValidIndex(index)) {
+                    if (IsValidIndex(index))
+                    {
                         return this[index];
                     }
-                    else {
+                    else
+                    {
                         return null;
                     }
 
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.Count"]/*' />
-            /// <devdoc>
-            ///    <para>
-            ///       Returns an integer representing the number of StatusBarPanels
-            ///       in this collection.
-            ///    </para>
-            /// </devdoc>
+            /// <summary>
+            ///  Returns an integer representing the number of StatusBarPanels
+            ///  in this collection.
+            /// </summary>
             [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-            public int Count {
-                get {
+            public int Count
+            {
+                get
+                {
                     return owner.panels.Count;
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBarPanelCollection.ICollection.SyncRoot"]/*' />
-            /// <internalonly/>
-            object ICollection.SyncRoot {
-                get {
+            object ICollection.SyncRoot
+            {
+                get
+                {
                     return this;
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBarPanelCollection.ICollection.IsSynchronized"]/*' />
-            /// <internalonly/>
-            bool ICollection.IsSynchronized {
-                get {
+            bool ICollection.IsSynchronized
+            {
+                get
+                {
                     return false;
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBarPanelCollection.IList.IsFixedSize"]/*' />
-            /// <internalonly/>
-            bool IList.IsFixedSize {
-                get {
+            bool IList.IsFixedSize
+            {
+                get
+                {
                     return false;
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.IsReadOnly"]/*' />
-            /// <devdoc>
-            ///    <para>[To be supplied.]</para>
-            /// </devdoc>
-            public bool IsReadOnly {
-                get {
+            public bool IsReadOnly
+            {
+                get
+                {
                     return false;
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.Add"]/*' />
-            /// <devdoc>
-            ///    <para>
-            ///       Adds a StatusBarPanel to the collection.
-            ///    </para>
-            /// </devdoc>
-            public virtual StatusBarPanel Add(string text) {
-                StatusBarPanel panel = new StatusBarPanel();
-                panel.Text = text;
+            /// <summary>
+            ///  Adds a StatusBarPanel to the collection.
+            /// </summary>
+            public virtual StatusBarPanel Add(string text)
+            {
+                StatusBarPanel panel = new StatusBarPanel
+                {
+                    Text = text
+                };
                 Add(panel);
                 return panel;
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.Add1"]/*' />
-            /// <devdoc>
-            ///    <para>
-            ///       Adds a StatusBarPanel to the collection.
-            ///    </para>
-            /// </devdoc>
-            public virtual int Add(StatusBarPanel value) {
+            /// <summary>
+            ///  Adds a StatusBarPanel to the collection.
+            /// </summary>
+            public virtual int Add(StatusBarPanel value)
+            {
                 int index = owner.panels.Count;
                 Insert(index, value);
                 return index;
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBarPanelCollection.IList.Add"]/*' />
-            /// <internalonly/>
-            int IList.Add(object value) {
-                if (value is StatusBarPanel) {
+            int IList.Add(object value)
+            {
+                if (value is StatusBarPanel)
+                {
                     return Add((StatusBarPanel)value);
                 }
-                else {
+                else
+                {
                     throw new ArgumentException(SR.StatusBarBadStatusBarPanel, "value");
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.AddRange"]/*' />
-            /// <devdoc>
-            ///    <para>[To be supplied.]</para>
-            /// </devdoc>
-            public virtual void AddRange(StatusBarPanel[] panels) {
-                if (panels == null) {
+            public virtual void AddRange(StatusBarPanel[] panels)
+            {
+                if (panels == null)
+                {
                     throw new ArgumentNullException(nameof(panels));
                 }
-                foreach(StatusBarPanel panel in panels) {
+                foreach (StatusBarPanel panel in panels)
+                {
                     Add(panel);
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.Contains"]/*' />
-            /// <devdoc>
-            ///    <para>[To be supplied.]</para>
-            /// </devdoc>
-            public bool Contains(StatusBarPanel panel) {
+            public bool Contains(StatusBarPanel panel)
+            {
                 return IndexOf(panel) != -1;
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBarPanelCollection.IList.Contains"]/*' />
-            /// <internalonly/>
-            bool IList.Contains(object panel) {
-                if (panel is StatusBarPanel) {
+            bool IList.Contains(object panel)
+            {
+                if (panel is StatusBarPanel)
+                {
                     return Contains((StatusBarPanel)panel);
                 }
-                else {
+                else
+                {
                     return false;
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.ContainsKey"]/*' />
-            /// <devdoc>
-            ///     <para>Returns true if the collection contains an item with the specified key, false otherwise.</para>
-            /// </devdoc>
-            public virtual bool ContainsKey(string key) {
-                 return IsValidIndex(IndexOfKey(key));
+            /// <summary>
+            ///  Returns true if the collection contains an item with the specified key, false otherwise.
+            /// </summary>
+            public virtual bool ContainsKey(string key)
+            {
+                return IsValidIndex(IndexOfKey(key));
             }
 
-
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.IndexOf"]/*' />
-            /// <devdoc>
-            ///    <para>[To be supplied.]</para>
-            /// </devdoc>
-            public int IndexOf(StatusBarPanel panel) {
-                for(int index=0; index < Count; ++index) {
-                    if (this[index] == panel) {
+            public int IndexOf(StatusBarPanel panel)
+            {
+                for (int index = 0; index < Count; ++index)
+                {
+                    if (this[index] == panel)
+                    {
                         return index;
                     }
                 }
                 return -1;
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBarPanelCollection.IList.IndexOf"]/*' />
-            /// <internalonly/>
-            int IList.IndexOf(object panel) {
-                if (panel is StatusBarPanel) {
+            int IList.IndexOf(object panel)
+            {
+                if (panel is StatusBarPanel)
+                {
                     return IndexOf((StatusBarPanel)panel);
                 }
-                else {
+                else
+                {
                     return -1;
                 }
             }
 
-           /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.this"]/*' />
-           /// <devdoc>
-           ///     <para>The zero-based index of the first occurrence of value within the entire CollectionBase, if found; otherwise, -1.</para>
-           /// </devdoc>
-           public virtual int  IndexOfKey(String key) {
-                  // Step 0 - Arg validation
-                  if (string.IsNullOrEmpty(key)){
-                        return -1; // we dont support empty or null keys.
-                  }
+            /// <summary>
+            ///  The zero-based index of the first occurrence of value within the entire CollectionBase, if found; otherwise, -1.
+            /// </summary>
+            public virtual int IndexOfKey(string key)
+            {
+                // Step 0 - Arg validation
+                if (string.IsNullOrEmpty(key))
+                {
+                    return -1; // we dont support empty or null keys.
+                }
 
                 // step 1 - check the last cached item
                 if (IsValidIndex(lastAccessedIndex))
                 {
-                    if (WindowsFormsUtils.SafeCompareStrings(this[lastAccessedIndex].Name, key, /* ignoreCase = */ true)) {
+                    if (WindowsFormsUtils.SafeCompareStrings(this[lastAccessedIndex].Name, key, /* ignoreCase = */ true))
+                    {
                         return lastAccessedIndex;
                     }
                 }
 
                 // step 2 - search for the item
-                for (int i = 0; i < this.Count; i ++) {
-                    if (WindowsFormsUtils.SafeCompareStrings(this[i].Name, key, /* ignoreCase = */ true)) {
+                for (int i = 0; i < Count; i++)
+                {
+                    if (WindowsFormsUtils.SafeCompareStrings(this[i].Name, key, /* ignoreCase = */ true))
+                    {
                         lastAccessedIndex = i;
                         return i;
                     }
@@ -1470,34 +1450,38 @@ namespace System.Windows.Forms {
                 // step 3 - we didn't find it.  Invalidate the last accessed index and return -1.
                 lastAccessedIndex = -1;
                 return -1;
-           }
+            }
 
-
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.Insert"]/*' />
-            /// <devdoc>
-            ///    <para>
-            ///       Inserts a StatusBarPanel in the collection.
-            ///    </para>
-            /// </devdoc>
-            public virtual void Insert(int index, StatusBarPanel value) {
+            /// <summary>
+            ///  Inserts a StatusBarPanel in the collection.
+            /// </summary>
+            public virtual void Insert(int index, StatusBarPanel value)
+            {
 
                 //check for the value not to be null
                 if (value == null)
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
                 //end check
-
 
                 owner.layoutDirty = true;
                 if (value.Parent != owner && value.Parent != null)
+                {
                     throw new ArgumentException(SR.ObjectHasParent, "value");
+                }
 
                 int length = owner.panels.Count;
 
                 if (index < 0 || index > length)
-                    throw new ArgumentOutOfRangeException(nameof(index), string.Format(SR.InvalidArgument, "index", index.ToString(CultureInfo.CurrentCulture)));
+                {
+                    throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
+                }
+
                 value.ParentInternal = owner;
 
-                switch (value.AutoSize) {
+                switch (value.AutoSize)
+                {
                     case StatusBarPanelAutoSize.None:
                     case StatusBarPanelAutoSize.Spring:
                         break;
@@ -1512,76 +1496,74 @@ namespace System.Windows.Forms {
                 owner.ForcePanelUpdate();
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBarPanelCollection.IList.Insert"]/*' />
-            /// <internalonly/>
-            void IList.Insert(int index, object value) {
-                if (value is StatusBarPanel) {
+            void IList.Insert(int index, object value)
+            {
+                if (value is StatusBarPanel)
+                {
                     Insert(index, (StatusBarPanel)value);
                 }
-                else {
+                else
+                {
                     throw new ArgumentException(SR.StatusBarBadStatusBarPanel, "value");
                 }
             }
 
-           /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.IsValidIndex"]/*' />
-           /// <devdoc>
-           ///     <para>Determines if the index is valid for the collection.</para>
-           /// </devdoc>
-           /// <internalonly/>
-           private bool IsValidIndex(int index) {
-               return ((index >= 0) && (index < this.Count));
+            /// <summary>
+            ///  Determines if the index is valid for the collection.
+            /// </summary>
+            private bool IsValidIndex(int index)
+            {
+                return ((index >= 0) && (index < Count));
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.Clear"]/*' />
-            /// <devdoc>
-            ///    <para>
-            ///       Removes all the StatusBarPanels in the collection.
-            ///    </para>
-            /// </devdoc>
-            public virtual void Clear() {
+            /// <summary>
+            ///  Removes all the StatusBarPanels in the collection.
+            /// </summary>
+            public virtual void Clear()
+            {
                 owner.RemoveAllPanelsWithoutUpdate();
                 owner.PerformLayout();
 
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.Remove"]/*' />
-            /// <devdoc>
-            ///    <para>
-            ///       Removes an individual StatusBarPanel in the collection.
-            ///    </para>
-            /// </devdoc>
-            public virtual void Remove(StatusBarPanel value) {
+            /// <summary>
+            ///  Removes an individual StatusBarPanel in the collection.
+            /// </summary>
+            public virtual void Remove(StatusBarPanel value)
+            {
 
                 //check for the value not to be null
                 if (value == null)
+                {
                     throw new ArgumentNullException(nameof(StatusBarPanel));
+                }
                 //end check
 
-                if (value.Parent != owner) {
+                if (value.Parent != owner)
+                {
                     return;
                 }
                 RemoveAt(value.Index);
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBarPanelCollection.IList.Remove"]/*' />
-            /// <internalonly/>
-            void IList.Remove(object value) {
-                if (value is StatusBarPanel) {
+            void IList.Remove(object value)
+            {
+                if (value is StatusBarPanel)
+                {
                     Remove((StatusBarPanel)value);
                 }
             }
 
-
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.RemoveAt"]/*' />
-            /// <devdoc>
-            ///    <para>
-            ///       Removes an individual StatusBarPanel in the collection at the given index.
-            ///    </para>
-            /// </devdoc>
-            public virtual void RemoveAt(int index) {
+            /// <summary>
+            ///  Removes an individual StatusBarPanel in the collection at the given index.
+            /// </summary>
+            public virtual void RemoveAt(int index)
+            {
                 int length = Count;
                 if (index < 0 || index >= length)
-                    throw new ArgumentOutOfRangeException(nameof(index), string.Format(SR.InvalidArgument, "index", index.ToString(CultureInfo.CurrentCulture)));
+                {
+                    throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
+                }
 
                 // clear any tooltip
                 //
@@ -1592,93 +1574,96 @@ namespace System.Windows.Forms {
 
                 // this will cause the panels tooltip to be removed since it's no longer a child
                 // of this StatusBar.
-                //
                 owner.UpdateTooltip(panel);
 
                 // We must reindex the panels after a removal...
                 owner.UpdatePanelIndex();
                 owner.ForcePanelUpdate();
             }
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.RemoveByKey"]/*' />
-            /// <devdoc>
-            ///     <para>Removes the child control with the specified key.</para>
-            /// </devdoc>
-            public virtual void RemoveByKey(string key) {
-                int index = IndexOfKey(key);
-                if (IsValidIndex(index)) {
-                    RemoveAt(index);
-                 }
-             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBarPanelCollection.ICollection.CopyTo"]/*' />
-            /// <internalonly/>
-            void ICollection.CopyTo(Array dest, int index) {
+            /// <summary>
+            ///  Removes the child control with the specified key.
+            /// </summary>
+            public virtual void RemoveByKey(string key)
+            {
+                int index = IndexOfKey(key);
+                if (IsValidIndex(index))
+                {
+                    RemoveAt(index);
+                }
+            }
+
+            void ICollection.CopyTo(Array dest, int index)
+            {
                 owner.panels.CopyTo(dest, index);
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.StatusBarPanelCollection.GetEnumerator"]/*' />
-            /// <devdoc>
-            ///    <para>
-            ///       Returns the Enumerator for this collection.
-            ///    </para>
-            /// </devdoc>
-            public IEnumerator GetEnumerator() {
-                if (owner.panels != null) {
+            /// <summary>
+            ///  Returns the Enumerator for this collection.
+            /// </summary>
+            public IEnumerator GetEnumerator()
+            {
+                if (owner.panels != null)
+                {
                     return owner.panels.GetEnumerator();
                 }
-                else {
-                    return new StatusBarPanel[0].GetEnumerator();
+                else
+                {
+                    return Array.Empty<StatusBarPanel>().GetEnumerator();
                 }
             }
         }
-        /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip"]/*' />
-        /// <devdoc>
-        ///     This is a tooltip control that provides tips for a single
-        ///     control. Each "tool" region is defined by a rectangle and
-        ///     the string that should be displayed. This implementation
-        ///     is based on System.Windows.Forms.ToolTip, but this control
-        ///     is lighter weight and provides less functionality... however
-        ///     this control binds to rectangular regions, instead of
-        ///     full controls.
-        /// </devdoc>
-        [SecurityPermission(SecurityAction.LinkDemand, Flags=SecurityPermissionFlag.UnmanagedCode)]
-        private class ControlToolTip {
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="Tool"]/*' />
-            public class Tool {
-                /// <include file='doc\StatusBar.uex' path='docs/doc[@for="Tool.rect"]/*' />
+        /// <summary>
+        ///  This is a tooltip control that provides tips for a single
+        ///  control. Each "tool" region is defined by a rectangle and
+        ///  the string that should be displayed. This implementation
+        ///  is based on System.Windows.Forms.ToolTip, but this control
+        ///  is lighter weight and provides less functionality... however
+        ///  this control binds to rectangular regions, instead of
+        ///  full controls.
+        /// </summary>
+        private class ControlToolTip : IHandle
+        {
+            public class Tool
+            {
                 public Rectangle rect = Rectangle.Empty;
-                /// <include file='doc\StatusBar.uex' path='docs/doc[@for="Tool.text;"]/*' />
                 public string text;
                 internal IntPtr id = new IntPtr(-1);
             }
 
-            private Hashtable           tools = new Hashtable();
-            private ToolTipNativeWindow window = null;
-            private Control             parent = null;
-            private int                 nextId = 0;
+            private readonly Hashtable tools = new Hashtable();
+            private readonly ToolTipNativeWindow window = null;
+            private readonly Control parent = null;
+            private int nextId = 0;
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.ControlToolTip"]/*' />
-            /// <devdoc>
-            ///    Creates a new ControlToolTip.
-            /// </devdoc>
-            public ControlToolTip(Control parent) {
+            /// <summary>
+            ///  Creates a new ControlToolTip.
+            /// </summary>
+            public ControlToolTip(Control parent)
+            {
                 window = new ToolTipNativeWindow(this);
                 this.parent = parent;
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.CreateParams"]/*' />
-            /// <devdoc>
-            ///    Returns the createParams to create the window.
-            /// </devdoc>
-            protected CreateParams CreateParams {
-                get {
-                    NativeMethods.INITCOMMONCONTROLSEX icc = new NativeMethods.INITCOMMONCONTROLSEX();
-                    icc.dwICC = NativeMethods.ICC_TAB_CLASSES;
-                    SafeNativeMethods.InitCommonControlsEx(icc);
-                    CreateParams cp = new CreateParams();
-                    cp.Parent = IntPtr.Zero;
-                    cp.ClassName = NativeMethods.TOOLTIPS_CLASS;
+            /// <summary>
+            ///  Returns the createParams to create the window.
+            /// </summary>
+            protected CreateParams CreateParams
+            {
+                get
+                {
+                    var icc = new ComCtl32.INITCOMMONCONTROLSEX
+                    {
+                        dwICC = ComCtl32.ICC.TAB_CLASSES
+                    };
+                    ComCtl32.InitCommonControlsEx(ref icc);
+
+                    var cp = new CreateParams
+                    {
+                        Parent = IntPtr.Zero,
+                        ClassName = ComCtl32.WindowClasses.TOOLTIPS_CLASS
+                    };
                     cp.Style |= NativeMethods.TTS_ALWAYSTIP;
                     cp.ExStyle = 0;
                     cp.Caption = null;
@@ -1686,226 +1671,224 @@ namespace System.Windows.Forms {
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.Handle"]/*' />
-            /// <devdoc>
-            /// </devdoc>
-            public IntPtr Handle {
-                get {
-                    if (window.Handle == IntPtr.Zero) {
+            public IntPtr Handle
+            {
+                get
+                {
+                    if (window.Handle == IntPtr.Zero)
+                    {
                         CreateHandle();
                     }
                     return window.Handle;
                 }
             }
 
-            private bool IsHandleCreated {
-                get { return window.Handle != IntPtr.Zero;}
+            private bool IsHandleCreated
+            {
+                get { return window.Handle != IntPtr.Zero; }
             }
 
-            private void AssignId(Tool tool) {
+            private void AssignId(Tool tool)
+            {
                 tool.id = (IntPtr)nextId;
                 nextId++;
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.SetTool"]/*' />
-            /// <devdoc>
-            ///    Sets the tool for the specified key. Keep in mind
-            ///    that as soon as setTool is called, the handle for
-            ///    the ControlToolTip is created, and the handle for
-            ///    the parent control is also created. If the parent
-            ///    handle is recreated in the future, all tools must
-            ///    be re-added. The old tool for the specified key
-            ///    will be removed. Passing null in for the
-            ///    tool parameter will result in the tool
-            ///    region being removed.
-            /// </devdoc>
-            public void SetTool(object key, Tool tool) {
+            /// <summary>
+            ///  Sets the tool for the specified key. Keep in mind
+            ///  that as soon as setTool is called, the handle for
+            ///  the ControlToolTip is created, and the handle for
+            ///  the parent control is also created. If the parent
+            ///  handle is recreated in the future, all tools must
+            ///  be re-added. The old tool for the specified key
+            ///  will be removed. Passing null in for the
+            ///  tool parameter will result in the tool
+            ///  region being removed.
+            /// </summary>
+            public void SetTool(object key, Tool tool)
+            {
                 bool remove = false;
                 bool add = false;
                 bool update = false;
 
                 Tool toRemove = null;
-                if (tools.ContainsKey(key)) {
+                if (tools.ContainsKey(key))
+                {
                     toRemove = (Tool)tools[key];
                 }
 
-                if (toRemove != null) {
+                if (toRemove != null)
+                {
                     remove = true;
                 }
-                if (tool != null) {
+                if (tool != null)
+                {
                     add = true;
                 }
                 if (tool != null && toRemove != null
-                    && tool.id == toRemove.id) {
+                    && tool.id == toRemove.id)
+                {
                     update = true;
                 }
 
-                if (update) {
+                if (update)
+                {
                     UpdateTool(tool);
                 }
-                else {
-                    if (remove) {
+                else
+                {
+                    if (remove)
+                    {
                         RemoveTool(toRemove);
                     }
-                    if (add) {
+                    if (add)
+                    {
                         AddTool(tool);
                     }
                 }
 
-                if (tool != null) {
+                if (tool != null)
+                {
                     tools[key] = tool;
                 }
-                else {
+                else
+                {
                     tools.Remove(key);
                 }
 
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.GetTool"]/*' />
-            /// <devdoc>
-            ///    Returns the tool associated with the specified key,
-            ///    or null if there is no area.
-            /// </devdoc>
-            public Tool GetTool(object key) {
-                return(Tool)tools[key];
+            /// <summary>
+            ///  Returns the tool associated with the specified key,
+            ///  or null if there is no area.
+            /// </summary>
+            public Tool GetTool(object key)
+            {
+                return (Tool)tools[key];
             }
 
-
-            private void AddTool(Tool tool) {
-                if (tool != null && tool.text != null && tool.text.Length > 0) {
-                    int ret;
+            private void AddTool(Tool tool)
+            {
+                if (tool != null && tool.text != null && tool.text.Length > 0)
+                {
                     StatusBar p = (StatusBar)parent;
 
-                    if (p.ToolTipSet) {
-                        ret = (int)UnsafeNativeMethods.SendMessage(new HandleRef(p.MainToolTip, p.MainToolTip.Handle), NativeMethods.TTM_ADDTOOL, 0, GetTOOLINFO(tool));
-                    }
-                    else {
-                        ret = (int)UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.TTM_ADDTOOL, 0, GetTOOLINFO(tool));
-                    }
-                    if (ret == 0) {
+                    ComCtl32.ToolInfoWrapper info = GetTOOLINFO(tool);
+                    if (info.SendMessage(p.ToolTipSet ? (IHandle)p.mainToolTip : this, User32.WindowMessage.TTM_ADDTOOLW) == IntPtr.Zero)
+                    {
                         throw new InvalidOperationException(SR.StatusBarAddFailed);
                     }
                 }
             }
-            private void RemoveTool(Tool tool) {
-                if (tool != null && tool.text != null && tool.text.Length > 0 && (int)tool.id >= 0) {
-                    UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.TTM_DELTOOL, 0, GetMinTOOLINFO(tool));
-                }
-            }
-            private void UpdateTool(Tool tool) {
-                if (tool != null && tool.text != null && tool.text.Length > 0 && (int)tool.id >= 0) {
-                    UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.TTM_SETTOOLINFO, 0, GetTOOLINFO(tool));
+
+            private void RemoveTool(Tool tool)
+            {
+                if (tool != null && tool.text != null && tool.text.Length > 0 && (int)tool.id >= 0)
+                {
+                    ComCtl32.ToolInfoWrapper info = GetMinTOOLINFO(tool);
+                    info.SendMessage(this, User32.WindowMessage.TTM_DELTOOLW);
                 }
             }
 
+            private void UpdateTool(Tool tool)
+            {
+                if (tool != null && tool.text != null && tool.text.Length > 0 && (int)tool.id >= 0)
+                {
+                    ComCtl32.ToolInfoWrapper info = GetTOOLINFO(tool);
+                    info.SendMessage(this, User32.WindowMessage.TTM_SETTOOLINFOW);
+                }
+            }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.CreateHandle"]/*' />
-            /// <devdoc>
-            ///    Creates the handle for the control.
-            /// </devdoc>
-            protected void CreateHandle() {
-                if (IsHandleCreated) {
+            /// <summary>
+            ///  Creates the handle for the control.
+            /// </summary>
+            protected void CreateHandle()
+            {
+                if (IsHandleCreated)
+                {
                     return;
                 }
 
                 window.CreateHandle(CreateParams);
-                SafeNativeMethods.SetWindowPos(new HandleRef(this, Handle), NativeMethods.HWND_TOPMOST,
-                                     0, 0, 0, 0,
-                                     NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE |
-                                     NativeMethods.SWP_NOACTIVATE);
+                User32.SetWindowPos(
+                    new HandleRef(this, Handle),
+                    User32.HWND_TOPMOST,
+                    flags: User32.SWP.NOMOVE | User32.SWP.NOSIZE | User32.SWP.NOACTIVATE);
 
-                // Setting the max width has the added benefit of enabling multiline
-                // tool tips!
-                //
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.TTM_SETMAXTIPWIDTH, 0, SystemInformation.MaxWindowTrackSize.Width);
+                // Setting the max width has the added benefit of enabling multiline tool tips
+                User32.SendMessageW(this, User32.WindowMessage.TTM_SETMAXTIPWIDTH, IntPtr.Zero, (IntPtr)SystemInformation.MaxWindowTrackSize.Width);
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.DestroyHandle"]/*' />
-            /// <devdoc>
-            ///    Destroys the handle for this control.
-            /// </devdoc>
-            protected void DestroyHandle() {
-                if (IsHandleCreated) {
+            /// <summary>
+            ///  Destroys the handle for this control.
+            /// </summary>
+            protected void DestroyHandle()
+            {
+                if (IsHandleCreated)
+                {
                     window.DestroyHandle();
                     tools.Clear();
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.Dispose"]/*' />
-            /// <devdoc>
-            ///    Disposes of the component.  Call dispose when the component is no longer needed.
-            ///    This method removes the component from its container (if the component has a site)
-            ///    and triggers the dispose event.
-            /// </devdoc>
-            public void Dispose() {
+            /// <summary>
+            ///  Disposes of the component.  Call dispose when the component is no longer needed.
+            ///  This method removes the component from its container (if the component has a site)
+            ///  and triggers the dispose event.
+            /// </summary>
+            public void Dispose()
+            {
                 DestroyHandle();
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.GetMinTOOLINFO"]/*' />
-            /// <devdoc>
-            ///     Returns a new instance of the TOOLINFO_T structure with the minimum
-            ///     required data to uniquely identify a region. This is used primarily
-            ///     for delete operations. NOTE: This cannot force the creation of a handle.
-            /// </devdoc>
-            private NativeMethods.TOOLINFO_T GetMinTOOLINFO(Tool tool) {
-                NativeMethods.TOOLINFO_T ti = new NativeMethods.TOOLINFO_T();
-                ti.cbSize = Marshal.SizeOf(typeof(NativeMethods.TOOLINFO_T));
-                ti.hwnd = parent.Handle;
-                if ((int)tool.id < 0) {
+            /// <summary>
+            ///  Returns a new instance of the TOOLINFO_T structure with the minimum
+            ///  required data to uniquely identify a region. This is used primarily
+            ///  for delete operations. NOTE: This cannot force the creation of a handle.
+            /// </summary>
+            private ComCtl32.ToolInfoWrapper GetMinTOOLINFO(Tool tool)
+            {
+                if ((int)tool.id < 0)
+                {
                     AssignId(tool);
                 }
-                StatusBar p = (StatusBar)parent;
-                if (p != null && p.ToolTipSet) {
-                   ti.uId = parent.Handle; 
-                }
-                else {
-                    ti.uId = tool.id;
-                }
-                return ti;
+
+                return new ComCtl32.ToolInfoWrapper(
+                    parent,
+                    id: parent is StatusBar sb ? sb.Handle : tool.id);
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.GetTOOLINFO"]/*' />
-            /// <devdoc>
-            ///     Returns a detailed TOOLINFO_T structure that represents the specified
-            ///     region. NOTE: This may force the creation of a handle.
-            /// </devdoc>
-            private NativeMethods.TOOLINFO_T GetTOOLINFO(Tool tool) {
-                NativeMethods.TOOLINFO_T ti = GetMinTOOLINFO(tool);
-                ti.cbSize = Marshal.SizeOf(typeof(NativeMethods.TOOLINFO_T));
-                ti.uFlags |= NativeMethods.TTF_TRANSPARENT | NativeMethods.TTF_SUBCLASS;
+            /// <summary>
+            ///  Returns a detailed TOOLINFO_T structure that represents the specified
+            ///  region. NOTE: This may force the creation of a handle.
+            /// </summary>
+            private ComCtl32.ToolInfoWrapper GetTOOLINFO(Tool tool)
+            {
+                ComCtl32.ToolInfoWrapper ti = GetMinTOOLINFO(tool);
+                ti.Info.uFlags |= ComCtl32.TTF.TRANSPARENT | ComCtl32.TTF.SUBCLASS;
 
                 // RightToLeft reading order
-                //
                 Control richParent = parent;
-                if (richParent != null && richParent.RightToLeft == RightToLeft.Yes) {
-                    ti.uFlags |= NativeMethods.TTF_RTLREADING;
+                if (richParent != null && richParent.RightToLeft == RightToLeft.Yes)
+                {
+                    ti.Info.uFlags |= ComCtl32.TTF.RTLREADING;
                 }
 
-                ti.lpszText = tool.text;
-                ti.rect = NativeMethods.RECT.FromXYWH(tool.rect.X, tool.rect.Y, tool.rect.Width, tool.rect.Height);
+                ti.Text = tool.text;
+                ti.Info.rect = tool.rect;
                 return ti;
             }
 
-
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.Finalize"]/*' />
-            /// <devdoc>
-            /// </devdoc>
-            ~ControlToolTip() {
+            ~ControlToolTip()
+            {
                 DestroyHandle();
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.WndProc"]/*' />
-            /// <devdoc>
-            ///    WNDPROC
-            /// </devdoc>
-
-            protected void WndProc(ref Message msg) {
-                switch (msg.Msg) {
-                    case NativeMethods.WM_SETFOCUS:
-                        // 
-
-
-
+            protected void WndProc(ref Message msg)
+            {
+                switch (msg.Msg)
+                {
+                    case WindowMessages.WM_SETFOCUS:
                         return;
                     default:
                         window.DefWndProc(ref msg);
@@ -1913,25 +1896,24 @@ namespace System.Windows.Forms {
                 }
             }
 
-            /// <include file='doc\StatusBar.uex' path='docs/doc[@for="StatusBar.ControlToolTip.ToolTipNativeWindow"]/*' />
-            /// <devdoc>
-            /// </devdoc>
-            private class ToolTipNativeWindow : NativeWindow {
-                ControlToolTip control;
+            private class ToolTipNativeWindow : NativeWindow
+            {
+                readonly ControlToolTip control;
 
-                internal ToolTipNativeWindow(ControlToolTip control) {
+                internal ToolTipNativeWindow(ControlToolTip control)
+                {
                     this.control = control;
                 }
 
-                protected override void WndProc(ref Message m) {
-                    if (control != null) {
+                protected override void WndProc(ref Message m)
+                {
+                    if (control != null)
+                    {
                         control.WndProc(ref m);
                     }
                 }
             }
         }
-
-
     }
 }
 

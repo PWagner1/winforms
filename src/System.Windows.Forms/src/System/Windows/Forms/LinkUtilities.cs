@@ -1,17 +1,15 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.Windows.Forms {
-using System;
 using System.Drawing;
-using System.Windows.Forms;
 using Microsoft.Win32;
 using System.Globalization;
-using System.Security.Permissions;
 
-    internal class LinkUtilities {
-
+namespace System.Windows.Forms
+{
+    internal class LinkUtilities
+    {
         // IE fonts and colors
         static Color ielinkColor = Color.Empty;
         static Color ieactiveLinkColor = Color.Empty;
@@ -23,90 +21,94 @@ using System.Security.Permissions;
         const string IEAnchorColorVisited = "Anchor Color Visited";
         const string IEAnchorColorHover = "Anchor Color Hover";
 
-        /// <include file='doc\LinkUtilities.uex' path='docs/doc[@for="LinkUtilities.GetIEColor"]/*' />
-        /// <devdoc>
-        ///     Retrieves a named IE color from the registry. There are constants at the top
-        ///     of this file of the valid names to retrieve.
-        /// </devdoc>
-        private static Color GetIEColor(string name) {
-            // 
+        /// <summary>
+        ///  Retrieves a named IE color from the registry. There are constants at the top
+        ///  of this file of the valid names to retrieve.
+        /// </summary>
+        private static Color GetIEColor(string name)
+        {
+            RegistryKey key = Registry.CurrentUser.OpenSubKey(IESettingsRegPath);
 
+            if (key != null)
+            {
 
+                // Since this comes from the registry, be very careful about its contents.
+                //
+                string s = (string)key.GetValue(name);
+                key.Close();
 
+                if (s != null)
+                {
+                    string[] rgbs = s.Split(new char[] { ',' });
+                    int[] rgb = new int[3];
 
-            new RegistryPermission(PermissionState.Unrestricted).Assert();
-            try {
-                RegistryKey key = Registry.CurrentUser.OpenSubKey(IESettingsRegPath);
+                    int nMax = Math.Min(rgb.Length, rgbs.Length);
 
-                if (key != null) {
-
-                    // Since this comes from the registry, be very careful about its contents.
-                    //
-                    string s = (string)key.GetValue(name);
-                    key.Close();
-
-                    if (s != null) {
-                        string[] rgbs = s.Split(new char[] {','});
-                        int[] rgb = new int[3];
-
-                        int nMax = Math.Min(rgb.Length, rgbs.Length);
-
-                        //NOTE: if we can't parse rgbs[i], rgb[i] will be set to 0.
-                        for (int i = 0; i < nMax; i++)
-                        {
-                            int.TryParse(rgbs[i], out rgb[i]);
-                        }
-
-                        return Color.FromArgb(rgb[0], rgb[1], rgb[2]);
+                    //NOTE: if we can't parse rgbs[i], rgb[i] will be set to 0.
+                    for (int i = 0; i < nMax; i++)
+                    {
+                        int.TryParse(rgbs[i], out rgb[i]);
                     }
-                }
 
-                if (string.Equals(name, IEAnchorColor, StringComparison.OrdinalIgnoreCase)) {
-                    return Color.Blue;
-                }
-                else if (string.Equals(name, IEAnchorColorVisited, StringComparison.OrdinalIgnoreCase)) {
-                    return Color.Purple;
-                }
-                else if (string.Equals(name, IEAnchorColorHover, StringComparison.OrdinalIgnoreCase)) {
-                    return Color.Red;
-                }
-                else {
-                    return Color.Red;
+                    return Color.FromArgb(rgb[0], rgb[1], rgb[2]);
                 }
             }
-            finally {
-                System.Security.CodeAccessPermission.RevertAssert();
+
+            if (string.Equals(name, IEAnchorColor, StringComparison.OrdinalIgnoreCase))
+            {
+                return Color.Blue;
+            }
+            else if (string.Equals(name, IEAnchorColorVisited, StringComparison.OrdinalIgnoreCase))
+            {
+                return Color.Purple;
+            }
+            else if (string.Equals(name, IEAnchorColorHover, StringComparison.OrdinalIgnoreCase))
+            {
+                return Color.Red;
+            }
+            else
+            {
+                return Color.Red;
             }
 
         }
 
-        public static Color IELinkColor {
-            get {
-                if (ielinkColor.IsEmpty) {
+        public static Color IELinkColor
+        {
+            get
+            {
+                if (ielinkColor.IsEmpty)
+                {
                     ielinkColor = GetIEColor(IEAnchorColor);
                 }
                 return ielinkColor;
             }
         }
 
-        public static Color IEActiveLinkColor {
-            get {
-                if (ieactiveLinkColor.IsEmpty) {
+        public static Color IEActiveLinkColor
+        {
+            get
+            {
+                if (ieactiveLinkColor.IsEmpty)
+                {
                     ieactiveLinkColor = GetIEColor(IEAnchorColorHover);
                 }
                 return ieactiveLinkColor;
             }
         }
-        public static Color IEVisitedLinkColor {
-            get {
-                if (ievisitedLinkColor.IsEmpty) {
+        public static Color IEVisitedLinkColor
+        {
+            get
+            {
+                if (ievisitedLinkColor.IsEmpty)
+                {
                     ievisitedLinkColor = GetIEColor(IEAnchorColorVisited);
                 }
                 return ievisitedLinkColor;
             }
         }
 
-        /// Produces a color for visited links using SystemColors
+        ///  Produces a color for visited links using SystemColors
         public static Color GetVisitedLinkColor()
         {
             int r = (SystemColors.Window.R + SystemColors.WindowText.R + 1) / 2;
@@ -116,62 +118,61 @@ using System.Security.Permissions;
             return Color.FromArgb(r, g, b);
         }
 
-        /// <include file='doc\LinkUtilities.uex' path='docs/doc[@for="LinkUtilities.GetIELinkBehavior"]/*' />
-        /// <devdoc>
-        ///     Retrieves the IE settings for link behavior from the registry.
-        /// </devdoc>
-        public static LinkBehavior GetIELinkBehavior() {
-            // 
-
-
-
-
-            new RegistryPermission(PermissionState.Unrestricted).Assert();
-            try {
-                RegistryKey key = null;
-                try {
-                    key = Registry.CurrentUser.OpenSubKey(IEMainRegPath);
-                }
-                catch (System.Security.SecurityException) {
-                    // User does not have right to access Registry path HKCU\\Software\\Microsoft\\Internet Explorer\\Main.
-                    // Catch SecurityException silently and let the return value fallback to AlwaysUnderline.
-                }
-
-                if (key != null) {
-                    string s = (string)key.GetValue("Anchor Underline");
-                    key.Close();
-
-                    if (s != null && string.Compare(s, "no", true, CultureInfo.InvariantCulture) == 0) {
-                        return LinkBehavior.NeverUnderline;
-                    }
-                    if (s != null && string.Compare(s, "hover", true, CultureInfo.InvariantCulture) == 0) {
-                        return LinkBehavior.HoverUnderline;
-                    }
-                    else {
-                        return LinkBehavior.AlwaysUnderline;
-                    }
-                }
+        /// <summary>
+        ///  Retrieves the IE settings for link behavior from the registry.
+        /// </summary>
+        public static LinkBehavior GetIELinkBehavior()
+        {
+            RegistryKey key = null;
+            try
+            {
+                key = Registry.CurrentUser.OpenSubKey(IEMainRegPath);
             }
-            finally {
-                System.Security.CodeAccessPermission.RevertAssert();
+            catch (Security.SecurityException)
+            {
+                // User does not have right to access Registry path HKCU\\Software\\Microsoft\\Internet Explorer\\Main.
+                // Catch SecurityException silently and let the return value fallback to AlwaysUnderline.
+            }
+
+            if (key != null)
+            {
+                string s = (string)key.GetValue("Anchor Underline");
+                key.Close();
+
+                if (s != null && string.Compare(s, "no", true, CultureInfo.InvariantCulture) == 0)
+                {
+                    return LinkBehavior.NeverUnderline;
+                }
+                if (s != null && string.Compare(s, "hover", true, CultureInfo.InvariantCulture) == 0)
+                {
+                    return LinkBehavior.HoverUnderline;
+                }
+                else
+                {
+                    return LinkBehavior.AlwaysUnderline;
+                }
             }
 
             return LinkBehavior.AlwaysUnderline;
         }
 
-        public static void EnsureLinkFonts(Font baseFont, LinkBehavior link, ref Font linkFont, ref Font hoverLinkFont) {
-            if (linkFont != null && hoverLinkFont != null) {
+        public static void EnsureLinkFonts(Font baseFont, LinkBehavior link, ref Font linkFont, ref Font hoverLinkFont)
+        {
+            if (linkFont != null && hoverLinkFont != null)
+            {
                 return;
             }
 
             bool underlineLink = true;
             bool underlineHover = true;
 
-            if (link == LinkBehavior.SystemDefault) {
+            if (link == LinkBehavior.SystemDefault)
+            {
                 link = GetIELinkBehavior();
             }
 
-            switch (link) {
+            switch (link)
+            {
                 case LinkBehavior.AlwaysUnderline:
                     underlineLink = true;
                     underlineHover = true;
@@ -191,33 +192,41 @@ using System.Security.Permissions;
             // We optimize for the "same" value (never & always) to avoid creating an
             // extra font object.
             //
-            if (underlineHover == underlineLink) {
+            if (underlineHover == underlineLink)
+            {
                 FontStyle style = f.Style;
-                if (underlineHover) {
+                if (underlineHover)
+                {
                     style |= FontStyle.Underline;
                 }
-                else {
+                else
+                {
                     style &= ~FontStyle.Underline;
                 }
                 hoverLinkFont = new Font(f, style);
                 linkFont = hoverLinkFont;
             }
-            else {
+            else
+            {
                 FontStyle hoverStyle = f.Style;
-                if (underlineHover) {
+                if (underlineHover)
+                {
                     hoverStyle |= FontStyle.Underline;
                 }
-                else {
+                else
+                {
                     hoverStyle &= ~FontStyle.Underline;
                 }
 
                 hoverLinkFont = new Font(f, hoverStyle);
 
                 FontStyle linkStyle = f.Style;
-                if (underlineLink) {
+                if (underlineLink)
+                {
                     linkStyle |= FontStyle.Underline;
                 }
-                else {
+                else
+                {
                     linkStyle &= ~FontStyle.Underline;
                 }
 

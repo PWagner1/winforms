@@ -7,15 +7,16 @@ root = true
 # A newline ending every file
 # Use 4 spaces as indentation
 [*]
-insert_final_newline = true
 indent_style = space
 indent_size = 4
 
-[project.json]
+[*.json]
 indent_size = 2
 
 # C# files
 [*.cs]
+charset = utf-8-bom
+insert_final_newline = true
 # New line preferences
 csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true
@@ -153,12 +154,18 @@ indent_size = 2
 indent_size = 2
 
 # Xml files
-[*.{xml,stylecop,resx,ruleset}]
+[*.{xml,stylecop,ruleset}]
 indent_size = 2
 
 # Xml config files
 [*.{props,targets,config,nuspec}]
 indent_size = 2
+
+# resx Files
+[*.{resx,xlf}]
+indent_size = 2
+charset = utf-8-bom
+insert_final_newline = true
 
 # Shell scripts
 [*.sh]

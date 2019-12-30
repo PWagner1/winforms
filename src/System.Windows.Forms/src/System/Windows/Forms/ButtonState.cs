@@ -1,86 +1,46 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using static Interop;
 
-namespace System.Windows.Forms {
-
-    using System.Diagnostics;
-
-    using System;
-    using System.Drawing;
-    using Microsoft.Win32;
-
-
-    /// <include file='doc\ButtonState.uex' path='docs/doc[@for="ButtonState"]/*' />
-    /// <devdoc>
-    ///    <para>
-    ///       Specifies the appearance of a button.
-    ///       
-    ///    </para>
-    /// </devdoc>
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ///  Specifies the appearance of a button.
+    /// </summary>
     [Flags]
-    public enum ButtonState {
+    public enum ButtonState
+    {
+        /// <summary>
+        ///  The button has a checked or latched appearance. Use this appearance to
+        ///  show that a toggle button has been pressed.
+        /// </summary>
+        Checked = (int)User32.DFCS.CHECKED,
 
-        /// <include file='doc\ButtonState.uex' path='docs/doc[@for="ButtonState.Checked"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The button has a
-        ///       checked or latched appearance. Use
-        ///       this appearance to show that a toggle button has been pressed.
-        ///       
-        ///    </para>
-        /// </devdoc>
-        Checked = NativeMethods.DFCS_CHECKED,
+        /// <summary>
+        ///  The button has a flat, two-dimensional appearance.
+        /// </summary>
+        Flat = (int)User32.DFCS.FLAT,
 
-        /// <include file='doc\ButtonState.uex' path='docs/doc[@for="ButtonState.Flat"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The button has a flat, two-dimensional appearance.
-        ///       
-        ///    </para>
-        /// </devdoc>
-        Flat = NativeMethods.DFCS_FLAT,
+        /// <summary>
+        ///  The button is inactive (grayed).
+        /// </summary>
+        Inactive = (int)User32.DFCS.INACTIVE,
 
-        /// <include file='doc\ButtonState.uex' path='docs/doc[@for="ButtonState.Inactive"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The button is inactive (grayed).
-        ///       
-        ///    </para>
-        /// </devdoc>
-        Inactive = NativeMethods.DFCS_INACTIVE,
-
-        /// <include file='doc\ButtonState.uex' path='docs/doc[@for="ButtonState.Normal"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       
-        ///       The button has its normal appearance
-        ///       (three-dimensional and not pressed).
-        ///       
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  The button has its normal appearance (three-dimensional and not pressed).
+        /// </summary>
         Normal = 0,
 
-        /// <include file='doc\ButtonState.uex' path='docs/doc[@for="ButtonState.Pushed"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       
-        ///       The button is currently pressed.
-        ///       
-        ///    </para>
-        /// </devdoc>
-        Pushed = NativeMethods.DFCS_PUSHED,
+        /// <summary>
+        ///  The button is currently pressed.
+        /// </summary>
+        Pushed = (int)User32.DFCS.PUSHED,
 
-        /// <include file='doc\ButtonState.uex' path='docs/doc[@for="ButtonState.All"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       All viable
-        ///       flags in the bit mask are used.
-        ///       
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  All viable flags in the bit mask are used.
+        /// </summary>
         All = Flat | Checked | Pushed | Inactive,
-
     }
 }

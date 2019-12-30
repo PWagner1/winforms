@@ -1,7 +1,8 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -12,87 +13,75 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
-using System.Windows.Forms.Design.Editors.Resources;
+using static Interop;
 
 namespace System.Drawing.Design
 {
     /// <summary>
-    ///     Provides an editor for visually picking a color.
+    ///  Provides an editor for visually picking a color.
     /// </summary>
     [CLSCompliant(false)]
     public class ColorEditor : UITypeEditor
     {
-        private ColorUI colorUI;
+        private ColorUI _colorUI;
 
         /// <summary>
-        ///     Edits the given object value using the editor style
-        ///     provided by ColorEditor.GetEditStyle.
+        ///  Edits the given object value using the editor style provided by ColorEditor.GetEditStyle.
         /// </summary>
-        [SuppressMessage("Microsoft.Performance", "CA1808:AvoidCallsThatBoxValueTypes")]
-        [SuppressMessage("Microsoft.Security", "CA2123:OverrideLinkDemandsShouldBeIdenticalToBase")] // everything in this assembly is full trust.
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
         {
-            object returnValue = value;
-
-            if (provider != null)
+            if (provider == null)
             {
-                IWindowsFormsEditorService edSvc = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
-
-                if (edSvc != null)
-                {
-                    if (colorUI == null)
-                    {
-                        colorUI = new ColorUI(this);
-                    }
-                    colorUI.Start(edSvc, value);
-                    edSvc.DropDownControl(colorUI);
-
-                    if (colorUI.Value != null && ((Color)colorUI.Value) != Color.Empty)
-                    {
-                        value = colorUI.Value;
-                    }
-
-                    colorUI.End();
-                }
+                return value;
+            }
+            if (!(provider.GetService(typeof(IWindowsFormsEditorService)) is IWindowsFormsEditorService edSvc))
+            {
+                return value;
             }
 
+            if (_colorUI == null)
+            {
+                _colorUI = new ColorUI(this);
+            }
+
+            _colorUI.Start(edSvc, value);
+            edSvc.DropDownControl(_colorUI);
+
+            if (_colorUI.Value is Color colorValue && colorValue != Color.Empty)
+            {
+                value = colorValue;
+            }
+
+            _colorUI.End();
             return value;
         }
 
         /// <summary>
-        ///     Gets the editing style of the Edit method. If the method
-        ///     is not supported, this will return UITypeEditorEditStyle.None.
+        ///  Gets the editing style of the Edit method.
+        ///  If the method is not supported, this will return UITypeEditorEditStyle.None.
         /// </summary>
-        [SuppressMessage("Microsoft.Security", "CA2123:OverrideLinkDemandsShouldBeIdenticalToBase")] // everything in this assembly is full trust.
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
         {
             return UITypeEditorEditStyle.DropDown;
         }
 
         /// <summary>
-        ///     Gets a value indicating if this editor supports the painting of a representation
-        ///     of an object's value.
+        ///  Gets a value indicating if this editor supports the painting of a representation
+        ///  of an object's value.
         /// </summary>
-        [SuppressMessage("Microsoft.Security", "CA2123:OverrideLinkDemandsShouldBeIdenticalToBase")] // everything in this assembly is full trust.
         public override bool GetPaintValueSupported(ITypeDescriptorContext context)
         {
             return true;
         }
 
         /// <summary>
-        ///     Paints a representative value of the given object to the provided
-        ///     canvas. Painting should be done within the boundaries of the
-        ///     provided rectangle.
+        ///  Paints a representative value of the given object to the provided canvas.
+        ///  Painting should be done within the boundaries of the provided rectangle.
         /// </summary>
-        [SuppressMessage("Microsoft.Performance", "CA1808:AvoidCallsThatBoxValueTypes")]
-        [SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
-        [SuppressMessage("Microsoft.Security", "CA2109:ReviewVisibleEventHandlers")] //Benign code
-        [SuppressMessage("Microsoft.Security", "CA2123:OverrideLinkDemandsShouldBeIdenticalToBase")] // everything in this assembly is full trust.
         public override void PaintValue(PaintValueEventArgs e)
         {
-            if (e.Value is Color)
+            if (e.Value is Color color)
             {
-                Color color = (Color)e.Value;
                 SolidBrush b = new SolidBrush(color);
                 e.Graphics.FillRectangle(b, e.Bounds);
                 b.Dispose();
@@ -100,7 +89,7 @@ namespace System.Drawing.Design
         }
 
         /// <summary>
-        ///     A control to display the color palette.
+        ///  A control to display the color palette.
         /// </summary>
         private class ColorPalette : Control
         {
@@ -145,7 +134,7 @@ namespace System.Drawing.Design
 
             public ColorPalette(ColorUI colorUI, Color[] customColors)
             {
-                
+
                 if (!isScalingInitialized)
                 {
                     if (DpiHelper.IsScalingRequired)
@@ -169,12 +158,13 @@ namespace System.Drawing.Design
                 staticColors = new Color[CELLS - CELLS_CUSTOM];
 
                 for (int i = 0; i < staticCells.Length; i++)
+                {
                     staticColors[i] = ColorTranslator.FromOle(staticCells[i]);
+                }
 
-                this.CustomColors = customColors;
+                CustomColors = customColors;
             }
 
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
             public Color[] CustomColors { get; }
 
             internal int FocusedCell => Get1DFrom2D(focus);
@@ -245,7 +235,10 @@ namespace System.Drawing.Design
             private Color GetColorFromCell(int index)
             {
                 if (index < CELLS - CELLS_CUSTOM)
+                {
                     return staticColors[index];
+                }
+
                 return CustomColors[index - CELLS + CELLS_CUSTOM];
             }
 
@@ -320,7 +313,7 @@ namespace System.Drawing.Design
                 Rectangle r = new Rectangle();
                 FillRectWithCellBounds(focus.X, focus.Y, ref r);
                 Invalidate(Rectangle.Inflate(r, 5, 5));
-                UnsafeNativeMethods.NotifyWinEvent((int)AccessibleEvents.Focus, new HandleRef(this, this.Handle), UnsafeNativeMethods.OBJID_CLIENT, 1 + Get1DFrom2D(focus.X, focus.Y));
+                User32.NotifyWinEvent((uint)AccessibleEvents.Focus, new HandleRef(this, Handle), User32.OBJID.CLIENT, 1 + Get1DFrom2D(focus.X, focus.Y));
             }
 
             protected override bool IsInputKey(System.Windows.Forms.Keys keyData)
@@ -347,7 +340,7 @@ namespace System.Drawing.Design
                 colorUI.EditorService.CloseDropDown(); // It will be closed anyway as soon as it sees the WM_ACTIVATE
                 CustomColorDialog dialog = new CustomColorDialog();
 
-                IntPtr hwndFocus = UnsafeNativeMethods.GetFocus();
+                IntPtr hwndFocus = User32.GetFocus();
                 try
                 {
                     DialogResult result = dialog.ShowDialog();
@@ -365,7 +358,7 @@ namespace System.Drawing.Design
                 {
                     if (hwndFocus != IntPtr.Zero)
                     {
-                        UnsafeNativeMethods.SetFocus(new HandleRef(null, hwndFocus));
+                        User32.SetFocus(hwndFocus);
                     }
                 }
             }
@@ -471,12 +464,13 @@ namespace System.Drawing.Design
                 {
                     g.FillRectangle(brush, ClientRectangle);
                 }
-                Rectangle rect = new Rectangle();
-
-                rect.Width = cellSizeX;
-                rect.Height = cellSizeY;
-                rect.X = marginX;
-                rect.Y = marginY;
+                Rectangle rect = new Rectangle
+                {
+                    Width = cellSizeX,
+                    Height = cellSizeY,
+                    X = marginX,
+                    Y = marginY
+                };
                 bool drawSelected = false;
 
                 for (int y = 0; y < CELLS_DOWN; y++)
@@ -594,11 +588,10 @@ namespace System.Drawing.Design
                 public override AccessibleObject HitTest(int x, int y)
                 {
                     // Convert from screen to client coordinates
-                    //
-                    NativeMethods.POINT pt = new NativeMethods.POINT(x, y);
-                    UnsafeNativeMethods.ScreenToClient(new HandleRef(ColorPalette, ColorPalette.Handle), pt);
+                    var pt = new Point(x, y);
+                    User32.ScreenToClient(new HandleRef(ColorPalette, ColorPalette.Handle), ref pt);
 
-                    int cell = ColorPalette.GetCellFromLocationMouse(pt.x, pt.y);
+                    int cell = ColorPalette.GetCellFromLocationMouse(pt.X, pt.Y);
                     if (cell != -1)
                     {
                         return GetChild(cell);
@@ -630,11 +623,10 @@ namespace System.Drawing.Design
                             ColorPalette.FillRectWithCellBounds(cellPt.X, cellPt.Y, ref rect);
 
                             // Translate rect to screen coordinates
-                            //
-                            NativeMethods.POINT pt = new NativeMethods.POINT(rect.X, rect.Y);
-                            UnsafeNativeMethods.ClientToScreen(new HandleRef(parent.ColorPalette, parent.ColorPalette.Handle), pt);
+                            var pt = new Point(rect.X, rect.Y);
+                            User32.ClientToScreen(new HandleRef(parent.ColorPalette, parent.ColorPalette.Handle), ref pt);
 
-                            return new Rectangle(pt.x, pt.y, rect.Width, rect.Height);
+                            return new Rectangle(pt.X, pt.Y, rect.Width, rect.Height);
                         }
                     }
 
@@ -662,7 +654,7 @@ namespace System.Drawing.Design
         }
 
         /// <summary>
-        ///      Editor UI for the color editor.
+        ///  Editor UI for the color editor.
         /// </summary>
         private class ColorUI : Control
         {
@@ -690,14 +682,13 @@ namespace System.Drawing.Design
             }
 
             /// <summary>
-            /// Array of standard colors.
+            ///  Array of standard colors.
             /// </summary>
             private object[] ColorValues => colorConstants ?? (colorConstants = GetConstants(typeof(Color)));
 
             /// <summary>
-            /// Retrieves the array of custom colors for our use.
+            ///  Retrieves the array of custom colors for our use.
             /// </summary>
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
             private Color[] CustomColors
             {
                 get
@@ -721,12 +712,12 @@ namespace System.Drawing.Design
             }
 
             /// <summary>
-            /// Allows someone else to close our dropdown.
+            ///  Allows someone else to close our dropdown.
             /// </summary>
             public IWindowsFormsEditorService EditorService => edSvc;
 
-            /// <summary> 
-            /// Array of system colors.
+            /// <summary>
+            ///  Array of system colors.
             /// </summary>
             private object[] SystemColorValues => systemColorConstants ?? (systemColorConstants = GetConstants(typeof(SystemColors)));
 
@@ -756,7 +747,7 @@ namespace System.Drawing.Design
             }
 
             /// <summary>
-            /// Takes the given color and looks for an instance in the ColorValues table.
+            ///  Takes the given color and looks for an instance in the ColorValues table.
             /// </summary>
             private Color GetBestColor(Color color)
             {
@@ -773,7 +764,7 @@ namespace System.Drawing.Design
             }
 
             /// <summary>
-            /// Retrieves an array of color constants for the given object.
+            ///  Retrieves an array of color constants for the given object.
             /// </summary>
             private static object[] GetConstants(Type enumType)
             {
@@ -813,27 +804,31 @@ namespace System.Drawing.Design
                 tabControl.TabPages.Add(systemTabPage);
                 tabControl.TabStop = false;
                 tabControl.SelectedTab = systemTabPage;
-                tabControl.SelectedIndexChanged += new EventHandler(this.OnTabControlSelChange);
+                tabControl.SelectedIndexChanged += new EventHandler(OnTabControlSelChange);
                 tabControl.Dock = DockStyle.Fill;
-                tabControl.Resize += new EventHandler(this.OnTabControlResize);
+                tabControl.Resize += new EventHandler(OnTabControlResize);
 
-                lbSystem = new ColorEditorListBox();
-                lbSystem.DrawMode = DrawMode.OwnerDrawFixed;
-                lbSystem.BorderStyle = BorderStyle.FixedSingle;
-                lbSystem.IntegralHeight = false;
-                lbSystem.Sorted = false;
-                lbSystem.Click += new EventHandler(this.OnListClick);
+                lbSystem = new ColorEditorListBox
+                {
+                    DrawMode = DrawMode.OwnerDrawFixed,
+                    BorderStyle = BorderStyle.FixedSingle,
+                    IntegralHeight = false,
+                    Sorted = false
+                };
+                lbSystem.Click += new EventHandler(OnListClick);
                 lbSystem.DrawItem += new DrawItemEventHandler(this.OnListDrawItem);
                 lbSystem.KeyDown += new KeyEventHandler(this.OnListKeyDown);
                 lbSystem.Dock = DockStyle.Fill;
-                lbSystem.FontChanged += new EventHandler(this.OnFontChanged);
+                lbSystem.FontChanged += new EventHandler(OnFontChanged);
 
-                lbCommon = new ColorEditorListBox();
-                lbCommon.DrawMode = DrawMode.OwnerDrawFixed;
-                lbCommon.BorderStyle = BorderStyle.FixedSingle;
-                lbCommon.IntegralHeight = false;
-                lbCommon.Sorted = false;
-                lbCommon.Click += new EventHandler(this.OnListClick);
+                lbCommon = new ColorEditorListBox
+                {
+                    DrawMode = DrawMode.OwnerDrawFixed,
+                    BorderStyle = BorderStyle.FixedSingle,
+                    IntegralHeight = false,
+                    Sorted = false
+                };
+                lbCommon.Click += new EventHandler(OnListClick);
                 lbCommon.DrawItem += new DrawItemEventHandler(this.OnListDrawItem);
                 lbCommon.KeyDown += new KeyEventHandler(this.OnListKeyDown);
                 lbCommon.Dock = DockStyle.Fill;
@@ -853,7 +848,7 @@ namespace System.Drawing.Design
                 }
 
                 pal = new ColorPalette(this, CustomColors);
-                pal.Picked += new EventHandler(this.OnPalettePick);
+                pal.Picked += new EventHandler(OnPalettePick);
 
                 paletteTabPage.Controls.Add(pal);
                 systemTabPage.Controls.Add(lbSystem);
@@ -873,7 +868,6 @@ namespace System.Drawing.Design
                 commonHeightSet = systemHeightSet = false;
             }
 
-            [SuppressMessage("Microsoft.Performance", "CA1808:AvoidCallsThatBoxValueTypes")]
             private void OnListClick(object sender, EventArgs e)
             {
                 ListBox lb = (ListBox)sender;
@@ -973,9 +967,14 @@ namespace System.Drawing.Design
                     {
                         int count = tabControl.TabPages.Count;
                         if (forward)
+                        {
                             sel = (sel + 1) % count;
+                        }
                         else
+                        {
                             sel = (sel + count - 1) % count;
+                        }
+
                         tabControl.SelectedTab = tabControl.TabPages[sel];
 
                         return true;
@@ -1091,7 +1090,7 @@ namespace System.Drawing.Design
                 }
             }
 
-            protected override int Options => NativeMethods.CC_FULLOPEN | NativeMethods.CC_ENABLETEMPLATEHANDLE;
+            protected override int Options => (int)(Comdlg32.CC.FULLOPEN | Comdlg32.CC.ENABLETEMPLATEHANDLE);
 
             protected override void Dispose(bool disposing)
             {
@@ -1113,23 +1112,29 @@ namespace System.Drawing.Design
             {
                 switch (msg)
                 {
-                    case NativeMethods.WM_INITDIALOG:
-                        NativeMethods.SendDlgItemMessage(hwnd, COLOR_HUE, NativeMethods.EM_SETMARGINS, (IntPtr)(NativeMethods.EC_LEFTMARGIN | NativeMethods.EC_RIGHTMARGIN), IntPtr.Zero);
-                        NativeMethods.SendDlgItemMessage(hwnd, COLOR_SAT, NativeMethods.EM_SETMARGINS, (IntPtr)(NativeMethods.EC_LEFTMARGIN | NativeMethods.EC_RIGHTMARGIN), IntPtr.Zero);
-                        NativeMethods.SendDlgItemMessage(hwnd, COLOR_LUM, NativeMethods.EM_SETMARGINS, (IntPtr)(NativeMethods.EC_LEFTMARGIN | NativeMethods.EC_RIGHTMARGIN), IntPtr.Zero);
-                        NativeMethods.SendDlgItemMessage(hwnd, COLOR_RED, NativeMethods.EM_SETMARGINS, (IntPtr)(NativeMethods.EC_LEFTMARGIN | NativeMethods.EC_RIGHTMARGIN), IntPtr.Zero);
-                        NativeMethods.SendDlgItemMessage(hwnd, COLOR_GREEN, NativeMethods.EM_SETMARGINS, (IntPtr)(NativeMethods.EC_LEFTMARGIN | NativeMethods.EC_RIGHTMARGIN), IntPtr.Zero);
-                        NativeMethods.SendDlgItemMessage(hwnd, COLOR_BLUE, NativeMethods.EM_SETMARGINS, (IntPtr)(NativeMethods.EC_LEFTMARGIN | NativeMethods.EC_RIGHTMARGIN), IntPtr.Zero);
+                    case WindowMessages.WM_INITDIALOG:
+                        NativeMethods.SendDlgItemMessage(hwnd, COLOR_HUE, EditMessages.EM_SETMARGINS, (IntPtr)(NativeMethods.EC_LEFTMARGIN | NativeMethods.EC_RIGHTMARGIN), IntPtr.Zero);
+                        NativeMethods.SendDlgItemMessage(hwnd, COLOR_SAT, EditMessages.EM_SETMARGINS, (IntPtr)(NativeMethods.EC_LEFTMARGIN | NativeMethods.EC_RIGHTMARGIN), IntPtr.Zero);
+                        NativeMethods.SendDlgItemMessage(hwnd, COLOR_LUM, EditMessages.EM_SETMARGINS, (IntPtr)(NativeMethods.EC_LEFTMARGIN | NativeMethods.EC_RIGHTMARGIN), IntPtr.Zero);
+                        NativeMethods.SendDlgItemMessage(hwnd, COLOR_RED, EditMessages.EM_SETMARGINS, (IntPtr)(NativeMethods.EC_LEFTMARGIN | NativeMethods.EC_RIGHTMARGIN), IntPtr.Zero);
+                        NativeMethods.SendDlgItemMessage(hwnd, COLOR_GREEN, EditMessages.EM_SETMARGINS, (IntPtr)(NativeMethods.EC_LEFTMARGIN | NativeMethods.EC_RIGHTMARGIN), IntPtr.Zero);
+                        NativeMethods.SendDlgItemMessage(hwnd, COLOR_BLUE, EditMessages.EM_SETMARGINS, (IntPtr)(NativeMethods.EC_LEFTMARGIN | NativeMethods.EC_RIGHTMARGIN), IntPtr.Zero);
                         IntPtr hwndCtl = NativeMethods.GetDlgItem(hwnd, COLOR_MIX);
-                        NativeMethods.EnableWindow(hwndCtl, false);
-                        NativeMethods.SetWindowPos(hwndCtl, IntPtr.Zero, 0, 0, 0, 0, NativeMethods.SWP_HIDEWINDOW);
+                        User32.EnableWindow(hwndCtl, BOOL.FALSE);
+                        User32.SetWindowPos(
+                            hwndCtl,
+                            User32.HWND_TOP,
+                            flags: User32.SWP.HIDEWINDOW);
                         hwndCtl = NativeMethods.GetDlgItem(hwnd, NativeMethods.IDOK);
-                        NativeMethods.EnableWindow(hwndCtl, false);
-                        NativeMethods.SetWindowPos(hwndCtl, IntPtr.Zero, 0, 0, 0, 0, NativeMethods.SWP_HIDEWINDOW);
+                        User32.EnableWindow(hwndCtl, BOOL.FALSE);
+                        User32.SetWindowPos(
+                            hwndCtl,
+                            User32.HWND_TOP,
+                            flags: User32.SWP.HIDEWINDOW);
                         this.Color = Color.Empty;
                         break;
-                    case NativeMethods.WM_COMMAND:
-                        switch (NativeMethods.Util.LOWORD(unchecked((int)(long)wParam)))
+                    case WindowMessages.WM_COMMAND:
+                        switch (PARAM.LOWORD(wParam))
                         {
                             case COLOR_ADD:
                                 byte red, green, blue;
@@ -1141,7 +1146,7 @@ namespace System.Drawing.Design
                                 blue = (byte)NativeMethods.GetDlgItemInt(hwnd, COLOR_BLUE, err, false);
                                 Debug.Assert(!err[0], "Couldn't find dialog member COLOR_BLUE");
                                 this.Color = Color.FromArgb(red, green, blue);
-                                NativeMethods.PostMessage(hwnd, NativeMethods.WM_COMMAND, (IntPtr)NativeMethods.Util.MAKELONG(NativeMethods.IDOK, 0), NativeMethods.GetDlgItem(hwnd, NativeMethods.IDOK));
+                                User32.PostMessageW(hwnd, User32.WindowMessage.WM_COMMAND, PARAM.FromLowHigh(NativeMethods.IDOK, 0), NativeMethods.GetDlgItem(hwnd, NativeMethods.IDOK));
                                 break;
                         }
                         break;
@@ -1151,19 +1156,18 @@ namespace System.Drawing.Design
         }
 
         /// <summary>
-        /// Comparer for system colors.
+        ///  Comparer for system colors.
         /// </summary>
         private class SystemColorComparer : IComparer
         {
-            [SuppressMessage("Microsoft.Globalization", "CA130:UseOrdinalStringComparison")]
             public int Compare(object x, object y)
             {
-                return String.Compare(((Color)x).Name, ((Color)y).Name, false, CultureInfo.InvariantCulture);
+                return string.Compare(((Color)x).Name, ((Color)y).Name, false, CultureInfo.InvariantCulture);
             }
         }
 
         /// <summary>
-        /// Comparer for standard colors
+        ///  Comparer for standard colors
         /// </summary>
         private class StandardColorComparer : IComparer
         {

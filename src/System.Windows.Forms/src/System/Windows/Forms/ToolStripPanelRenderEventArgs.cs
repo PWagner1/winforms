@@ -1,52 +1,32 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.Windows.Forms {
+using System.Drawing;
 
-    using System.Drawing;
-
-    
-    /// <devdoc>
-    ///   ToolStripPanelRenderEventArgs
-    /// </devdoc>
-    public class ToolStripPanelRenderEventArgs : EventArgs {
-
-        private ToolStripPanel      toolStripPanel         = null;
-        private Graphics              graphics                 = null;
-        private bool handled = false;
-
-        /// <devdoc>
+namespace System.Windows.Forms
+{
+    public class ToolStripPanelRenderEventArgs : EventArgs
+    {
+        /// <summary>
         ///  This class represents all the information to render the toolStrip
-        /// </devdoc>        
-        public ToolStripPanelRenderEventArgs(Graphics g, ToolStripPanel toolStripPanel) {
-            this.toolStripPanel = toolStripPanel;
-            this.graphics = g;
+        /// </summary>
+        public ToolStripPanelRenderEventArgs(Graphics g, ToolStripPanel toolStripPanel)
+        {
+            Graphics = g;
+            ToolStripPanel = toolStripPanel;
         }
 
+        /// <summary>
+        ///  The graphics object to draw with
+        /// </summary>
+        public Graphics Graphics { get; }
 
-        /// <devdoc>
-        ///  the graphics object to draw with
-        /// </devdoc>
-        public Graphics Graphics {
-            get {
-                return graphics;    
-            }
-        }
-
-        /// <devdoc>
+        /// <summary>
         ///  Represents which toolStrip was affected by the click
-        /// </devdoc>
-        public ToolStripPanel ToolStripPanel {
-            get {
-                return toolStripPanel;
-            }
-        }
+        /// </summary>
+        public ToolStripPanel ToolStripPanel { get; }
 
-        public bool Handled {
-            get { return handled; }
-            set { handled = value; }
-        }
-
+        public bool Handled { get; set; }
     }
 }

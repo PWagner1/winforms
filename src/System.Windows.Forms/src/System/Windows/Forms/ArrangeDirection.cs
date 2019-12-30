@@ -1,57 +1,37 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.Windows.Forms {
+using System.Runtime.InteropServices;
+using static Interop;
 
-    using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
-
-    /// <include file='doc\ArrangeDirection.uex' path='docs/doc[@for="ArrangeDirection"]/*' />
-    /// <devdoc>
-    ///    <para>
-    ///       Specifies the direction the system uses to arrange
-    ///       minimized windows.
-    ///    </para>
-    /// </devdoc>
-    [System.Runtime.InteropServices.ComVisible(true)]
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ///  Specifies the direction the system uses to arrange minimized windows.
+    /// </summary>
+    [ComVisible(true)]
     [Flags]
-    [
-        SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue")  // Maps to native enum.
-    ]
-    public enum ArrangeDirection {
+    public enum ArrangeDirection
+    {
+        /// <summary>
+        ///  Arranges vertically, from top to bottom.
+        /// </summary>
+        Down = User32.ARW.DOWN,
 
-        /// <include file='doc\ArrangeDirection.uex' path='docs/doc[@for="ArrangeDirection.Down"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Arranges vertically, from top to bottom.
-        ///    </para>
-        /// </devdoc>
-        Down = NativeMethods.ARW_DOWN,
+        /// <summary>
+        ///  Arranges horizontally, from left to right.
+        /// </summary>
+        Left = User32.ARW.LEFT,
 
-        /// <include file='doc\ArrangeDirection.uex' path='docs/doc[@for="ArrangeDirection.Left"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Arranges horizontally, from left to right.
-        ///    </para>
-        /// </devdoc>
-        Left = NativeMethods.ARW_LEFT,
+        /// <summary>
+        ///  Arranges horizontally, from right to left.
+        /// </summary>
+        Right = User32.ARW.RIGHT,
 
-        /// <include file='doc\ArrangeDirection.uex' path='docs/doc[@for="ArrangeDirection.Right"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Arranges horizontally, from right to left.
-        ///    </para>
-        /// </devdoc>
-        Right = NativeMethods.ARW_RIGHT,
-
-        /// <include file='doc\ArrangeDirection.uex' path='docs/doc[@for="ArrangeDirection.Up"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Arranges vertically, from bottom to top.
-        ///    </para>
-        /// </devdoc>
-        Up = NativeMethods.ARW_UP,
+        /// <summary>
+        ///  Arranges vertically, from bottom to top.
+        /// </summary>
+        Up = User32.ARW.UP,
     }
 }
-

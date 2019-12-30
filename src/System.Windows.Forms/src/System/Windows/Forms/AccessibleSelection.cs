@@ -1,75 +1,46 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.Windows.Forms {
-
-    using System.Diagnostics;
-
-    using System;
-    using System.ComponentModel;
-    using Microsoft.Win32;
-
-
-    /// <include file='doc\AccessibleSelection.uex' path='docs/doc[@for="AccessibleSelection"]/*' />
-    /// <devdoc>
-    ///    <para>
-    ///       Specifies how an accessible object will be selected or receive focus.
-    ///    </para>
-    /// </devdoc>
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ///  Specifies how an accessible object will be selected or receive focus.
+    /// </summary>
     [Flags]
-    public enum AccessibleSelection {
-
-        /// <include file='doc\AccessibleSelection.uex' path='docs/doc[@for="AccessibleSelection.None"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The selection or focus of an object is unchanged.
-        ///    </para>
-        /// </devdoc>
+    public enum AccessibleSelection
+    {
+        /// <summary>
+        ///  The selection or focus of an object is unchanged.
+        /// </summary>
         None = 0,
 
-        /// <include file='doc\AccessibleSelection.uex' path='docs/doc[@for="AccessibleSelection.TakeFocus"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Assigns focus to an object and makes
-        ///       it the anchor, which is the starting point for
-        ///       the selection. Can be combined with <see langword='TakeSelection'/>,
-        ///    <see langword='ExtendSelection'/>, <see langword='AddSelection'/>, or 
-        ///    <see langword='RemoveSelection'/>.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Assigns focus to an object and makes it the anchor, which is the
+        ///  starting point for the selection. Can be combined with
+        /// <see cref='TakeSelection'/>, <see cref='ExtendSelection'/>,
+        /// <see cref='AddSelection'/>, or  <see cref='RemoveSelection'/>.
+        /// </summary>
         TakeFocus = 1,
 
-        /// <include file='doc\AccessibleSelection.uex' path='docs/doc[@for="AccessibleSelection.TakeSelection"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Selects the object and deselects all other objects in the container.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Selects the object and deselects all other objects in the container.
+        /// </summary>
         TakeSelection = 2,
 
-        /// <include file='doc\AccessibleSelection.uex' path='docs/doc[@for="AccessibleSelection.ExtendSelection"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Selects all objects between the anchor and the selected object.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Selects all objects between the anchor and the selected object.
+        /// </summary>
         ExtendSelection = 4,
 
-        /// <include file='doc\AccessibleSelection.uex' path='docs/doc[@for="AccessibleSelection.AddSelection"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Adds the object to the selection.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Adds the object to the selection.
+        /// </summary>
         AddSelection = 8,
-        
-        /// <include file='doc\AccessibleSelection.uex' path='docs/doc[@for="AccessibleSelection.RemoveSelection"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Removes the object from the selection.
-        ///    </para>
-        /// </devdoc>
+
+        /// <summary>
+        ///  Removes the object from the selection.
+        /// </summary>
         RemoveSelection = 16,
     }
 }

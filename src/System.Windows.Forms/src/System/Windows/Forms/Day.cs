@@ -1,80 +1,52 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.Windows.Forms {
-
-    using System.Diagnostics;
-
-    using System;
-    using System.Drawing;
-    using System.ComponentModel;
-    using Microsoft.Win32;
-
-
-    /// <include file='doc\Day.uex' path='docs/doc[@for="Day"]/*' />
-    /// <devdoc>
-    ///    <para>
-    ///       Specifies the day of the week.
-    ///
-    ///    </para>
-    /// </devdoc>
-    public enum Day {
-        /// <include file='doc\Day.uex' path='docs/doc[@for="Day.Monday"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The day Monday.
-        ///    </para>
-        /// </devdoc>
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ///  Specifies the day of the week.
+    /// </summary>
+    public enum Day
+    {
+        /// <summary>
+        ///  The day Monday.
+        /// </summary>
         Monday = 0,
-        /// <include file='doc\Day.uex' path='docs/doc[@for="Day.Tuesday"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The day Tuesday.
-        ///    </para>
-        /// </devdoc>
+
+        /// <summary>
+        ///  The day Tuesday.
+        /// </summary>
         Tuesday = 1,
-        /// <include file='doc\Day.uex' path='docs/doc[@for="Day.Wednesday"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The day Wednesday.
-        ///    </para>
-        /// </devdoc>
+
+        /// <summary>
+        ///  The day Wednesday.
+        /// </summary>
         Wednesday = 2,
-        /// <include file='doc\Day.uex' path='docs/doc[@for="Day.Thursday"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The day Thursday.
-        ///    </para>
-        /// </devdoc>
+
+        /// <summary>
+        ///  The day Thursday.
+        /// </summary>
         Thursday = 3,
-        /// <include file='doc\Day.uex' path='docs/doc[@for="Day.Friday"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The day Friday.
-        ///    </para>
-        /// </devdoc>
+
+        /// <summary>
+        ///  The day Friday.
+        /// </summary>
         Friday = 4,
-        /// <include file='doc\Day.uex' path='docs/doc[@for="Day.Saturday"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The day Saturday.
-        ///    </para>
-        /// </devdoc>
-        Saturday  = 5,
-        /// <include file='doc\Day.uex' path='docs/doc[@for="Day.Sunday"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The day Sunday.
-        ///    </para>
-        /// </devdoc>
+
+        /// <summary>
+        ///  The day Saturday.
+        /// </summary>
+        Saturday = 5,
+
+        /// <summary>
+        ///  The day Sunday.
+        /// </summary>
         Sunday = 6,
-        /// <include file='doc\Day.uex' path='docs/doc[@for="Day.Default"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       A default day of the week specified by the application.
-        ///    </para>
-        /// </devdoc>
+
+        /// <summary>
+        ///  A default day of the week specified by the application.
+        /// </summary>
         Default = 7,
     }
 }

@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -7,55 +7,59 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Design;
-using System.Security.Permissions;
 
 namespace System.Windows.Forms.Design
 {
     /// <summary>
-    ///     Provides an editor for setting the ToolStripStatusLabel BorderSides property..
+    ///  Provides an editor for setting the ToolStripStatusLabel BorderSides property..
     /// </summary>
-    [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.UnmanagedCode)]
     [CLSCompliant(false)]
     public class BorderSidesEditor : UITypeEditor
     {
-        private BorderSidesEditorUI borderSidesEditorUI;
+        private BorderSidesEditorUI _borderSidesEditorUI;
 
         /// <summary>
-        /// Edits the given object value using the editor style provided by BorderSidesEditor.GetEditStyle.
+        ///  Edits the given object value using the editor style provided by BorderSidesEditor.GetEditStyle.
         /// </summary>
-        [SuppressMessage("Microsoft.Security", "CA2123:OverrideLinkDemandsShouldBeIdenticalToBase")]
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
         {
-            if (provider != null)
+            if (provider == null)
             {
-                IWindowsFormsEditorService edSvc =
-                    (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
-                if (edSvc != null)
-                {
-                    if (borderSidesEditorUI == null) borderSidesEditorUI = new BorderSidesEditorUI(this);
-                    borderSidesEditorUI.Start(edSvc, value);
-                    edSvc.DropDownControl(borderSidesEditorUI);
-
-                    if (borderSidesEditorUI.Value != null) value = borderSidesEditorUI.Value;
-                    borderSidesEditorUI.End();
-                }
+                return value;
+            }
+            if (!(provider.GetService(typeof(IWindowsFormsEditorService)) is IWindowsFormsEditorService edSvc))
+            {
+                return value;
             }
 
+            if (_borderSidesEditorUI == null)
+            {
+                _borderSidesEditorUI = new BorderSidesEditorUI(this);
+            }
+
+            _borderSidesEditorUI.Start(edSvc, value);
+            edSvc.DropDownControl(_borderSidesEditorUI);
+
+            if (_borderSidesEditorUI.Value != null)
+            {
+                value = _borderSidesEditorUI.Value;
+            }
+
+            _borderSidesEditorUI.End();
             return value;
         }
 
         /// <summary>
-        /// Gets the editing style of the Edit method. If the method
-        /// is not supported, this will return UITypeEditorEditStyle.None.
+        ///  Gets the editing style of the Edit method.
+        ///  If the method is not supported, this will return UITypeEditorEditStyle.None.
         /// </summary>
-        [SuppressMessage("Microsoft.Security", "CA2123:OverrideLinkDemandsShouldBeIdenticalToBase")]
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
         {
             return UITypeEditorEditStyle.DropDown;
         }
 
         /// <summary>
-        /// Editor UI for the BorderSides editor.
+        ///  Editor UI for the BorderSides editor.
         /// </summary>
         private class BorderSidesEditorUI : UserControl
         {
@@ -85,17 +89,16 @@ namespace System.Windows.Forms.Design
             }
 
             /// <summary>
-            /// Allows someone else to close our dropdown.
+            ///  Allows someone else to close our dropdown.
             /// </summary>
             public IWindowsFormsEditorService EditorService
             {
-                [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
                 get;
                 private set;
             }
 
             /// <summary>
-            /// Returns the current value of BorderSides, if nothing is selected returns BorderSides.None.
+            ///  Returns the current value of BorderSides, if nothing is selected returns BorderSides.None.
             /// </summary>
             public object Value { get; private set; }
 
@@ -108,7 +111,7 @@ namespace System.Windows.Forms.Design
             }
 
             /// <summary>
-            /// The first checkBox (allCheckBox) gets the focus by default.
+            ///  The first checkBox (allCheckBox) gets the focus by default.
             /// </summary>
             protected override void OnGotFocus(EventArgs e)
             {
@@ -129,9 +132,9 @@ namespace System.Windows.Forms.Design
                 splitterLabel = new Label();
                 tableLayoutPanel1.SuspendLayout();
                 SuspendLayout();
-                // 
+                //
                 // tableLayoutPanel1
-                // 
+                //
                 resources.ApplyResources(tableLayoutPanel1, "tableLayoutPanel1");
                 tableLayoutPanel1.AutoSizeMode = AutoSizeMode.GrowAndShrink;
                 tableLayoutPanel1.BackColor = SystemColors.Window;
@@ -152,51 +155,51 @@ namespace System.Windows.Forms.Design
                 tableLayoutPanel1.RowStyles.Add(new RowStyle());
                 tableLayoutPanel1.RowStyles.Add(new RowStyle());
                 tableLayoutPanel1.Margin = new Padding(0);
-                // 
+                //
                 // noneCheckBox
-                // 
+                //
                 resources.ApplyResources(noneCheckBox, "noneCheckBox");
                 noneCheckBox.Name = "noneCheckBox";
                 noneCheckBox.Margin = new Padding(3, 3, 3, 1);
-                // 
+                //
                 // allCheckBox
-                // 
+                //
                 resources.ApplyResources(allCheckBox, "allCheckBox");
                 allCheckBox.Name = "allCheckBox";
                 allCheckBox.Margin = new Padding(3, 3, 3, 1);
-                // 
+                //
                 // topCheckBox
-                // 
+                //
                 resources.ApplyResources(topCheckBox, "topCheckBox");
                 topCheckBox.Margin = new Padding(20, 1, 3, 1);
                 topCheckBox.Name = "topCheckBox";
-                // 
+                //
                 // bottomCheckBox
-                // 
+                //
                 resources.ApplyResources(bottomCheckBox, "bottomCheckBox");
                 bottomCheckBox.Margin = new Padding(20, 1, 3, 1);
                 bottomCheckBox.Name = "bottomCheckBox";
-                // 
+                //
                 // rightCheckBox
-                // 
+                //
                 resources.ApplyResources(rightCheckBox, "rightCheckBox");
                 rightCheckBox.Margin = new Padding(20, 1, 3, 1);
                 rightCheckBox.Name = "rightCheckBox";
-                // 
+                //
                 // leftCheckBox
-                // 
+                //
                 resources.ApplyResources(leftCheckBox, "leftCheckBox");
                 leftCheckBox.Margin = new Padding(20, 1, 3, 1);
                 leftCheckBox.Name = "leftCheckBox";
-                // 
+                //
                 // splitterLabel
-                // 
+                //
                 resources.ApplyResources(splitterLabel, "splitterLabel");
                 splitterLabel.BackColor = SystemColors.ControlDark;
                 splitterLabel.Name = "splitterLabel";
-                // 
+                //
                 // Control
-                // 
+                //
                 resources.ApplyResources(this, "$this");
                 Controls.Add(tableLayoutPanel1);
                 Padding = new Padding(1, 1, 1, 1);
@@ -221,7 +224,7 @@ namespace System.Windows.Forms.Design
             }
 
             /// <summary>
-            /// CheckBox CheckedChanged event.. allows selecting/Deselecting proper values.
+            ///  CheckBox CheckedChanged event.. allows selecting/Deselecting proper values.
             /// </summary>
             private void rightCheckBox_CheckedChanged(object sender, EventArgs e)
             {
@@ -232,14 +235,17 @@ namespace System.Windows.Forms.Design
                 }
                 else // this is turned off....
                 {
-                    if (allCheckBox.Checked) allCheckBox.Checked = false;
+                    if (allCheckBox.Checked)
+                    {
+                        allCheckBox.Checked = false;
+                    }
                 }
 
                 UpdateCurrentValue();
             }
 
             /// <summary>
-            /// CheckBox CheckedChanged event.. allows selecting/Deselecting proper values.
+            ///  CheckBox CheckedChanged event.. allows selecting/Deselecting proper values.
             /// </summary>
             private void leftCheckBox_CheckedChanged(object sender, EventArgs e)
             {
@@ -250,14 +256,17 @@ namespace System.Windows.Forms.Design
                 }
                 else // this is turned off....
                 {
-                    if (allCheckBox.Checked) allCheckBox.Checked = false;
+                    if (allCheckBox.Checked)
+                    {
+                        allCheckBox.Checked = false;
+                    }
                 }
 
                 UpdateCurrentValue();
             }
 
             /// <summary>
-            /// CheckBox CheckedChanged event.. allows selecting/Deselecting proper values.
+            ///  CheckBox CheckedChanged event.. allows selecting/Deselecting proper values.
             /// </summary>
             private void bottomCheckBox_CheckedChanged(object sender, EventArgs e)
             {
@@ -268,14 +277,17 @@ namespace System.Windows.Forms.Design
                 }
                 else // this is turned off....
                 {
-                    if (allCheckBox.Checked) allCheckBox.Checked = false;
+                    if (allCheckBox.Checked)
+                    {
+                        allCheckBox.Checked = false;
+                    }
                 }
 
                 UpdateCurrentValue();
             }
 
             /// <summary>
-            /// CheckBox CheckedChanged event.. allows selecting/Deselecting proper values.
+            ///  CheckBox CheckedChanged event.. allows selecting/Deselecting proper values.
             /// </summary>
             private void topCheckBox_CheckedChanged(object sender, EventArgs e)
             {
@@ -286,14 +298,17 @@ namespace System.Windows.Forms.Design
                 }
                 else // this is turned off....
                 {
-                    if (allCheckBox.Checked) allCheckBox.Checked = false;
+                    if (allCheckBox.Checked)
+                    {
+                        allCheckBox.Checked = false;
+                    }
                 }
 
                 UpdateCurrentValue();
             }
 
             /// <summary>
-            /// CheckBox CheckedChanged event.. allows selecting/Deselecting proper values.
+            ///  CheckBox CheckedChanged event.. allows selecting/Deselecting proper values.
             /// </summary>
             private void noneCheckBox_CheckedChanged(object sender, EventArgs e)
             {
@@ -311,7 +326,7 @@ namespace System.Windows.Forms.Design
             }
 
             /// <summary>
-            /// CheckBox CheckedChanged event.. allows selecting/Deselecting proper values.
+            ///  CheckBox CheckedChanged event.. allows selecting/Deselecting proper values.
             /// </summary>
             private void allCheckBox_CheckedChanged(object sender, EventArgs e)
             {
@@ -329,23 +344,29 @@ namespace System.Windows.Forms.Design
             }
 
             /// <summary>
-            /// Click event.
+            ///  Click event.
             /// </summary>
             private void noneCheckBoxClicked(object sender, EventArgs e)
             {
-                if (noneChecked) noneCheckBox.Checked = true;
+                if (noneChecked)
+                {
+                    noneCheckBox.Checked = true;
+                }
             }
 
             /// <summary>
-            /// Click event.
+            ///  Click event.
             /// </summary>
             private void allCheckBoxClicked(object sender, EventArgs e)
             {
-                if (allChecked) allCheckBox.Checked = true;
+                if (allChecked)
+                {
+                    allCheckBox.Checked = true;
+                }
             }
 
             /// <summary>
-            /// Allows to reset the state and start afresh.
+            ///  Allows to reset the state and start afresh.
             /// </summary>
             private void ResetCheckBoxState()
             {
@@ -358,7 +379,7 @@ namespace System.Windows.Forms.Design
             }
 
             /// <summary>
-            ///     Allows to select proper values..
+            ///  Allows to select proper values..
             /// </summary>
             private void SetCheckBoxCheckState(ToolStripStatusLabelBorderSides sides)
             {
@@ -388,28 +409,31 @@ namespace System.Windows.Forms.Design
             }
 
             /// <summary>
-            ///     Triggered whenever the user drops down the editor.
+            ///  Triggered whenever the user drops down the editor.
             /// </summary>
             public void Start(IWindowsFormsEditorService edSvc, object value)
             {
                 Debug.Assert(edSvc != null);
-                Debug.Assert(value is ToolStripStatusLabelBorderSides);
 
                 EditorService = edSvc;
                 originalValue = Value = value;
 
-                ToolStripStatusLabelBorderSides currentSides = (ToolStripStatusLabelBorderSides)value;
-
-                SetCheckBoxCheckState(currentSides);
-                updateCurrentValue = true;
+                if (value is ToolStripStatusLabelBorderSides currentSides)
+                {
+                    SetCheckBoxCheckState(currentSides);
+                    updateCurrentValue = true;
+                }
             }
 
             /// <summary>
-            ///     Update the current value based on the state of the UI controls.
+            ///  Update the current value based on the state of the UI controls.
             /// </summary>
             private void UpdateCurrentValue()
             {
-                if (!updateCurrentValue) return;
+                if (!updateCurrentValue)
+                {
+                    return;
+                }
 
                 ToolStripStatusLabelBorderSides valueSide = ToolStripStatusLabelBorderSides.None;
                 if (allCheckBox.Checked)
@@ -421,11 +445,30 @@ namespace System.Windows.Forms.Design
                     return;
                 }
 
-                if (noneCheckBox.Checked) valueSide |= ToolStripStatusLabelBorderSides.None;
-                if (topCheckBox.Checked) valueSide |= ToolStripStatusLabelBorderSides.Top;
-                if (bottomCheckBox.Checked) valueSide |= ToolStripStatusLabelBorderSides.Bottom;
-                if (leftCheckBox.Checked) valueSide |= ToolStripStatusLabelBorderSides.Left;
-                if (rightCheckBox.Checked) valueSide |= ToolStripStatusLabelBorderSides.Right;
+                if (noneCheckBox.Checked)
+                {
+                    valueSide |= ToolStripStatusLabelBorderSides.None;
+                }
+
+                if (topCheckBox.Checked)
+                {
+                    valueSide |= ToolStripStatusLabelBorderSides.Top;
+                }
+
+                if (bottomCheckBox.Checked)
+                {
+                    valueSide |= ToolStripStatusLabelBorderSides.Bottom;
+                }
+
+                if (leftCheckBox.Checked)
+                {
+                    valueSide |= ToolStripStatusLabelBorderSides.Left;
+                }
+
+                if (rightCheckBox.Checked)
+                {
+                    valueSide |= ToolStripStatusLabelBorderSides.Right;
+                }
 
                 if (valueSide == ToolStripStatusLabelBorderSides.None)
                 {

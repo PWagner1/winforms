@@ -1,31 +1,25 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 namespace System.Windows.Forms
 {
-    /// <include file='doc\DataGridViewColumnDividerDoubleClickEventArgs.uex' path='docs/doc[@for="DataGridViewColumnDividerDoubleClickEventArgs"]/*' />
     public class DataGridViewColumnDividerDoubleClickEventArgs : HandledMouseEventArgs
     {
-        private int columnIndex;
-
-        /// <include file='doc\DataGridViewColumnDividerDoubleClickEventArgs.uex' path='docs/doc[@for="DataGridViewColumnDividerDoubleClickEventArgs.DataGridViewColumnDividerDoubleClickEventArgs"]/*' />
-        public DataGridViewColumnDividerDoubleClickEventArgs(int columnIndex, HandledMouseEventArgs e) : base(e.Button, e.Clicks, e.X, e.Y, e.Delta, e.Handled)
+        public DataGridViewColumnDividerDoubleClickEventArgs(int columnIndex, HandledMouseEventArgs e) : base(e?.Button ?? MouseButtons.None, e?.Clicks ?? 0, e?.X ?? 0, e?.Y ?? 0, e?.Delta ?? 0, e?.Handled ?? false)
         {
             if (columnIndex < -1)
             {
                 throw new ArgumentOutOfRangeException(nameof(columnIndex));
             }
-            this.columnIndex = columnIndex;
+            if (e == null)
+            {
+                throw new ArgumentNullException(nameof(e));
+            }
+
+            ColumnIndex = columnIndex;
         }
 
-        /// <include file='doc\DataGridViewColumnDividerDoubleClickEventArgs.uex' path='docs/doc[@for="DataGridViewColumnDividerDoubleClickEventArgs.ColumnIndex"]/*' />
-        public int ColumnIndex
-        {
-            get
-            {
-                return this.columnIndex;
-            }
-        }
+        public int ColumnIndex { get; }
     }
 }

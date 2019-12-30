@@ -1,32 +1,30 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-
-namespace System.Windows.Forms {
-    /// <include file='doc\ColumnHeaderAutoResizeStyle.uex' path='docs/doc[@for="ColumnHeaderAutoResizeStyle"]/*' />
-    /// <devdoc>
-    ///    <para>
-    ///       Specifies how the column headers are autoresized in 
-    ///       a <see cref='System.Windows.Forms.ListView'/> control.
-    ///    </para>
-    /// </devdoc>
-    public enum ColumnHeaderAutoResizeStyle {
-        /// <include file='doc\ColumnHeaderAutoResizeStyle.uex' path='docs/doc[@for="ColumnHeaderAutoResizeStyle.None"]/*' />
-        /// <devdoc>
-        ///     Do not auto resize the column headers.
-        /// </devdoc>
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ///  Specifies how the column headers are autoresized in a <see cref='ListView'/>
+    ///  control.
+    /// </summary>
+    public enum ColumnHeaderAutoResizeStyle
+    {
+        /// <summary>
+        ///  Do not auto resize the column headers.
+        /// </summary>
         None,
-        /// <include file='doc\ColumnHeaderAutoResizeStyle.uex' path='docs/doc[@for="ColumnHeaderAutoResizeStyle.HeaderSize"]/*' />
-        /// <devdoc>
-        ///     Autoresize the column headers based on the width of just the column header.
-        /// </devdoc>
+
+        /// <summary>
+        ///  Autoresize the column headers based on the width of just the column
+        ///  header.
+        /// </summary>
         HeaderSize,
-        /// <include file='doc\ColumnHeaderAutoResizeStyle.uex' path='docs/doc[@for="ColumnHeaderAutoResizeStyle.ColumnContent"]/*' />
-        /// <devdoc>
-        ///     Autoresize the column headers based on the width of the largest subitem in the column.
-        /// </devdoc>
+
+        /// <summary>
+        ///  Autoresize the column headers based on the width of the largest
+        ///  subitem in the column.
+        /// </summary>
         ColumnContent,
     }
 }

@@ -1,287 +1,159 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#if WINFORMS_NAMESPACE
+using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Text;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using static Interop;
+
 namespace System.Windows.Forms.Internal
-#elif DRAWING_NAMESPACE
-namespace System.Drawing.Internal
-#else
-namespace System.Experimental.Gdi
-#endif
 {
-    using System;
-    using System.Internal;
-    using System.Runtime.InteropServices;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.Drawing;
-    using System.Drawing.Text;
-    using System.Security;
-    using System.Security.Permissions;
-    using System.Globalization;
-    using System.Runtime.Versioning;
-
-    /// <devdoc>
-    ///     <para>
-    ///         Encapsulates a GDI Font object.
-    ///     </para>
-    /// </devdoc>
-#if WINFORMS_PUBLIC_GRAPHICS_LIBRARY
-    public
-#else
-    internal
-#endif
-    sealed partial class WindowsFont : MarshalByRefObject, ICloneable, IDisposable
+    /// <summary>
+    ///  Encapsulates a GDI Font object.
+    /// </summary>
+    internal sealed partial class WindowsFont : MarshalByRefObject, ICloneable, IDisposable
     {
-        const int LogFontNameOffset = 28;
-        
-        // Handle to the native Windows font object.
-        // 
-        private IntPtr hFont;
-        private float  fontSize = -1.0f; //invalid value.
-        private int    lineSpacing;
-        private bool   ownHandle;
-        private bool   ownedByCacheManager;
-        private bool   everOwnedByCacheManager;
+        private float _fontSize = -1.0f;        // invalid value.
+        private int _lineSpacing;
+        private bool _ownHandle;
+        private bool _ownedByCacheManager;
+        private bool _everOwnedByCacheManager;
 
-        private IntNativeMethods.LOGFONT logFont; 
-        private FontStyle style;
+        private readonly User32.LOGFONTW _logFont;
 
         // Note: These defaults are according to the ones in GDI+ but those are not necessarily the same as the system
         // default font.  The GetSystemDefaultHFont() method should be used if needed.
-        private const string defaultFaceName   = "Microsoft Sans Serif";
-        private const float  defaultFontSize   = 8.25f;
-        private const int    defaultFontHeight = 13;
+        private const string DefaultFaceName = "Microsoft Sans Serif";
+        private const byte True = 1;
+        private const byte False = 0;
 
-#if GDI_FINALIZATION_WATCH
-       private string AllocationSite = DbgUtil.StackTrace;
-#endif
-
-        /// <devdoc>
-        ///     Creates the font handle.
-        /// </devdoc>
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        private void CreateFont()
+        /// <summary>
+        ///  Creates the font handle.
+        /// </summary>
+        private unsafe WindowsFont(User32.LOGFONTW logFont, FontStyle style, bool createHandle)
         {
-            Debug.Assert( hFont == IntPtr.Zero, "hFont is not null, this will generate a handle leak." );
-            Debug.Assert( this.logFont != null, "WindowsFont.logFont not initialized." );
+            Debug.Assert(Hfont == IntPtr.Zero, "hFont is not null, this will generate a handle leak.");
 
-            this.hFont = IntUnsafeNativeMethods.CreateFontIndirect(this.logFont);
-
-#if TRACK_HFONT
-            Debug.WriteLine( DbgUtil.StackTraceToStr(String.Format( "HFONT[0x{0:x8}] = CreateFontIndirect( LOGFONT={1} )", (int) this.hFont, this.logFont)));
-#endif
-            if (this.hFont == IntPtr.Zero)
+            _logFont = logFont;
+            if (_logFont.FaceName.Length == 0)
             {
-                this.logFont.lfFaceName     = defaultFaceName;
-                this.logFont.lfOutPrecision = IntNativeMethods.OUT_TT_ONLY_PRECIS; // True Type only.
-
-                this.hFont = IntUnsafeNativeMethods.CreateFontIndirect(this.logFont);
-
-#if TRACK_HFONT
-            Debug.WriteLine( DbgUtil.StackTraceToStr(String.Format( "HFONT[0x{0:x8}] = CreateFontIndirect( LOGFONT={1} )", (int) this.hFont, this.logFont)));
-#endif
-
+                _logFont.FaceName = DefaultFaceName;
             }
+            Style = style;
 
-            // Update logFont height and other adjusted parameters.
-            //
-            IntUnsafeNativeMethods.GetObject(new HandleRef(this, this.hFont), this.logFont);
-
-            // We created the hFont, we will delete it on dispose.
-            this.ownHandle = true;
-        }
-
-        /// Constructors.
-
-        /// <devdoc>
-        ///     Contructor to construct font from a face name.
-        /// </devdoc>>
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        public WindowsFont( string faceName ) :
-            this(faceName, defaultFontSize, FontStyle.Regular, IntNativeMethods.DEFAULT_CHARSET, WindowsFontQuality.Default)
-        {
-         // Default size in WinForms is 8.25f.  
-        }
-
-        /// <devdoc>
-        ///     Contructor to construct font from a face name, a desired size and with the specified style.
-        /// </devdoc>>
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        public WindowsFont( string faceName, float size ) :
-            this(faceName, size, FontStyle.Regular, IntNativeMethods.DEFAULT_CHARSET, WindowsFontQuality.Default)
-        {
-        }
-
-        /// <devdoc>
-        ///     Contructor to construct font from a face name, a desired size and with the specified style.
-        /// </devdoc>>
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        public WindowsFont( string faceName, float size, FontStyle style ) :
-            this(faceName, size, style, IntNativeMethods.DEFAULT_CHARSET, WindowsFontQuality.Default)
-        {
-        }
-        
-        /// <devdoc>
-        ///     Contructor to construct font from a face name, a desired size in points and with the specified style
-        ///     and character set. The screen dc is used for calculating the font em height.
-        /// </devdoc>>
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        public WindowsFont( string faceName, float size, FontStyle style, byte charSet, WindowsFontQuality fontQuality )
-        {   
-            Debug.Assert( size > 0.0f, "size has a negative value." );
-            const byte True  = 1;
-            const byte False = 0;
-            this.logFont = new IntNativeMethods.LOGFONT();
-
-            //
-            // Get the font height from the specified size.  size is in point units and height in logical 
-            // units (pixels when using MM_TEXT) so we need to make the conversion using the number of 
-            // pixels per logical inch along the screen height.
-            //
-            int pixelsY = (int) Math.Ceiling( WindowsGraphicsCacheManager.MeasurementGraphics.DeviceContext.DpiY * size / 72); // 1 point = 1/72 inch.;
-
-            //
-            // The lfHeight represents the font cell height (line spacing) which includes the internal 
-            // leading; we specify a negative size value (in pixels) for the height so the font mapper 
-            // provides the closest match for the character height rather than the cell height (MSDN).
-            //
-            this.logFont.lfHeight       = -pixelsY;
-            this.logFont.lfFaceName     = faceName != null ? faceName : defaultFaceName;
-            this.logFont.lfCharSet      = charSet;
-            this.logFont.lfOutPrecision = IntNativeMethods.OUT_TT_PRECIS;
-            this.logFont.lfQuality      = (byte) fontQuality;
-            this.logFont.lfWeight       = (style & FontStyle.Bold)      == FontStyle.Bold      ? IntNativeMethods.FW_BOLD : IntNativeMethods.FW_NORMAL;
-            this.logFont.lfItalic       = (style & FontStyle.Italic)    == FontStyle.Italic    ? True : False;
-            this.logFont.lfUnderline    = (style & FontStyle.Underline) == FontStyle.Underline ? True : False;
-            this.logFont.lfStrikeOut    = (style & FontStyle.Strikeout) == FontStyle.Strikeout ? True : False;
-
-            // Let the Size be recomputed to be consistent with the Height (there may be some precision loss coming from size to height).
-            // this.fontSize = size;
-            this.style    = style;
-
-            CreateFont();
-        }
-
-        /// <devdoc>
-        ///     Contructor to construct font from a LOGFONT structure.
-        ///     Pass false in the createHandle param to create a 'compatible' font (handle-less, to be used for measuring/comparing) or
-        ///     when the handle has already been created.
-        /// </devdoc>
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        private WindowsFont( IntNativeMethods.LOGFONT lf, bool createHandle )
-        {
-            Debug.Assert( lf != null, "lf is null" );
-
-            this.logFont = lf;
-
-            if (this.logFont.lfFaceName == null)
+            if (createHandle)
             {
-                this.logFont.lfFaceName = defaultFaceName;
-            }
+                Hfont = Gdi32.CreateFontIndirectW(ref _logFont);
 
-            this.style = FontStyle.Regular;
-            if (lf.lfWeight == IntNativeMethods.FW_BOLD)
-            {
-                this.style |= FontStyle.Bold;
-            }
-            if (lf.lfItalic == 1)
-            {
-                this.style |= FontStyle.Italic;
-            }
-            if (lf.lfUnderline == 1)
-            {
-                this.style |= FontStyle.Underline;
-            }
-            if (lf.lfStrikeOut == 1)
-            {
-                this.style |= FontStyle.Strikeout;
-            }
+                if (Hfont == IntPtr.Zero)
+                {
+                    _logFont.FaceName = DefaultFaceName;
+                    _logFont.lfOutPrecision = Gdi32.OUT_PRECIS.TT_ONLY; // TrueType only.
 
-            if( createHandle )
-            {
-                CreateFont();
+                    Hfont = Gdi32.CreateFontIndirectW(ref _logFont);
+                }
+
+                // Update logFont height and other adjusted parameters.
+                Gdi32.GetObjectW(new HandleRef(this, Hfont), out _logFont);
+
+                // We created the hFont, we will delete it on dispose.
+                _ownHandle = true;
             }
         }
 
-        /// <devdoc>
-        ///     Contructs a WindowsFont object from an existing System.Drawing.Font object (GDI+), based on the screen dc MapMode
-        ///     and resolution (normally: MM_TEXT and 96 dpi).
-        /// </devdoc>
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        public static WindowsFont FromFont(Font font)
-        {
-            return FromFont(font, WindowsFontQuality.Default);
-        }
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        public static WindowsFont FromFont(Font font, WindowsFontQuality fontQuality) 
+        /// <summary>
+        ///  Contructs a WindowsFont object from an existing System.Drawing.Font object (GDI+), based on the screen dc MapMode
+        ///  and resolution (normally: MM_TEXT and 96 dpi).
+        /// </summary>
+        public static WindowsFont FromFont(Font font, Gdi32.QUALITY fontQuality = Gdi32.QUALITY.DEFAULT)
         {
             string familyName = font.FontFamily.Name;
 
             // Strip vertical-font mark from the name if needed.
-            if (familyName != null && familyName.Length > 1 && familyName[0] == '@') 
+            if (familyName != null && familyName.Length > 1 && familyName[0] == '@')
             {
                 familyName = familyName.Substring(1);
             }
 
             // Note: Creating the WindowsFont from Font using a LOGFONT structure from GDI+ (Font.ToLogFont(logFont)) may sound like
             // a better choice (more accurate) for doing this but tests show that is not the case (see WindowsFontTests test suite),
-            // the results are the same.  Also, that approach has some issues when the Font is created in a different application 
+            // the results are the same.  Also, that approach has some issues when the Font is created in a different application
             // domain since the LOGFONT cannot be marshalled properly.
+
             // Now, creating it using the Font.SizeInPoints makes it GraphicsUnit-independent.
 
-            return new WindowsFont(familyName, font.SizeInPoints, font.Style, font.GdiCharSet, fontQuality);
+            Debug.Assert(font.SizeInPoints > 0.0f, "size has a negative value.");
+
+            // Get the font height from the specified size.  size is in point units and height in logical
+            // units (pixels when using MM_TEXT) so we need to make the conversion using the number of
+            // pixels per logical inch along the screen height. (1 point = 1/72 inch.)
+            int pixelsY = (int)Math.Ceiling(WindowsGraphicsCacheManager.MeasurementGraphics.DeviceContext.DpiY * font.SizeInPoints / 72);
+
+            // The lfHeight represents the font cell height (line spacing) which includes the internal
+            // leading; we specify a negative size value (in pixels) for the height so the font mapper
+            // provides the closest match for the character height rather than the cell height (MSDN).
+
+            User32.LOGFONTW logFont = new User32.LOGFONTW()
+            {
+                lfHeight = -pixelsY,
+                lfCharSet = font.GdiCharSet,
+                lfOutPrecision = Gdi32.OUT_PRECIS.TT,
+                lfQuality = fontQuality,
+                lfWeight = (font.Style & FontStyle.Bold) == FontStyle.Bold ? Gdi32.FW.BOLD : Gdi32.FW.NORMAL,
+                lfItalic = (font.Style & FontStyle.Italic) == FontStyle.Italic ? True : False,
+                lfUnderline = (font.Style & FontStyle.Underline) == FontStyle.Underline ? True : False,
+                lfStrikeOut = (font.Style & FontStyle.Strikeout) == FontStyle.Strikeout ? True : False,
+                FaceName = familyName
+            };
+
+            return new WindowsFont(logFont, font.Style, createHandle: true);
         }
 
-        
-        /// <devdoc>
-        ///     Creates a WindowsFont from the font selected in the supplied dc.
-        /// </devdoc>
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        public static WindowsFont FromHdc( IntPtr hdc )
+        /// <summary>
+        ///  Creates a WindowsFont from the font selected in the supplied dc.
+        /// </summary>
+        public static WindowsFont FromHdc(IntPtr hdc)
         {
-            IntPtr hFont = IntUnsafeNativeMethods.GetCurrentObject(new HandleRef(null, hdc), IntNativeMethods.OBJ_FONT);
+            IntPtr hFont = Gdi32.GetCurrentObject(hdc, Gdi32.ObjectType.OBJ_FONT);
 
             // don't call DeleteObject on handle from GetCurrentObject, it is the one selected in the hdc.
-
-            return FromHfont( hFont );
+            return FromHfont(hFont);
         }
 
-        /// <devdoc>
-        ///     Creates a WindowsFont from the handle to a native GDI font.  It does not take ownership of the 
-        ///     passed-in handle, the caller needs to delete the hFont when done with the WindowsFont.
-        /// </devdoc>
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        public static WindowsFont FromHfont( IntPtr hFont )
+        /// <summary>
+        ///  Creates a WindowsFont from the handle to a native GDI font and optionally takes ownership of managing
+        ///  the lifetime of the handle.
+        /// </summary>
+        public unsafe static WindowsFont FromHfont(IntPtr hFont, bool takeOwnership = false)
         {
-            return FromHfont( hFont, false );
-        }
+            Gdi32.GetObjectW(hFont, out User32.LOGFONTW logFont);
 
-        /// <devdoc>
-        ///     Creates a WindowsFont from the handle to a native GDI font and optionally takes ownership of managing
-        ///     the lifetime of the handle. 
-        /// </devdoc>
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
-        public static WindowsFont FromHfont( IntPtr hFont, bool takeOwnership )
-        {
-            IntNativeMethods.LOGFONT lf = new IntNativeMethods.LOGFONT();
-            IntUnsafeNativeMethods.GetObject(new HandleRef(null, hFont), lf);
-            
-            WindowsFont wf = new WindowsFont( lf, /*createHandle*/ false );
-            wf.hFont = hFont;
-            wf.ownHandle = takeOwnership; // if true, hFont will be deleted on dispose.
+            FontStyle style = FontStyle.Regular;
+            if (logFont.lfWeight == Gdi32.FW.BOLD)
+            {
+                style |= FontStyle.Bold;
+            }
+            if (logFont.lfItalic == True)
+            {
+                style |= FontStyle.Italic;
+            }
+            if (logFont.lfUnderline == True)
+            {
+                style |= FontStyle.Underline;
+            }
+            if (logFont.lfStrikeOut == True)
+            {
+                style |= FontStyle.Strikeout;
+            }
+
+            WindowsFont wf = new WindowsFont(logFont, style, createHandle: false)
+            {
+                Hfont = hFont,
+                _ownHandle = takeOwnership // if true, hFont will be deleted on dispose.
+            };
 
             return wf;
         }
@@ -299,49 +171,45 @@ namespace System.Experimental.Gdi
         internal void Dispose(bool disposing)
         {
             bool deletedHandle = false;
-            if (this.ownHandle)
+            if (_ownHandle)
             {
-                if (!ownedByCacheManager || !disposing) {
-
+                if (!_ownedByCacheManager || !disposing)
+                {
                     // If we were ever owned by the CacheManger and we're being disposed
-                    // we can be sure that we're not in use by any DC's (otherwise Dispose() wouldn't have been called)                    
+                    // we can be sure that we're not in use by any DC's (otherwise Dispose() wouldn't have been called)
                     // skip the check IsFontInUse check in this case.
                     // Also skip the check if disposing == false, because the cache is thread-static
                     // and that means we're being called from the finalizer.
-                    if (everOwnedByCacheManager || !disposing || !DeviceContexts.IsFontInUse(this)) {
-                        Debug.Assert( this.hFont != IntPtr.Zero, "Unexpected null hFont." );
+                    if (_everOwnedByCacheManager || !disposing || !DeviceContexts.IsFontInUse(this))
+                    {
+                        Debug.Assert(Hfont != IntPtr.Zero, "Unexpected null hFont.");
                         DbgUtil.AssertFinalization(this, disposing);
-                        
-                        IntUnsafeNativeMethods.DeleteObject(new HandleRef(this, this.hFont));
-#if TRACK_HFONT
-                        Debug.WriteLine( DbgUtil.StackTraceToStr(String.Format( "DeleteObject(HFONT[0x{0:x8}]))", (int) this.hFont)));
-#endif
-                        this.hFont = IntPtr.Zero;
-                        this.ownHandle = false;
+
+                        Gdi32.DeleteObject(Hfont);
+                        Hfont = IntPtr.Zero;
+                        _ownHandle = false;
                         deletedHandle = true;
                     }
                 }
             }
 
-            if (disposing && (deletedHandle || !ownHandle))
+            if (disposing && (deletedHandle || !_ownHandle))
             {
                 GC.SuppressFinalize(this);
             }
         }
 
-        /// <devdoc>
-        ///    Returns a value indicating whether the specified object is a WindowsFont equivalent to this object.
-        /// </devdoc>
-        public override bool Equals( object font )
+        /// <summary>
+        ///  Returns a value indicating whether the specified object is a WindowsFont equivalent to this object.
+        /// </summary>
+        public override bool Equals(object font)
         {
-            WindowsFont winFont = font as WindowsFont;
-
-            if( winFont == null )
+            if (!(font is WindowsFont winFont))
             {
                 return false;
             }
 
-            if( winFont == this )
+            if (winFont == this)
             {
                 return true;
             }
@@ -350,251 +218,195 @@ namespace System.Experimental.Gdi
             //          remoting scenario and proxies cannot access internal or private members.
 
             // Compare params used to create the font.
-            return  this.Name           == winFont.Name            &&
-                    this.LogFontHeight  == winFont.LogFontHeight   && // Equivalent to comparing Size but always at hand.
-                    this.Style          == winFont.Style           &&
-                    this.CharSet        == winFont.CharSet         &&
-                    this.Quality        == winFont.Quality;
+            return Name == winFont.Name &&
+                    LogFontHeight == winFont.LogFontHeight && // Equivalent to comparing Size but always at hand.
+                    Style == winFont.Style &&
+                    CharSet == winFont.CharSet &&
+                    Quality == winFont.Quality;
         }
 
-        /// <devdoc>
-        ///    Gets the hash code for this WindowsFont.
-        /// </devdoc>
-        public override int GetHashCode() 
-        {
-            // similar to Font.GetHashCode().
-            return (int)((((UInt32)this.Style   << 13) | ((UInt32)this.Style   >> 19)) ^
-                         (((UInt32)this.CharSet << 26) | ((UInt32)this.CharSet >>  6)) ^
-                         (((UInt32)this.Size    <<  7) | ((UInt32)this.Size    >> 25)));
-        }
+        /// <summary>
+        ///  Gets the hash code for this WindowsFont.
+        /// </summary>
+        public override int GetHashCode() => HashCode.Combine(Style, CharSet, Size);
 
-        /// <devdoc>
-        ///     Clones this object.
-        /// </devdoc>
-        [ResourceExposure(ResourceScope.Process)]
-        [ResourceConsumption(ResourceScope.Process)]
+        /// <summary>
+        ///  Clones this object.
+        /// </summary>
         public object Clone()
         {
-            return new WindowsFont( this.logFont, true );
+            return new WindowsFont(_logFont, Style, createHandle: true);
         }
 
         public override string ToString()
         {
-            return string.Format(CultureInfo.CurrentCulture, "[{0}: Name={1}, Size={2} points, Height={3} pixels, Sytle={4}]", GetType().Name,  logFont.lfFaceName, this.Size, this.Height, this.Style); 
+            return string.Format(CultureInfo.CurrentCulture, "[{0}: Name={1}, Size={2} points, Height={3} pixels, Sytle={4}]", GetType().Name, _logFont.FaceName.ToString(), Size, Height, Style);
         }
 
         ////////////////////////////////////////////
         ///  Properties
-        
-        /// <devdoc>
-        ///       Returns this object's native Win32 font handle.  Should NOT be deleted externally.
-        ///       Compare with ToHfont method.
-        /// </devdoc>
-        public IntPtr Hfont
-        { 
-            get
-            {
-                //Assert removed. We need to be able to check for Hfont == IntPtr.Zero to determine if the object was disposed.
-                //Debug.Assert(this.hFont != IntPtr.Zero, "hFont is null, are you using a disposed object?");
-                return this.hFont;
-            }
-        }
 
-        /// <devdoc>
-        ///     Determines whether the font has the italic style or not.
-        /// </devdoc>
+        /// <summary>
+        ///  Returns this object's native Win32 font handle.  Should NOT be deleted externally.
+        ///  Compare with ToHfont method.
+        /// </summary>
+        public IntPtr Hfont { get; private set; }
+
+        /// <summary>
+        ///  Determines whether the font has the italic style or not.
+        /// </summary>
         public bool Italic
         {
             get
             {
-                return logFont.lfItalic == 1;
+                return _logFont.lfItalic == 1;
             }
         }
 
         public bool OwnedByCacheManager
         {
-            get {
-                return ownedByCacheManager;
+            get
+            {
+                return _ownedByCacheManager;
             }
-            set {
-                if (value) {
-                    everOwnedByCacheManager = true;
+            set
+            {
+                if (value)
+                {
+                    _everOwnedByCacheManager = true;
                 }
-                ownedByCacheManager = value;
+                _ownedByCacheManager = value;
             }
         }
 
-        /// <devdoc>
-        ///     Rendering quality.
-        /// </devdoc>
-        public WindowsFontQuality Quality
+        /// <summary>
+        ///  Rendering quality.
+        /// </summary>
+        public Gdi32.QUALITY Quality
         {
             get
             {
-                return (WindowsFontQuality) this.logFont.lfQuality;
+                return _logFont.lfQuality;
             }
         }
 
-        /// <devdoc>
-        ///     Gets the font style.
-        /// </devdoc>
-        public FontStyle Style
-        {
-            get
-            {
-                return this.style;
-            }
-        }
+        /// <summary>
+        ///  Gets the font style.
+        /// </summary>
+        public FontStyle Style { get; }
 
-        /// <devdoc>
-        ///     Gets the line spacing (cell height) of this font in (screen) pixels using the screen resolution.
-        ///     Gets the line spacing (cell height), in pixels (using the screen DC resolution), of this font. 
-        ///     The line spacing is the vertical distance between the base lines of two consecutive lines of text. 
-        ///     Thus, the line spacing includes the blank space between lines along with the height of the character 
-        ///     itself.
-        /// </devdoc>
+        /// <summary>
+        ///  Gets the line spacing (cell height) of this font in (screen) pixels using the screen resolution.
+        ///  Gets the line spacing (cell height), in pixels (using the screen DC resolution), of this font.
+        ///  The line spacing is the vertical distance between the base lines of two consecutive lines of text.
+        ///  Thus, the line spacing includes the blank space between lines along with the height of the character
+        ///  itself.
+        /// </summary>
         public int Height
         {
-            // 
-
             get
             {
-                if( this.lineSpacing == 0 )
+                if (_lineSpacing == 0)
                 {
                     // Observe that the font text metrics are obtained using the resolution of the screen.
-                    WindowsGraphics wg  = WindowsGraphicsCacheManager.MeasurementGraphics;
+                    WindowsGraphics wg = WindowsGraphicsCacheManager.MeasurementGraphics;
 
                     // No need to reset the font (if changed) since we always set the font before using the MeasurementGraphics
                     // in WindowsGraphics methods.
                     wg.DeviceContext.SelectFont(this);
 
-                    IntNativeMethods.TEXTMETRIC tm = (IntNativeMethods.TEXTMETRIC) wg.GetTextMetrics();
-                    this.lineSpacing = tm.tmHeight;
+                    Gdi32.TEXTMETRICW tm = wg.GetTextMetrics();
+                    _lineSpacing = tm.tmHeight;
                 }
 
-                return this.lineSpacing;
+                return _lineSpacing;
             }
         }
 
-        /// <devdoc>
-        ///     Gets the font character set.  
-        ///     This is used by the system font mapper when searching for the physical font that best matches the logical font.
-        /// </devdoc>
+        /// <summary>
+        ///  Gets the font character set.
+        ///  This is used by the system font mapper when searching for the physical font that best matches the logical font.
+        /// </summary>
         public byte CharSet
         {
             get
             {
-                return logFont.lfCharSet;
+                return _logFont.lfCharSet;
             }
         }
 
-        /// <devdoc>
-        ///     Specifies the height, in logical units, of the font's character cell or character. The character height value (em height)
-        ///     is the character cell height value minus the internal-leading value. 
-        /// </devdoc>
+        /// <summary>
+        ///  Specifies the height, in logical units, of the font's character cell or character. The character height value (em height)
+        ///  is the character cell height value minus the internal-leading value.
+        /// </summary>
         public int LogFontHeight
         {
             get
             {
-                return logFont.lfHeight;
+                return _logFont.lfHeight;
             }
         }
 
-        /// <devdoc>
-        ///     The font's face name.
-        /// </devdoc>
-        public string Name
-        {
-            get
-            {
-                return logFont.lfFaceName;
-            }
-        }
+        /// <summary>
+        ///  The font's face name.
+        /// </summary>
+        public string Name => _logFont.FaceName.ToString();
 
-        /// <devdoc>
-        ///     Gets the character height (as opposed to the cell height) of the font represented by this object in points.
-        ///     Consider
-        /// </devdoc>
-        public float Size 
+        /// <summary>
+        ///  Gets the character height (as opposed to the cell height) of the font represented by this object in points.
+        ///  Consider
+        /// </summary>
+        public float Size
         {
             get
             {
-                if( this.fontSize < 0.0f )
+                if (_fontSize < 0.0f)
                 {
-                    WindowsGraphics wg  = WindowsGraphicsCacheManager.MeasurementGraphics;
+                    WindowsGraphics wg = WindowsGraphicsCacheManager.MeasurementGraphics;
 
                     // No need to reset the font (if changed) since we always set the font before using the MeasurementGraphics
                     // in WindowsGraphics methods.
                     wg.DeviceContext.SelectFont(this);
 
-                    IntNativeMethods.TEXTMETRIC tm = (IntNativeMethods.TEXTMETRIC) wg.GetTextMetrics();
+                    Gdi32.TEXTMETRICW tm = wg.GetTextMetrics();
 
-                    //
-                    // Convert the font character height to points.  If lfHeight is negative, Windows 
-                    // treats the absolute value of that number as a desired font height compatible with 
-                    // the point size; in this case lfHeight will roughly match the tmHeight field of 
-                    // the TEXTMETRIC structure less the tmInternalLeading field. 
-                    //
-                    int height = this.logFont.lfHeight > 0 ? tm.tmHeight : (tm.tmHeight - tm.tmInternalLeading);
+                    // Convert the font character height to points.  If lfHeight is negative, Windows
+                    // treats the absolute value of that number as a desired font height compatible with
+                    // the point size; in this case lfHeight will roughly match the tmHeight field of
+                    // the TEXTMETRIC structure less the tmInternalLeading field.
+                    int height = _logFont.lfHeight > 0 ? tm.tmHeight : (tm.tmHeight - tm.tmInternalLeading);
 
-                    // 
-                    /*
-                    switch (this.unit)
-                    {
-                        case GraphicsUnit.Pixel:       worldEmSize = height * dpi / 72.0f;   break;
-                        case GraphicsUnit.Point:       worldEmSize = height * dpi / 72.0f;   break;
-                        case GraphicsUnit.Inch:        worldEmSize = height * dpi;           break;
-                        case GraphicsUnit.Document:    worldEmSize = height * dpi / 300.0f;  break;
-                        case GraphicsUnit.Millimeter:  worldEmSize = height * dpi / 25.4f;   break;
-                    }
-                    */
-                
-                    this.fontSize = height * 72f / wg.DeviceContext.DpiY;
+                    _fontSize = height * 72f / wg.DeviceContext.DpiY;
                 }
-                
-                return this.fontSize;
+
+                return _fontSize;
             }
         }
 
-        /// <devdoc>
-        ///     Attempts to match the TextRenderingHint of the specified Graphics object with a LOGFONT.lfQuality value.
-        /// </devdoc>
-        public static WindowsFontQuality WindowsFontQualityFromTextRenderingHint(Graphics g)
+        /// <summary>
+        ///  Attempts to match the TextRenderingHint of the specified Graphics object with a LOGFONT.lfQuality value.
+        /// </summary>
+        public static Gdi32.QUALITY WindowsFontQualityFromTextRenderingHint(Graphics g)
         {
             if (g == null)
             {
-                return WindowsFontQuality.Default;
+                return Gdi32.QUALITY.DEFAULT;
             }
 
             switch (g.TextRenderingHint)
             {
                 case TextRenderingHint.ClearTypeGridFit:
-                    // See WindowsFontQuality enum for the flags supported in the different OS systems.
-                    if (Environment.OSVersion.Version.Major == 5 && Environment.OSVersion.Version.Minor >= 1)
-                    {
-                        return WindowsFontQuality.ClearTypeNatural;
-                    }
-                    else
-                    {
-                        return WindowsFontQuality.ClearType;
-                    }
-
+                    return Gdi32.QUALITY.CLEARTYPE;
                 case TextRenderingHint.AntiAliasGridFit:
-                    return WindowsFontQuality.AntiAliased;
-
                 case TextRenderingHint.AntiAlias:
-                    return WindowsFontQuality.AntiAliased;
-
+                    return Gdi32.QUALITY.ANTIALIASED;
                 case TextRenderingHint.SingleBitPerPixelGridFit:
-                    return WindowsFontQuality.Proof;
-
+                    return Gdi32.QUALITY.PROOF;
                 case TextRenderingHint.SingleBitPerPixel:
-                    return WindowsFontQuality.Draft;
-
+                    return Gdi32.QUALITY.DRAFT;
                 default:
                 case TextRenderingHint.SystemDefault:
-                    return WindowsFontQuality.Default;
-                
+                    return Gdi32.QUALITY.DEFAULT;
             }
         }
     }

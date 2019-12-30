@@ -1,205 +1,197 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.Windows.Forms.ComponentModel.Com2Interop {
-    using System.Runtime.Remoting;
-    using System.Runtime.InteropServices;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System;
-    using System.Windows.Forms;
-    using System.ComponentModel.Design;    
-    using Microsoft.Win32;
-    using System.Collections;
-    using Hashtable = System.Collections.Hashtable;
-    
-    using System.Reflection.Emit;
-    using System.Reflection;
-    using System.Threading;
-    using System.Globalization;
-   
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
+using static Interop;
 
-    /// <include file='doc\COM2TypeInfoProcessor.uex' path='docs/doc[@for="Com2TypeInfoProcessor"]/*' />
-    /// <devdoc>
-    /// This is the main worker class of Com2 property interop. It takes an IDispatch Object
-    /// and translates it's ITypeInfo into Com2PropertyDescriptor objects that are understandable
-    /// by managed code.
+namespace System.Windows.Forms.ComponentModel.Com2Interop
+{
+    /// <summary>
+    ///  This is the main worker class of Com2 property interop. It takes an IDispatch Object
+    ///  and translates it's ITypeInfo into Com2PropertyDescriptor objects that are understandable
+    ///  by managed code.
     ///
-    /// This class only knows how to process things that are natively in the typeinfo.  Other property
-    /// information such as IPerPropertyBrowsing is handled elsewhere.
-    /// </devdoc>
-    internal class Com2TypeInfoProcessor {
-        
-        #if DEBUG
-        private static TraceSwitch DbgTypeInfoProcessorSwitch = new TraceSwitch("DbgTypeInfoProcessor", "Com2TypeInfoProcessor: debug Com2 type info processing");
-        #else
-        private static TraceSwitch DbgTypeInfoProcessorSwitch;
-        #endif
-        
-        private Com2TypeInfoProcessor() {
+    ///  This class only knows how to process things that are natively in the typeinfo.  Other property
+    ///  information such as IPerPropertyBrowsing is handled elsewhere.
+    /// </summary>
+    internal class Com2TypeInfoProcessor
+    {
+        private static readonly TraceSwitch DbgTypeInfoProcessorSwitch = new TraceSwitch("DbgTypeInfoProcessor", "Com2TypeInfoProcessor: debug Com2 type info processing");
+
+        private Com2TypeInfoProcessor()
+        {
         }
-        
+
         private static ModuleBuilder moduleBuilder = null;
-        
-        private static ModuleBuilder ModuleBuilder {
-            get {
-               if (moduleBuilder == null) {
-                  AssemblyName assemblyName = new AssemblyName();
-                  assemblyName.Name = "COM2InteropEmit";
-                  AssemblyBuilder aBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
-                  moduleBuilder = aBuilder.DefineDynamicModule("COM2Interop.Emit");
-               }
-               return moduleBuilder;
+
+        private static ModuleBuilder ModuleBuilder
+        {
+            get
+            {
+                if (moduleBuilder == null)
+                {
+                    AssemblyName assemblyName = new AssemblyName
+                    {
+                        Name = "COM2InteropEmit"
+                    };
+                    AssemblyBuilder aBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+                    moduleBuilder = aBuilder.DefineDynamicModule("COM2Interop.Emit");
+                }
+                return moduleBuilder;
             }
         }
-        
+
         private static Hashtable builtEnums;
         private static Hashtable processedLibraries;
-        
-         
-        /// <include file='doc\COM2TypeInfoProcessor.uex' path='docs/doc[@for="Com2TypeInfoProcessor.FindTypeInfo"]/*' />
-        /// <devdoc>
-        /// Given an Object, this attempts to locate its type ifo
-        /// </devdoc>
-        public static UnsafeNativeMethods.ITypeInfo FindTypeInfo(Object obj, bool wantCoClass) {
-            UnsafeNativeMethods.ITypeInfo  pTypeInfo = null;
 
-            // this is kind of odd.  What's going on here is that
-            // if we want the CoClass (e.g. for the interface name),
-            // we need to look for IProvideClassInfo first, then
-            // look for the typeinfo from the IDispatch.
-            // In the case of many OleAut32 operations, the CoClass
-            // doesn't have the interface members on it, although
-            // in the shell it usually does, so
-            // we need to re-order the lookup if we _actually_ want
-            // the CoClass if it's available.
-            //
+        /// <summary>
+        ///  Given an Object, this attempts to locate its type ifo
+        /// </summary>
+        public static UnsafeNativeMethods.ITypeInfo FindTypeInfo(object obj, bool wantCoClass)
+        {
+            UnsafeNativeMethods.ITypeInfo pTypeInfo = null;
 
-            for (int i = 0; pTypeInfo == null && i < 2; i++) {
+            // This is kind of odd.  What's going on here is that if we want the CoClass (e.g. for
+            // the interface name), we need to look for IProvideClassInfo first, then look for the
+            // typeinfo from the IDispatch. In the case of many OleAut32 operations, the CoClass
+            // doesn't have the interface members on it, although in the shell it usually does, so
+            // we need to re-order the lookup if we *actually* want the CoClass if it's available.
 
-                  if (wantCoClass == (i == 0)){
-                        if (obj is NativeMethods.IProvideClassInfo) {
-                            NativeMethods.IProvideClassInfo pProvideClassInfo = (NativeMethods.IProvideClassInfo)obj;
-                            try {
-                                pTypeInfo = pProvideClassInfo.GetClassInfo();
-                            }
-                            catch {
-                            }
-                        }
-                  }
-                  else {
-                       if (obj is UnsafeNativeMethods.IDispatch) {
-                            UnsafeNativeMethods.IDispatch iDispatch = (UnsafeNativeMethods.IDispatch)obj;
-                            try {
-                                pTypeInfo = iDispatch.GetTypeInfo(0, SafeNativeMethods.GetThreadLCID());
-                            }
-                            catch {
-                            }
-                       }
-                  }
-
+            for (int i = 0; pTypeInfo == null && i < 2; i++)
+            {
+                if (wantCoClass == (i == 0))
+                {
+                    if (obj is NativeMethods.IProvideClassInfo pProvideClassInfo)
+                    {
+                        pProvideClassInfo.GetClassInfo(out pTypeInfo);
+                    }
+                }
+                else
+                {
+                    if (obj is UnsafeNativeMethods.IDispatch iDispatch)
+                    {
+                        iDispatch.GetTypeInfo(0, Kernel32.GetThreadLocale(), out pTypeInfo);
+                    }
+                }
             }
+
             return pTypeInfo;
         }
 
-
-        /// <include file='doc\COM2TypeInfoProcessor.uex' path='docs/doc[@for="Com2TypeInfoProcessor.FindTypeInfos"]/*' />
-        /// <devdoc>
-        /// Given an Object, this attempts to locate its type info. If it implementes IProvideMultipleClassInfo
-        /// all available type infos will be returned, otherwise the primary one will be alled.
-        /// </devdoc>
-        public static UnsafeNativeMethods.ITypeInfo[] FindTypeInfos(Object obj, bool wantCoClass){
-            
+        /// <summary>
+        ///  Given an Object, this attempts to locate its type info. If it implementes IProvideMultipleClassInfo
+        ///  all available type infos will be returned, otherwise the primary one will be alled.
+        /// </summary>
+        public static UnsafeNativeMethods.ITypeInfo[] FindTypeInfos(object obj, bool wantCoClass)
+        {
             UnsafeNativeMethods.ITypeInfo[] typeInfos = null;
             int n = 0;
             UnsafeNativeMethods.ITypeInfo temp = null;
 
-            if (obj is NativeMethods.IProvideMultipleClassInfo) {
-               NativeMethods.IProvideMultipleClassInfo pCI = (NativeMethods.IProvideMultipleClassInfo)obj;
-               if (!NativeMethods.Succeeded(pCI.GetMultiTypeInfoCount(ref n)) || n == 0) {
-                  n = 0;
-               }
+            if (obj is NativeMethods.IProvideMultipleClassInfo pCI)
+            {
+                if (!NativeMethods.Succeeded(pCI.GetMultiTypeInfoCount(ref n)) || n == 0)
+                {
+                    n = 0;
+                }
 
-               if (n > 0){
-                  typeInfos = new UnsafeNativeMethods.ITypeInfo[n];
-                  
-                  for (int i = 0; i < n; i++){
-                     if (NativeMethods.Failed(pCI.GetInfoOfIndex(i, 1 /*MULTICLASSINFO_GETTYPEINFO*/, ref temp, 0, 0, IntPtr.Zero, IntPtr.Zero))){
-                        continue;
-                     }
-                     Debug.Assert(temp != null, "IProvideMultipleClassInfo::GetInfoOfIndex returned S_OK for ITypeInfo index " + i + ", this is a issue in the object that's being browsed, NOT the property browser.");
-                     typeInfos[i] = temp;
-                  }
-               }
+                if (n > 0)
+                {
+                    typeInfos = new UnsafeNativeMethods.ITypeInfo[n];
+
+                    for (int i = 0; i < n; i++)
+                    {
+                        if (NativeMethods.Failed(pCI.GetInfoOfIndex(i, 1 /*MULTICLASSINFO_GETTYPEINFO*/, ref temp, 0, 0, IntPtr.Zero, IntPtr.Zero)))
+                        {
+                            continue;
+                        }
+                        Debug.Assert(temp != null, "IProvideMultipleClassInfo::GetInfoOfIndex returned S_OK for ITypeInfo index " + i + ", this is a issue in the object that's being browsed, NOT the property browser.");
+                        typeInfos[i] = temp;
+                    }
+                }
             }
 
-            if (typeInfos == null || typeInfos.Length == 0){
-               temp = FindTypeInfo(obj, wantCoClass);
-               if (temp != null) {
-                   typeInfos = new UnsafeNativeMethods.ITypeInfo[]{temp};
-               }
+            if (typeInfos == null || typeInfos.Length == 0)
+            {
+                temp = FindTypeInfo(obj, wantCoClass);
+                if (temp != null)
+                {
+                    typeInfos = new UnsafeNativeMethods.ITypeInfo[] { temp };
+                }
             }
 
             return typeInfos;
         }
-        
-        /// <include file='doc\COM2TypeInfoProcessor.uex' path='docs/doc[@for="Com2TypeInfoProcessor.GetNameDispId"]/*' />
-        /// <devdoc>
-        /// Retrieve the dispid of the property that we are to use as the name
-        /// member.  In this case, the grid will put parens around the name.
-        /// </devdoc>
-        public static int GetNameDispId(UnsafeNativeMethods.IDispatch obj){
-            int dispid = NativeMethods.DISPID_UNKNOWN;
+
+        /// <summary>
+        ///  Retrieve the dispid of the property that we are to use as the name
+        ///  member.  In this case, the grid will put parens around the name.
+        /// </summary>
+        public unsafe static Ole32.DispatchID GetNameDispId(UnsafeNativeMethods.IDispatch obj)
+        {
+            Ole32.DispatchID dispid = Ole32.DispatchID.UNKNOWN;
             string[] names = null;
-            
+
             ComNativeDescriptor cnd = ComNativeDescriptor.Instance;
             bool succeeded = false;
 
             // first try to find one with a valid value
             cnd.GetPropertyValue(obj, "__id", ref succeeded);
-            
-            if (succeeded) {
-               names = new string[]{"__id"};
-            }
-            else {
-               cnd.GetPropertyValue(obj, NativeMethods.ActiveX.DISPID_Name, ref succeeded);
-               if (succeeded) {
-                  dispid = NativeMethods.ActiveX.DISPID_Name;
-               }
-               else {
-                  cnd.GetPropertyValue(obj, "Name", ref succeeded);
-                  if (succeeded) {
-                     names = new string[]{"Name"};
-                  }
-               }
-            }
-            
-            // now get the dispid of the one that worked...
-            if (names != null) {
-               int[] pDispid = new int[]{NativeMethods.DISPID_UNKNOWN};
-               Guid g = Guid.Empty;
-               int hr = obj.GetIDsOfNames(ref g, names, 1, SafeNativeMethods.GetThreadLCID(), pDispid);
-               if (NativeMethods.Succeeded(hr)){
 
-                  dispid = pDispid[0];
-               }
+            if (succeeded)
+            {
+                names = new string[] { "__id" };
             }
-            
+            else
+            {
+                cnd.GetPropertyValue(obj, Ole32.DispatchID.Name, ref succeeded);
+                if (succeeded)
+                {
+                    dispid = Ole32.DispatchID.Name;
+                }
+                else
+                {
+                    cnd.GetPropertyValue(obj, "Name", ref succeeded);
+                    if (succeeded)
+                    {
+                        names = new string[] { "Name" };
+                    }
+                }
+            }
+
+            // now get the dispid of the one that worked...
+            if (names != null)
+            {
+                Ole32.DispatchID pDispid = Ole32.DispatchID.UNKNOWN;
+                Guid g = Guid.Empty;
+                HRESULT hr = obj.GetIDsOfNames(&g, names, 1, Kernel32.GetThreadLocale(), &pDispid);
+                if (hr.Succeeded())
+                {
+                    dispid = pDispid;
+                }
+            }
+
             return dispid;
         }
 
-
-        /// <include file='doc\COM2TypeInfoProcessor.uex' path='docs/doc[@for="Com2TypeInfoProcessor.GetProperties"]/*' />
-        /// <devdoc>
-        /// Gets the properties for a given Com2 Object.  The returned Com2Properties
-        /// Object contains the properties and relevant data about them.
-        /// </devdoc>
-        public static Com2Properties GetProperties(Object obj) {
-            
+        /// <summary>
+        ///  Gets the properties for a given Com2 Object.  The returned Com2Properties
+        ///  Object contains the properties and relevant data about them.
+        /// </summary>
+        public static Com2Properties GetProperties(object obj)
+        {
             Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "Com2TypeInfoProcessor.GetProperties");
-            
-            if (obj == null || !Marshal.IsComObject(obj)) {
+
+            if (obj == null || !Marshal.IsComObject(obj))
+            {
                 Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "Com2TypeInfoProcessor.GetProperties returning null: Object is not a com Object");
                 return null;
             }
@@ -208,65 +200,76 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop {
 
             // oops, looks like this guy doesn't surface any type info
             // this is okay, so we just say it has no props
-            if (typeInfos == null || typeInfos.Length == 0) {
+            if (typeInfos == null || typeInfos.Length == 0)
+            {
                 Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "Com2TypeInfoProcessor.GetProperties :: Didn't get typeinfo");
                 return null;
             }
-
 
             int defaultProp = -1;
             int temp = -1;
             ArrayList propList = new ArrayList();
             Guid[] typeGuids = new Guid[typeInfos.Length];
 
-            for (int i = 0; i < typeInfos.Length; i++) {
-               UnsafeNativeMethods.ITypeInfo ti = typeInfos[i];
+            for (int i = 0; i < typeInfos.Length; i++)
+            {
+                UnsafeNativeMethods.ITypeInfo ti = typeInfos[i];
 
-               if (ti == null) {
-                   continue;
-               }
+                if (ti == null)
+                {
+                    continue;
+                }
 
-               int[] versions = new int[2];
-               Guid typeGuid = GetGuidForTypeInfo(ti, null, versions);
-               PropertyDescriptor[] props = null;
-               bool dontProcess = typeGuid != Guid.Empty && processedLibraries != null && processedLibraries.Contains(typeGuid);
+                int[] versions = new int[2];
+                Guid typeGuid = GetGuidForTypeInfo(ti, versions);
+                PropertyDescriptor[] props = null;
+                bool dontProcess = typeGuid != Guid.Empty && processedLibraries != null && processedLibraries.Contains(typeGuid);
 
-               if (dontProcess) {
+                if (dontProcess)
+                {
                     CachedProperties cp = (CachedProperties)processedLibraries[typeGuid];
-                    
-                    if (versions[0] == cp.MajorVersion && versions[1] == cp.MinorVersion) {
+
+                    if (versions[0] == cp.MajorVersion && versions[1] == cp.MinorVersion)
+                    {
                         props = cp.Properties;
-                        if (i == 0 && cp.DefaultIndex != -1) {
+                        if (i == 0 && cp.DefaultIndex != -1)
+                        {
                             defaultProp = cp.DefaultIndex;
                         }
                     }
-                    else {
+                    else
+                    {
                         dontProcess = false;
                     }
-               }
-               
-               if (!dontProcess) {
-                   props = InternalGetProperties(obj, ti, NativeMethods.MEMBERID_NIL, ref temp);
-    
-                   // only save the default property from the first type Info
-                   if (i == 0 && temp != -1) {
-                      defaultProp = temp;
-                   }
+                }
 
-                   if (processedLibraries == null) {
+                if (!dontProcess)
+                {
+                    props = InternalGetProperties(obj, ti, Ole32.DispatchID.MEMBERID_NIL, ref temp);
+
+                    // only save the default property from the first type Info
+                    if (i == 0 && temp != -1)
+                    {
+                        defaultProp = temp;
+                    }
+
+                    if (processedLibraries == null)
+                    {
                         processedLibraries = new Hashtable();
-                   }
-             
-                   if (typeGuid != Guid.Empty) {
-                        processedLibraries[typeGuid] = new CachedProperties(props, i == 0 ? defaultProp : -1, versions[0], versions[1]);
-                   }
-               }
+                    }
 
-               if (props != null){
-                   propList.AddRange(props);
-               }
+                    if (typeGuid != Guid.Empty)
+                    {
+                        processedLibraries[typeGuid] = new CachedProperties(props, i == 0 ? defaultProp : -1, versions[0], versions[1]);
+                    }
+                }
+
+                if (props != null)
+                {
+                    propList.AddRange(props);
+                }
             }
-            
+
             Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "Com2TypeInfoProcessor.GetProperties : returning " + propList.Count.ToString(CultureInfo.InvariantCulture) + " properties");
 
             // done!
@@ -276,337 +279,340 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop {
             return new Com2Properties(obj, temp2, defaultProp);
         }
 
-        private static Guid GetGuidForTypeInfo(UnsafeNativeMethods.ITypeInfo typeInfo, StructCache structCache, int[] versions) {
+        private static Guid GetGuidForTypeInfo(UnsafeNativeMethods.ITypeInfo typeInfo, int[] versions)
+        {
             IntPtr pTypeAttr = IntPtr.Zero;
-            int hr = typeInfo.GetTypeAttr(ref pTypeAttr);
-            if (!NativeMethods.Succeeded(hr)) {
-                throw new ExternalException(string.Format(SR.TYPEINFOPROCESSORGetTypeAttrFailed, hr), hr);
+            HRESULT hr = typeInfo.GetTypeAttr(ref pTypeAttr);
+            if (!hr.Succeeded())
+            {
+                throw new ExternalException(string.Format(SR.TYPEINFOPROCESSORGetTypeAttrFailed, hr), (int)hr);
             }
 
-            Guid g = Guid.Empty;
-            NativeMethods.tagTYPEATTR typeAttr = null;
-            try {
-                
-
-                if (structCache == null) {
-                    typeAttr = new NativeMethods.tagTYPEATTR();
-                }
-                else {
-                    typeAttr = (NativeMethods.tagTYPEATTR)structCache.GetStruct(typeof(NativeMethods.tagTYPEATTR));
-                }
-                UnsafeNativeMethods.PtrToStructure(pTypeAttr, typeAttr);
-                g = typeAttr.guid;
-                if (versions != null) {
+            try
+            {
+                ref readonly Ole32.TYPEATTR typeAttr = ref UnsafeNativeMethods.PtrToRef<Ole32.TYPEATTR>(pTypeAttr);
+                if (versions != null)
+                {
                     versions[0] = typeAttr.wMajorVerNum;
                     versions[1] = typeAttr.wMinorVerNum;
                 }
-            }
-            finally {
-                typeInfo.ReleaseTypeAttr(pTypeAttr);
-                if (structCache != null && typeAttr != null) {
-                    structCache.ReleaseStruct(typeAttr);
-                }
-            }
 
-            return g;
+                return typeAttr.guid;
+            }
+            finally
+            {
+                typeInfo.ReleaseTypeAttr(pTypeAttr);
+            }
         }
 
-
-        /// <include file='doc\COM2TypeInfoProcessor.uex' path='docs/doc[@for="Com2TypeInfoProcessor.GetValueTypeFromTypeDesc"]/*' />
-        /// <devdoc>
-        /// Resolves a value type for a property from a TYPEDESC.  Value types can be
-        /// user defined, which and may be aliased into other type infos.  This function
-        /// will recusively walk the ITypeInfos to resolve the type to a clr Type.
-        /// </devdoc>
-        private static Type GetValueTypeFromTypeDesc(NativeMethods.tagTYPEDESC typeDesc, UnsafeNativeMethods.ITypeInfo typeInfo, Object[] typeData, StructCache structCache) {
+        /// <summary>
+        ///  Resolves a value type for a property from a TYPEDESC.  Value types can be
+        ///  user defined, which and may be aliased into other type infos.  This function
+        ///  will recusively walk the ITypeInfos to resolve the type to a clr Type.
+        /// </summary>
+        private static Type GetValueTypeFromTypeDesc(in Ole32.TYPEDESC typeDesc, UnsafeNativeMethods.ITypeInfo typeInfo, object[] typeData)
+        {
             IntPtr hreftype;
-            int hr = 0;
+            HRESULT hr = HRESULT.S_OK;
 
-            switch ((NativeMethods.tagVT)typeDesc.vt) {
-            default:
-                return VTToType((NativeMethods.tagVT)typeDesc.vt);
+            switch (typeDesc.vt)
+            {
+                default:
+                    return VTToType(typeDesc.vt);
 
-            case NativeMethods.tagVT.VT_UNKNOWN:
-            case NativeMethods.tagVT.VT_DISPATCH:
-                // get the guid
-                typeData[0] = GetGuidForTypeInfo(typeInfo, structCache, null);
-                
-                // return the type
-                return VTToType((NativeMethods.tagVT)typeDesc.vt);
+                case Ole32.VARENUM.UNKNOWN:
+                case Ole32.VARENUM.DISPATCH:
+                    // get the guid
+                    typeData[0] = GetGuidForTypeInfo(typeInfo, null);
 
-            case NativeMethods.tagVT.VT_USERDEFINED:
-                // we'll need to recurse into a user defined reference typeinfo
-                Debug.Assert(typeDesc.unionMember != IntPtr.Zero, "typeDesc doesn't contain an hreftype!");
-                hreftype = typeDesc.unionMember;
-                break;
+                    // return the type
+                    return VTToType(typeDesc.vt);
 
-            case NativeMethods.tagVT.VT_PTR:
-                // we'll need to recurse into a user defined reference typeinfo
-                Debug.Assert(typeDesc.unionMember != IntPtr.Zero, "typeDesc doesn't contain an refTypeDesc!");
-                NativeMethods.tagTYPEDESC refTypeDesc = (NativeMethods.tagTYPEDESC)structCache.GetStruct(typeof(NativeMethods.tagTYPEDESC));
-                
-                try {
+                case Ole32.VARENUM.USERDEFINED:
+                    // we'll need to recurse into a user defined reference typeinfo
+                    Debug.Assert(typeDesc.unionMember != IntPtr.Zero, "typeDesc doesn't contain an hreftype!");
+                    hreftype = typeDesc.unionMember;
+                    break;
 
-                    try {
-                        //(tagTYPEDESC)Marshal.PtrToStructure(typeDesc.unionMember, typeof(tagTYPEDESC));
-                        UnsafeNativeMethods.PtrToStructure(typeDesc.unionMember, refTypeDesc);
+                case Ole32.VARENUM.PTR:
+                    // we'll need to recurse into a user defined reference typeinfo
+                    Debug.Assert(typeDesc.unionMember != IntPtr.Zero, "typeDesc doesn't contain an refTypeDesc!");
+                    ref readonly Ole32.TYPEDESC refTypeDesc = ref UnsafeNativeMethods.PtrToRef<Ole32.TYPEDESC>(typeDesc.unionMember);
+
+                    if (refTypeDesc.vt == Ole32.VARENUM.VARIANT)
+                    {
+                        return VTToType(refTypeDesc.vt);
                     }
-                    catch {
-                        // above is failing, why?
-                        refTypeDesc = new NativeMethods.tagTYPEDESC();
-                        refTypeDesc.unionMember = (IntPtr)Marshal.ReadInt32(typeDesc.unionMember);
-                        refTypeDesc.vt = Marshal.ReadInt16(typeDesc.unionMember, 4);
-                    }
-    
-                    if (refTypeDesc.vt == (int)NativeMethods.tagVT.VT_VARIANT) {
-                        return VTToType((NativeMethods.tagVT)refTypeDesc.vt);
-                    }
+
                     hreftype = refTypeDesc.unionMember;
-                }
-                finally {
-                    structCache.ReleaseStruct(refTypeDesc);
-                }
-                break;
+                    break;
             }
 
             // get the reference type info
             UnsafeNativeMethods.ITypeInfo refTypeInfo = null;
 
             hr = typeInfo.GetRefTypeInfo(hreftype, ref refTypeInfo);
-            if (!NativeMethods.Succeeded(hr)) {
-                throw new ExternalException(string.Format(SR.TYPEINFOPROCESSORGetRefTypeInfoFailed, hr), hr);
+            if (!hr.Succeeded())
+            {
+                throw new ExternalException(string.Format(SR.TYPEINFOPROCESSORGetRefTypeInfoFailed, hr), (int)hr);
             }
 
-            try {
+            try
+            {
                 // here is where we look at the next level type info.
                 // if we get an enum, process it, otherwise we will recurse
                 // or get a dispatch.
                 //
-                if (refTypeInfo != null) {
+                if (refTypeInfo != null)
+                {
                     IntPtr pRefTypeAttr = IntPtr.Zero;
                     hr = refTypeInfo.GetTypeAttr(ref pRefTypeAttr);
-
-                    if (!NativeMethods.Succeeded(hr)) {
-                        
-                        throw new ExternalException(string.Format(SR.TYPEINFOPROCESSORGetTypeAttrFailed, hr), hr);
+                    if (!hr.Succeeded())
+                    {
+                        throw new ExternalException(string.Format(SR.TYPEINFOPROCESSORGetTypeAttrFailed, hr), (int)hr);
                     }
 
-                    NativeMethods.tagTYPEATTR refTypeAttr = (NativeMethods.tagTYPEATTR)structCache.GetStruct(typeof(NativeMethods.tagTYPEATTR));//(tagTYPEATTR)Marshal.PtrToStructure(pRefTypeAttr, typeof(tagTYPEATTR));
-                    UnsafeNativeMethods.PtrToStructure(pRefTypeAttr, refTypeAttr);
-                    try {
+                    try
+                    {
+                        ref readonly Ole32.TYPEATTR refTypeAttr = ref UnsafeNativeMethods.PtrToRef<Ole32.TYPEATTR>(pRefTypeAttr);
                         Guid g = refTypeAttr.guid;
 
                         // save the guid if we've got one here
-                        if (!Guid.Empty.Equals(g)){
+                        if (!Guid.Empty.Equals(g))
+                        {
                             typeData[0] = g;
                         }
 
-                        switch ((NativeMethods.tagTYPEKIND)refTypeAttr.typekind) {
-
-                            case NativeMethods.tagTYPEKIND.TKIND_ENUM:
-                                return ProcessTypeInfoEnum(refTypeInfo, structCache);
-                                //return VTToType(tagVT.VT_I4);
-                            case NativeMethods.tagTYPEKIND.TKIND_ALIAS:
+                        switch (refTypeAttr.typekind)
+                        {
+                            case Ole32.TYPEKIND.ENUM:
+                                return ProcessTypeInfoEnum(refTypeInfo);
+                            case Ole32.TYPEKIND.ALIAS:
                                 // recurse here
-                                return GetValueTypeFromTypeDesc(refTypeAttr.Get_tdescAlias(), refTypeInfo, typeData, structCache);
-                            case NativeMethods.tagTYPEKIND.TKIND_DISPATCH:
-                                return VTToType(NativeMethods.tagVT.VT_DISPATCH);
-                                                        case NativeMethods.tagTYPEKIND.TKIND_INTERFACE:
-                                                        case NativeMethods.tagTYPEKIND.TKIND_COCLASS:
-                                return VTToType(NativeMethods.tagVT.VT_UNKNOWN);
+                                return GetValueTypeFromTypeDesc(refTypeAttr.tdescAlias, refTypeInfo, typeData);
+                            case Ole32.TYPEKIND.DISPATCH:
+                                return VTToType(Ole32.VARENUM.DISPATCH);
+                            case Ole32.TYPEKIND.INTERFACE:
+                            case Ole32.TYPEKIND.COCLASS:
+                                return VTToType(Ole32.VARENUM.UNKNOWN);
                             default:
                                 return null;
                         }
                     }
-                    finally {
+                    finally
+                    {
                         refTypeInfo.ReleaseTypeAttr(pRefTypeAttr);
-                        structCache.ReleaseStruct(refTypeAttr);
                     }
                 }
             }
-            finally {
+            finally
+            {
                 refTypeInfo = null;
             }
             return null;
         }
 
-        private static PropertyDescriptor[] InternalGetProperties(Object obj, UnsafeNativeMethods.ITypeInfo typeInfo, int dispidToGet, ref int defaultIndex) {
-        
-            if (typeInfo == null) {
+        private static PropertyDescriptor[] InternalGetProperties(object obj, UnsafeNativeMethods.ITypeInfo typeInfo, Ole32.DispatchID dispidToGet, ref int defaultIndex)
+        {
+            if (typeInfo == null)
+            {
                 return null;
             }
-            
+
             Hashtable propInfos = new Hashtable();
-            
-            int nameDispID = GetNameDispId((UnsafeNativeMethods.IDispatch)obj);
+
+            Ole32.DispatchID nameDispID = GetNameDispId((UnsafeNativeMethods.IDispatch)obj);
             bool addAboutBox = false;
-            
-            StructCache structCache = new StructCache();            
-            
+
             // properties can live as functions with get_ and put_ or
             // as variables, so we do two steps here.
-            try {
+            try
+            {
                 // DO FUNCDESC things
-                ProcessFunctions(typeInfo, propInfos, dispidToGet, nameDispID, ref addAboutBox, structCache);
+                ProcessFunctions(typeInfo, propInfos, dispidToGet, nameDispID, ref addAboutBox);
             }
-            catch (ExternalException ex) {
+            catch (ExternalException ex)
+            {
                 Debug.Fail("ProcessFunctions failed with hr=" + ex.ErrorCode.ToString(CultureInfo.InvariantCulture) + ", message=" + ex.ToString());
             }
 
-            try {
+            try
+            {
                 // DO VARDESC things.
-                ProcessVariables(typeInfo, propInfos, dispidToGet, nameDispID, structCache);
+                ProcessVariables(typeInfo, propInfos, dispidToGet, nameDispID);
             }
-            catch (ExternalException ex) {
+            catch (ExternalException ex)
+            {
                 Debug.Fail("ProcessVariables failed with hr=" + ex.ErrorCode.ToString(CultureInfo.InvariantCulture) + ", message=" + ex.ToString());
             }
 
             typeInfo = null;
 
-
             // now we take the propertyInfo structures we built up
             // and use them to create the actual descriptors.
             int cProps = propInfos.Count;
-            
-            if (addAboutBox) {
-               cProps++;
+
+            if (addAboutBox)
+            {
+                cProps++;
             }
-            
+
             PropertyDescriptor[] props = new PropertyDescriptor[cProps];
             int defaultProp = -1;
-            
-            int hr = NativeMethods.S_OK;
-            Object[] pvar = new Object[1];
+
+            HRESULT hr = HRESULT.S_OK;
+            object[] pvar = new object[1];
             ComNativeDescriptor cnd = ComNativeDescriptor.Instance;
 
             // for each item in uur list, create the descriptor an check
             // if it's the default one.
-            foreach (PropInfo pi in propInfos.Values){
-                if (!pi.NonBrowsable) {
+            foreach (PropInfo pi in propInfos.Values)
+            {
+                if (!pi.NonBrowsable)
+                {
                     // finally, for each property, make sure we can get the value
                     // if we can't then we should mark it non-browsable
 
-                    try {
+                    try
+                    {
                         hr = cnd.GetPropertyValue(obj, pi.DispId, pvar);
                     }
-                    catch (ExternalException ex) {
-                        hr = ex.ErrorCode;
-                        Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "IDispatch::Invoke(PROPGET, " +  pi.Name + ") threw an exception :" + ex.ToString());
+                    catch (ExternalException ex)
+                    {
+                        hr = (HRESULT)ex.ErrorCode;
+                        Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "IDispatch::Invoke(PROPGET, " + pi.Name + ") threw an exception :" + ex.ToString());
                     }
-                    if (!NativeMethods.Succeeded(hr)) {
-                        Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, String.Format(CultureInfo.CurrentCulture, "Adding Browsable(false) to property '" + pi.Name + "' because Invoke(dispid=0x{0:X} ,DISPATCH_PROPERTYGET) returned hr=0x{1:X}.  Properties that do not return S_OK are hidden by default.", pi.DispId, hr));
+                    if (!hr.Succeeded())
+                    {
+                        Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, string.Format(CultureInfo.CurrentCulture, "Adding Browsable(false) to property '" + pi.Name + "' because Invoke(dispid=0x{0:X} ,DISPATCH_PROPERTYGET) returned hr=0x{1:X}.  Properties that do not return S_OK are hidden by default.", pi.DispId, hr));
                         pi.Attributes.Add(new BrowsableAttribute(false));
                         pi.NonBrowsable = true;
                     }
                 }
-                else {
-                    hr = NativeMethods.S_OK;
+                else
+                {
+                    hr = HRESULT.S_OK;
                 }
 
                 Attribute[] temp = new Attribute[pi.Attributes.Count];
                 pi.Attributes.CopyTo(temp, 0);
                 //Debug.Assert(pi.nonbrowsable || pi.valueType != null, "Browsable property '" + pi.name + "' has a null type");
-                props[pi.Index] = new Com2PropertyDescriptor(pi.DispId, pi.Name, temp, pi.ReadOnly != PropInfo.ReadOnlyFalse, pi.ValueType, pi.TypeData, !NativeMethods.Succeeded(hr));
-                if (pi.IsDefault) {
+                props[pi.Index] = new Com2PropertyDescriptor(pi.DispId, pi.Name, temp, pi.ReadOnly != PropInfo.ReadOnlyFalse, pi.ValueType, pi.TypeData, !hr.Succeeded());
+                if (pi.IsDefault)
+                {
                     defaultProp = pi.Index;
                 }
             }
-            
-            if (addAboutBox) {
-               props[props.Length-1] = new Com2AboutBoxPropertyDescriptor();
+
+            if (addAboutBox)
+            {
+                props[props.Length - 1] = new Com2AboutBoxPropertyDescriptor();
             }
             return props;
         }
 
-
-        private static PropInfo ProcessDataCore(UnsafeNativeMethods.ITypeInfo typeInfo, IDictionary propInfoList, int dispid, int nameDispID, NativeMethods.tagTYPEDESC typeDesc, int flags, StructCache structCache) {
-            string          pPropName = null;
-            string          pPropDesc = null;
-
+        private static PropInfo ProcessDataCore(UnsafeNativeMethods.ITypeInfo typeInfo, IDictionary propInfoList, Ole32.DispatchID dispid, Ole32.DispatchID nameDispID, in Ole32.TYPEDESC typeDesc, Ole32.VARFLAGS flags)
+        {
+            string pPropName = null;
+            string pPropDesc = null;
 
             // get the name and the helpstring
-            int hr = typeInfo.GetDocumentation(dispid, ref pPropName, ref pPropDesc, null, null);
-
+            HRESULT hr = typeInfo.GetDocumentation(dispid, ref pPropName, ref pPropDesc, null, null);
             ComNativeDescriptor cnd = ComNativeDescriptor.Instance;
-
-
-            if (!NativeMethods.Succeeded(hr)) {
-                throw new COMException(string.Format(SR.TYPEINFOPROCESSORGetDocumentationFailed, dispid, hr, cnd.GetClassName(typeInfo)), hr);
+            if (!hr.Succeeded())
+            {
+                throw new COMException(string.Format(SR.TYPEINFOPROCESSORGetDocumentationFailed, dispid, hr, cnd.GetClassName(typeInfo)), (int)hr);
             }
 
-            if (pPropName == null){
-               Debug.Fail(String.Format(CultureInfo.CurrentCulture, "ITypeInfo::GetDocumentation didn't return a name for DISPID 0x{0:X} but returned SUCEEDED(hr),  Component=" + cnd.GetClassName(typeInfo), dispid));
-               return null;
+            if (pPropName == null)
+            {
+                Debug.Fail(string.Format(CultureInfo.CurrentCulture, "ITypeInfo::GetDocumentation didn't return a name for DISPID 0x{0:X} but returned SUCEEDED(hr),  Component=" + cnd.GetClassName(typeInfo), dispid));
+                return null;
             }
 
             // now we can create our struct... make sure we don't already have one
             PropInfo pi = (PropInfo)propInfoList[pPropName];
 
-            if (pi == null) {
-                pi = new PropInfo();
-                pi.Index = propInfoList.Count;
+            if (pi == null)
+            {
+                pi = new PropInfo
+                {
+                    Index = propInfoList.Count
+                };
                 propInfoList[pPropName] = pi;
                 pi.Name = pPropName;
                 pi.DispId = dispid;
-                pi.Attributes.Add(new DispIdAttribute(pi.DispId));
+                pi.Attributes.Add(new DispIdAttribute((int)pi.DispId));
             }
 
-            if (pPropDesc != null) {
+            if (pPropDesc != null)
+            {
                 pi.Attributes.Add(new DescriptionAttribute(pPropDesc));
             }
 
             // figure out the value type
-            if (pi.ValueType == null) {
-                Object[] pTypeData = new Object[1];
-                try {
-                    pi.ValueType = GetValueTypeFromTypeDesc(typeDesc, typeInfo, pTypeData, structCache);
+            if (pi.ValueType == null)
+            {
+                object[] pTypeData = new object[1];
+                try
+                {
+                    pi.ValueType = GetValueTypeFromTypeDesc(in typeDesc, typeInfo, pTypeData);
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "Hiding property " + pi.Name + " because value Type could not be resolved: " + ex.ToString());
                 }
 
                 // if we can't resolve the type, mark the property as nonbrowsable
                 // from the browser
                 //
-                if (pi.ValueType == null) {
+                if (pi.ValueType == null)
+                {
                     pi.NonBrowsable = true;
                 }
 
-                if (pi.NonBrowsable) {
-                    flags |= (int)NativeMethods.tagVARFLAGS.VARFLAG_FNONBROWSABLE;
+                if (pi.NonBrowsable)
+                {
+                    flags |= Ole32.VARFLAGS.FNONBROWSABLE;
                 }
 
-                if (pTypeData[0] != null) {
+                if (pTypeData[0] != null)
+                {
                     pi.TypeData = pTypeData[0];
                 }
             }
 
             // check the flags
-            if ((flags & (int)NativeMethods.tagVARFLAGS.VARFLAG_FREADONLY) != 0) {
+            if ((flags & Ole32.VARFLAGS.FREADONLY) != 0)
+            {
                 pi.ReadOnly = PropInfo.ReadOnlyTrue;
             }
 
-            if ((flags & (int)NativeMethods.tagVARFLAGS.VARFLAG_FHIDDEN) != 0 ||
-                (flags & (int)NativeMethods.tagVARFLAGS.VARFLAG_FNONBROWSABLE) != 0 ||
+            if ((flags & Ole32.VARFLAGS.FHIDDEN) != 0 ||
+                (flags & Ole32.VARFLAGS.FNONBROWSABLE) != 0 ||
                 pi.Name[0] == '_' ||
-                dispid == NativeMethods.ActiveX.DISPID_HWND) {
+                dispid == Ole32.DispatchID.HWND)
+            {
                 pi.Attributes.Add(new BrowsableAttribute(false));
                 pi.NonBrowsable = true;
             }
 
-            if ((flags & (int)NativeMethods.tagVARFLAGS.VARFLAG_FUIDEFAULT) != 0) {
+            if ((flags & Ole32.VARFLAGS.FUIDEFAULT) != 0)
+            {
                 pi.IsDefault = true;
             }
 
-            if ((flags & (int)NativeMethods.tagVARFLAGS.VARFLAG_FBINDABLE) != 0 &&
-                (flags & (int)NativeMethods.tagVARFLAGS.VARFLAG_FDISPLAYBIND) != 0) {
+            if ((flags & Ole32.VARFLAGS.FBINDABLE) != 0 &&
+                (flags & Ole32.VARFLAGS.FDISPLAYBIND) != 0)
+            {
                 pi.Attributes.Add(new BindableAttribute(true));
             }
 
             // lastly, if it's DISPID_Name, add the ParenthesizeNameAttribute
-            if (dispid == nameDispID){
+            if (dispid == nameDispID)
+            {
                 pi.Attributes.Add(new ParenthesizePropertyNameAttribute(true));
-                
+
                 // don't allow merges on the name
                 pi.Attributes.Add(new MergablePropertyAttribute(false));
             }
@@ -614,128 +620,125 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop {
             return pi;
         }
 
-        private static void ProcessFunctions(UnsafeNativeMethods.ITypeInfo typeInfo, IDictionary propInfoList, int dispidToGet, int nameDispID, ref bool addAboutBox, StructCache structCache) {
+        private unsafe static void ProcessFunctions(UnsafeNativeMethods.ITypeInfo typeInfo, IDictionary propInfoList, Ole32.DispatchID dispidToGet, Ole32.DispatchID nameDispID, ref bool addAboutBox)
+        {
             IntPtr pTypeAttr = IntPtr.Zero;
-            int hr = typeInfo.GetTypeAttr(ref pTypeAttr);
-
-            if (!NativeMethods.Succeeded(hr) || pTypeAttr == IntPtr.Zero) {
-                throw new ExternalException(string.Format(SR.TYPEINFOPROCESSORGetTypeAttrFailed, hr), hr);
+            HRESULT hr = typeInfo.GetTypeAttr(ref pTypeAttr);
+            if (!hr.Succeeded() || pTypeAttr == IntPtr.Zero)
+            {
+                throw new ExternalException(string.Format(SR.TYPEINFOPROCESSORGetTypeAttrFailed, hr), (int)hr);
             }
 
-            NativeMethods.tagTYPEATTR         typeAttr = (NativeMethods.tagTYPEATTR)structCache.GetStruct(typeof(NativeMethods.tagTYPEATTR));//(tagTYPEATTR)Marshal.PtrToStructure(pTypeAttr, typeof(tagTYPEATTR));
-            UnsafeNativeMethods.PtrToStructure(pTypeAttr, typeAttr);
-            if (typeAttr == null) {
-                return;
-            }
-            NativeMethods.tagFUNCDESC         funcDesc = null;
-            NativeMethods.tagELEMDESC         ed = null;
-            try {
-                
-                funcDesc = (NativeMethods.tagFUNCDESC)structCache.GetStruct(typeof(NativeMethods.tagFUNCDESC));
-                ed = (NativeMethods.tagELEMDESC)structCache.GetStruct(typeof(NativeMethods.tagELEMDESC));
-                
-                bool              isPropGet;
-                PropInfo          pi;
+            try
+            {
+                ref readonly Ole32.TYPEATTR typeAttr = ref UnsafeNativeMethods.PtrToRef<Ole32.TYPEATTR>(pTypeAttr);
 
-                for (int i = 0; i < typeAttr.cFuncs; i++) {
+                bool isPropGet;
+                PropInfo pi;
+
+                for (int i = 0; i < typeAttr.cFuncs; i++)
+                {
                     IntPtr pFuncDesc = IntPtr.Zero;
                     hr = typeInfo.GetFuncDesc(i, ref pFuncDesc);
-
-                    if (!NativeMethods.Succeeded(hr) || pFuncDesc == IntPtr.Zero) {
-                        Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, String.Format(CultureInfo.CurrentCulture, "ProcessTypeInfoEnum: ignoring function item 0x{0:X} because ITypeInfo::GetFuncDesc returned hr=0x{1:X} or NULL", i, hr));
+                    if (!hr.Succeeded() || pFuncDesc == IntPtr.Zero)
+                    {
+                        Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, string.Format(CultureInfo.CurrentCulture, "ProcessTypeInfoEnum: ignoring function item 0x{0:X} because ITypeInfo::GetFuncDesc returned hr=0x{1:X} or NULL", i, hr));
                         continue;
                     }
 
-                    //funcDesc = (tagFUNCDESC)Marshal.PtrToStructure(pFuncDesc, typeof(tagFUNCDESC));
-                    UnsafeNativeMethods.PtrToStructure(pFuncDesc, funcDesc);
-                    try {
-                        if (funcDesc.invkind == (int)NativeMethods.tagINVOKEKIND.INVOKE_FUNC ||
-                            (dispidToGet != NativeMethods.MEMBERID_NIL && funcDesc.memid != dispidToGet)) {
-                            
-                            if (funcDesc.memid == NativeMethods.ActiveX.DISPID_ABOUTBOX) {
-                               addAboutBox = true;
+                    try
+                    {
+                        ref readonly Ole32.FUNCDESC funcDesc = ref UnsafeNativeMethods.PtrToRef<Ole32.FUNCDESC>(pFuncDesc);
+                        if (funcDesc.invkind == Ole32.INVOKEKIND.FUNC ||
+                            (dispidToGet != Ole32.DispatchID.MEMBERID_NIL && funcDesc.memid != dispidToGet))
+                        {
+
+                            if (funcDesc.memid == Ole32.DispatchID.ABOUTBOX)
+                            {
+                                addAboutBox = true;
                             }
                             continue;
                         }
 
-                        NativeMethods.tagTYPEDESC typeDesc;
+                        Ole32.TYPEDESC typeDesc;
 
                         // is this a get or a put?
-                        isPropGet = (funcDesc.invkind == (int)NativeMethods.tagINVOKEKIND.INVOKE_PROPERTYGET);
+                        isPropGet = (funcDesc.invkind == Ole32.INVOKEKIND.PROPERTYGET);
 
-                        if (isPropGet) {
+                        if (isPropGet)
+                        {
 
-                            if (funcDesc.cParams != 0) {
-                                
+                            if (funcDesc.cParams != 0)
+                            {
+
                                 continue;
                             }
 
-                            typeDesc = funcDesc.elemdescFunc.tdesc;
+                            unsafe
+                            {
+                                typeDesc = funcDesc.elemdescFunc.tdesc;
+                            }
                         }
-                        else {
-                            Debug.Assert(funcDesc.lprgelemdescParam != IntPtr.Zero, "ELEMDESC param is null!");
-                            if (funcDesc.lprgelemdescParam == IntPtr.Zero || funcDesc.cParams != 1) {
-                                
+                        else
+                        {
+                            Debug.Assert(funcDesc.lprgelemdescParam != null, "ELEMDESC param is null!");
+                            if (funcDesc.lprgelemdescParam == null || funcDesc.cParams != 1)
+                            {
+
                                 continue;
                             }
-                            Marshal.PtrToStructure(funcDesc.lprgelemdescParam, ed);
-                            typeDesc = ed.tdesc;
+
+                            unsafe
+                            {
+                                typeDesc = funcDesc.lprgelemdescParam->tdesc;
+                            }
                         }
-                        pi = ProcessDataCore(typeInfo, propInfoList, funcDesc.memid, nameDispID, typeDesc, funcDesc.wFuncFlags, structCache);
+                        pi = ProcessDataCore(typeInfo, propInfoList, funcDesc.memid, nameDispID, in typeDesc, (Ole32.VARFLAGS)funcDesc.wFuncFlags);
 
                         // if we got a setmethod, it's not readonly
-                        if (pi != null && !isPropGet) {
+                        if (pi != null && !isPropGet)
+                        {
                             pi.ReadOnly = PropInfo.ReadOnlyFalse;
                         }
                     }
-                    finally {
+                    finally
+                    {
                         typeInfo.ReleaseFuncDesc(pFuncDesc);
                     }
                 }
             }
-            finally {
-                if (funcDesc != null) {
-                    structCache.ReleaseStruct(funcDesc);
-                }
-                if (ed != null) {
-                    structCache.ReleaseStruct(ed);
-                }
+            finally
+            {
                 typeInfo.ReleaseTypeAttr(pTypeAttr);
-                structCache.ReleaseStruct(typeAttr);
             }
         }
 
-        /// <include file='doc\COM2TypeInfoProcessor.uex' path='docs/doc[@for="Com2TypeInfoProcessor.ProcessTypeInfoEnum"]/*' />
-        /// <devdoc>
-        /// This converts a type info that describes a IDL defined enum
-        /// into one we can use
-        /// </devdoc>
-        private static Type ProcessTypeInfoEnum(UnsafeNativeMethods.ITypeInfo enumTypeInfo, StructCache structCache) {
-
+        /// <summary>
+        ///  This converts a type info that describes a IDL defined enum
+        ///  into one we can use
+        /// </summary>
+        private static Type ProcessTypeInfoEnum(UnsafeNativeMethods.ITypeInfo enumTypeInfo)
+        {
             Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "ProcessTypeInfoEnum entered");
 
-            if (enumTypeInfo == null) {
+            if (enumTypeInfo == null)
+            {
                 Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "ProcessTypeInfoEnum got a NULL enumTypeInfo");
                 return null;
             }
 
-            try {
+            try
+            {
                 IntPtr pTypeAttr = IntPtr.Zero;
-                int hr = enumTypeInfo.GetTypeAttr(ref pTypeAttr);
-
-                if (!NativeMethods.Succeeded(hr) || pTypeAttr == IntPtr.Zero) {
-                        throw new ExternalException(string.Format(SR.TYPEINFOPROCESSORGetTypeAttrFailed, hr), hr);
+                HRESULT hr = enumTypeInfo.GetTypeAttr(ref pTypeAttr);
+                if (!hr.Succeeded() || pTypeAttr == IntPtr.Zero)
+                {
+                    throw new ExternalException(string.Format(SR.TYPEINFOPROCESSORGetTypeAttrFailed, hr), (int)hr);
                 }
 
-                NativeMethods.tagTYPEATTR typeAttr = (NativeMethods.tagTYPEATTR)structCache.GetStruct(typeof(NativeMethods.tagTYPEATTR));//(tagTYPEATTR)Marshal.PtrToStructure(pTypeAttr, typeof(tagTYPEATTR));
-                UnsafeNativeMethods.PtrToStructure(pTypeAttr, typeAttr);
-
-                if (pTypeAttr == IntPtr.Zero) {
-                    Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "ProcessTypeInfoEnum: failed to get a typeAttr");
-                    return null;
-                }
-
-                try {
+                try
+                {
+                    ref readonly Ole32.TYPEATTR typeAttr = ref UnsafeNativeMethods.PtrToRef<Ole32.TYPEATTR>(pTypeAttr);
 
                     int nItems = typeAttr.cVars;
 
@@ -744,33 +747,31 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop {
                     ArrayList strs = new ArrayList();
                     ArrayList vars = new ArrayList();
 
-                    NativeMethods.tagVARDESC varDesc = (NativeMethods.tagVARDESC)structCache.GetStruct(typeof(NativeMethods.tagVARDESC));
-                    Object varValue = null;
+                    object varValue = null;
                     string enumName = null;
                     string name = null;
                     string helpstr = null;
 
-                    enumTypeInfo.GetDocumentation(NativeMethods.MEMBERID_NIL, ref enumName, ref helpstr, null, null);
-                    
-                                                            // For each item in the enum type info,
+                    enumTypeInfo.GetDocumentation(Ole32.DispatchID.MEMBERID_NIL, ref enumName, ref helpstr, null, null);
+
+                    // For each item in the enum type info,
                     // we just need it's name and value, and helpstring if it's there.
                     //
-                    for (int i = 0; i < nItems; i++) {
+                    for (int i = 0; i < nItems; i++)
+                    {
                         IntPtr pVarDesc = IntPtr.Zero;
                         hr = enumTypeInfo.GetVarDesc(i, ref pVarDesc);
-
-                        if (!NativeMethods.Succeeded(hr) || pVarDesc == IntPtr.Zero) {
-                            Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, String.Format(CultureInfo.CurrentCulture, "ProcessTypeInfoEnum: ignoring item 0x{0:X} because ITypeInfo::GetVarDesc returned hr=0x{1:X} or NULL", hr));
+                        if (!hr.Succeeded() || pVarDesc == IntPtr.Zero)
+                        {
+                            Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, string.Format(CultureInfo.CurrentCulture, "ProcessTypeInfoEnum: ignoring item 0x{0:X} because ITypeInfo::GetVarDesc returned hr=0x{1:X} or NULL", hr));
                             continue;
                         }
 
-                        try {
-                            //varDesc = (tagVARDESC)Marshal.PtrToStructure(pVarDesc, typeof(tagVARDESC));
-                            UnsafeNativeMethods.PtrToStructure(pVarDesc, varDesc);
-
-                            if (varDesc == null ||
-                                varDesc.varkind != (int)NativeMethods.tagVARKIND.VAR_CONST ||
-                                varDesc.unionMember == IntPtr.Zero) {
+                        try
+                        {
+                            ref readonly Ole32.VARDESC varDesc = ref UnsafeNativeMethods.PtrToRef<Ole32.VARDESC>(pVarDesc);
+                            if (varDesc.varkind != Ole32.VARKIND.CONST || varDesc.unionMember == IntPtr.Zero)
+                            {
                                 continue;
                             }
 
@@ -778,440 +779,325 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop {
                             varValue = null;
 
                             // get the name and the helpstring
-
-                            hr = enumTypeInfo.GetDocumentation(varDesc.memid,  ref name,  ref helpstr, null, null);
-
-
-                            if (!NativeMethods.Succeeded(hr)) {
-                                Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, String.Format(CultureInfo.CurrentCulture, "ProcessTypeInfoEnum: ignoring item 0x{0:X} because ITypeInfo::GetDocumentation returned hr=0x{1:X} or NULL", hr));
+                            hr = enumTypeInfo.GetDocumentation(varDesc.memid, ref name, ref helpstr, null, null);
+                            if (!hr.Succeeded())
+                            {
+                                Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, string.Format(CultureInfo.CurrentCulture, "ProcessTypeInfoEnum: ignoring item 0x{0:X} because ITypeInfo::GetDocumentation returned hr=0x{1:X} or NULL", hr));
                                 continue;
                             }
 
-                            Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "ProcessTypeInfoEnum got name=" + (name == null ? "(null)" : name) + ", helpstring=" + (helpstr == null ? "(null)" : helpstr));
+                            Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "ProcessTypeInfoEnum got name=" + (name ?? "(null)") + ", helpstring=" + (helpstr ?? "(null)"));
 
                             // get the value
-                            try {
-                                //varValue = (VARIANT)Marshal.PtrToStructure(varDesc.unionMember, typeof(VARIANT));
+                            try
+                            {
                                 varValue = Marshal.GetObjectForNativeVariant(varDesc.unionMember);
                             }
-                            catch (Exception ex) {
+                            catch (Exception ex)
+                            {
                                 Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "ProcessTypeInfoEnum: PtrtoStructFailed " + ex.GetType().Name + "," + ex.Message);
                             }
 
-                            /*if (varValue == null) {
-                                Debug.Fail("Couldn't get VARIANT from VARIANTDESC");
-                                continue;
-                            }*/
-
-                            //variant v = varValue.ToVariant();
                             Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "ProcessTypeInfoEnum: adding variable value=" + Convert.ToString(varValue, CultureInfo.InvariantCulture));
                             vars.Add(varValue);
 
                             // if we have a helpstring, use it, otherwise use name
                             string nameString;
-                            if (helpstr != null) {
+                            if (helpstr != null)
+                            {
                                 nameString = helpstr;
                             }
-                            else {
+                            else
+                            {
                                 Debug.Assert(name != null, "No name for VARDESC member, but GetDocumentation returned S_OK!");
                                 nameString = name;
                             }
                             Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "ProcessTypeInfoEnum: adding name value=" + nameString);
                             strs.Add(nameString);
                         }
-                        finally {
-                            if (pVarDesc != IntPtr.Zero) {
+                        finally
+                        {
+                            if (pVarDesc != IntPtr.Zero)
+                            {
                                 enumTypeInfo.ReleaseVarDesc(pVarDesc);
                             }
                         }
                     }
-                    structCache.ReleaseStruct(varDesc);
+
                     Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, "ProcessTypeInfoEnum: returning enum with " + strs.Count.ToString(CultureInfo.InvariantCulture) + " items");
 
                     // just build our enumerator
-                    if (strs.Count > 0) {
-                        
+                    if (strs.Count > 0)
+                    {
+
                         // get the IUnknown value of the ITypeInfo
                         IntPtr pTypeInfoUnk = Marshal.GetIUnknownForObject(enumTypeInfo);
-                        
-                        try {
-                           enumName = pTypeInfoUnk.ToString() + "_" + enumName;
-                           
-                           if (builtEnums == null) {
-                              builtEnums = new Hashtable();
-                           }
-                           else if (builtEnums.ContainsKey(enumName)) {
-                              return (Type)builtEnums[enumName];
-                           }
 
-                           Type enumType = typeof(int);
+                        try
+                        {
+                            enumName = pTypeInfoUnk.ToString() + "_" + enumName;
 
-                           if (vars.Count > 0 && vars[0] != null) {
-                               enumType = vars[0].GetType();
-                           }
-                           
-                           EnumBuilder enumBuilder = ModuleBuilder.DefineEnum(enumName, TypeAttributes.Public, enumType);
-                           for (int i = 0; i < strs.Count; i++) {
-                              enumBuilder.DefineLiteral((string)strs[i], vars[i]);
-                           }
-                           Type t = enumBuilder.CreateTypeInfo().AsType();
-                           builtEnums[enumName] = t;
-                           return t;
+                            if (builtEnums == null)
+                            {
+                                builtEnums = new Hashtable();
+                            }
+                            else if (builtEnums.ContainsKey(enumName))
+                            {
+                                return (Type)builtEnums[enumName];
+                            }
+
+                            Type enumType = typeof(int);
+
+                            if (vars.Count > 0 && vars[0] != null)
+                            {
+                                enumType = vars[0].GetType();
+                            }
+
+                            EnumBuilder enumBuilder = ModuleBuilder.DefineEnum(enumName, TypeAttributes.Public, enumType);
+                            for (int i = 0; i < strs.Count; i++)
+                            {
+                                enumBuilder.DefineLiteral((string)strs[i], vars[i]);
+                            }
+                            Type t = enumBuilder.CreateTypeInfo().AsType();
+                            builtEnums[enumName] = t;
+                            return t;
                         }
-                        finally {
-                           if (pTypeInfoUnk != IntPtr.Zero) {
-                              Marshal.Release(pTypeInfoUnk);
-                           }
+                        finally
+                        {
+                            if (pTypeInfoUnk != IntPtr.Zero)
+                            {
+                                Marshal.Release(pTypeInfoUnk);
+                            }
                         }
                     }
 
                 }
-                finally {
+                finally
+                {
                     enumTypeInfo.ReleaseTypeAttr(pTypeAttr);
-                    structCache.ReleaseStruct(typeAttr);
                 }
             }
-            catch {
+            catch
+            {
             }
             return null;
         }
 
-
-        private static void ProcessVariables(UnsafeNativeMethods.ITypeInfo typeInfo, IDictionary propInfoList, int dispidToGet, int nameDispID, StructCache structCache) {
+        private static void ProcessVariables(UnsafeNativeMethods.ITypeInfo typeInfo, IDictionary propInfoList, Ole32.DispatchID dispidToGet, Ole32.DispatchID nameDispID)
+        {
             IntPtr pTypeAttr = IntPtr.Zero;
-            int hr = typeInfo.GetTypeAttr(ref pTypeAttr);
-
-            if (!NativeMethods.Succeeded(hr) || pTypeAttr == IntPtr.Zero) {
-                throw new ExternalException(string.Format(SR.TYPEINFOPROCESSORGetTypeAttrFailed, hr), hr);
+            HRESULT hr = typeInfo.GetTypeAttr(ref pTypeAttr);
+            if (!hr.Succeeded() || pTypeAttr == IntPtr.Zero)
+            {
+                throw new ExternalException(string.Format(SR.TYPEINFOPROCESSORGetTypeAttrFailed, hr), (int)hr);
             }
 
-            NativeMethods.tagTYPEATTR typeAttr = (NativeMethods.tagTYPEATTR)structCache.GetStruct(typeof(NativeMethods.tagTYPEATTR));//(tagTYPEATTR)Marshal.PtrToStructure(pTypeAttr, typeof(tagTYPEATTR));
-            UnsafeNativeMethods.PtrToStructure(pTypeAttr, typeAttr);
-
-            try {
-                if (typeAttr == null) {
-                    return;
-                }
-                NativeMethods.tagVARDESC        varDesc = (NativeMethods.tagVARDESC)structCache.GetStruct(typeof(NativeMethods.tagVARDESC));
-
-                for (int i = 0; i < typeAttr.cVars; i++) {
+            try
+            {
+                ref readonly Ole32.TYPEATTR typeAttr = ref UnsafeNativeMethods.PtrToRef<Ole32.TYPEATTR>(pTypeAttr);
+                for (int i = 0; i < typeAttr.cVars; i++)
+                {
                     IntPtr pVarDesc = IntPtr.Zero;
-
                     hr = typeInfo.GetVarDesc(i, ref pVarDesc);
-                    if (!NativeMethods.Succeeded(hr) || pVarDesc == IntPtr.Zero) {
-                        Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, String.Format(CultureInfo.CurrentCulture, "ProcessTypeInfoEnum: ignoring variable item 0x{0:X} because ITypeInfo::GetFuncDesc returned hr=0x{1:X} or NULL", hr));
+                    if (!hr.Succeeded() || pVarDesc == IntPtr.Zero)
+                    {
+                        Debug.WriteLineIf(DbgTypeInfoProcessorSwitch.TraceVerbose, string.Format(CultureInfo.CurrentCulture, "ProcessTypeInfoEnum: ignoring variable item 0x{0:X} because ITypeInfo::GetFuncDesc returned hr=0x{1:X} or NULL", hr));
                         continue;
                     }
 
-                    //varDesc = (tagVARDESC)Marshal.PtrToStructure(pVarDesc, typeof(tagVARDESC));
-                    UnsafeNativeMethods.PtrToStructure(pVarDesc, varDesc);
+                    try
+                    {
+                        ref readonly Ole32.VARDESC varDesc = ref UnsafeNativeMethods.PtrToRef<Ole32.VARDESC>(pVarDesc);
 
-                    try {
-
-                        if (varDesc.varkind == (int)NativeMethods.tagVARKIND.VAR_CONST ||
-                            (dispidToGet != NativeMethods.MEMBERID_NIL && varDesc.memid != dispidToGet)) {
+                        if (varDesc.varkind == Ole32.VARKIND.CONST ||
+                            (dispidToGet != Ole32.DispatchID.MEMBERID_NIL && varDesc.memid != dispidToGet))
+                        {
                             continue;
                         }
 
-
-                        PropInfo pi = ProcessDataCore(typeInfo, propInfoList, varDesc.memid, nameDispID, varDesc.elemdescVar.tdesc, varDesc.wVarFlags, structCache);
-                        if (pi.ReadOnly != PropInfo.ReadOnlyTrue) {
-                            pi.ReadOnly = PropInfo.ReadOnlyFalse;
+                        unsafe
+                        {
+                            PropInfo pi = ProcessDataCore(typeInfo, propInfoList, varDesc.memid, nameDispID, in varDesc.elemdescVar.tdesc, varDesc.wVarFlags);
+                            if (pi.ReadOnly != PropInfo.ReadOnlyTrue)
+                            {
+                                pi.ReadOnly = PropInfo.ReadOnlyFalse;
+                            }
                         }
                     }
-                    finally {
-                        if (pVarDesc != IntPtr.Zero) {
+                    finally
+                    {
+                        if (pVarDesc != IntPtr.Zero)
+                        {
                             typeInfo.ReleaseVarDesc(pVarDesc);
                         }
                     }
                 }
-                structCache.ReleaseStruct(varDesc);
             }
-            finally {
+            finally
+            {
                 typeInfo.ReleaseTypeAttr(pTypeAttr);
-                structCache.ReleaseStruct(typeAttr);
             }
         }
 
-        private static Type VTToType(NativeMethods.tagVT vt) {
-            switch (vt) {
-            case NativeMethods.tagVT.VT_EMPTY:
-            case NativeMethods.tagVT.VT_NULL:
-                return null;
-            case NativeMethods.tagVT.VT_I1:
-                return typeof(SByte);
-            case NativeMethods.tagVT.VT_UI1:
-                return typeof(Byte);
-
-            case NativeMethods.tagVT.VT_I2:
-                return typeof(Int16);
-            case NativeMethods.tagVT.VT_UI2:
-                return typeof(UInt16);
-                
-
-            case NativeMethods.tagVT.VT_I4:
-            case NativeMethods.tagVT.VT_INT:
-                return typeof(Int32);
-            
-            case NativeMethods.tagVT.VT_UI4:
-            case NativeMethods.tagVT.VT_UINT:
-                return typeof(UInt32);
-            
-            case NativeMethods.tagVT.VT_I8:
-                return typeof(Int64);
-            case NativeMethods.tagVT.VT_UI8:
-                return typeof(UInt64);
-
-            case NativeMethods.tagVT.VT_R4:
-                return typeof(float);
-
-            case NativeMethods.tagVT.VT_R8:
-                return typeof(double);
-
-            case NativeMethods.tagVT.VT_CY:
-                return typeof(Decimal);
-            case NativeMethods.tagVT.VT_DATE:
-                return typeof(DateTime);
-            case NativeMethods.tagVT.VT_BSTR:
-            case NativeMethods.tagVT.VT_LPSTR:
-            case NativeMethods.tagVT.VT_LPWSTR:
-                return typeof(string);
-
-            case NativeMethods.tagVT.VT_DISPATCH:
-                return typeof(UnsafeNativeMethods.IDispatch);
-            case NativeMethods.tagVT.VT_UNKNOWN:
-                return typeof(Object);
-
-            case NativeMethods.tagVT.VT_ERROR:
-            case NativeMethods.tagVT.VT_HRESULT:
-                return typeof(int);
-
-            case NativeMethods.tagVT.VT_BOOL:
-                return typeof(bool);
-
-            case NativeMethods.tagVT.VT_VARIANT:
-                return typeof(Com2Variant);
-            case NativeMethods.tagVT.VT_CLSID:
-                return typeof(Guid);
-
-            case NativeMethods.tagVT.VT_FILETIME:
-                return typeof(NativeMethods.FILETIME);
-
-            case NativeMethods.tagVT.VT_USERDEFINED:
-                throw new ArgumentException(string.Format(SR.COM2UnhandledVT, "VT_USERDEFINED"));
-
-                /*case VT_ENUM:
-                    if (enumNames != null || null != pPropertyInfo.GetEnum()) {
-                        return typeof(IEnum);
-                    }
-                    goto default;*/
-            case NativeMethods.tagVT.VT_VOID:
-            case NativeMethods.tagVT.VT_PTR:
-            case NativeMethods.tagVT.VT_SAFEARRAY:
-            case NativeMethods.tagVT.VT_CARRAY:
-
-            case NativeMethods.tagVT.VT_RECORD:
-            case NativeMethods.tagVT.VT_BLOB:
-            case NativeMethods.tagVT.VT_STREAM:
-            case NativeMethods.tagVT.VT_STORAGE:
-            case NativeMethods.tagVT.VT_STREAMED_OBJECT:
-            case NativeMethods.tagVT.VT_STORED_OBJECT:
-            case NativeMethods.tagVT.VT_BLOB_OBJECT:
-            case NativeMethods.tagVT.VT_CF:
-            case NativeMethods.tagVT.VT_BSTR_BLOB:
-            case NativeMethods.tagVT.VT_VECTOR:
-            case NativeMethods.tagVT.VT_ARRAY:
-            case NativeMethods.tagVT.VT_BYREF:
-            case NativeMethods.tagVT.VT_RESERVED:
-            default:
-                throw new ArgumentException(string.Format(SR.COM2UnhandledVT, ((int)vt).ToString(CultureInfo.InvariantCulture)));
+        private static Type VTToType(Ole32.VARENUM vt)
+        {
+            switch (vt)
+            {
+                case Ole32.VARENUM.EMPTY:
+                case Ole32.VARENUM.NULL:
+                    return null;
+                case Ole32.VARENUM.I1:
+                    return typeof(sbyte);
+                case Ole32.VARENUM.UI1:
+                    return typeof(byte);
+                case Ole32.VARENUM.I2:
+                    return typeof(short);
+                case Ole32.VARENUM.UI2:
+                    return typeof(ushort);
+                case Ole32.VARENUM.I4:
+                case Ole32.VARENUM.INT:
+                    return typeof(int);
+                case Ole32.VARENUM.UI4:
+                case Ole32.VARENUM.UINT:
+                    return typeof(uint);
+                case Ole32.VARENUM.I8:
+                    return typeof(long);
+                case Ole32.VARENUM.UI8:
+                    return typeof(ulong);
+                case Ole32.VARENUM.R4:
+                    return typeof(float);
+                case Ole32.VARENUM.R8:
+                    return typeof(double);
+                case Ole32.VARENUM.CY:
+                    return typeof(decimal);
+                case Ole32.VARENUM.DATE:
+                    return typeof(DateTime);
+                case Ole32.VARENUM.BSTR:
+                case Ole32.VARENUM.LPSTR:
+                case Ole32.VARENUM.LPWSTR:
+                    return typeof(string);
+                case Ole32.VARENUM.DISPATCH:
+                    return typeof(UnsafeNativeMethods.IDispatch);
+                case Ole32.VARENUM.UNKNOWN:
+                    return typeof(object);
+                case Ole32.VARENUM.ERROR:
+                case Ole32.VARENUM.HRESULT:
+                    return typeof(int);
+                case Ole32.VARENUM.BOOL:
+                    return typeof(bool);
+                case Ole32.VARENUM.VARIANT:
+                    return typeof(Com2Variant);
+                case Ole32.VARENUM.CLSID:
+                    return typeof(Guid);
+                case Ole32.VARENUM.FILETIME:
+                    return typeof(FILETIME);
+                case Ole32.VARENUM.USERDEFINED:
+                    throw new ArgumentException(string.Format(SR.COM2UnhandledVT, "VT_USERDEFINED"));
+                case Ole32.VARENUM.VOID:
+                case Ole32.VARENUM.PTR:
+                case Ole32.VARENUM.SAFEARRAY:
+                case Ole32.VARENUM.CARRAY:
+                case Ole32.VARENUM.RECORD:
+                case Ole32.VARENUM.BLOB:
+                case Ole32.VARENUM.STREAM:
+                case Ole32.VARENUM.STORAGE:
+                case Ole32.VARENUM.STREAMED_OBJECT:
+                case Ole32.VARENUM.STORED_OBJECT:
+                case Ole32.VARENUM.BLOB_OBJECT:
+                case Ole32.VARENUM.CF:
+                case Ole32.VARENUM.BSTR_BLOB:
+                case Ole32.VARENUM.VECTOR:
+                case Ole32.VARENUM.ARRAY:
+                case Ole32.VARENUM.BYREF:
+                case Ole32.VARENUM.RESERVED:
+                default:
+                    throw new ArgumentException(string.Format(SR.COM2UnhandledVT, ((int)vt).ToString(CultureInfo.InvariantCulture)));
             }
         }
 
-        internal class CachedProperties {
-
-            private PropertyDescriptor[] props;
+        internal class CachedProperties
+        {
+            private readonly PropertyDescriptor[] props;
 
             public readonly int MajorVersion;
             public readonly int MinorVersion;
-            private int defaultIndex;
+            private readonly int defaultIndex;
 
-            internal CachedProperties(PropertyDescriptor[] props, int defIndex, int majVersion, int minVersion) {
+            internal CachedProperties(PropertyDescriptor[] props, int defIndex, int majVersion, int minVersion)
+            {
                 this.props = ClonePropertyDescriptors(props);
-                this.MajorVersion = majVersion;
-                this.MinorVersion = minVersion;
-                this.defaultIndex = defIndex;
+                MajorVersion = majVersion;
+                MinorVersion = minVersion;
+                defaultIndex = defIndex;
             }
 
-            public PropertyDescriptor[] Properties {
-                get {
+            public PropertyDescriptor[] Properties
+            {
+                get
+                {
                     return ClonePropertyDescriptors(props);
                 }
             }
 
-            public int DefaultIndex {
-                get {
+            public int DefaultIndex
+            {
+                get
+                {
                     return defaultIndex;
                 }
             }
 
-            private PropertyDescriptor[] ClonePropertyDescriptors(PropertyDescriptor[] props) {
+            private PropertyDescriptor[] ClonePropertyDescriptors(PropertyDescriptor[] props)
+            {
                 PropertyDescriptor[] retProps = new PropertyDescriptor[props.Length];
-                for (int i = 0; i < props.Length; i++) {
-                    if (props[i] is ICloneable) {
-                        retProps[i] = (PropertyDescriptor)((ICloneable)props[i]).Clone();;
+                for (int i = 0; i < props.Length; i++)
+                {
+                    if (props[i] is ICloneable)
+                    {
+                        retProps[i] = (PropertyDescriptor)((ICloneable)props[i]).Clone();
+                        ;
                     }
-                    else {
+                    else
+                    {
                         retProps[i] = props[i];
                     }
                 }
                 return retProps;
             }
         }
-        
-        /// <include file='doc\COM2TypeInfoProcessor.uex' path='docs/doc[@for="Com2TypeInfoProcessor.StructCache"]/*' />
-        /// <devdoc>
-        /// This class manages a cache of structures that we can use
-        /// for passing into native so we don't have to create them every time.
-        /// for many objects, these can be used thousands of times.
-        /// </devdoc>
-        public class StructCache {
-           
-           private Hashtable queuedTypes = new Hashtable();
-           
-#if DEBUG
-           private Hashtable releaseCheck = new Hashtable();
 
-           ~StructCache() {
-                IEnumerator enumRelease = releaseCheck.Keys.GetEnumerator();
-                
-                while (enumRelease.MoveNext()) {
-                    Type t = (Type)enumRelease.Current;
-                    if ((int)releaseCheck[t] != 0) {
-                        Debug.Assert(false, "Failed to release struct of type " + t.Name);
-                    }
-                }      
-           }
-           
-#endif
-           
-           private Queue GetQueue(Type t, bool create) {
-               Object queue = queuedTypes[t];
-               
-               if (queue == null && create){
-                  queue = new Queue();
-                  queuedTypes[t] = queue;
-                  #if DEBUG
-                    releaseCheck[t] = 0;
-                  #endif
-               }
-               
-               return (Queue)queue;
-           }
-           
-           public Object GetStruct(Type t) {
-               Queue queue = GetQueue(t, true);
-               
-               Object str = null;
-               
-               if (queue.Count == 0) {
-                  str = Activator.CreateInstance(t);
-               }
-               else {
-                  str = queue.Dequeue();
-               }
-               
-               #if DEBUG
-                    int count = (int)releaseCheck[t];
-                    releaseCheck[t] = ++count;
-               #endif
-               
-               return str;
-           }
-           
-           public void ReleaseStruct(Object str) {
-               Type t = str.GetType();
-               Queue queue = GetQueue(t, false);
-               
-               if (queue != null) {
-                  queue.Enqueue(str);
-                  
-                  #if DEBUG
-                    int count = (int)releaseCheck[t];
-                    releaseCheck[t] = --count;
-                  #endif
-               } 
-           }
-            
-        }
+        private class PropInfo
+        {
+            public const int ReadOnlyUnknown = 0;
+            public const int ReadOnlyTrue = 1;
+            public const int ReadOnlyFalse = 2;
 
-        private class PropInfo {
+            public string Name { get; set; }
 
-            public const int            ReadOnlyUnknown = 0;
-            public const int            ReadOnlyTrue =  1;
-            public const int            ReadOnlyFalse = 2;
+            public Ole32.DispatchID DispId { get; set; } = Ole32.DispatchID.UNKNOWN;
 
-            string               name = null;
-            int                  dispid = -1;
-            Type                 valueType = null;
-            readonly ArrayList   attributes = new ArrayList();
-            int                  readOnly = ReadOnlyUnknown;
-            bool                 isDefault;
-            Object               typeData;
-            bool                 nonbrowsable = false;
-            int                  index;
+            public Type ValueType { get; set; }
 
-            public string Name {
-                get { return name; }
-                set { name = value; }
-            }
-            public int DispId {
-                get { return dispid; }
-                set { dispid = value; }
-            }
-            public Type ValueType {
-                get { return valueType; }
-                set { valueType = value; }
-            }
-            public ArrayList Attributes {
-                get { return attributes; }
-            }
-            public int ReadOnly {
-                get { return readOnly; }
-                set { readOnly = value; }
-            }
-            public bool IsDefault {
-                get { return isDefault; }
-                set { isDefault = value; }
-            }
-            public object TypeData {
-                get { return typeData; }
-                set { typeData = value; }
-            }
-            public bool NonBrowsable {
-                get { return nonbrowsable; }
-                set { nonbrowsable = value; }
-            }
-            public int Index{
-                get {return index;}
-                set {index = value;}
-            }
+            public ArrayList Attributes { get; } = new ArrayList();
 
+            public int ReadOnly { get; set; } = ReadOnlyUnknown;
 
-            public override int GetHashCode() {
-                if (name != null) {
-                    return name.GetHashCode();
-                }
-                return base.GetHashCode();
-            }
+            public bool IsDefault { get; set; }
+
+            public object TypeData { get; set; }
+
+            public bool NonBrowsable { get; set; }
+
+            public int Index { get; set; }
+
+            public override int GetHashCode() => Name?.GetHashCode() ?? base.GetHashCode();
         }
     }
-    
-    
-    // just so we can recognize a variant properly...
-    /// <include file='doc\COM2TypeInfoProcessor.uex' path='docs/doc[@for="Com2Variant"]/*' />
-    [System.Security.Permissions.PermissionSetAttribute(System.Security.Permissions.SecurityAction.InheritanceDemand, Name="FullTrust")]
-    [System.Security.Permissions.PermissionSetAttribute(System.Security.Permissions.SecurityAction.LinkDemand, Name="FullTrust")]
-    public class Com2Variant {
+
+    /// <summary>
+    ///  A class included so we can recognize a variant properly.
+    /// </summary>
+    public class Com2Variant
+    {
     }
 }

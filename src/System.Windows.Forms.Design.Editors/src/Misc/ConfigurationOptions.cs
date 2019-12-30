@@ -9,7 +9,7 @@ using System.Runtime.Versioning;
 namespace System.Windows.Forms
 {
     /// <summary>
-    /// Winforms application configuration options
+    ///  Winforms application configuration options
     /// </summary>
     internal static class ConfigurationOptions
     {
@@ -19,11 +19,8 @@ namespace System.Windows.Forms
         // Minimum supported framework version for this feature.
         private static readonly Version featureSupportedMinimumFrameworkVersion = new Version(4, 7);
 
-        // Current OS version
-        internal static Version OSVersion = Environment.OSVersion.Version;
-           
         // RS2 build number - we may need to change once we know RTM version. below is pre-RTM RS2 version.
-        internal static readonly Version RS2Version = new Version(10, 0, 14933, 0); 
+        internal static readonly Version RS2Version = new Version(10, 0, 14933, 0);
 
         static ConfigurationOptions()
         {
@@ -46,7 +43,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        /// Extract current targeted framework version
+        ///  Extract current targeted framework version
         /// </summary>
         public static Version NetFrameworkVersion
         {
@@ -54,22 +51,24 @@ namespace System.Windows.Forms
             {
                 if (netFrameworkVersion == null)
                 {
-                    netFrameworkVersion = new Version(0,0,0,0);  // by default version set to 0.0.0.0
+                    netFrameworkVersion = new Version(0, 0, 0, 0);  // by default version set to 0.0.0.0
 
                     // TargetFrameworkName can be null in certain scenarios.
                     try
                     {
-                        var targetFrameworkName= AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName;
-                        if (!String.IsNullOrEmpty(targetFrameworkName))
+                        var targetFrameworkName = AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName;
+                        if (!string.IsNullOrEmpty(targetFrameworkName))
                         {
                             var frameworkName = new FrameworkName(targetFrameworkName);
-                            if (String.Equals(frameworkName.Identifier, ".NETFramework"))
+                            if (string.Equals(frameworkName.Identifier, ".NETFramework"))
+                            {
                                 netFrameworkVersion = frameworkName.Version;
+                            }
                         }
                     }
                     catch (Exception e)
-                    {   
-                        Debug.WriteLine("Exception while reading Framework version : " + e.ToString());
+                    {
+                        Debug.WriteLine("Exception while reading .NET version : " + e.ToString());
                     }
                 }
 
@@ -78,7 +77,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        /// Extract value of the key specified from collection read from app.config file's winforms section
+        ///  Extract value of the key specified from collection read from app.config file's winforms section
         /// </summary>
         /// <param name="settingName"> setting key name</param>
         /// <returns>value of key</returns>

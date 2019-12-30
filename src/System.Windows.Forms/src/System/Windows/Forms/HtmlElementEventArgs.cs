@@ -1,201 +1,123 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Drawing;
-using System.Drawing.Printing;
-using System.Windows.Forms;
-using System.Runtime.InteropServices;
-using System.Net;
+using static Interop.Mshtml;
 
-namespace System.Windows.Forms {
+namespace System.Windows.Forms
+{
+    public sealed class HtmlElementEventArgs : EventArgs
+    {
+        private readonly HtmlShimManager _shimManager;
 
-    /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs"]/*' />
-    /// <devdoc>
-    ///    <para>[To be supplied.]</para>
-    /// </devdoc>
-    public sealed class HtmlElementEventArgs : EventArgs {
-        private UnsafeNativeMethods.IHTMLEventObj htmlEventObj;
-        private HtmlShimManager shimManager;
-        
-        internal HtmlElementEventArgs(HtmlShimManager shimManager, UnsafeNativeMethods.IHTMLEventObj eventObj) {
-            this.htmlEventObj = eventObj;
-            Debug.Assert(this.NativeHTMLEventObj != null, "The event object should implement IHTMLEventObj");
-            
-            this.shimManager = shimManager;
-        }
-        
-        private UnsafeNativeMethods.IHTMLEventObj NativeHTMLEventObj {
-            get {
-                return this.htmlEventObj;
-            }
+        internal HtmlElementEventArgs(HtmlShimManager shimManager, IHTMLEventObj eventObj)
+        {
+            NativeHTMLEventObj = eventObj;
+            Debug.Assert(NativeHTMLEventObj != null, "The event object should implement IHTMLEventObj");
+
+            _shimManager = shimManager;
         }
 
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.MouseButtonsPressed"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        public MouseButtons MouseButtonsPressed {
-            get {
+        private IHTMLEventObj NativeHTMLEventObj { get; }
+
+        public MouseButtons MouseButtonsPressed
+        {
+            get
+            {
                 MouseButtons buttons = MouseButtons.None;
-                int nButtons = this.NativeHTMLEventObj.GetButton();
-                if ((nButtons & 1) != 0) {
+                int nButtons = NativeHTMLEventObj.GetButton();
+                if ((nButtons & 1) != 0)
+                {
                     buttons |= MouseButtons.Left;
                 }
-                if ((nButtons & 2) != 0) {
+                if ((nButtons & 2) != 0)
+                {
                     buttons |= MouseButtons.Right;
                 }
-                if ((nButtons & 4) != 0) {
+                if ((nButtons & 4) != 0)
+                {
                     buttons |= MouseButtons.Middle;
                 }
                 return buttons;
             }
         }
 
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.ClientMousePosition"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        public Point ClientMousePosition {
-            get {
-                return new Point(this.NativeHTMLEventObj.GetClientX(), this.NativeHTMLEventObj.GetClientY());
-            }
+        public Point ClientMousePosition
+        {
+            get => new Point(NativeHTMLEventObj.GetClientX(), NativeHTMLEventObj.GetClientY());
         }
 
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.OffsetMousePosition"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        public Point OffsetMousePosition {
-            get {
-                return new Point(this.NativeHTMLEventObj.GetOffsetX(), this.NativeHTMLEventObj.GetOffsetY());
-            }
+        public Point OffsetMousePosition
+        {
+            get => new Point(NativeHTMLEventObj.GetOffsetX(), NativeHTMLEventObj.GetOffsetY());
         }
 
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.MousePosition"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        public Point MousePosition {
-            get {
-                return new Point(this.NativeHTMLEventObj.GetX(), this.NativeHTMLEventObj.GetY());
-            }
+        public Point MousePosition
+        {
+            get => new Point(NativeHTMLEventObj.GetX(), NativeHTMLEventObj.GetY());
         }
 
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.BubbleEvent"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        public bool BubbleEvent {
-            get {
-                return !this.NativeHTMLEventObj.GetCancelBubble();
-            }
-            set {
-                this.NativeHTMLEventObj.SetCancelBubble(!value);
-            }
+        public bool BubbleEvent
+        {
+            get => !NativeHTMLEventObj.GetCancelBubble();
+            set => NativeHTMLEventObj.SetCancelBubble(!value);
         }
 
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.KeyPressedCode"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        public int KeyPressedCode {
-            get {
-                return this.NativeHTMLEventObj.GetKeyCode();
-            }
-        }
+        public int KeyPressedCode => NativeHTMLEventObj.GetKeyCode();
 
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.AltKeyPressed"]/*' />
-        /// <devdoc>
-        ///    <para>Indicates whether the Alt key was pressed, if this information is 
-        ///     provided to the IHtmlEventObj </para>
-        /// </devdoc>
-        public bool AltKeyPressed
+        /// <summary>
+        ///  Indicates whether the Alt key was pressed, if this information is
+        ///  provided to the IHtmlEventObj
+        /// </summary>
+        public bool AltKeyPressed => NativeHTMLEventObj.GetAltKey();
+
+        /// <summary>
+        ///  Indicates whether the Ctrl key was pressed, if this information is
+        ///  provided to the IHtmlEventObj
+        /// </summary>
+        public bool CtrlKeyPressed => NativeHTMLEventObj.GetCtrlKey();
+
+        /// <summary>
+        ///  Indicates whether the Shift key was pressed, if this information is
+        ///  provided to the IHtmlEventObj
+        /// </summary>
+        public bool ShiftKeyPressed => NativeHTMLEventObj.GetShiftKey();
+
+        public string EventType => NativeHTMLEventObj.GetEventType();
+
+        public bool ReturnValue
         {
             get
             {
-                return this.NativeHTMLEventObj.GetAltKey();
-            }
-        }
-
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.CtrlKeyPressed"]/*' />
-        /// <devdoc>
-        ///    <para>Indicates whether the Ctrl key was pressed, if this information is 
-        ///     provided to the IHtmlEventObj </para>
-        /// </devdoc>
-        public bool CtrlKeyPressed
-        {
-            get
-            {
-                return this.NativeHTMLEventObj.GetCtrlKey();
-            }
-        }
-
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.ShiftKeyPressed"]/*' />
-        /// <devdoc>
-        ///    <para>Indicates whether the Shift key was pressed, if this information is 
-        ///     provided to the IHtmlEventObj </para>
-        /// </devdoc>
-        public bool ShiftKeyPressed
-        {
-            get
-            {
-                return this.NativeHTMLEventObj.GetShiftKey();
-            }
-        }
-
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.EventType"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        public string EventType {
-            get {
-                return this.NativeHTMLEventObj.GetEventType();
-            }
-        }
-
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.ReturnValue"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        public bool ReturnValue {
-            get {
-                object obj = this.NativeHTMLEventObj.GetReturnValue();
+                object obj = NativeHTMLEventObj.GetReturnValue();
                 return obj == null ? true : (bool)obj;
             }
-            set {
-                object objValue = value;
-                this.NativeHTMLEventObj.SetReturnValue(objValue);
+            set => NativeHTMLEventObj.SetReturnValue(value);
+        }
+
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public HtmlElement FromElement
+        {
+            get
+            {
+                IHTMLElement htmlElement = NativeHTMLEventObj.GetFromElement();
+                return htmlElement == null ? null : new HtmlElement(_shimManager, htmlElement);
             }
         }
 
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.FromElement"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced)]
-        public HtmlElement FromElement {
-            get {
-                UnsafeNativeMethods.IHTMLElement htmlElement = this.NativeHTMLEventObj.GetFromElement();
-                return htmlElement == null ? null : new HtmlElement(shimManager, htmlElement);
-            }
-        }
-
-        /// <include file='doc\HtmlElementEventArgs.uex' path='docs/doc[@for="HtmlElementEventArgs.ToElement"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced)]
-        public HtmlElement ToElement {
-            get {
-                UnsafeNativeMethods.IHTMLElement htmlElement = this.NativeHTMLEventObj.GetToElement();
-                return htmlElement == null ? null : new HtmlElement(shimManager, htmlElement);
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public HtmlElement ToElement
+        {
+            get
+            {
+                IHTMLElement htmlElement = NativeHTMLEventObj.GetToElement();
+                return htmlElement == null ? null : new HtmlElement(_shimManager, htmlElement);
             }
         }
     }
 }
-

@@ -1,38 +1,16 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Diagnostics.CodeAnalysis;
+using static Interop;
 
-namespace System.Windows.Forms {
-    /// <include file='doc\SearchDirectionHint.uex' path='docs/doc[@for="SearchDirectionHint"]/*' />
-    /// <devdoc>
-    ///
-    /// </devdoc>
-    [
-        SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue")  // Maps to native enum.
-    ]
-    public enum SearchDirectionHint {
-        /// <include file='doc\SearchDirectionHint.uex' path='docs/doc[@for="SearchDirectionHint.Up"]/*' />
-        /// <devdoc>
-        ///
-        /// </devdoc>
-        Up = NativeMethods.VK_UP,
-        /// <include file='doc\SearchDirectionHint.uex' path='docs/doc[@for="SearchDirectionHint.Down"]/*' />
-        /// <devdoc>
-        ///
-        /// </devdoc>
-        Down = NativeMethods.VK_DOWN,
-        /// <include file='doc\SearchDirectionHint.uex' path='docs/doc[@for="SearchDirectionHint.Left"]/*' />
-        /// <devdoc>
-        ///
-        /// </devdoc>
-        Left = NativeMethods.VK_LEFT,
-        /// <include file='doc\SearchDirectionHint.uex' path='docs/doc[@for="SearchDirectionHint.Right"]/*' />
-        /// <devdoc>
-        ///
-        /// </devdoc>
-        Right = NativeMethods.VK_RIGHT
+namespace System.Windows.Forms
+{
+    public enum SearchDirectionHint
+    {
+        Up = User32.VK.UP,
+        Down = User32.VK.DOWN,
+        Left = User32.VK.LEFT,
+        Right = User32.VK.RIGHT
     }
 }

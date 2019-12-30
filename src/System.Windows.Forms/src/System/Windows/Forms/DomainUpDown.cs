@@ -1,27 +1,22 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.Windows.Forms {
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Design;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Windows.Forms.Layout;
+using static Interop;
 
-    using System.Diagnostics;
-
-    using System;
-    using System.Security.Permissions;
-    
-    using System.Runtime.InteropServices;
-    using System.ComponentModel;
-    using System.Drawing;
-    using System.Drawing.Design;
-    using System.Globalization;
-    using System.Windows.Forms.Layout;
-    using System.Collections;
-    using Microsoft.Win32;
-
-    /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown"]/*' />
-    /// <devdoc>
-    ///    <para>Represents a Windows up-down control that displays string values.</para>
-    /// </devdoc>
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ///  Represents a Windows up-down control that displays string values.
+    /// </summary>
     [
     ComVisible(true),
     ClassInterface(ClassInterfaceType.AutoDispatch),
@@ -30,21 +25,18 @@ namespace System.Windows.Forms {
     DefaultBindingProperty(nameof(SelectedItem)),
     SRDescription(nameof(SR.DescriptionDomainUpDown))
     ]
-    public class DomainUpDown : UpDownBase {
-
-        private readonly static string     DefaultValue = "";
-        private readonly static bool       DefaultWrap = false;
+    public class DomainUpDown : UpDownBase
+    {
+        private readonly static string DefaultValue = string.Empty;
+        private readonly static bool DefaultWrap = false;
 
         //////////////////////////////////////////////////////////////
         // Member variables
         //
         //////////////////////////////////////////////////////////////
-
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.domainItems"]/*' />
-        /// <devdoc>
-        ///     Allowable strings for the domain updown.
-        /// </devdoc>
-
+        /// <summary>
+        ///  Allowable strings for the domain updown.
+        /// </summary>
         private DomainUpDownItemCollection domainItems = null;
 
         private string stringValue = DefaultValue;      // Current string value
@@ -57,27 +49,22 @@ namespace System.Windows.Forms {
 
         private bool inSort = false;
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDown"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Initializes a new instance of the <see cref='System.Windows.Forms.DomainUpDown'/> class.
-        ///    </para>
-        /// </devdoc>
-        public DomainUpDown() : base() {   
+        /// <summary>
+        ///  Initializes a new instance of the <see cref='DomainUpDown'/> class.
+        /// </summary>
+        public DomainUpDown() : base()
+        {
             // this class overrides GetPreferredSizeCore, let Control automatically cache the result
-            SetState2(STATE2_USEPREFERREDSIZECACHE, true);  
-            Text = String.Empty;
-        }                
-                
+            SetExtendedState(ExtendedStates.UserPreferredSizeCache, true);
+            Text = string.Empty;
+        }
+
         // Properties
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.Items"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets the collection of objects assigned to the
-        ///       up-down control.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Gets the collection of objects assigned to the
+        ///  up-down control.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatData)),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Content),
@@ -85,105 +72,110 @@ namespace System.Windows.Forms {
         Localizable(true),
         Editor("System.Windows.Forms.Design.StringCollectionEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))
         ]
-        public DomainUpDownItemCollection Items {
-
-            get {
-                if (domainItems == null) {
+        public DomainUpDownItemCollection Items
+        {
+            get
+            {
+                if (domainItems == null)
+                {
                     domainItems = new DomainUpDownItemCollection(this);
                 }
                 return domainItems;
             }
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.Padding"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///    <para>[To be supplied.]</para>
-        ///    </para>
-        /// </devdoc>
         [
         Browsable(false),
         EditorBrowsable(EditorBrowsableState.Never),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
         ]
-        public new Padding Padding {
+        public new Padding Padding
+        {
             get { return base.Padding; }
-            set { base.Padding = value;}
+            set { base.Padding = value; }
         }
 
         [
         Browsable(false),
         EditorBrowsable(EditorBrowsableState.Never)
         ]
-        public new event EventHandler PaddingChanged {
-            add { base.PaddingChanged += value; }
-            remove { base.PaddingChanged -= value; }
+        public new event EventHandler PaddingChanged
+        {
+            add => base.PaddingChanged += value;
+            remove => base.PaddingChanged -= value;
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.SelectedIndex"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets or sets the index value of the selected item.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Gets or sets the index value of the selected item.
+        /// </summary>
         [
         Browsable(false),
         DefaultValue(-1),
         SRCategory(nameof(SR.CatAppearance)),
         SRDescription(nameof(SR.DomainUpDownSelectedIndexDescr))
         ]
-        public int SelectedIndex {
-
-            get {
-                if (UserEdit) {
+        public int SelectedIndex
+        {
+            get
+            {
+                if (UserEdit)
+                {
                     return -1;
                 }
-                else {
+                else
+                {
                     return domainIndex;
                 }
             }
 
-            set {
-                if (value < -1 || value >= Items.Count) {
-                    throw new ArgumentOutOfRangeException(nameof(SelectedIndex), string.Format(SR.InvalidArgument, "SelectedIndex", (value).ToString(CultureInfo.CurrentCulture)));
+            set
+            {
+                if (value < -1 || value >= Items.Count)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidArgument, nameof(SelectedIndex), value));
                 }
-                
-                if (value != SelectedIndex) {    
+
+                if (value != SelectedIndex)
+                {
                     SelectIndex(value);
                 }
             }
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.SelectedItem"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets or sets the selected item based on the index value
-        ///       of the selected item in the
-        ///       collection.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Gets or sets the selected item based on the index value
+        ///  of the selected item in the
+        ///  collection.
+        /// </summary>
         [
         Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
         SRDescription(nameof(SR.DomainUpDownSelectedItemDescr))
         ]
-        public object SelectedItem {
-            get {
+        public object SelectedItem
+        {
+            get
+            {
                 int index = SelectedIndex;
-                return(index == -1) ? null : Items[index];
+                return (index == -1) ? null : Items[index];
             }
-            set {
+            set
+            {
 
                 // Treat null as selecting no item
                 //
-                if (value == null) {
+                if (value == null)
+                {
                     SelectedIndex = -1;
                 }
-                else {
+                else
+                {
                     // Attempt to find the given item in the list of items
                     //
-                    for (int i = 0; i < Items.Count; i++) {
-                        if (value != null && value.Equals(Items[i])) {
+                    for (int i = 0; i < Items.Count; i++)
+                    {
+                        if (value != null && value.Equals(Items[i]))
+                        {
                             SelectedIndex = i;
                             break;
                         }
@@ -192,51 +184,52 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.Sorted"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets or sets a value indicating whether the item collection is sorted.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Gets or sets a value indicating whether the item collection is sorted.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         DefaultValue(false),
         SRDescription(nameof(SR.DomainUpDownSortedDescr))
         ]
-        public bool Sorted {
-
-            get {
+        public bool Sorted
+        {
+            get
+            {
                 return sorted;
             }
 
-            set {
+            set
+            {
                 sorted = value;
-                if (sorted) {
+                if (sorted)
+                {
                     SortDomainItems();
                 }
             }
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.Wrap"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Gets or sets a value indicating whether the collection of items continues to
-        ///       the first or last item if the user continues past the end of the list.
-        ///    </para>
-        /// </devdoc>
+        internal override bool SupportsUiaProviders => true;
+
+        /// <summary>
+        ///  Gets or sets a value indicating whether the collection of items continues to
+        ///  the first or last item if the user continues past the end of the list.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         Localizable(true),
         DefaultValue(false),
         SRDescription(nameof(SR.DomainUpDownWrapDescr))
         ]
-        public bool Wrap {
-
-            get {
+        public bool Wrap
+        {
+            get
+            {
                 return wrap;
             }
 
-            set {
+            set
+            {
                 wrap = value;
             }
         }
@@ -245,113 +238,105 @@ namespace System.Windows.Forms {
         // Methods
         //
         //////////////////////////////////////////////////////////////
-
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.SelectedItemChanged"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Occurs when the <see cref='System.Windows.Forms.DomainUpDown.SelectedItem'/> property has
-        ///       been changed.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Occurs when the <see cref='SelectedItem'/> property has
+        ///  been changed.
+        /// </summary>
         [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.DomainUpDownOnSelectedItemChangedDescr))]
-        public event EventHandler SelectedItemChanged {
-            add {
-                onSelectedItemChanged += value;
-            }
-            remove {
-                onSelectedItemChanged -= value;
-            }
+        public event EventHandler SelectedItemChanged
+        {
+            add => onSelectedItemChanged += value;
+            remove => onSelectedItemChanged -= value;
         }
-        
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.CreateAccessibilityInstance"]/*' />
-        /// <internalonly/>
-        /// <devdoc>
-        ///    Constructs the new instance of the accessibility object for this control. Subclasses
-        ///    should not call base.CreateAccessibilityObject.
-        /// </devdoc>
-        protected override AccessibleObject CreateAccessibilityInstance() {
+
+        /// <summary>
+        ///  Constructs the new instance of the accessibility object for this control. Subclasses
+        ///  should not call base.CreateAccessibilityObject.
+        /// </summary>
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
             return new DomainUpDownAccessibleObject(this);
         }
-        
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DownButton"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Displays the next item in the object collection.
-        ///    </para>
-        /// </devdoc>
-        public override void DownButton() {
 
+        /// <summary>
+        ///  Displays the next item in the object collection.
+        /// </summary>
+        public override void DownButton()
+        {
             // Make sure domain values exist, and there are >0 items
             //
-            if (domainItems == null) {
+            if (domainItems == null)
+            {
                 return;
             }
-            if (domainItems.Count <= 0) {
+            if (domainItems.Count <= 0)
+            {
                 return;
             }
 
             // If the user has entered text, attempt to match it to the domain list
-            //            
+            //
             int matchIndex = -1;
-            if (UserEdit) {
+            if (UserEdit)
+            {
                 matchIndex = MatchIndex(Text, false, domainIndex);
             }
-            if (matchIndex != -1) {
-
+            if (matchIndex != -1)
+            {
                 // Found a match, so select this value
-                //
-                if (!LocalAppContextSwitches.UseLegacyDomainUpDownControlScrolling) {
-                    domainIndex = matchIndex;
+                domainIndex = matchIndex;
+                SelectIndex(matchIndex);
+            }
+            else
+            {
+                // Otherwise, get the next string in the domain list
+                if (domainIndex < domainItems.Count - 1)
+                {
+                    SelectIndex(domainIndex + 1);
                 }
-                else {
-                    SelectIndex(matchIndex);
-                    return;
+                else if (Wrap)
+                {
+                    SelectIndex(0);
                 }
             }
 
-            // Otherwise, get the next string in the domain list
-            //
-            
-            if (domainIndex < domainItems.Count - 1) {
-                SelectIndex(domainIndex + 1);
-            }
-            else if (Wrap) {
-                SelectIndex(0);
-            }
-                        
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.MatchIndex"]/*' />
-        /// <devdoc>
-        ///     Tries to find a match of the supplied text in the domain list.
-        ///     If complete is true, a complete match is required for success
-        ///     (i.e. the supplied text is the same length as the matched domain value)
-        ///     Returns the index in the domain list if the match is successful,
-        ///     returns -1 otherwise.
-        /// </devdoc>
-
-        internal int MatchIndex(string text, bool complete) {
+        /// <summary>
+        ///  Tries to find a match of the supplied text in the domain list.
+        ///  If complete is true, a complete match is required for success
+        ///  (i.e. the supplied text is the same length as the matched domain value)
+        ///  Returns the index in the domain list if the match is successful,
+        ///  returns -1 otherwise.
+        /// </summary>
+        internal int MatchIndex(string text, bool complete)
+        {
             return MatchIndex(text, complete, domainIndex);
         }
 
-        internal int MatchIndex(string text, bool complete, int startPosition) {
-
+        internal int MatchIndex(string text, bool complete, int startPosition)
+        {
             // Make sure domain values exist
-            if (domainItems == null) {
+            if (domainItems == null)
+            {
                 return -1;
             }
 
             // Sanity check of parameters
-            if (text.Length < 1) {
+            if (text.Length < 1)
+            {
                 return -1;
             }
-            if (domainItems.Count <= 0) {
+            if (domainItems.Count <= 0)
+            {
                 return -1;
             }
-            if (startPosition < 0) {
+            if (startPosition < 0)
+            {
                 startPosition = domainItems.Count - 1;
             }
-            if (startPosition >= domainItems.Count) {
+            if (startPosition >= domainItems.Count)
+            {
                 startPosition = 0;
             }
 
@@ -362,24 +347,32 @@ namespace System.Windows.Forms {
             int matchIndex = -1;
             bool found = false;
 
-            if (!complete) {
+            if (!complete)
+            {
                 text = text.ToUpper(CultureInfo.InvariantCulture);
             }
 
             // Attempt to match the string with Items[index]
-            do {
+            do
+            {
                 if (complete)
+                {
                     found = Items[index].ToString().Equals(text);
+                }
                 else
+                {
                     found = Items[index].ToString().ToUpper(CultureInfo.InvariantCulture).StartsWith(text);
+                }
 
-                if (found) {
+                if (found)
+                {
                     matchIndex = index;
                 }
 
                 // Calculate the next index to attempt to match
                 index++;
-                if (index >= domainItems.Count) {
+                if (index >= domainItems.Count)
+                {
                     index = 0;
                 }
 
@@ -388,30 +381,27 @@ namespace System.Windows.Forms {
             return matchIndex;
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.OnChanged"]/*' />
-        /// <internalonly/>
-        /// <devdoc>
-        ///    <para>
-        ///       In the case of a DomainUpDown, the handler for changing
-        ///       values is called OnSelectedItemChanged - so just forward it to that
-        ///       function.
-        ///    </para>
-        /// </devdoc>
-        protected override void OnChanged(object source, EventArgs e) {
+        /// <summary>
+        ///  In the case of a DomainUpDown, the handler for changing
+        ///  values is called OnSelectedItemChanged - so just forward it to that
+        ///  function.
+        /// </summary>
+        protected override void OnChanged(object source, EventArgs e)
+        {
             OnSelectedItemChanged(source, e);
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.OnTextBoxKeyPress"]/*' />
-        /// <internalonly/>
-        /// <devdoc>
-        /// <para>Handles the <see cref='System.Windows.Forms.Control.KeyPress'/>
-        /// event, using the input character to find the next matching item in our 
-        /// item collection.</para>
-        /// </devdoc>
-        protected override void OnTextBoxKeyPress(object source, KeyPressEventArgs e) {
-            if (ReadOnly) {
+        /// <summary>
+        ///  Handles the <see cref='Control.KeyPress'/>
+        ///  event, using the input character to find the next matching item in our
+        ///  item collection.
+        /// </summary>
+        protected override void OnTextBoxKeyPress(object source, KeyPressEventArgs e)
+        {
+            if (ReadOnly)
+            {
                 char[] character = new char[] { e.KeyChar };
-                UnicodeCategory uc = Char.GetUnicodeCategory(character[0]);
+                UnicodeCategory uc = char.GetUnicodeCategory(character[0]);
 
                 if (uc == UnicodeCategory.LetterNumber
                     || uc == UnicodeCategory.LowercaseLetter
@@ -419,11 +409,13 @@ namespace System.Windows.Forms {
                     || uc == UnicodeCategory.MathSymbol
                     || uc == UnicodeCategory.OtherLetter
                     || uc == UnicodeCategory.OtherNumber
-                    || uc == UnicodeCategory.UppercaseLetter) {
+                    || uc == UnicodeCategory.UppercaseLetter)
+                {
 
                     // Attempt to match the character to a domain item
                     int matchIndex = MatchIndex(new string(character), false, domainIndex + 1);
-                    if (matchIndex != -1) {
+                    if (matchIndex != -1)
+                    {
 
                         // Select the matching domain item
                         SelectIndex(matchIndex);
@@ -434,161 +426,152 @@ namespace System.Windows.Forms {
             base.OnTextBoxKeyPress(source, e);
         }
 
-
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.OnSelectedItemChanged"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Raises the <see cref='System.Windows.Forms.DomainUpDown.SelectedItemChanged'/> event.
-        ///    </para>
-        /// </devdoc>
-        protected void OnSelectedItemChanged(object source, EventArgs e) {
-
+        /// <summary>
+        ///  Raises the <see cref='SelectedItemChanged'/> event.
+        /// </summary>
+        protected void OnSelectedItemChanged(object source, EventArgs e)
+        {
             // Call the event handler
-            if (onSelectedItemChanged != null) {
-                onSelectedItemChanged(this, e);
-            }
+            onSelectedItemChanged?.Invoke(this, e);
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.SelectIndex"]/*' />
-        /// <devdoc>
-        ///     Selects the item in the domain list at the given index
-        /// </devdoc>
-        private void SelectIndex(int index) {
-
+        /// <summary>
+        ///  Selects the item in the domain list at the given index
+        /// </summary>
+        private void SelectIndex(int index)
+        {
             // Sanity check index
 
             Debug.Assert(domainItems != null, "Domain values array is null");
             Debug.Assert(index < domainItems.Count && index >= -1, "SelectValue: index out of range");
-            if (domainItems == null || index < -1 || index >= domainItems.Count) {
+            if (domainItems == null || index < -1 || index >= domainItems.Count)
+            {
                 // Defensive programming
                 index = -1;
                 return;
             }
-            
+
             // If the selected index has changed, update the text
             //
             domainIndex = index;
-            if (domainIndex >= 0) {
+            if (domainIndex >= 0)
+            {
                 stringValue = domainItems[domainIndex].ToString();
                 UserEdit = false;
                 UpdateEditText();
             }
-            else {
+            else
+            {
                 UserEdit = true;
             }
-            
-            Debug.Assert(domainIndex >=0 || UserEdit == true, "UserEdit should be true when domainIndex < 0 " + UserEdit);
+
+            Debug.Assert(domainIndex >= 0 || UserEdit == true, "UserEdit should be true when domainIndex < 0 " + UserEdit);
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.SortDomainItems"]/*' />
-        /// <devdoc>
-        ///     Sorts the domain values
-        /// </devdoc>
-        private void SortDomainItems() {
+        /// <summary>
+        ///  Sorts the domain values
+        /// </summary>
+        private void SortDomainItems()
+        {
             if (inSort)
+            {
                 return;
-            
+            }
+
             inSort = true;
-            try {
+            try
+            {
                 // Sanity check
                 Debug.Assert(sorted == true, "Sorted == false");
-                if (!sorted) {
+                if (!sorted)
+                {
                     return;
                 }
 
-                if (domainItems != null) {
+                if (domainItems != null)
+                {
 
                     // Sort the domain values
                     ArrayList.Adapter(domainItems).Sort(new DomainUpDownItemCompare());
 
                     // Update the domain index
-                    if (!UserEdit) {
+                    if (!UserEdit)
+                    {
                         int newIndex = MatchIndex(stringValue, true);
-                        if (newIndex != -1) {
+                        if (newIndex != -1)
+                        {
                             SelectIndex(newIndex);
                         }
                     }
                 }
             }
-            finally {
+            finally
+            {
                 inSort = false;
             }
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.ToString"]/*' />
-        /// <devdoc>
-        ///     Provides some interesting info about this control in String form.
-        /// </devdoc>
-        /// <internalonly/>
-        public override string ToString() {
-
+        /// <summary>
+        ///  Provides some interesting info about this control in String form.
+        /// </summary>
+        public override string ToString()
+        {
             string s = base.ToString();
 
-            if (Items != null) {
+            if (Items != null)
+            {
                 s += ", Items.Count: " + Items.Count.ToString(CultureInfo.CurrentCulture);
                 s += ", SelectedIndex: " + SelectedIndex.ToString(CultureInfo.CurrentCulture);
             }
             return s;
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.UpButton"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Displays the previous item in the collection.
-        ///    </para>
-        /// </devdoc>
-        public override void UpButton() {
-
+        /// <summary>
+        ///  Displays the previous item in the collection.
+        /// </summary>
+        public override void UpButton()
+        {
             // Make sure domain values exist, and there are >0 items
-            if (domainItems == null) {
+            if (domainItems == null)
+            {
                 return;
             }
-            if (domainItems.Count <= 0) {
-                return;
-            }
-
-            // legacy behaviour. we do not want to void operation if domainIndex was -1 in latest runtime.
-            if (domainIndex == -1 && LocalAppContextSwitches.UseLegacyDomainUpDownControlScrolling) {
+            if (domainItems.Count <= 0)
+            {
                 return;
             }
 
             // If the user has entered text, attempt to match it to the domain list
             int matchIndex = -1;
-            if (UserEdit) {
+            if (UserEdit)
+            {
                 matchIndex = MatchIndex(Text, false, domainIndex);
             }
-            if (matchIndex != -1) {
-
+            if (matchIndex != -1)
+            {
                 // Found a match, so set the domain index accordingly
-                //In legacy (.NET framework 4.7.1 and below), we were just updating selected index but no actualy change in the spinner.
-                //with new runtime, we update the selected index and perform spinner action.
-                 if(!LocalAppContextSwitches.UseLegacyDomainUpDownControlScrolling) {
-                     domainIndex = matchIndex;                                      
-                 }
-                 else {
-                     SelectIndex(matchIndex);
-                     return;
-                 }
+                domainIndex = matchIndex;
+                SelectIndex(matchIndex);
             }
-
-            // Otherwise, get the previous string in the domain list            
-
-            if (domainIndex > 0) {
-                SelectIndex(domainIndex - 1);
+            else
+            {
+                // Otherwise, get the previous string in the domain list
+                if (domainIndex > 0)
+                {
+                    SelectIndex(domainIndex - 1);
+                }
+                else if (Wrap)
+                {
+                    SelectIndex(domainItems.Count - 1);
+                }
             }
-            else if (Wrap) {
-                SelectIndex(domainItems.Count - 1);
-            }            
         }
-       
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.UpdateEditText"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Updates the text in the up-down control to display the selected item.
-        ///    </para>
-        /// </devdoc>
-        protected override void UpdateEditText() {
 
+        /// <summary>
+        ///  Updates the text in the up-down control to display the selected item.
+        /// </summary>
+        protected override void UpdateEditText()
+        {
             Debug.Assert(!UserEdit, "UserEdit should be false");
             // Defensive programming
             UserEdit = false;
@@ -599,10 +582,11 @@ namespace System.Windows.Forms {
         // This is not a breaking change -- Even though this control previously autosized to hieght,
         // it didn't actually have an AutoSize property.  The new AutoSize property enables the
         // smarter behavior.
-        internal override Size GetPreferredSizeCore(Size proposedConstraints) {
+        internal override Size GetPreferredSizeCore(Size proposedConstraints)
+        {
             int height = PreferredHeight;
             int width = LayoutUtils.OldGetLargestStringSizeInCollection(Font, Items).Width;
-            
+
             // AdjuctWindowRect with our border, since textbox is borderless.
             width = SizeFromClientSize(width, height).Width + upDownButtons.Width;
             return new Size(width, height) + Padding.Size;
@@ -610,325 +594,367 @@ namespace System.Windows.Forms {
 
         // DomainUpDown collection class
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDownItemCollection"]/*' />
-        /// <devdoc>
-        /// <para>Encapsulates a collection of objects for use by the <see cref='System.Windows.Forms.DomainUpDown'/>
-        /// class.</para>
-        /// </devdoc>
-        public class DomainUpDownItemCollection : ArrayList {
-            DomainUpDown owner;
+        /// <summary>
+        ///  Encapsulates a collection of objects for use by the <see cref='DomainUpDown'/>
+        ///  class.
+        /// </summary>
+        public class DomainUpDownItemCollection : ArrayList
+        {
+            readonly DomainUpDown owner;
 
             internal DomainUpDownItemCollection(DomainUpDown owner)
-            : base() {
+            : base()
+            {
                 this.owner = owner;
             }
 
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDownItemCollection.this"]/*' />
-            /// <devdoc>
-            /// </devdoc>
+            /// <summary>
+            /// </summary>
             [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-            public override object this[int index] {
-                get {
+            public override object this[int index]
+            {
+                get
+                {
                     return base[index];
                 }
 
-                set {
+                set
+                {
                     base[index] = value;
 
-                    if (owner.SelectedIndex == index) {
+                    if (owner.SelectedIndex == index)
+                    {
                         owner.SelectIndex(index);
                     }
 
-                    if (owner.Sorted) {
+                    if (owner.Sorted)
+                    {
                         owner.SortDomainItems();
                     }
                 }
             }
 
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDownItemCollection.Add"]/*' />
-            /// <devdoc>
-            /// </devdoc>
-            public override int Add(object item) {
+            /// <summary>
+            /// </summary>
+            public override int Add(object item)
+            {
                 // Overridden to perform sorting after adding an item
 
                 int ret = base.Add(item);
-                if (owner.Sorted) {
+                if (owner.Sorted)
+                {
                     owner.SortDomainItems();
                 }
                 return ret;
             }
 
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDownItemCollection.Remove"]/*' />
-            /// <devdoc>
-            /// </devdoc>
-            public override void Remove(object item) {
+            /// <summary>
+            /// </summary>
+            public override void Remove(object item)
+            {
                 int index = IndexOf(item);
-                
-                if (index == -1) {
-                    throw new ArgumentOutOfRangeException(nameof(item), string.Format(SR.InvalidArgument, "item", item.ToString()));
+
+                if (index == -1)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(item), item, string.Format(SR.InvalidArgument, nameof(item), item));
                 }
-                else {
-                    RemoveAt(index);    
+                else
+                {
+                    RemoveAt(index);
                 }
             }
-            
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDownItemCollection.RemoveAt"]/*' />
-            /// <devdoc>
-            /// </devdoc>
-            public override void RemoveAt(int item) {
+
+            /// <summary>
+            /// </summary>
+            public override void RemoveAt(int item)
+            {
                 // Overridden to update the domain index if neccessary
                 base.RemoveAt(item);
 
-                if (item < owner.domainIndex) {
+                if (item < owner.domainIndex)
+                {
                     // The item removed was before the currently selected item
                     owner.SelectIndex(owner.domainIndex - 1);
                 }
-                else if (item == owner.domainIndex) {
+                else if (item == owner.domainIndex)
+                {
                     // The currently selected item was removed
                     //
                     owner.SelectIndex(-1);
                 }
             }
 
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDownItemCollection.Insert"]/*' />
-            /// <devdoc>
-            /// </devdoc>
-            public override void Insert(int index, object item) {
+            /// <summary>
+            /// </summary>
+            public override void Insert(int index, object item)
+            {
                 base.Insert(index, item);
-                if (owner.Sorted) {
+                if (owner.Sorted)
+                {
                     owner.SortDomainItems();
                 }
             }
         } // end class DomainUpDownItemCollection
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDownItemCompare"]/*' />
-        /// <devdoc>
-        /// </devdoc>
-        private sealed class DomainUpDownItemCompare : IComparer {
-
-            public int Compare(object p, object q) {
-                if (p == q) return 0;
-                if (p == null || q == null) {
+        private sealed class DomainUpDownItemCompare : IComparer
+        {
+            public int Compare(object p, object q)
+            {
+                if (p == q)
+                {
                     return 0;
                 }
 
-                return String.Compare(p.ToString(), q.ToString(), false, CultureInfo.CurrentCulture);
+                if (p == null || q == null)
+                {
+                    return 0;
+                }
+
+                return string.Compare(p.ToString(), q.ToString(), false, CultureInfo.CurrentCulture);
             }
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDownAccessibleObject"]/*' />
-        /// <internalonly/>        
-        /// <devdoc>
-        /// </devdoc>
-        [System.Runtime.InteropServices.ComVisible(true)]        
-        public class DomainUpDownAccessibleObject : ControlAccessibleObject {
-
+        [ComVisible(true)]
+        public class DomainUpDownAccessibleObject : ControlAccessibleObject
+        {
             private DomainItemListAccessibleObject itemList;
-            
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDownAccessibleObject.DomainUpDownAccessibleObject"]/*' />
-            /// <devdoc>
-            /// </devdoc>
-            public DomainUpDownAccessibleObject(Control owner) : base(owner) {
+            private readonly UpDownBase _owner;
+
+            /// <summary>
+            /// </summary>
+            public DomainUpDownAccessibleObject(DomainUpDown owner) : base(owner)
+            {
+                _owner = owner;
+            }
+
+            internal override object GetPropertyValue(UiaCore.UIA propertyID)
+            {
+                switch (propertyID)
+                {
+                    case UiaCore.UIA.RuntimeIdPropertyId:
+                        return RuntimeId;
+                    case UiaCore.UIA.NamePropertyId:
+                        return Name;
+                    case UiaCore.UIA.ControlTypePropertyId:
+                        return UiaCore.UIA.SpinnerControlTypeId;
+                    case UiaCore.UIA.BoundingRectanglePropertyId:
+                        return Bounds;
+                    case UiaCore.UIA.LegacyIAccessibleStatePropertyId:
+                        return State;
+                    case UiaCore.UIA.LegacyIAccessibleRolePropertyId:
+                        return Role;
+                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
+                        return false;
+                    default:
+                        return base.GetPropertyValue(propertyID);
+                }
             }
 
             /// <summary>
-            /// Gets or sets the accessible name.
+            ///  Gets or sets the accessible name.
             /// </summary>
-            public override string Name {
-                get {
-                    string baseName = base.Name;
-                    return ((DomainUpDown)Owner).GetAccessibleName(baseName);
-                }
-                set {
-                    base.Name = value;
-                }
+            public override string Name
+            {
+                get => base.Name ?? SR.DefaultDomainUpDownAccessibleName;
+                set => base.Name = value;
             }
-            
-            private DomainItemListAccessibleObject ItemList {
-                get {
-                    if (itemList == null) {
+
+            private DomainItemListAccessibleObject ItemList
+            {
+                get
+                {
+                    if (itemList == null)
+                    {
                         itemList = new DomainItemListAccessibleObject(this);
                     }
+
                     return itemList;
                 }
             }
-            
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDownAccessibleObject.Role"]/*' />
-            /// <devdoc>
-            ///    <para>[To be supplied.]</para>
-            /// </devdoc>
-            public override AccessibleRole Role {
-                get {
+
+            public override AccessibleRole Role
+            {
+                get
+                {
                     AccessibleRole role = Owner.AccessibleRole;
-                    if (role != AccessibleRole.Default) {
+
+                    if (role != AccessibleRole.Default)
+                    {
                         return role;
                     }
-                    else {
-                        if (AccessibilityImprovements.Level1) {
-                            return AccessibleRole.SpinButton;
-                        }
-                        else {
-                            return AccessibleRole.ComboBox;
-                        }
-                    }
+
+                    return AccessibleRole.SpinButton;
                 }
             }
 
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDownAccessibleObject.GetChild"]/*' />
-            /// <devdoc>
-            /// </devdoc>
-            public override AccessibleObject GetChild(int index) {
-                switch(index) {
+            /// <summary>
+            /// </summary>
+            public override AccessibleObject GetChild(int index)
+            {
+                switch (index)
+                {
                     // TextBox child
-                    //
                     case 0:
-                        return ((UpDownBase)Owner).TextBox.AccessibilityObject.Parent;
-                    
+                        return _owner.TextBox.AccessibilityObject.Parent;
                     // Up/down buttons
-                    //
                     case 1:
-                        return ((UpDownBase)Owner).UpDownButtonsInternal.AccessibilityObject.Parent;
-            
-                    case 2:                           
+                        return _owner.UpDownButtonsInternal.AccessibilityObject.Parent;
+                    case 2:
                         return ItemList;
+                    default:
+                        return null;
                 }
-                
-                return null;
             }
 
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainUpDownAccessibleObject.GetChildCount"]/*' />
-            /// <devdoc>
-            /// </devdoc>
-            public override int GetChildCount() {
+            public override int GetChildCount()
+            {
                 return 3;
             }
+
+            internal override int[] RuntimeId
+            {
+                get
+                {
+                    if (_owner == null)
+                    {
+                        return base.RuntimeId;
+                    }
+
+                    // we need to provide a unique ID
+                    // others are implementing this in the same manner
+                    // first item is static - 0x2a (RuntimeIDFirstItem)
+                    // second item can be anything, but here it is a hash
+
+                    var runtimeId = new int[3];
+                    runtimeId[0] = RuntimeIDFirstItem;
+                    runtimeId[1] = (int)(long)_owner.Handle;
+                    runtimeId[2] = _owner.GetHashCode();
+
+                    return runtimeId;
+                }
+            }
         }
-        
-        internal class DomainItemListAccessibleObject : AccessibleObject {
-        
-            private DomainUpDownAccessibleObject parent;
-        
-            public DomainItemListAccessibleObject(DomainUpDownAccessibleObject parent) : base() {
+
+        internal class DomainItemListAccessibleObject : AccessibleObject
+        {
+            private readonly DomainUpDownAccessibleObject parent;
+
+            public DomainItemListAccessibleObject(DomainUpDownAccessibleObject parent) : base()
+            {
                 this.parent = parent;
             }
-            
-            public override string Name {
-                get {
+
+            public override string Name
+            {
+                get
+                {
                     string baseName = base.Name;
-                    if (baseName == null || baseName.Length == 0) {
+                    if (baseName == null || baseName.Length == 0)
+                    {
                         return "Items";
                     }
                     return baseName;
                 }
-                set {
+                set
+                {
                     base.Name = value;
                 }
             }
-            
-            public override AccessibleObject Parent {
-                [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.UnmanagedCode)]
-                get {
+
+            public override AccessibleObject Parent
+            {
+                get
+                {
                     return parent;
                 }
             }
 
-            public override AccessibleRole Role {
-                get {
+            public override AccessibleRole Role
+            {
+                get
+                {
                     return AccessibleRole.List;
                 }
             }
 
-            public override AccessibleStates State {
-                get {
+            public override AccessibleStates State
+            {
+                get
+                {
                     return AccessibleStates.Invisible | AccessibleStates.Offscreen;
                 }
             }
-            
-            public override AccessibleObject GetChild(int index) {
-                
-                if (index >=0 && index < GetChildCount()) {
+
+            public override AccessibleObject GetChild(int index)
+            {
+
+                if (index >= 0 && index < GetChildCount())
+                {
                     return new DomainItemAccessibleObject(((DomainUpDown)parent.Owner).Items[index].ToString(), this);
                 }
-                
+
                 return null;
             }
 
-            public override int GetChildCount() {
+            public override int GetChildCount()
+            {
                 return ((DomainUpDown)parent.Owner).Items.Count;
             }
 
         }
 
-        /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainItemAccessibleObject"]/*' />
-        /// <internalonly/>        
-        /// <devdoc>
-        /// </devdoc>
-        [System.Runtime.InteropServices.ComVisible(true)]        
-        public class DomainItemAccessibleObject : AccessibleObject {
-
+        [ComVisible(true)]
+        public class DomainItemAccessibleObject : AccessibleObject
+        {
             private string name;
-            private DomainItemListAccessibleObject parent;
+            private readonly DomainItemListAccessibleObject parent;
 
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainItemAccessibleObject.DomainItemAccessibleObject"]/*' />
-            /// <devdoc>
-            ///    <para>[To be supplied.]</para>
-            /// </devdoc>
-            public DomainItemAccessibleObject(string name, AccessibleObject parent) : base() {
+            public DomainItemAccessibleObject(string name, AccessibleObject parent) : base()
+            {
                 this.name = name;
                 this.parent = (DomainItemListAccessibleObject)parent;
             }
 
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainItemAccessibleObject.Name"]/*' />
-            /// <devdoc>
-            ///    <para>[To be supplied.]</para>
-            /// </devdoc>
-            public override string Name {
-                get {
+            public override string Name
+            {
+                get
+                {
                     return name;
                 }
-                set {
+                set
+                {
                     name = value;
                 }
             }
 
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainItemAccessibleObject.Parent"]/*' />
-            /// <devdoc>
-            ///    <para>[To be supplied.]</para>
-            /// </devdoc>
-            public override AccessibleObject Parent {
-                [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.UnmanagedCode)]
-                get {
+            public override AccessibleObject Parent
+            {
+                get
+                {
                     return parent;
                 }
             }
 
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainItemAccessibleObject.Role"]/*' />
-            /// <devdoc>
-            ///    <para>[To be supplied.]</para>
-            /// </devdoc>
-            public override AccessibleRole Role {
-                get {
+            public override AccessibleRole Role
+            {
+                get
+                {
                     return AccessibleRole.ListItem;
                 }
             }
 
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainItemAccessibleObject.State"]/*' />
-            /// <devdoc>
-            ///    <para>[To be supplied.]</para>
-            /// </devdoc>
-            public override AccessibleStates State {
-                get {
+            public override AccessibleStates State
+            {
+                get
+                {
                     return AccessibleStates.Selectable;
                 }
             }
 
-            /// <include file='doc\DomainUpDown.uex' path='docs/doc[@for="DomainUpDown.DomainItemAccessibleObject.Value"]/*' />
-            /// <devdoc>
-            ///    <para>[To be supplied.]</para>
-            /// </devdoc>
-            public override string Value {
-                [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.UnmanagedCode)]
-                get {
+            public override string Value
+            {
+                get
+                {
                     return name;
                 }
             }

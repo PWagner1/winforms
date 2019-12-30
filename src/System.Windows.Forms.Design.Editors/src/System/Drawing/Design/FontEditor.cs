@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -7,79 +7,66 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
+using static Interop;
 
 namespace System.Drawing.Design
 {
     /// <summary>
-    ///       Provides a font editor that
-    ///       is used to visually select and configure a Font
-    ///       object.
+    ///  Provides a font editor that is used to visually select and configure a Font object.
     /// </summary>
     [CLSCompliant(false)]
     public class FontEditor : UITypeEditor
     {
-        private FontDialog fontDialog;
-        private object value;
+        private FontDialog _fontDialog;
 
         /// <summary>
-        ///      Edits the given object value using the editor style provided by
-        ///      GetEditorStyle.  A service provider is provided so that any
-        ///      required editing services can be obtained.
+        ///  Edits the given object value using the editor style provided by GetEditorStyle.
+        ///  A service provider is provided so that any required editing services can be obtained.
         /// </summary>
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
         {
-            this.value = value;
-
-            Debug.Assert(provider != null, "No service provider; we cannot edit the value");
             if (provider != null)
             {
-                IWindowsFormsEditorService edSvc = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
-
-                Debug.Assert(edSvc != null, "No editor service; we cannot edit the value");
-                if (edSvc != null)
+                if (provider.GetService(typeof(IWindowsFormsEditorService)) is IWindowsFormsEditorService edSvc)
                 {
-                    if (fontDialog == null)
+                    if (_fontDialog == null)
                     {
-                        fontDialog = new FontDialog();
-                        fontDialog.ShowApply = false;
-                        fontDialog.ShowColor = false;
-                        fontDialog.AllowVerticalFonts = false;
+                        _fontDialog = new FontDialog
+                        {
+                            ShowApply = false,
+                            ShowColor = false,
+                            AllowVerticalFonts = false
+                        };
                     }
 
-                    Font fontvalue = value as Font;
-                    if (fontvalue != null)
+                    if (value is Font fontValue)
                     {
-                        fontDialog.Font = fontvalue;
+                        _fontDialog.Font = fontValue;
                     }
 
-                    IntPtr hwndFocus = UnsafeNativeMethods.GetFocus();
+                    IntPtr hwndFocus = User32.GetFocus();
                     try
                     {
-                        if (fontDialog.ShowDialog() == DialogResult.OK)
+                        if (_fontDialog.ShowDialog() == DialogResult.OK)
                         {
-                            this.value = fontDialog.Font;
+                            return _fontDialog.Font;
                         }
                     }
                     finally
                     {
                         if (hwndFocus != IntPtr.Zero)
                         {
-                            UnsafeNativeMethods.SetFocus(new HandleRef(null, hwndFocus));
+                            User32.SetFocus(hwndFocus);
                         }
                     }
                 }
             }
 
-            // Now pull out the updated value, if there was one.
-            value = this.value;
-            this.value = null;
-
             return value;
         }
 
         /// <summary>
-        ///      Retrieves the editing style of the Edit method.  If the method
-        ///      is not supported, this will return None.
+        ///  Retrieves the editing style of the Edit method.false
         /// </summary>
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
         {
@@ -87,4 +74,3 @@ namespace System.Drawing.Design
         }
     }
 }
-

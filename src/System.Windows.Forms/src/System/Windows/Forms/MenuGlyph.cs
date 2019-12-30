@@ -1,52 +1,32 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.Windows.Forms {
+using static Interop;
 
-    using System.Diagnostics;
-    using System;
-    using System.ComponentModel;
-    using System.Drawing;
-    using Microsoft.Win32;
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ///  Enum to be used with the drawMenuGlyph function.
+    /// </summary>
+    public enum MenuGlyph
+    {
+        /// <summary>
+        ///  Draws a submenu arrow.
+        /// </summary>
+        Arrow = (int)User32.DFCS.MENUARROW,
 
+        /// <summary>
+        ///  Draws a menu checkmark.
+        /// </summary>
+        Checkmark = (int)User32.DFCS.MENUCHECK,
 
+        /// <summary>
+        ///  Draws a menu bullet.
+        /// </summary>
+        Bullet = (int)User32.DFCS.MENUBULLET,
 
-    /// <include file='doc\MenuGlyph.uex' path='docs/doc[@for="MenuGlyph"]/*' />
-    /// <devdoc>
-    ///     Enum to be used with the drawMenuGlyph function.
-    ///
-    /// </devdoc>
-    public enum MenuGlyph {
-
-        /// <include file='doc\MenuGlyph.uex' path='docs/doc[@for="MenuGlyph.Arrow"]/*' />
-        /// <devdoc>
-        ///     Draws a submenu arrow.
-        /// </devdoc>
-        Arrow = NativeMethods.DFCS_MENUARROW,
-
-        /// <include file='doc\MenuGlyph.uex' path='docs/doc[@for="MenuGlyph.Checkmark"]/*' />
-        /// <devdoc>
-        ///     Draws a menu checkmark.
-        /// </devdoc>
-        Checkmark = NativeMethods.DFCS_MENUCHECK,
-
-        /// <include file='doc\MenuGlyph.uex' path='docs/doc[@for="MenuGlyph.Bullet"]/*' />
-        /// <devdoc>
-        ///     Draws a menu bullet.
-        /// </devdoc>
-        Bullet = NativeMethods.DFCS_MENUBULLET,
-
-        /// <include file='doc\MenuGlyph.uex' path='docs/doc[@for="MenuGlyph.Min"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        Min = NativeMethods.DFCS_MENUARROW,
-        /// <include file='doc\MenuGlyph.uex' path='docs/doc[@for="MenuGlyph.Max"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        Max = NativeMethods.DFCS_MENUBULLET,
-
+        Min = (int)User32.DFCS.MENUARROW,
+        Max = (int)User32.DFCS.MENUBULLET,
     }
 }

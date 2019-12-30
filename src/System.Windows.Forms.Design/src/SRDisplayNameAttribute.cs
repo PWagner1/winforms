@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -12,19 +12,19 @@ namespace System.Windows.Forms.Design
         private bool replaced;
 
         /// <summary>
-        ///     Constructs a new sys display name.
+        ///  Constructs a new sys display name.
         /// </summary>
         /// <param name='displayName'>
-        ///     description text.
+        ///  description text.
         public SRDisplayNameAttribute(string displayName) : base(displayName)
         {
         }
 
         /// <summary>
-        ///     Retrieves the description text.
+        ///  Retrieves the description text.
         /// </summary>
         /// <returns>
-        ///     description
+        ///  description
         /// </returns>
         public override string DisplayName
         {

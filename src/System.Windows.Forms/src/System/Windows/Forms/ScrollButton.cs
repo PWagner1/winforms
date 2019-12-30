@@ -1,70 +1,39 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.Windows.Forms {
+using static Interop;
 
-    using System.Diagnostics;
-    using System;
-    using System.ComponentModel;
-    using System.Drawing;
-    using Microsoft.Win32;
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ////  Specifies the type of scroll arrow to create on a scroll bar.
+    ////
+    /// </summary>
+    public enum ScrollButton
+    {
+        /// <summary>
+        ///  A down-scroll arrow.
+        /// </summary>
+        Down = (int)User32.DFCS.SCROLLDOWN,
 
+        /// <summary>
+        ///  A left-scroll arrow.
+        /// </summary>
+        Left = (int)User32.DFCS.SCROLLLEFT,
 
+        /// <summary>
+        ///  A right-scroll arrow.
+        /// </summary>
+        Right = (int)User32.DFCS.SCROLLRIGHT,
 
-    /// <include file='doc\ScrollButton.uex' path='docs/doc[@for="ScrollButton"]/*' />
-    /// <devdoc>
-    ///    <para>
-    ///       Specifies the type of
-    ///       scroll arrow to create on a scroll bar.
-    ///       
-    ///    </para>
-    /// </devdoc>
-    public enum ScrollButton {
+        /// <summary>
+        ///  An up-scroll arrow.
+        /// </summary>
+        Up = (int)User32.DFCS.SCROLLUP,
 
-        /// <include file='doc\ScrollButton.uex' path='docs/doc[@for="ScrollButton.Down"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       A down-scroll arrow.
-        ///       
-        ///    </para>
-        /// </devdoc>
-        Down = NativeMethods.DFCS_SCROLLDOWN,
+        Min = (int)User32.DFCS.SCROLLUP,
 
-        /// <include file='doc\ScrollButton.uex' path='docs/doc[@for="ScrollButton.Left"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       A left-scroll arrow.
-        ///       
-        ///    </para>
-        /// </devdoc>
-        Left = NativeMethods.DFCS_SCROLLLEFT,
-
-        /// <include file='doc\ScrollButton.uex' path='docs/doc[@for="ScrollButton.Right"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       A right-scroll arrow.
-        ///       
-        ///    </para>
-        /// </devdoc>
-        Right = NativeMethods.DFCS_SCROLLRIGHT,
-
-        /// <include file='doc\ScrollButton.uex' path='docs/doc[@for="ScrollButton.Up"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       An up-scroll arrow.
-        ///       
-        ///    </para>
-        /// </devdoc>
-        Up = NativeMethods.DFCS_SCROLLUP,
-
-        /// <include file='doc\ScrollButton.uex' path='docs/doc[@for="ScrollButton.Min"]/*' />
-        /// <devdoc>
-        /// </devdoc>
-        Min = NativeMethods.DFCS_SCROLLUP,
-        
-        /// <include file='doc\ScrollButton.uex' path='docs/doc[@for="ScrollButton.Max"]/*' />
-        Max = NativeMethods.DFCS_SCROLLRIGHT,
-
+        Max = (int)User32.DFCS.SCROLLRIGHT,
     }
 }

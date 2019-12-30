@@ -2,67 +2,58 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Windows.Forms.Internal;
+using System.Windows.Forms.Layout;
+using Microsoft.Win32;
 
+using static Interop;
+using ArrayList = System.Collections.ArrayList;
 
-namespace System.Windows.Forms {
-    using System.Runtime.Serialization.Formatters;
-    using System.Runtime.Remoting;
-    using System.Runtime.InteropServices;
-
-    using System.Diagnostics;
-
-    using System;
-    using System.Security.Permissions;
-    using System.Globalization;
-
-    using System.Windows.Forms.Internal;
-    using System.ComponentModel;
-    using System.ComponentModel.Design;
-    using ArrayList = System.Collections.ArrayList;
-
-    using System.Drawing;
-    using Microsoft.Win32;
-    using System.Windows.Forms.Layout;
-
-    /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar"]/*' />
-    /// <devdoc>
-    ///     This control is an encapsulateion of the Windows month calendar control.
-    ///     A month calendar control implements a calendar-like user interface, that
-    ///     provides the user with a very intuitive and recognizable method of entering
-    ///     or selecting a date.
-    ///     Users can also select which days bold.  The most efficient way to add the
-    ///     bolded dates is via an array all at once.  (The below descriptions can be applied
-    ///     equally to annually and monthly bolded dates as well)
-    ///     The following is an example of this:
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ///  This control is an encapsulateion of the Windows month calendar control.
+    ///  A month calendar control implements a calendar-like user interface, that
+    ///  provides the user with a very intuitive and recognizable method of entering
+    ///  or selecting a date.
+    ///  Users can also select which days bold.  The most efficient way to add the
+    ///  bolded dates is via an array all at once.  (The below descriptions can be applied
+    ///  equally to annually and monthly bolded dates as well)
+    ///  The following is an example of this:
     /// <code>
-    ///     MonthCalendar mc = new MonthCalendar();
-    ///     //     add specific dates to bold
-    ///     DateTime[] time = new DateTime[3];
-    ///     time[0] = DateTime.Now;
-    ///     time[1] = time[0].addDays(2);
-    ///     time[2] = time[1].addDays(2);
-    ///     mc.setBoldedDates(time);
+    ///  MonthCalendar mc = new MonthCalendar();
+    ///  //     add specific dates to bold
+    ///  DateTime[] time = new DateTime[3];
+    ///  time[0] = DateTime.Now;
+    ///  time[1] = time[0].addDays(2);
+    ///  time[2] = time[1].addDays(2);
+    ///  mc.setBoldedDates(time);
     /// </code>
-    ///     Removal of all bolded dates is accomplished with:
+    ///  Removal of all bolded dates is accomplished with:
     /// <code>
-    ///     mc.removeAllBoldedDates();
+    ///  mc.removeAllBoldedDates();
     /// </code>
-    ///     Although less efficient, the user may need to add or remove bolded dates one at
-    ///     a time.  To improve the performance of this, neither addBoldedDate nor
-    ///     removeBoldedDate repaints the monthcalendar.  The user must call updateBoldedDates
-    ///     to force the repaint of the bolded dates, otherwise the monthCalendar will not
-    ///     paint properly.
-    ///     The following is an example of this:
+    ///  Although less efficient, the user may need to add or remove bolded dates one at
+    ///  a time.  To improve the performance of this, neither addBoldedDate nor
+    ///  removeBoldedDate repaints the monthcalendar.  The user must call updateBoldedDates
+    ///  to force the repaint of the bolded dates, otherwise the monthCalendar will not
+    ///  paint properly.
+    ///  The following is an example of this:
     /// <code>
-    ///     DateTime time1 = new DateTime("3/5/98");
-    ///     DateTime time2 = new DateTime("4/19/98");
-    ///     mc.addBoldedDate(time1);
-    ///     mc.addBoldedDate(time2);
-    ///     mc.removeBoldedDate(time1);
-    ///     mc.updateBoldedDates();
+    ///  DateTime time1 = new DateTime("3/5/98");
+    ///  DateTime time2 = new DateTime("4/19/98");
+    ///  mc.addBoldedDate(time1);
+    ///  mc.addBoldedDate(time2);
+    ///  mc.removeBoldedDate(time1);
+    ///  mc.updateBoldedDates();
     /// </code>
-    ///     The same applies to addition and removal of annual and monthly bolded dates.
-    /// </devdoc>
+    ///  The same applies to addition and removal of annual and monthly bolded dates.
+    /// </summary>
     [
     ComVisible(true),
     ClassInterface(ClassInterfaceType.AutoDispatch),
@@ -72,7 +63,8 @@ namespace System.Windows.Forms {
     Designer("System.Windows.Forms.Design.MonthCalendarDesigner, " + AssemblyRef.SystemDesign),
     SRDescription(nameof(SR.DescriptionMonthCalendar))
     ]
-    public class MonthCalendar : Control {
+    public partial class MonthCalendar : Control
+    {
         const long DAYS_TO_1601 = 548229;
         const long DAYS_TO_10000 = 3615900;
         static readonly Color DEFAULT_TITLE_BACK_COLOR = SystemColors.ActiveCaption;
@@ -80,215 +72,160 @@ namespace System.Windows.Forms {
         static readonly Color DEFAULT_TRAILING_FORE_COLOR = SystemColors.GrayText;
         private const int MINIMUM_ALLOC_SIZE = 12;  // minimum size to expand the buffer by
         private const int MONTHS_IN_YEAR = 12;
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.INSERT_WIDTH_SIZE"]/*' />
-        /// <devdoc>
-        ///     This is the arbitrary number of pixels that the Win32 control
-        ///     inserts between calendars horizontally, regardless of font.
-        /// </devdoc>
-        /// <internalonly/>
-        private const int   INSERT_WIDTH_SIZE = 6;
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.INSERT_HEIGHT_SIZE"]/*' />
-        /// <devdoc>
-        ///     This is the arbitrary number of pixels that the Win32 control
-        ///     inserts between calendars vertically, regardless of font.
-        /// </devdoc>
-        /// <internalonly/>
-        private const int         INSERT_HEIGHT_SIZE = 6;       // From comctl32 MonthCalendar sources CALBORDER
-        private const Day    DEFAULT_FIRST_DAY_OF_WEEK = Day.Default;
-        private const int         DEFAULT_MAX_SELECTION_COUNT = 7;
-        private const int         DEFAULT_SCROLL_CHANGE = 0;
-        private const int         UNIQUE_DATE = 0;
-        private const int         ANNUAL_DATE = 1;
-        private const int         MONTHLY_DATE = 2;
+        /// <summary>
+        ///  This is the arbitrary number of pixels that the Win32 control
+        ///  inserts between calendars horizontally, regardless of font.
+        /// </summary>
+        private const int INSERT_WIDTH_SIZE = 6;
+        /// <summary>
+        ///  This is the arbitrary number of pixels that the Win32 control
+        ///  inserts between calendars vertically, regardless of font.
+        /// </summary>
+        private const int INSERT_HEIGHT_SIZE = 6;       // From comctl32 MonthCalendar sources CALBORDER
+        private const Day DEFAULT_FIRST_DAY_OF_WEEK = Day.Default;
+        private const int DEFAULT_MAX_SELECTION_COUNT = 7;
+        private const int DEFAULT_SCROLL_CHANGE = 0;
+        private const int UNIQUE_DATE = 0;
+        private const int ANNUAL_DATE = 1;
+        private const int MONTHLY_DATE = 2;
 
-        private static readonly Size           DefaultSingleMonthSize = new Size(176, 153);
+        private static readonly Size DefaultSingleMonthSize = new Size(176, 153);
 
-        private const int   MaxScrollChange = 20000;
+        private const int MaxScrollChange = 20000;
 
-        private const int   ExtraPadding = 2;
-        private int         scaledExtraPadding = ExtraPadding;
+        private const int ExtraPadding = 2;
+        private int scaledExtraPadding = ExtraPadding;
 
-        private IntPtr         mdsBuffer = IntPtr.Zero;
-        private int         mdsBufferSize = 0;
+        private IntPtr _mdsBuffer = IntPtr.Zero;
+        private int _mdsBufferSize = 0;
 
         // styles
-        private Color       titleBackColor = DEFAULT_TITLE_BACK_COLOR;
-        private Color       titleForeColor = DEFAULT_TITLE_FORE_COLOR;
-        private Color       trailingForeColor = DEFAULT_TRAILING_FORE_COLOR;
-        private bool        showToday = true;
-        private bool        showTodayCircle = true;
-        private bool        showWeekNumbers = false;
-        private bool        rightToLeftLayout = false;
-
+        private Color titleBackColor = DEFAULT_TITLE_BACK_COLOR;
+        private Color titleForeColor = DEFAULT_TITLE_FORE_COLOR;
+        private Color trailingForeColor = DEFAULT_TRAILING_FORE_COLOR;
+        private bool showToday = true;
+        private bool showTodayCircle = true;
+        private bool showWeekNumbers = false;
+        private bool rightToLeftLayout = false;
 
         // properties
-        private Size        dimensions = new Size(1, 1);
-        private int         maxSelectionCount = DEFAULT_MAX_SELECTION_COUNT;
+        private Size dimensions = new Size(1, 1);
+        private int maxSelectionCount = DEFAULT_MAX_SELECTION_COUNT;
         // Reconcile out-of-range min/max values in the property getters.
-        private DateTime    maxDate = DateTime.MaxValue; 
-        private DateTime    minDate = DateTime.MinValue; 
-        private int         scrollChange = DEFAULT_SCROLL_CHANGE;
-        private bool        todayDateSet = false;           // Has TodayDate been explicitly set?
-        private DateTime    todayDate = DateTime.Now.Date;
-        private DateTime    selectionStart;
-        private DateTime    selectionEnd;
-        private Day     firstDayOfWeek = DEFAULT_FIRST_DAY_OF_WEEK;
-        private NativeMethods.MONTCALENDAR_VIEW_MODE mcCurView = NativeMethods.MONTCALENDAR_VIEW_MODE.MCMV_MONTH;
-        private NativeMethods.MONTCALENDAR_VIEW_MODE mcOldView = NativeMethods.MONTCALENDAR_VIEW_MODE.MCMV_MONTH;
+        private DateTime maxDate = DateTime.MaxValue;
+        private DateTime minDate = DateTime.MinValue;
+        private int scrollChange = DEFAULT_SCROLL_CHANGE;
+        private bool todayDateSet = false;           // Has TodayDate been explicitly set?
+        private DateTime todayDate = DateTime.Now.Date;
+        private DateTime selectionStart;
+        private DateTime selectionEnd;
+        private Day firstDayOfWeek = DEFAULT_FIRST_DAY_OF_WEEK;
+        private ComCtl32.MCMV _mcCurView = ComCtl32.MCMV.MONTH;
+        private ComCtl32.MCMV _mcOldView = ComCtl32.MCMV.MONTH;
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.monthsOfYear"]/*' />
-        /// <devdoc>
-        ///     Bitmask for the annually bolded dates.  Months start on January.
-        /// </devdoc>
-        /// <internalonly/>
-        private int[]       monthsOfYear = new int[12];
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.datesToBoldMonthly"]/*' />
-        /// <devdoc>
-        ///     Bitmask for the dates bolded monthly.
-        /// </devdoc>
-        /// <internalonly/>
-        private int         datesToBoldMonthly = 0;
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.arrayOfDates"]/*' />
-        /// <devdoc>
-        ///     Lists are slow, so this section can be optimized.
-        ///     Implementation is such that inserts are fast, removals are slow.
-        /// </devdoc>
-        /// <internalonly/>
-        private ArrayList   arrayOfDates = new ArrayList();
-        private ArrayList   annualArrayOfDates = new ArrayList(); // we have to maintain these lists too.
-        private ArrayList   monthlyArrayOfDates = new ArrayList();
+        /// <summary>
+        ///  Bitmask for the annually bolded dates.  Months start on January.
+        /// </summary>
+        private readonly int[] monthsOfYear = new int[12];
+        /// <summary>
+        ///  Bitmask for the dates bolded monthly.
+        /// </summary>
+        private int datesToBoldMonthly = 0;
+        /// <summary>
+        ///  Lists are slow, so this section can be optimized.
+        ///  Implementation is such that inserts are fast, removals are slow.
+        /// </summary>
+        private readonly ArrayList arrayOfDates = new ArrayList();
+        private readonly ArrayList annualArrayOfDates = new ArrayList(); // we have to maintain these lists too.
+        private readonly ArrayList monthlyArrayOfDates = new ArrayList();
 
         // notifications
-        private DateRangeEventHandler       onDateChanged;
-        private DateRangeEventHandler       onDateSelected;
-        private EventHandler                   onRightToLeftLayoutChanged;
+        private DateRangeEventHandler onDateChanged;
+        private DateRangeEventHandler onDateSelected;
+        private EventHandler onRightToLeftLayoutChanged;
 
-        private int          nativeWndProcCount = 0;
-        private static bool? restrictUnmanagedCode;
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.MonthCalendar"]/*' />
-        /// <devdoc>
-        ///     Creates a new MonthCalendar object.  Styles are the default for a
-        ///     regular month calendar control.
-        /// </devdoc>
+        /// <summary>
+        ///  Creates a new MonthCalendar object.  Styles are the default for a
+        ///  regular month calendar control.
+        /// </summary>
         public MonthCalendar()
-        : base() {
-
+        : base()
+        {
             PrepareForDrawing();
 
             selectionStart = todayDate;
             selectionEnd = todayDate;
             SetStyle(ControlStyles.UserPaint, false);
             SetStyle(ControlStyles.StandardClick, false);
-            
+
             TabStop = true;
-
-            if (!restrictUnmanagedCode.HasValue) {
-                bool demandUnmanagedFailed = false;
-                try {
-                    IntSecurity.UnmanagedCode.Demand();
-                    restrictUnmanagedCode = false;
-                }
-                catch {
-                    // ensure that the static field is written to exactly once to avoid race conditions
-                    demandUnmanagedFailed = true;
-                }
-
-                if (demandUnmanagedFailed) {
-                    // Demand for unmanaged code failed, thus we are running in partial trust.
-                    // We need to assert a registry access permission, this is safe because
-                    // we are reading the registry and are not returning the information 
-                    // from the registry to the user.
-                    new RegistryPermission(PermissionState.Unrestricted).Assert();
-                    try {
-                        // for 32 bit applications on 64 bit machines this code is reading 
-                        // HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node node
-
-                        // to opt out, set a DWORD value AllowWindowsFormsReentrantDestroy=1
-                        RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\.NETFramework");
-                        if (key != null) {
-                            object o = key.GetValue("AllowWindowsFormsReentrantDestroy");
-                            if ((o != null) && (o is int) && ((int)o == 1)) {
-                                restrictUnmanagedCode = false;
-                            }
-                            else {
-                                restrictUnmanagedCode = true;
-                            }
-                        }
-                        else {
-                            restrictUnmanagedCode = true;
-                        }
-                    }
-                    catch {
-                        restrictUnmanagedCode = true;
-                    }
-                    finally {
-                        System.Security.CodeAccessPermission.RevertAssert();
-                    }
-                }
-            }
         }
 
         /// <summary>
-        /// MonthCalendar control  accessbile object.
+        ///  MonthCalendar control  accessbile object.
         /// </summary>
         /// <returns></returns>
-        protected override AccessibleObject CreateAccessibilityInstance() {
-            if (AccessibilityImprovements.Level1) {
-                return new MonthCalendarAccessibleObject(this);
-            }
-            else {
-                return base.CreateAccessibilityInstance();
-            }
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new MonthCalendarAccessibleObject(this);
         }
 
-        protected override void RescaleConstantsForDpi(int deviceDpiOld, int deviceDpiNew) {
+        protected override void RescaleConstantsForDpi(int deviceDpiOld, int deviceDpiNew)
+        {
             base.RescaleConstantsForDpi(deviceDpiOld, deviceDpiNew);
             PrepareForDrawing();
         }
 
-        private void PrepareForDrawing() {
-            if (DpiHelper.IsScalingRequirementMet) {
+        private void PrepareForDrawing()
+        {
+            if (DpiHelper.IsScalingRequirementMet)
+            {
                 scaledExtraPadding = LogicalToDeviceUnits(ExtraPadding);
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.AnnuallyBoldedDates"]/*' />
-        /// <devdoc>
-        ///     The array of DateTime objects that determines which annual days are shown
-        ///     in bold.
-        /// </devdoc>
+        /// <summary>
+        ///  The array of DateTime objects that determines which annual days are shown
+        ///  in bold.
+        /// </summary>
         [
         Localizable(true),
         SRDescription(nameof(SR.MonthCalendarAnnuallyBoldedDatesDescr))
         ]
-        public DateTime[] AnnuallyBoldedDates {
-            get {
+        public DateTime[] AnnuallyBoldedDates
+        {
+            get
+            {
                 DateTime[] dateTimes = new DateTime[annualArrayOfDates.Count];
 
-                for (int i=0;i < annualArrayOfDates.Count; ++i) {
-                    dateTimes[i] = (DateTime)this.annualArrayOfDates[i];
+                for (int i = 0; i < annualArrayOfDates.Count; ++i)
+                {
+                    dateTimes[i] = (DateTime)annualArrayOfDates[i];
                 }
                 return dateTimes;
             }
-            set {
-                // 
+            set
+            {
+                //
 
-
-
-                this.annualArrayOfDates.Clear();
-                for (int i=0; i<MONTHS_IN_YEAR; ++i)
+                annualArrayOfDates.Clear();
+                for (int i = 0; i < MONTHS_IN_YEAR; ++i)
+                {
                     monthsOfYear[i] = 0;
+                }
 
-                if (value != null && value.Length > 0) {
+                if (value != null && value.Length > 0)
+                {
 
                     //add each boldeddate to our ArrayList...
-                    for (int i = 0; i < value.Length; i++) {
-                        this.annualArrayOfDates.Add(value[i]);
+                    for (int i = 0; i < value.Length; i++)
+                    {
+                        annualArrayOfDates.Add(value[i]);
                     }
 
-                    for (int i = 0; i < value.Length; ++i) {
-                        monthsOfYear[value[i].Month-1] |= 0x00000001<<(value[i].Day-1);
+                    for (int i = 0; i < value.Length; ++i)
+                    {
+                        monthsOfYear[value[i].Month - 1] |= 0x00000001 << (value[i].Day - 1);
                     }
 
                 }
@@ -296,106 +233,96 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.BackColor"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
         [SRDescription(nameof(SR.MonthCalendarMonthBackColorDescr))]
-        public override Color BackColor {
-            get {
-                if (ShouldSerializeBackColor()) {
+        public override Color BackColor
+        {
+            get
+            {
+                if (ShouldSerializeBackColor())
+                {
                     return base.BackColor;
                 }
-                else {
+                else
+                {
                     return SystemColors.Window;
                 }
             }
-            set {
+            set
+            {
                 base.BackColor = value;
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.BackgroundImage"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public override Image BackgroundImage {
-            get {
+        public override Image BackgroundImage
+        {
+            get
+            {
                 return base.BackgroundImage;
             }
-            set {
+            set
+            {
                 base.BackgroundImage = value;
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.BackgroundImageChanged"]/*' />
-        /// <internalonly/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler BackgroundImageChanged {
-            add {
-                base.BackgroundImageChanged += value;
-            }
-            remove {
-                base.BackgroundImageChanged -= value;
-            }
+        new public event EventHandler BackgroundImageChanged
+        {
+            add => base.BackgroundImageChanged += value;
+            remove => base.BackgroundImageChanged -= value;
         }
 
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.BackgroundImageLayout"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public override ImageLayout BackgroundImageLayout {
-            get {
+        public override ImageLayout BackgroundImageLayout
+        {
+            get
+            {
                 return base.BackgroundImageLayout;
             }
-            set {
+            set
+            {
                 base.BackgroundImageLayout = value;
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.BackgroundImageLayoutChanged"]/*' />
-        /// <internalonly/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler BackgroundImageLayoutChanged {
-            add {
-                base.BackgroundImageLayoutChanged += value;
-            }
-            remove {
-                base.BackgroundImageLayoutChanged -= value;
-            }
+        new public event EventHandler BackgroundImageLayoutChanged
+        {
+            add => base.BackgroundImageLayoutChanged += value;
+            remove => base.BackgroundImageLayoutChanged -= value;
         }
 
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.BoldedDates"]/*' />
-        /// <devdoc>
-        ///     The array of DateTime objects that determines which non-recurring
-        ///     specified dates are shown in bold.
-        /// </devdoc>
+        /// <summary>
+        ///  The array of DateTime objects that determines which non-recurring
+        ///  specified dates are shown in bold.
+        /// </summary>
         /*Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced),*/
         [Localizable(true)]
-        public DateTime[] BoldedDates {
-            get {
+        public DateTime[] BoldedDates
+        {
+            get
+            {
                 DateTime[] dateTimes = new DateTime[arrayOfDates.Count];
 
-                for (int i=0;i < arrayOfDates.Count; ++i) {
-                    dateTimes[i] = (DateTime)this.arrayOfDates[i];
+                for (int i = 0; i < arrayOfDates.Count; ++i)
+                {
+                    dateTimes[i] = (DateTime)arrayOfDates[i];
                 }
                 return dateTimes;
             }
-            set {
-                // 
+            set
+            {
+                //
 
-
-
-                this.arrayOfDates.Clear();
-                if (value != null && value.Length > 0) {
+                arrayOfDates.Clear();
+                if (value != null && value.Length > 0)
+                {
 
                     //add each boldeddate to our ArrayList...
-                    for (int i = 0; i < value.Length; i++) {
-                        this.arrayOfDates.Add(value[i]);
+                    for (int i = 0; i < value.Length; i++)
+                    {
+                        arrayOfDates.Add(value[i]);
                     }
 
                 }
@@ -403,183 +330,212 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.CalendarDimensions"]/*' />
-        /// <devdoc>
-        ///     The number of columns and rows of months that will be displayed
-        ///     in the MonthCalendar control.
-        /// </devdoc>
+        /// <summary>
+        ///  The number of columns and rows of months that will be displayed
+        ///  in the MonthCalendar control.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatAppearance)),
         Localizable(true),
         SRDescription(nameof(SR.MonthCalendarDimensionsDescr))
         ]
-        public Size CalendarDimensions {
-            get {
+        public Size CalendarDimensions
+        {
+            get
+            {
                 return dimensions;
             }
-            set {
-                if (!this.dimensions.Equals(value))
+            set
+            {
+                if (!dimensions.Equals(value))
+                {
                     SetCalendarDimensions(value.Width, value.Height);
+                }
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.CreateParams"]/*' />
-        /// <devdoc>
-        ///     This is called when creating a window.  Inheriting classes can ovveride
-        ///     this to add extra functionality, but should not forget to first call
-        ///     base.getCreateParams() to make sure the control continues to work
-        ///     correctly.
-        /// </devdoc>
-        protected override CreateParams CreateParams {
-            [SecurityPermission(SecurityAction.LinkDemand, Flags=SecurityPermissionFlag.UnmanagedCode)]
-            get {
+        /// <summary>
+        ///  This is called when creating a window.  Inheriting classes can ovveride
+        ///  this to add extra functionality, but should not forget to first call
+        ///  base.getCreateParams() to make sure the control continues to work
+        ///  correctly.
+        /// </summary>
+        protected override CreateParams CreateParams
+        {
+            get
+            {
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = NativeMethods.WC_MONTHCAL;
-                cp.Style |= NativeMethods.MCS_MULTISELECT | NativeMethods.MCS_DAYSTATE;
-                if (!showToday) cp.Style |= NativeMethods.MCS_NOTODAY;
-                if (!showTodayCircle) cp.Style |= NativeMethods.MCS_NOTODAYCIRCLE;
-                if (showWeekNumbers) cp.Style |= NativeMethods.MCS_WEEKNUMBERS;
+                cp.ClassName = ComCtl32.WindowClasses.WC_MONTHCAL;
+                cp.Style |= (int)ComCtl32.MCS.MULTISELECT | (int)ComCtl32.MCS.DAYSTATE;
+                if (!showToday)
+                {
+                    cp.Style |= (int)ComCtl32.MCS.NOTODAY;
+                }
 
-                if (RightToLeft == RightToLeft.Yes && RightToLeftLayout == true) {
+                if (!showTodayCircle)
+                {
+                    cp.Style |= (int)ComCtl32.MCS.NOTODAYCIRCLE;
+                }
+
+                if (showWeekNumbers)
+                {
+                    cp.Style |= (int)ComCtl32.MCS.WEEKNUMBERS;
+                }
+
+                if (RightToLeft == RightToLeft.Yes && RightToLeftLayout)
+                {
                     //We want to turn on mirroring for Form explicitly.
-                    cp.ExStyle |= NativeMethods.WS_EX_LAYOUTRTL;
+                    cp.ExStyle |= (int)User32.WS_EX.LAYOUTRTL;
                     //Don't need these styles when mirroring is turned on.
-                    cp.ExStyle &= ~(NativeMethods.WS_EX_RTLREADING | NativeMethods.WS_EX_RIGHT | NativeMethods.WS_EX_LEFTSCROLLBAR);
+                    cp.ExStyle &= ~(int)(User32.WS_EX.RTLREADING | User32.WS_EX.RIGHT | User32.WS_EX.LEFTSCROLLBAR);
                 }
 
                 return cp;
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.DefaultImeMode"]/*' />
-        protected override ImeMode DefaultImeMode {
-            get {
+        protected override ImeMode DefaultImeMode
+        {
+            get
+            {
                 return ImeMode.Disable;
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.DefaultMargin"]/*' />
-        protected override Padding DefaultMargin {
+        protected override Padding DefaultMargin
+        {
             get { return new Padding(9); }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.DefaultSize"]/*' />
-        protected override Size DefaultSize {
-            get {
+        protected override Size DefaultSize
+        {
+            get
+            {
                 return GetMinReqRect();
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.DoubleBuffered"]/*' />
-        /// <devdoc>
-        ///     This property is overridden and hidden from statement completion
-        ///     on controls that are based on Win32 Native Controls.
-        /// </devdoc>
+        /// <summary>
+        ///  This property is overridden and hidden from statement completion
+        ///  on controls that are based on Win32 Native Controls.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override bool DoubleBuffered {
-            get {
+        protected override bool DoubleBuffered
+        {
+            get
+            {
                 return base.DoubleBuffered;
             }
-            set {
+            set
+            {
                 base.DoubleBuffered = value;
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.FirstDayOfWeek"]/*' />
-        /// <devdoc>
-        ///     The first day of the week for the month calendar control.
-        /// </devdoc>
+        /// <summary>
+        ///  The first day of the week for the month calendar control.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         Localizable(true),
         DefaultValue(DEFAULT_FIRST_DAY_OF_WEEK),
         SRDescription(nameof(SR.MonthCalendarFirstDayOfWeekDescr))
         ]
-        public Day FirstDayOfWeek {
-            get {
+        public Day FirstDayOfWeek
+        {
+            get
+            {
                 return firstDayOfWeek;
             }
 
-            set {
+            set
+            {
                 //valid values are 0x0 to 0x7
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)Day.Monday, (int)Day.Default)){
-                     throw new InvalidEnumArgumentException(nameof(FirstDayOfWeek), (int)value, typeof(Day));
+                if (!ClientUtils.IsEnumValid(value, (int)value, (int)Day.Monday, (int)Day.Default))
+                {
+                    throw new InvalidEnumArgumentException(nameof(FirstDayOfWeek), (int)value, typeof(Day));
                 }
 
-                if (value != firstDayOfWeek) {
+                if (value != firstDayOfWeek)
+                {
                     firstDayOfWeek = value;
-                    if (IsHandleCreated) {
-                        if (value == Day.Default) {
+                    if (IsHandleCreated)
+                    {
+                        if (value == Day.Default)
+                        {
                             RecreateHandle();
                         }
-                        else {
-                            SendMessage(NativeMethods.MCM_SETFIRSTDAYOFWEEK, 0, (int) value);
+                        else
+                        {
+                            SendMessage((int)ComCtl32.MCM.SETFIRSTDAYOFWEEK, 0, (int)value);
                         }
                     }
                 }
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ForeColor"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
         [SRDescription(nameof(SR.MonthCalendarForeColorDescr))]
-        public override Color ForeColor {
-            get {
-                if (ShouldSerializeForeColor()) {
+        public override Color ForeColor
+        {
+            get
+            {
+                if (ShouldSerializeForeColor())
+                {
                     return base.ForeColor;
                 }
-                else {
+                else
+                {
                     return SystemColors.WindowText;
                 }
             }
-            set {
+            set
+            {
                 base.ForeColor = value;
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ImeMode"]/*' />
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        new public ImeMode ImeMode {
-            get {
+        new public ImeMode ImeMode
+        {
+            get
+            {
                 return base.ImeMode;
             }
-            set {
+            set
+            {
                 base.ImeMode = value;
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ImeModeChanged"]/*' />
-        /// <internalonly/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler ImeModeChanged {
-            add {
-                base.ImeModeChanged += value;
-            }
-            remove {
-                base.ImeModeChanged -= value;
-            }
+        public new event EventHandler ImeModeChanged
+        {
+            add => base.ImeModeChanged += value;
+            remove => base.ImeModeChanged -= value;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.MaxDate"]/*' />
-        /// <devdoc>
-        ///     The maximum allowable date that can be selected.  By default, there
-        ///     is no maximum date.  The maximum date is not set if max less than the
-        ///     current minimum date.
-        /// </devdoc>
+        /// <summary>
+        ///  The maximum allowable date that can be selected.  By default, there
+        ///  is no maximum date.  The maximum date is not set if max less than the
+        ///  current minimum date.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         SRDescription(nameof(SR.MonthCalendarMaxDateDescr))
         ]
-        public DateTime MaxDate {
-            get {
+        public DateTime MaxDate
+        {
+            get
+            {
                 return DateTimePicker.EffectiveMaxDate(maxDate);
             }
-            set {
-                if (value != maxDate) {
-                    if (value < DateTimePicker.EffectiveMinDate(minDate)) {
-                        throw new ArgumentOutOfRangeException(nameof(MaxDate), string.Format(SR.InvalidLowBoundArgumentEx, "MaxDate", FormatDate(value), "MinDate"));
+            set
+            {
+                if (value != maxDate)
+                {
+                    if (value < DateTimePicker.EffectiveMinDate(minDate))
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(MaxDate), FormatDate(value), nameof(MinDate)));
                     }
                     maxDate = value;
                     SetRange();
@@ -587,60 +543,72 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.MaxSelectionCount"]/*' />
-        /// <devdoc>
-        ///     The maximum number of days that can be selected in a
-        ///     month calendar control.  This method does not affect the current
-        ///     selection range.
-        /// </devdoc>
+        /// <summary>
+        ///  The maximum number of days that can be selected in a
+        ///  month calendar control.  This method does not affect the current
+        ///  selection range.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         DefaultValue(DEFAULT_MAX_SELECTION_COUNT),
         SRDescription(nameof(SR.MonthCalendarMaxSelectionCountDescr))
         ]
-        public int MaxSelectionCount {
-            get {
+        public int MaxSelectionCount
+        {
+            get
+            {
                 return maxSelectionCount;
             }
-            set {
-                if (value < 1) {
-                    throw new ArgumentOutOfRangeException(nameof(MaxSelectionCount), string.Format(SR.InvalidLowBoundArgumentEx, "MaxSelectionCount", (value).ToString("D", CultureInfo.CurrentCulture), (1).ToString(CultureInfo.CurrentCulture)));
+            set
+            {
+                if (value < 1)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(MaxSelectionCount), value.ToString("D"), 1));
                 }
 
-                if (value != maxSelectionCount) {
-                    if (IsHandleCreated) {
-                        if (unchecked( (int) (long)SendMessage(NativeMethods.MCM_SETMAXSELCOUNT, value, 0)) == 0)
-                            throw new ArgumentException(string.Format(SR.MonthCalendarMaxSelCount, (value).ToString("D", CultureInfo.CurrentCulture)), "MaxSelectionCount");
+                if (value != maxSelectionCount)
+                {
+                    if (IsHandleCreated)
+                    {
+                        if (unchecked((int)(long)SendMessage((int)ComCtl32.MCM.SETMAXSELCOUNT, value, 0)) == 0)
+                        {
+                            throw new ArgumentException(string.Format(SR.MonthCalendarMaxSelCount, value.ToString("D")), nameof(value));
+                        }
                     }
                     maxSelectionCount = value;
                 }
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.MinDate"]/*' />
-        /// <devdoc>
-        ///     The minimum allowable date that can be selected.  By default, there
-        ///     is no minimum date.  The minimum date is not set if min greater than the
-        ///     current maximum date.  MonthCalendar does not support dates prior to 1753.
-        /// </devdoc>
+        /// <summary>
+        ///  The minimum allowable date that can be selected.  By default, there
+        ///  is no minimum date.  The minimum date is not set if min greater than the
+        ///  current maximum date.  MonthCalendar does not support dates prior to 1753.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         SRDescription(nameof(SR.MonthCalendarMinDateDescr))
         ]
-        public DateTime MinDate {
-            get {
+        public DateTime MinDate
+        {
+            get
+            {
                 return DateTimePicker.EffectiveMinDate(minDate);
             }
-            set {
-                if (value != minDate) {
-                    if (value > DateTimePicker.EffectiveMaxDate(maxDate)) {
-                        throw new ArgumentOutOfRangeException(nameof(MinDate), string.Format(SR.InvalidHighBoundArgument, "MinDate", FormatDate(value), "MaxDate"));
+            set
+            {
+                if (value != minDate)
+                {
+                    if (value > DateTimePicker.EffectiveMaxDate(maxDate))
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidHighBoundArgument, nameof(MinDate), FormatDate(value), nameof(MaxDate)));
                     }
 
                     // If trying to set the minimum less than DateTimePicker.MinimumDateTime, throw
                     // an exception.
-                    if (value < DateTimePicker.MinimumDateTime) {
-                        throw new ArgumentOutOfRangeException(nameof(MinDate), string.Format(SR.InvalidLowBoundArgumentEx, "MinDate", FormatDate(value), FormatDate(DateTimePicker.MinimumDateTime)));
+                    if (value < DateTimePicker.MinimumDateTime)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(MinDate), FormatDate(value), FormatDate(DateTimePicker.MinimumDateTime)));
                     }
 
                     minDate = value;
@@ -649,40 +617,44 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.MonthlyBoldedDates"]/*' />
-        /// <devdoc>
-        ///     The array of DateTime objects that determine which monthly days to bold.
-        /// </devdoc>
+        /// <summary>
+        ///  The array of DateTime objects that determine which monthly days to bold.
+        /// </summary>
         [
         Localizable(true),
         SRDescription(nameof(SR.MonthCalendarMonthlyBoldedDatesDescr))
         ]
-        public DateTime[] MonthlyBoldedDates {
-            get {
+        public DateTime[] MonthlyBoldedDates
+        {
+            get
+            {
                 DateTime[] dateTimes = new DateTime[monthlyArrayOfDates.Count];
 
-                for (int i=0;i < monthlyArrayOfDates.Count; ++i) {
-                    dateTimes[i] = (DateTime)this.monthlyArrayOfDates[i];
+                for (int i = 0; i < monthlyArrayOfDates.Count; ++i)
+                {
+                    dateTimes[i] = (DateTime)monthlyArrayOfDates[i];
                 }
                 return dateTimes;
             }
-            set {
-                // 
+            set
+            {
+                //
 
-
-
-                this.monthlyArrayOfDates.Clear();
+                monthlyArrayOfDates.Clear();
                 datesToBoldMonthly = 0;
 
-                if (value != null && value.Length > 0) {
+                if (value != null && value.Length > 0)
+                {
 
                     //add each boldeddate to our ArrayList...
-                    for (int i = 0; i < value.Length; i++) {
-                        this.monthlyArrayOfDates.Add(value[i]);
+                    for (int i = 0; i < value.Length; i++)
+                    {
+                        monthlyArrayOfDates.Add(value[i]);
                     }
 
-                    for (int i = 0; i < value.Length; ++i) {
-                        datesToBoldMonthly |= 0x00000001<<(value[i].Day-1);
+                    for (int i = 0; i < value.Length; ++i)
+                    {
+                        datesToBoldMonthly |= 0x00000001 << (value[i].Day - 1);
                     }
 
                 }
@@ -690,138 +662,148 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.Now"]/*' />
-        /// <devdoc>
-        /// </devdoc>
-        /// <internalonly/>
-        private DateTime Now {
-            get {
+        private DateTime Now
+        {
+            get
+            {
                 return DateTime.Now.Date;
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.Padding"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///    <para>[To be supplied.]</para>
-        ///    </para>
-        /// </devdoc>
         [
         Browsable(false),
         EditorBrowsable(EditorBrowsableState.Never),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
         ]
-        public new Padding Padding {
+        public new Padding Padding
+        {
             get { return base.Padding; }
-            set { base.Padding = value;}
+            set { base.Padding = value; }
         }
 
         [
         Browsable(false),
         EditorBrowsable(EditorBrowsableState.Never)
         ]
-        public new event EventHandler PaddingChanged {
-            add { base.PaddingChanged += value; }
-            remove { base.PaddingChanged -= value; }
+        public new event EventHandler PaddingChanged
+        {
+            add => base.PaddingChanged += value;
+            remove => base.PaddingChanged -= value;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.RightToLeftLayout"]/*' />
-        /// <devdoc>
-        ///     This is used for international applications where the language
-        ///     is written from RightToLeft. When this property is true,
+        /// <summary>
+        ///  This is used for international applications where the language
+        ///  is written from RightToLeft. When this property is true,
         //      and the RightToLeft is true, mirroring will be turned on on the form, and
-        ///     control placement and text will be from right to left.
-        /// </devdoc>
+        ///  control placement and text will be from right to left.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatAppearance)),
         Localizable(true),
         DefaultValue(false),
         SRDescription(nameof(SR.ControlRightToLeftLayoutDescr))
         ]
-        public virtual bool RightToLeftLayout {
-            get {
+        public virtual bool RightToLeftLayout
+        {
+            get
+            {
 
                 return rightToLeftLayout;
             }
 
-            set {
-                if (value != rightToLeftLayout) {
+            set
+            {
+                if (value != rightToLeftLayout)
+                {
                     rightToLeftLayout = value;
-                    using(new LayoutTransaction(this, this, PropertyNames.RightToLeftLayout)) {
+                    using (new LayoutTransaction(this, this, PropertyNames.RightToLeftLayout))
+                    {
                         OnRightToLeftLayoutChanged(EventArgs.Empty);
                     }
                 }
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ScrollChange"]/*' />
-        /// <devdoc>
-        ///     The scroll rate for a month calendar control. The scroll
-        ///     rate is the number of months that the control moves its display
-        ///     when the user clicks a scroll button.  If this value is zero,
-        ///     the month delta is reset to the default, which is the number of
-        ///     months displayed in the control.
-        /// </devdoc>
+        /// <summary>
+        ///  The scroll rate for a month calendar control. The scroll
+        ///  rate is the number of months that the control moves its display
+        ///  when the user clicks a scroll button.  If this value is zero,
+        ///  the month delta is reset to the default, which is the number of
+        ///  months displayed in the control.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         DefaultValue(DEFAULT_SCROLL_CHANGE),
         SRDescription(nameof(SR.MonthCalendarScrollChangeDescr))
         ]
-        public int ScrollChange {
-            get {
+        public int ScrollChange
+        {
+            get
+            {
                 return scrollChange;
             }
-            set {
-                if (scrollChange != value) {
+            set
+            {
+                if (scrollChange != value)
+                {
 
-                    if (value < 0) {
-                        throw new ArgumentOutOfRangeException(nameof(ScrollChange), string.Format(SR.InvalidLowBoundArgumentEx, "ScrollChange", (value).ToString("D", CultureInfo.CurrentCulture), (0).ToString(CultureInfo.CurrentCulture)));
+                    if (value < 0)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ScrollChange), value.ToString("D"), 0));
                     }
-                    if (value > MaxScrollChange) {
-                        throw new ArgumentOutOfRangeException(nameof(ScrollChange), string.Format(SR.InvalidHighBoundArgumentEx, "ScrollChange", (value).ToString("D", CultureInfo.CurrentCulture), (MaxScrollChange).ToString("D", CultureInfo.CurrentCulture)));
+                    if (value > MaxScrollChange)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidHighBoundArgumentEx, nameof(ScrollChange), value.ToString("D"), MaxScrollChange.ToString("D")));
                     }
 
-                    if (IsHandleCreated) {
-                        SendMessage(NativeMethods.MCM_SETMONTHDELTA, value, 0);
+                    if (IsHandleCreated)
+                    {
+                        SendMessage((int)ComCtl32.MCM.SETMONTHDELTA, value, 0);
                     }
                     scrollChange = value;
                 }
             }
         }
 
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.SelectionEnd"]/*' />
-        /// <devdoc>
-        ///    <para>Indicates the end date of the selected range of dates.</para>
-        /// </devdoc>
+        /// <summary>
+        ///  Indicates the end date of the selected range of dates.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
         SRDescription(nameof(SR.MonthCalendarSelectionEndDescr))
         ]
-        public DateTime SelectionEnd {
-            get {
+        public DateTime SelectionEnd
+        {
+            get
+            {
                 return selectionEnd;
             }
-            set {
-                if (selectionEnd != value) {
+            set
+            {
+                if (selectionEnd != value)
+                {
 
                     // Keep SelectionEnd within min and max
-                    if (value < MinDate) {
-                        throw new ArgumentOutOfRangeException(nameof(SelectionEnd), string.Format(SR.InvalidLowBoundArgumentEx, "SelectionEnd", FormatDate(value), "MinDate"));
+                    if (value < MinDate)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(SelectionEnd), FormatDate(value), nameof(MinDate)));
                     }
-                    if (value > MaxDate) {
-                        throw new ArgumentOutOfRangeException(nameof(SelectionEnd), string.Format(SR.InvalidHighBoundArgumentEx, "SelectionEnd", FormatDate(value), "MaxDate"));
+                    if (value > MaxDate)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidHighBoundArgumentEx, nameof(SelectionEnd), FormatDate(value), nameof(MaxDate)));
                     }
 
                     // If we've moved SelectionEnd before SelectionStart, move SelectionStart back
-                    if (selectionStart > value) {
+                    if (selectionStart > value)
+                    {
                         selectionStart = value;
                     }
 
                     // If we've moved SelectionEnd too far beyond SelectionStart, move SelectionStart forward
-                    if ((value - selectionStart).Days >= maxSelectionCount) {
+                    if ((value - selectionStart).Days >= maxSelectionCount)
+                    {
                         selectionStart = value.AddDays(1 - maxSelectionCount);
                     }
 
@@ -831,41 +813,47 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.SelectionStart"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Indicates
-        ///       the start date of the selected range of dates.</para>
-        /// </devdoc>
+        /// <summary>
+        ///  Indicates
+        ///  the start date of the selected range of dates.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
         SRDescription(nameof(SR.MonthCalendarSelectionStartDescr))
         ]
-        public DateTime SelectionStart {
-            get {
+        public DateTime SelectionStart
+        {
+            get
+            {
                 return selectionStart;
             }
-            set {
-                if (selectionStart != value) {
+            set
+            {
+                if (selectionStart != value)
+                {
 
                     // Keep SelectionStart within min and max
                     //
-                    if (value < minDate) {
-                        throw new ArgumentOutOfRangeException(nameof(SelectionStart), string.Format(SR.InvalidLowBoundArgumentEx, "SelectionStart", FormatDate(value), "MinDate"));
+                    if (value < minDate)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(SelectionStart), FormatDate(value), nameof(MinDate)));
                     }
-                    if (value > maxDate) {
-                        throw new ArgumentOutOfRangeException(nameof(SelectionStart), string.Format(SR.InvalidHighBoundArgumentEx, "SelectionStart", FormatDate(value), "MaxDate"));
+                    if (value > maxDate)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidHighBoundArgumentEx, nameof(SelectionStart), FormatDate(value), nameof(MaxDate)));
                     }
 
                     // If we've moved SelectionStart beyond SelectionEnd, move SelectionEnd forward
-                    if (selectionEnd < value) {
+                    if (selectionEnd < value)
+                    {
                         selectionEnd = value;
                     }
 
                     // If we've moved SelectionStart too far back from SelectionEnd, move SelectionEnd back
-                    if ((selectionEnd - value).Days >= maxSelectionCount) {
+                    if ((selectionEnd - value).Days >= maxSelectionCount)
+                    {
                         selectionEnd = value.AddDays(maxSelectionCount - 1);
                     }
 
@@ -875,40 +863,45 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.SelectionRange"]/*' />
-        /// <devdoc>
-        ///     Retrieves the selection range for a month calendar control.
-        /// </devdoc>
+        /// <summary>
+        ///  Retrieves the selection range for a month calendar control.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         SRDescription(nameof(SR.MonthCalendarSelectionRangeDescr)),
         Bindable(true)
         ]
-        public SelectionRange SelectionRange {
-            get {
+        public SelectionRange SelectionRange
+        {
+            get
+            {
                 return new SelectionRange(SelectionStart, SelectionEnd);
             }
-            set {
+            set
+            {
                 SetSelectionRange(value.Start, value.End);
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ShowToday"]/*' />
-        /// <devdoc>
-        ///     Indicates whether the month calendar control will display
-        ///     the "today" date at the bottom of the control.
-        /// </devdoc>
+        /// <summary>
+        ///  Indicates whether the month calendar control will display
+        ///  the "today" date at the bottom of the control.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         DefaultValue(true),
         SRDescription(nameof(SR.MonthCalendarShowTodayDescr))
         ]
-        public bool ShowToday {
-            get {
+        public bool ShowToday
+        {
+            get
+            {
                 return showToday;
             }
-            set {
-                if (showToday != value) {
+            set
+            {
+                if (showToday != value)
+                {
                     showToday = value;
                     UpdateStyles();
                     AdjustSize();
@@ -916,45 +909,51 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ShowTodayCircle"]/*' />
-        /// <devdoc>
-        ///     Indicates whether the month calendar control will circle
-        ///     the "today" date.
-        /// </devdoc>
+        /// <summary>
+        ///  Indicates whether the month calendar control will circle
+        ///  the "today" date.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         DefaultValue(true),
         SRDescription(nameof(SR.MonthCalendarShowTodayCircleDescr))
         ]
-        public bool ShowTodayCircle {
-            get {
+        public bool ShowTodayCircle
+        {
+            get
+            {
                 return showTodayCircle;
             }
-            set {
-                if (showTodayCircle != value) {
+            set
+            {
+                if (showTodayCircle != value)
+                {
                     showTodayCircle = value;
                     UpdateStyles();
                 }
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ShowWeekNumbers"]/*' />
-        /// <devdoc>
-        ///     Indicates whether the month calendar control will the display
-        ///     week numbers (1-52) to the left of each row of days.
-        /// </devdoc>
+        /// <summary>
+        ///  Indicates whether the month calendar control will the display
+        ///  week numbers (1-52) to the left of each row of days.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         Localizable(true),
         DefaultValue(false),
         SRDescription(nameof(SR.MonthCalendarShowWeekNumbersDescr))
         ]
-        public bool ShowWeekNumbers {
-            get {
+        public bool ShowWeekNumbers
+        {
+            get
+            {
                 return showWeekNumbers;
             }
-            set {
-                if (showWeekNumbers != value) {
+            set
+            {
+                if (showWeekNumbers != value)
+                {
                     showWeekNumbers = value;
                     UpdateStyles();
                     AdjustSize();
@@ -962,28 +961,31 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.SingleMonthSize"]/*' />
-        /// <devdoc>
-        ///     The minimum size required to display a full month.  The size
-        ///     information is presented in the form of a Point, with the x
-        ///     and y members representing the minimum width and height required
-        ///     for the control.  The minimum required window size for a month calendar
-        ///     control depends on the currently selected font.
-        /// </devdoc>
+        /// <summary>
+        ///  The minimum size required to display a full month.  The size
+        ///  information is presented in the form of a Point, with the x
+        ///  and y members representing the minimum width and height required
+        ///  for the control.  The minimum required window size for a month calendar
+        ///  control depends on the currently selected font.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatAppearance)),
         Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
         SRDescription(nameof(SR.MonthCalendarSingleMonthSizeDescr))
         ]
-        public Size SingleMonthSize {
-            get {
-                NativeMethods.RECT rect = new NativeMethods.RECT();
+        public Size SingleMonthSize
+        {
+            get
+            {
+                RECT rect = new RECT();
 
-                if (IsHandleCreated) {
-
-                    if (unchecked( (int) (long)SendMessage(NativeMethods.MCM_GETMINREQRECT, 0, ref rect)) == 0)
+                if (IsHandleCreated)
+                {
+                    if (User32.SendMessageW(this, (User32.WindowMessage)ComCtl32.MCM.GETMINREQRECT, IntPtr.Zero, ref rect) == IntPtr.Zero)
+                    {
                         throw new InvalidOperationException(SR.InvalidSingleMonthSize);
+                    }
 
                     return new Size(rect.right, rect.bottom);
                 }
@@ -992,84 +994,94 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.Size"]/*' />
-        /// <devdoc>
-        ///     Unlike most controls, serializing the MonthCalendar's Size is really bad:
-        ///     when it's restored at runtime, it uses a a default SingleMonthSize, which 
-        ///     may not be right, especially for JPN/CHS machines.
-        /// </devdoc>
+        /// <summary>
+        ///  Unlike most controls, serializing the MonthCalendar's Size is really bad:
+        ///  when it's restored at runtime, it uses a a default SingleMonthSize, which
+        ///  may not be right, especially for JPN/CHS machines.
+        /// </summary>
         [
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
         Localizable(false)
         ]
-        public new Size Size {
-            get {
+        public new Size Size
+        {
+            get
+            {
                 return base.Size;
             }
-            set {
+            set
+            {
                 base.Size = value;
             }
         }
 
+        internal override bool SupportsUiaProviders => true;
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.Text"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never), Bindable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public override string Text {
-            get {
+        public override string Text
+        {
+            get
+            {
                 return base.Text;
             }
-            set {
+            set
+            {
                 base.Text = value;
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.TextChanged"]/*' />
-        /// <internalonly/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler TextChanged {
-            add {
-                base.TextChanged += value;
-            }
-            remove {
-                base.TextChanged -= value;
-            }
+        new public event EventHandler TextChanged
+        {
+            add => base.TextChanged += value;
+            remove => base.TextChanged -= value;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.TodayDate"]/*' />
-        /// <devdoc>
-        ///     The date shown as "Today" in the Month Calendar control.
-        ///     By default, "Today" is the current date at the time
-        ///     the MonthCalendar control is created.
-        /// </devdoc>
+        /// <summary>
+        ///  The date shown as "Today" in the Month Calendar control.
+        ///  By default, "Today" is the current date at the time
+        ///  the MonthCalendar control is created.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         SRDescription(nameof(SR.MonthCalendarTodayDateDescr))
         ]
-        public DateTime TodayDate {
-            get {
-                if (todayDateSet) return todayDate;
-                if (IsHandleCreated) {
-                    NativeMethods.SYSTEMTIME st = new NativeMethods.SYSTEMTIME();
-                    int res = (int)UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.MCM_GETTODAY, 0, st);
+        public DateTime TodayDate
+        {
+            get
+            {
+                if (todayDateSet)
+                {
+                    return todayDate;
+                }
+
+                if (IsHandleCreated)
+                {
+                    var st = new Kernel32.SYSTEMTIME();
+                    int res = (int)User32.SendMessageW(this, (User32.WindowMessage)User32.MCM.GETTODAY, IntPtr.Zero, ref st);
                     Debug.Assert(res != 0, "MCM_GETTODAY failed");
                     return DateTimePicker.SysTimeToDateTime(st).Date;
                 }
-                else return Now.Date;
+                else
+                {
+                    return Now.Date;
+                }
             }
-            set {
-                if (!(todayDateSet) || (DateTime.Compare(value, todayDate) != 0)) {
+            set
+            {
+                if (!(todayDateSet) || (DateTime.Compare(value, todayDate) != 0))
+                {
 
                     // throw if trying to set the TodayDate to a value greater than MaxDate
-                    if (DateTime.Compare(value, maxDate) > 0) {
-                        throw new ArgumentOutOfRangeException(nameof(TodayDate), string.Format(SR.InvalidHighBoundArgumentEx, "TodayDate", FormatDate(value), FormatDate(maxDate)));
+                    if (DateTime.Compare(value, maxDate) > 0)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidHighBoundArgumentEx, nameof(TodayDate), FormatDate(value), FormatDate(maxDate)));
                     }
 
                     // throw if trying to set the TodayDate to a value less than MinDate
-                    if (DateTime.Compare(value, minDate) < 0) {
-                        throw new ArgumentOutOfRangeException(nameof(TodayDate), string.Format(SR.InvalidLowBoundArgument, "TodayDate", FormatDate(value), FormatDate(minDate)));
+                    if (DateTime.Compare(value, minDate) < 0)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgument, nameof(TodayDate), FormatDate(value), FormatDate(minDate)));
                     }
 
                     todayDate = value.Date;
@@ -1079,311 +1091,282 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.TodayDateSet"]/*' />
-        /// <devdoc>
-        ///     Indicates whether or not the TodayDate property has been explicitly
-        ///     set by the user. If TodayDateSet is true, TodayDate will return whatever
-        ///     the user has set it to. If TodayDateSet is false, TodayDate will follow
-        ///     wall-clock time; ie. TodayDate will always equal the current system date.
-        /// </devdoc>
+        /// <summary>
+        ///  Indicates whether or not the TodayDate property has been explicitly
+        ///  set by the user. If TodayDateSet is true, TodayDate will return whatever
+        ///  the user has set it to. If TodayDateSet is false, TodayDate will follow
+        ///  wall-clock time; ie. TodayDate will always equal the current system date.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatBehavior)),
         Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
         SRDescription(nameof(SR.MonthCalendarTodayDateSetDescr))
         ]
-        public bool TodayDateSet {
-            get {
+        public bool TodayDateSet
+        {
+            get
+            {
                 return todayDateSet;
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.TitleBackColor"]/*' />
-        /// <devdoc>
-        ///     The background color displayed in the month calendar's
-        ///     title.
-        /// </devdoc>
+        /// <summary>
+        ///  The background color displayed in the month calendar's
+        ///  title.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatAppearance)),
         SRDescription(nameof(SR.MonthCalendarTitleBackColorDescr))
         ]
-        public Color TitleBackColor {
-            get {
+        public Color TitleBackColor
+        {
+            get
+            {
                 return titleBackColor;
             }
-            set {
-                if (value.IsEmpty) {
+            set
+            {
+                if (value.IsEmpty)
+                {
                     throw new ArgumentException(string.Format(SR.InvalidNullArgument,
                                                               "value"));
                 }
                 titleBackColor = value;
-                SetControlColor(NativeMethods.MCSC_TITLEBK, value);
+                SetControlColor(ComCtl32.MCSC.TITLEBK, value);
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.TitleForeColor"]/*' />
-        /// <devdoc>
-        ///     The foreground color used to display text within the month
-        ///     calendar's title.
-        /// </devdoc>
+        /// <summary>
+        ///  The foreground color used to display text within the month
+        ///  calendar's title.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatAppearance)),
         SRDescription(nameof(SR.MonthCalendarTitleForeColorDescr))
         ]
-        public Color TitleForeColor {
-            get {
+        public Color TitleForeColor
+        {
+            get
+            {
                 return titleForeColor;
             }
-            set {
-                if (value.IsEmpty) {
+            set
+            {
+                if (value.IsEmpty)
+                {
                     throw new ArgumentException(string.Format(SR.InvalidNullArgument,
                                                               "value"));
                 }
                 titleForeColor = value;
-                SetControlColor(NativeMethods.MCSC_TITLETEXT, value);
+                SetControlColor(ComCtl32.MCSC.TITLETEXT, value);
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.TrailingForeColor"]/*' />
-        /// <devdoc>
-        ///     The color used to display the previous and following months that
-        ///     appear on the current month calendar.
-        /// </devdoc>
+        /// <summary>
+        ///  The color used to display the previous and following months that
+        ///  appear on the current month calendar.
+        /// </summary>
         [
         SRCategory(nameof(SR.CatAppearance)),
         SRDescription(nameof(SR.MonthCalendarTrailingForeColorDescr))
         ]
-        public Color TrailingForeColor {
-            get {
+        public Color TrailingForeColor
+        {
+            get
+            {
                 return trailingForeColor;
             }
-            set {
-                if (value.IsEmpty) {
+            set
+            {
+                if (value.IsEmpty)
+                {
                     throw new ArgumentException(string.Format(SR.InvalidNullArgument,
                                                               "value"));
                 }
                 trailingForeColor = value;
-                SetControlColor(NativeMethods.MCSC_TRAILINGTEXT, value);
+                SetControlColor(ComCtl32.MCSC.TRAILINGTEXT, value);
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.AddAnnuallyBoldedDate"]/*' />
-        /// <devdoc>
-        ///     Adds a day that will be bolded annually on the month calendar.
-        ///     Be sure to call updateBoldedDates() afterwards.
-        /// </devdoc>
-        public void AddAnnuallyBoldedDate(DateTime date) {
+        /// <summary>
+        ///  Adds a day that will be bolded annually on the month calendar.
+        ///  Be sure to call updateBoldedDates() afterwards.
+        /// </summary>
+        public void AddAnnuallyBoldedDate(DateTime date)
+        {
             annualArrayOfDates.Add(date);
-            monthsOfYear[date.Month-1] |= 0x00000001<<(date.Day-1);
+            monthsOfYear[date.Month - 1] |= 0x00000001 << (date.Day - 1);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.AddBoldedDate"]/*' />
-        /// <devdoc>
-        ///     Adds a day that will be bolded on the month calendar.
-        ///     Be sure to call updateBoldedDates() afterwards.
-        /// </devdoc>
-        public void AddBoldedDate(DateTime date) {
-            if (!this.arrayOfDates.Contains(date)) {
-                this.arrayOfDates.Add(date);
+        /// <summary>
+        ///  Adds a day that will be bolded on the month calendar.
+        ///  Be sure to call updateBoldedDates() afterwards.
+        /// </summary>
+        public void AddBoldedDate(DateTime date)
+        {
+            if (!arrayOfDates.Contains(date))
+            {
+                arrayOfDates.Add(date);
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.AddMonthlyBoldedDate"]/*' />
-        /// <devdoc>
-        ///     Adds a day that will be bolded monthly on the month calendar.
-        ///     Be sure to call updateBoldedDates() afterwards.
-        /// </devdoc>
-        public void AddMonthlyBoldedDate(DateTime date) {
-            this.monthlyArrayOfDates.Add(date);
-            datesToBoldMonthly |= 0x00000001<<(date.Day-1);
+        /// <summary>
+        ///  Adds a day that will be bolded monthly on the month calendar.
+        ///  Be sure to call updateBoldedDates() afterwards.
+        /// </summary>
+        public void AddMonthlyBoldedDate(DateTime date)
+        {
+            monthlyArrayOfDates.Add(date);
+            datesToBoldMonthly |= 0x00000001 << (date.Day - 1);
         }
 
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.Click"]/*' />
-        /// <internalonly/><hideinheritance/>
+        /// <hideinheritance/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler Click {
-            add {
-                base.Click += value;
-            }
-            remove {
-                base.Click -= value;
-            }
+        public new event EventHandler Click
+        {
+            add => base.Click += value;
+            remove => base.Click -= value;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.DateChanged"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
         [SRCategory(nameof(SR.CatAction)), SRDescription(nameof(SR.MonthCalendarOnDateChangedDescr))]
-        public event DateRangeEventHandler DateChanged {
-            add {
-                onDateChanged += value;
-            }
-            remove {
-                onDateChanged -= value;
-            }
+        public event DateRangeEventHandler DateChanged
+        {
+            add => onDateChanged += value;
+            remove => onDateChanged -= value;
         }
 
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.DateSelected"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
         [SRCategory(nameof(SR.CatAction)), SRDescription(nameof(SR.MonthCalendarOnDateSelectedDescr))]
-        public event DateRangeEventHandler DateSelected {
-            add {
-                onDateSelected += value;
-            }
-            remove {
-                onDateSelected -= value;
-            }
+        public event DateRangeEventHandler DateSelected
+        {
+            add => onDateSelected += value;
+            remove => onDateSelected -= value;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.DoubleClick"]/*' />
-        /// <internalonly/><hideinheritance/>
+        /// <hideinheritance/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler DoubleClick {
-            add {
-                base.DoubleClick += value;
-            }
-            remove {
-                base.DoubleClick -= value;
-            }
+        public new event EventHandler DoubleClick
+        {
+            add => base.DoubleClick += value;
+            remove => base.DoubleClick -= value;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.MouseClick"]/*' />
-        /// <internalonly/><hideinheritance/>
+        /// <hideinheritance/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public new event MouseEventHandler MouseClick {
-            add {
-                base.MouseClick += value;
-            }
-            remove {
-                base.MouseClick -= value;
-            }
+        public new event MouseEventHandler MouseClick
+        {
+            add => base.MouseClick += value;
+            remove => base.MouseClick -= value;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.MouseDoubleClick"]/*' />
-        /// <internalonly/><hideinheritance/>
+        /// <hideinheritance/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public new event MouseEventHandler MouseDoubleClick {
-            add {
-                base.MouseDoubleClick += value;
-            }
-            remove {
-                base.MouseDoubleClick -= value;
-            }
+        public new event MouseEventHandler MouseDoubleClick
+        {
+            add => base.MouseDoubleClick += value;
+            remove => base.MouseDoubleClick -= value;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.OnPaint"]/*' />
-        /// <devdoc>
-        ///     MonthCalendar Onpaint.
-        /// </devdoc>
-        /// <internalonly/><hideinheritance/>
+        /// <summary>
+        ///  MonthCalendar Onpaint.
+        /// </summary>
+        /// <hideinheritance/>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public new event PaintEventHandler Paint {
-            add {
-                base.Paint += value;
-            }
-            remove {
-                base.Paint -= value;
-            }
+        public new event PaintEventHandler Paint
+        {
+            add => base.Paint += value;
+            remove => base.Paint -= value;
         }
 
-        /// <include file='doc\Form.uex' path='docs/doc[@for="Form.RightToLeftLayoutChanged"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
         [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.ControlOnRightToLeftLayoutChangedDescr))]
-        public event EventHandler RightToLeftLayoutChanged {
-            add {
-                onRightToLeftLayoutChanged += value;
-            }
-            remove {
-                onRightToLeftLayoutChanged -= value;
-            }
+        public event EventHandler RightToLeftLayoutChanged
+        {
+            add => onRightToLeftLayoutChanged += value;
+            remove => onRightToLeftLayoutChanged -= value;
         }
 
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.AdjustSize"]/*' />
-        /// <devdoc>
-        ///     Used to auto-size the control.  The requested number of rows and columns are
-        ///     restricted by the maximum size of the parent control, hence the requested number
-        ///     of rows and columns may not be what you get.
-        /// </devdoc>
-        /// <internalonly/>
-        private void AdjustSize() {
+        /// <summary>
+        ///  Used to auto-size the control.  The requested number of rows and columns are
+        ///  restricted by the maximum size of the parent control, hence the requested number
+        ///  of rows and columns may not be what you get.
+        /// </summary>
+        private void AdjustSize()
+        {
             Size minSize = GetMinReqRect();
             Size = minSize;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.BoldDates"]/*' />
-        /// <devdoc>
-        ///     Event handler that bolds dates indicated by arrayOfDates
-        /// </devdoc>
-        /// <internalonly/>
-        private void BoldDates(DateBoldEventArgs e) {
+        /// <summary>
+        ///  Event handler that bolds dates indicated by arrayOfDates
+        /// </summary>
+        private void BoldDates(DateBoldEventArgs e)
+        {
             int months = e.Size;
             e.DaysToBold = new int[months];
             SelectionRange range = GetDisplayRange(false);
             int startMonth = range.Start.Month;
             int startYear = range.Start.Year;
             int numDates = arrayOfDates.Count;
-            for (int i=0; i<numDates; ++i) {
-                DateTime date = (DateTime) arrayOfDates[i];
-                if (DateTime.Compare(date, range.Start) >= 0 && DateTime.Compare(date, range.End) <= 0) {
+            for (int i = 0; i < numDates; ++i)
+            {
+                DateTime date = (DateTime)arrayOfDates[i];
+                if (DateTime.Compare(date, range.Start) >= 0 && DateTime.Compare(date, range.End) <= 0)
+                {
                     int month = date.Month;
                     int year = date.Year;
-                    int index = (year == startYear) ? month - startMonth : month + year*MONTHS_IN_YEAR - startYear*MONTHS_IN_YEAR - startMonth;
-                    e.DaysToBold[index] |= (0x00000001<<(date.Day-1));
+                    int index = (year == startYear) ? month - startMonth : month + year * MONTHS_IN_YEAR - startYear * MONTHS_IN_YEAR - startMonth;
+                    e.DaysToBold[index] |= (0x00000001 << (date.Day - 1));
                 }
             }
             //now we figure out which monthly and annual dates to bold
             --startMonth;
-            for (int i=0; i<months; ++i, ++startMonth)
+            for (int i = 0; i < months; ++i, ++startMonth)
+            {
                 e.DaysToBold[i] |= monthsOfYear[startMonth % MONTHS_IN_YEAR] | datesToBoldMonthly;
+            }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.CompareDayAndMonth"]/*' />
-        /// <devdoc>
-        ///     Compares only the day and month of each time.
-        /// </devdoc>
-        /// <internalonly/>
-        private bool CompareDayAndMonth(DateTime t1, DateTime t2) {
-            return(t1.Day == t2.Day && t1.Month == t2.Month);
+        /// <summary>
+        ///  Compares only the day and month of each time.
+        /// </summary>
+        private bool CompareDayAndMonth(DateTime t1, DateTime t2)
+        {
+            return (t1.Day == t2.Day && t1.Month == t2.Month);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.CreateHandle"]/*' />
-        /// <devdoc>
-        /// </devdoc>
-        /// <internalonly/>
-        protected override void CreateHandle() {
-            if (!RecreatingHandle) {
-                IntPtr userCookie = UnsafeNativeMethods.ThemingScope.Activate();   
-                try {
-                    NativeMethods.INITCOMMONCONTROLSEX icc = new NativeMethods.INITCOMMONCONTROLSEX();
-                    icc.dwICC = NativeMethods.ICC_DATE_CLASSES;
-                    SafeNativeMethods.InitCommonControlsEx(icc);
+        protected override void CreateHandle()
+        {
+            if (!RecreatingHandle)
+            {
+                IntPtr userCookie = ThemingScope.Activate();
+                try
+                {
+                    var icc = new ComCtl32.INITCOMMONCONTROLSEX
+                    {
+                        dwICC = ComCtl32.ICC.DATE_CLASSES
+                    };
+                    ComCtl32.InitCommonControlsEx(ref icc);
                 }
-                finally {
-                    UnsafeNativeMethods.ThemingScope.Deactivate(userCookie);
+                finally
+                {
+                    ThemingScope.Deactivate(userCookie);
                 }
             }
             base.CreateHandle();
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.Dispose"]/*' />
-        /// <devdoc>
-        ///     Called to cleanup a MonthCalendar.  Normally you do not need
-        ///     to call this as the garbage collector will cleanup the buffer
-        ///     for you.  However, there may be times when you may want to expedite
-        ///     the garbage collectors cleanup.
-        /// </devdoc>
-        protected override void Dispose(bool disposing) {
-            if (mdsBuffer != IntPtr.Zero) {
-                Marshal.FreeHGlobal(mdsBuffer);
-                mdsBuffer = IntPtr.Zero;
+        /// <summary>
+        ///  Called to cleanup a MonthCalendar.  Normally you do not need
+        ///  to call this as the garbage collector will cleanup the buffer
+        ///  for you.  However, there may be times when you may want to expedite
+        ///  the garbage collectors cleanup.
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (_mdsBuffer != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(_mdsBuffer);
+                _mdsBuffer = IntPtr.Zero;
             }
             base.Dispose(disposing);
         }
@@ -1391,106 +1374,113 @@ namespace System.Windows.Forms {
         // Return a localized string representation of the given DateTime value.
         // Used for throwing exceptions, etc.
         //
-        private static string FormatDate(DateTime value) {
+        private static string FormatDate(DateTime value)
+        {
             return value.ToString("d", CultureInfo.CurrentCulture);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.GetDisplayRange"]/*' />
-        /// <devdoc>
-        ///     Retrieves date information that represents the low and high limits of the
-        ///     control's display.
-        /// </devdoc>
-        public SelectionRange GetDisplayRange(bool visible) {
+        /// <summary>
+        ///  Retrieves date information that represents the low and high limits of the
+        ///  control's display.
+        /// </summary>
+        public SelectionRange GetDisplayRange(bool visible)
+        {
             if (visible)
+            {
                 return GetMonthRange(NativeMethods.GMR_VISIBLE);
+            }
             else
+            {
                 return GetMonthRange(NativeMethods.GMR_DAYSTATE);
+            }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.GetHitArea"]/*' />
-        /// <devdoc>
-        ///     Retrieves the enumeration value corresponding to the hit area.
-        /// </devdoc>
-        /// <internalonly/>
-        private HitArea GetHitArea(int hit) {
-            switch (hit) {
-                case NativeMethods.MCHT_TITLEBK:
+        /// <summary>
+        ///  Retrieves the enumeration value corresponding to the hit area.
+        /// </summary>
+        private HitArea GetHitArea(int hit)
+        {
+            switch ((ComCtl32.MCHT)hit)
+            {
+                case ComCtl32.MCHT.TITLEBK:
                     return HitArea.TitleBackground;
-                case NativeMethods.MCHT_TITLEMONTH:
+                case ComCtl32.MCHT.TITLEMONTH:
                     return HitArea.TitleMonth;
-                case NativeMethods.MCHT_TITLEYEAR:
+                case ComCtl32.MCHT.TITLEYEAR:
                     return HitArea.TitleYear;
-                case NativeMethods.MCHT_TITLEBTNNEXT:
+                case ComCtl32.MCHT.TITLEBTNNEXT:
                     return HitArea.NextMonthButton;
-                case NativeMethods.MCHT_TITLEBTNPREV:
+                case ComCtl32.MCHT.TITLEBTNPREV:
                     return HitArea.PrevMonthButton;
-                case NativeMethods.MCHT_CALENDARBK:
+                case ComCtl32.MCHT.CALENDARBK:
                     return HitArea.CalendarBackground;
-                case NativeMethods.MCHT_CALENDARDATE:
+                case ComCtl32.MCHT.CALENDARDATE:
                     return HitArea.Date;
-                case NativeMethods.MCHT_CALENDARDATENEXT:
+                case ComCtl32.MCHT.CALENDARDATENEXT:
                     return HitArea.NextMonthDate;
-                case NativeMethods.MCHT_CALENDARDATEPREV:
+                case ComCtl32.MCHT.CALENDARDATEPREV:
                     return HitArea.PrevMonthDate;
-                case NativeMethods.MCHT_CALENDARDAY:
+                case ComCtl32.MCHT.CALENDARDAY:
                     return HitArea.DayOfWeek;
-                case NativeMethods.MCHT_CALENDARWEEKNUM:
+                case ComCtl32.MCHT.CALENDARWEEKNUM:
                     return HitArea.WeekNumbers;
-                case NativeMethods.MCHT_TODAYLINK:
+                case ComCtl32.MCHT.TODAYLINK:
                     return HitArea.TodayLink;
                 default:
                     return HitArea.Nowhere;
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.GetMinReqRect"]/*' />
-        /// <devdoc>
-        ///     stub for getMinReqRect (int, boolean)
-        /// </devdoc>
-        /// <internalonly/>
-        private Size GetMinReqRect() {
+        /// <summary>
+        ///  stub for getMinReqRect (int, boolean)
+        /// </summary>
+        private Size GetMinReqRect()
+        {
             return GetMinReqRect(0, false, false);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.GetMinReqRect1"]/*' />
-        /// <devdoc>
-        ///     Used internally to get the minimum size needed to display the
-        ///     MonthCalendar.  This is needed because
-        ///     NativeMethods.MCM_GETMINREQRECT returns an incorrect value if showToday
-        ///     is set to false.  If updateRows is true, then the
-        ///     number of rows will be updated according to height.
-        /// </devdoc>
-        /// <internalonly/>
-        private Size GetMinReqRect(int newDimensionLength, bool updateRows, bool updateCols) {
+        /// <summary>
+        ///  Used internally to get the minimum size needed to display the
+        ///  MonthCalendar. This is needed because
+        ///  ComCtl32.MCM.GETMINREQRECT
+        ///  returns an incorrect value if showToday
+        ///  is set to false. If updateRows is true, then the
+        ///  number of rows will be updated according to height.
+        /// </summary>
+        private Size GetMinReqRect(int newDimensionLength, bool updateRows, bool updateCols)
+        {
             Size minSize = SingleMonthSize;
 
             // Calculate calendar height
             //
             Size textExtent;
-            using (WindowsFont font = WindowsFont.FromFont(this.Font))
+            using (WindowsFont font = WindowsFont.FromFont(Font))
             {
                 // this is the string that Windows uses to determine the extent of the today string
                 textExtent = WindowsGraphicsCacheManager.MeasurementGraphics.GetTextExtent(DateTime.Now.ToShortDateString(), font);
             }
             int todayHeight = textExtent.Height + 4;  // The constant 4 is from the comctl32 MonthCalendar source code
             int calendarHeight = minSize.Height;
-            if (ShowToday) {
+            if (ShowToday)
+            {
                 // If ShowToday is true, then minSize already includes the height of the today string.
                 // So we remove it to get the actual calendar height.
                 //
                 calendarHeight -= todayHeight;
             }
 
-            if (updateRows) {
+            if (updateRows)
+            {
                 Debug.Assert(calendarHeight > INSERT_HEIGHT_SIZE, "Divide by 0");
-                int nRows = (newDimensionLength - todayHeight + INSERT_HEIGHT_SIZE)/(calendarHeight + INSERT_HEIGHT_SIZE);
-                this.dimensions.Height = (nRows < 1) ? 1 : nRows;
+                int nRows = (newDimensionLength - todayHeight + INSERT_HEIGHT_SIZE) / (calendarHeight + INSERT_HEIGHT_SIZE);
+                dimensions.Height = (nRows < 1) ? 1 : nRows;
             }
 
-            if (updateCols) {
+            if (updateCols)
+            {
                 Debug.Assert(minSize.Width > INSERT_WIDTH_SIZE, "Divide by 0");
-                int nCols = (newDimensionLength - scaledExtraPadding) /minSize.Width;
-                this.dimensions.Width = (nCols < 1) ? 1 : nCols;
+                int nCols = (newDimensionLength - scaledExtraPadding) / minSize.Width;
+                dimensions.Width = (nCols < 1) ? 1 : nCols;
             }
 
             minSize.Width = (minSize.Width + INSERT_WIDTH_SIZE) * dimensions.Width - INSERT_WIDTH_SIZE;
@@ -1498,9 +1488,11 @@ namespace System.Windows.Forms {
 
             // If the width we've calculated is too small to fit the Today string, enlarge the width to fit
             //
-            if (IsHandleCreated) {
-                int maxTodayWidth = unchecked( (int) (long)SendMessage(NativeMethods.MCM_GETMAXTODAYWIDTH, 0, 0));
-                if (maxTodayWidth > minSize.Width) {
+            if (IsHandleCreated)
+            {
+                int maxTodayWidth = unchecked((int)(long)SendMessage((int)ComCtl32.MCM.GETMAXTODAYWIDTH, 0, 0));
+                if (maxTodayWidth > minSize.Width)
+                {
                     minSize.Width = maxTodayWidth;
                 }
             }
@@ -1512,101 +1504,100 @@ namespace System.Windows.Forms {
             return minSize;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.GetMonthRange"]/*' />
-        /// <devdoc>
-        /// </devdoc>
-        /// <internalonly/>
-        private SelectionRange GetMonthRange(int flag) {
-            NativeMethods.SYSTEMTIMEARRAY sa = new NativeMethods.SYSTEMTIMEARRAY();
-            SelectionRange range = new SelectionRange();
-            UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.MCM_GETMONTHRANGE, flag, sa);
-
-            NativeMethods.SYSTEMTIME st = new NativeMethods.SYSTEMTIME();
-            st.wYear = sa.wYear1;
-            st.wMonth = sa.wMonth1;
-            st.wDayOfWeek = sa.wDayOfWeek1;
-            st.wDay = sa.wDay1;
-
-            range.Start = DateTimePicker.SysTimeToDateTime(st);
-            st.wYear = sa.wYear2;
-            st.wMonth = sa.wMonth2;
-            st.wDayOfWeek = sa.wDayOfWeek2;
-            st.wDay = sa.wDay2;
-            range.End = DateTimePicker.SysTimeToDateTime(st);
-
-            return range;
+        private SelectionRange GetMonthRange(int flag)
+        {
+            Span<Kernel32.SYSTEMTIME> sa = stackalloc Kernel32.SYSTEMTIME[2];
+            User32.SendMessageW(this, (User32.WindowMessage)ComCtl32.MCM.GETMONTHRANGE, (IntPtr)flag, ref sa[0]);
+            return new SelectionRange
+            {
+                Start = DateTimePicker.SysTimeToDateTime(sa[0]),
+                End = DateTimePicker.SysTimeToDateTime(sa[1])
+            };
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.GetPreferredHeight"]/*' />
-        /// <devdoc>
-        ///     Called by setBoundsCore.  If updateRows is true, then the
-        ///     number of rows will be updated according to height.
-        /// </devdoc>
-        /// <internalonly/>
-        private int GetPreferredHeight(int height, bool updateRows) {
+        /// <summary>
+        ///  Called by setBoundsCore.  If updateRows is true, then the
+        ///  number of rows will be updated according to height.
+        /// </summary>
+        private int GetPreferredHeight(int height, bool updateRows)
+        {
             Size preferredSize = GetMinReqRect(height, updateRows, false);
             return preferredSize.Height;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.GetPreferredWidth"]/*' />
-        /// <devdoc>
-        ///     Called by setBoundsCore.  If updateCols is true, then the
-        ///     number of columns will be updated according to width.
-        /// </devdoc>
-        /// <internalonly/>
-        private int GetPreferredWidth(int width, bool updateCols) {
+        /// <summary>
+        ///  Called by setBoundsCore.  If updateCols is true, then the
+        ///  number of columns will be updated according to width.
+        /// </summary>
+        private int GetPreferredWidth(int width, bool updateCols)
+        {
             Size preferredSize = GetMinReqRect(width, false, updateCols);
             return preferredSize.Width;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.HitTest"]/*' />
-        /// <devdoc>
-        ///     Determines which portion of a month calendar control is at
-        ///     at a given point on the screen.
-        /// </devdoc>
-        public HitTestInfo HitTest(int x, int y) {
-            NativeMethods.MCHITTESTINFO mchi = new NativeMethods.MCHITTESTINFO();
-            mchi.pt_x = x;
-            mchi.pt_y = y;
-            mchi.cbSize = Marshal.SizeOf(typeof(NativeMethods.MCHITTESTINFO));
-            UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.MCM_HITTEST, 0, mchi);
+        /// <summary>
+        ///  Determines which portion of a month calendar control is at
+        ///  at a given point on the screen.
+        /// </summary>
+        public HitTestInfo HitTest(int x, int y)
+        {
+            ComCtl32.MCHITTESTINFO mchi = new ComCtl32.MCHITTESTINFO
+            {
+                pt = new POINT
+                {
+                    x = x,
+                    y = y
+                },
+                st = new Kernel32.SYSTEMTIME(),
+                cbSize = Marshal.SizeOf<ComCtl32.MCHITTESTINFO>()
+            };
+            UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), (int)ComCtl32.MCM.HITTEST, 0, ref mchi);
 
             // If the hit area has an associated valid date, get it
             //
             HitArea hitArea = GetHitArea(mchi.uHit);
-            if (HitTestInfo.HitAreaHasValidDateTime(hitArea)) {
-                NativeMethods.SYSTEMTIME sys = new NativeMethods.SYSTEMTIME();
-                sys.wYear = mchi.st_wYear;
-                sys.wMonth = mchi.st_wMonth;
-                sys.wDayOfWeek = mchi.st_wDayOfWeek;
-                sys.wDay = mchi.st_wDay;
-                sys.wHour = mchi.st_wHour;
-                sys.wMinute = mchi.st_wMinute;
-                sys.wSecond = mchi.st_wSecond;
-                sys.wMilliseconds = mchi.st_wMilliseconds;
-                return new HitTestInfo(new Point(mchi.pt_x, mchi.pt_y), hitArea, DateTimePicker.SysTimeToDateTime(sys));
+            if (HitTestInfo.HitAreaHasValidDateTime(hitArea))
+            {
+                var sys = new Kernel32.SYSTEMTIME
+                {
+                    wYear = mchi.st.wYear,
+                    wMonth = mchi.st.wMonth,
+                    wDayOfWeek = mchi.st.wDayOfWeek,
+                    wDay = mchi.st.wDay,
+                    wHour = mchi.st.wHour,
+                    wMinute = mchi.st.wMinute,
+                    wSecond = mchi.st.wSecond,
+                    wMilliseconds = mchi.st.wMilliseconds
+                };
+                return new HitTestInfo(new Point(mchi.pt.x, mchi.pt.y), hitArea, DateTimePicker.SysTimeToDateTime(sys));
             }
-            else {
-                return new HitTestInfo(new Point(mchi.pt_x, mchi.pt_y), hitArea);
+            else
+            {
+                return new HitTestInfo(new Point(mchi.pt.x, mchi.pt.y), hitArea);
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.HitTest1"]/*' />
-        /// <devdoc>
-        ///     Determines which portion of a month calendar control is at
-        ///     at a given point on the screen.
-        /// </devdoc>
-        public HitTestInfo HitTest(Point point) {
+        /// <summary>
+        ///  Determines which portion of a month calendar control is at
+        ///  at a given point on the screen.
+        /// </summary>
+        public HitTestInfo HitTest(Point point)
+        {
             return HitTest(point.X, point.Y);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.IsInputKey"]/*' />
-        /// <devdoc>
-        ///      Handling special input keys, such as pgup, pgdown, home, end, etc...
-        /// </devdoc>
-        protected override bool IsInputKey(Keys keyData) {
-            if ((keyData & Keys.Alt) == Keys.Alt) return false;
-            switch (keyData & Keys.KeyCode) {
+        /// <summary>
+        ///  Handling special input keys, such as pgup, pgdown, home, end, etc...
+        /// </summary>
+        protected override bool IsInputKey(Keys keyData)
+        {
+            if ((keyData & Keys.Alt) == Keys.Alt)
+            {
+                return false;
+            }
+
+            switch (keyData & Keys.KeyCode)
+            {
                 case Keys.PageUp:
                 case Keys.PageDown:
                 case Keys.Home:
@@ -1616,193 +1607,196 @@ namespace System.Windows.Forms {
             return base.IsInputKey(keyData);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.OnHandleCreated"]/*' />
-        /// <devdoc>
-        ///     Overrides Control.OnHandleCreated()
-        /// </devdoc>
-        /// <internalonly/>
-        protected override void OnHandleCreated(EventArgs e) {
+        /// <summary>
+        ///  Overrides Control.OnHandleCreated()
+        /// </summary>
+        protected override void OnHandleCreated(EventArgs e)
+        {
             base.OnHandleCreated(e);
+
+            if (!IsHandleCreated)
+            {
+                return;
+            }
+
             SetSelRange(selectionStart, selectionEnd);
-            if (maxSelectionCount != DEFAULT_MAX_SELECTION_COUNT) {
-                SendMessage(NativeMethods.MCM_SETMAXSELCOUNT, maxSelectionCount, 0);
+            if (maxSelectionCount != DEFAULT_MAX_SELECTION_COUNT)
+            {
+                SendMessage((int)ComCtl32.MCM.SETMAXSELCOUNT, maxSelectionCount, 0);
             }
             AdjustSize();
 
-            if (todayDateSet) {
-                NativeMethods.SYSTEMTIME st = DateTimePicker.DateTimeToSysTime(todayDate);
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.MCM_SETTODAY, 0, st);
+            if (todayDateSet)
+            {
+                Kernel32.SYSTEMTIME st = DateTimePicker.DateTimeToSysTime(todayDate);
+                User32.SendMessageW(this, (User32.WindowMessage)User32.MCM.SETTODAY, IntPtr.Zero, ref st);
             }
 
-            SetControlColor(NativeMethods.MCSC_TEXT, ForeColor);
-            SetControlColor(NativeMethods.MCSC_MONTHBK, BackColor);
-            SetControlColor(NativeMethods.MCSC_TITLEBK, titleBackColor);
-            SetControlColor(NativeMethods.MCSC_TITLETEXT, titleForeColor);
-            SetControlColor(NativeMethods.MCSC_TRAILINGTEXT, trailingForeColor);
+            SetControlColor(ComCtl32.MCSC.TEXT, ForeColor);
+            SetControlColor(ComCtl32.MCSC.MONTHBK, BackColor);
+            SetControlColor(ComCtl32.MCSC.TITLEBK, titleBackColor);
+            SetControlColor(ComCtl32.MCSC.TITLETEXT, titleForeColor);
+            SetControlColor(ComCtl32.MCSC.TRAILINGTEXT, trailingForeColor);
 
             int firstDay;
-            if (firstDayOfWeek == Day.Default) {
+            if (firstDayOfWeek == Day.Default)
+            {
                 firstDay = NativeMethods.LOCALE_IFIRSTDAYOFWEEK;
             }
-            else {
+            else
+            {
                 firstDay = (int)firstDayOfWeek;
             }
-            SendMessage(NativeMethods.MCM_SETFIRSTDAYOFWEEK, 0, firstDay);
+            SendMessage((int)ComCtl32.MCM.SETFIRSTDAYOFWEEK, 0, firstDay);
 
             SetRange();
-            if (scrollChange != DEFAULT_SCROLL_CHANGE) {
-                SendMessage(NativeMethods.MCM_SETMONTHDELTA, scrollChange, 0);
+            if (scrollChange != DEFAULT_SCROLL_CHANGE)
+            {
+                SendMessage((int)ComCtl32.MCM.SETMONTHDELTA, scrollChange, 0);
             }
 
-            SystemEvents.UserPreferenceChanged += new UserPreferenceChangedEventHandler(this.MarshaledUserPreferenceChanged);
+            SystemEvents.UserPreferenceChanged += new UserPreferenceChangedEventHandler(MarshaledUserPreferenceChanged);
         }
 
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.OnHandleDestroyed"]/*' />
-        /// <devdoc>
-        ///     Overrides Control.OnHandleDestroyed()
-        /// </devdoc>
-        /// <internalonly/>
-        protected override void OnHandleDestroyed(EventArgs e) {
-            SystemEvents.UserPreferenceChanged -= new UserPreferenceChangedEventHandler(this.MarshaledUserPreferenceChanged);
+        /// <summary>
+        ///  Overrides Control.OnHandleDestroyed()
+        /// </summary>
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            SystemEvents.UserPreferenceChanged -= new UserPreferenceChangedEventHandler(MarshaledUserPreferenceChanged);
             base.OnHandleDestroyed(e);
         }
 
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.OnDateChanged"]/*' />
-        /// <devdoc>
-        ///     Fires the event indicating that the currently selected date
-        ///     or range of dates has changed.
-        /// </devdoc>
-        protected virtual void OnDateChanged(DateRangeEventArgs drevent) {
-            if (onDateChanged != null) {
-                onDateChanged(this, drevent);
-            }
+        /// <summary>
+        ///  Fires the event indicating that the currently selected date
+        ///  or range of dates has changed.
+        /// </summary>
+        protected virtual void OnDateChanged(DateRangeEventArgs drevent)
+        {
+            onDateChanged?.Invoke(this, drevent);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.OnDateSelected"]/*' />
-        /// <devdoc>
-        ///     Fires the event indicating that the user has changed his\her selection.
-        /// </devdoc>
-        protected virtual void OnDateSelected(DateRangeEventArgs drevent) {
-            if (onDateSelected != null) {
-                onDateSelected(this, drevent);
-            }
+        /// <summary>
+        ///  Fires the event indicating that the user has changed his\her selection.
+        /// </summary>
+        protected virtual void OnDateSelected(DateRangeEventArgs drevent)
+        {
+            onDateSelected?.Invoke(this, drevent);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.OnFontChanged"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        protected override void OnFontChanged(EventArgs e) {
+        protected override void OnGotFocus(EventArgs e)
+        {
+            base.OnGotFocus(e);
+
+            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+        }
+
+        protected override void OnFontChanged(EventArgs e)
+        {
             base.OnFontChanged(e);
             AdjustSize();
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.OnForeColorChanged"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        protected override void OnForeColorChanged(EventArgs e) {
+        protected override void OnForeColorChanged(EventArgs e)
+        {
             base.OnForeColorChanged(e);
-            SetControlColor(NativeMethods.MCSC_TEXT, ForeColor);
+            SetControlColor(ComCtl32.MCSC.TEXT, ForeColor);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.OnBackColorChanged"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
-        protected override void OnBackColorChanged(EventArgs e) {
+        protected override void OnBackColorChanged(EventArgs e)
+        {
             base.OnBackColorChanged(e);
-            SetControlColor(NativeMethods.MCSC_MONTHBK, BackColor);
+            SetControlColor(ComCtl32.MCSC.MONTHBK, BackColor);
         }
 
-        /// <include file='doc\Form.uex' path='docs/doc[@for="Form.OnRightToLeftLayoutChanged"]/*' />
-        /// <devdoc>
-        ///    <para>[To be supplied.]</para>
-        /// </devdoc>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        protected virtual void OnRightToLeftLayoutChanged(EventArgs e) {
-            if (GetAnyDisposingInHierarchy()) {
+        protected virtual void OnRightToLeftLayoutChanged(EventArgs e)
+        {
+            if (GetAnyDisposingInHierarchy())
+            {
                 return;
             }
 
-            if (RightToLeft == RightToLeft.Yes) {
+            if (RightToLeft == RightToLeft.Yes)
+            {
                 RecreateHandle();
             }
 
-            if (onRightToLeftLayoutChanged != null) {
-                 onRightToLeftLayoutChanged(this, e);
+            onRightToLeftLayoutChanged?.Invoke(this, e);
+        }
+
+        /// <summary>
+        ///  Removes all annually bolded days.  Be sure to call updateBoldedDates() afterwards.
+        /// </summary>
+        public void RemoveAllAnnuallyBoldedDates()
+        {
+            annualArrayOfDates.Clear();
+            for (int i = 0; i < MONTHS_IN_YEAR; ++i)
+            {
+                monthsOfYear[i] = 0;
             }
         }
 
-
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.RemoveAllAnnuallyBoldedDates"]/*' />
-        /// <devdoc>
-        ///     Removes all annually bolded days.  Be sure to call updateBoldedDates() afterwards.
-        /// </devdoc>
-        public void RemoveAllAnnuallyBoldedDates() {
-            this.annualArrayOfDates.Clear();
-            for (int i=0; i<MONTHS_IN_YEAR; ++i)
-                monthsOfYear[i] = 0;
+        /// <summary>
+        ///  Removes all the bolded days.  Be sure to call updateBoldedDates() afterwards.
+        /// </summary>
+        public void RemoveAllBoldedDates()
+        {
+            arrayOfDates.Clear();
         }
 
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.RemoveAllBoldedDates"]/*' />
-        /// <devdoc>
-        ///     Removes all the bolded days.  Be sure to call updateBoldedDates() afterwards.
-        /// </devdoc>
-        public void RemoveAllBoldedDates() {
-            this.arrayOfDates.Clear();
-        }
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.RemoveAllMonthlyBoldedDates"]/*' />
-        /// <devdoc>
-        ///     Removes all monthly bolded days.  Be sure to call updateBoldedDates() afterwards.
-        /// </devdoc>
-        public void RemoveAllMonthlyBoldedDates() {
-            this.monthlyArrayOfDates.Clear();
+        /// <summary>
+        ///  Removes all monthly bolded days.  Be sure to call updateBoldedDates() afterwards.
+        /// </summary>
+        public void RemoveAllMonthlyBoldedDates()
+        {
+            monthlyArrayOfDates.Clear();
             datesToBoldMonthly = 0;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.RemoveAnnuallyBoldedDate"]/*' />
-        /// <devdoc>
-        ///     Removes an annually bolded date.  If the date is not found in the
-        ///     bolded date list, then no action is taken.  If date occurs more than
-        ///     once in the bolded date list, then only the first date is removed.  When
-        ///     comparing dates, only the day and month are used. Be sure to call
-        ///     updateBoldedDates afterwards.
-        /// </devdoc>
-        public void RemoveAnnuallyBoldedDate(DateTime date) {
+        /// <summary>
+        ///  Removes an annually bolded date.  If the date is not found in the
+        ///  bolded date list, then no action is taken.  If date occurs more than
+        ///  once in the bolded date list, then only the first date is removed.  When
+        ///  comparing dates, only the day and month are used. Be sure to call
+        ///  updateBoldedDates afterwards.
+        /// </summary>
+        public void RemoveAnnuallyBoldedDate(DateTime date)
+        {
             int length = annualArrayOfDates.Count;
-            int i=0;
-            for (; i<length; ++i) {
-                if (CompareDayAndMonth((DateTime) annualArrayOfDates[i], date)) {
+            int i = 0;
+            for (; i < length; ++i)
+            {
+                if (CompareDayAndMonth((DateTime)annualArrayOfDates[i], date))
+                {
                     annualArrayOfDates.RemoveAt(i);
                     break;
                 }
             }
             --length;
-            for (int j=i; j<length; ++j) {
-                if (CompareDayAndMonth((DateTime) annualArrayOfDates[j], date)) {
+            for (int j = i; j < length; ++j)
+            {
+                if (CompareDayAndMonth((DateTime)annualArrayOfDates[j], date))
+                {
                     return;
                 }
             }
-            monthsOfYear[date.Month-1] &= ~(0x00000001<<(date.Day-1));
+            monthsOfYear[date.Month - 1] &= ~(0x00000001 << (date.Day - 1));
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.RemoveBoldedDate"]/*' />
-        /// <devdoc>
-        ///     Removes a bolded date.  If the date is not found in the
-        ///     bolded date list, then no action is taken.  If date occurs more than
-        ///     once in the bolded date list, then only the first date is removed.
-        ///     Be sure to call updateBoldedDates() afterwards.
-        /// </devdoc>
-        public void RemoveBoldedDate(DateTime date) {
+        /// <summary>
+        ///  Removes a bolded date.  If the date is not found in the
+        ///  bolded date list, then no action is taken.  If date occurs more than
+        ///  once in the bolded date list, then only the first date is removed.
+        ///  Be sure to call updateBoldedDates() afterwards.
+        /// </summary>
+        public void RemoveBoldedDate(DateTime date)
+        {
             int length = arrayOfDates.Count;
-            for (int i=0; i<length; ++i) {
-                if (DateTime.Compare( ((DateTime)arrayOfDates[i]).Date, date.Date) == 0) {
+            for (int i = 0; i < length; ++i)
+            {
+                if (DateTime.Compare(((DateTime)arrayOfDates[i]).Date, date.Date) == 0)
+                {
                     arrayOfDates.RemoveAt(i);
                     Invalidate();
                     return;
@@ -1810,142 +1804,159 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.RemoveMonthlyBoldedDate"]/*' />
-        /// <devdoc>
-        ///     Removes a monthly bolded date.  If the date is not found in the
-        ///     bolded date list, then no action is taken.  If date occurs more than
-        ///     once in the bolded date list, then only the first date is removed.  When
-        ///     comparing dates, only the day and month are used.  Be sure to call
-        ///     updateBoldedDates afterwards.
-        /// </devdoc>
-        public void RemoveMonthlyBoldedDate(DateTime date) {
+        /// <summary>
+        ///  Removes a monthly bolded date.  If the date is not found in the
+        ///  bolded date list, then no action is taken.  If date occurs more than
+        ///  once in the bolded date list, then only the first date is removed.  When
+        ///  comparing dates, only the day and month are used.  Be sure to call
+        ///  updateBoldedDates afterwards.
+        /// </summary>
+        public void RemoveMonthlyBoldedDate(DateTime date)
+        {
             int length = monthlyArrayOfDates.Count;
-            int i=0;
-            for (; i<length; ++i) {
-                if (CompareDayAndMonth((DateTime) monthlyArrayOfDates[i], date)) {
+            int i = 0;
+            for (; i < length; ++i)
+            {
+                if (CompareDayAndMonth((DateTime)monthlyArrayOfDates[i], date))
+                {
                     monthlyArrayOfDates.RemoveAt(i);
                     break;
                 }
             }
             --length;
-            for (int j=i; j<length; ++j) {
-                if (CompareDayAndMonth((DateTime) monthlyArrayOfDates[j], date)) {
+            for (int j = i; j < length; ++j)
+            {
+                if (CompareDayAndMonth((DateTime)monthlyArrayOfDates[j], date))
+                {
                     return;
                 }
             }
-            datesToBoldMonthly &= ~(0x00000001<<(date.Day-1));
+            datesToBoldMonthly &= ~(0x00000001 << (date.Day - 1));
         }
 
-        private void ResetAnnuallyBoldedDates() {
+        private void ResetAnnuallyBoldedDates()
+        {
             annualArrayOfDates.Clear();
         }
 
-        private void ResetBoldedDates() {
+        private void ResetBoldedDates()
+        {
             arrayOfDates.Clear();
         }
 
-        private void ResetCalendarDimensions() {
-            CalendarDimensions = new Size(1,1);
+        private void ResetCalendarDimensions()
+        {
+            CalendarDimensions = new Size(1, 1);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ResetMaxDate"]/*' />
-        /// <devdoc>
-        ///     Resets the maximum selectable date.  By default value, there is no
-        ///     upper limit.
-        /// </devdoc>
-        private void ResetMaxDate() {
+        /// <summary>
+        ///  Resets the maximum selectable date.  By default value, there is no
+        ///  upper limit.
+        /// </summary>
+        private void ResetMaxDate()
+        {
             MaxDate = DateTime.MaxValue;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ResetMinDate"]/*' />
-        /// <devdoc>
-        ///     Resets the minimum selectable date.  By default value, there is no
-        ///     lower limit.
-        /// </devdoc>
-        private void ResetMinDate() {
+        /// <summary>
+        ///  Resets the minimum selectable date.  By default value, there is no
+        ///  lower limit.
+        /// </summary>
+        private void ResetMinDate()
+        {
             MinDate = DateTime.MinValue;
         }
 
-
-        private void ResetMonthlyBoldedDates() {
+        private void ResetMonthlyBoldedDates()
+        {
             monthlyArrayOfDates.Clear();
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ResetSelectionRange"]/*' />
-        /// <devdoc>
-        ///     Resets the limits of the selection range.  By default value, the upper
-        ///     and lower limit is the current date.
-        /// </devdoc>
-        private void ResetSelectionRange() {
+        /// <summary>
+        ///  Resets the limits of the selection range.  By default value, the upper
+        ///  and lower limit is the current date.
+        /// </summary>
+        private void ResetSelectionRange()
+        {
             SetSelectionRange(Now, Now);
         }
 
-        private void ResetTrailingForeColor() {
+        private void ResetTrailingForeColor()
+        {
             TrailingForeColor = DEFAULT_TRAILING_FORE_COLOR;
         }
 
-        private void ResetTitleForeColor() {
+        private void ResetTitleForeColor()
+        {
             TitleForeColor = DEFAULT_TITLE_FORE_COLOR;
         }
 
-        private void ResetTitleBackColor() {
+        private void ResetTitleBackColor()
+        {
             TitleBackColor = DEFAULT_TITLE_BACK_COLOR;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ResetTodayDate"]/*' />
-        /// <devdoc>
-        ///     Resets the "today"'s date.  By default value, "today" is the
-        ///     current date (and is automatically updated when the clock crosses
-        ///     over to the next day).
-        ///     If you set the today date yourself (using the TodayDate property)
-        ///     the control will no longer automatically update the current day
-        ///     for you. To re-enable this behavior, ResetTodayDate() is used.
-        /// </devdoc>
-        private void ResetTodayDate() {
+        /// <summary>
+        ///  Resets the "today"'s date.  By default value, "today" is the
+        ///  current date (and is automatically updated when the clock crosses
+        ///  over to the next day).
+        ///  If you set the today date yourself (using the TodayDate property)
+        ///  the control will no longer automatically update the current day
+        ///  for you. To re-enable this behavior, ResetTodayDate() is used.
+        /// </summary>
+        private void ResetTodayDate()
+        {
             todayDateSet = false;
             UpdateTodayDate();
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.RequestBuffer"]/*' />
-        /// <devdoc>
-        ///     reqSize = # elements in int[] array
+        /// <summary>
+        ///  reqSize = # elements in int[] array
         ///
-        ///     The size argument should be greater than 0.
-        ///     Because of the nature of MonthCalendar, we can expect that
-        ///     the requested size will not be ridiculously large, hence
-        ///     it is not necessary to decrease the size of an allocated
-        ///     block if the new requested size is smaller.
-        /// </devdoc>
-        /// <internalonly/>
-        private IntPtr RequestBuffer(int reqSize) {
+        ///  The size argument should be greater than 0.
+        ///  Because of the nature of MonthCalendar, we can expect that
+        ///  the requested size will not be ridiculously large, hence
+        ///  it is not necessary to decrease the size of an allocated
+        ///  block if the new requested size is smaller.
+        /// </summary>
+        private IntPtr RequestBuffer(int reqSize)
+        {
             Debug.Assert(reqSize > 0, "Requesting a ridiculously small buffer");
             int intSize = 4;
             // if the current buffer size is insufficient...
-            if (reqSize * intSize > mdsBufferSize) {
+            if (reqSize * intSize > _mdsBufferSize)
+            {
                 // free and expand the buffer,
-                if (mdsBuffer != IntPtr.Zero) {
-                    Marshal.FreeHGlobal(mdsBuffer);
-                    mdsBuffer = IntPtr.Zero;
+                if (_mdsBuffer != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(_mdsBuffer);
+                    _mdsBuffer = IntPtr.Zero;
                 }
 
                 // Round up to the nearest multiple of MINIMUM_ALLOC_SIZE
-                float quotient = (float) (reqSize-1) / MINIMUM_ALLOC_SIZE;
-                int actualSize = ((int) (quotient+1)) * MINIMUM_ALLOC_SIZE;
+                float quotient = (float)(reqSize - 1) / MINIMUM_ALLOC_SIZE;
+                int actualSize = ((int)(quotient + 1)) * MINIMUM_ALLOC_SIZE;
                 Debug.Assert(actualSize >= reqSize, "Tried to round up, but got it wrong");
 
-                mdsBufferSize = actualSize * intSize;
-                mdsBuffer = Marshal.AllocHGlobal(mdsBufferSize);
-                return mdsBuffer;
+                _mdsBufferSize = actualSize * intSize;
+                _mdsBuffer = Marshal.AllocHGlobal(_mdsBufferSize);
+                return _mdsBuffer;
             }
-            return mdsBuffer;
+            return _mdsBuffer;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.SetBoundsCore"]/*' />
-        /// <devdoc>
-        ///     Overrides Control.SetBoundsCore to enforce auto-sizing.
-        /// </devdoc>
-        /// <internalonly/>
-        protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified) {
+        /// <summary>
+        ///  Sends a Win32 message to this control.  If the control does not yet
+        ///  have a handle, it will be created.
+        /// </summary>
+        private IntPtr SendMessage(int msg, int wparam, ref ComCtl32.MCGRIDINFO lparam) =>
+            ComCtl32.SendMessage(new HandleRef(this, Handle), msg, wparam, ref lparam);
+
+        /// <summary>
+        ///  Overrides Control.SetBoundsCore to enforce auto-sizing.
+        /// </summary>
+        protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
+        {
             Rectangle oldBounds = Bounds;
             Size max = SystemInformation.MaxWindowTrackSize;
 
@@ -1953,88 +1964,93 @@ namespace System.Windows.Forms {
             // We only want to update the number of rows/columns if we are not currently being scaled.
             bool updateRowsAndColumns = !DpiHelper.IsScalingRequirementMet || !IsCurrentlyBeingScaled;
 
-            if (width != oldBounds.Width) {
+            if (width != oldBounds.Width)
+            {
                 if (width > max.Width)
+                {
                     width = max.Width;
+                }
+
                 width = GetPreferredWidth(width, updateRowsAndColumns);
             }
-            if (height != oldBounds.Height) {
+            if (height != oldBounds.Height)
+            {
                 if (height > max.Height)
+                {
                     height = max.Height;
+                }
+
                 height = GetPreferredHeight(height, updateRowsAndColumns);
             }
             base.SetBoundsCore(x, y, width, height, specified);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.SetControlColor"]/*' />
-        /// <devdoc>
-        ///     If the handle has been created, this applies the color to the control
-        /// </devdoc>
-        /// <internalonly/>
-        private void SetControlColor(int colorIndex, Color value) {
-            if (IsHandleCreated) {
-                SendMessage(NativeMethods.MCM_SETCOLOR, colorIndex, ColorTranslator.ToWin32(value));
+        /// <summary>
+        ///  If the handle has been created, this applies the color to the control
+        /// </summary>
+        private void SetControlColor(ComCtl32.MCSC colorIndex, Color value)
+        {
+            if (IsHandleCreated)
+            {
+                SendMessage((int)ComCtl32.MCM.SETCOLOR, (int)colorIndex, ColorTranslator.ToWin32(value));
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.SetRange"]/*' />
-        /// <devdoc>
-        ///     Updates the window handle with the min/max ranges if it has been
-        ///     created.
-        /// </devdoc>
-        /// <internalonly/>
-        private void SetRange() {
+        /// <summary>
+        ///  Updates the window handle with the min/max ranges if it has been
+        ///  created.
+        /// </summary>
+        private void SetRange()
+        {
             SetRange(DateTimePicker.EffectiveMinDate(minDate), DateTimePicker.EffectiveMaxDate(maxDate));
         }
 
-        private void SetRange(DateTime minDate, DateTime maxDate) {
+        private void SetRange(DateTime minDate, DateTime maxDate)
+        {
             // Keep selection range within passed in minDate and maxDate
-            if (selectionStart < minDate) {
+            if (selectionStart < minDate)
+            {
                 selectionStart = minDate;
             }
-            if (selectionStart > maxDate) {
+            if (selectionStart > maxDate)
+            {
                 selectionStart = maxDate;
             }
-            if (selectionEnd < minDate) {
+            if (selectionEnd < minDate)
+            {
                 selectionEnd = minDate;
             }
-            if (selectionEnd > maxDate) {
+            if (selectionEnd > maxDate)
+            {
                 selectionEnd = maxDate;
             }
             SetSelRange(selectionStart, selectionEnd);
 
             // Updated the calendar range
-            //
-            if (IsHandleCreated) {
-                int flag = 0;
-
-                NativeMethods.SYSTEMTIMEARRAY sa = new NativeMethods.SYSTEMTIMEARRAY();
-                flag |= NativeMethods.GDTR_MIN | NativeMethods.GDTR_MAX;
-                NativeMethods.SYSTEMTIME sys = DateTimePicker.DateTimeToSysTime(minDate);
-                sa.wYear1 = sys.wYear;
-                sa.wMonth1 = sys.wMonth;
-                sa.wDayOfWeek1 = sys.wDayOfWeek;
-                sa.wDay1 = sys.wDay;
-                sys = DateTimePicker.DateTimeToSysTime(maxDate);
-                sa.wYear2 = sys.wYear;
-                sa.wMonth2 = sys.wMonth;
-                sa.wDayOfWeek2 = sys.wDayOfWeek;
-                sa.wDay2 = sys.wDay;
-
-                if ((int)UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.MCM_SETRANGE, flag, sa) == 0)
+            if (IsHandleCreated)
+            {
+                Span<Kernel32.SYSTEMTIME> sa = stackalloc Kernel32.SYSTEMTIME[2];
+                sa[0] = DateTimePicker.DateTimeToSysTime(minDate);
+                sa[1] = DateTimePicker.DateTimeToSysTime(maxDate);
+                int flag = NativeMethods.GDTR_MIN | NativeMethods.GDTR_MAX;
+                if ((int)User32.SendMessageW(this, (User32.WindowMessage)ComCtl32.MCM.SETRANGE, (IntPtr)flag, ref sa[0]) == 0)
+                {
                     throw new InvalidOperationException(string.Format(SR.MonthCalendarRange, minDate.ToShortDateString(), maxDate.ToShortDateString()));
+                }
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.SetCalendarDimensions"]/*' />
-        /// <devdoc>
-        ///     Sets the number of columns and rows to display.
-        /// </devdoc>
-        public void SetCalendarDimensions(int x, int y) {
-            if (x < 1) {
+        /// <summary>
+        ///  Sets the number of columns and rows to display.
+        /// </summary>
+        public void SetCalendarDimensions(int x, int y)
+        {
+            if (x < 1)
+            {
                 throw new ArgumentOutOfRangeException(nameof(x), string.Format(SR.MonthCalendarInvalidDimensions, (x).ToString("D", CultureInfo.CurrentCulture), (y).ToString("D", CultureInfo.CurrentCulture)));
             }
-            if (y < 1) {
+            if (y < 1)
+            {
                 throw new ArgumentOutOfRangeException(nameof(y), string.Format(SR.MonthCalendarInvalidDimensions, (x).ToString("D", CultureInfo.CurrentCulture), (y).ToString("D", CultureInfo.CurrentCulture)));
             }
 
@@ -2043,78 +2059,90 @@ namespace System.Windows.Forms {
             // The following code emulates what is done inside monthcalendar (in comctl32.dll):
             // The dimensions are gradually reduced until the inequality above holds.
             //
-            while (x * y > 12) {
-                if (x > y) {
+            while (x * y > 12)
+            {
+                if (x > y)
+                {
                     x--;
                 }
-                else {
+                else
+                {
                     y--;
                 }
             }
 
-            if (dimensions.Width != x || dimensions.Height != y) {
-                this.dimensions.Width = x;
-                this.dimensions.Height = y;
+            if (dimensions.Width != x || dimensions.Height != y)
+            {
+                dimensions.Width = x;
+                dimensions.Height = y;
                 AdjustSize();
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.SetDate"]/*' />
-        /// <devdoc>
-        ///     Sets date as the current selected date.  The start and begin of
-        ///     the selection range will both be equal to date.
-        /// </devdoc>
-        public void SetDate(DateTime date) {
-
-            if (date.Ticks < minDate.Ticks) {
-                throw new ArgumentOutOfRangeException(nameof(date), string.Format(SR.InvalidLowBoundArgumentEx, "date", FormatDate(date), "MinDate"));
+        /// <summary>
+        ///  Sets date as the current selected date.  The start and begin of
+        ///  the selection range will both be equal to date.
+        /// </summary>
+        public void SetDate(DateTime date)
+        {
+            if (date.Ticks < minDate.Ticks)
+            {
+                throw new ArgumentOutOfRangeException(nameof(date), date, string.Format(SR.InvalidLowBoundArgumentEx, nameof(date), FormatDate(date), nameof(MinDate)));
             }
-            if (date.Ticks > maxDate.Ticks) {
-                throw new ArgumentOutOfRangeException(nameof(date), string.Format(SR.InvalidHighBoundArgumentEx, "date", FormatDate(date), "MaxDate"));
+            if (date.Ticks > maxDate.Ticks)
+            {
+                throw new ArgumentOutOfRangeException(nameof(date), date, string.Format(SR.InvalidHighBoundArgumentEx, nameof(date), FormatDate(date), nameof(MaxDate)));
             }
 
             SetSelectionRange(date, date);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.SetSelectionRange"]/*' />
-        /// <devdoc>
-        ///     Sets the selection for a month calendar control to a given date range.
-        ///     The selection range will not be set if the selection range exceeds the
-        ///     maximum selection count.
-        /// </devdoc>
-        public void SetSelectionRange(DateTime date1, DateTime date2) {
-
+        /// <summary>
+        ///  Sets the selection for a month calendar control to a given date range.
+        ///  The selection range will not be set if the selection range exceeds the
+        ///  maximum selection count.
+        /// </summary>
+        public void SetSelectionRange(DateTime date1, DateTime date2)
+        {
             // Keep the dates within the min and max dates
-            if (date1.Ticks < minDate.Ticks) {
-                throw new ArgumentOutOfRangeException(nameof(date1), string.Format(SR.InvalidLowBoundArgumentEx, "SelectionStart", FormatDate(date1), "MinDate"));
+            if (date1.Ticks < minDate.Ticks)
+            {
+                throw new ArgumentOutOfRangeException(nameof(date1), date1, string.Format(SR.InvalidLowBoundArgumentEx, nameof(SelectionStart), FormatDate(date1), nameof(MinDate)));
             }
-            if (date1.Ticks > maxDate.Ticks) {
-                throw new ArgumentOutOfRangeException(nameof(date1), string.Format(SR.InvalidHighBoundArgumentEx, "SelectionEnd", FormatDate(date1), "MaxDate"));
+            if (date1.Ticks > maxDate.Ticks)
+            {
+                throw new ArgumentOutOfRangeException(nameof(date1), date1, string.Format(SR.InvalidHighBoundArgumentEx, nameof(SelectionEnd), FormatDate(date1), nameof(MaxDate)));
             }
-            if (date2.Ticks < minDate.Ticks) {
-                throw new ArgumentOutOfRangeException(nameof(date2), string.Format(SR.InvalidLowBoundArgumentEx, "SelectionStart", FormatDate(date2), "MinDate"));
+            if (date2.Ticks < minDate.Ticks)
+            {
+                throw new ArgumentOutOfRangeException(nameof(date2), date2, string.Format(SR.InvalidLowBoundArgumentEx, nameof(SelectionStart), FormatDate(date2), nameof(MinDate)));
             }
-            if (date2.Ticks > maxDate.Ticks) {
-                throw new ArgumentOutOfRangeException(nameof(date2), string.Format(SR.InvalidHighBoundArgumentEx, "SelectionEnd", FormatDate(date2), "MaxDate"));
+            if (date2.Ticks > maxDate.Ticks)
+            {
+                throw new ArgumentOutOfRangeException(nameof(date2), date2, string.Format(SR.InvalidHighBoundArgumentEx, nameof(SelectionEnd), FormatDate(date2), nameof(MaxDate)));
             }
 
             // If date1 > date2, we just select date2 (compat)
             //
-            if (date1 > date2) {
+            if (date1 > date2)
+            {
                 date2 = date1;
             }
 
             // If the range exceeds maxSelectionCount, compare with the previous range and adjust whichever
             // limit hasn't changed.
             //
-            if ((date2 - date1).Days >= maxSelectionCount) {
+            if ((date2 - date1).Days >= maxSelectionCount)
+            {
 
-                if (date1.Ticks == selectionStart.Ticks) {
+                if (date1.Ticks == selectionStart.Ticks)
+                {
                     // Bring start date forward
                     //
                     date1 = date2.AddDays(1 - maxSelectionCount);
                 }
-                else {
+                else
+                {
                     // Bring end date back
                     //
                     date2 = date1.AddDays(maxSelectionCount - 1);
@@ -2125,264 +2153,269 @@ namespace System.Windows.Forms {
             SetSelRange(date1, date2);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.SetSelRange"]/*' />
-        /// <devdoc>
-        ///     Upper must be greater than Lower
-        /// </devdoc>
-        /// <internalonly/>
-        private void SetSelRange(DateTime lower, DateTime upper) {
-
+        /// <summary>
+        ///  Upper must be greater than Lower
+        /// </summary>
+        private void SetSelRange(DateTime lower, DateTime upper)
+        {
             Debug.Assert(lower.Ticks <= upper.Ticks, "lower must be less than upper");
 
             bool changed = false;
-            if (selectionStart != lower || selectionEnd != upper) {
+            if (selectionStart != lower || selectionEnd != upper)
+            {
                 changed = true;
                 selectionStart = lower;
                 selectionEnd = upper;
             }
 
-            // always set the value on the control, to ensure that
-            // it is up to date.
-            //
-            if (IsHandleCreated) {
-                NativeMethods.SYSTEMTIMEARRAY sa = new NativeMethods.SYSTEMTIMEARRAY();
-
-                NativeMethods.SYSTEMTIME sys = DateTimePicker.DateTimeToSysTime(lower);
-                sa.wYear1 = sys.wYear;
-                sa.wMonth1 = sys.wMonth;
-                sa.wDayOfWeek1 = sys.wDayOfWeek;
-                sa.wDay1 = sys.wDay;
-                sys = DateTimePicker.DateTimeToSysTime(upper);
-                sa.wYear2 = sys.wYear;
-                sa.wMonth2 = sys.wMonth;
-                sa.wDayOfWeek2 = sys.wDayOfWeek;
-                sa.wDay2 = sys.wDay;
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.MCM_SETSELRANGE , 0, sa);
+            // Always set the value on the control, to ensure that it is up to date.
+            if (IsHandleCreated)
+            {
+                Span<Kernel32.SYSTEMTIME> sa = stackalloc Kernel32.SYSTEMTIME[2];
+                sa[0] = DateTimePicker.DateTimeToSysTime(lower);
+                sa[1] = DateTimePicker.DateTimeToSysTime(upper);
+                User32.SendMessageW(this, (User32.WindowMessage)ComCtl32.MCM.SETSELRANGE, IntPtr.Zero, ref sa[0]);
             }
 
-            if (changed) {
+            if (changed)
+            {
                 OnDateChanged(new DateRangeEventArgs(lower, upper));
             }
         }
 
-        private bool ShouldSerializeAnnuallyBoldedDates() {
+        private bool ShouldSerializeAnnuallyBoldedDates()
+        {
             return annualArrayOfDates.Count > 0;
         }
 
-        private bool ShouldSerializeBoldedDates() {
+        private bool ShouldSerializeBoldedDates()
+        {
             return arrayOfDates.Count > 0;
         }
 
-        private bool ShouldSerializeCalendarDimensions() {
+        private bool ShouldSerializeCalendarDimensions()
+        {
             return !dimensions.Equals(new Size(1, 1));
         }
 
-        private bool ShouldSerializeTrailingForeColor() {
+        private bool ShouldSerializeTrailingForeColor()
+        {
             return !TrailingForeColor.Equals(DEFAULT_TRAILING_FORE_COLOR);
         }
 
-        private bool ShouldSerializeTitleForeColor() {
+        private bool ShouldSerializeTitleForeColor()
+        {
             return !TitleForeColor.Equals(DEFAULT_TITLE_FORE_COLOR);
         }
 
-        private bool ShouldSerializeTitleBackColor() {
+        private bool ShouldSerializeTitleBackColor()
+        {
             return !TitleBackColor.Equals(DEFAULT_TITLE_BACK_COLOR);
         }
 
-        private bool ShouldSerializeMonthlyBoldedDates() {
+        private bool ShouldSerializeMonthlyBoldedDates()
+        {
             return monthlyArrayOfDates.Count > 0;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ShouldSerializeMaxDate"]/*' />
-        /// <devdoc>
-        ///     Retrieves true if the maxDate should be persisted in code gen.
-        /// </devdoc>
-        private bool ShouldSerializeMaxDate() {
+        /// <summary>
+        ///  Retrieves true if the maxDate should be persisted in code gen.
+        /// </summary>
+        private bool ShouldSerializeMaxDate()
+        {
             return maxDate != DateTimePicker.MaximumDateTime && maxDate != DateTime.MaxValue;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ShouldSerializeMinDate"]/*' />
-        /// <devdoc>
-        ///     Retrieves true if the minDate should be persisted in code gen.
-        /// </devdoc>
-        private bool ShouldSerializeMinDate() {
+        /// <summary>
+        ///  Retrieves true if the minDate should be persisted in code gen.
+        /// </summary>
+        private bool ShouldSerializeMinDate()
+        {
             return minDate != DateTimePicker.MinimumDateTime && minDate != DateTime.MinValue;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ShouldSerializeSelectionRange"]/*' />
-        /// <devdoc>
-        ///     Retrieves true if the selectionRange should be persisted in code gen.
-        /// </devdoc>
-        private bool ShouldSerializeSelectionRange() {
+        /// <summary>
+        ///  Retrieves true if the selectionRange should be persisted in code gen.
+        /// </summary>
+        private bool ShouldSerializeSelectionRange()
+        {
             return !DateTime.Equals(selectionEnd, selectionStart);
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ShouldSerializeTodayDate"]/*' />
-        /// <devdoc>
-        ///     Retrieves true if the todayDate should be persisted in code gen.
-        /// </devdoc>
-        private bool ShouldSerializeTodayDate() {
+        /// <summary>
+        ///  Retrieves true if the todayDate should be persisted in code gen.
+        /// </summary>
+        private bool ShouldSerializeTodayDate()
+        {
             return todayDateSet;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.ToString"]/*' />
-        /// <devdoc>
-        ///     Returns a string representation for this control.
-        /// </devdoc>
-        /// <internalonly/>
-        public override string ToString() {
-
+        /// <summary>
+        ///  Returns a string representation for this control.
+        /// </summary>
+        public override string ToString()
+        {
             string s = base.ToString();
             return s + ", " + SelectionRange.ToString();
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.UpdateBoldedDates"]/*' />
-        /// <devdoc>
-        ///     Forces month calendar to display the current set of bolded dates.
-        /// </devdoc>
-        public void UpdateBoldedDates() {
+        /// <summary>
+        ///  Forces month calendar to display the current set of bolded dates.
+        /// </summary>
+        public void UpdateBoldedDates()
+        {
             RecreateHandle();
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.UpdateTodayDate"]/*' />
-        /// <devdoc>
-        ///     Updates the current setting for "TODAY" in the MonthCalendar control
-        ///     If the today date is set, the control will be set to that. Otherwise,
-        ///     it will be set to null (running clock mode - the today date will be
-        ///     automatically updated).
-        /// </devdoc>
-        private void UpdateTodayDate() {
-            if (IsHandleCreated) {
-                NativeMethods.SYSTEMTIME st = null;
-                if (todayDateSet) {
-                    st = DateTimePicker.DateTimeToSysTime(todayDate);
+        /// <summary>
+        ///  Updates the current setting for "TODAY" in the MonthCalendar control
+        ///  If the today date is set, the control will be set to that. Otherwise,
+        ///  it will be set to null (running clock mode - the today date will be
+        ///  automatically updated).
+        /// </summary>
+        private void UpdateTodayDate()
+        {
+            if (IsHandleCreated)
+            {
+                if (todayDateSet)
+                {
+                    Kernel32.SYSTEMTIME st = DateTimePicker.DateTimeToSysTime(todayDate);
+                    User32.SendMessageW(this, (User32.WindowMessage)User32.MCM.SETTODAY, IntPtr.Zero, ref st);
                 }
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), NativeMethods.MCM_SETTODAY, 0, st);
+                else
+                {
+                    User32.SendMessageW(this, (User32.WindowMessage)User32.MCM.SETTODAY, IntPtr.Zero, IntPtr.Zero);
+                }
             }
         }
 
-        private void MarshaledUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs pref) {
-            try {
+        private void MarshaledUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs pref)
+        {
+            try
+            {
                 //use begininvoke instead of invoke in case the destination thread is not processing messages.
-                BeginInvoke(new UserPreferenceChangedEventHandler(this.UserPreferenceChanged), new object[] { sender, pref });
+                BeginInvoke(new UserPreferenceChangedEventHandler(UserPreferenceChanged), new object[] { sender, pref });
             }
             catch (InvalidOperationException) { } //if the destination thread does not exist, don't send.
         }
 
-        private void UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs pref) {
-            if (pref.Category == UserPreferenceCategory.Locale) {
-               // We need to recreate the monthcalendar handle when the locale changes, because
+        private void UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs pref)
+        {
+            if (pref.Category == UserPreferenceCategory.Locale)
+            {
+                // We need to recreate the monthcalendar handle when the locale changes, because
                 // the day names etc. are only updated on a handle recreate (comctl32 limitation).
                 //
                 RecreateHandle();
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.WmDateChanged"]/*' />
-        /// <devdoc>
-        ///     Handles the MCN_SELCHANGE notification
-        /// </devdoc>
-        /// <internalonly/>
-        private void WmDateChanged(ref Message m) {
-            NativeMethods.NMSELCHANGE nmmcsc = (NativeMethods.NMSELCHANGE)m.GetLParam(typeof(NativeMethods.NMSELCHANGE));
-            DateTime start = selectionStart = DateTimePicker.SysTimeToDateTime(nmmcsc.stSelStart);
-            DateTime end = selectionEnd = DateTimePicker.SysTimeToDateTime(nmmcsc.stSelEnd);
+        /// <summary>
+        ///  Handles the MCN_SELCHANGE notification
+        /// </summary>
+        private unsafe void WmDateChanged(ref Message m)
+        {
+            ComCtl32.NMSELCHANGE* nmmcsc = (ComCtl32.NMSELCHANGE*)m.LParam;
+            DateTime start = selectionStart = DateTimePicker.SysTimeToDateTime(nmmcsc->stSelStart);
+            DateTime end = selectionEnd = DateTimePicker.SysTimeToDateTime(nmmcsc->stSelEnd);
 
-            if (AccessibilityImprovements.Level1) {
-                AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
-                AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
-            }
-            
+            AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
+            AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
+
+            MonthCalendarAccessibleObject calendarAccessibleObject = (MonthCalendarAccessibleObject)AccessibilityObject;
+            calendarAccessibleObject.RaiseAutomationEventForChild(UiaCore.UIA.AutomationFocusChangedEventId, selectionStart, selectionEnd);
+
             //subhag
             if (start.Ticks < minDate.Ticks || end.Ticks < minDate.Ticks)
-                SetSelRange(minDate,minDate);
+            {
+                SetSelRange(minDate, minDate);
+            }
             else if (start.Ticks > maxDate.Ticks || end.Ticks > maxDate.Ticks)
-                SetSelRange(maxDate,maxDate);
+            {
+                SetSelRange(maxDate, maxDate);
+            }
             //end subhag
             OnDateChanged(new DateRangeEventArgs(start, end));
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.WmDateBold"]/*' />
-        /// <devdoc>
-        ///     Handles the MCN_GETDAYSTATE notification
-        /// </devdoc>
-        /// <internalonly/>
-        private void WmDateBold(ref Message m) {
-            NativeMethods.NMDAYSTATE nmmcds = (NativeMethods.NMDAYSTATE)m.GetLParam(typeof(NativeMethods.NMDAYSTATE));
-            DateTime start = DateTimePicker.SysTimeToDateTime(nmmcds.stStart);
-            DateBoldEventArgs boldEvent = new DateBoldEventArgs(start, nmmcds.cDayState);
+        /// <summary>
+        ///  Handles the MCN_GETDAYSTATE notification
+        /// </summary>
+        private unsafe void WmDateBold(ref Message m)
+        {
+            ComCtl32.NMDAYSTATE* nmmcds = (ComCtl32.NMDAYSTATE*)m.LParam;
+            DateTime start = DateTimePicker.SysTimeToDateTime(nmmcds->stStart);
+            DateBoldEventArgs boldEvent = new DateBoldEventArgs(start, nmmcds->cDayState);
             BoldDates(boldEvent);
-            mdsBuffer = RequestBuffer(boldEvent.Size);
+            _mdsBuffer = RequestBuffer(boldEvent.Size);
             // copy boldEvent into mdsBuffer
-            Marshal.Copy(boldEvent.DaysToBold, 0, mdsBuffer, boldEvent.Size);
+            Marshal.Copy(boldEvent.DaysToBold, 0, _mdsBuffer, boldEvent.Size);
             // now we replug DateBoldEventArgs info into NMDAYSTATE
-            nmmcds.prgDayState = mdsBuffer;
-            Marshal.StructureToPtr(nmmcds, m.LParam, false);
+            nmmcds->prgDayState = _mdsBuffer;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.WmCalViewChanged"]/*' />
-        /// <devdoc>
-        ///     Handles the MCN_VIEWCHANGE  notification
-        /// </devdoc>
-        /// <internalonly/>
+        /// <summary>
+        ///  Handles the MCN_VIEWCHANGE  notification
+        /// </summary>
+        private unsafe void WmCalViewChanged(ref Message m)
+        {
+            ComCtl32.NMVIEWCHANGE* nmmcvm = (ComCtl32.NMVIEWCHANGE*)m.LParam;
+            Debug.Assert(_mcCurView == nmmcvm->uOldView, "Calendar view mode is out of sync with native control");
+            if (_mcCurView != nmmcvm->uNewView)
+            {
+                _mcOldView = _mcCurView;
+                _mcCurView = nmmcvm->uNewView;
 
-        private void WmCalViewChanged (ref Message m) {
-            NativeMethods.NMVIEWCHANGE nmmcvm = (NativeMethods.NMVIEWCHANGE)m.GetLParam(typeof(NativeMethods.NMVIEWCHANGE));
-            Debug.Assert(mcCurView == (NativeMethods.MONTCALENDAR_VIEW_MODE)nmmcvm.uOldView, "Calendar view mode is out of sync with native control");
-            if (mcCurView != (NativeMethods.MONTCALENDAR_VIEW_MODE)nmmcvm.uNewView) {
-                mcOldView = mcCurView;
-                mcCurView = (NativeMethods.MONTCALENDAR_VIEW_MODE)nmmcvm.uNewView;
-                if (AccessibilityImprovements.Level1) {
-                    AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
-                    AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
-                }
-            }
-        }
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.WmDateSelected"]/*' />
-        /// <devdoc>
-        ///     Handles the MCN_SELECT notification
-        /// </devdoc>
-        /// <internalonly/>
-        private void WmDateSelected(ref Message m) {
-            NativeMethods.NMSELCHANGE nmmcsc = (NativeMethods.NMSELCHANGE)m.GetLParam(typeof(NativeMethods.NMSELCHANGE));
-            DateTime start = selectionStart = DateTimePicker.SysTimeToDateTime(nmmcsc.stSelStart);
-            DateTime end = selectionEnd = DateTimePicker.SysTimeToDateTime(nmmcsc.stSelEnd);
-
-            if (AccessibilityImprovements.Level1) {
-                AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
                 AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
+                AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
             }
+        }
+        /// <summary>
+        ///  Handles the MCN_SELECT notification
+        /// </summary>
+        private unsafe void WmDateSelected(ref Message m)
+        {
+            ComCtl32.NMSELCHANGE* nmmcsc = (ComCtl32.NMSELCHANGE*)m.LParam;
+            DateTime start = selectionStart = DateTimePicker.SysTimeToDateTime(nmmcsc->stSelStart);
+            DateTime end = selectionEnd = DateTimePicker.SysTimeToDateTime(nmmcsc->stSelEnd);
+
+            AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
+            AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
 
             //subhag
             if (start.Ticks < minDate.Ticks || end.Ticks < minDate.Ticks)
-                SetSelRange(minDate,minDate);
+            {
+                SetSelRange(minDate, minDate);
+            }
             else if (start.Ticks > maxDate.Ticks || end.Ticks > maxDate.Ticks)
-                SetSelRange(maxDate,maxDate);
+            {
+                SetSelRange(maxDate, maxDate);
+            }
 
             //end subhag
             OnDateSelected(new DateRangeEventArgs(start, end));
 
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.WmGetDlgCode"]/*' />
-        /// <devdoc>
-        ///     Handles the WM_GETDLGCODE message
-        /// </devdoc>
-        /// <internalonly/>
-        private void WmGetDlgCode(ref Message m) {
+        /// <summary>
+        ///  Handles the WM_GETDLGCODE message
+        /// </summary>
+        private void WmGetDlgCode(ref Message m)
+        {
             // The MonthCalendar does its own handling of arrow keys
             m.Result = (IntPtr)NativeMethods.DLGC_WANTARROWS;
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.WmReflectCommand"]/*' />
-        /// <devdoc>
-        ///     Handles the WM_COMMAND messages reflected from the parent control.
-        /// </devdoc>
-        /// <internalonly/>
-        private void WmReflectCommand(ref Message m) {
-            if (m.HWnd == Handle) {
-                NativeMethods.NMHDR nmhdr = (NativeMethods.NMHDR)m.GetLParam(typeof(NativeMethods.NMHDR));
-                switch (nmhdr.code) {
+        /// <summary>
+        ///  Handles the WM_COMMAND messages reflected from the parent control.
+        /// </summary>
+        private unsafe void WmReflectCommand(ref Message m)
+        {
+            if (m.HWnd == Handle)
+            {
+                User32.NMHDR* nmhdr = (User32.NMHDR*)m.LParam;
+                switch (nmhdr->code)
+                {
                     case NativeMethods.MCN_SELECT:
                         WmDateSelected(ref m);
                         break;
@@ -2393,39 +2426,34 @@ namespace System.Windows.Forms {
                         WmDateBold(ref m);
                         break;
                     case NativeMethods.MCN_VIEWCHANGE:
-                        if (AccessibilityImprovements.Level1) {
-                            WmCalViewChanged(ref m);
-                        }
+                        WmCalViewChanged(ref m);
                         break;
                 }
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.WndProc"]/*' />
-        /// <devdoc>
-        ///     Overrided wndProc
-        /// </devdoc>
-        /// <internalonly/>
-        [SecurityPermission(SecurityAction.LinkDemand, Flags=SecurityPermissionFlag.UnmanagedCode)]
-        protected override void WndProc(ref Message m) {
-            switch (m.Msg) {
-                case NativeMethods.WM_LBUTTONDOWN:
-                    FocusInternal();
-                    if (!ValidationCancelled) {
+        /// <summary>
+        ///  Overrided wndProc
+        /// </summary>
+        protected override void WndProc(ref Message m)
+        {
+            switch (m.Msg)
+            {
+                case WindowMessages.WM_LBUTTONDOWN:
+                    Focus();
+                    if (!ValidationCancelled)
+                    {
                         base.WndProc(ref m);
                     }
                     break;
-                case NativeMethods.WM_GETDLGCODE:
+                case WindowMessages.WM_GETDLGCODE:
                     WmGetDlgCode(ref m);
                     break;
-                case NativeMethods.WM_REFLECT + NativeMethods.WM_NOTIFY:
+                case WindowMessages.WM_REFLECT + WindowMessages.WM_NOTIFY:
                     WmReflectCommand(ref m);
                     base.WndProc(ref m);
                     break;
-                case NativeMethods.WM_DESTROY:
-                    if (restrictUnmanagedCode == true && nativeWndProcCount > 0) {
-                        throw new InvalidOperationException();
-                    }
+                case WindowMessages.WM_DESTROY:
                     base.WndProc(ref m);
                     break;
                 default:
@@ -2434,97 +2462,70 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.DefWndProc"]/*' />
-        /// <internalonly/>
-        /// <devdoc>
-        ///    Calls the default window procedure for the MonthCalendar control. 
-        /// </devdoc>
-        [
-            SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode),
-            EditorBrowsable(EditorBrowsableState.Advanced)
-        ]
-        protected override void DefWndProc(ref Message m) {
-            if (restrictUnmanagedCode == true) {
-                nativeWndProcCount++;
-                try {
-                    base.DefWndProc(ref m);
-                }
-                finally {
-                    nativeWndProcCount--;
-                }
+        /// <summary>
+        ///  HitTestInfo objects are returned by MonthCalendar in response to the hitTest method.
+        ///  HitTestInfo is for informational purposes only; the user should not construct these objects, and
+        ///  cannot modify any of the members.
+        /// </summary>
+        public sealed class HitTestInfo
+        {
+            readonly Point point;
+            readonly HitArea hitArea;
+            readonly DateTime time;
 
-                return;
-            }
-
-            base.DefWndProc(ref m);
-        }
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.HitTestInfo"]/*' />
-        /// <devdoc>
-        ///     HitTestInfo objects are returned by MonthCalendar in response to the hitTest method.
-        ///     HitTestInfo is for informational purposes only; the user should not construct these objects, and
-        ///     cannot modify any of the members.
-        /// </devdoc>
-        public sealed class HitTestInfo {
-            readonly Point       point;
-            readonly HitArea     hitArea;
-            readonly DateTime    time;
-
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.HitTestInfo.HitTestInfo"]/*' />
-            /// <devdoc>
-            /// </devdoc>
-            /// <internalonly/>
-            internal HitTestInfo(Point pt, HitArea area, DateTime time) {
-                this.point = pt;
-                this.hitArea = area;
+            /// <summary>
+            /// </summary>
+            internal HitTestInfo(Point pt, HitArea area, DateTime time)
+            {
+                point = pt;
+                hitArea = area;
                 this.time = time;
             }
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.HitTestInfo.HitTestInfo1"]/*' />
-            /// <devdoc>
-            ///      This constructor is used when the DateTime member is invalid.
-            /// </devdoc>
-            /// <internalonly/>
-            internal HitTestInfo(Point pt, HitArea area) {
-                this.point = pt;
-                this.hitArea = area;
+            /// <summary>
+            ///  This constructor is used when the DateTime member is invalid.
+            /// </summary>
+            internal HitTestInfo(Point pt, HitArea area)
+            {
+                point = pt;
+                hitArea = area;
             }
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.HitTestInfo.Point"]/*' />
-            /// <devdoc>
-            ///     The point that was hit-tested
-            /// </devdoc>
-            public Point Point {
+            /// <summary>
+            ///  The point that was hit-tested
+            /// </summary>
+            public Point Point
+            {
                 get { return point; }
             }
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.HitTestInfo.HitArea"]/*' />
-            /// <devdoc>
-            ///     Output member that receives an enumeration value from System.Windows.Forms.MonthCalendar.HitArea
-            ///     representing the result of the hit-test operation.
-            /// </devdoc>
-            public HitArea HitArea {
+            /// <summary>
+            ///  Output member that receives an enumeration value from System.Windows.Forms.MonthCalendar.HitArea
+            ///  representing the result of the hit-test operation.
+            /// </summary>
+            public HitArea HitArea
+            {
                 get { return hitArea; }
             }
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.HitTestInfo.Time"]/*' />
-            /// <devdoc>
-            ///     The time information specific to the location that was hit-tested.  This value
-            ///     will only be valid at certain values of hitArea.
-            /// </devdoc>
-            public DateTime Time {
+            /// <summary>
+            ///  The time information specific to the location that was hit-tested.  This value
+            ///  will only be valid at certain values of hitArea.
+            /// </summary>
+            public DateTime Time
+            {
                 get { return time; }
             }
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.HitTestInfo.HitAreaHasValidDateTime"]/*' />
-            /// <devdoc>
-            ///      Determines whether a given HitArea should have a corresponding valid DateTime
-            /// </devdoc>
-            /// <internalonly/>
-            internal static bool HitAreaHasValidDateTime(HitArea hitArea) {
-                switch (hitArea) {
+            /// <summary>
+            ///  Determines whether a given HitArea should have a corresponding valid DateTime
+            /// </summary>
+            internal static bool HitAreaHasValidDateTime(HitArea hitArea)
+            {
+                switch (hitArea)
+                {
                     case HitArea.Date:
-                        //case HitArea.DayOfWeek:   comCtl does not provide a valid date
+                    //case HitArea.DayOfWeek:   comCtl does not provide a valid date
                     case HitArea.WeekNumbers:
                         return true;
                 }
@@ -2532,227 +2533,97 @@ namespace System.Windows.Forms {
             }
         }
 
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea"]/*' />
-        /// <devdoc>
-        /// This enumeration has specific areas of the MonthCalendar control as its enumerated values.
-        /// The hitArea member of System.Windows.Forms.Win32.HitTestInfo will be one of these enumerated values, and
-        /// indicates which portion of a month calendar is under a specific point.
-        /// </devdoc>
-        public enum HitArea {
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.Nowhere"]/*' />
-            /// <devdoc>
-            /// The given point was not on the month calendar control, or it was in an inactive portion of the control.
-            /// </devdoc>
+        /// <summary>
+        ///  This enumeration has specific areas of the MonthCalendar control as
+        ///  its enumerated values. The hitArea member of System.Windows.Forms.Win32.HitTestInfo
+        ///  will be one of these enumerated values, and indicates which portion of
+        ///  a month calendar is under a specific point.
+        /// </summary>
+        public enum HitArea
+        {
+            /// <summary>
+            ///  The given point was not on the month calendar control, or it was
+            ///  in an inactive portion of the control.
+            /// </summary>
             Nowhere = 0,
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.TitleBackground"]/*' />
-            /// <devdoc>
-            /// The given point was over the background of a month's title
-            /// </devdoc>
+            /// <summary>
+            ///  The given point was over the background of a month's title
+            /// </summary>
             TitleBackground = 1,
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.TitleMonth"]/*' />
-            /// <devdoc>
-            /// The given point was in a month's title bar, over a month name
-            /// </devdoc>
+            /// <summary>
+            ///  The given point was in a month's title bar, over a month name
+            /// </summary>
             TitleMonth = 2,
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.TitleYear"]/*' />
-            /// <devdoc>
-            /// The given point was in a month's title bar, over the year value
-            /// </devdoc>
+            /// <summary>
+            ///  The given point was in a month's title bar, over the year value
+            /// </summary>
             TitleYear = 3,
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.NextMonthButton"]/*' />
-            /// <devdoc>
-            /// The given point was over the button at the top right corner of the control.
-            /// If the user clicks here, the month calendar will scroll its display to the next
-            /// month or set of months
-            /// </devdoc>
+            /// <summary>
+            ///  The given point was over the button at the top right corner of
+            ///  the control. If the user clicks here, the month calendar will
+            ///  scroll its display to the next month or set of months
+            /// </summary>
             NextMonthButton = 4,
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.PrevMonthButton"]/*' />
-            /// <devdoc>
-            /// The given point was over the button at the top left corner of the control. If the
-            /// user clicks here, the month calendar will scroll its display to the previous month
-            /// or set of months
-            /// </devdoc>
+            /// <summary>
+            ///  The given point was over the button at the top left corner of
+            ///  the control. If the user clicks here, the month calendar will
+            ///  scroll its display to the previous month or set of months
+            /// </summary>
             PrevMonthButton = 5,
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.CalendarBackground"]/*' />
-            /// <devdoc>
-            /// The given point was in the calendar's background
-            /// </devdoc>
+            /// <summary>
+            ///  The given point was in the calendar's background
+            /// </summary>
             CalendarBackground = 6,
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.Date"]/*' />
-            /// <devdoc>
-            /// The given point was on a particular date within the calendar, and the time member of
-            /// HitTestInfo will be set to the date at the given point.
-            /// </devdoc>
+            /// <summary>
+            ///  The given point was on a particular date within the calendar,
+            ///  and the time member of HitTestInfo will be set to the date at
+            ///  the given point.
+            /// </summary>
             Date = 7,
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.NextMonthDate"]/*' />
-            /// <devdoc>
-            /// The given point was over a date from the next month (partially displayed at the end of
-            /// the currently displayed month). If the user clicks here, the month calendar will scroll
-            /// its display to the next month or set of months.
-            /// </devdoc>
+            /// <summary>
+            ///  The given point was over a date from the next month (partially
+            ///  displayed at the end of the currently displayed month). If the
+            ///  user clicks here, the month calendar will scroll its display to
+            ///  the next month or set of months.
+            /// </summary>
             NextMonthDate = 8,
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.PrevMonthDate"]/*' />
-            /// <devdoc>
-            /// The given point was over a date from the previous month (partially displayed at the end
-            /// of the currently displayed month). If the user clicks here, the month calendar will scroll
-            /// its display to the previous month or set of months.
-            /// </devdoc>
+            /// <summary>
+            ///  The given point was over a date from the previous month (partially
+            ///  displayed at the end of the currently displayed month). If the
+            ///  user clicks here, the month calendar will scroll its display to
+            ///  the previous month or set of months.
+            /// </summary>
             PrevMonthDate = 9,
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.DayOfWeek"]/*' />
-            /// <devdoc>
-            /// The given point was over a day abbreviation ("Fri", for example). The time member
-            /// of HitTestInfo will be set to the corresponding date on the top row.
-            /// </devdoc>
+            /// <summary>
+            ///  The given point was over a day abbreviation ("Fri", for example).
+            ///  The time member of HitTestInfo will be set to the corresponding
+            ///  date on the top row.
+            /// </summary>
             DayOfWeek = 10,
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.WeekNumbers"]/*' />
-            /// <devdoc>
-            /// The given point was over a week number.  This will only occur if the showWeekNumbers
-            /// property of MonthCalendar is enabled.  The time member of HitTestInfo will be set to
-            /// the corresponding date in the leftmost column.
-            /// </devdoc>
+            /// <summary>
+            ///  The given point was over a week number.  This will only occur if
+            ///  the showWeekNumbers property of MonthCalendar is enabled. The
+            ///  time member of HitTestInfo will be set to the corresponding date
+            ///  in the leftmost column.
+            /// </summary>
             WeekNumbers = 11,
 
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="HitArea.TodayLink"]/*' />
-            /// <devdoc>
-            /// The given point was on the "today" link at the bottom of the month calendar control
-            /// </devdoc>
+            /// <summary>
+            ///  The given point was on the "today" link at the bottom of the
+            ///  month calendar control
+            /// </summary>
             TodayLink = 12,
         }
-
-        /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.MonthCalendarAccessibleObject"]/*' />
-        /// <internalonly/>        
-        /// <devdoc>
-        /// </devdoc>
-        [System.Runtime.InteropServices.ComVisible(true)]
-        internal class MonthCalendarAccessibleObject : ControlAccessibleObject {
-
-            private MonthCalendar calendar;
-
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.CheckBoxAccessibleObject.MonthCalendarAccessibleObject"]/*' />
-            public MonthCalendarAccessibleObject(Control owner)
-                : base(owner) {
-                    calendar = owner as MonthCalendar;
-            }
-
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.MonthCalendarAccessibleObject.Role"]/*' />
-            public override AccessibleRole Role {
-                get {
-                    if (calendar != null) {
-                        AccessibleRole role = calendar.AccessibleRole;
-                        if (role != AccessibleRole.Default) {
-                            return role;
-                        }
-                    }
-                    return AccessibleRole.Table;
-                }
-            }
-
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.MonthCalendarAccessibleObject.Help"]/*' />
-            public override string Help {
-                get {
-                    var help = base.Help;
-                    if (help != null) {
-                        return help;
-                    }
-                    else {
-                        if (calendar != null) {
-                            return calendar.GetType().Name + "(" + calendar.GetType().BaseType.Name + ")";
-                        }
-                    }
-                    return string.Empty;
-                }
-            }
-
-            /// <include file='doc\MonthCalendar.uex' path='docs/doc[@for="MonthCalendar.MonthCalendarAccessibleObject.Name"]/*' />
-            public override string Name {
-                get {
-                    string name = base.Name;
-                    if (name != null) {
-                        return name;
-                    }
-
-                    if (calendar != null) {
-
-                        if (calendar.mcCurView == NativeMethods.MONTCALENDAR_VIEW_MODE.MCMV_MONTH) {
-                            if (System.DateTime.Equals(calendar.SelectionStart.Date, calendar.SelectionEnd.Date)) {
-                                name = string.Format(SR.MonthCalendarSingleDateSelected, calendar.SelectionStart.ToLongDateString());
-                            }
-                            else {
-                                name = string.Format(SR.MonthCalendarRangeSelected, calendar.SelectionStart.ToLongDateString(), calendar.SelectionEnd.ToLongDateString());
-                            }
-                        }
-                        else if (this.calendar.mcCurView == NativeMethods.MONTCALENDAR_VIEW_MODE.MCMV_YEAR) {
-                            if (System.DateTime.Equals(this.calendar.SelectionStart.Month, this.calendar.SelectionEnd.Month)) {
-                                name = string.Format(SR.MonthCalendarSingleDateSelected, calendar.SelectionStart.ToString("y"));
-                            }
-                            else {
-                                name = string.Format(SR.MonthCalendarRangeSelected, calendar.SelectionStart.ToString("y"), calendar.SelectionEnd.ToString("y"));
-                            }
-                        }
-                        else if (calendar.mcCurView == NativeMethods.MONTCALENDAR_VIEW_MODE.MCMV_DECADE) {
-                            if (System.DateTime.Equals(calendar.SelectionStart.Year, calendar.SelectionEnd.Year)) {
-                                name = string.Format(SR.MonthCalendarSingleYearSelected, calendar.SelectionStart.ToString("yyyy"));
-                            }
-                            else {
-                                name = string.Format(SR.MonthCalendarYearRangeSelected, calendar.SelectionStart.ToString("yyyy"), calendar.SelectionEnd.ToString("yyyy"));
-                            }
-                        }
-                        else if (calendar.mcCurView == NativeMethods.MONTCALENDAR_VIEW_MODE.MCMV_CENTURY) {
-                            name = string.Format(SR.MonthCalendarSingleDecadeSelected, calendar.SelectionStart.ToString("yyyy"));
-                        }
-                    }
-                    return name;
-                }
-            }
-
-            public override string Value {
-                get {
-                    var value = string.Empty;
-                    try {
-                        if (calendar != null) {
-                            if (calendar.mcCurView == NativeMethods.MONTCALENDAR_VIEW_MODE.MCMV_MONTH) {
-                                if (System.DateTime.Equals(calendar.SelectionStart.Date, calendar.SelectionEnd.Date)) {
-                                    value = calendar.SelectionStart.ToLongDateString();
-                                }
-                                else {
-                                    value = string.Format("{0} - {1}", calendar.SelectionStart.ToLongDateString(), calendar.SelectionEnd.ToLongDateString());
-                                }
-                            }
-                            else if (this.calendar.mcCurView == NativeMethods.MONTCALENDAR_VIEW_MODE.MCMV_YEAR) {
-                                if (System.DateTime.Equals(this.calendar.SelectionStart.Month, this.calendar.SelectionEnd.Month)) {
-                                    value = calendar.SelectionStart.ToString("y");
-                                }
-                                else {
-                                    value = string.Format("{0} - {1}", calendar.SelectionStart.ToString("y"), calendar.SelectionEnd.ToString("y"));
-                                }
-                            }
-                            else {
-                                value = string.Format("{0} - {1}", calendar.SelectionRange.Start.ToString(), calendar.SelectionRange.End.ToString());
-                            }
-                        }
-                    }
-                    catch {
-                        value = base.Value;
-                    }
-                    return value;
-                }
-                set {
-                    base.Value = value;
-                }
-            }                      
-        }
-
     } // end class MonthCalendar
 }
-

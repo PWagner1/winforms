@@ -1,52 +1,32 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.Windows.Forms {
+using System.Drawing;
 
-    using System.Drawing;
-
-    
-    /// <devdoc>
-    ///   ToolStripContentPanelRenderEventArgs
-    /// </devdoc>
-    public class ToolStripContentPanelRenderEventArgs : EventArgs {
-
-        private ToolStripContentPanel      contentPanel         = null;
-        private Graphics                   graphics                 = null;
-        private bool handled = false;
-
-        /// <devdoc>
+namespace System.Windows.Forms
+{
+    public class ToolStripContentPanelRenderEventArgs : EventArgs
+    {
+        /// <summary>
         ///  This class represents all the information to render the toolStrip
-        /// </devdoc>        
-        public ToolStripContentPanelRenderEventArgs(Graphics g, ToolStripContentPanel contentPanel) {
-            this.contentPanel = contentPanel;
-            this.graphics = g;
+        /// </summary>
+        public ToolStripContentPanelRenderEventArgs(Graphics g, ToolStripContentPanel contentPanel)
+        {
+            Graphics = g;
+            ToolStripContentPanel = contentPanel;
         }
 
+        /// <summary>
+        ///  The graphics object to draw with
+        /// </summary>
+        public Graphics Graphics { get; }
 
-        /// <devdoc>
-        ///  the graphics object to draw with
-        /// </devdoc>
-        public Graphics Graphics {
-            get {
-                return graphics;    
-            }
-        }
-
-        public bool Handled {
-            get { return handled; }
-            set { handled = value; }
-        }
-
-        /// <devdoc>
+        /// <summary>
         ///  Represents which toolStrip was affected by the click
-        /// </devdoc>
-        public ToolStripContentPanel ToolStripContentPanel {
-            get {
-                return contentPanel;
-            }
-        }
-        
+        /// </summary>
+        public ToolStripContentPanel ToolStripContentPanel { get; }
+
+        public bool Handled { get; set; }
     }
 }

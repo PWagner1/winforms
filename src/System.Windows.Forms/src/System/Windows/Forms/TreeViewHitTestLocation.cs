@@ -1,116 +1,72 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.Windows.Forms {
+using System.Runtime.InteropServices;
+using static Interop;
 
-    using System.Diagnostics;
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ///  Specifies the return value for HITTEST on treeview.
+    /// </summary>
+    [Flags]
+    [ComVisible(true)]
+    public enum TreeViewHitTestLocations
+    {
+        /// <summary>
+        ///  No Information.
+        /// </summary>
+        None = (int)ComCtl32.TVHT.NOWHERE,
 
-    using System;
-    using System.ComponentModel;
-    using System.Drawing;
-    using Microsoft.Win32;
+        /// <summary>
+        ///  On Image.
+        /// </summary>
+        Image = (int)ComCtl32.TVHT.ONITEMICON,
 
-    /// <include file='doc\TreeViewHitTestLocations.uex' path='docs/doc[@for="TreeViewHitTestLocations"]/*' />
-    /// <devdoc>
-    ///    <para>
-    ///       Specifies the
-    ///       return value for HITTEST on treeview.
-    ///    </para>
-    /// </devdoc>
-    [
-    Flags,
-    System.Runtime.InteropServices.ComVisible(true)
-    ]
-    public enum TreeViewHitTestLocations {
+        /// <summary>
+        ///  On Label.
+        /// </summary>
+        Label = (int)ComCtl32.TVHT.ONITEMLABEL,
 
-        /// <include file='doc\TreeViewHitTestLocations.uex' path='docs/doc[@for="TreeViewHitTestLocations.None"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       No Information.
-        ///    </para>
-        /// </devdoc>
-        None = NativeMethods.TVHT_NOWHERE,
+        /// <summary>
+        ///  Indent.
+        /// </summary>
+        Indent = (int)ComCtl32.TVHT.ONITEMINDENT,
 
-        /// <include file='doc\TreeViewHitTestLocations.uex' path='docs/doc[@for="TreeViewHitTestLocations.Image"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       On Image.
-        ///    </para>
-        /// </devdoc>
-        Image = NativeMethods.TVHT_ONITEMICON,
+        /// <summary>
+        ///  AboveClientArea.
+        /// </summary>
+        AboveClientArea = (int)ComCtl32.TVHT.ABOVE,
 
-        /// <include file='doc\TreeViewHitTestLocations.uex' path='docs/doc[@for="TreeViewHitTestLocations.Label"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       On Label.
-        ///    </para>
-        /// </devdoc>
-        Label = NativeMethods.TVHT_ONITEMLABEL,
+        /// <summary>
+        ///  BelowClientArea.
+        /// </summary>
+        BelowClientArea = (int)ComCtl32.TVHT.BELOW,
 
-        /// <include file='doc\TreeViewHitTestLocations.uex' path='docs/doc[@for="TreeViewHitTestLocations.Indent"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Indent.
-        ///    </para>
-        /// </devdoc>
-        Indent = NativeMethods.TVHT_ONITEMINDENT,
+        /// <summary>
+        ///  LeftOfClientArea.
+        /// </summary>
+        LeftOfClientArea = (int)ComCtl32.TVHT.TOLEFT,
 
-        /// <include file='doc\TreeViewHitTestLocations.uex' path='docs/doc[@for="TreeViewHitTestLocations.AboveClientArea"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       AboveClientArea.
-        ///    </para>
-        /// </devdoc>
-        AboveClientArea =  NativeMethods.TVHT_ABOVE,
+        /// <summary>
+        ///  RightOfClientArea.
+        /// </summary>
+        RightOfClientArea = (int)ComCtl32.TVHT.TORIGHT,
 
-        /// <include file='doc\TreeViewHitTestLocations.uex' path='docs/doc[@for="TreeViewHitTestLocations.BelowClientArea"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       BelowClientArea.
-        ///    </para>
-        /// </devdoc>
-        BelowClientArea = NativeMethods.TVHT_BELOW,
+        /// <summary>
+        ///  RightOfNode.
+        /// </summary>
+        RightOfLabel = (int)ComCtl32.TVHT.ONITEMRIGHT,
 
-        /// <include file='doc\TreeViewHitTestInfo.uex' path='docs/doc[@for="TreeViewHitTestInfo.LeftOfClientArea"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       LeftOfClientArea.
-        ///    </para>
-        /// </devdoc>
-        LeftOfClientArea = NativeMethods.TVHT_TOLEFT,
+        /// <summary>
+        ///  StateImage.
+        /// </summary>
+        StateImage = (int)ComCtl32.TVHT.ONITEMSTATEICON,
 
-        /// <include file='doc\TreeViewHitTestLocations.uex' path='docs/doc[@for="TreeViewHitTestLocations.RightOfClientArea"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       RightOfClientArea.
-        ///    </para>
-        /// </devdoc>
-        RightOfClientArea = NativeMethods.TVHT_TORIGHT,
-
-        /// <include file='doc\TreeViewHitTestLocations.uex' path='docs/doc[@for="TreeViewHitTestLocations.RightOfNode"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       RightOfNode.
-        ///    </para>
-        /// </devdoc>
-        RightOfLabel =   NativeMethods.TVHT_ONITEMRIGHT,
-
-        /// <include file='doc\TreeViewHitTestLocations.uex' path='docs/doc[@for="TreeViewHitTestLocations.StateImage"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       StateImage.
-        ///    </para>
-        /// </devdoc>
-        StateImage = NativeMethods.TVHT_ONITEMSTATEICON,
-
-        /// <include file='doc\TreeViewHitTestLocations.uex' path='docs/doc[@for="TreeViewHitTestLocations.PlusMinus"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///      PlusMinus.
-        ///    </para>
-        /// </devdoc>
-        PlusMinus = NativeMethods.TVHT_ONITEMBUTTON,
+        /// <summary>
+        ///  PlusMinus.
+        /// </summary>
+        PlusMinus = (int)ComCtl32.TVHT.ONITEMBUTTON,
     }
 }
-

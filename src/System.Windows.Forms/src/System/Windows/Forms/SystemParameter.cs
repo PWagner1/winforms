@@ -1,112 +1,67 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.Windows.Forms {
+using System.Runtime.InteropServices;
 
-    using System.Diagnostics;
-    using System;
-    using System.ComponentModel;
-    using Microsoft.Win32;
-
-
-    /// <include file='doc\SystemParameter.uex' path='docs/doc[@for="SystemParameter"]/*' />
-    /// <devdoc>
-    ///    <para>
-    ///       Specifies the
-    ///       SystemParameterType.
-    ///    </para>
-    /// </devdoc>
-    [System.Runtime.InteropServices.ComVisible(true)]
-    public enum SystemParameter {
-
-        /// <include file='doc\SystemParameter.uex' path='docs/doc[@for="SystemParameter.DropShadow"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       DropShadow.
-        ///    </para>
-        /// </devdoc>
+namespace System.Windows.Forms
+{
+    [ComVisible(true)]
+    public enum SystemParameter
+    {
+        /// <summary>
+        ///  DropShadow.
+        /// </summary>
         DropShadow = 0,
 
-        /// <include file='doc\SystemParameter.uex' path='docs/doc[@for="SystemParameter.FlatMenu"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       Flat Menu.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  Flat Menu.
+        /// </summary>
         FlatMenu = 1,
 
-        /// <include file='doc\SystemParameter.uex' path='docs/doc[@for="SystemParameter.FontSmoothingContrastMetric"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       FontSmoothingContrastMetric.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  FontSmoothingContrastMetric.
+        /// </summary>
         FontSmoothingContrastMetric = 2,
 
-        /// <include file='doc\SystemParameter.uex' path='docs/doc[@for="SystemParameter.FontSmoothingTypeMetric"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       FontSmoothingTypeMetric.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  FontSmoothingTypeMetric.
+        /// </summary>
         FontSmoothingTypeMetric = 3,
 
-        /// <include file='doc\SystemParameter.uex' path='docs/doc[@for="SystemParameter.MenuFadeEnabled"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       MenuFadeEnabled.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  MenuFadeEnabled.
+        /// </summary>
         MenuFadeEnabled = 4,
-        
-        /// <include file='doc\SystemParameter.uex' path='docs/doc[@for="SystemParameter.SelectionFade"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       SelectionFade.
-        ///    </para>
-        /// </devdoc>
+
+        /// <summary>
+        ///  SelectionFade.
+        /// </summary>
         SelectionFade = 5,
-        
-        /// <include file='doc\SystemParameter.uex' path='docs/doc[@for="SystemParameter.ToolTipAnimationMetric"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       ToolTipAnimationMetric.
-        ///    </para>
-        /// </devdoc>
+
+        /// <summary>
+        ///  ToolTipAnimationMetric.
+        /// </summary>
         ToolTipAnimationMetric = 6,
 
-        /// <include file='doc\SystemParameter.uex' path='docs/doc[@for="SystemParameter.UIEffects"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       UIEffects.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  UIEffects.
+        /// </summary>
         UIEffects = 7,
 
-        /// <include file='doc\SystemParameter.uex' path='docs/doc[@for="SystemParameter.CaretWidthMetric"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       CaretWidthMetric.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  CaretWidthMetric.
+        /// </summary>
         CaretWidthMetric = 8,
 
-        /// <include file='doc\SystemParameter.uex' path='docs/doc[@for="SystemParameter.VerticalFocusThicknessMetric"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       VerticalFocusThicknessMetric.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  VerticalFocusThicknessMetric.
+        /// </summary>
         VerticalFocusThicknessMetric = 9,
 
-        /// <include file='doc\SystemParameter.uex' path='docs/doc[@for="SystemParameter.HorizontalFocusThicknessMetric"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       HorizontalFocusThicknessMetric.
-        ///    </para>
-        /// </devdoc>
+        /// <summary>
+        ///  HorizontalFocusThicknessMetric.
+        /// </summary>
         HorizontalFocusThicknessMetric = 10,
     }
 }
-

@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -36,13 +36,11 @@ namespace System
 
 #else
         public const string Activeds = "activeds.dll";
-        public const string Advapi32 = "advapi32.dll";
         public const string Comctl32 = "comctl32.dll";
         public const string Comdlg32 = "comdlg32.dll";
         public const string Gdi32 = "gdi32.dll";
         public const string Gdiplus = "gdiplus.dll";
         public const string Hhctrl = "hhctrl.ocx";
-        public const string Imm32 = "imm32.dll";
         public const string Kernel32 = "kernel32.dll";
         public const string Loadperf = "Loadperf.dll";
         public const string Mscoree = "mscoree.dll";
@@ -55,7 +53,6 @@ namespace System
         public const string Oleaut32 = "oleaut32.dll";
         public const string Olepro32 = "olepro32.dll";
         public const string PerfCounter = "perfcounter.dll";
-        public const string Powrprof = "Powrprof.dll";
         public const string Psapi = "psapi.dll";
         public const string Shell32 = "shell32.dll";
         public const string User32 = "user32.dll";
@@ -66,9 +63,7 @@ namespace System
         public const string Version = "version.dll";
         public const string Vsassert = "vsassert.dll";
         public const string Fxassert = "Fxassert.dll";
-        public const string Shlwapi = "shlwapi.dll";
         public const string Crypt32 = "crypt32.dll";
-        public const string ShCore = "SHCore.dll";
         public const string Wldp = "wldp.dll";
 
         // system.data specific

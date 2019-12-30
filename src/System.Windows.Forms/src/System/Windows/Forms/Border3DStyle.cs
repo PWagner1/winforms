@@ -1,110 +1,67 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Runtime.InteropServices;
+using static Interop;
 
-namespace System.Windows.Forms {
+namespace System.Windows.Forms
+{
+    /// <summary>
+    ///  Specifies the style of a three-dimensional border.
+    /// </summary>
+    [ComVisible(true)]
+    public enum Border3DStyle
+    {
+        /// <summary>
+        ///  The border is drawn outside the specified rectangle, preserving the
+        ///  dimensions of the rectangle for drawing.
+        /// </summary>
+        Adjust = (int)User32.BF.ADJUST,
 
-    using System.Diagnostics;
-    using System;
-    using System.ComponentModel;
-    using System.Drawing;
-    using Microsoft.Win32;
+        /// <summary>
+        ///  The border has a raised outer edge and a sunken inner edge.
+        /// </summary>
+        Bump = (int)User32.EDGE.BUMP,
 
-    /// <include file='doc\Border3DStyle.uex' path='docs/doc[@for="Border3DStyle"]/*' />
-    /// <devdoc>
-    ///    <para>
-    ///       Specifies the style of a three-dimensional border.
-    ///    </para>
-    /// </devdoc>
-    [System.Runtime.InteropServices.ComVisible(true)]
-    public enum Border3DStyle {
+        /// <summary>
+        ///  The border has a with a sunken inner edge and a raised outer edge.
+        /// </summary>
+        Etched = (int)User32.EDGE.ETCHED,
 
-        /// <include file='doc\Border3DStyle.uex' path='docs/doc[@for="Border3DStyle.Adjust"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The border is drawn
-        ///       outside the
-        ///       specified rectangle, preserving the dimensions of the rectangle for drawing.
-        ///    </para>
-        /// </devdoc>
-        Adjust = NativeMethods.BF_ADJUST,
+        /// <summary>
+        ///  The border has a with no three-dimensional effects.
+        /// </summary>
+        Flat = (int)User32.BF.FLAT | (int)User32.EDGE.SUNKEN,
 
-        /// <include file='doc\Border3DStyle.uex' path='docs/doc[@for="Border3DStyle.Bump"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The border has
-        ///       a raised outer edge and a sunken inner edge.
-        ///    </para>
-        /// </devdoc>
-        Bump = NativeMethods.EDGE_BUMP,
+        /// <summary>
+        ///  The border has a with raised inner and outer edges.
+        /// </summary>
+        Raised = (int)User32.EDGE.RAISED,
 
-        /// <include file='doc\Border3DStyle.uex' path='docs/doc[@for="Border3DStyle.Etched"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The border has a
-        ///       with a sunken inner edge and a raised outer edge.
-        ///    </para>
-        /// </devdoc>
-        Etched = NativeMethods.EDGE_ETCHED,
+        /// <summary>
+        ///  The border has a with a raised inner edge and no outer edge.
+        /// </summary>
+        RaisedInner = (int)User32.BDR.RAISEDINNER,
 
-        /// <include file='doc\Border3DStyle.uex' path='docs/doc[@for="Border3DStyle.Flat"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The border has a with no three-dimensional effects.
-        ///    </para>
-        /// </devdoc>
-        Flat = NativeMethods.BF_FLAT | NativeMethods.EDGE_SUNKEN,
+        /// <summary>
+        ///  The border has a with a raised outer edge and no inner edge.
+        /// </summary>
+        RaisedOuter = (int)User32.BDR.RAISEDOUTER,
 
-        /// <include file='doc\Border3DStyle.uex' path='docs/doc[@for="Border3DStyle.Raised"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The border has a with
-        ///       raised inner and outer edges.
-        ///    </para>
-        /// </devdoc>
-        Raised = NativeMethods.EDGE_RAISED,
+        /// <summary>
+        ///  The border has a with sunken inner and outer edges.
+        /// </summary>
+        Sunken = (int)User32.EDGE.SUNKEN,
 
-        /// <include file='doc\Border3DStyle.uex' path='docs/doc[@for="Border3DStyle.RaisedInner"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The border has a with a raised inner edge and no outer edge.
-        ///    </para>
-        /// </devdoc>
-        RaisedInner = NativeMethods.BDR_RAISEDINNER,
+        /// <summary>
+        ///  The border has a with a sunken inner edge and no outer edge.
+        /// </summary>
+        SunkenInner = (int)User32.BDR.SUNKENINNER,
 
-        /// <include file='doc\Border3DStyle.uex' path='docs/doc[@for="Border3DStyle.RaisedOuter"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The border has a
-        ///       with a raised outer edge and no inner edge.
-        ///    </para>
-        /// </devdoc>
-        RaisedOuter = NativeMethods.BDR_RAISEDOUTER,
-
-        /// <include file='doc\Border3DStyle.uex' path='docs/doc[@for="Border3DStyle.Sunken"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The border has a with sunken inner and outer edges.
-        ///    </para>
-        /// </devdoc>
-        Sunken = NativeMethods.EDGE_SUNKEN,
-
-        /// <include file='doc\Border3DStyle.uex' path='docs/doc[@for="Border3DStyle.SunkenInner"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The border has a with
-        ///       a sunken inner edge and no outer edge.
-        ///    </para>
-        /// </devdoc>
-        SunkenInner = NativeMethods.BDR_SUNKENINNER,
-
-        /// <include file='doc\Border3DStyle.uex' path='docs/doc[@for="Border3DStyle.SunkenOuter"]/*' />
-        /// <devdoc>
-        ///    <para>
-        ///       The border has a with a sunken outer edge and no inner edge.
-        ///    </para>
-        /// </devdoc>
-        SunkenOuter = NativeMethods.BDR_SUNKENOUTER,
+        /// <summary>
+        ///  The border has a with a sunken outer edge and no inner edge.
+        /// </summary>
+        SunkenOuter = (int)User32.BDR.SUNKENOUTER,
     }
 }

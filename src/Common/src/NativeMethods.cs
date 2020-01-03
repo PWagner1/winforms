@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -24,21 +24,6 @@ namespace System.Windows.Forms
         BFFM_SELCHANGED = 2,
         BFFM_SETSELECTION = 0x400 + 103,
         BFFM_ENABLEOK = 0x400 + 101,
-        BS_PUSHBUTTON = 0x00000000,
-        BS_DEFPUSHBUTTON = 0x00000001,
-        BS_MULTILINE = 0x00002000,
-        BS_PUSHLIKE = 0x00001000,
-        BS_OWNERDRAW = 0x0000000B,
-        BS_RADIOBUTTON = 0x00000004,
-        BS_3STATE = 0x00000005,
-        BS_GROUPBOX = 0x00000007,
-        BS_LEFT = 0x00000100,
-        BS_RIGHT = 0x00000200,
-        BS_CENTER = 0x00000300,
-        BS_TOP = 0x00000400,
-        BS_BOTTOM = 0x00000800,
-        BS_VCENTER = 0x00000C00,
-        BS_RIGHTBUTTON = 0x00000020,
         BN_CLICKED = 0,
         BM_SETCHECK = 0x00F1,
         BM_SETSTATE = 0x00F3,
@@ -342,42 +327,12 @@ namespace System.Windows.Forms
         MDITILE_VERTICAL = 0x0000,
         MDITILE_HORIZONTAL = 0x0001,
         MDITILE_SKIPDISABLED = 0x0002,
-        MCM_SETMAXSELCOUNT = (0x1000 + 4),
-        MCM_SETSELRANGE = (0x1000 + 6),
-        MCM_GETMONTHRANGE = (0x1000 + 7),
-        MCM_GETMINREQRECT = (0x1000 + 9),
-        MCM_SETCOLOR = (0x1000 + 10),
-        MCM_HITTEST = (0x1000 + 14),
-        MCM_SETFIRSTDAYOFWEEK = (0x1000 + 15),
-        MCM_SETRANGE = (0x1000 + 18),
-        MCM_SETMONTHDELTA = (0x1000 + 20),
-        MCM_GETMAXTODAYWIDTH = (0x1000 + 21),
-        MCHT_TITLE = 0x00010000,
-        MCHT_CALENDAR = 0x00020000,
-        MCHT_TODAYLINK = 0x00030000,
-        MCHT_TITLEBK = (0x00010000),
-        MCHT_TITLEMONTH = (0x00010000 | 0x0001),
-        MCHT_TITLEYEAR = (0x00010000 | 0x0002),
-        MCHT_TITLEBTNNEXT = (0x00010000 | 0x01000000 | 0x0003),
-        MCHT_TITLEBTNPREV = (0x00010000 | 0x02000000 | 0x0003),
-        MCHT_CALENDARBK = (0x00020000),
-        MCHT_CALENDARDATE = (0x00020000 | 0x0001),
-        MCHT_CALENDARDATENEXT = ((0x00020000 | 0x0001) | 0x01000000),
-        MCHT_CALENDARDATEPREV = ((0x00020000 | 0x0001) | 0x02000000),
-        MCHT_CALENDARDAY = (0x00020000 | 0x0002),
-        MCHT_CALENDARWEEKNUM = (0x00020000 | 0x0003),
-        MCSC_TEXT = 1,
-        MCSC_TITLEBK = 2,
-        MCSC_TITLETEXT = 3,
-        MCSC_MONTHBK = 4,
-        MCSC_TRAILINGTEXT = 5,
         MCN_VIEWCHANGE = (0 - 750), // MCN_SELECT -4  - give state of calendar view
         MCN_SELCHANGE = ((0 - 750) + 1),
         MCN_GETDAYSTATE = ((0 - 750) + 3),
         MCN_SELECT = ((0 - 750) + 4),
 
         MSAA_MENU_SIG = (unchecked((int)0xAA0DF00D));
-
 
         public const int NIM_ADD = 0x00000000,
         NIM_MODIFY = 0x00000001,
@@ -404,35 +359,7 @@ namespace System.Windows.Forms
         NM_CUSTOMDRAW = ((0 - 0) - 12),
         NM_RELEASEDCAPTURE = ((0 - 0) - 16);
 
-        public const int PD_ALLPAGES = 0x00000000,
-        PD_SELECTION = 0x00000001,
-        PD_PAGENUMS = 0x00000002,
-        PD_NOSELECTION = 0x00000004,
-        PD_NOPAGENUMS = 0x00000008,
-        PD_COLLATE = 0x00000010,
-        PD_PRINTTOFILE = 0x00000020,
-        PD_PRINTSETUP = 0x00000040,
-        PD_NOWARNING = 0x00000080,
-        PD_RETURNDC = 0x00000100,
-        PD_RETURNIC = 0x00000200,
-        PD_RETURNDEFAULT = 0x00000400,
-        PD_SHOWHELP = 0x00000800,
-        PD_ENABLEPRINTHOOK = 0x00001000,
-        PD_ENABLESETUPHOOK = 0x00002000,
-        PD_ENABLEPRINTTEMPLATE = 0x00004000,
-        PD_ENABLESETUPTEMPLATE = 0x00008000,
-        PD_ENABLEPRINTTEMPLATEHANDLE = 0x00010000,
-        PD_ENABLESETUPTEMPLATEHANDLE = 0x00020000,
-        PD_USEDEVMODECOPIES = 0x00040000,
-        PD_USEDEVMODECOPIESANDCOLLATE = 0x00040000,
-        PD_DISABLEPRINTTOFILE = 0x00080000,
-        PD_HIDEPRINTTOFILE = 0x00100000,
-        PD_NONETWORKBUTTON = 0x00200000,
-        PD_CURRENTPAGE = 0x00400000,
-        PD_NOCURRENTPAGE = 0x00800000,
-        PD_EXCLUSIONFLAGS = 0x01000000,
-        PD_USELARGETEMPLATE = 0x10000000,
-        PRF_CHECKVISIBLE = 0x00000001,
+        public const int PRF_CHECKVISIBLE = 0x00000001,
         PRF_NONCLIENT = 0x00000002,
         PRF_CLIENT = 0x00000004,
         PRF_ERASEBKGND = 0x00000008,
@@ -595,11 +522,6 @@ namespace System.Windows.Forms
 
         public static int START_PAGE_GENERAL = unchecked((int)0xffffffff);
 
-        //  Result action ids for PrintDlgEx.
-        public const int PD_RESULT_CANCEL = 0;
-        public const int PD_RESULT_PRINT = 1;
-        public const int PD_RESULT_APPLY = 2;
-
         private static uint wmMouseEnterMessage = uint.MaxValue;
 
         public static User32.WindowMessage WM_MOUSEENTER
@@ -754,7 +676,7 @@ namespace System.Windows.Forms
             IntPtr hDevNames { get; set; }
             IntPtr hDC { get; set; }
 
-            int Flags { get; set; }
+            Comdlg32.PD Flags { get; set; }
 
             short nFromPage { get; set; }
             short nToPage { get; set; }
@@ -787,8 +709,6 @@ namespace System.Windows.Forms
             IntPtr m_hDevNames;
             IntPtr m_hDC;
 
-            int m_Flags;
-
             short m_nFromPage;
             short m_nToPage;
             short m_nMinPage;
@@ -814,7 +734,7 @@ namespace System.Windows.Forms
             public IntPtr hDevNames { get { return m_hDevNames; } set { m_hDevNames = value; } }
             public IntPtr hDC { get { return m_hDC; } set { m_hDC = value; } }
 
-            public int Flags { get { return m_Flags; } set { m_Flags = value; } }
+            public Comdlg32.PD Flags { get; set; }
 
             public short nFromPage { get { return m_nFromPage; } set { m_nFromPage = value; } }
             public short nToPage { get { return m_nToPage; } set { m_nToPage = value; } }
@@ -847,8 +767,6 @@ namespace System.Windows.Forms
             IntPtr m_hDevNames;
             IntPtr m_hDC;
 
-            int m_Flags;
-
             short m_nFromPage;
             short m_nToPage;
             short m_nMinPage;
@@ -874,7 +792,7 @@ namespace System.Windows.Forms
             public IntPtr hDevNames { get { return m_hDevNames; } set { m_hDevNames = value; } }
             public IntPtr hDC { get { return m_hDC; } set { m_hDC = value; } }
 
-            public int Flags { get { return m_Flags; } set { m_Flags = value; } }
+            public Comdlg32.PD Flags { get; set; }
 
             public short nFromPage { get { return m_nFromPage; } set { m_nFromPage = value; } }
             public short nToPage { get { return m_nToPage; } set { m_nToPage = value; } }
@@ -905,7 +823,7 @@ namespace System.Windows.Forms
             public IntPtr hDevNames;
             public IntPtr hDC;
 
-            public int Flags;
+            public Comdlg32.PD Flags;
             public int Flags2;
 
             public int ExclusionFlags;
@@ -930,8 +848,7 @@ namespace System.Windows.Forms
             public IntPtr lphPropertyPages;
 
             public int nStartPage;
-            public int dwResultAction;
-
+            public Comdlg32.PD_RESULT dwResultAction;
         }
 
         // x86 requires EXPLICIT packing of 1.
@@ -1365,15 +1282,6 @@ namespace System.Windows.Forms
 
         // Threading stuff
         public const uint STILL_ACTIVE = 259;
-
-        [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
-
-        [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam, int lParam);
-
-        [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam, string lParam);
 
         [DllImport(ExternDll.User32, ExactSpelling = true)]
         public static extern bool GetUpdateRect(IntPtr hwnd, ref RECT rc, bool fErase);

@@ -14,7 +14,6 @@ namespace System.Windows.Forms.Design
         public const int NM_CLICK = 0 - 0 - 2;
         public const int EC_LEFTMARGIN = 0x0001;
         public const int EC_RIGHTMARGIN = 0x0002;
-        public const int IDOK = 1;
 
         public const int VK_PROCESSKEY = 0xE5;
 
@@ -53,15 +52,6 @@ namespace System.Windows.Forms.Design
         public const int TVM_SETEXTENDEDSTYLE = TV_FIRST + 44;
         public const int TVM_GETEXTENDEDSTYLE = TV_FIRST + 45;
         public const int SWP_HIDEWINDOW = 0x0080;
-
-        [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
-
-        [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam, int lParam);
-
-        [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam, string lParam);
 
         public const int CHILDID_SELF = 0;
     }

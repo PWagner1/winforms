@@ -286,7 +286,6 @@ namespace System.Windows.Forms.Design
                     {
                         return true;
                     }
-
                 }
                 return false;
             }
@@ -698,7 +697,6 @@ namespace System.Windows.Forms.Design
         /// </summary>
         private void CreatetypeHereNode()
         {
-            //Debug.Assert(typeHereNode == null, "Why is our dummy node valid?");
             if (typeHereNode == null)
             {
                 AddNewTemplateNode(MenuItem.DropDown);
@@ -2487,7 +2485,6 @@ namespace System.Windows.Forms.Design
                 minIndex++;
             }
             selSvc.SetSelectedComponents(selectedItems);
-
         }
 
         /// <summary>

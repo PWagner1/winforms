@@ -8,7 +8,7 @@ using static Interop;
 
 namespace System.Windows.Forms.Design.Tests
 {
-    public class ControlDesignerTests
+    public class ControlDesignerTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void AccessibleObjectField()
@@ -132,7 +132,6 @@ namespace System.Windows.Forms.Design.Tests
             controlDesigner.Initialize(new Button());
             try
             {
-
                 controlDesigner.HookChildControlsMethod(new Control());
             }
             catch (Exception ex)

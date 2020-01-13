@@ -19,7 +19,7 @@ namespace System.Windows.Forms
 {
     /// <summary>
     ///  Provides <see langword='static'/> methods and properties to manage an application, such as methods to run and quit an application,
-    ///  to process Windows messages, and properties to get information about an application. 
+    ///  to process Windows messages, and properties to get information about an application.
     ///  This class cannot be inherited.
     /// </summary>
     public sealed partial class Application
@@ -1072,8 +1072,8 @@ namespace System.Windows.Forms
         /// </summary>
         internal static void ParkHandle(HandleRef handle, DpiAwarenessContext dpiAwarenessContext = DpiAwarenessContext.DPI_AWARENESS_CONTEXT_UNSPECIFIED)
         {
-            Debug.Assert(UnsafeNativeMethods.IsWindow(handle), "Handle being parked is not a valid window handle");
-            Debug.Assert(((int)UnsafeNativeMethods.GetWindowLong(handle, NativeMethods.GWL_STYLE) & (int)User32.WS.CHILD) != 0, "Only WS_CHILD windows should be parked.");
+            Debug.Assert(User32.IsWindow(handle).IsTrue(), "Handle being parked is not a valid window handle");
+            Debug.Assert(((int)User32.GetWindowLong(handle, User32.GWL.STYLE) & (int)User32.WS.CHILD) != 0, "Only WS_CHILD windows should be parked.");
 
             ThreadContext cxt = GetContextForHandle(handle);
             if (cxt != null)

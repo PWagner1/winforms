@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using static System.Windows.Forms.UnsafeNativeMethods;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -534,13 +535,13 @@ namespace System.Windows.Forms
                                 {
                                     // This is the second CDN_FILEOK, so we want to ignore it.
                                     _ignoreSecondFileOkNotification = false;
-                                    UnsafeNativeMethods.SetWindowLong(new HandleRef(null, hWnd), 0, new HandleRef(null, NativeMethods.InvalidIntPtr));
+                                    User32.SetWindowLong(hWnd, 0, NativeMethods.InvalidIntPtr);
                                     return NativeMethods.InvalidIntPtr;
                                 }
                             }
                             if (!DoFileOk(notify->lpOFN))
                             {
-                                UnsafeNativeMethods.SetWindowLong(new HandleRef(null, hWnd), 0, new HandleRef(null, NativeMethods.InvalidIntPtr));
+                                User32.SetWindowLong(hWnd, 0, NativeMethods.InvalidIntPtr);
                                 return NativeMethods.InvalidIntPtr;
                             }
                             break;
@@ -736,7 +737,7 @@ namespace System.Windows.Forms
             {
                 return returnValue;
             }
-            
+
             return RunDialogOld(hWndOwner);
         }
 

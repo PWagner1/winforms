@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -186,7 +186,7 @@ namespace System.Windows.Forms
         private Ole32.IOleInPlaceActiveObject iOleInPlaceActiveObjectExternal;
         private Ole32.IPerPropertyBrowsing iPerPropertyBrowsing;
         private VSSDK.ICategorizeProperties iCategorizeProperties;
-        private UnsafeNativeMethods.IPersistPropertyBag iPersistPropBag;
+        private Ole32.IPersistPropertyBag iPersistPropBag;
         private Ole32.IPersistStream iPersistStream;
         private Ole32.IPersistStreamInit iPersistStreamInit;
         private Ole32.IPersistStorage iPersistStorage;
@@ -1416,7 +1416,7 @@ namespace System.Windows.Forms
             }
 
             IntPtr handle = Handle;
-            IntPtr currentWndproc = UnsafeNativeMethods.GetWindowLong(new HandleRef(this, handle), NativeMethods.GWL_WNDPROC);
+            IntPtr currentWndproc = User32.GetWindowLong(new HandleRef(this, handle), User32.GWL.WNDPROC);
             if (currentWndproc == wndprocAddr)
             {
                 return true;
@@ -1432,7 +1432,7 @@ namespace System.Windows.Forms
             // we need to resubclass outselves now...
             Debug.Assert(!OwnWindow(), "why are we here if we own our window?");
             WindowReleaseHandle();
-            UnsafeNativeMethods.SetWindowLong(new HandleRef(this, handle), NativeMethods.GWL_WNDPROC, new HandleRef(this, currentWndproc));
+            User32.SetWindowLong(new HandleRef(this, handle), User32.GWL.WNDPROC, new HandleRef(this, currentWndproc));
             WindowAssignHandle(handle, axState[assignUniqueID]);
             InformOfNewHandle();
             axState[manualUpdate] = true;
@@ -1597,7 +1597,6 @@ namespace System.Windows.Forms
                                 }
                             }
 
-                            //Debug.Assert(GetOcState() == OC_INPLACE, " failed transition");
                             if (GetOcState() < OC_INPLACE)
                             {
                                 SetOcState(OC_INPLACE);
@@ -2510,9 +2509,6 @@ namespace System.Windows.Forms
         private void CreateInstance()
         {
             Debug.Assert(instance == null, "instance must be null");
-            //Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "before created "+Windows.GetCurrentThreadId());
-            //Debug.WriteStackTraceIf("AxHTrace");
-            //checkThreadingModel();
             try
             {
                 instance = CreateInstanceCore(clsid);
@@ -3057,10 +3053,10 @@ namespace System.Windows.Forms
                     }
                     return;
                 }
-                if (instance is UnsafeNativeMethods.IPersistPropertyBag)
+                if (instance is Ole32.IPersistPropertyBag)
                 {
                     Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, this + " supports IPersistPropertyBag.");
-                    iPersistPropBag = (UnsafeNativeMethods.IPersistPropertyBag)instance;
+                    iPersistPropBag = (Ole32.IPersistPropertyBag)instance;
                     try
                     {
                         iPersistPropBag.InitNew();
@@ -3130,7 +3126,7 @@ namespace System.Windows.Forms
             {
                 try
                 {
-                    iPersistPropBag = (UnsafeNativeMethods.IPersistPropertyBag)instance;
+                    iPersistPropBag = (Ole32.IPersistPropertyBag)instance;
                     DepersistFromIPropertyBag(ocxState.GetPropBag());
                 }
                 catch (Exception e)
@@ -3559,7 +3555,7 @@ namespace System.Windows.Forms
             DetachWindow();
             if (handle != IntPtr.Zero)
             {
-                IntPtr wndProc = UnsafeNativeMethods.GetWindowLong(new HandleRef(this, handle), NativeMethods.GWL_WNDPROC);
+                IntPtr wndProc = User32.GetWindowLong(new HandleRef(this, handle), User32.GWL.WNDPROC);
                 m.Result = User32.CallWindowProcW(wndProc, handle, m.WindowMessage(), m.WParam, m.LParam);
             }
         }
@@ -3576,7 +3572,7 @@ namespace System.Windows.Forms
         private void InformOfNewHandle()
         {
             Debug.Assert(IsHandleCreated, "we got to have a handle to be here...");
-            wndprocAddr = UnsafeNativeMethods.GetWindowLong(new HandleRef(this, Handle), NativeMethods.GWL_WNDPROC);
+            wndprocAddr = User32.GetWindowLong(this, User32.GWL.WNDPROC);
         }
 
         private void AttachWindow(IntPtr hwnd)
@@ -3688,7 +3684,7 @@ namespace System.Windows.Forms
             qaContainer.dwAmbientFlags = Ole32.QACONTAINERFLAGS.AUTOCLIP | Ole32.QACONTAINERFLAGS.MESSAGEREFLECT | Ole32.QACONTAINERFLAGS.SUPPORTSMNEMONICS;
             if (IsUserMode())
             {
-                // In design mode we'd ideally set QACONTAINER_UIDEAD on dwAmbientFlags 
+                // In design mode we'd ideally set QACONTAINER_UIDEAD on dwAmbientFlags
                 // so controls don't take keyboard input, but MFC controls return NOWHERE on
                 // NCHITTEST, which messes up the designer.
                 qaContainer.dwAmbientFlags |= Ole32.QACONTAINERFLAGS.USERMODE;

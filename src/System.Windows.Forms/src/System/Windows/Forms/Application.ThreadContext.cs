@@ -310,7 +310,6 @@ namespace System.Windows.Forms
 
                 if (!DpiHelper.IsScalingRequirementMet || CommonUnsafeNativeMethods.TryFindDpiAwarenessContextsEqual(context, DpiAwarenessContext.DPI_AWARENESS_CONTEXT_UNSPECIFIED))
                 {
-
                     Debug.Assert(_parkingWindows.Count == 1, "parkingWindows count can not be > 1 for legacy OS/target framework versions");
                     return _parkingWindows[0];
                 }
@@ -846,7 +845,7 @@ namespace System.Windows.Forms
             ///  A method of determining whether we are handling messages that does not demand register
             ///  the componentmanager
             /// </summary>
-            internal bool IsValidComponentId() =>_componentID != s_invalidId;
+            internal bool IsValidComponentId() => _componentID != s_invalidId;
 
             internal ApartmentState OleRequired()
             {
@@ -979,7 +978,7 @@ namespace System.Windows.Forms
                 IntPtr userCookie = IntPtr.Zero;
                 if (UseVisualStyles)
                 {
-                    userCookie = ThemingScope.Activate();
+                    userCookie = ThemingScope.Activate(Application.UseVisualStyles);
                 }
 
                 try
@@ -1075,7 +1074,7 @@ namespace System.Windows.Forms
                     // If the owner window of the dialog is still enabled, disable it now.
                     // This can happen if the owner window is from a different thread or
                     // process.
-                    hwndOwner = UnsafeNativeMethods.GetWindowLong(new HandleRef(_currentForm, _currentForm.Handle), NativeMethods.GWL_HWNDPARENT);
+                    hwndOwner = User32.GetWindowLong(_currentForm, User32.GWL.HWNDPARENT);
                     if (hwndOwner != IntPtr.Zero)
                     {
                         if (User32.IsWindowEnabled(hwndOwner).IsTrue())

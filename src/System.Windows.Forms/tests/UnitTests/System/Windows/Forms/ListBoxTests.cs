@@ -44,7 +44,7 @@ namespace System.Windows.Forms.Tests
             Assert.True(control.CausesValidation);
             Assert.Equal(new Size(116, 92), control.ClientSize);
             Assert.Equal(new Rectangle(0, 0, 116, 92), control.ClientRectangle);
-            Assert.Equal(0, control.ColumnWidth); 
+            Assert.Equal(0, control.ColumnWidth);
             Assert.Null(control.Container);
             Assert.False(control.ContainsFocus);
             Assert.Null(control.ContextMenuStrip);
@@ -454,27 +454,29 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, displayMemberCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetFontTheoryData))]
         public void Font_Set_GetReturnsExpected(Font value)
         {
-            var control = new SubListBox
+            using var control = new SubListBox
             {
                 Font = value
             };
             Assert.Equal(value ?? Control.DefaultFont, control.Font);
             Assert.Equal(control.Font.Height, control.FontHeight);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.Font = value;
             Assert.Equal(value ?? Control.DefaultFont, control.Font);
             Assert.Equal(control.Font.Height, control.FontHeight);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Fact]
-        public void Font_SetWithHandler_CallsFontChanged()
+        [WinFormsFact]
+        public void ListBox_Font_SetWithHandler_CallsFontChanged()
         {
-            var control = new ListBox();
+            using var control = new ListBox();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -485,7 +487,7 @@ namespace System.Windows.Forms.Tests
             control.FontChanged += handler;
 
             // Set different.
-            Font font1 = new Font("Arial", 8.25f);
+            using var font1 = new Font("Arial", 8.25f);
             control.Font = font1;
             Assert.Same(font1, control.Font);
             Assert.Equal(1, callCount);
@@ -496,7 +498,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, callCount);
 
             // Set different.
-            Font font2 = SystemFonts.DialogFont;
+            using var font2 = SystemFonts.DialogFont;
             control.Font = font2;
             Assert.Same(font2, control.Font);
             Assert.Equal(2, callCount);
@@ -612,7 +614,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetPaddingNormalizedTheoryData))]
         public void ListBox_Padding_Set_GetReturnsExpected(Padding value, Padding expected)
         {
@@ -629,7 +631,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetPaddingNormalizedTheoryData))]
         public void ListBox_Padding_SetWithHandle_GetReturnsExpected(Padding value, Padding expected)
         {
@@ -658,7 +660,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ListBox_Padding_SetWithHandler_CallsPaddingChanged()
         {
             using var control = new ListBox();
@@ -752,7 +754,7 @@ namespace System.Windows.Forms.Tests
             var control = new ListBox();
             Assert.Throws<InvalidEnumArgumentException>("value", () => control.RightToLeft = value);
         }
-        
+
         [WinFormsFact]
         public void ListBox_GetAutoSizeMode_Invoke_ReturnsExpected()
         {

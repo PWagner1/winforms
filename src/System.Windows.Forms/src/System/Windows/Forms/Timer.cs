@@ -111,7 +111,6 @@ namespace System.Windows.Forms
                                 // Create the timer window if needed.
                                 if (_timerWindow == null)
                                 {
-
                                     _timerWindow = new TimerNativeWindow(this);
                                 }
 
@@ -291,7 +290,7 @@ namespace System.Windows.Forms
                 // Locking 'this' here is ok since this is an internal class.
                 lock (this)
                 {
-                    if (_stoppingTimer || hWnd == IntPtr.Zero || !UnsafeNativeMethods.IsWindow(new HandleRef(this, hWnd)))
+                    if (_stoppingTimer || hWnd == IntPtr.Zero || User32.IsWindow(new HandleRef(this, hWnd)).IsFalse())
                     {
                         return;
                     }

@@ -4,7 +4,6 @@
 
 using System.Collections;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Globalization;
@@ -988,7 +987,6 @@ namespace System.ComponentModel.Design
                     {
                         Items = Array.Empty<object>();
                     }
-
                 }
                 catch (Exception ex)
                 {
@@ -1487,7 +1485,6 @@ namespace System.ComponentModel.Design
 
                 AdjustListBoxItemHeight();
                 UpdateItemWidths(null);
-
             }
 
             protected override void OnFontChanged(EventArgs e)
@@ -1551,7 +1548,6 @@ namespace System.ComponentModel.Design
             /// </summary>
             private void PropertyGrid_propertyValueChanged(object sender, PropertyValueChangedEventArgs e)
             {
-
                 _dirty = true;
 
                 // Refresh selected listbox item so that it picks up any name change
@@ -1732,7 +1728,6 @@ namespace System.ComponentModel.Design
                 {
                     ResumeEnabledUpdates(true);
                 }
-
             }
 
             /// <summary>
@@ -1908,7 +1903,7 @@ namespace System.ComponentModel.Design
                 public override Type PropertyType { get; }
 
                 /// <summary>
-                ///  When overridden in a derived class, indicates whether resetting the <paramref name="component"/> 
+                ///  When overridden in a derived class, indicates whether resetting the <paramref name="component"/>
                 ///  will change the value of the <paramref name="component"/>.
                 /// </summary>
                 public override bool CanResetValue(object component) => false;
@@ -2111,6 +2106,7 @@ namespace System.ComponentModel.Design
         /// </summary>
         internal class FilterListBox : ListBox
         {
+            private const int VK_PROCESSKEY = 0xE5;
             private PropertyGrid _grid;
             private Message _lastKeyDown;
 
@@ -2132,7 +2128,6 @@ namespace System.ComponentModel.Design
 
                     return _grid;
                 }
-
             }
 
             /// <summary>
@@ -2148,7 +2143,7 @@ namespace System.ComponentModel.Design
                         _lastKeyDown = m;
 
                         // the first thing the ime does on a key it cares about is send a VK_PROCESSKEY, so we use that to sling focus to the grid.
-                        if (unchecked((int)(long)m.WParam) == NativeMethods.VK_PROCESSKEY)
+                        if (unchecked((int)(long)m.WParam) == VK_PROCESSKEY)
                         {
                             if (PropertyGrid != null)
                             {
@@ -2196,11 +2191,9 @@ namespace System.ComponentModel.Design
                             return;
                         }
                         break;
-
                 }
                 base.WndProc(ref m);
             }
-
         }
 
         /// <summary>

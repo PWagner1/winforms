@@ -601,7 +601,6 @@ namespace System.Windows.Forms
                 {
                     ownerToolStrip.KeyboardActive = value;
                 }
-
             }
         }
 
@@ -1148,13 +1147,11 @@ namespace System.Windows.Forms
                 {
                     ApplyTopMost(true);
                 }
-
             }
             if (DesignMode)
             {
                 SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, false);
             }
-
         }
 
         public void Close()
@@ -1225,12 +1222,10 @@ namespace System.Windows.Forms
                     parentClientPoint = suggestedBounds.Location;
                 }
                 dropDownBounds = new Rectangle(parentClientPoint, suggestedBounds.Size);
-
             }
             Debug.WriteLineIf(DropDownDebugBounds.TraceVerbose, "DropDownBounds for " + suggestedBounds + "is" + dropDownBounds);
 
             return dropDownBounds;
-
         }
 
         internal Rectangle CalculateDropDownLocation(Point start, ToolStripDropDownDirection dropDownDirection)
@@ -1268,7 +1263,6 @@ namespace System.Windows.Forms
                 dropDownBounds = WindowsFormsUtils.ConstrainToScreenWorkingAreaBounds(dropDownBounds);
             }
             return dropDownBounds;
-
         }
 
         internal Size GetSuggestedSize()
@@ -1307,7 +1301,7 @@ namespace System.Windows.Forms
         }
         /// <summary>
         ///  Set some common properties
-        /// </summary>	
+        /// </summary>
         internal virtual void Initialize()
         {
             SetState(States.Visible, false);
@@ -1336,7 +1330,7 @@ namespace System.Windows.Forms
                     AccessibilityNotifyClients(AccessibleEvents.SystemMenuPopupEnd, -1);
                 }
             }
-            
+
             ((ToolStripDropDownClosedEventHandler)Events[EventClosed])?.Invoke(this, e);
         }
 
@@ -1374,7 +1368,6 @@ namespace System.Windows.Forms
                     }
                 }
             }
-
         }
 
         protected override void OnLayout(LayoutEventArgs e)
@@ -1383,7 +1376,6 @@ namespace System.Windows.Forms
             // the layout engine and SetDisplayedItems know how big the container is.
             AdjustSize();
             base.OnLayout(e);
-
         }
 
         protected virtual void OnOpening(CancelEventArgs e)
@@ -1404,7 +1396,7 @@ namespace System.Windows.Forms
                     AccessibilityNotifyClients(AccessibleEvents.SystemMenuPopupStart, -1);
                 }
             }
-            
+
             ((EventHandler)Events[EventOpened])?.Invoke(this, e);
         }
 
@@ -1525,7 +1517,6 @@ namespace System.Windows.Forms
                 Debug.WriteLineIf(ToolStrip.SnapFocusDebug.TraceVerbose, "[ToolStripDropDown.SelectPreviousToolStrip] No previous toolstrip to select - exiting menu mode.");
                 ToolStripManager.ModalMenuFilter.ExitMenuMode();
             }
-
         }
 
         /// <summary>
@@ -1541,7 +1532,6 @@ namespace System.Windows.Forms
 
             if (keyCode == Keys.Left || keyCode == Keys.Right)
             {
-
                 bool rightAligned = SystemInformation.RightAlignedMenus;
                 bool forward = (keyCode == Keys.Left && rightAligned) || (keyCode == Keys.Right && !rightAligned);
 
@@ -1562,7 +1552,6 @@ namespace System.Windows.Forms
 
                     if (closeOnHorizontalKey)
                     {
-
                         ToolStrip toplevelToolStrip = GetToplevelOwnerToolStrip();
                         ToolStripItem rootItem = GetToplevelOwnerItem();
 
@@ -1696,7 +1685,7 @@ namespace System.Windows.Forms
         private void ReparentToActiveToolStripWindow()
         {
             ToolStripManager.ModalMenuFilter.SetActiveToolStrip(this);
-            UnsafeNativeMethods.SetWindowLong(new HandleRef(this, Handle), NativeMethods.GWL_HWNDPARENT, ToolStripManager.ModalMenuFilter.ActiveHwnd);
+            User32.SetWindowLong(this, User32.GWL.HWNDPARENT, ToolStripManager.ModalMenuFilter.ActiveHwnd);
         }
 
         private void ReparentToDropDownOwnerWindow()
@@ -1705,7 +1694,7 @@ namespace System.Windows.Forms
             // this prevents a taskbar entry.
             NativeWindow ownerWindow = DropDownOwnerWindow;
             HandleRef ownerHandle = new HandleRef(ownerWindow, ownerWindow.Handle);
-            UnsafeNativeMethods.SetWindowLong(new HandleRef(this, Handle), NativeMethods.GWL_HWNDPARENT, ownerHandle);
+            User32.SetWindowLong(this, User32.GWL.HWNDPARENT, ownerHandle);
         }
 
         internal override void ResetScaling(int newDpi)
@@ -1818,7 +1807,6 @@ namespace System.Windows.Forms
                 }
 
                 WindowStyle = styleFlags;
-
             }
         }
 
@@ -2044,7 +2032,6 @@ namespace System.Windows.Forms
                                         }
                                     }
                                 }
-
                             }
                         }
                     }
@@ -2074,11 +2061,9 @@ namespace System.Windows.Forms
         {
             if (state[stateLayered] && IsHandleCreated && TopLevel)
             {
-                bool result;
+                BOOL result = User32.SetLayeredWindowAttributes(this, 0, OpacityAsByte, User32.LWA.ALPHA);
 
-                result = UnsafeNativeMethods.SetLayeredWindowAttributes(new HandleRef(this, Handle), 0, OpacityAsByte, NativeMethods.LWA_ALPHA);
-
-                if (!result)
+                if (result.IsFalse())
                 {
                     throw new Win32Exception();
                 }
@@ -2107,7 +2092,6 @@ namespace System.Windows.Forms
             displayLocation = control.PointToScreen(position);
             Location = displayLocation;
             ShowCore();
-
         }
 
         public void Show(Control control, Point position, ToolStripDropDownDirection direction)
@@ -2232,7 +2216,6 @@ namespace System.Windows.Forms
                 {
                     dropDown.Visible = false;
                 }
-
             }
             else
             {
@@ -2262,7 +2245,6 @@ namespace System.Windows.Forms
         {
             if (m.WParam != IntPtr.Zero /*activating*/)
             {
-
                 if (!sendingActivateMessage)
                 {
                     sendingActivateMessage = true;
@@ -2287,13 +2269,11 @@ namespace System.Windows.Forms
                 }
                 DefWndProc(ref m);
                 return;
-
             }
             else
             {
                 base.WndProc(ref m);
             }
-
         }
         #endregion
         /// <summary>
@@ -2402,7 +2382,6 @@ namespace System.Windows.Forms
                     return AccessibleRole.MenuPopup;
                 }
             }
-
         }
     }
 }

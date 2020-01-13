@@ -239,7 +239,6 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<ArgumentOutOfRangeException>("DisplayIndex", () => header.DisplayIndex = value);
         }
 
-
         [WinFormsFact]
         public void ColumnHeader_DisplayIndex_ShouldSerializeValue_Success()
         {
@@ -451,7 +450,7 @@ namespace System.Windows.Forms.Tests
             {
                 mask = ComCtl32.LVCF.IMAGE
             };
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WindowMessage)LVM.GETCOLUMN, (IntPtr)0, ref column));
+            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WindowMessage)LVM.GETCOLUMNW, (IntPtr)0, ref column));
             Assert.Equal(0, column.iImage);
         }
 
@@ -481,7 +480,7 @@ namespace System.Windows.Forms.Tests
                 mask = ComCtl32.LVCF.IMAGE | ComCtl32.LVCF.FMT,
                 fmt = ComCtl32.LVCFMT.IMAGE
             };
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WindowMessage)LVM.GETCOLUMN, (IntPtr)0, ref column));
+            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WindowMessage)LVM.GETCOLUMNW, (IntPtr)0, ref column));
             Assert.Equal(expected, column.iImage);
         }
 
@@ -652,7 +651,6 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-
         [WinFormsTheory]
         [InlineData(null)]
         [InlineData("")]
@@ -672,7 +670,7 @@ namespace System.Windows.Forms.Tests
             {
                 mask = ComCtl32.LVCF.IMAGE
             };
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WindowMessage)LVM.GETCOLUMN, (IntPtr)0, ref column));
+            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WindowMessage)LVM.GETCOLUMNW, (IntPtr)0, ref column));
             Assert.Equal(0, column.iImage);
         }
 
@@ -704,7 +702,7 @@ namespace System.Windows.Forms.Tests
                 mask = ComCtl32.LVCF.IMAGE | ComCtl32.LVCF.FMT,
                 fmt = ComCtl32.LVCFMT.IMAGE
             };
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WindowMessage)LVM.GETCOLUMN, (IntPtr)0, ref column));
+            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WindowMessage)LVM.GETCOLUMNW, (IntPtr)0, ref column));
             Assert.Equal(expected, column.iImage);
         }
 
@@ -860,7 +858,6 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value, header.Site.Name);
         }
 
-
         [WinFormsFact]
         public void ColumnHeader_Name_ResetValue_Success()
         {
@@ -995,7 +992,7 @@ namespace System.Windows.Forms.Tests
                 pszText = buffer,
                 cchTextMax = 256
             };
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WindowMessage)LVM.GETCOLUMN, (IntPtr)0, ref column));
+            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WindowMessage)LVM.GETCOLUMNW, (IntPtr)0, ref column));
             Assert.Equal(expected, new string(column.pszText));
         }
 
@@ -1184,7 +1181,7 @@ namespace System.Windows.Forms.Tests
             {
                 mask = ComCtl32.LVCF.FMT
             };
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WindowMessage)LVM.GETCOLUMN, (IntPtr)columnIndex, ref column));
+            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WindowMessage)LVM.GETCOLUMNW, (IntPtr)columnIndex, ref column));
             Assert.Equal(expected, (int)column.fmt);
         }
 
@@ -1593,7 +1590,7 @@ namespace System.Windows.Forms.Tests
 
             protected override void WndProc(ref Message m)
             {
-                if (MakeInvalid && m.Msg == (int)LVM.SETCOLUMN)
+                if (MakeInvalid && m.Msg == (int)LVM.SETCOLUMNW)
                 {
                     m.Result = IntPtr.Zero;
                 }

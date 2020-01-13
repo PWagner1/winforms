@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -514,7 +514,6 @@ namespace System.Windows.Forms
                 if ((value != null && !value.Equals(customFormat)) ||
                     (value == null && customFormat != null))
                 {
-
                     customFormat = value;
 
                     if (IsHandleCreated)
@@ -651,7 +650,6 @@ namespace System.Windows.Forms
 
                 if (format != value)
                 {
-
                     format = value;
                     RecreateHandle();
 
@@ -906,7 +904,6 @@ namespace System.Windows.Forms
         {
             get
             {
-
                 return rightToLeftLayout;
             }
 
@@ -1102,9 +1099,9 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-            ///  Constructs the new instance of the accessibility object for this control. Subclasses
+        ///  Constructs the new instance of the accessibility object for this control. Subclasses
         ///  should not call base.CreateAccessibilityObject.
-            /// </summary>
+        /// </summary>
         protected override AccessibleObject CreateAccessibilityInstance()
         {
             return new DateTimePickerAccessibleObject(this);
@@ -1117,7 +1114,7 @@ namespace System.Windows.Forms
         {
             if (!RecreatingHandle)
             {
-                IntPtr userCookie = ThemingScope.Activate();
+                IntPtr userCookie = ThemingScope.Activate(Application.UseVisualStyles);
 
                 try
                 {
@@ -1639,10 +1636,10 @@ namespace System.Windows.Forms
                 IntPtr handle = SendMessage(NativeMethods.DTM_GETMONTHCAL, 0, 0);
                 if (handle != IntPtr.Zero)
                 {
-                    int style = unchecked((int)((long)UnsafeNativeMethods.GetWindowLong(new HandleRef(this, handle), NativeMethods.GWL_EXSTYLE)));
+                    int style = unchecked((int)((long)User32.GetWindowLong(new HandleRef(this, handle), User32.GWL.EXSTYLE)));
                     style |= (int)(User32.WS_EX.LAYOUTRTL | User32.WS_EX.NOINHERITLAYOUT);
                     style &= ~(int)(User32.WS_EX.RIGHT | User32.WS_EX.RTLREADING);
-                    UnsafeNativeMethods.SetWindowLong(new HandleRef(this, handle), NativeMethods.GWL_EXSTYLE, new HandleRef(this, (IntPtr)style));
+                    User32.SetWindowLong(new HandleRef(this, handle), User32.GWL.EXSTYLE, new HandleRef(this, (IntPtr)style));
                 }
             }
             OnDropDown(EventArgs.Empty);

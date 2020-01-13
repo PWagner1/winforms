@@ -169,7 +169,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                         Ole32.DispatchID.ABOUTBOX,
                         &g,
                         Kernel32.GetThreadLocale(),
-                        NativeMethods.DISPATCH_METHOD,
+                        Oleaut32.DISPATCH.METHOD,
                         &dispParams,
                         null,
                         &pExcepInfo,
@@ -188,7 +188,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             {
                 return UITypeEditorEditStyle.Modal;
             }
-
         }
     }
 }

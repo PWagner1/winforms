@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -439,7 +441,7 @@ namespace System.Windows.Forms
                 if (IsHandleCreated)
                 {
                     bool b;
-                    b = unchecked((int)(long)SendMessageW(this, (WindowMessage)EM.CANUNDO)) != 0;
+                    b = unchecked((int)(long)SendMessageW(this, (WM)EM.CANUNDO)) != 0;
 
                     return b;
                 }
@@ -761,7 +763,7 @@ namespace System.Windows.Forms
             {
                 if (IsHandleCreated)
                 {
-                    bool curState = (0 != unchecked((int)(long)SendMessageW(this, (WindowMessage)EM.GETMODIFY)));
+                    bool curState = (0 != unchecked((int)(long)SendMessageW(this, (WM)EM.GETMODIFY)));
                     if (textBoxFlags[modified] != curState)
                     {
                         // Raise ModifiedChanged event.  See WmReflectCommand for more info.
@@ -782,7 +784,7 @@ namespace System.Windows.Forms
                 {
                     if (IsHandleCreated)
                     {
-                        SendMessageW(this, (WindowMessage)EM.SETMODIFY, PARAM.FromBool(value));
+                        SendMessageW(this, (WM)EM.SETMODIFY, PARAM.FromBool(value));
                         // Must maintain this state always in order for the
                         // test in the Get method to work properly.
                     }
@@ -983,7 +985,7 @@ namespace System.Windows.Forms
             {
                 start = 0;
                 int startResult = 0;
-                User32.SendMessageW(this, (WindowMessage)EM.GETSEL, (IntPtr)(&startResult), ref end);
+                User32.SendMessageW(this, (WM)EM.GETSEL, (IntPtr)(&startResult), ref end);
                 start = startResult;
 
                 //Here, we return the max of either 0 or the # returned by
@@ -1041,7 +1043,7 @@ namespace System.Windows.Forms
                     textBoxFlags[readOnly] = value;
                     if (IsHandleCreated)
                     {
-                        SendMessageW(this, (WindowMessage)EM.SETREADONLY, PARAM.FromBool(value));
+                        SendMessageW(this, (WM)EM.SETREADONLY, PARAM.FromBool(value));
                     }
 
                     OnReadOnlyChanged(EventArgs.Empty);
@@ -1098,22 +1100,22 @@ namespace System.Windows.Forms
             // The EM_LIMITTEXT message limits only the text the user can enter. It does not affect any text
             // already in the edit control when the message is sent, nor does it affect the length of the text
             // copied to the edit control by the WM_SETTEXT message.
-            SendMessageW(this, (WindowMessage)EM.LIMITTEXT);
+            SendMessageW(this, (WM)EM.LIMITTEXT);
 
             if (clearUndo)
             {
-                SendMessageW(this, (WindowMessage)EM.REPLACESEL, IntPtr.Zero, text);
+                SendMessageW(this, (WM)EM.REPLACESEL, IntPtr.Zero, text);
                 // For consistency with Text, we clear the modified flag
-                SendMessageW(this, (WindowMessage)EM.SETMODIFY);
+                SendMessageW(this, (WM)EM.SETMODIFY);
                 ClearUndo();
             }
             else
             {
-                SendMessageW(this, (WindowMessage)EM.REPLACESEL, /*undoable*/ (IntPtr)(-1), text);
+                SendMessageW(this, (WM)EM.REPLACESEL, /*undoable*/ (IntPtr)(-1), text);
             }
 
             // Re-enable user input.
-            SendMessageW(this, (WindowMessage)EM.LIMITTEXT, (IntPtr)maxLength);
+            SendMessageW(this, (WM)EM.LIMITTEXT, (IntPtr)maxLength);
         }
 
         /// <summary>
@@ -1202,7 +1204,7 @@ namespace System.Windows.Forms
                     if (IsHandleCreated)
                     {
                         // clear the modified flag
-                        SendMessageW(this, (WindowMessage)EM.SETMODIFY);
+                        SendMessageW(this, (WM)EM.SETMODIFY);
                     }
                 }
             }
@@ -1415,17 +1417,14 @@ namespace System.Windows.Forms
         {
             if (IsHandleCreated)
             {
-                SendMessageW(this, (WindowMessage)EM.EMPTYUNDOBUFFER);
+                SendMessageW(this, (WM)EM.EMPTYUNDOBUFFER);
             }
         }
 
         /// <summary>
         ///  Copies the current selection in the text box to the Clipboard.
         /// </summary>
-        public void Copy()
-        {
-            SendMessage(WindowMessages.WM_COPY, 0, 0);
-        }
+        public void Copy() => SendMessageW(this, WM.COPY);
 
         protected override void CreateHandle()
         {
@@ -1448,10 +1447,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Moves the current selection in the text box to the Clipboard.
         /// </summary>
-        public void Cut()
-        {
-            SendMessage(WindowMessages.WM_CUT, 0, 0);
-        }
+        public void Cut() => SendMessageW(this, WM.CUT);
 
         /// <summary>
         ///  Returns the text end position (one past the last input character).  This property is virtual to allow MaskedTextBox
@@ -1516,7 +1512,7 @@ namespace System.Windows.Forms
             UpdateMaxLength();
             if (textBoxFlags[modified])
             {
-                SendMessageW(this, (WindowMessage)EM.SETMODIFY, PARAM.FromBool(true));
+                SendMessageW(this, (WM)EM.SETMODIFY, PARAM.FromBool(true));
             }
             if (textBoxFlags[scrollToCaretOnHandleCreated])
             {
@@ -1537,10 +1533,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Replaces the current selection in the text box with the contents of the Clipboard.
         /// </summary>
-        public void Paste()
-        {
-            SendMessage(WindowMessages.WM_PASTE, 0, 0);
-        }
+        public void Paste() => SendMessageW(this, WM.PASTE);
 
         protected override bool ProcessDialogKey(Keys keyData)
         {
@@ -1680,7 +1673,7 @@ namespace System.Windows.Forms
         /// </summary>
         public virtual int GetCharIndexFromPosition(Point pt)
         {
-            int index = (int)User32.SendMessageW(this, (WindowMessage)EM.CHARFROMPOS, IntPtr.Zero, PARAM.FromLowHigh(pt.X, pt.Y));
+            int index = (int)User32.SendMessageW(this, (WM)EM.CHARFROMPOS, IntPtr.Zero, PARAM.FromLowHigh(pt.X, pt.Y));
             index = PARAM.LOWORD(index);
 
             if (index < 0)
@@ -1711,7 +1704,7 @@ namespace System.Windows.Forms
         /// </summary>
         public virtual int GetLineFromCharIndex(int index)
         {
-            return unchecked((int)(long)SendMessageW(this, (WindowMessage)EM.LINEFROMCHAR, (IntPtr)index));
+            return unchecked((int)(long)SendMessageW(this, (WM)EM.LINEFROMCHAR, (IntPtr)index));
         }
 
         /// <summary>
@@ -1724,7 +1717,7 @@ namespace System.Windows.Forms
                 return Point.Empty;
             }
 
-            int i = (int)User32.SendMessageW(this, (WindowMessage)EM.POSFROMCHAR, (IntPtr)index);
+            int i = (int)User32.SendMessageW(this, (WM)EM.POSFROMCHAR, (IntPtr)index);
             return new Point(PARAM.SignedLOWORD(i), PARAM.SignedHIWORD(i));
         }
 
@@ -1737,7 +1730,7 @@ namespace System.Windows.Forms
             {
                 throw new ArgumentOutOfRangeException(nameof(lineNumber), lineNumber, string.Format(SR.InvalidArgument, nameof(lineNumber), lineNumber));
             }
-            return unchecked((int)(long)SendMessageW(this, (WindowMessage)EM.LINEINDEX, (IntPtr)lineNumber));
+            return unchecked((int)(long)SendMessageW(this, (WM)EM.LINEINDEX, (IntPtr)lineNumber));
         }
 
         /// <summary>
@@ -1745,7 +1738,7 @@ namespace System.Windows.Forms
         /// </summary>
         public int GetFirstCharIndexOfCurrentLine()
         {
-            return unchecked((int)(long)SendMessageW(this, (WindowMessage)EM.LINEINDEX, (IntPtr)(-1)));
+            return unchecked((int)(long)SendMessageW(this, (WM)EM.LINEINDEX, (IntPtr)(-1)));
         }
 
         /// <summary>
@@ -1798,7 +1791,7 @@ namespace System.Windows.Forms
                                     textRange.ScrollIntoView(0);   // 0 ==> tomEnd
 
                                     // 2. Get the first visible line.
-                                    int firstVisibleLine = unchecked((int)(long)SendMessageW(this, (WindowMessage)EM.GETFIRSTVISIBLELINE));
+                                    int firstVisibleLine = unchecked((int)(long)SendMessageW(this, (WM)EM.GETFIRSTVISIBLELINE));
 
                                     // 3. If the first visible line is smaller than the start of the selection, we are done;
                                     if (firstVisibleLine <= selStartLine)
@@ -1835,7 +1828,7 @@ namespace System.Windows.Forms
 
                 if (!scrolled)
                 {
-                    SendMessageW(this, (WindowMessage)EM.SCROLLCARET);
+                    SendMessageW(this, (WM)EM.SCROLLCARET);
                 }
             }
             else
@@ -1898,7 +1891,7 @@ namespace System.Windows.Forms
             {
                 AdjustSelectionStartAndEnd(start, length, out int s, out int e, textLen);
 
-                SendMessageW(this, (WindowMessage)EM.SETSEL, (IntPtr)s, (IntPtr)e);
+                SendMessageW(this, (WM)EM.SETSEL, (IntPtr)s, (IntPtr)e);
             }
             else
             {
@@ -2010,7 +2003,7 @@ namespace System.Windows.Forms
             {
                 textBoxFlags[setSelectionOnHandleCreated] = false;
                 AdjustSelectionStartAndEnd(selectionStart, selectionLength, out int start, out int end, -1);
-                SendMessageW(this, (WindowMessage)EM.SETSEL, (IntPtr)start, (IntPtr)end);
+                SendMessageW(this, (WM)EM.SETSEL, (IntPtr)start, (IntPtr)end);
             }
         }
 
@@ -2128,19 +2121,19 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Undoes the last edit operation in the text box.
         /// </summary>
-        public void Undo() => SendMessageW(this, (WindowMessage)EM.UNDO);
+        public void Undo() => SendMessageW(this, (WM)EM.UNDO);
 
         internal virtual void UpdateMaxLength()
         {
             if (IsHandleCreated)
             {
-                SendMessageW(this, (WindowMessage)EM.LIMITTEXT, (IntPtr)maxLength);
+                SendMessageW(this, (WM)EM.LIMITTEXT, (IntPtr)maxLength);
             }
         }
 
         internal override IntPtr InitializeDCForWmCtlColor(IntPtr dc, int msg)
         {
-            if ((msg == WindowMessages.WM_CTLCOLORSTATIC) && !ShouldSerializeBackColor())
+            if ((msg == (int)WM.CTLCOLORSTATIC) && !ShouldSerializeBackColor())
             {
                 // Let the Win32 Edit control handle background colors itself.
                 // This is necessary because a disabled edit control will display a different
@@ -2176,7 +2169,7 @@ namespace System.Windows.Forms
             base.WndProc(ref m);
             if (!textBoxFlags[multiline])
             {
-                SendMessageW(this, (WindowMessage)EM.SETMARGINS, (IntPtr)(EC.LEFTMARGIN | EC.RIGHTMARGIN));
+                SendMessageW(this, (WM)EM.SETMARGINS, (IntPtr)(EC.LEFTMARGIN | EC.RIGHTMARGIN));
             }
         }
 
@@ -2248,22 +2241,22 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((WM)m.Msg)
             {
-                case WindowMessages.WM_LBUTTONDBLCLK:
+                case WM.LBUTTONDBLCLK:
                     doubleClickFired = true;
                     base.WndProc(ref m);
                     break;
-                case WindowMessages.WM_REFLECT + WindowMessages.WM_COMMAND:
+                case WM.REFLECT | WM.COMMAND:
                     WmReflectCommand(ref m);
                     break;
-                case WindowMessages.WM_GETDLGCODE:
+                case WM.GETDLGCODE:
                     WmGetDlgCode(ref m);
                     break;
-                case WindowMessages.WM_SETFONT:
+                case WM.SETFONT:
                     WmSetFont(ref m);
                     break;
-                case WindowMessages.WM_CONTEXTMENU:
+                case WM.CONTEXTMENU:
                     if (ShortcutsEnabled)
                     {
                         //calling base will find ContextMenus in this order:

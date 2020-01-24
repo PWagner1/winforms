@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
@@ -770,9 +772,9 @@ namespace System.Windows.Forms.Design
             {
                 base.OnHandleCreated(e);
 
-                int itemHeight = (int)User32.SendMessageW(this, (User32.WindowMessage)ComCtl32.TVM.GETITEMHEIGHT);
+                int itemHeight = (int)User32.SendMessageW(this, (User32.WM)ComCtl32.TVM.GETITEMHEIGHT);
                 itemHeight += 2 * PADDING_VERT;
-                User32.SendMessageW(this, (User32.WindowMessage)ComCtl32.TVM.SETITEMHEIGHT, (IntPtr)itemHeight);
+                User32.SendMessageW(this, (User32.WM)ComCtl32.TVM.SETITEMHEIGHT, (IntPtr)itemHeight);
 
                 if (_hbrushDither == IntPtr.Zero)
                 {
@@ -849,7 +851,7 @@ namespace System.Windows.Forms.Design
 
             protected unsafe override void WndProc(ref Message m)
             {
-                if (m.Msg == WindowMessages.WM_REFLECT + WindowMessages.WM_NOTIFY)
+                if (m.Msg == (int)(User32.WM.REFLECT | User32.WM.NOTIFY))
                 {
                     User32.NMHDR* nmhdr = (User32.NMHDR*)m.LParam;
                     if (nmhdr->code == (int)ComCtl32.NM.CUSTOMDRAW)

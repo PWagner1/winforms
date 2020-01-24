@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -209,7 +211,7 @@ namespace System.Windows.Forms
 
                     if (IsHandleCreated)
                     {
-                        User32.SendMessageW(this, (User32.WindowMessage)User32.BM.SETCHECK, PARAM.FromBool(value));
+                        User32.SendMessageW(this, (User32.WM)User32.BM.SETCHECK, PARAM.FromBool(value));
                     }
 
                     Invalidate();
@@ -411,7 +413,7 @@ namespace System.Windows.Forms
 
             if (IsHandleCreated)
             {
-                User32.SendMessageW(this, (User32.WindowMessage)User32.BM.SETCHECK, PARAM.FromBool(isChecked));
+                User32.SendMessageW(this, (User32.WM)User32.BM.SETCHECK, PARAM.FromBool(isChecked));
             }
         }
 

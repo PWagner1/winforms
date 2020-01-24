@@ -2,13 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using static Interop;
 
 namespace System.Windows.Forms
 {
     /// <summary>
-    ////  Specifies the type of scroll arrow to create on a scroll bar.
-    ////
+    ///  Specifies the type of scroll arrow to create on a scroll bar.
     /// </summary>
     public enum ScrollButton
     {

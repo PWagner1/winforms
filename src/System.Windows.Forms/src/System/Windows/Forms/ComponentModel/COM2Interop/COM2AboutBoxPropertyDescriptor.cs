@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Design;
@@ -151,10 +153,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
         public class AboutBoxUITypeEditor : UITypeEditor
         {
-            /// <summary>
-            ///  Edits the given object value using the editor style provided by GetEditorStyle.
-            ///  A service provider is provided so that any required editing services can be obtained.
-            /// </summary>
             public unsafe override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
             {
                 object component = context.Instance;

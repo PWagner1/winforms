@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -1110,7 +1112,7 @@ namespace System.Windows.Forms
                     //
                     if (!OwnerDraw)
                     {
-                        User32.SendMessageW(this, (User32.WindowMessage)User32.BM.SETSTATE, PARAM.FromBool(true));
+                        User32.SendMessageW(this, (User32.WM)User32.BM.SETSTATE, PARAM.FromBool(true));
                     }
                     Invalidate(DownChangeRectangle);
                 }
@@ -1136,7 +1138,7 @@ namespace System.Windows.Forms
                 {
                     SetFlag(FlagMousePressed, false);
                     SetFlag(FlagMouseDown, false);
-                    User32.SendMessageW(this, (User32.WindowMessage)User32.BM.SETSTATE, PARAM.FromBool(false));
+                    User32.SendMessageW(this, (User32.WM)User32.BM.SETSTATE, PARAM.FromBool(false));
                 }
                 // Breaking change: specifically filter out Keys.Enter and Keys.Space as the only
                 // two keystrokes to execute OnClick.
@@ -1323,9 +1325,9 @@ namespace System.Windows.Forms
                         // even though we are ownerdraw.
                         break;
 
-                    case WindowMessages.WM_KILLFOCUS:
-                    case WindowMessages.WM_CANCELMODE:
-                    case WindowMessages.WM_CAPTURECHANGED:
+                    case (int)User32.WM.KILLFOCUS:
+                    case (int)User32.WM.CANCELMODE:
+                    case (int)User32.WM.CAPTURECHANGED:
                         if (!GetFlag(FlagInButtonUp) && GetFlag(FlagMousePressed))
                         {
                             SetFlag(FlagMousePressed, false);
@@ -1339,9 +1341,9 @@ namespace System.Windows.Forms
                         base.WndProc(ref m);
                         break;
 
-                    case WindowMessages.WM_LBUTTONUP:
-                    case WindowMessages.WM_MBUTTONUP:
-                    case WindowMessages.WM_RBUTTONUP:
+                    case (int)User32.WM.LBUTTONUP:
+                    case (int)User32.WM.MBUTTONUP:
+                    case (int)User32.WM.RBUTTONUP:
                         try
                         {
                             SetFlag(FlagInButtonUp, true);
@@ -1360,9 +1362,9 @@ namespace System.Windows.Forms
             }
             else
             {
-                switch (m.Msg)
+                switch ((User32.WM)m.Msg)
                 {
-                    case WindowMessages.WM_REFLECT + WindowMessages.WM_COMMAND:
+                    case User32.WM.REFLECT | User32.WM.COMMAND:
                         if (PARAM.HIWORD(m.WParam) == (int)User32.BN.CLICKED && !ValidationCancelled)
                         {
                             OnClick(EventArgs.Empty);
@@ -1405,4 +1407,3 @@ namespace System.Windows.Forms
         }
     }
 }
-

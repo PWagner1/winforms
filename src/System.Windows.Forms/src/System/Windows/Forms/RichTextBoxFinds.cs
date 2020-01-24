@@ -2,10 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 namespace System.Windows.Forms
 {
     /// <summary>
-    ///  Specifies how the <see cref='RichTextBox.Find'/> method works.
+    ///  Specifies how the <see cref='RichTextBox.Find(string, RichTextBoxFinds)'/> method works.
     /// </summary>
     [Flags]
     public enum RichTextBoxFinds

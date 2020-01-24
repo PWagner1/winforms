@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -2338,7 +2340,7 @@ namespace System.Windows.Forms
             }
 
             /// <summary>
-            ///  Skips the next <paramref name="celt"> child accessible objects.
+            ///  Skips the next <paramref name="celt"/> child accessible objects.
             /// </summary>
             HRESULT OleAut32.IEnumVariant.Skip(uint celt)
             {

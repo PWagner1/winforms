@@ -2,11 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 namespace System.Windows.Forms
 {
     /// <summary>
     ///  Determines which child controls in a ContainerControl will be validated
-    ///  by the <see cref='ContainerControl.ValidateChildren'/> method.
+    ///  by the <see cref='ContainerControl.ValidateChildren(ValidationConstraints)'/> method.
     /// </summary>
     [Flags]
     public enum ValidationConstraints

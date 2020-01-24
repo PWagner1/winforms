@@ -16,30 +16,16 @@ namespace System.Windows.Forms
 
         public const int STATUS_PENDING = 0x103; //259 = STILL_ALIVE
 
-        public const int ACM_OPENA = (0x0400 + 100);
-        public const int ACM_OPENW = (0x0400 + 103);
-
-        public const int BCM_GETIDEALSIZE = 0x1601,
+        public const int
         BFFM_INITIALIZED = 1,
         BFFM_SELCHANGED = 2,
         BFFM_SETSELECTION = 0x400 + 103,
         BFFM_ENABLEOK = 0x400 + 101;
 
-        public const int CP_WINANSI = 1004;
-
         public const int cmb4 = 0x0473;
 
         public const int CW_USEDEFAULT = (unchecked((int)0x80000000)),
-        COLOR_WINDOW = 5,
-        CCS_NORESIZE = 0x00000004,
-        CCS_NOPARENTALIGN = 0x00000008,
-        CCS_NODIVIDER = 0x00000040,
-        CBEM_INSERTITEM = (0x0400 + 11),
-        CBEM_SETITEM = (0x0400 + 12),
-        CBEM_GETITEM = (0x0400 + 13),
-        CBEN_ENDEDIT = ((0 - 800) - 6),
-        CONNECT_E_NOCONNECTION = unchecked((int)0x80040200),
-        CONNECT_E_CANNOTCONNECT = unchecked((int)0x80040202);
+        COLOR_WINDOW = 5;
 
         public const int
         DI_NORMAL = 0x0003,
@@ -49,11 +35,6 @@ namespace System.Windows.Forms
         DLGC_WANTCHARS = 0x0080,
         DLGC_WANTMESSAGE = 0x0004,      /* Pass message to control          */
         DLGC_HASSETSEL = 0x0008,      /* Understands EM_SETSEL message    */
-        DTM_SETRANGE = (0x1000 + 4),
-        DTM_SETFORMAT = (0x1000 + 50),
-        DTM_SETMCCOLOR = (0x1000 + 6),
-        DTM_GETMONTHCAL = (0x1000 + 8),
-        DTM_SETMCFONT = (0x1000 + 9),
         DTS_UPDOWN = 0x0001,
         DTS_SHOWNONE = 0x0002,
         DTS_LONGDATEFORMAT = 0x0004,
@@ -74,7 +55,6 @@ namespace System.Windows.Forms
         public const int FADF_VARIANT = (unchecked((int)0x800));
 
         public const int
-        GCL_WNDPROC = (-24),
         GMR_VISIBLE = 0,
         GMR_DAYSTATE = 1,
         GDI_ERROR = (unchecked((int)0xFFFFFFFF)),
@@ -108,14 +88,9 @@ namespace System.Windows.Forms
 
         public const int
         ICON_SMALL = 0,
-        ICON_BIG = 1,
-        IMAGE_ICON = 1,
-        IMAGE_CURSOR = 2;
+        ICON_BIG = 1;
 
         public const int
-        LOCK_WRITE = 0x1,
-        LOCK_EXCLUSIVE = 0x2,
-        LOCK_ONLYONCE = 0x4,
         LV_VIEW_TILE = 0x0004,
         LVN_ITEMCHANGING = ((0 - 100) - 0),
         LVN_ITEMCHANGED = ((0 - 100) - 1),
@@ -164,20 +139,6 @@ namespace System.Windows.Forms
 
         public const int MEMBERID_NIL = (-1),
         ERROR_INSUFFICIENT_BUFFER = 122, //https://msdn.microsoft.com/en-us/library/windows/desktop/ms681382(v=vs.85).aspx
-        MIIM_STATE = 0x00000001,
-        MIIM_ID = 0x00000002,
-        MIIM_SUBMENU = 0x00000004,
-        MIIM_TYPE = 0x00000010,
-        MIIM_DATA = 0x00000020,
-        MIIM_STRING = 0x00000040,
-        MIIM_BITMAP = 0x00000080,
-        MIIM_FTYPE = 0x00000100,
-        MB_OK = 0x00000000,
-        MFS_DISABLED = 0x00000003,
-        MFT_MENUBREAK = 0x00000040,
-        MFT_SEPARATOR = 0x00000800,
-        MFT_RIGHTORDER = 0x00002000,
-        MFT_RIGHTJUSTIFY = 0x00004000,
         MDIS_ALLCHILDSTYLES = 0x0001,
         MDITILE_VERTICAL = 0x0000,
         MDITILE_HORIZONTAL = 0x0001,
@@ -201,10 +162,10 @@ namespace System.Windows.Forms
         NIIF_INFO = 0x00000001,
         NIIF_WARNING = 0x00000002,
         NIIF_ERROR = 0x00000003,
-        NIN_BALLOONSHOW = (WindowMessages.WM_USER + 2),
-        NIN_BALLOONHIDE = (WindowMessages.WM_USER + 3),
-        NIN_BALLOONTIMEOUT = (WindowMessages.WM_USER + 4),
-        NIN_BALLOONUSERCLICK = (WindowMessages.WM_USER + 5),
+        NIN_BALLOONSHOW = ((int)User32.WM.USER + 2),
+        NIN_BALLOONHIDE = ((int)User32.WM.USER + 3),
+        NIN_BALLOONTIMEOUT = ((int)User32.WM.USER + 4),
+        NIN_BALLOONUSERCLICK = ((int)User32.WM.USER + 5),
         NFR_ANSI = 1,
         NFR_UNICODE = 2;
 
@@ -213,10 +174,6 @@ namespace System.Windows.Forms
         PRF_CLIENT = 0x00000004,
         PRF_ERASEBKGND = 0x00000008,
         PRF_CHILDREN = 0x00000010,
-        PSM_SETTITLEA = (0x0400 + 111),
-        PSM_SETTITLEW = (0x0400 + 120),
-        PSM_SETFINISHTEXTA = (0x0400 + 115),
-        PSM_SETFINISHTEXTW = (0x0400 + 121),
         PATCOPY = 0x00F00021,
         PATINVERT = 0x005A0049;
 
@@ -237,8 +194,6 @@ namespace System.Windows.Forms
         HLP_KEYWORD = 2,
         HLP_NAVIGATOR = 3,
         HLP_OBJECT = 4;
-
-        public const int SBARS_SIZEGRIP = 0x0100;
 
         public static bool Succeeded(int hr)
         {
@@ -303,41 +258,8 @@ namespace System.Windows.Forms
 
         public static int START_PAGE_GENERAL = unchecked((int)0xffffffff);
 
-        private static uint wmMouseEnterMessage = uint.MaxValue;
-
-        public static User32.WindowMessage WM_MOUSEENTER
-        {
-            get
-            {
-                if (wmMouseEnterMessage == uint.MaxValue)
-                {
-                    wmMouseEnterMessage = (uint)User32.RegisterWindowMessageW("WinFormsMouseEnter");
-                }
-
-                return (User32.WindowMessage)wmMouseEnterMessage;
-            }
-        }
-
-        private static uint wmUnSubclass = uint.MaxValue;
-        public static User32.WindowMessage WM_UIUNSUBCLASS
-        {
-            get
-            {
-                if (wmUnSubclass == uint.MaxValue)
-                {
-                    wmUnSubclass = (uint)User32.RegisterWindowMessageW("WinFormsUnSubclass");
-                }
-
-                return (User32.WindowMessage)wmUnSubclass;
-            }
-        }
-
         public const int XBUTTON1 = 0x0001;
         public const int XBUTTON2 = 0x0002;
-
-        public const string
-        MSH_MOUSEWHEEL = "MSWHEEL_ROLLMSG",
-        MSH_SCROLL_LINES = "MSH_SCROLL_LINES_MSG";
 
         public const int CHILDID_SELF = 0;
 
@@ -354,8 +276,6 @@ namespace System.Windows.Forms
             public int fReserved;
             public int dwFlags;
         }
-
-        public delegate bool EnumChildrenCallback(IntPtr hwnd, IntPtr lParam);
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public class HH_AKLINK
@@ -661,42 +581,6 @@ namespace System.Windows.Forms
             public int dwInfoFlags;
         }
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public class MENUITEMINFO_T
-        {
-            public int cbSize = Marshal.SizeOf<MENUITEMINFO_T>();
-            public int fMask;
-            public int fType;
-            public int fState;
-            public int wID;
-            public IntPtr hSubMenu;
-            public IntPtr hbmpChecked;
-            public IntPtr hbmpUnchecked;
-            public IntPtr dwItemData;
-            public string dwTypeData;
-            public int cch;
-        }
-
-        // This version allows you to read the string that's stuffed
-        // in the native menu item.  You have to do the marshaling on
-        // your own though.
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public class MENUITEMINFO_T_RW
-        {
-            public int cbSize = Marshal.SizeOf<MENUITEMINFO_T_RW>();
-            public int fMask = 0;
-            public int fType = 0;
-            public int fState = 0;
-            public int wID = 0;
-            public IntPtr hSubMenu = IntPtr.Zero;
-            public IntPtr hbmpChecked = IntPtr.Zero;
-            public IntPtr hbmpUnchecked = IntPtr.Zero;
-            public IntPtr dwItemData = IntPtr.Zero;
-            public IntPtr dwTypeData = IntPtr.Zero;
-            public int cch = 0;
-            public IntPtr hbmpItem = IntPtr.Zero;  // requires WINVER > 5
-        }
-
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         public struct MSAAMENUINFO
         {
@@ -740,27 +624,6 @@ namespace System.Windows.Forms
             public int FlagsEx;
         }
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public class CHOOSEFONT
-        {
-            public int lStructSize = Marshal.SizeOf<CHOOSEFONT>();
-            public IntPtr hwndOwner;
-            public IntPtr hDC;
-            public IntPtr lpLogFont;
-            public int iPointSize = 0;
-            public Comdlg32.CF Flags;
-            public int rgbColors;
-            public IntPtr lCustData = IntPtr.Zero;
-            public WndProc lpfnHook;
-            public string lpTemplateName = null;
-            public IntPtr hInstance;
-            public string lpszStyle = null;
-            public short nFontType = 0;
-            public short ___MISSING_ALIGNMENT__ = 0;
-            public int nSizeMin;
-            public int nSizeMax;
-        }
-
         [StructLayout(LayoutKind.Sequential)]
         public class COMRECT
         {
@@ -785,19 +648,6 @@ namespace System.Windows.Forms
             {
                 return "Left = " + left + " Top " + top + " Right = " + right + " Bottom = " + bottom;
             }
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public class TOOLTIPTEXT
-        {
-            public User32.NMHDR hdr;
-            public string lpszText;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
-            public string szText = null;
-
-            public IntPtr hinst;
-            public int uFlags;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -975,7 +825,6 @@ namespace System.Windows.Forms
 
         public class ActiveX
         {
-            public const int OCM__BASE = 0x2000;
             public const int ALIGN_MIN = 0x0;
             public const int ALIGN_NO_CHANGE = 0x0;
             public const int ALIGN_TOP = 0x1;

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -70,8 +72,8 @@ namespace System.Windows.Forms
         private CheckedItemCollection checkedItemCollection = null;
         private CheckedIndexCollection checkedIndexCollection = null;
 
-        private static readonly WindowMessage LBC_GETCHECKSTATE;
-        private static readonly WindowMessage LBC_SETCHECKSTATE;
+        private static readonly WM LBC_GETCHECKSTATE;
+        private static readonly WM LBC_SETCHECKSTATE;
 
         static CheckedListBox()
         {
@@ -496,7 +498,7 @@ namespace System.Windows.Forms
             if (IsHandleCreated)
             {
                 var rect = new RECT();
-                SendMessageW(this, (WindowMessage)LB.GETITEMRECT, (IntPtr)index, ref rect);
+                SendMessageW(this, (WM)LB.GETITEMRECT, (IntPtr)index, ref rect);
                 InvalidateRect(new HandleRef(this, Handle), &rect, BOOL.FALSE);
             }
         }
@@ -1042,12 +1044,12 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((WM)m.Msg)
             {
-                case WindowMessages.WM_REFLECT + WindowMessages.WM_CHARTOITEM:
+                case WM.REFLECT | WM.CHARTOITEM:
                     m.Result = NativeMethods.InvalidIntPtr;
                     break;
-                case WindowMessages.WM_REFLECT + WindowMessages.WM_VKEYTOITEM:
+                case WM.REFLECT | WM.VKEYTOITEM:
                     WmReflectVKeyToItem(ref m);
                     break;
                 default:

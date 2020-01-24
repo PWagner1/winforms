@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
@@ -369,7 +371,7 @@ namespace System.Windows.Forms
                     CreateHandle();
                 }
 
-                return (char)SendMessageW(this, (WindowMessage)EM.GETPASSWORDCHAR);
+                return (char)SendMessageW(this, (WM)EM.GETPASSWORDCHAR);
             }
             set
             {
@@ -381,7 +383,7 @@ namespace System.Windows.Forms
                         if (PasswordChar != value)
                         {
                             // Set the password mode.
-                            SendMessageW(this, (WindowMessage)EM.SETPASSWORDCHAR, (IntPtr)value);
+                            SendMessageW(this, (WM)EM.SETPASSWORDCHAR, (IntPtr)value);
 
                             // Disable IME if setting the control to password mode.
                             VerifyImeRestrictedModeChanged();
@@ -649,7 +651,7 @@ namespace System.Windows.Forms
             {
                 if (!useSystemPasswordChar)
                 {
-                    SendMessageW(this, (WindowMessage)EM.SETPASSWORDCHAR, (IntPtr)passwordChar);
+                    SendMessageW(this, (WM)EM.SETPASSWORDCHAR, (IntPtr)passwordChar);
                 }
             }
 
@@ -943,10 +945,10 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
                 // Work around a very obscure Windows issue.
-                case WindowMessages.WM_LBUTTONDOWN:
+                case User32.WM.LBUTTONDOWN:
                     MouseButtons realState = MouseButtons;
                     bool wasValidationCancelled = ValidationCancelled;
                     Focus();
@@ -958,10 +960,10 @@ namespace System.Windows.Forms
                     break;
                 //for readability ... so that we know whats happening ...
                 // case WM_LBUTTONUP is included here eventhough it just calls the base.
-                case WindowMessages.WM_LBUTTONUP:
+                case User32.WM.LBUTTONUP:
                     base.WndProc(ref m);
                     break;
-                case WindowMessages.WM_PRINT:
+                case User32.WM.PRINT:
                     WmPrint(ref m);
                     break;
                 default:
@@ -980,7 +982,7 @@ namespace System.Windows.Forms
 
         private bool ShouldRenderPlaceHolderText(in Message m) =>
                     !string.IsNullOrEmpty(PlaceholderText) &&
-                    (m.Msg == WindowMessages.WM_PAINT || m.Msg == WindowMessages.WM_KILLFOCUS) &&
+                    (m.Msg == (int)User32.WM.PAINT || m.Msg == (int)User32.WM.KILLFOCUS) &&
                     !GetStyle(ControlStyles.UserPaint) &&
                     !Focused &&
                     TextLength == 0;

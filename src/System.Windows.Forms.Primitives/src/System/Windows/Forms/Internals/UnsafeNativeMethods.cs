@@ -85,31 +85,8 @@ namespace System.Windows.Forms
             }
         }
 
-        [DllImport(ExternDll.User32, ExactSpelling = true)]
-        public static extern bool EnumChildWindows(HandleRef hwndParent, NativeMethods.EnumChildrenCallback lpEnumFunc, HandleRef lParam);
-
         [DllImport(ExternDll.Shell32, CharSet = CharSet.Auto)]
         public static extern int Shell_NotifyIcon(int message, NativeMethods.NOTIFYICONDATA pnid);
-
-        [DllImport(Libraries.User32, CharSet = CharSet.Auto)]
-        public static extern BOOL GetMenuItemInfo(IntPtr hMenu, int uItem, bool fByPosition, [In, Out] NativeMethods.MENUITEMINFO_T lpmii);
-
-        public static BOOL GetMenuItemInfo(HandleRef hMenu, int uItem, bool fByPosition, NativeMethods.MENUITEMINFO_T lpmii)
-        {
-            BOOL result = GetMenuItemInfo(hMenu.Handle, uItem, fByPosition, lpmii);
-            GC.KeepAlive(hMenu.Wrapper);
-            return result;
-        }
-
-        [DllImport(Libraries.User32, CharSet = CharSet.Auto)]
-        public static extern BOOL GetMenuItemInfo(IntPtr hMenu, int uItem, bool fByPosition, [In, Out] NativeMethods.MENUITEMINFO_T_RW lpmii);
-
-        public static BOOL GetMenuItemInfo(HandleRef hMenu, int uItem, bool fByPosition, NativeMethods.MENUITEMINFO_T_RW lpmii)
-        {
-            BOOL result = GetMenuItemInfo(hMenu.Handle, uItem, fByPosition, lpmii);
-            GC.KeepAlive(hMenu.Wrapper);
-            return result;
-        }
 
         [DllImport(ExternDll.Comdlg32, SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool GetOpenFileName([In, Out] NativeMethods.OPENFILENAME_I ofn);
@@ -280,16 +257,10 @@ namespace System.Windows.Forms
         public extern static IntPtr SendMessage(HandleRef hWnd, int Msg, IntPtr wParam, NativeMethods.ListViewCompareCallback pfnCompare);
 
         [DllImport(ExternDll.User32, ExactSpelling = true, CharSet = CharSet.Auto)]
-        public static extern IntPtr GetDlgItem(HandleRef hWnd, int nIDDlgItem);
-
-        [DllImport(ExternDll.User32, ExactSpelling = true, CharSet = CharSet.Auto)]
-        public static extern IntPtr GetDlgItem(IntPtr hWnd, int nIDDlgItem);
-
-        [DllImport(ExternDll.User32, ExactSpelling = true, CharSet = CharSet.Auto)]
         public static extern int GetDlgItemInt(IntPtr hWnd, int nIDDlgItem, bool[] err, bool signed);
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
-        public static extern IntPtr DefMDIChildProc(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+        public static extern IntPtr DefMDIChildProc(IntPtr hWnd, User32.WM msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport(ExternDll.User32, SetLastError = true)]
         public static extern bool GetUserObjectInformation(HandleRef hObj, int nIndex, ref NativeMethods.USEROBJECTFLAGS pvBuffer, int nLength, ref int lpnLengthNeeded);

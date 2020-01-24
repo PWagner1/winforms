@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 namespace System.Windows.Forms
 {
     /// <summary>
@@ -17,9 +19,8 @@ namespace System.Windows.Forms
         Normal = 0,
 
         /// <summary>
-        ///  The image within the <see cref='PictureBox'/> is
-        ///  stretched or shrunk to fit the current size of the
-        // <see cref='System.Windows.Forms.PictureBox'/>.
+        ///  The image within the <see cref='PictureBox'/> is stretched or shrunk to fit the
+        ///  current size of the <see cref='System.Windows.Forms.PictureBox'/>.
         /// </summary>
         StretchImage = 1,
 

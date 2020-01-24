@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -155,6 +157,8 @@ namespace System.Windows.Forms
         private TreeNodeMouseClickEventHandler onNodeMouseClick;
         private TreeNodeMouseClickEventHandler onNodeMouseDoubleClick;
 
+        private ToolTipBuffer _toolTipBuffer;
+
         /// <summary>
         ///  Creates a TreeView control
         /// </summary>
@@ -202,12 +206,12 @@ namespace System.Windows.Forms
                 base.BackColor = value;
                 if (IsHandleCreated)
                 {
-                    User32.SendMessageW(this, (User32.WindowMessage)TVM.SETBKCOLOR, IntPtr.Zero, PARAM.FromColor(BackColor));
+                    User32.SendMessageW(this, (User32.WM)TVM.SETBKCOLOR, IntPtr.Zero, PARAM.FromColor(BackColor));
 
                     // This is to get around a problem in the comctl control where the lines
                     // connecting nodes don't get the new BackColor.  This messages forces
                     // reconstruction of the line bitmaps without changing anything else.
-                    User32.SendMessageW(this, (User32.WindowMessage)TVM.SETINDENT, (IntPtr)Indent);
+                    User32.SendMessageW(this, (User32.WM)TVM.SETINDENT, (IntPtr)Indent);
                 }
             }
         }
@@ -476,7 +480,7 @@ namespace System.Windows.Forms
                 base.ForeColor = value;
                 if (IsHandleCreated)
                 {
-                    User32.SendMessageW(this, (User32.WindowMessage)TVM.SETTEXTCOLOR, IntPtr.Zero, PARAM.FromColor(ForeColor));
+                    User32.SendMessageW(this, (User32.WM)TVM.SETTEXTCOLOR, IntPtr.Zero, PARAM.FromColor(ForeColor));
                 }
             }
         }
@@ -686,7 +690,7 @@ namespace System.Windows.Forms
                     //
                     if (IsHandleCreated)
                     {
-                        User32.SendMessageW(this, (User32.WindowMessage)TVM.SETIMAGELIST, IntPtr.Zero,
+                        User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, IntPtr.Zero,
                                     value == null ? IntPtr.Zero : value.Handle);
                         if (StateImageList != null && StateImageList.Images.Count > 0 && internalStateImageList != null)
                         {
@@ -807,7 +811,7 @@ namespace System.Windows.Forms
                 }
                 else if (IsHandleCreated)
                 {
-                    return unchecked((int)(long)User32.SendMessageW(this, (User32.WindowMessage)TVM.GETINDENT));
+                    return unchecked((int)(long)User32.SendMessageW(this, (User32.WM)TVM.GETINDENT));
                 }
                 return DefaultTreeViewIndent;
             }
@@ -827,8 +831,8 @@ namespace System.Windows.Forms
                     indent = value;
                     if (IsHandleCreated)
                     {
-                        User32.SendMessageW(this, (User32.WindowMessage)TVM.SETINDENT, (IntPtr)value);
-                        indent = unchecked((int)(long)User32.SendMessageW(this, (User32.WindowMessage)TVM.GETINDENT));
+                        User32.SendMessageW(this, (User32.WM)TVM.SETINDENT, (IntPtr)value);
+                        indent = unchecked((int)(long)User32.SendMessageW(this, (User32.WM)TVM.GETINDENT));
                     }
                 }
             }
@@ -852,7 +856,7 @@ namespace System.Windows.Forms
 
                 if (IsHandleCreated)
                 {
-                    return unchecked((int)(long)User32.SendMessageW(this, (User32.WindowMessage)TVM.GETITEMHEIGHT));
+                    return unchecked((int)(long)User32.SendMessageW(this, (User32.WM)TVM.GETITEMHEIGHT));
                 }
                 else
                 {
@@ -893,8 +897,8 @@ namespace System.Windows.Forms
                             }
                         }
 
-                        User32.SendMessageW(this, (User32.WindowMessage)TVM.SETITEMHEIGHT, (IntPtr)value);
-                        itemHeight = unchecked((int)(long)User32.SendMessageW(this, (User32.WindowMessage)TVM.GETITEMHEIGHT));
+                        User32.SendMessageW(this, (User32.WM)TVM.SETITEMHEIGHT, (IntPtr)value);
+                        itemHeight = unchecked((int)(long)User32.SendMessageW(this, (User32.WM)TVM.GETITEMHEIGHT));
                     }
                 }
             }
@@ -942,7 +946,7 @@ namespace System.Windows.Forms
             {
                 if (IsHandleCreated)
                 {
-                    int intColor = unchecked((int)(long)User32.SendMessageW(this, (User32.WindowMessage)TVM.GETLINECOLOR));
+                    int intColor = unchecked((int)(long)User32.SendMessageW(this, (User32.WM)TVM.GETLINECOLOR));
                     return ColorTranslator.FromWin32(intColor);
                 }
                 return lineColor;
@@ -954,7 +958,7 @@ namespace System.Windows.Forms
                     lineColor = value;
                     if (IsHandleCreated)
                     {
-                        User32.SendMessageW(this, (User32.WindowMessage)TVM.SETLINECOLOR, IntPtr.Zero, PARAM.FromColor(lineColor));
+                        User32.SendMessageW(this, (User32.WM)TVM.SETLINECOLOR, IntPtr.Zero, PARAM.FromColor(lineColor));
                     }
                 }
             }
@@ -1060,10 +1064,9 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  This is used for international applications where the language
-        ///  is written from RightToLeft. When this property is true,
-        //      and the RightToLeft is true, mirroring will be turned on on the form, and
-        ///  control placement and text will be from right to left.
+        ///  This is used for international applications where the language is written from RightToLeft.
+        ///  When this property is true, and the RightToLeft is true, mirroring will be turned on on
+        ///  the form, and control placement and text will be from right to left.
         /// </summary>
         [
         SRCategory(nameof(SR.CatAppearance)),
@@ -1218,7 +1221,7 @@ namespace System.Windows.Forms
             {
                 if (IsHandleCreated)
                 {
-                    IntPtr hItem = User32.SendMessageW(this, (User32.WindowMessage)TVM.GETNEXTITEM, (IntPtr)NativeMethods.TVGN_CARET);
+                    IntPtr hItem = User32.SendMessageW(this, (User32.WM)TVM.GETNEXTITEM, (IntPtr)NativeMethods.TVGN_CARET);
                     if (hItem == IntPtr.Zero)
                     {
                         return null;
@@ -1245,7 +1248,7 @@ namespace System.Windows.Forms
                     Debug.Assert(selectedNode == null || selectedNode.TreeView != this, "handle is created, but we're still caching selectedNode");
 
                     IntPtr hnode = (value == null ? IntPtr.Zero : value.Handle);
-                    User32.SendMessageW(this, (User32.WindowMessage)TVM.SELECTITEM, (IntPtr)NativeMethods.TVGN_CARET, hnode);
+                    User32.SendMessageW(this, (User32.WM)TVM.SELECTITEM, (IntPtr)NativeMethods.TVGN_CARET, hnode);
                     selectedNode = null;
                 }
                 else
@@ -1456,7 +1459,7 @@ namespace System.Windows.Forms
             {
                 if (IsHandleCreated)
                 {
-                    IntPtr hitem = User32.SendMessageW(this, (User32.WindowMessage)TVM.GETNEXTITEM, (IntPtr)NativeMethods.TVGN_FIRSTVISIBLE);
+                    IntPtr hitem = User32.SendMessageW(this, (User32.WM)TVM.GETNEXTITEM, (IntPtr)NativeMethods.TVGN_FIRSTVISIBLE);
                     return (hitem == IntPtr.Zero ? null : NodeFromHandle(hitem));
                 }
                 return topNode;
@@ -1471,7 +1474,7 @@ namespace System.Windows.Forms
                     Debug.Assert(topNode == null || topNode.TreeView != this, "handle is created, but we're still caching selectedNode");
 
                     IntPtr hnode = (value == null ? IntPtr.Zero : value.Handle);
-                    User32.SendMessageW(this, (User32.WindowMessage)TVM.SELECTITEM, (IntPtr)NativeMethods.TVGN_FIRSTVISIBLE, hnode);
+                    User32.SendMessageW(this, (User32.WM)TVM.SELECTITEM, (IntPtr)NativeMethods.TVGN_FIRSTVISIBLE, hnode);
                     topNode = null;
                 }
                 else
@@ -1499,7 +1502,7 @@ namespace System.Windows.Forms
             {
                 if (IsHandleCreated)
                 {
-                    return unchecked((int)(long)User32.SendMessageW(this, (User32.WindowMessage)TVM.GETVISIBLECOUNT));
+                    return unchecked((int)(long)User32.SendMessageW(this, (User32.WM)TVM.GETVISIBLECOUNT));
                 }
 
                 return 0;
@@ -1704,6 +1707,9 @@ namespace System.Windows.Forms
                 }
             }
 
+            // Dispose unmanaged resources.
+            _toolTipBuffer.Dispose();
+
             base.Dispose(disposing);
         }
 
@@ -1740,14 +1746,14 @@ namespace System.Windows.Forms
             {
                 if (IsHandleCreated)
                 {
-                    SendMessage(WindowMessages.WM_SETREDRAW, 0, 0);
+                    User32.SendMessageW(this, User32.WM.SETREDRAW, PARAM.FromBool(false));
                     if (delayed)
                     {
-                        User32.PostMessageW(this, User32.WindowMessage.WM_SETREDRAW, (IntPtr)1, IntPtr.Zero);
+                        User32.PostMessageW(this, User32.WM.SETREDRAW, (IntPtr)1, IntPtr.Zero);
                     }
                     else
                     {
-                        SendMessage(WindowMessages.WM_SETREDRAW, 1, 0);
+                        User32.SendMessageW(this, User32.WM.SETREDRAW, PARAM.FromBool(true));
                     }
                 }
             }
@@ -1760,8 +1766,8 @@ namespace System.Windows.Forms
         {
             if (toolTip != null)
             {
-                User32.SendMessageW(toolTip, (User32.WindowMessage)TTM.SETMAXTIPWIDTH, IntPtr.Zero, (IntPtr)SystemInformation.MaxWindowTrackSize.Width);
-                User32.SendMessageW(this, (User32.WindowMessage)TVM.SETTOOLTIPS, toolTip.Handle);
+                User32.SendMessageW(toolTip, (User32.WM)TTM.SETMAXTIPWIDTH, IntPtr.Zero, (IntPtr)SystemInformation.MaxWindowTrackSize.Width);
+                User32.SendMessageW(this, (User32.WM)TVM.SETTOOLTIPS, toolTip.Handle);
                 controlToolTipText = toolTipText;
             }
         }
@@ -1783,7 +1789,7 @@ namespace System.Windows.Forms
             {
                 pt = new Point(x, y)
             };
-            IntPtr hnode = User32.SendMessageW(this, (User32.WindowMessage)TVM.HITTEST, IntPtr.Zero, ref tvhi);
+            IntPtr hnode = User32.SendMessageW(this, (User32.WM)TVM.HITTEST, IntPtr.Zero, ref tvhi);
             TreeNode node = (hnode == IntPtr.Zero ? null : NodeFromHandle(hnode));
             TreeViewHitTestLocations loc = (TreeViewHitTestLocations)tvhi.flags;
             return (new TreeViewHitTestInfo(node, loc));
@@ -1830,7 +1836,7 @@ namespace System.Windows.Forms
                 pt = new Point(x, y)
             };
 
-            IntPtr hnode = User32.SendMessageW(this, (User32.WindowMessage)TVM.HITTEST, IntPtr.Zero, ref tvhi);
+            IntPtr hnode = User32.SendMessageW(this, (User32.WM)TVM.HITTEST, IntPtr.Zero, ref tvhi);
             return (hnode == IntPtr.Zero ? null : NodeFromHandle(hnode));
         }
 
@@ -1839,7 +1845,7 @@ namespace System.Windows.Forms
             if (IsHandleCreated)
             {
                 IntPtr handle = (ImageList == null) ? IntPtr.Zero : ImageList.Handle;
-                User32.SendMessageW(this, (User32.WindowMessage)TVM.SETIMAGELIST, IntPtr.Zero, handle);
+                User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, IntPtr.Zero, handle);
             }
         }
 
@@ -2010,25 +2016,25 @@ namespace System.Windows.Forms
             Color c = BackColor;
             if (c != SystemColors.Window)
             {
-                User32.SendMessageW(this, (User32.WindowMessage)TVM.SETBKCOLOR, IntPtr.Zero, PARAM.FromColor(c));
+                User32.SendMessageW(this, (User32.WM)TVM.SETBKCOLOR, IntPtr.Zero, PARAM.FromColor(c));
             }
 
             c = ForeColor;
 
             if (c != SystemColors.WindowText)
             {
-                User32.SendMessageW(this, (User32.WindowMessage)TVM.SETTEXTCOLOR, IntPtr.Zero, PARAM.FromColor(c));
+                User32.SendMessageW(this, (User32.WM)TVM.SETTEXTCOLOR, IntPtr.Zero, PARAM.FromColor(c));
             }
 
-            ///  put the linecolor into the native control only if Set ...
+            // Put the linecolor into the native control only if set.
             if (lineColor != Color.Empty)
             {
-                User32.SendMessageW(this, (User32.WindowMessage)TVM.SETLINECOLOR, IntPtr.Zero, PARAM.FromColor(lineColor));
+                User32.SendMessageW(this, (User32.WM)TVM.SETLINECOLOR, IntPtr.Zero, PARAM.FromColor(lineColor));
             }
 
             if (imageList != null)
             {
-                User32.SendMessageW(this, (User32.WindowMessage)TVM.SETIMAGELIST, IntPtr.Zero, imageList.Handle);
+                User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, IntPtr.Zero, imageList.Handle);
             }
 
             if (stateImageList != null)
@@ -2038,12 +2044,12 @@ namespace System.Windows.Forms
 
             if (indent != -1)
             {
-                User32.SendMessageW(this, (User32.WindowMessage)TVM.SETINDENT, (IntPtr)indent);
+                User32.SendMessageW(this, (User32.WM)TVM.SETINDENT, (IntPtr)indent);
             }
 
             if (itemHeight != -1)
             {
-                User32.SendMessageW(this, (User32.WindowMessage)TVM.SETITEMHEIGHT, (IntPtr)ItemHeight);
+                User32.SendMessageW(this, (User32.WM)TVM.SETITEMHEIGHT, (IntPtr)ItemHeight);
             }
 
             // Essentially we are setting the width to be infinite so that the
@@ -2107,7 +2113,7 @@ namespace System.Windows.Forms
                     images[i] = stateImageList.Images[i - 1];
                 }
                 newImageList.Images.AddRange(images);
-                User32.SendMessageW(this, (User32.WindowMessage)TVM.SETIMAGELIST, (IntPtr)NativeMethods.TVSIL_STATE, newImageList.Handle);
+                User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, (IntPtr)NativeMethods.TVSIL_STATE, newImageList.Handle);
 
                 if (internalStateImageList != null)
                 {
@@ -2121,7 +2127,7 @@ namespace System.Windows.Forms
         {
             // In certain cases (TREEVIEWSTATE_checkBoxes) e.g., the Native TreeView leaks the imagelist
             // even if set by us. To prevent any leaks, we always destroy what was there after setting a new list.
-            IntPtr handleOld = User32.SendMessageW(this, (User32.WindowMessage)TVM.SETIMAGELIST, (IntPtr)NativeMethods.TVSIL_STATE, handle);
+            IntPtr handleOld = User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, (IntPtr)NativeMethods.TVSIL_STATE, handle);
             if ((handleOld != IntPtr.Zero) && (handleOld != handle))
             {
                 ComCtl32.ImageList.Destroy(new HandleRef(this, handleOld));
@@ -2132,13 +2138,13 @@ namespace System.Windows.Forms
         // We must destroy it explicitly.
         private void DestroyNativeStateImageList(bool reset)
         {
-            IntPtr handle = User32.SendMessageW(this, (User32.WindowMessage)TVM.GETIMAGELIST, (IntPtr)NativeMethods.TVSIL_STATE);
+            IntPtr handle = User32.SendMessageW(this, (User32.WM)TVM.GETIMAGELIST, (IntPtr)NativeMethods.TVSIL_STATE);
             if (handle != IntPtr.Zero)
             {
                 ComCtl32.ImageList.Destroy(new HandleRef(this, handle));
                 if (reset)
                 {
-                    User32.SendMessageW(this, (User32.WindowMessage)TVM.SETIMAGELIST, (IntPtr)NativeMethods.TVSIL_STATE);
+                    User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, (IntPtr)NativeMethods.TVSIL_STATE);
                 }
             }
         }
@@ -2178,16 +2184,14 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void OnMouseHover(EventArgs e)
         {
-            ///  Hover events need to be caught for each node
-            ///  within the TreeView so the appropriate
-            ///  NodeHovered event can be raised.
-
+            // Hover events need to be caught for each node within the TreeView so
+            // the appropriate NodeHovered event can be raised.
             var tvhip = new TVHITTESTINFO
             {
                 pt = PointToClient(Cursor.Position)
             };
 
-            IntPtr hnode = User32.SendMessageW(this, (User32.WindowMessage)TVM.HITTEST, IntPtr.Zero, ref tvhip);
+            IntPtr hnode = User32.SendMessageW(this, (User32.WM)TVM.HITTEST, IntPtr.Zero, ref tvhip);
             if (hnode != IntPtr.Zero && ((tvhip.flags & TVHT.ONITEM) != 0))
             {
                 TreeNode tn = NodeFromHandle(hnode);
@@ -2615,7 +2619,7 @@ namespace System.Windows.Forms
             *((IntPtr*)&rc.left) = nmtv->itemOld.hItem;
             if (nmtv->itemOld.hItem != IntPtr.Zero)
             {
-                if (unchecked((int)(long)User32.SendMessageW(this, (User32.WindowMessage)TVM.GETITEMRECT, (IntPtr)1, ref rc)) != 0)
+                if (unchecked((int)(long)User32.SendMessageW(this, (User32.WM)TVM.GETITEMRECT, (IntPtr)1, ref rc)) != 0)
                 {
                     User32.InvalidateRect(new HandleRef(this, Handle), &rc, BOOL.TRUE);
                 }
@@ -2715,7 +2719,7 @@ namespace System.Windows.Forms
             // If the user shows the ContextMenu bu overiding the WndProc( ), then the treeview
             // goes into the weird state where the high-light gets locked to the node on which the ContextMenu was shown.
             // So we need to get the native TREEIVEW out of this weird state.
-            User32.SendMessageW(this, (User32.WindowMessage)TVM.SELECTITEM, (IntPtr)NativeMethods.TVGN_DROPHILITE);
+            User32.SendMessageW(this, (User32.WM)TVM.SELECTITEM, (IntPtr)NativeMethods.TVGN_DROPHILITE);
 
             // Windows TreeView pushes its own message loop in WM_xBUTTONDOWN, so fire the
             // event before calling defWndProc or else it won't get fired until the button
@@ -2959,7 +2963,7 @@ namespace System.Windows.Forms
             {
                 pt = PointToClient(Cursor.Position)
             };
-            IntPtr hnode = User32.SendMessageW(this, (User32.WindowMessage)TVM.HITTEST, IntPtr.Zero, ref tvhip);
+            IntPtr hnode = User32.SendMessageW(this, (User32.WM)TVM.HITTEST, IntPtr.Zero, ref tvhip);
             if (hnode != IntPtr.Zero && ((tvhip.flags & TVHT.ONITEM) != 0))
             {
                 TreeNode tn = NodeFromHandle(hnode);
@@ -2970,7 +2974,7 @@ namespace System.Windows.Forms
                         Rectangle bounds = tn.Bounds;
                         bounds.Location = PointToScreen(bounds.Location);
 
-                        User32.SendMessageW(tooltipHandle, (User32.WindowMessage)TTM.ADJUSTRECT, PARAM.FromBool(true), ref bounds);
+                        User32.SendMessageW(tooltipHandle, (User32.WM)TTM.ADJUSTRECT, PARAM.FromBool(true), ref bounds);
                         User32.SetWindowPos(
                             new HandleRef(this, tooltipHandle),
                             User32.HWND_TOPMOST,
@@ -2984,16 +2988,16 @@ namespace System.Windows.Forms
             return false;
         }
 
-        private void WmNeedText(ref Message m)
+        private unsafe void WmNeedText(ref Message m)
         {
-            NativeMethods.TOOLTIPTEXT ttt = (NativeMethods.TOOLTIPTEXT)m.GetLParam(typeof(NativeMethods.TOOLTIPTEXT));
+            NMTTDISPINFOW* ttt = (NMTTDISPINFOW*)m.LParam;
             string tipText = controlToolTipText;
 
             var tvhip = new TVHITTESTINFO
             {
                 pt = PointToClient(Cursor.Position)
             };
-            IntPtr hnode = User32.SendMessageW(this, (User32.WindowMessage)TVM.HITTEST, IntPtr.Zero, ref tvhip);
+            IntPtr hnode = User32.SendMessageW(this, (User32.WM)TVM.HITTEST, IntPtr.Zero, ref tvhip);
             if (hnode != IntPtr.Zero && ((tvhip.flags & TVHT.ONITEM) != 0))
             {
                 TreeNode tn = NodeFromHandle(hnode);
@@ -3010,15 +3014,16 @@ namespace System.Windows.Forms
                     tipText = null;
                 }
             }
-            ttt.lpszText = tipText;
-            ttt.hinst = IntPtr.Zero;
+
+            _toolTipBuffer.SetText(tipText);
+            ttt->lpszText = _toolTipBuffer.Buffer;
+            ttt->hinst = IntPtr.Zero;
 
             // RightToLeft reading order
             if (RightToLeft == RightToLeft.Yes)
             {
-                ttt.uFlags |= (int)TTF.RTLREADING;
+                ttt->uFlags |= TTF.RTLREADING;
             }
-            Marshal.StructureToPtr(ttt, m.LParam, false);
         }
 
         private unsafe void WmNotify(ref Message m)
@@ -3068,7 +3073,7 @@ namespace System.Windows.Forms
                         {
                             pt = pos
                         };
-                        IntPtr hnode = User32.SendMessageW(this, (User32.WindowMessage)TVM.HITTEST, IntPtr.Zero, ref tvhip);
+                        IntPtr hnode = User32.SendMessageW(this, (User32.WM)TVM.HITTEST, IntPtr.Zero, ref tvhip);
                         if (nmtv->nmhdr.code != (int)NM.CLICK
                                     || (tvhip.flags & TVHT.ONITEM) != 0)
                         {
@@ -3099,7 +3104,7 @@ namespace System.Windows.Forms
                             else
                             {
                                 treeViewState[TREEVIEWSTATE_showTreeViewContextMenu] = true;
-                                User32.SendMessageW(this, User32.WindowMessage.WM_CONTEXTMENU, Handle, (IntPtr)User32.GetMessagePos());
+                                User32.SendMessageW(this, User32.WM.CONTEXTMENU, Handle, (IntPtr)User32.GetMessagePos());
                             }
                             m.Result = (IntPtr)1;
                         }
@@ -3131,7 +3136,7 @@ namespace System.Windows.Forms
                 ContextMenuStrip menu = treeNode.ContextMenuStrip;
 
                 // Need to send TVM_SELECTITEM to highlight the node while the contextMenuStrip is being shown.
-                User32.PostMessageW(this, (User32.WindowMessage)TVM.SELECTITEM, (IntPtr)NativeMethods.TVGN_DROPHILITE, treeNode.Handle);
+                User32.PostMessageW(this, (User32.WM)TVM.SELECTITEM, (IntPtr)NativeMethods.TVGN_DROPHILITE, treeNode.Handle);
                 menu.ShowInternal(this, PointToClient(MousePosition),/*keyboardActivated*/false);
                 menu.Closing += new ToolStripDropDownClosingEventHandler(ContextMenuStripClosing);
             }
@@ -3143,7 +3148,7 @@ namespace System.Windows.Forms
             ContextMenuStrip strip = sender as ContextMenuStrip;
             // Unhook the Event.
             strip.Closing -= new ToolStripDropDownClosingEventHandler(ContextMenuStripClosing);
-            User32.SendMessageW(this, (User32.WindowMessage)TVM.SELECTITEM, (IntPtr)NativeMethods.TVGN_DROPHILITE);
+            User32.SendMessageW(this, (User32.WM)TVM.SELECTITEM, (IntPtr)NativeMethods.TVGN_DROPHILITE);
         }
 
         private void WmPrint(ref Message m)
@@ -3166,10 +3171,10 @@ namespace System.Windows.Forms
         {
             switch (m.Msg)
             {
-                case WindowMessages.WM_WINDOWPOSCHANGING:
-                case WindowMessages.WM_NCCALCSIZE:
-                case WindowMessages.WM_WINDOWPOSCHANGED:
-                case WindowMessages.WM_SIZE:
+                case (int)User32.WM.WINDOWPOSCHANGING:
+                case (int)User32.WM.NCCALCSIZE:
+                case (int)User32.WM.WINDOWPOSCHANGED:
+                case (int)User32.WM.SIZE:
                     // While we are changing size of treeView to avoid the scrollbar; dont respond to the window-sizing messages.
                     if (treeViewState[TREEVIEWSTATE_stopResizeWindowMsgs])
                     {
@@ -3180,7 +3185,7 @@ namespace System.Windows.Forms
                         base.WndProc(ref m);
                     }
                     break;
-                case WindowMessages.WM_HSCROLL:
+                case (int)User32.WM.HSCROLL:
                     base.WndProc(ref m);
                     if (DrawMode == TreeViewDrawMode.OwnerDrawAll)
                     {
@@ -3188,7 +3193,7 @@ namespace System.Windows.Forms
                     }
                     break;
 
-                case WindowMessages.WM_PRINT:
+                case (int)User32.WM.PRINT:
                     WmPrint(ref m);
                     break;
                 case (int)TVM.SETITEMW:
@@ -3205,20 +3210,20 @@ namespace System.Windows.Forms
                                 hItem = item->hItem,
                                 stateMask = TVIS.STATEIMAGEMASK
                             };
-                            User32.SendMessageW(this, (User32.WindowMessage)TVM.GETITEMW, IntPtr.Zero, ref item1);
+                            User32.SendMessageW(this, (User32.WM)TVM.GETITEMW, IntPtr.Zero, ref item1);
 
                             TreeNode node = NodeFromHandle(item->hItem);
                             node.CheckedStateInternal = (((int)item1.state >> TreeNode.SHIFTVAL) > 1);
                         }
                     }
                     break;
-                case WindowMessages.WM_NOTIFY:
+                case (int)User32.WM.NOTIFY:
                     User32.NMHDR* nmhdr = (User32.NMHDR*)m.LParam;
                     switch (nmhdr->code)
                     {
                         case (int)TTN.GETDISPINFOW:
                             // Setting the max width has the added benefit of enabling multiline tool tips
-                            User32.SendMessageW(nmhdr->hwndFrom, (User32.WindowMessage)TTM.SETMAXTIPWIDTH, IntPtr.Zero, (IntPtr)SystemInformation.MaxWindowTrackSize.Width);
+                            User32.SendMessageW(nmhdr->hwndFrom, (User32.WM)TTM.SETMAXTIPWIDTH, IntPtr.Zero, (IntPtr)SystemInformation.MaxWindowTrackSize.Width);
                             WmNeedText(ref m);
                             m.Result = (IntPtr)1;
                             return;
@@ -3239,10 +3244,10 @@ namespace System.Windows.Forms
                             break;
                     }
                     break;
-                case WindowMessages.WM_REFLECT + WindowMessages.WM_NOTIFY:
+                case (int)(User32.WM.REFLECT | User32.WM.NOTIFY):
                     WmNotify(ref m);
                     break;
-                case WindowMessages.WM_LBUTTONDBLCLK:
+                case (int)User32.WM.LBUTTONDBLCLK:
                     WmMouseDown(ref m, MouseButtons.Left, 2);
 
                     // Just maintain state and fire double click in final mouseUp.
@@ -3254,7 +3259,7 @@ namespace System.Windows.Forms
                     // Make sure we get the mouse up if it happens outside the control.
                     Capture = true;
                     break;
-                case WindowMessages.WM_LBUTTONDOWN:
+                case (int)User32.WM.LBUTTONDOWN:
                     try
                     {
                         treeViewState[TREEVIEWSTATE_ignoreSelects] = true;
@@ -3271,7 +3276,7 @@ namespace System.Windows.Forms
                     {
                         pt = new Point(PARAM.SignedLOWORD(m.LParam), PARAM.SignedHIWORD(m.LParam))
                     };
-                    hNodeMouseDown = User32.SendMessageW(this, (User32.WindowMessage)TVM.HITTEST, IntPtr.Zero, ref tvhip);
+                    hNodeMouseDown = User32.SendMessageW(this, (User32.WM)TVM.HITTEST, IntPtr.Zero, ref tvhip);
 
                     // This gets around the TreeView behavior of temporarily moving the selection
                     // highlight to a node when the user clicks on its checkbox.
@@ -3297,13 +3302,13 @@ namespace System.Windows.Forms
                     }
                     downButton = MouseButtons.Left;
                     break;
-                case WindowMessages.WM_LBUTTONUP:
-                case WindowMessages.WM_RBUTTONUP:
+                case (int)User32.WM.LBUTTONUP:
+                case (int)User32.WM.RBUTTONUP:
                     var tvhi = new TVHITTESTINFO
                     {
                         pt = new Point(PARAM.SignedLOWORD(m.LParam), PARAM.SignedHIWORD(m.LParam))
                     };
-                    IntPtr hnode = User32.SendMessageW(this, (User32.WindowMessage)TVM.HITTEST, IntPtr.Zero, ref tvhi);
+                    IntPtr hnode = User32.SendMessageW(this, (User32.WM)TVM.HITTEST, IntPtr.Zero, ref tvhi);
 
                     // Important for CheckBoxes. Click needs to be fired.
                     if (hnode != IntPtr.Zero)
@@ -3344,24 +3349,24 @@ namespace System.Windows.Forms
                     // Always clear our hit-tested node we cached on mouse down
                     hNodeMouseDown = IntPtr.Zero;
                     break;
-                case WindowMessages.WM_MBUTTONDBLCLK:
+                case (int)User32.WM.MBUTTONDBLCLK:
                     // Fire mouse up in the Wndproc.
                     treeViewState[TREEVIEWSTATE_mouseUpFired] = false;
                     WmMouseDown(ref m, MouseButtons.Middle, 2);
                     break;
-                case WindowMessages.WM_MBUTTONDOWN:
+                case (int)User32.WM.MBUTTONDOWN:
                     // Always reset MouseupFired.
                     treeViewState[TREEVIEWSTATE_mouseUpFired] = false;
                     WmMouseDown(ref m, MouseButtons.Middle, 1);
                     downButton = MouseButtons.Middle;
                     break;
-                case WindowMessages.WM_MOUSELEAVE:
+                case (int)User32.WM.MOUSELEAVE:
                     // if the mouse leaves and then reenters the TreeView
                     // NodeHovered events should be raised.
                     prevHoveredNode = null;
                     base.WndProc(ref m);
                     break;
-                case WindowMessages.WM_RBUTTONDBLCLK:
+                case (int)User32.WM.RBUTTONDBLCLK:
                     WmMouseDown(ref m, MouseButtons.Right, 2);
 
                     // Just maintain state and fire double click in the final mouseUp.
@@ -3373,7 +3378,7 @@ namespace System.Windows.Forms
                     // Make sure we get the mouse up if it happens outside the control.
                     Capture = true;
                     break;
-                case WindowMessages.WM_RBUTTONDOWN:
+                case (int)User32.WM.RBUTTONDOWN:
                     //Always Reset the MouseupFired....
                     treeViewState[TREEVIEWSTATE_mouseUpFired] = false;
                     //Cache the hit-tested node for verification when mouse up is fired
@@ -3381,16 +3386,16 @@ namespace System.Windows.Forms
                     {
                         pt = new Point(PARAM.SignedLOWORD(m.LParam), PARAM.SignedHIWORD(m.LParam))
                     };
-                    hNodeMouseDown = User32.SendMessageW(this, (User32.WindowMessage)TVM.HITTEST, IntPtr.Zero, ref tvhit);
+                    hNodeMouseDown = User32.SendMessageW(this, (User32.WM)TVM.HITTEST, IntPtr.Zero, ref tvhit);
 
                     WmMouseDown(ref m, MouseButtons.Right, 1);
                     downButton = MouseButtons.Right;
                     break;
-                case WindowMessages.WM_SYSCOLORCHANGE:
-                    User32.SendMessageW(this, (User32.WindowMessage)TVM.SETINDENT, (IntPtr)Indent);
+                case (int)User32.WM.SYSCOLORCHANGE:
+                    User32.SendMessageW(this, (User32.WM)TVM.SETINDENT, (IntPtr)Indent);
                     base.WndProc(ref m);
                     break;
-                case WindowMessages.WM_SETFOCUS:
+                case (int)User32.WM.SETFOCUS:
                     // If we get focus through the LBUttonDown .. we might have done the validation...
                     // so skip it..
                     if (treeViewState[TREEVIEWSTATE_lastControlValidated])
@@ -3405,7 +3410,7 @@ namespace System.Windows.Forms
                         base.WndProc(ref m);
                     }
                     break;
-                case WindowMessages.WM_CONTEXTMENU:
+                case (int)User32.WM.CONTEXTMENU:
                     if (treeViewState[TREEVIEWSTATE_showTreeViewContextMenu])
                     {
                         treeViewState[TREEVIEWSTATE_showTreeViewContextMenu] = false;

@@ -390,7 +390,7 @@ namespace System.Windows.Forms
                             }
                             else
                             {
-                                target.SendMessage((int)lpmsg->message, lpmsg->wParam, lpmsg->lParam);
+                                User32.SendMessageW(target, (User32.WM)lpmsg->message, lpmsg->wParam, lpmsg->lParam);
                             }
                         }
                         break;
@@ -485,11 +485,7 @@ namespace System.Windows.Forms
                 // Now do the actual drawing.  We must ask all of our children to draw as well.
                 try
                 {
-                    IntPtr flags = (IntPtr)(NativeMethods.PRF_CHILDREN
-                                    | NativeMethods.PRF_CLIENT
-                                    | NativeMethods.PRF_ERASEBKGND
-                                    | NativeMethods.PRF_NONCLIENT);
-
+                    IntPtr flags = (IntPtr)(User32.PRF.CHILDREN | User32.PRF.CLIENT | User32.PRF.ERASEBKGND | User32.PRF.NONCLIENT);
                     if (hdcType != Gdi32.ObjectType.OBJ_ENHMETADC)
                     {
                         User32.SendMessageW(_control, User32.WM.PRINT, hdcDraw, flags);
@@ -622,11 +618,10 @@ namespace System.Windows.Forms
                 Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetAmbientProperty");
                 Debug.Indent();
 
-                if (_clientSite is UnsafeNativeMethods.IDispatch)
+                if (_clientSite is Oleaut32.IDispatch disp)
                 {
                     Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "clientSite implements IDispatch");
 
-                    UnsafeNativeMethods.IDispatch disp = (UnsafeNativeMethods.IDispatch)_clientSite;
                     var dispParams = new Ole32.DISPPARAMS();
                     object[] pvt = new object[1];
                     Guid g = Guid.Empty;
@@ -2243,7 +2238,7 @@ namespace System.Windows.Forms
                         finalClipRegion = MergeRegion(rgn);
                     }
 
-                    UnsafeNativeMethods.SetWindowRgn(new HandleRef(_control, _control.Handle), new HandleRef(this, finalClipRegion), User32.IsWindowVisible(_control).IsTrue());
+                    User32.SetWindowRgn(_control, new HandleRef(this, finalClipRegion), User32.IsWindowVisible(_control));
                 }
 
                 // Yuck.  Forms^3 uses transparent overlay windows that appear to cause

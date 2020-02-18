@@ -21688,7 +21688,7 @@ namespace System.Windows.Forms
                                     // Forward the key message to the editing control if any
                                     if (editingControl != null)
                                     {
-                                        editingControl.SendMessage(m.Msg, m.WParam, m.LParam);
+                                        User32.SendMessageW(editingControl, (User32.WM)m.Msg, m.WParam, m.LParam);
                                         dataGridViewState1[DATAGRIDVIEWSTATE1_forwardCharMessage] = true;
                                         return true;
                                     }
@@ -21704,7 +21704,7 @@ namespace System.Windows.Forms
                 dataGridViewState1[DATAGRIDVIEWSTATE1_forwardCharMessage] = false;
                 if (editingControl != null)
                 {
-                    editingControl.SendMessage(m.Msg, m.WParam, m.LParam);
+                    User32.SendMessageW(editingControl, (User32.WM)m.Msg, m.WParam, m.LParam);
                     return true;
                 }
             }
@@ -25615,7 +25615,8 @@ namespace System.Windows.Forms
                 for (int r = 0; r < rects.Length; r++)
                 {
                     scroll = rects[r];
-                    SafeNativeMethods.ScrollWindow(new HandleRef(this, Handle),
+                    User32.ScrollWindow(
+                        this,
                         change,
                         0,
                         ref scroll,
@@ -25726,7 +25727,7 @@ namespace System.Windows.Forms
             UpdateMouseEnteredCell(null /*HitTestInfo*/, null /*MouseEventArgs*/);
 
             RECT scrollArea = rowsRect;
-            SafeNativeMethods.ScrollWindow(new HandleRef(this, Handle), 0, deltaY, ref scrollArea, ref scrollArea);
+            User32.ScrollWindow(this, 0, deltaY, ref scrollArea, ref scrollArea);
             if (invalidateTopOfRowHeaders)
             {
                 rowsRect.X = layout.Inside.X;
@@ -29084,12 +29085,12 @@ namespace System.Windows.Forms
         /// </summary>
         private void WmGetDlgCode(ref Message m)
         {
-            m.Result = (IntPtr)((long)m.Result | NativeMethods.DLGC_WANTARROWS | NativeMethods.DLGC_WANTCHARS);
+            m.Result = (IntPtr)((long)m.Result | (int)User32.DLGC.WANTARROWS | (int)User32.DLGC.WANTCHARS);
 
             Keys modifierKeys = ModifierKeys;
             if (GetTabKeyEffective((modifierKeys & Keys.Shift) == Keys.Shift, (modifierKeys & Keys.Control) == Keys.Control))
             {
-                m.Result = (IntPtr)((long)m.Result | NativeMethods.DLGC_WANTTAB);
+                m.Result = (IntPtr)((long)m.Result | (int)User32.DLGC.WANTTAB);
             }
         }
 
@@ -29160,7 +29161,7 @@ namespace System.Windows.Forms
                     if (editingControl != null)
                     {
                         // Make sure that the first character is forwarded to the editing control.
-                        editingControl.SendMessage(m.Msg, m.WParam, m.LParam);
+                        User32.SendMessageW(editingControl, (User32.WM)m.Msg, m.WParam, m.LParam);
                     }
                     break;
             }

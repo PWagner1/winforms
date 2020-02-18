@@ -481,7 +481,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets control Dpi awareness context value.
         /// </summary>
-        internal DpiAwarenessContext DpiAwarenessContext => _window.DpiAwarenessContext;
+        internal IntPtr DpiAwarenessContext => _window.DpiAwarenessContext;
 
         /// <summary>
         ///  The Accessibility Object for this Control
@@ -1775,7 +1775,7 @@ namespace System.Windows.Forms
                     User32.GetWindowRect(this, ref r);
                     if ((r.left <= p.X && p.X < r.right && r.top <= p.Y && p.Y < r.bottom) || User32.GetCapture() == Handle)
                     {
-                        User32.SendMessageW(this, User32.WM.SETCURSOR, Handle, (IntPtr)NativeMethods.HTCLIENT);
+                        User32.SendMessageW(this, User32.WM.SETCURSOR, Handle, (IntPtr)User32.HT.CLIENT);
                     }
                 }
 
@@ -3171,7 +3171,7 @@ namespace System.Windows.Forms
                                 regionHandle = ActiveXMergeRegion(regionHandle);
                             }
 
-                            if (UnsafeNativeMethods.SetWindowRgn(new HandleRef(this, Handle), new HandleRef(this, regionHandle), User32.IsWindowVisible(this).IsTrue()) != 0)
+                            if (User32.SetWindowRgn(this, new HandleRef(this, regionHandle), User32.IsWindowVisible(this)) != 0)
                             {
                                 //The Hwnd owns the region.
                                 regionHandle = IntPtr.Zero;
@@ -5138,7 +5138,7 @@ namespace System.Windows.Forms
 
             if (0 != ((int)User32.WS_EX.MDICHILD & (int)(long)User32.GetWindowLong(new HandleRef(_window, InternalHandle), User32.GWL.EXSTYLE)))
             {
-                UnsafeNativeMethods.DefMDIChildProc(InternalHandle, User32.WM.CLOSE, IntPtr.Zero, IntPtr.Zero);
+                User32.DefMDIChildProcW(InternalHandle, User32.WM.CLOSE, IntPtr.Zero, IntPtr.Zero);
             }
             else
             {
@@ -5335,7 +5335,7 @@ namespace System.Windows.Forms
                         this,
                         User32.WM.PRINT,
                         (IntPtr)hDc,
-                        (IntPtr)(NativeMethods.PRF_CHILDREN | NativeMethods.PRF_CLIENT | NativeMethods.PRF_ERASEBKGND | NativeMethods.PRF_NONCLIENT));
+                        (IntPtr)(User32.PRF.CHILDREN | User32.PRF.CLIENT | User32.PRF.ERASEBKGND | User32.PRF.NONCLIENT));
 
                     //now BLT the result to the destination bitmap.
                     using (Graphics destGraphics = Graphics.FromImage(bitmap))
@@ -6712,11 +6712,11 @@ namespace System.Windows.Forms
             int mask = 0;
             if (charCode == (char)(int)Keys.Tab)
             {
-                mask = NativeMethods.DLGC_WANTCHARS | NativeMethods.DLGC_WANTALLKEYS | NativeMethods.DLGC_WANTTAB;
+                mask = (int)(User32.DLGC.WANTCHARS | User32.DLGC.WANTALLKEYS | User32.DLGC.WANTTAB);
             }
             else
             {
-                mask = NativeMethods.DLGC_WANTCHARS | NativeMethods.DLGC_WANTALLKEYS;
+                mask = (int)(User32.DLGC.WANTCHARS | User32.DLGC.WANTALLKEYS);
             }
             return (unchecked((int)(long)User32.SendMessageW(this, User32.WM.GETDLGCODE)) & mask) != 0;
         }
@@ -6740,23 +6740,23 @@ namespace System.Windows.Forms
                 return false;
             }
 
-            int mask = NativeMethods.DLGC_WANTALLKEYS;
+            User32.DLGC mask = User32.DLGC.WANTALLKEYS;
             switch (keyData & Keys.KeyCode)
             {
                 case Keys.Tab:
-                    mask = NativeMethods.DLGC_WANTALLKEYS | NativeMethods.DLGC_WANTTAB;
+                    mask = User32.DLGC.WANTALLKEYS | User32.DLGC.WANTTAB;
                     break;
                 case Keys.Left:
                 case Keys.Right:
                 case Keys.Up:
                 case Keys.Down:
-                    mask = NativeMethods.DLGC_WANTALLKEYS | NativeMethods.DLGC_WANTARROWS;
+                    mask = User32.DLGC.WANTALLKEYS | User32.DLGC.WANTARROWS;
                     break;
             }
 
             if (IsHandleCreated)
             {
-                return (unchecked((int)(long)User32.SendMessageW(this, User32.WM.GETDLGCODE)) & mask) != 0;
+                return (unchecked((int)(long)User32.SendMessageW(this, User32.WM.GETDLGCODE)) & (int)mask) != 0;
             }
             else
             {
@@ -7587,7 +7587,7 @@ namespace System.Windows.Forms
 
                 if (!(e is PrintPaintEventArgs ppev))
                 {
-                    IntPtr flags = (IntPtr)(NativeMethods.PRF_CHILDREN | NativeMethods.PRF_CLIENT | NativeMethods.PRF_ERASEBKGND | NativeMethods.PRF_NONCLIENT);
+                    IntPtr flags = (IntPtr)(User32.PRF.CHILDREN | User32.PRF.CLIENT | User32.PRF.ERASEBKGND | User32.PRF.NONCLIENT);
                     hdc = e.HDC;
 
                     if (hdc == IntPtr.Zero)
@@ -7814,7 +7814,7 @@ namespace System.Windows.Forms
                             regionHandle = ActiveXMergeRegion(regionHandle);
                         }
 
-                        if (UnsafeNativeMethods.SetWindowRgn(new HandleRef(this, Handle), new HandleRef(this, regionHandle), User32.IsWindowVisible(this).IsTrue()) != 0)
+                        if (User32.SetWindowRgn(this, new HandleRef(this, regionHandle), User32.IsWindowVisible(this)) != 0)
                         {
                             //The HWnd owns the region.
                             regionHandle = IntPtr.Zero;
@@ -9241,11 +9241,11 @@ namespace System.Windows.Forms
         {
             Debug.Assert(Gdi32.GetObjectType(hDC) == Gdi32.ObjectType.OBJ_ENHMETADC,
                 "PrintToMetaFile() called with a non-Enhanced MetaFile DC.");
-            Debug.Assert(((long)lParam & NativeMethods.PRF_CHILDREN) != 0,
+            Debug.Assert(((long)lParam & (long)User32.PRF.CHILDREN) != 0,
                 "PrintToMetaFile() called without PRF_CHILDREN.");
 
             // Strip the PRF_CHILDREN flag.  We will manually walk our children and print them.
-            lParam = (IntPtr)((long)lParam & ~NativeMethods.PRF_CHILDREN);
+            lParam = (IntPtr)((long)lParam & (long)~User32.PRF.CHILDREN);
 
             // We're the root control, so we need to set up our clipping region.  Retrieve the
             // x-coordinates and y-coordinates of the viewport origin for the specified device context.
@@ -9279,7 +9279,7 @@ namespace System.Windows.Forms
             using (DCMapping mapping = new DCMapping(hDC, bounds))
             {
                 // print the non-client area
-                PrintToMetaFile_SendPrintMessage(hDC, (IntPtr)((long)lParam & ~NativeMethods.PRF_CLIENT));
+                PrintToMetaFile_SendPrintMessage(hDC, (IntPtr)((long)lParam & (long)~User32.PRF.CLIENT));
 
                 // figure out mapping for the client area
                 RECT windowRect = new RECT();
@@ -9292,7 +9292,7 @@ namespace System.Windows.Forms
                 using (DCMapping clientMapping = new DCMapping(hDC, clientBounds))
                 {
                     // print the client area
-                    PrintToMetaFile_SendPrintMessage(hDC, (IntPtr)((long)lParam & ~NativeMethods.PRF_NONCLIENT));
+                    PrintToMetaFile_SendPrintMessage(hDC, (IntPtr)((long)lParam & (long)~User32.PRF.NONCLIENT));
 
                     // Paint children in reverse Z-Order
                     int count = Controls.Count;
@@ -9323,7 +9323,7 @@ namespace System.Windows.Forms
                 // good example.
                 if (Controls.Count == 0)
                 {
-                    lParam = (IntPtr)((long)lParam | NativeMethods.PRF_CHILDREN);
+                    lParam = (IntPtr)((long)lParam | (long)User32.PRF.CHILDREN);
                 }
 
                 // System controls must be painted into a temporary bitmap
@@ -10591,46 +10591,6 @@ namespace System.Windows.Forms
                     ((Control)c).SelectNextControl(this, true, true, true, true);
                 }
             }
-        }
-
-        /// <summary>
-        ///  Sends a Win32 message to this control.  If the control does not yet
-        ///  have a handle, it will be created.
-        /// </summary>
-        internal IntPtr SendMessage(int msg, int wparam, int lparam)
-        {
-            return UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), msg, wparam, lparam);
-        }
-
-        /// <summary>
-        ///  Sends a Win32 message to this control.  If the control does not yet
-        ///  have a handle, it will be created.
-        /// </summary>
-        internal IntPtr SendMessage(int msg, ref int wparam, ref int lparam)
-        {
-            Debug.Assert(IsHandleCreated, "Performance alert!  Calling Control::SendMessage and forcing handle creation.  Re-work control so handle creation is not required to set properties.  If there is no work around, wrap the call in an IsHandleCreated check.");
-            return UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), msg, ref wparam, ref lparam);
-        }
-
-        internal IntPtr SendMessage(int msg, int wparam, IntPtr lparam)
-        {
-            return UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), msg, (IntPtr)wparam, lparam);
-        }
-
-        internal IntPtr SendMessage(int msg, IntPtr wparam, IntPtr lparam)
-        {
-            Debug.Assert(IsHandleCreated, "Performance alert!  Calling Control::SendMessage and forcing handle creation.  Re-work control so handle creation is not required to set properties.  If there is no work around, wrap the call in an IsHandleCreated check.");
-            return UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), msg, wparam, lparam);
-        }
-
-        /// <summary>
-        ///  Sends a Win32 message to this control.  If the control does not yet
-        ///  have a handle, it will be created.
-        /// </summary>
-        internal IntPtr SendMessage(int msg, int wparam, string lparam)
-        {
-            Debug.Assert(IsHandleCreated, "Performance alert!  Calling Control::SendMessage and forcing handle creation.  Re-work control so handle creation is not required to set properties.  If there is no work around, wrap the call in an IsHandleCreated check.");
-            return UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), msg, wparam, lparam);
         }
 
         /// <summary>
@@ -12418,7 +12378,7 @@ namespace System.Windows.Forms
             bool reflectCalled = false;
 
             int ctrlId = unchecked((int)(long)m.WParam);
-            IntPtr p = User32.GetDlgItem(m.HWnd, ctrlId);
+            IntPtr p = User32.GetDlgItem(m.HWnd, (User32.DialogItemID)ctrlId);
             if (p == IntPtr.Zero)
             {
                 // On 64-bit platforms wParam is already 64 bit but the control ID stored in it is only 32-bit
@@ -12651,7 +12611,7 @@ namespace System.Windows.Forms
             // Accessing through the Handle property has side effects that break this
             // logic. You must use InternalHandle.
             //
-            if (m.WParam == InternalHandle && PARAM.LOWORD(m.LParam) == NativeMethods.HTCLIENT)
+            if (m.WParam == InternalHandle && PARAM.LOWORD(m.LParam) == (int)User32.HT.CLIENT)
             {
                 Cursor.Current = Cursor;
             }
@@ -12710,7 +12670,7 @@ namespace System.Windows.Forms
                 case User32.WM.DESTROY:
                     break;
                 default:
-                    hWnd = User32.GetDlgItem(this, PARAM.HIWORD(m.WParam));
+                    hWnd = User32.GetDlgItem(this, (User32.DialogItemID)PARAM.HIWORD(m.WParam));
                     break;
             }
             if (hWnd == IntPtr.Zero || !ReflectMessage(hWnd, ref m))

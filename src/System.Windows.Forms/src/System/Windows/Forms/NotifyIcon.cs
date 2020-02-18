@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using static Interop;
+using static Interop.Shell32;
 
 namespace System.Windows.Forms
 {
@@ -615,7 +616,7 @@ namespace System.Windows.Forms
                         data.dwInfoFlags = NativeMethods.NIIF_NONE;
                         break;
                 }
-                UnsafeNativeMethods.Shell_NotifyIcon(NativeMethods.NIM_MODIFY, data);
+                UnsafeNativeMethods.Shell_NotifyIcon(NIM.MODIFY, data);
             }
         }
 
@@ -631,7 +632,7 @@ namespace System.Windows.Forms
                 // Summary: the current window must be made the foreground window
                 // before calling TrackPopupMenuEx, and a task switch must be
                 // forced after the call.
-                UnsafeNativeMethods.SetForegroundWindow(new HandleRef(window, window.Handle));
+                User32.SetForegroundWindow(window);
 
                 // this will set the context menu strip to be toplevel
                 // and will allow us to overlap the system tray
@@ -683,17 +684,17 @@ namespace System.Windows.Forms
                 {
                     if (!added)
                     {
-                        UnsafeNativeMethods.Shell_NotifyIcon(NativeMethods.NIM_ADD, data);
+                        UnsafeNativeMethods.Shell_NotifyIcon(NIM.ADD, data);
                         added = true;
                     }
                     else
                     {
-                        UnsafeNativeMethods.Shell_NotifyIcon(NativeMethods.NIM_MODIFY, data);
+                        UnsafeNativeMethods.Shell_NotifyIcon(NIM.MODIFY, data);
                     }
                 }
                 else if (added)
                 {
-                    UnsafeNativeMethods.Shell_NotifyIcon(NativeMethods.NIM_DELETE, data);
+                    UnsafeNativeMethods.Shell_NotifyIcon(NIM.DELETE, data);
                     added = false;
                 }
             }

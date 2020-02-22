@@ -34,15 +34,9 @@ namespace System.Windows.Forms
         DTN_CLOSEUP = ((0 - 760) + 7);
 
         public const int FRERR_BUFFERLENGTHZERO = 0x4001;
-        public const int FADF_BSTR = (0x100);
-        public const int FADF_UNKNOWN = (0x200);
-        public const int FADF_DISPATCH = (0x400);
-        public const int FADF_VARIANT = (unchecked((int)0x800));
 
         public const int
-        GDI_ERROR = (unchecked((int)0xFFFFFFFF)),
-        GDTR_MIN = 0x0001,
-        GDTR_MAX = 0x0002;
+        GDI_ERROR = (unchecked((int)0xFFFFFFFF));
 
         public const int
         HCF_HIGHCONTRASTON = 0x00000001,
@@ -104,20 +98,10 @@ namespace System.Windows.Forms
         MSAA_MENU_SIG = (unchecked((int)0xAA0DF00D));
 
         public const int
-        NIF_MESSAGE = 0x00000001,
-        NIF_ICON = 0x00000002,
-        NIF_INFO = 0x00000010,
-        NIF_TIP = 0x00000004,
-        NIIF_NONE = 0x00000000,
-        NIIF_INFO = 0x00000001,
-        NIIF_WARNING = 0x00000002,
-        NIIF_ERROR = 0x00000003,
         NIN_BALLOONSHOW = ((int)User32.WM.USER + 2),
         NIN_BALLOONHIDE = ((int)User32.WM.USER + 3),
         NIN_BALLOONTIMEOUT = ((int)User32.WM.USER + 4),
-        NIN_BALLOONUSERCLICK = ((int)User32.WM.USER + 5),
-        NFR_ANSI = 1,
-        NFR_UNICODE = 2;
+        NIN_BALLOONUSERCLICK = ((int)User32.WM.USER + 5);
 
         public const int
         PATCOPY = 0x00F00021,
@@ -437,7 +421,7 @@ namespace System.Windows.Forms
             public int cbSize = Marshal.SizeOf<NOTIFYICONDATA>();
             public IntPtr hWnd;
             public int uID;
-            public int uFlags;
+            public Shell32.NIF uFlags;
             public int uCallbackMessage;
             public IntPtr hIcon;
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
@@ -449,7 +433,7 @@ namespace System.Windows.Forms
             public int uTimeoutOrVersion;
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
             public string szInfoTitle;
-            public int dwInfoFlags;
+            public Shell32.NIIF dwInfoFlags;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]

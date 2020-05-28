@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Windows.Forms.Design;
 using Xunit;
 using static Interop;
+using static Interop.Kernel32;
 
 namespace System.Windows.Forms.Tests
 {
@@ -178,6 +179,28 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expected, control.GetStyle(flag));
         }
 
+        [WinFormsFact]
+        public void DateTimePicker_GetTopLevel_Invoke_ReturnsExpected()
+        {
+            using var control = new SubDateTimePicker();
+            Assert.False(control.GetTopLevel());
+        }
+
+        [WinFormsFact]
+        public void DateTimePicker_SysTimeToDateTime_DoesnThrowException_If_SYSTEMTIME_IsIncorrect()
+        {
+            // We expect to hit Debug.Fail in this test and unless we clear listeners we will crash to xUnit runner:
+            // "The active test run was aborted. Reason: Test host process crashed : Process terminated. Assertion failed."
+            using (new NoAssertContext())
+            {
+                // An empty SYSTEMTIME has year, month and day as 0, but DateTime can't have these parameters.
+                // So an empty SYSTEMTIME is incorrect in this case.
+                SYSTEMTIME systemTime = new SYSTEMTIME();
+                DateTime dateTime = DateTimePicker.SysTimeToDateTime(systemTime);
+                Assert.Equal(DateTime.MinValue, dateTime);
+            }
+        }
+
         public class SubDateTimePicker : DateTimePicker
         {
             public new bool CanEnableIme => base.CanEnableIme;
@@ -235,6 +258,8 @@ namespace System.Windows.Forms.Tests
             public new AutoSizeMode GetAutoSizeMode() => base.GetAutoSizeMode();
 
             public new bool GetStyle(ControlStyles flag) => base.GetStyle(flag);
+
+            public new bool GetTopLevel() => base.GetTopLevel();
         }
     }
 }

@@ -698,46 +698,68 @@ namespace System.Windows.Forms.Tests
             Assert.Same(createParams, control.CreateParams);
         }
 
-        public static IEnumerable<object[]> BackColor_TestData()
+        public static IEnumerable<object[]> BackColor_Set_TestData()
         {
             yield return new object[] { Color.Empty, SystemColors.Window };
             yield return new object[] { Color.Red, Color.Red };
         }
 
-        [Theory]
-        [MemberData(nameof(BackColor_TestData))]
-        public void BackColor_Set_GetReturnsExpected(Color value, Color expected)
+        [WinFormsTheory]
+        [MemberData(nameof(BackColor_Set_TestData))]
+        public void TreeView_BackColor_Set_GetReturnsExpected(Color value, Color expected)
         {
-            var control = new TreeView
+            using var control = new TreeView
             {
                 BackColor = value
             };
             Assert.Equal(expected, control.BackColor);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.BackColor = value;
             Assert.Equal(expected, control.BackColor);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
-        [MemberData(nameof(BackColor_TestData))]
-        public void BackColor_SetWithHandle_GetReturnsExpected(Color value, Color expected)
+        public static IEnumerable<object[]> BackColor_SetWithHandle_TestData()
         {
-            var control = new TreeView();
+            yield return new object[] { Color.Empty, SystemColors.Window, 0 };
+            yield return new object[] { Color.Red, Color.Red, 1 };
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(BackColor_SetWithHandle_TestData))]
+        public void TreeView_BackColor_SetWithHandle_GetReturnsExpected(Color value, Color expected, int expectedInvalidatedCallCount)
+        {
+            using var control = new TreeView();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
 
             control.BackColor = value;
             Assert.Equal(expected, control.BackColor);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(expectedInvalidatedCallCount, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
 
             // Set same.
             control.BackColor = value;
             Assert.Equal(expected, control.BackColor);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(expectedInvalidatedCallCount, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void BackColor_SetWithHandler_CallsBackColorChanged()
         {
-            var control = new TreeView();
+            using var control = new TreeView();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -769,25 +791,27 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
-        public void BackgroundImage_Set_GetReturnsExpected(Image value)
+        public void TreeView_BackgroundImage_Set_GetReturnsExpected(Image value)
         {
-            var control = new TreeView
+            using var control = new TreeView
             {
                 BackgroundImage = value
             };
-            Assert.Equal(value, control.BackgroundImage);
+            Assert.Same(value, control.BackgroundImage);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.BackgroundImage = value;
-            Assert.Equal(value, control.BackgroundImage);
+            Assert.Same(value, control.BackgroundImage);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Fact]
-        public void BackgroundImage_SetWithHandler_CallsBackgroundImageChanged()
+        [WinFormsFact]
+        public void TreeView_BackgroundImage_SetWithHandler_CallsBackgroundImageChanged()
         {
-            var control = new TreeView();
+            using var control = new TreeView();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -798,7 +822,7 @@ namespace System.Windows.Forms.Tests
             control.BackgroundImageChanged += handler;
 
             // Set different.
-            var image1 = new Bitmap(10, 10);
+            using var image1 = new Bitmap(10, 10);
             control.BackgroundImage = image1;
             Assert.Same(image1, control.BackgroundImage);
             Assert.Equal(1, callCount);
@@ -809,7 +833,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, callCount);
 
             // Set different.
-            var image2 = new Bitmap(10, 10);
+            using var image2 = new Bitmap(10, 10);
             control.BackgroundImage = image2;
             Assert.Same(image2, control.BackgroundImage);
             Assert.Equal(2, callCount);
@@ -826,25 +850,27 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(3, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ImageLayout))]
-        public void BackgroundImageLayout_Set_GetReturnsExpected(ImageLayout value)
+        public void TreeView_BackgroundImageLayout_Set_GetReturnsExpected(ImageLayout value)
         {
-            var control = new TreeView
+            using var control = new TreeView
             {
                 BackgroundImageLayout = value
             };
             Assert.Equal(value, control.BackgroundImageLayout);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.BackgroundImageLayout = value;
             Assert.Equal(value, control.BackgroundImageLayout);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Fact]
-        public void BackgroundImageLayout_SetWithHandler_CallsBackgroundImageLayoutChanged()
+        [WinFormsFact]
+        public void TreeView_BackgroundImageLayout_SetWithHandler_CallsBackgroundImageLayoutChanged()
         {
-            var control = new TreeView();
+            using var control = new TreeView();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -876,19 +902,19 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImageLayout))]
         public void BackgroundImageLayout_SetInvalid_ThrowsInvalidEnumArgumentException(ImageLayout value)
         {
-            var control = new TreeView();
+            using var control = new TreeView();
             Assert.Throws<InvalidEnumArgumentException>("value", () => control.BackgroundImageLayout = value);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(BorderStyle))]
         public void BorderStyle_Set_GetReturnsExpected(BorderStyle value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 BorderStyle = value
             };
@@ -899,10 +925,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value, treeView.BorderStyle);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void BorderStyle_SetWithUpdateStylesHandler_CallsStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 BorderStyle = BorderStyle.Fixed3D
             };
@@ -950,10 +976,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void BorderStyle_SetWithInvalidatedWithHandle_CallsStyleChangedCallsInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 BorderStyle = BorderStyle.Fixed3D
             };
@@ -1002,19 +1028,19 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(BorderStyle))]
         public void BorderStyle_SetInvalid_ThrowsInvalidEnumArgumentException(BorderStyle value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.Throws<InvalidEnumArgumentException>("value", () => treeView.BorderStyle = value);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void CheckBoxes_Set_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 CheckBoxes = value
             };
@@ -1029,11 +1055,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.CheckBoxes);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void CheckBoxes_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.CheckBoxes = value;
@@ -1048,10 +1074,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.CheckBoxes);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void CheckBoxes_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 CheckBoxes = false
             };
@@ -1099,10 +1125,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void CheckBoxes_SetWithUpdateStylesHandlerWithHandle_CallsStyleChangedCallsInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 CheckBoxes = false
             };
@@ -1151,11 +1177,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DoubleBuffered_Set_GetReturnsExpected(bool value)
         {
-            var treeView = new SubTreeView
+            using var treeView = new SubTreeView
             {
                 DoubleBuffered = value
             };
@@ -1170,11 +1196,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.DoubleBuffered);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DoubleBuffered_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var treeView = new SubTreeView();
+            using var treeView = new SubTreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.DoubleBuffered = value;
@@ -1189,10 +1215,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.DoubleBuffered);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void DoubleBuffered_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new SubTreeView
+            using var treeView = new SubTreeView
             {
                 DoubleBuffered = false
             };
@@ -1240,10 +1266,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void DoubleBuffered_SetWithUpdateStylesHandlerWithHandle_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new SubTreeView
+            using var treeView = new SubTreeView
             {
                 DoubleBuffered = false
             };
@@ -1292,11 +1318,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TreeViewDrawMode))]
         public void DrawMode_Set_GetReturnsExpected(TreeViewDrawMode value)
         {
-            var control = new TreeView
+            using var control = new TreeView
             {
                 DrawMode = value
             };
@@ -1307,11 +1333,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value, control.DrawMode);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TreeViewDrawMode))]
         public void DrawMode_SetWithHandle_GetReturnsExpected(TreeViewDrawMode value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.DrawMode = value;
@@ -1322,10 +1348,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value, treeView.DrawMode);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void DrawMode_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new SubTreeView
+            using var treeView = new SubTreeView
             {
                 DrawMode = TreeViewDrawMode.Normal
             };
@@ -1373,10 +1399,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void DrawMode_SetWithUpdateStylesHandlerWithHandle_DoesNotCallStyleChangedCallsInvalidated()
         {
-            var treeView = new SubTreeView
+            using var treeView = new SubTreeView
             {
                 DrawMode = TreeViewDrawMode.Normal
             };
@@ -1425,11 +1451,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TreeViewDrawMode))]
         public void DrawMode_SetInvalid_ThrowsInvalidEnumArgumentException(TreeViewDrawMode value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.Throws<InvalidEnumArgumentException>("value", () => treeView.DrawMode = value);
         }
 
@@ -1442,11 +1468,11 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { Color.Red, Color.Red };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ForeColor_Set_TestData))]
         public void ForeColor_Set_GetReturnsExpected(Color value, Color expected)
         {
-            var control = new TreeView
+            using var control = new TreeView
             {
                 ForeColor = value
             };
@@ -1457,11 +1483,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expected, control.ForeColor);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ForeColor_Set_TestData))]
         public void ForeColor_SetWithHandle_GetReturnsExpected(Color value, Color expected)
         {
-            var control = new TreeView();
+            using var control = new TreeView();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
 
             control.ForeColor = value;
@@ -1472,10 +1498,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expected, control.ForeColor);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ForeColor_SetWithHandler_CallsForeColorChanged()
         {
-            var control = new TreeView();
+            using var control = new TreeView();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -1507,11 +1533,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void FullRowSelect_Set_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 FullRowSelect = value
             };
@@ -1526,11 +1552,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.FullRowSelect);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void FullRowSelect_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.FullRowSelect = value;
@@ -1545,10 +1571,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.FullRowSelect);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void FullRowSelect_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 FullRowSelect = false
             };
@@ -1596,10 +1622,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void FullRowSelect_SetWithUpdateStylesHandlerWithHandle_CallsStyleChangedCallsInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 FullRowSelect = false
             };
@@ -1702,11 +1728,11 @@ namespace System.Windows.Forms.Tests
             }
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void HideSelection_Set_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 HideSelection = value
             };
@@ -1721,11 +1747,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.HideSelection);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void HideSelection_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.HideSelection = value;
@@ -1740,10 +1766,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.HideSelection);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void HideSelection_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 HideSelection = true
             };
@@ -1791,10 +1817,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void HideSelection_SetWithUpdateStylesHandlerWithHandle_CallsStyleChangedCallsInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 HideSelection = true
             };
@@ -1843,11 +1869,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void HotTracking_Set_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 HotTracking = value
             };
@@ -1862,11 +1888,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.HotTracking);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void HotTracking_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.HotTracking = value;
@@ -1881,10 +1907,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.HotTracking);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void HotTracking_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 HotTracking = false
             };
@@ -1932,10 +1958,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void HotTracking_SetWithUpdateStylesHandlerWithHandle_CallsStyleChangedCallsInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 HotTracking = false
             };
@@ -1984,13 +2010,13 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
         public void ImageIndex_SetWithoutImageList_GetReturnsExpected(int value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageIndex = value
             };
@@ -2003,13 +2029,13 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.ImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
         public void ImageIndex_SetWithoutImageListWithImageKey_GetReturnsExpected(int value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageKey = "imageKey",
                 ImageIndex = value
@@ -2023,15 +2049,15 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.ImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
         public void ImageIndex_SetWithEmptyImageList_GetReturnsExpected(int value)
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList,
                 ImageIndex = value
@@ -2045,15 +2071,15 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.ImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
         public void ImageIndex_SetWithEmptyImageListWithImageKey_GetReturnsExpected(int value)
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageKey = "imageKey",
                 ImageList = imageList,
@@ -2068,17 +2094,17 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.ImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1, 0)]
         [InlineData(0, 0)]
         [InlineData(1, 1)]
         [InlineData(2, 1)]
         public void ImageIndex_SetWithImageList_GetReturnsExpected(int value, int expected)
         {
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             imageList.Images.Add(new Bitmap(10, 10));
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageList = imageList,
                 ImageIndex = value
@@ -2092,17 +2118,17 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.ImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1, 0)]
         [InlineData(0, 0)]
         [InlineData(1, 1)]
         [InlineData(2, 1)]
         public void ImageIndex_SetWithImageListWithImageKey_GetReturnsExpected(int value, int expected)
         {
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             imageList.Images.Add("imageKey", new Bitmap(10, 10));
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageKey = "imageKey",
                 ImageList = imageList,
@@ -2117,13 +2143,13 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.ImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
         public void ImageIndex_SetWithoutImageListWithHandle_GetReturnsExpected(int value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.ImageIndex = value;
@@ -2136,15 +2162,15 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.ImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
         public void ImageIndex_SetWithEmptyImageListWithHandle_GetReturnsExpected(int value)
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList
             };
@@ -2160,17 +2186,17 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.ImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1, 0)]
         [InlineData(0, 0)]
         [InlineData(1, 1)]
         [InlineData(2, 1)]
         public void ImageIndex_SetWithImageListWithHandle_GetReturnsExpected(int value, int expected)
         {
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             imageList.Images.Add(new Bitmap(10, 10));
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageList = imageList
             };
@@ -2186,19 +2212,19 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.ImageKey);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ImageIndex_SetInvalid_Throws()
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.Throws<ArgumentOutOfRangeException>("value", () => treeView.ImageIndex = -2);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         [InlineData("(none)", "")]
         public void ImageKey_SetWithoutImageList_GetReturnsExpected(string value, string expected)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageKey = value
             };
@@ -2211,12 +2237,12 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(-1, treeView.ImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         [InlineData("(none)", "")]
         public void ImageKey_SetWithoutImageListWithImageIndex_GetReturnsExpected(string value, string expected)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageIndex = 1,
                 ImageKey = value
@@ -2240,12 +2266,12 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { "ImageKey", "ImageKey", -1 };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageKey_Set_TestData))]
         public void ImageKey_SetWithEmptyImageList_GetReturnsExpected(string value, string expected, int expectedImageIndex)
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList,
                 ImageKey = value
@@ -2259,12 +2285,12 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedImageIndex, treeView.ImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageKey_Set_TestData))]
         public void ImageKey_SetWithEmptyImageListWithImageIndex_GetReturnsExpected(string value, string expected, int expectedImageIndex)
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageIndex = 1,
                 ImageList = imageList,
@@ -2279,14 +2305,14 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedImageIndex, treeView.ImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageKey_Set_TestData))]
         public void ImageKey_SetWithNonEmptyImageList_GetReturnsExpected(string value, string expected, int expectedImageIndex)
         {
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             imageList.Images.Add("imageKey", new Bitmap(10, 10));
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageList = imageList,
                 ImageKey = value
@@ -2300,7 +2326,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedImageIndex, treeView.ImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(null, "", 0)]
         [InlineData("", "", 1)]
         [InlineData("reasonable", "reasonable", -1)]
@@ -2309,10 +2335,10 @@ namespace System.Windows.Forms.Tests
         [InlineData("ImageKey", "ImageKey", -1)]
         public void ImageKey_SetWithNonEmptyImageListWithImageIndex_GetReturnsExpected(string value, string expected, int expectedImageIndex)
         {
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             imageList.Images.Add("imageKey", new Bitmap(10, 10));
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageIndex = 1,
                 ImageList = imageList,
@@ -2327,12 +2353,12 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedImageIndex, treeView.ImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         [InlineData("(none)", "")]
         public void ImageKey_SetWithoutImageListWithHandle_GetReturnsExpected(string value, string expected)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.ImageKey = value;
@@ -2345,12 +2371,12 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(-1, treeView.ImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageKey_Set_TestData))]
         public void ImageKey_SetWithEmptyImageListWithHandle_GetReturnsExpected(string value, string expected, int expectedImageIndex)
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList
             };
@@ -2366,14 +2392,14 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedImageIndex, treeView.ImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageKey_Set_TestData))]
         public void ImageKey_SetWithNonEmptyImageListWithHandle_GetReturnsExpected(string value, string expected, int expectedImageIndex)
         {
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             imageList.Images.Add("imageKey", new Bitmap(10, 10));
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageList = imageList
             };
@@ -2394,16 +2420,16 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { null };
             yield return new object[] { new ImageList() };
 
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             yield return new object[] { imageList };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageList_TestData))]
         public void ImageList_Set_GetReturnsExpected(ImageList value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageList = value
             };
@@ -2414,11 +2440,11 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.ImageList);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageList_TestData))]
         public void ImageList_SetWithCheckboxes_GetReturnsExpected(ImageList value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 CheckBoxes = true,
                 ImageList = value
@@ -2430,11 +2456,11 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.ImageList);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageList_TestData))]
         public void ImageList_SetWithNonNullOldValue_GetReturnsExpected(ImageList value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageList = new ImageList()
             };
@@ -2447,11 +2473,11 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.ImageList);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageList_TestData))]
         public void ImageList_SetWithStateImageList_GetReturnsExpected(ImageList value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 StateImageList = value,
                 ImageList = value
@@ -2463,11 +2489,11 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.ImageList);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageList_TestData))]
         public void ImageList_SetWithHandle_GetReturnsExpected(ImageList value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.ImageList = value;
@@ -2478,11 +2504,11 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.ImageList);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageList_TestData))]
         public void ImageList_SetWithHandleWithCheckBoxes_GetReturnsExpected(ImageList value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 CheckBoxes = true
             };
@@ -2496,11 +2522,11 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.ImageList);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageList_TestData))]
         public void ImageList_SetWithNonNullOldValueWithHandle_GetReturnsExpected(ImageList value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageList = new ImageList()
             };
@@ -2514,11 +2540,11 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.ImageList);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageList_TestData))]
         public void ImageList_SetWithStateImageListWithHandle_GetReturnsExpected(ImageList value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 StateImageList = value
             };
@@ -2532,12 +2558,12 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.ImageList);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ImageList_Dispose_DetachesFromTreeView()
         {
-            var imageList1 = new ImageList();
-            var imageList2 = new ImageList();
-            var treeView = new TreeView
+            using var imageList1 = new ImageList();
+            using var imageList2 = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList1
             };
@@ -2552,11 +2578,11 @@ namespace System.Windows.Forms.Tests
             Assert.Same(imageList2, treeView.ImageList);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ImageList_CreateHandle_DetachesFromTreeView()
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList
             };
@@ -2564,11 +2590,11 @@ namespace System.Windows.Forms.Tests
             Assert.NotEqual(IntPtr.Zero, imageList.Handle);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ImageList_CreateHandleWithHandle_DetachesFromTreeView()
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList
             };
@@ -2577,11 +2603,11 @@ namespace System.Windows.Forms.Tests
             Assert.NotEqual(IntPtr.Zero, imageList.Handle);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ImageList_RecreateHandle_DetachesFromTreeView()
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList
             };
@@ -2592,11 +2618,11 @@ namespace System.Windows.Forms.Tests
             Assert.NotEqual(IntPtr.Zero, imageList.Handle);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ImageList_RecreateHandleWithHandle_DetachesFromTreeView()
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList
             };
@@ -2608,7 +2634,7 @@ namespace System.Windows.Forms.Tests
             Assert.NotEqual(IntPtr.Zero, imageList.Handle);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1, 19)]
         [InlineData(0, 0)]
         [InlineData(1, 1)]
@@ -2618,7 +2644,7 @@ namespace System.Windows.Forms.Tests
         [InlineData(32000, 32000)]
         public void Indent_Set_GetReturnsExpected(int value, int expected)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 Indent = value
             };
@@ -2629,7 +2655,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expected, treeView.Indent);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
@@ -2639,7 +2665,7 @@ namespace System.Windows.Forms.Tests
         [InlineData(32000)]
         public void Indent_SetWithHandle_GetReturnsExpected(int value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.Indent = value;
@@ -2650,22 +2676,22 @@ namespace System.Windows.Forms.Tests
             Assert.True(treeView.Indent > 0);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-2)]
         [InlineData(32001)]
         public void Indent_SetInvalid_ThrowsArgumentOutOfRangeException(int value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.Throws<ArgumentOutOfRangeException>("value", () => treeView.Indent = value);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-2)]
         [InlineData(-1)]
         [InlineData(32001)]
         public void Indent_SetInvalidWithCustomValue_ThrowsArgumentOutOfRangeException(int indent)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 Indent = 1
             };
@@ -2691,11 +2717,11 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { smallFont, false, TreeViewDrawMode.OwnerDrawAll, smallFont.Height + 3 };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ItemHeight_Get_TestData))]
         public void ItemHeight_Get_ReturnsExpected(Font font, bool checkBoxes, TreeViewDrawMode drawMode, int expectedHeight)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 Font = font,
                 CheckBoxes = checkBoxes,
@@ -2728,14 +2754,14 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1, 0)]
         [InlineData(1, 1)]
         [InlineData(2, 0)]
         [InlineData(32766, 0)]
         public void TreeView_ItemHeight_SetWithHandle_GetReturnsExpected(int value, int expectedCreatedCallCount)
         {
-            var control = new TreeView();
+            using var control = new TreeView();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             int invalidatedCallCount = 0;
             control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -2784,11 +2810,11 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<ArgumentOutOfRangeException>("value", () => control.ItemHeight = indent);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void LabelEdit_Set_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 LabelEdit = value
             };
@@ -2803,11 +2829,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.LabelEdit);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void LabelEdit_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.LabelEdit = value;
@@ -2822,10 +2848,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.LabelEdit);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void LabelEdit_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 LabelEdit = false
             };
@@ -2873,10 +2899,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void LabelEdit_SetWithUpdateStylesHandlerWithHandle_CallsStyleChangedCallsInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 LabelEdit = false
             };
@@ -2925,11 +2951,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
         public void LineColor_Set_GetReturnsExpected(Color value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 LineColor = value
             };
@@ -2940,11 +2966,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value, treeView.LineColor);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void PathSeparator_Set_GetReturnsExpected(string value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 PathSeparator = value
             };
@@ -3200,11 +3226,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, disposedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Scrollable_Set_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 Scrollable = value
             };
@@ -3219,11 +3245,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.Scrollable);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Scrollable_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.Scrollable = value;
@@ -3238,10 +3264,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.Scrollable);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Scrollable_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 Scrollable = true
             };
@@ -3289,10 +3315,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Scrollable_SetWithUpdateStylesHandlerWithHandle_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 Scrollable = true
             };
@@ -3341,13 +3367,13 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
         public void SelectedImageIndex_SetWithoutImageList_GetReturnsExpected(int value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 SelectedImageIndex = value
             };
@@ -3360,13 +3386,13 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.SelectedImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
         public void SelectedImageIndex_SetWithoutImageListWithImageKey_GetReturnsExpected(int value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageKey = "imageKey",
                 SelectedImageIndex = value
@@ -3380,15 +3406,15 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.SelectedImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
         public void SelectedImageIndex_SetWithEmptyImageList_GetReturnsExpected(int value)
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList,
                 SelectedImageIndex = value
@@ -3402,15 +3428,15 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.SelectedImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
         public void SelectedImageIndex_SetWithEmptyImageListWithImageKey_GetReturnsExpected(int value)
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageKey = "imageKey",
                 ImageList = imageList,
@@ -3425,17 +3451,17 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.SelectedImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1, 0)]
         [InlineData(0, 0)]
         [InlineData(1, 1)]
         [InlineData(2, 1)]
         public void SelectedImageIndex_SetWithImageList_GetReturnsExpected(int value, int expected)
         {
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             imageList.Images.Add(new Bitmap(10, 10));
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageList = imageList,
                 SelectedImageIndex = value
@@ -3449,17 +3475,17 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.SelectedImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1, 0)]
         [InlineData(0, 0)]
         [InlineData(1, 1)]
         [InlineData(2, 1)]
         public void SelectedImageIndex_SetWithImageListWithImageKey_GetReturnsExpected(int value, int expected)
         {
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             imageList.Images.Add("imageKey", new Bitmap(10, 10));
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageKey = "imageKey",
                 ImageList = imageList,
@@ -3474,13 +3500,13 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.SelectedImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
         public void SelectedImageIndex_SetWithoutImageListWithHandle_GetReturnsExpected(int value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.SelectedImageIndex = value;
@@ -3493,15 +3519,15 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.SelectedImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
         public void SelectedImageIndex_SetWithEmptyImageListWithHandle_GetReturnsExpected(int value)
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList
             };
@@ -3517,17 +3543,17 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.SelectedImageKey);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1, 0)]
         [InlineData(0, 0)]
         [InlineData(1, 1)]
         [InlineData(2, 1)]
         public void SelectedImageIndex_SetWithImageListWithHandle_GetReturnsExpected(int value, int expected)
         {
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             imageList.Images.Add(new Bitmap(10, 10));
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageList = imageList
             };
@@ -3543,19 +3569,19 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(treeView.SelectedImageKey);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void SelectedImageIndex_SetInvalid_Throws()
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.Throws<ArgumentOutOfRangeException>("value", () => treeView.SelectedImageIndex = -2);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         [InlineData("(none)", "")]
         public void SelectedImageKey_SetWithoutImageList_GetReturnsExpected(string value, string expected)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 SelectedImageKey = value
             };
@@ -3568,12 +3594,12 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(-1, treeView.SelectedImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         [InlineData("(none)", "")]
         public void SelectedImageKey_SetWithoutImageListWithImageIndex_GetReturnsExpected(string value, string expected)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 SelectedImageIndex = 1,
                 SelectedImageKey = value
@@ -3587,12 +3613,12 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(-1, treeView.SelectedImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageKey_Set_TestData))]
         public void SelectedImageKey_SetWithEmptyImageList_GetReturnsExpected(string value, string expected, int expectedImageIndex)
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList,
                 SelectedImageKey = value
@@ -3606,12 +3632,12 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedImageIndex, treeView.SelectedImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageKey_Set_TestData))]
         public void SelectedImageKey_SetWithEmptyImageListWithImageIndex_GetReturnsExpected(string value, string expected, int expectedImageIndex)
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 SelectedImageIndex = 1,
                 ImageList = imageList,
@@ -3626,14 +3652,14 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedImageIndex, treeView.SelectedImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageKey_Set_TestData))]
         public void SelectedImageKey_SetWithNonEmptyImageList_GetReturnsExpected(string value, string expected, int expectedImageIndex)
         {
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             imageList.Images.Add("imageKey", new Bitmap(10, 10));
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageList = imageList,
                 SelectedImageKey = value
@@ -3647,7 +3673,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedImageIndex, treeView.SelectedImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(null, "", 0)]
         [InlineData("", "", 1)]
         [InlineData("reasonable", "reasonable", -1)]
@@ -3656,10 +3682,10 @@ namespace System.Windows.Forms.Tests
         [InlineData("ImageKey", "ImageKey", -1)]
         public void SelectedImageKey_SetWithNonEmptyImageListWithImageIndex_GetReturnsExpected(string value, string expected, int expectedImageIndex)
         {
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             imageList.Images.Add("imageKey", new Bitmap(10, 10));
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 SelectedImageIndex = 1,
                 ImageList = imageList,
@@ -3674,12 +3700,12 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedImageIndex, treeView.SelectedImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         [InlineData("(none)", "")]
         public void SelectedImageKey_SetWithoutImageListWithHandle_GetReturnsExpected(string value, string expected)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.SelectedImageKey = value;
@@ -3692,12 +3718,12 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(-1, treeView.SelectedImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageKey_Set_TestData))]
         public void SelectedImageKey_SetWithEmptyImageListWithHandle_GetReturnsExpected(string value, string expected, int expectedImageIndex)
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 ImageList = imageList
             };
@@ -3713,14 +3739,14 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedImageIndex, treeView.SelectedImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageKey_Set_TestData))]
         public void SelectedImageKey_SetWithNonEmptyImageListWithHandle_GetReturnsExpected(string value, string expected, int expectedImageIndex)
         {
-            var imageList = new ImageList();
+            using var imageList = new ImageList();
             imageList.Images.Add(new Bitmap(10, 10));
             imageList.Images.Add("imageKey", new Bitmap(10, 10));
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ImageList = imageList
             };
@@ -3736,11 +3762,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedImageIndex, treeView.SelectedImageIndex);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowLines_Set_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ShowLines = value
             };
@@ -3755,11 +3781,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.ShowLines);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowLines_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.ShowLines = value;
@@ -3774,10 +3800,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.ShowLines);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ShowLines_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ShowLines = false
             };
@@ -3825,10 +3851,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ShowLines_SetWithUpdateStylesHandlerWithHandle_CallsStyleChangedCallsInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ShowLines = true
             };
@@ -3877,11 +3903,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowNodeToolTips_Set_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ShowNodeToolTips = value
             };
@@ -3896,11 +3922,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.ShowNodeToolTips);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowNodeToolTips_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.ShowNodeToolTips = value;
@@ -3915,10 +3941,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.ShowNodeToolTips);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ShowNodeToolTips_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ShowNodeToolTips = false
             };
@@ -3966,10 +3992,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ShowNodeToolTips_SetWithUpdateStylesHandlerWithHandle_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ShowNodeToolTips = true
             };
@@ -4018,11 +4044,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowPlusMinus_Set_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ShowPlusMinus = value
             };
@@ -4037,11 +4063,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.ShowPlusMinus);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowPlusMinus_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.ShowPlusMinus = value;
@@ -4056,10 +4082,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.ShowPlusMinus);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ShowPlusMinus_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ShowPlusMinus = true
             };
@@ -4107,10 +4133,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ShowPlusMinus_SetWithUpdateStylesHandlerWithHandle_CallsStyleChangedCallsInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ShowPlusMinus = true
             };
@@ -4159,11 +4185,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowRootLines_Set_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ShowRootLines = value
             };
@@ -4178,11 +4204,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.ShowRootLines);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowRootLines_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.ShowRootLines = value;
@@ -4197,10 +4223,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.ShowRootLines);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ShowRootLines_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ShowRootLines = true
             };
@@ -4248,10 +4274,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void ShowRootLines_SetWithUpdateStylesHandlerWithHandle_CallsStyleChangedCallsInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 ShowRootLines = true
             };
@@ -4300,11 +4326,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Sorted_Set_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 Sorted = value
             };
@@ -4319,11 +4345,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.Sorted);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Sorted_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.Sorted = value;
@@ -4338,10 +4364,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, treeView.Sorted);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Sorted_SetWithUpdateStylesHandler_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 Sorted = false
             };
@@ -4389,10 +4415,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Sorted_SetWithUpdateStylesHandlerWithHandle_DoesNotCallStyleChangedDoesNotCallInvalidated()
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 Sorted = false
             };
@@ -4441,11 +4467,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageList_TestData))]
         public void StateImageList_Set_GetReturnsExpected(ImageList value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 StateImageList = value
             };
@@ -4456,11 +4482,11 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.StateImageList);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageList_TestData))]
         public void StateImageList_SetWithNonNullOldValue_GetReturnsExpected(ImageList value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 StateImageList = new ImageList()
             };
@@ -4473,11 +4499,11 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.StateImageList);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageList_TestData))]
         public void StateImageList_SetWithHandle_GetReturnsExpected(ImageList value)
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             Assert.NotEqual(IntPtr.Zero, treeView.Handle);
 
             treeView.StateImageList = value;
@@ -4488,11 +4514,11 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.StateImageList);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImageList_TestData))]
         public void StateImageList_SetWithNonNullOldValueWithHandle_GetReturnsExpected(ImageList value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 StateImageList = new ImageList()
             };
@@ -4506,12 +4532,12 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.StateImageList);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void StateImageList_Dispose_DetachesFromTreeView()
         {
-            var imageList1 = new ImageList();
-            var imageList2 = new ImageList();
-            var treeView = new TreeView
+            using var imageList1 = new ImageList();
+            using var imageList2 = new ImageList();
+            using var treeView = new TreeView
             {
                 StateImageList = imageList1
             };
@@ -4526,11 +4552,11 @@ namespace System.Windows.Forms.Tests
             Assert.Same(imageList2, treeView.StateImageList);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void StateImageList_CreateHandle_DetachesFromTreeView()
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 StateImageList = imageList
             };
@@ -4538,11 +4564,11 @@ namespace System.Windows.Forms.Tests
             Assert.NotEqual(IntPtr.Zero, imageList.Handle);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void StateImageList_CreateHandleWithHandle_DetachesFromTreeView()
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 StateImageList = imageList
             };
@@ -4551,11 +4577,11 @@ namespace System.Windows.Forms.Tests
             Assert.NotEqual(IntPtr.Zero, imageList.Handle);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void StateImageList_RecreateHandle_DetachesFromTreeView()
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 StateImageList = imageList
             };
@@ -4566,11 +4592,11 @@ namespace System.Windows.Forms.Tests
             Assert.NotEqual(IntPtr.Zero, imageList.Handle);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void StateImageList_RecreateHandleWithHandle_DetachesFromTreeView()
         {
-            var imageList = new ImageList();
-            var treeView = new TreeView
+            using var imageList = new ImageList();
+            using var treeView = new TreeView
             {
                 StateImageList = imageList
             };
@@ -4586,7 +4612,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void Text_Set_GetReturnsExpected(string value, string expected)
         {
-            var control = new TreeView
+            using var control = new TreeView
             {
                 Text = value
             };
@@ -4679,11 +4705,11 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { StringComparer.CurrentCulture };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(TreeViewNodeSorter_TestData))]
         public void TreeViewNodeSorter_Set_GetReturnsExpected(IComparer value)
         {
-            var treeView = new TreeView
+            using var treeView = new TreeView
             {
                 TreeViewNodeSorter = value
             };
@@ -4694,10 +4720,10 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value, treeView.TreeViewNodeSorter);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void AddExistingNodeAsChild_ThrowsArgumentException()
         {
-            var treeView = new TreeView();
+            using var treeView = new TreeView();
             var node = new TreeNode();
             treeView.Nodes.Add(node);
 
@@ -5027,6 +5053,13 @@ namespace System.Windows.Forms.Tests
 
             // Call again to test caching.
             Assert.Equal(expected, control.GetStyle(flag));
+        }
+
+        [WinFormsFact]
+        public void TreeView_GetTopLevel_Invoke_ReturnsExpected()
+        {
+            using var control = new SubTreeView();
+            Assert.False(control.GetTopLevel());
         }
 
         public static IEnumerable<object[]> HitTest_Empty_TestData()
@@ -5675,7 +5708,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { new KeyEventArgs(Keys.Control | Keys.Space) };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(OnKeyDown_TestData))]
         public void TreeView_OnKeyDown_Invoke_CallsKeyDown(KeyEventArgs eventArgs)
         {
@@ -5713,7 +5746,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { false, false, false, new KeyEventArgs(Keys.Space), 0, 0, false };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(OnKeyDown_WithSelectedNode_TestData))]
         public void TreeView_OnKeyDown_InvokeWithSelectedNode_CallsKeyDown(bool handled, bool checkBoxes, bool cancel, KeyEventArgs eventArgs, int expectedBeforeCheckCallCount, int expectedAfterCheckCallCount, bool expectedHandled)
         {
@@ -5798,7 +5831,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { false, new KeyPressEventArgs(' '), true };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(OnKeyPress_TestData))]
         public void TreeView_OnKeyPress_Invoke_CallsKeyPress(bool handled, KeyPressEventArgs eventArgs, bool expectedHandled)
         {
@@ -5845,7 +5878,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { false, new KeyEventArgs(Keys.Control | Keys.Space), true };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(OnKeyUp_TestData))]
         public void TreeView_OnKeyUp_Invoke_CallsKeyUp(bool handled, KeyEventArgs eventArgs, bool expectedHandled)
         {
@@ -5942,9 +5975,9 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> OnHandleCreated_WithHandleWithProperties_TestData()
         {
-            yield return new object[] { new Image[0], null, false };
+            yield return new object[] { Array.Empty<Image>(), null, false };
             yield return new object[] { new Image[] { new Bitmap(10, 10) }, null, true };
-            yield return new object[] { new Image[0], new EventArgs(), false };
+            yield return new object[] { Array.Empty<Image>(), new EventArgs(), false };
             yield return new object[] { new Image[] { new Bitmap(10, 10) }, new EventArgs(), true };
         }
 
@@ -6329,7 +6362,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TreeView_OnMouseLeave_Invoke_CallsMouseLeave(EventArgs eventArgs)
         {
@@ -6614,6 +6647,8 @@ namespace System.Windows.Forms.Tests
             public new AutoSizeMode GetAutoSizeMode() => base.GetAutoSizeMode();
 
             public new bool GetStyle(ControlStyles flag) => base.GetStyle(flag);
+
+            public new bool GetTopLevel() => base.GetTopLevel();
 
             public new void OnAfterCheck(TreeViewEventArgs e) => base.OnAfterCheck(e);
 

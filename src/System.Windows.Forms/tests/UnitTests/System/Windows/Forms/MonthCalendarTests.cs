@@ -167,8 +167,8 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> AnnuallyBoldedDates_Set_TestData()
         {
-            yield return new object[] { null, new DateTime[0] };
-            yield return new object[] { new DateTime[0], new DateTime[0] };
+            yield return new object[] { null, Array.Empty<DateTime>() };
+            yield return new object[] { Array.Empty<DateTime>(), Array.Empty<DateTime>() };
 
             yield return new object[] { new DateTime[] { new DateTime(2019, 01, 1), new DateTime(2019, 01, 20) }, new DateTime[] { new DateTime(2019, 01, 1), new DateTime(2019, 01, 20) } };
             yield return new object[] { new DateTime[] { new DateTime(2017, 01, 1), new DateTime(2018, 01, 20) }, new DateTime[] { new DateTime(2017, 01, 1), new DateTime(2018, 01, 20) } };
@@ -193,7 +193,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { everyMonth, everyMonth };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(AnnuallyBoldedDates_Set_TestData))]
         public void MonthCalendar_AnnuallyBoldedDates_Set_GetReturnsExpected(DateTime[] value, DateTime[] expected)
         {
@@ -214,7 +214,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(AnnuallyBoldedDates_Set_TestData))]
         public void MonthCalendar_AnnuallyBoldedDates_SetWithHandle_GetReturnsExpected(DateTime[] value, DateTime[] expected)
         {
@@ -253,7 +253,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { Color.Red, Color.Red };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(BackColor_Set_TestData))]
         public void MonthCalendar_BackColor_Set_GetReturnsExpected(Color value, Color expected)
         {
@@ -276,7 +276,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { Color.Red, Color.Red, 1 };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(BackColor_SetWithHandle_TestData))]
         public void MonthCalendar_BackColor_SetWithHandle_GetReturnsExpected(Color value, Color expected, int expectedInvalidatedCallCount)
         {
@@ -305,7 +305,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_BackColor_SetWithHandler_CallsBackColorChanged()
         {
             using var control = new MonthCalendar();
@@ -340,7 +340,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
         public void MonthCalendar_BackgroundImage_Set_GetReturnsExpected(Image value)
         {
@@ -348,14 +348,16 @@ namespace System.Windows.Forms.Tests
             {
                 BackgroundImage = value
             };
-            Assert.Equal(value, control.BackgroundImage);
+            Assert.Same(value, control.BackgroundImage);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.BackgroundImage = value;
-            Assert.Equal(value, control.BackgroundImage);
+            Assert.Same(value, control.BackgroundImage);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_BackgroundImage_SetWithHandler_CallsBackgroundImageChanged()
         {
             using var control = new MonthCalendar();
@@ -369,7 +371,7 @@ namespace System.Windows.Forms.Tests
             control.BackgroundImageChanged += handler;
 
             // Set different.
-            var image1 = new Bitmap(10, 10);
+            using var image1 = new Bitmap(10, 10);
             control.BackgroundImage = image1;
             Assert.Same(image1, control.BackgroundImage);
             Assert.Equal(1, callCount);
@@ -380,7 +382,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, callCount);
 
             // Set different.
-            var image2 = new Bitmap(10, 10);
+            using var image2 = new Bitmap(10, 10);
             control.BackgroundImage = image2;
             Assert.Same(image2, control.BackgroundImage);
             Assert.Equal(2, callCount);
@@ -397,7 +399,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(3, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ImageLayout))]
         public void MonthCalendar_BackgroundImageLayout_Set_GetReturnsExpected(ImageLayout value)
         {
@@ -416,7 +418,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_BackgroundImageLayout_SetWithHandler_CallsBackgroundImageLayoutChanged()
         {
             using var control = new MonthCalendar();
@@ -451,7 +453,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImageLayout))]
         public void MonthCalendar_BackgroundImageLayout_SetInvalid_ThrowsInvalidEnumArgumentException(ImageLayout value)
         {
@@ -461,8 +463,8 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> BoldedDates_Set_TestData()
         {
-            yield return new object[] { null, new DateTime[0] };
-            yield return new object[] { new DateTime[0], new DateTime[0] };
+            yield return new object[] { null, Array.Empty<DateTime>() };
+            yield return new object[] { Array.Empty<DateTime>(), Array.Empty<DateTime>() };
 
             yield return new object[] { new DateTime[] { new DateTime(2019, 01, 1), new DateTime(2019, 01, 20) }, new DateTime[] { new DateTime(2019, 01, 1), new DateTime(2019, 01, 20) } };
             yield return new object[] { new DateTime[] { new DateTime(2017, 01, 1), new DateTime(2018, 01, 20) }, new DateTime[] { new DateTime(2017, 01, 1), new DateTime(2018, 01, 20) } };
@@ -487,7 +489,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { everyMonth, everyMonth };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(BoldedDates_Set_TestData))]
         public void MonthCalendar_BoldedDates_Set_GetReturnsExpected(DateTime[] value, DateTime[] expected)
         {
@@ -508,7 +510,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(BoldedDates_Set_TestData))]
         public void MonthCalendar_BoldedDates_SetWithHandle_GetReturnsExpected(DateTime[] value, DateTime[] expected)
         {
@@ -554,7 +556,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { new Size(10, 3), new Size(4, 3) };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(CalendarDimensions_Set_TestData))]
         public void MonthCalendar_CalendarDimensions_Set_GetReturnsExpected(Size value, Size expected)
         {
@@ -571,7 +573,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(1, 12)]
         [InlineData(12, 1)]
         public void MonthCalendar_CalendarDimensions_SetAreaOfTwelve_GetReturnsExpected(int width, int height)
@@ -581,20 +583,20 @@ namespace System.Windows.Forms.Tests
             {
                 CalendarDimensions = value
             };
-            Assert.True(calendar.CalendarDimensions.Width > 0 && calendar.CalendarDimensions.Width < 12);
-            Assert.True(calendar.CalendarDimensions.Height > 0 && calendar.CalendarDimensions.Height < 12);
-            Assert.NotEqual(value, calendar.CalendarDimensions);
+            Assert.True(calendar.CalendarDimensions.Width > 0 && calendar.CalendarDimensions.Width <= 12);
+            Assert.True(calendar.CalendarDimensions.Height > 0 && calendar.CalendarDimensions.Height <= 12);
             Assert.False(calendar.IsHandleCreated);
 
             // Set same.
+            var previousCalendarDimensions = calendar.CalendarDimensions;
             calendar.CalendarDimensions = value;
-            Assert.True(calendar.CalendarDimensions.Width > 0 && calendar.CalendarDimensions.Width < 12);
-            Assert.True(calendar.CalendarDimensions.Height > 0 && calendar.CalendarDimensions.Height < 12);
-            Assert.NotEqual(value, calendar.CalendarDimensions);
+            Assert.True(calendar.CalendarDimensions.Width > 0 && calendar.CalendarDimensions.Width <= 12);
+            Assert.True(calendar.CalendarDimensions.Height > 0 && calendar.CalendarDimensions.Height <= 12);
+            Assert.Equal(previousCalendarDimensions, calendar.CalendarDimensions);
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(CalendarDimensions_Set_TestData))]
         public void MonthCalendar_CalendarDimensions_SetWithHandle_GetReturnsExpected(Size value, Size expected)
         {
@@ -623,7 +625,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(1, 12)]
         [InlineData(12, 1)]
         public void MonthCalendar_CalendarDimensions_SetWithHandleAreaOfTwelve_GetReturnsExpected(int width, int height)
@@ -639,26 +641,26 @@ namespace System.Windows.Forms.Tests
             calendar.HandleCreated += (sender, e) => createdCallCount++;
 
             calendar.CalendarDimensions = value;
-            Assert.True(calendar.CalendarDimensions.Width > 0 && calendar.CalendarDimensions.Width < 12);
-            Assert.True(calendar.CalendarDimensions.Height > 0 && calendar.CalendarDimensions.Height < 12);
-            Assert.NotEqual(value, calendar.CalendarDimensions);
+            Assert.True(calendar.CalendarDimensions.Width > 0 && calendar.CalendarDimensions.Width <= 12);
+            Assert.True(calendar.CalendarDimensions.Height > 0 && calendar.CalendarDimensions.Height <= 12);
             Assert.True(calendar.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
             Assert.Equal(0, createdCallCount);
 
             // Set same.
+            var previousCalendarDimensions = calendar.CalendarDimensions;
             calendar.CalendarDimensions = value;
-            Assert.True(calendar.CalendarDimensions.Width > 0 && calendar.CalendarDimensions.Width < 12);
-            Assert.True(calendar.CalendarDimensions.Height > 0 && calendar.CalendarDimensions.Height < 12);
-            Assert.NotEqual(value, calendar.CalendarDimensions);
+            Assert.True(calendar.CalendarDimensions.Width > 0 && calendar.CalendarDimensions.Width <= 12);
+            Assert.True(calendar.CalendarDimensions.Height > 0 && calendar.CalendarDimensions.Height <= 12);
+            Assert.Equal(previousCalendarDimensions, calendar.CalendarDimensions);
             Assert.True(calendar.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
             Assert.Equal(0, createdCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(0)]
         [InlineData(-1)]
         public void MonthCalendar_CalendarDimensions_SetNegativeX_ThrowsArgumentOutOfRangeException(int x)
@@ -667,7 +669,7 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<ArgumentOutOfRangeException>("x", () => calendar.CalendarDimensions = new Size(x, 1));
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(0)]
         [InlineData(-1)]
         public void MonthCalendar_CalendarDimensions_SetNegativeY_ThrowsArgumentOutOfRangeException(int y)
@@ -676,7 +678,7 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<ArgumentOutOfRangeException>("y", () => calendar.CalendarDimensions = new Size(1, y));
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void MonthCalendar_DoubleBuffered_Set_GetReturnsExpected(bool value)
         {
@@ -701,7 +703,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void MonthCalendar_DoubleBuffered_SetWithHandle_GetReturnsExpected(bool value)
         {
@@ -741,7 +743,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(Day))]
         public void MonthCalendar_FirstDayOfWeek_Set_GetReturnsExpected(Day value)
         {
@@ -758,7 +760,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(Day))]
         public void MonthCalendar_FirstDayOfWeek_SetWithCustomOldValue_GetReturnsExpected(Day value)
         {
@@ -777,7 +779,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(Day))]
         public void MonthCalendar_FirstDayOfWeek_SetWithHandle_GetReturnsExpected(Day value)
         {
@@ -806,7 +808,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(Day.Default, 1)]
         [InlineData(Day.Monday, 0)]
         [InlineData(Day.Tuesday, 0)]
@@ -845,7 +847,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedCreatedCallCount, createdCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(Day))]
         public void MonthCalendar_FirstDayOfWeek_SetInvalidValue_ThrowsInvalidEnumArgumentException(Day value)
         {
@@ -862,7 +864,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { Color.Red, Color.Red };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ForeColor_Set_TestData))]
         public void MonthCalendar_ForeColor_Set_GetReturnsExpected(Color value, Color expected)
         {
@@ -888,7 +890,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { Color.Red, Color.Red, 1 };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ForeColor_SetWithHandle_TestData))]
         public void MonthCalendar_ForeColor_SetWithHandle_GetReturnsExpected(Color value, Color expected, int expectedInvalidatedCallCount)
         {
@@ -917,7 +919,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_ForeColor_SetWithHandler_CallsForeColorChanged()
         {
             using var control = new MonthCalendar();
@@ -1153,7 +1155,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { ImeMode.OnHalf, ImeMode.On };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImeMode_Set_TestData))]
         public void MonthCalendar_ImeMode_Set_GetReturnsExpected(ImeMode value, ImeMode expected)
         {
@@ -1170,7 +1172,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImeMode_Set_TestData))]
         public void MonthCalendar_ImeMode_SetWithHandle_GetReturnsExpected(ImeMode value, ImeMode expected)
         {
@@ -1199,7 +1201,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_ImeMode_SetWithHandler_CallsImeModeChanged()
         {
             using var control = new MonthCalendar();
@@ -1234,7 +1236,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImeMode))]
         public void MonthCalendar_ImeMode_SetInvalid_ThrowsInvalidEnumArgumentException(ImeMode value)
         {
@@ -1251,7 +1253,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { DateTime.MaxValue, new DateTime(9998, 12, 31), DateTime.Now.Date };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(MaxDate_Set_TestData))]
         public void MonthCalendar_MaxDate_Set_GetReturnsExpected(DateTime value, DateTime expected, DateTime expectedSelection)
         {
@@ -1272,7 +1274,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(MaxDate_Set_TestData))]
         public void MonthCalendar_MaxDate_SetWithHandle_GetReturnsExpected(DateTime value, DateTime expected, DateTime expectedSelection)
         {
@@ -1305,7 +1307,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_MaxDate_SetLessThanMinDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -1321,7 +1323,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { int.MaxValue };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(MaxSelectionCount_Set_TestData))]
         public void MonthCalendar_MaxSelectionCount_Set_GetReturnsExpected(int value)
         {
@@ -1338,7 +1340,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(MaxSelectionCount_Set_TestData))]
         public void MonthCalendar_MaxSelectionCount_SetWithHandle_GetReturnsExpected(int value)
         {
@@ -1367,7 +1369,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(0)]
         [InlineData(-1)]
         public void MonthCalendar_MaxSelectionCount_SetLessThanOne_ThrowsArgumentOutOfRangeException(int value)
@@ -1384,7 +1386,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { new DateTime(9998, 12, 31), new DateTime(9998, 12, 31), new DateTime(9998, 12, 31) };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(MinDate_Set_TestData))]
         public void MonthCalendar_MinDate_Set_GetReturnsExpected(DateTime value, DateTime expected, DateTime expectedSelection)
         {
@@ -1405,7 +1407,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(MinDate_Set_TestData))]
         public void MonthCalendar_MinDate_SetWithHandle_GetReturnsExpected(DateTime value, DateTime expected, DateTime expectedSelection)
         {
@@ -1438,14 +1440,14 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_MinDate_SetLessThanMaxDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
             Assert.Throws<ArgumentOutOfRangeException>("value", () => calendar.MinDate = calendar.MaxDate.AddTicks(1));
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_MinDate_SetLessThanMinDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -1454,8 +1456,8 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> MonthlyBoldedDates_Set_TestData()
         {
-            yield return new object[] { null, new DateTime[0] };
-            yield return new object[] { new DateTime[0], new DateTime[0] };
+            yield return new object[] { null, Array.Empty<DateTime>() };
+            yield return new object[] { Array.Empty<DateTime>(), Array.Empty<DateTime>() };
 
             yield return new object[] { new DateTime[] { new DateTime(2019, 01, 1), new DateTime(2019, 01, 20) }, new DateTime[] { new DateTime(2019, 01, 1), new DateTime(2019, 01, 20) } };
             yield return new object[] { new DateTime[] { new DateTime(2017, 01, 1), new DateTime(2018, 01, 20) }, new DateTime[] { new DateTime(2017, 01, 1), new DateTime(2018, 01, 20) } };
@@ -1480,7 +1482,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { everyMonth, everyMonth };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(MonthlyBoldedDates_Set_TestData))]
         public void MonthCalendar_MonthlyBoldedDates_Set_GetReturnsExpected(DateTime[] value, DateTime[] expected)
         {
@@ -1501,7 +1503,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(MonthlyBoldedDates_Set_TestData))]
         public void MonthCalendar_MonthlyBoldedDates_SetWithHandle_GetReturnsExpected(DateTime[] value, DateTime[] expected)
         {
@@ -1787,7 +1789,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { 20000 };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ScrollChange_Set_TestData))]
         public void MonthCalendar_ScrollChange_Set_GetReturnsExpected(int value)
         {
@@ -1804,7 +1806,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ScrollChange_Set_TestData))]
         public void MonthCalendar_ScrollChange_SetWithHandle_GetReturnsExpected(int value)
         {
@@ -1833,7 +1835,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(-1)]
         [InlineData(200001)]
         public void MonthCalendar_ScrollChange_SetInvalid_ThrowsArgumentOutOfRangeException(int value)
@@ -1854,7 +1856,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { DateTime.MaxValue, DateTime.MaxValue };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(SelectionStart_Set_TestData))]
         public void MonthCalendar_SelectionStart_Set_GetReturnsExpected(DateTime value, DateTime expectedSelectionEnd)
         {
@@ -1873,7 +1875,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(SelectionStart_Set_TestData))]
         public void MonthCalendar_SelectionStart_SetWithHandle_GetReturnsExpected(DateTime value, DateTime expectedSelectionEnd)
         {
@@ -1904,7 +1906,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_SelectionStart_SetLessThanMinDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -1915,7 +1917,7 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<ArgumentOutOfRangeException>("value", () => calendar.SelectionStart = calendar.MinDate.AddTicks(-1));
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_SelectionStart_SetGreaterThanMaxDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -1935,7 +1937,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { new DateTime(9998, 12, 31), new DateTime(9998, 12, 25) };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(SelectionEnd_Set_TestData))]
         public void MonthCalendar_SelectionEnd_Set_GetReturnsExpected(DateTime value, DateTime expectedSelectionStart)
         {
@@ -1954,7 +1956,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(SelectionEnd_Set_TestData))]
         public void MonthCalendar_SelectionEnd_SetWithHandle_GetReturnsExpected(DateTime value, DateTime expectedSelectionStart)
         {
@@ -1985,7 +1987,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_SelectionEnd_SetLessThanMinDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -1995,7 +1997,7 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<ArgumentOutOfRangeException>("value", () => calendar.SelectionEnd = calendar.MinDate.AddTicks(-1));
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_SelectionEnd_SetGreaterThanMaxDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -2032,7 +2034,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { new SelectionRange(DateTime.MaxValue, DateTime.MaxValue), DateTime.MaxValue.Date, DateTime.MaxValue.Date };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(SelectionRange_Set_TestData))]
         public void MonthCalendar_SelectionRange_Set_GetReturnsExpected(SelectionRange value, DateTime expectedSelectionStart, DateTime expectedSelectionEnd)
         {
@@ -2057,7 +2059,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(SelectionRange_Set_TestData))]
         public void MonthCalendar_SelectionRange_SetWithHandle_GetReturnsExpected(SelectionRange value, DateTime expectedSelectionStart, DateTime expectedSelectionEnd)
         {
@@ -2094,7 +2096,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_SelectionRange_SetLessThanMinDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -2111,7 +2113,7 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<ArgumentOutOfRangeException>("date1", () => calendar.SelectionRange = new SelectionRange(calendar.MinDate, calendar.MinDate.AddTicks(-1)));
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_SelectionRange_SetGreaterThanMaxDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -2128,7 +2130,7 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<ArgumentOutOfRangeException>("date2", () => calendar.SelectionRange = new SelectionRange(calendar.MaxDate, calendar.MaxDate.AddDays(1)));
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void MonthCalendar_ShowToday_Set_GetReturnsExpected(bool value)
         {
@@ -2150,7 +2152,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(true, 0)]
         [InlineData(false, 1)]
         public void MonthCalendar_ShowToday_SetWithHandle_GetReturnsExpected(bool value, int expectedStyleChangedCallCount)
@@ -2200,7 +2202,7 @@ namespace System.Windows.Forms.Tests
             Assert.NotSame(control.AccessibilityObject, instance);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void MonthCalendar_ShowTodayCircle_Set_GetReturnsExpected(bool value)
         {
@@ -2222,7 +2224,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(true, 0)]
         [InlineData(false, 1)]
         public void MonthCalendar_ShowTodayCircle_SetWithHandle_GetReturnsExpected(bool value, int expectedStyleChangedCallCount)
@@ -2260,7 +2262,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void MonthCalendar_ShowWeekNumbers_Set_GetReturnsExpected(bool value)
         {
@@ -2282,7 +2284,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(true, 1)]
         [InlineData(false, 0)]
         public void MonthCalendar_ShowWeekNumbers_SetWithHandle_GetReturnsExpected(bool value, int expectedStyleChangedCallCount)
@@ -2333,7 +2335,7 @@ namespace System.Windows.Forms.Tests
             control.HandleCreated += (sender, e) => createdCallCount++;
 
             Size size = control.SingleMonthSize;
-            Assert.True(size.Width >= 176);
+            Assert.True(size.Width >= 169);
             Assert.True(size.Height >= 153);
             Assert.Equal(size, control.SingleMonthSize);
             Assert.True(control.IsHandleCreated);
@@ -2418,7 +2420,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { new Size(1, -2) };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(Size_Set_TestData))]
         public void MonthCalendar_Size_Set_GetReturnsExpected(Size value)
         {
@@ -2443,7 +2445,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(Size_Set_TestData))]
         public void MonthCalendar_Size_SetWithHandle_GetReturnsExpected(Size value)
         {
@@ -2482,7 +2484,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_Size_SetWithHandler_CallsSizeChanged()
         {
             using var control = new MonthCalendar();
@@ -2592,12 +2594,12 @@ namespace System.Windows.Forms.Tests
 
             // Set different.
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(1, callCount);
 
             // Set same.
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(1, callCount);
 
             // Set different.
@@ -2608,7 +2610,7 @@ namespace System.Windows.Forms.Tests
             // Remove handler.
             control.TextChanged -= handler;
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(2, callCount);
         }
 
@@ -2618,7 +2620,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { Color.FromArgb(254, 1, 2, 3) };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(TitleBackColor_Set_TestData))]
         public void MonthCalendar_TitleBackColor_Set_GetReturnsExpected(Color value)
         {
@@ -2635,7 +2637,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(TitleBackColor_Set_TestData))]
         public void MonthCalendar_TitleBackColor_SetWithHandle_GetReturnsExpected(Color value)
         {
@@ -2664,7 +2666,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_TitleBackColor_SetEmpty_ThrowsArgumentException()
         {
             using var calendar = new MonthCalendar();
@@ -2677,7 +2679,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { Color.FromArgb(254, 1, 2, 3) };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(TitleForeColor_Set_TestData))]
         public void MonthCalendar_TitleForeColor_Set_GetReturnsExpected(Color value)
         {
@@ -2694,7 +2696,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(TitleForeColor_Set_TestData))]
         public void MonthCalendar_TitleForeColor_SetWithHandle_GetReturnsExpected(Color value)
         {
@@ -2723,14 +2725,14 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_TitleForeColor_SetEmpty_ThrowsArgumentException()
         {
             using var calendar = new MonthCalendar();
             Assert.Throws<ArgumentException>("value", () => calendar.TitleForeColor = Color.Empty);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_TodayDate_GetWithHandle_ReturnsExpected()
         {
             using var control = new MonthCalendar();
@@ -2753,7 +2755,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { DateTime.MaxValue };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(TodayDate_Set_TestData))]
         public void MonthCalendar_TodayDate_Set_GetReturnsExpected(DateTime value)
         {
@@ -2772,7 +2774,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(TodayDate_Set_TestData))]
         public void MonthCalendar_TodayDate_SetWithHandle_GetReturnsExpected(DateTime value)
         {
@@ -2803,7 +2805,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_TodayDate_SetLessThanMinDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -2814,7 +2816,7 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<ArgumentOutOfRangeException>("value", () => calendar.TodayDate = calendar.MinDate.AddTicks(-1));
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_TodayDate_SetGreaterThanMaxDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -2831,7 +2833,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { Color.FromArgb(254, 1, 2, 3) };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(TrailingForeColor_Set_TestData))]
         public void MonthCalendar_TrailingForeColor_Set_GetReturnsExpected(Color value)
         {
@@ -2848,7 +2850,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(TrailingForeColor_Set_TestData))]
         public void MonthCalendar_TrailingForeColor_SetWithHandle_GetReturnsExpected(Color value)
         {
@@ -2877,14 +2879,14 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_TrailingForeColor_SetEmpty_ThrowsArgumentException()
         {
             using var calendar = new MonthCalendar();
             Assert.Throws<ArgumentException>("value", () => calendar.TrailingForeColor = Color.Empty);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_AddAnnuallyBoldedDate_Invoke_AddsToAnnuallyBoldedDates()
         {
             using var calendar = new MonthCalendar();
@@ -2923,7 +2925,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_AddAnnuallyBoldedDate_InvokeWithHandle_AddsToAnnuallyBoldedDates()
         {
             using var calendar = new MonthCalendar();
@@ -2991,7 +2993,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_AddBoldedDate_Invoke_AddsToBoldedDates()
         {
             using var calendar = new MonthCalendar();
@@ -3030,7 +3032,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_AddBoldedDate_InvokeWithHandle_AddsToBoldedDates()
         {
             using var calendar = new MonthCalendar();
@@ -3098,7 +3100,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_AddMonthlyBoldedDate_Invoke_AddsToMonthlyBoldedDates()
         {
             using var calendar = new MonthCalendar();
@@ -3137,7 +3139,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_AddMonthlyBoldedDate_InvokeWithHandle_AddsToMonthlyBoldedDates()
         {
             using var calendar = new MonthCalendar();
@@ -3215,7 +3217,51 @@ namespace System.Windows.Forms.Tests
             Assert.NotEqual(IntPtr.Zero, control.Handle);
         }
 
-        [Theory]
+        [WinFormsFact]
+        public void MonthCalendar_GetAutoSizeMode_Invoke_ReturnsExpected()
+        {
+            using var control = new SubMonthCalendar();
+            Assert.Equal(AutoSizeMode.GrowOnly, control.GetAutoSizeMode());
+        }
+
+        [WinFormsTheory]
+        [InlineData(ControlStyles.ContainerControl, false)]
+        [InlineData(ControlStyles.UserPaint, false)]
+        [InlineData(ControlStyles.Opaque, false)]
+        [InlineData(ControlStyles.ResizeRedraw, false)]
+        [InlineData(ControlStyles.FixedWidth, false)]
+        [InlineData(ControlStyles.FixedHeight, false)]
+        [InlineData(ControlStyles.StandardClick, false)]
+        [InlineData(ControlStyles.Selectable, true)]
+        [InlineData(ControlStyles.UserMouse, false)]
+        [InlineData(ControlStyles.SupportsTransparentBackColor, false)]
+        [InlineData(ControlStyles.StandardDoubleClick, true)]
+        [InlineData(ControlStyles.AllPaintingInWmPaint, true)]
+        [InlineData(ControlStyles.CacheText, false)]
+        [InlineData(ControlStyles.EnableNotifyMessage, false)]
+        [InlineData(ControlStyles.DoubleBuffer, false)]
+        [InlineData(ControlStyles.OptimizedDoubleBuffer, false)]
+        [InlineData(ControlStyles.UseTextForAccessibility, true)]
+        [InlineData((ControlStyles)0, true)]
+        [InlineData((ControlStyles)int.MaxValue, false)]
+        [InlineData((ControlStyles)(-1), false)]
+        public void MonthCalendar_GetStyle_Invoke_ReturnsExpected(ControlStyles flag, bool expected)
+        {
+            using var control = new SubMonthCalendar();
+            Assert.Equal(expected, control.GetStyle(flag));
+
+            // Call again to test caching.
+            Assert.Equal(expected, control.GetStyle(flag));
+        }
+
+        [WinFormsFact]
+        public void MonthCalendar_GetTopLevel_Invoke_ReturnsExpected()
+        {
+            using var control = new SubMonthCalendar();
+            Assert.False(control.GetTopLevel());
+        }
+
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void MonthCalendar_OnBackColorChanged_Invoke_CallsBackColorChanged(EventArgs eventArgs)
         {
@@ -3241,7 +3287,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void MonthCalendar_OnBackColorChanged_InvokeWithHandle_CallsBackColorChanged(EventArgs eventArgs)
         {
@@ -3286,7 +3332,7 @@ namespace System.Windows.Forms.Tests
             Assert.True(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void MonthCalendar_OnClick_Invoke_CallsClick(EventArgs eventArgs)
         {
@@ -3316,7 +3362,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { new DateRangeEventArgs(DateTime.Now, DateTime.Now) };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(DateRangeEventArgs_TestData))]
         public void MonthCalendar_Calendar_OnDateChanged_Invoke_CallsDateChanged(DateRangeEventArgs eventArgs)
         {
@@ -3340,7 +3386,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(DateRangeEventArgs_TestData))]
         public void MonthCalendar_Calendar_OnDateSelected_Invoke_CallsDateSelected(DateRangeEventArgs eventArgs)
         {
@@ -3364,7 +3410,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void MonthControl_OnDoubleClick_Invoke_CallsDoubleClick(EventArgs eventArgs)
         {
@@ -3388,7 +3434,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void MonthCalendar_OnForeColorChanged_Invoke_CallsForeColorChanged(EventArgs eventArgs)
         {
@@ -3414,7 +3460,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void MonthCalendar_OnForeColorChanged_InvokeWithHandle_CallsForeColorChanged(EventArgs eventArgs)
         {
@@ -3613,7 +3659,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetPaintEventArgsTheoryData))]
         public void MonthCalendar_OnPaint_Invoke_CallsPaint(PaintEventArgs eventArgs)
         {
@@ -3755,7 +3801,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, disposedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_RecreateHandle_InvokeWithHandle_Success()
         {
             using var control = new SubMonthCalendar();
@@ -3777,7 +3823,7 @@ namespace System.Windows.Forms.Tests
             Assert.True(control.IsHandleCreated);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_RecreateHandle_InvokeWithoutHandle_Nop()
         {
             using var control = new SubMonthCalendar();
@@ -3818,7 +3864,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { DateTime.MaxValue };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(SetDate_TestData))]
         public void MonthCalendar_SetDate_Invoke_GetReturnsExpected(DateTime date)
         {
@@ -3839,7 +3885,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(SetDate_TestData))]
         public void MonthCalendar_SetDate_InvokeWithHandle_GetReturnsExpected(DateTime date)
         {
@@ -3874,7 +3920,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_SetDate_DateLessThanMinDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -3886,7 +3932,7 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<ArgumentOutOfRangeException>("date", () => calendar.SetDate(calendar.MinDate.AddTicks(-1)));
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_SetDate_DateGreaterThanMaxDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -3925,7 +3971,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { DateTime.MaxValue, DateTime.MaxValue, DateTime.MaxValue, DateTime.MaxValue };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(SetSelectionRange_TestData))]
         public void MonthCalendar_SetSelectionRange_Invoke_GetReturnsExpected(DateTime date1, DateTime date2, DateTime expectedSelectionStart, DateTime expectedSelectionEnd)
         {
@@ -3946,7 +3992,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(calendar.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(SetSelectionRange_TestData))]
         public void MonthCalendar_SetSelectionRange_InvokeWithHandle_GetReturnsExpected(DateTime date1, DateTime date2, DateTime expectedSelectionStart, DateTime expectedSelectionEnd)
         {
@@ -3981,7 +4027,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_SetSelectionRange_DateLessThanMinDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -3998,7 +4044,7 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<ArgumentOutOfRangeException>("date2", () => calendar.SetSelectionRange(calendar.MinDate, calendar.MinDate.AddTicks(-1)));
         }
 
-        [Fact]
+        [WinFormsFact]
         public void MonthCalendar_SetSelectionRange_DateGreaterThanMaxDate_ThrowsArgumentOutOfRangeException()
         {
             using var calendar = new MonthCalendar();
@@ -4073,7 +4119,11 @@ namespace System.Windows.Forms.Tests
 
             public new void CreateHandle() => base.CreateHandle();
 
+            public new AutoSizeMode GetAutoSizeMode() => base.GetAutoSizeMode();
+
             public new bool GetStyle(ControlStyles flag) => base.GetStyle(flag);
+
+            public new bool GetTopLevel() => base.GetTopLevel();
 
             public new void OnBackColorChanged(EventArgs e) => base.OnBackColorChanged(e);
 

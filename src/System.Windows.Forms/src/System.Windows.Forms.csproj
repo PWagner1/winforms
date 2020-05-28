@@ -7,7 +7,6 @@
     <Nullable>enable</Nullable>
 
     <NoWarn>$(NoWarn);618</NoWarn>
-    <DefineConstants>$(DefineConstants);OPTIMIZED_MEASUREMENTDC;</DefineConstants>
     <Win32Manifest>Resources\System\Windows\Forms\XPThemes.manifest</Win32Manifest>
     <Deterministic>true</Deterministic>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
@@ -553,6 +552,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Windows\Forms\ToolStrip\ToolStripMenuItem.ico">
       <LogicalName>System.Windows.Forms.ToolStripMenuItem</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Windows\Forms\ToolStrip\ToolStripDropDownMenu.ico">
+      <LogicalName>System.Windows.Forms.ToolStripDropDownMenu</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Windows\Forms\ToolStrip\ToolStripDropDownButton.ico">
       <LogicalName>System.Windows.Forms.ToolStripDropDownButton</LogicalName>

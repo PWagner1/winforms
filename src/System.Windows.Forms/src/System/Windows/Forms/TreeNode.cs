@@ -180,30 +180,25 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Creates a TreeNode object.
         /// </summary>
-        public TreeNode(string text, TreeNode[] children) : this()
+        public TreeNode(string text, TreeNode[] children) : this(text)
         {
-            this.text = text;
             Nodes.AddRange(children);
         }
 
         /// <summary>
         ///  Creates a TreeNode object.
         /// </summary>
-        public TreeNode(string text, int imageIndex, int selectedImageIndex) : this()
+        public TreeNode(string text, int imageIndex, int selectedImageIndex) : this(text)
         {
-            this.text = text;
-            ImageIndexer.Index = imageIndex;
-            SelectedImageIndexer.Index = selectedImageIndex;
+            ImageIndex = imageIndex;
+            SelectedImageIndex = selectedImageIndex;
         }
 
         /// <summary>
         ///  Creates a TreeNode object.
         /// </summary>
-        public TreeNode(string text, int imageIndex, int selectedImageIndex, TreeNode[] children) : this()
+        public TreeNode(string text, int imageIndex, int selectedImageIndex, TreeNode[] children) : this(text, imageIndex, selectedImageIndex)
         {
-            this.text = text;
-            ImageIndexer.Index = imageIndex;
-            SelectedImageIndexer.Index = selectedImageIndex;
             Nodes.AddRange(children);
         }
 
@@ -220,10 +215,8 @@ namespace System.Windows.Forms
         ///  If null, the color used will be the default color from the TreeView control that this
         ///  node is attached to
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        SRDescription(nameof(SR.TreeNodeBackColorDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.TreeNodeBackColorDescr))]
         public Color BackColor
         {
             get
@@ -421,11 +414,9 @@ namespace System.Windows.Forms
         ///  The contextMenu associated with this tree node. The contextMenu
         ///  will be shown when the user right clicks the mouse on the control.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(null),
-        SRDescription(nameof(SR.ControlContextMenuDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(null)]
+        [SRDescription(nameof(SR.ControlContextMenuDescr))]
         public virtual ContextMenuStrip ContextMenuStrip
         {
             get
@@ -473,10 +464,8 @@ namespace System.Windows.Forms
         ///  If null, the color used will be the default color from the TreeView control that this
         ///  node is attached to
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        SRDescription(nameof(SR.TreeNodeForeColorDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.TreeNodeForeColorDescr))]
         public Color ForeColor
         {
             get
@@ -568,21 +557,38 @@ namespace System.Windows.Forms
         ///  The index of the image to be displayed when the node is in the unselected state.
         ///  The image is contained in the ImageList referenced by the imageList property.
         /// </summary>
-        [
-        Localizable(true),
-        SRCategory(nameof(SR.CatBehavior)),
-        SRDescription(nameof(SR.TreeNodeImageIndexDescr)),
-        TypeConverter(typeof(TreeViewImageIndexConverter)),
-        Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-        RefreshProperties(RefreshProperties.Repaint),
-        DefaultValue(-1),
-        RelatedImageList("TreeView.ImageList")
-        ]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.TreeNodeImageIndexDescr))]
+        [TypeConverter(typeof(TreeViewImageIndexConverter))]
+        [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [DefaultValue(-1)]
+        [RelatedImageList("TreeView.ImageList")]
         public int ImageIndex
         {
-            get { return ImageIndexer.Index; }
+            get
+            {
+                TreeView tv = TreeView;
+                if (ImageIndexer.Index != -1 && tv != null && tv.ImageList != null && ImageIndexer.Index >= tv.ImageList.Images.Count)
+                {
+                    return tv.ImageList.Images.Count - 1;
+                }
+
+                return ImageIndexer.Index;
+            }
             set
             {
+                if (value < -1)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ImageIndex), value, -1));
+                }
+
+                if (ImageIndexer.Index == value)
+                {
+                    return;
+                }
+
                 ImageIndexer.Index = value;
                 UpdateNode(TVIF.IMAGE);
             }
@@ -592,21 +598,24 @@ namespace System.Windows.Forms
         ///  The index of the image to be displayed when the node is in the unselected state.
         ///  The image is contained in the ImageList referenced by the imageList property.
         /// </summary>
-        [
-        Localizable(true),
-        SRCategory(nameof(SR.CatBehavior)),
-        SRDescription(nameof(SR.TreeNodeImageKeyDescr)),
-        TypeConverter(typeof(TreeViewImageKeyConverter)),
-        DefaultValue(""),
-        Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-        RefreshProperties(RefreshProperties.Repaint),
-        RelatedImageList("TreeView.ImageList")
-        ]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.TreeNodeImageKeyDescr))]
+        [TypeConverter(typeof(TreeViewImageKeyConverter))]
+        [DefaultValue("")]
+        [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [RelatedImageList("TreeView.ImageList")]
         public string ImageKey
         {
-            get { return ImageIndexer.Key; }
+            get => ImageIndexer.Key;
             set
             {
+                if (value == ImageIndexer.Key)
+                {
+                    return;
+                }
+
                 ImageIndexer.Key = value;
                 UpdateNode(TVIF.IMAGE);
             }
@@ -615,14 +624,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Returns the position of this node in relation to its siblings
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        SRDescription(nameof(SR.TreeNodeIndexDescr)),
-        ]
-        public int Index
-        {
-            get { return index; }
-        }
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.TreeNodeIndexDescr))]
+        public int Index => index;
 
         /// <summary>
         ///  Specifies whether this node is being edited by the user.
@@ -804,12 +808,10 @@ namespace System.Windows.Forms
         ///  NOTE: If the node font is larger than the default font from the TreeView control, then
         ///  the node will be clipped.
         /// </summary>
-        [
-        Localizable(true),
-        SRCategory(nameof(SR.CatAppearance)),
-        SRDescription(nameof(SR.TreeNodeNodeFontDescr)),
-        DefaultValue(null)
-        ]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.TreeNodeNodeFontDescr))]
+        [DefaultValue(null)]
         public Font NodeFont
         {
             get
@@ -856,10 +858,8 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-        ListBindable(false),
-        Browsable(false)
-        ]
+        [ListBindable(false)]
+        [Browsable(false)]
         public TreeNodeCollection Nodes
         {
             get
@@ -961,24 +961,38 @@ namespace System.Windows.Forms
         ///  The index of the image displayed when the node is in the selected state.
         ///  The image is contained in the ImageList referenced by the imageList property.
         /// </summary>
-        [
-        Localizable(true),
-        SRCategory(nameof(SR.CatBehavior)),
-        SRDescription(nameof(SR.TreeNodeSelectedImageIndexDescr)),
-        TypeConverter(typeof(TreeViewImageIndexConverter)),
-        DefaultValue(-1),
-        RefreshProperties(RefreshProperties.Repaint),
-        Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-        RelatedImageList("TreeView.ImageList")
-        ]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.TreeNodeSelectedImageIndexDescr))]
+        [TypeConverter(typeof(TreeViewImageIndexConverter))]
+        [DefaultValue(-1)]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [RelatedImageList("TreeView.ImageList")]
         public int SelectedImageIndex
         {
             get
             {
+                TreeView tv = TreeView;
+                if (SelectedImageIndexer.Index != -1 && tv != null && tv.ImageList != null && SelectedImageIndexer.Index >= tv.ImageList.Images.Count)
+                {
+                    return tv.ImageList.Images.Count - 1;
+                }
+
                 return SelectedImageIndexer.Index;
             }
             set
             {
+                if (value < -1)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(SelectedImageIndex), value, -1));
+                }
+
+                if (SelectedImageIndexer.Index == value)
+                {
+                    return;
+                }
+
                 SelectedImageIndexer.Index = value;
                 UpdateNode(TVIF.SELECTEDIMAGE);
             }
@@ -988,24 +1002,24 @@ namespace System.Windows.Forms
         ///  The index of the image displayed when the node is in the selected state.
         ///  The image is contained in the ImageList referenced by the imageList property.
         /// </summary>
-        [
-        Localizable(true),
-        SRCategory(nameof(SR.CatBehavior)),
-        SRDescription(nameof(SR.TreeNodeSelectedImageKeyDescr)),
-        TypeConverter(typeof(TreeViewImageKeyConverter)),
-        DefaultValue(""),
-        RefreshProperties(RefreshProperties.Repaint),
-        Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-        RelatedImageList("TreeView.ImageList")
-        ]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.TreeNodeSelectedImageKeyDescr))]
+        [TypeConverter(typeof(TreeViewImageKeyConverter))]
+        [DefaultValue("")]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [RelatedImageList("TreeView.ImageList")]
         public string SelectedImageKey
         {
-            get
-            {
-                return SelectedImageIndexer.Key;
-            }
+            get => SelectedImageIndexer.Key;
             set
             {
+                if (SelectedImageIndexer.Key == value)
+                {
+                    return;
+                }
+
                 SelectedImageIndexer.Key = value;
                 UpdateNode(TVIF.SELECTEDIMAGE);
             }
@@ -1043,16 +1057,14 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The key of the StateImage that the user want to display.
         /// </summary>
-        [
-        Localizable(true),
-        SRCategory(nameof(SR.CatBehavior)),
-        SRDescription(nameof(SR.TreeNodeStateImageKeyDescr)),
-        TypeConverter(typeof(ImageKeyConverter)),
-        DefaultValue(""),
-        Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-        RefreshProperties(RefreshProperties.Repaint),
-        RelatedImageList("TreeView.StateImageList")
-        ]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.TreeNodeStateImageKeyDescr))]
+        [TypeConverter(typeof(ImageKeyConverter))]
+        [DefaultValue("")]
+        [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [RelatedImageList("TreeView.StateImageList")]
         public string StateImageKey
         {
             get
@@ -1072,21 +1084,25 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-        Localizable(true),
-        TypeConverter(typeof(NoneExcludedImageIndexConverter)),
-        DefaultValue(-1),
-        SRCategory(nameof(SR.CatBehavior)),
-        SRDescription(nameof(SR.TreeNodeStateImageIndexDescr)),
-        Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-        RefreshProperties(RefreshProperties.Repaint),
-        RelatedImageList("TreeView.StateImageList")
-        ]
+        [Localizable(true)]
+        [TypeConverter(typeof(NoneExcludedImageIndexConverter))]
+        [DefaultValue(-1)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.TreeNodeStateImageIndexDescr))]
+        [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [RelatedImageList("TreeView.StateImageList")]
         public int StateImageIndex
         {
             get
             {
-                return (treeView == null || treeView.StateImageList == null) ? -1 : StateImageIndexer.Index;
+                TreeView tv = TreeView;
+                if (StateImageIndexer.Index != -1 && tv != null && tv.StateImageList != null && StateImageIndexer.Index >= tv.StateImageList.Images.Count)
+                {
+                    return tv.StateImageList.Images.Count - 1;
+                }
+
+                return StateImageIndexer.Index;
             }
             set
             {
@@ -1094,6 +1110,12 @@ namespace System.Windows.Forms
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidArgument, nameof(StateImageIndex), value));
                 }
+
+                if (StateImageIndexer.Index == value)
+                {
+                    return;
+                }
+
                 StateImageIndexer.Index = value;
                 if (treeView != null && !treeView.CheckBoxes)
                 {
@@ -1102,14 +1124,12 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-        SRCategory(nameof(SR.CatData)),
-        Localizable(false),
-        Bindable(true),
-        SRDescription(nameof(SR.ControlTagDescr)),
-        DefaultValue(null),
-        TypeConverter(typeof(StringConverter)),
-        ]
+        [SRCategory(nameof(SR.CatData))]
+        [Localizable(false)]
+        [Bindable(true)]
+        [SRDescription(nameof(SR.ControlTagDescr))]
+        [DefaultValue(null)]
+        [TypeConverter(typeof(StringConverter))]
         public object Tag
         {
             get
@@ -1125,11 +1145,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The label text for the tree node
         /// </summary>
-        [
-        Localizable(true),
-        SRCategory(nameof(SR.CatAppearance)),
-        SRDescription(nameof(SR.TreeNodeTextDescr))
-        ]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.TreeNodeTextDescr))]
         public string Text
         {
             get
@@ -1146,12 +1164,10 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The ToolTip text that will be displayed when the mouse hovers over the node.
         /// </summary>
-        [
-        Localizable(false),
-        SRCategory(nameof(SR.CatAppearance)),
-        SRDescription(nameof(SR.TreeNodeToolTipTextDescr)),
-        DefaultValue("")
-        ]
+        [Localizable(false)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.TreeNodeToolTipTextDescr))]
+        [DefaultValue("")]
         public string ToolTipText
         {
             get
@@ -1167,10 +1183,8 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The name for the tree node - useful for indexing.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        SRDescription(nameof(SR.TreeNodeNodeNameDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.TreeNodeNodeNameDescr))]
         public string Name
         {
             get
@@ -2178,6 +2192,10 @@ namespace System.Windows.Forms
 
             TreeView tv = TreeView;
             Debug.Assert(tv != null, "TreeNode has handle but no TreeView");
+            if (tv.IsDisposed)
+            {
+                return;
+            }
 
             var item = new TVITEMW
             {

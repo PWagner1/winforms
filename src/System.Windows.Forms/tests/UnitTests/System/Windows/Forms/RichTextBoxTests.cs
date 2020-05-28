@@ -5,6 +5,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
+using System.Text;
 using WinForms.Common.Tests;
 using Xunit;
 using static Interop;
@@ -848,7 +850,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsFact]
-        public void RichTextBox_RightMargin_GetWithHandle_ReturnsExpecte()
+        public void RichTextBox_RightMargin_GetWithHandle_ReturnsExpected()
         {
             using var control = new RichTextBox();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
@@ -987,19 +989,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsFact]
-        public void RichTextBox_SelectedText_GetWithoutHandle_ReturnsExpected()
-        {
-            using var control = new RichTextBox();
-            Assert.Empty(control.SelectedText);
-            Assert.True(control.IsHandleCreated);
-
-            // Get again.
-            Assert.Empty(control.SelectedText);
-            Assert.True(control.IsHandleCreated);
-        }
-
-        [WinFormsFact]
-        public void RichTextBox_SelectedText_GetWithHandle_ReturnsExpected()
+        public void RichTextBox_Rtf_GetWithHandle_ReturnsExpected()
         {
             using var control = new RichTextBox();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
@@ -1010,14 +1000,121 @@ namespace System.Windows.Forms.Tests
             int createdCallCount = 0;
             control.HandleCreated += (sender, e) => createdCallCount++;
 
-            Assert.Empty(control.SelectedText);
+            string rtf1 = control.Rtf;
+            Assert.StartsWith("{\\rtf", rtf1);
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
             Assert.Equal(0, createdCallCount);
 
             // Get again.
-            Assert.Empty(control.SelectedText);
+            string rtf2 = control.Rtf;
+            Assert.Equal(rtf1, rtf2);
+            Assert.NotSame(rtf1, rtf2);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_Rtf_GetWithPlainText_ReturnsExpected()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Text"
+            };
+            string rtf1 = control.Rtf;
+            Assert.Contains("Text", rtf1);
+            Assert.StartsWith("{\\rtf", rtf1);
+            Assert.True(control.IsHandleCreated);
+
+            // Get again.
+            string rtf2 = control.Rtf;
+            Assert.Equal(rtf1, rtf2);
+            Assert.NotSame(rtf1, rtf2);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_Rtf_GetWithPlainTextWithHandle_ReturnsExpected()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Text"
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            string rtf1 = control.Rtf;
+            Assert.Contains("Text", rtf1);
+            Assert.StartsWith("{\\rtf", rtf1);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Get again.
+            string rtf2 = control.Rtf;
+            Assert.Equal(rtf1, rtf2);
+            Assert.NotSame(rtf1, rtf2);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        public void RichTextBox_Rtf_Set_GetReturnsExpected(string nullOrEmpty)
+        {
+            using var control = new RichTextBox
+            {
+                Rtf = "{\\rtf1Hello World}"
+            };
+
+            string rtf = control.Rtf;
+            Assert.StartsWith("{\\rtf", rtf);
+            Assert.NotSame(rtf, control.Rtf);
+            Assert.Equal("Hello World", control.Text);
+            Assert.True(control.IsHandleCreated);
+
+            control.Rtf = nullOrEmpty;
+            rtf = control.Rtf;
+            Assert.StartsWith("{\\rtf", rtf);
+            Assert.Empty(control.Text);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        public void RichTextBox_Rtf_SetWithHandle_GetReturnsExpected(string nullOrEmpty)
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            control.Rtf = "{\\rtf1Hello World}";
+            string rtf = control.Rtf;
+            Assert.StartsWith("{\\rtf", rtf);
+            Assert.NotSame(rtf, control.Rtf);
+            Assert.Equal("Hello World", control.Text);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            control.Rtf = nullOrEmpty;
+            rtf = control.Rtf;
+            Assert.StartsWith("{\\rtf", rtf);
+            Assert.Empty(control.Text);
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1025,14 +1122,120 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsFact]
-        public void RichTextBox_SelectedRtf_GetWithoutHandle_ReturnsExpected()
+        public void RichTextBox_Rtf_SetWithHandler_CallsTextChanged()
         {
             using var control = new RichTextBox();
-            Assert.NotNull(control.SelectedRtf);
+            int callCount = 0;
+            EventHandler handler = (sender, e) =>
+            {
+                Assert.Same(control, sender);
+                Assert.Equal(EventArgs.Empty, e);
+                callCount++;
+            };
+            control.TextChanged += handler;
+
+            // Set different.
+            control.Rtf = "{\\rtf1text}";
+            Assert.Equal("text", control.Text);
+            Assert.Equal(2, callCount);
+
+            // Set same.
+            control.Rtf = "{\\rtf1text}";
+            Assert.Equal("text", control.Text);
+            Assert.Equal(4, callCount);
+
+            // Set different.
+            control.Text = null;
+            Assert.Empty(control.Text);
+            Assert.Equal(5, callCount);
+
+            // Remove handler.
+            control.TextChanged -= handler;
+            control.Rtf = "{\\rtf1text}";
+            Assert.Equal("text", control.Text);
+            Assert.Equal(5, callCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_Rtf_SetWithHandlerWithHandle_CallsTextChanged()
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            int callCount = 0;
+            EventHandler handler = (sender, e) =>
+            {
+                Assert.Same(control, sender);
+                Assert.Equal(EventArgs.Empty, e);
+                callCount++;
+            };
+            control.TextChanged += handler;
+
+            // Set different.
+            control.Rtf = "{\\rtf1text}";
+            Assert.Equal("text", control.Text);
+            Assert.Equal(2, callCount);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set same.
+            control.Rtf = "{\\rtf1text}";
+            Assert.Equal("text", control.Text);
+            Assert.Equal(4, callCount);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set different.
+            control.Rtf = null;
+            Assert.Empty(control.Text);
+            Assert.Equal(6, callCount);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Remove handler.
+            control.TextChanged -= handler;
+            control.Rtf = "{\\rtf1text}";
+            Assert.Equal("text", control.Text);
+            Assert.Equal(6, callCount);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_Rtf_SetInvalidValue_ThrowsArgumentException()
+        {
+            using var control = new RichTextBox();
+            Assert.Throws<ArgumentException>(null, () => control.Rtf = "text");
+            Assert.True(control.IsHandleCreated);
+            Assert.DoesNotContain("text", control.Rtf);
+            Assert.Empty(control.Text);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SelectedRtf_Get_ReturnsExpected()
+        {
+            using var control = new RichTextBox();
+            string rtf1 = control.SelectedRtf;
+            Assert.Empty(rtf1);
             Assert.True(control.IsHandleCreated);
 
-            // Call again.
-            Assert.NotNull(control.SelectedRtf);
+            // Get again.
+            string rtf2 = control.SelectedRtf;
+            Assert.Equal(rtf1, rtf2);
             Assert.True(control.IsHandleCreated);
         }
 
@@ -1048,14 +1251,393 @@ namespace System.Windows.Forms.Tests
             int createdCallCount = 0;
             control.HandleCreated += (sender, e) => createdCallCount++;
 
-            Assert.NotNull(control.SelectedRtf);
+            string rtf1 = control.SelectedRtf;
+            Assert.Empty(rtf1);
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
             Assert.Equal(0, createdCallCount);
 
-            // Call again.
-            Assert.NotNull(control.SelectedRtf);
+            // Get again.
+            string rtf2 = control.SelectedRtf;
+            Assert.Equal(rtf1, rtf2);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SelectedRtf_GetWithPlainText_ReturnsExpected()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Text",
+                SelectedText = "ex"
+            };
+            string rtf1 = control.SelectedRtf;
+            Assert.Empty(rtf1);
+            Assert.True(control.IsHandleCreated);
+
+            // Get again.
+            string rtf2 = control.SelectedRtf;
+            Assert.Equal(rtf1, rtf2);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SelectedRtf_GetWithPlainTextWithHandle_ReturnsExpected()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Text",
+                SelectedText = "ex"
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            string rtf1 = control.SelectedRtf;
+            Assert.Empty(rtf1);
+            Assert.DoesNotContain("ex", rtf1);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Get again.
+            string rtf2 = control.SelectedRtf;
+            Assert.Equal(rtf1, rtf2);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        public void RichTextBox_SelectedRtf_Set_GetReturnsExpected(string nullOrEmpty)
+        {
+            using var control = new RichTextBox
+            {
+                SelectedRtf = "{\\rtf1Hell}"
+            };
+
+            string rtf = control.SelectedRtf;
+            Assert.Empty(rtf);
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+
+            control.SelectedRtf = nullOrEmpty;
+            rtf = control.SelectedRtf;
+            Assert.Empty(rtf);
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        public void RichTextBox_SelectedRtf_SetWithHandle_GetReturnsExpected(string nullOrEmpty)
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            control.SelectedRtf = "{\\rtf1Hell}";
+            string rtf = control.SelectedRtf;
+            Assert.Empty(rtf);
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            control.SelectedRtf = nullOrEmpty;
+            rtf = control.SelectedRtf;
+            Assert.Empty(rtf);
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        public void RichTextBox_SelectedRtf_SetWithRtf_GetReturnsExpected(string nullOrEmpty)
+        {
+            using var control = new RichTextBox
+            {
+                Rtf = "{\\rtf1Hello World}",
+                SelectedRtf = "{\\rtf1Hell}"
+            };
+
+            string rtf = control.SelectedRtf;
+            Assert.Empty(rtf);
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+
+            control.SelectedRtf = nullOrEmpty;
+            rtf = control.SelectedRtf;
+            Assert.Empty(rtf);
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        public void RichTextBox_SelectedRtf_SetWithRtfWithHandle_GetReturnsExpected(string nullOrEmpty)
+        {
+            using var control = new RichTextBox
+            {
+                Rtf = "{\\rtf1Hello World}"
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            control.SelectedRtf = "{\\rtf1Hell}";
+            string rtf = control.SelectedRtf;
+            Assert.Empty(rtf);
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            control.SelectedRtf = nullOrEmpty;
+            rtf = control.SelectedRtf;
+            Assert.Empty(rtf);
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SelectedRtf_SetInvalidValue_ThrowsArgumentException()
+        {
+            using var control = new RichTextBox();
+            Assert.Throws<ArgumentException>(null, () => control.SelectedRtf = "text");
+            Assert.True(control.IsHandleCreated);
+            Assert.DoesNotContain("text", control.Rtf);
+            Assert.Empty(control.Text);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SelectedText_Get_ReturnsExpected()
+        {
+            using var control = new RichTextBox();
+            string text1 = control.SelectedText;
+            Assert.Empty(text1);
+            Assert.True(control.IsHandleCreated);
+
+            // Get again.
+            string text2 = control.SelectedText;
+            Assert.Equal(text1, text2);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SelectedText_GetWithHandle_ReturnsExpected()
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            string text1 = control.SelectedText;
+            Assert.Empty(text1);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Get again.
+            string text2 = control.SelectedText;
+            Assert.Equal(text1, text2);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SelectedText_GetWithPlainText_ReturnsExpected()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Text",
+                SelectedText = "ex"
+            };
+            string text1 = control.SelectedText;
+            Assert.Empty(text1);
+            Assert.True(control.IsHandleCreated);
+
+            // Get again.
+            string text2 = control.SelectedText;
+            Assert.Equal(text1, text2);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SelectedText_GetWithPlainTextWithHandle_ReturnsExpected()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Text",
+                SelectedText = "ex"
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            string text1 = control.SelectedText;
+            Assert.Empty(text1);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Get again.
+            string text2 = control.SelectedText;
+            Assert.Equal(text1, text2);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetStringTheoryData))]
+        public void RichTextBox_SelectedText_Set_GetReturnsExpected(string value)
+        {
+            using var control = new RichTextBox
+            {
+                SelectedText = value
+            };
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+
+            // Set same.
+            control.SelectedText = value;
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetStringTheoryData))]
+        public void RichTextBox_SelectedText_SetWithHandle_GetReturnsExpected(string value)
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            control.SelectedText = value;
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set same.
+            control.SelectedText = value;
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetStringTheoryData))]
+        public void RichTextBox_SelectedText_SetWithRtf_GetReturnsExpected(string value)
+        {
+            using var control = new RichTextBox
+            {
+                Rtf = "{\\rtf1Hello World}",
+                SelectedText = value
+            };
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+
+            // Set same.
+            control.SelectedText = value;
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetStringTheoryData))]
+        public void RichTextBox_SelectedText_SetWithText_GetReturnsExpected(string value)
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Hello World",
+                SelectedText = value
+            };
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+
+            // Set same.
+            control.SelectedText = value;
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetStringTheoryData))]
+        public void RichTextBox_SelectedText_SetWithTextWithHandle_GetReturnsExpected(string value)
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Hello World"
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            control.SelectedText = value;
+            Assert.Empty(control.SelectedText);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set same.
+            control.SelectedText = value;
+            Assert.Empty(control.SelectedText);
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -3216,10 +3798,10 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> Find_CharArray_TestData()
         {
-            yield return new object[] { string.Empty, new char[0], -1 };
+            yield return new object[] { string.Empty, Array.Empty<char>(), -1 };
             yield return new object[] { string.Empty, new char[] { 'a', 'b', 'c' }, -1 };
 
-            yield return new object[] { "abc", new char[0], -1 };
+            yield return new object[] { "abc", Array.Empty<char>(), -1 };
             yield return new object[] { "abc", new char[] { 'a' }, 0 };
             yield return new object[] { "abc", new char[] { 'a', 'b' }, 0 };
             yield return new object[] { "abc", new char[] { 'a', 'b', 'c' }, 0 };
@@ -3254,10 +3836,10 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> Find_CharArray_Int_TestData()
         {
-            yield return new object[] { string.Empty, new char[0], 0, -1 };
+            yield return new object[] { string.Empty, Array.Empty<char>(), 0, -1 };
             yield return new object[] { string.Empty, new char[] { 'a', 'b', 'c' }, 0, -1 };
 
-            yield return new object[] { "abc", new char[0], 0, -1 };
+            yield return new object[] { "abc", Array.Empty<char>(), 0, -1 };
             yield return new object[] { "abc", new char[] { 'a' },0,  0 };
             yield return new object[] { "abc", new char[] { 'a', 'b' },0,  0 };
             yield return new object[] { "abc", new char[] { 'a', 'b', 'c' },0,  0 };
@@ -3298,10 +3880,10 @@ namespace System.Windows.Forms.Tests
         {
             foreach (int end in new int[] { -1, 0 })
             {
-                yield return new object[] { string.Empty, new char[0], 0, end, -1 };
+                yield return new object[] { string.Empty, Array.Empty<char>(), 0, end, -1 };
                 yield return new object[] { string.Empty, new char[] { 'a', 'b', 'c' }, 0, end, -1 };
 
-                yield return new object[] { "abc", new char[0], 0, end, -1 };
+                yield return new object[] { "abc", Array.Empty<char>(), 0, end, -1 };
                 yield return new object[] { "abc", new char[] { 'a' },0, end,  0 };
                 yield return new object[] { "abc", new char[] { 'a', 'b' },0, end,  0 };
                 yield return new object[] { "abc", new char[] { 'a', 'b', 'c' },0, end,  0 };
@@ -3535,6 +4117,262 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsFact]
+        public void RichTextBox_LoadFile_InvokePlainTextEmpty_Success()
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            control.LoadFile(stream, RichTextBoxStreamType.PlainText);
+            Assert.Empty(control.Text);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_InvokePlainTextNotEmpty_Success()
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            byte[] buffer = Encoding.ASCII.GetBytes("Hello World");
+            stream.Write(buffer, 0, buffer.Length);
+            stream.Position = 0;
+
+            control.LoadFile(stream, RichTextBoxStreamType.PlainText);
+            Assert.Equal("Hello World", control.Text);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_InvokePlainTextEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            control.LoadFile(stream, RichTextBoxStreamType.PlainText);
+            Assert.Empty(control.Text);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_InvokePlainTextNotEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            byte[] buffer = Encoding.ASCII.GetBytes("Hello World");
+            stream.Write(buffer, 0, buffer.Length);
+            stream.Position = 0;
+            control.LoadFile(stream, RichTextBoxStreamType.PlainText);
+            Assert.Equal("Hello World", control.Text);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_InvokePlainTextWithRtf_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Rtf = "{\\rtf1OldText}"
+            };
+            using var stream = new MemoryStream();
+            byte[] buffer = Encoding.ASCII.GetBytes("Hello World");
+            stream.Write(buffer, 0, buffer.Length);
+            stream.Position = 0;
+
+            control.LoadFile(stream, RichTextBoxStreamType.PlainText);
+            Assert.Equal("Hello World", control.Text);
+            Assert.DoesNotContain("OldText", control.Rtf);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_InvokeUnicodeTextEmpty_Success()
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            control.LoadFile(stream, RichTextBoxStreamType.UnicodePlainText);
+            Assert.Empty(control.Text);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_InvokeUnicodeTextNotEmpty_Success()
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            byte[] buffer = Encoding.Unicode.GetBytes("Hello World");
+            stream.Write(buffer, 0, buffer.Length);
+            stream.Position = 0;
+
+            control.LoadFile(stream, RichTextBoxStreamType.UnicodePlainText);
+            Assert.Equal("Hello World", control.Text);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_InvokeUnicodeTextEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            control.LoadFile(stream, RichTextBoxStreamType.UnicodePlainText);
+            Assert.Empty(control.Text);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_InvokeUnicodeTextNotEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            byte[] buffer = Encoding.Unicode.GetBytes("Hello World");
+            stream.Write(buffer, 0, buffer.Length);
+            stream.Position = 0;
+            control.LoadFile(stream, RichTextBoxStreamType.UnicodePlainText);
+            Assert.Equal("Hello World", control.Text);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_InvokeUnicodeTextWithRtf_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Rtf = "{\\rtf1OldText}"
+            };
+            using var stream = new MemoryStream();
+            byte[] buffer = Encoding.Unicode.GetBytes("Hello World");
+            stream.Write(buffer, 0, buffer.Length);
+            stream.Position = 0;
+
+            control.LoadFile(stream, RichTextBoxStreamType.UnicodePlainText);
+            Assert.Equal("Hello World", control.Text);
+            Assert.DoesNotContain("OldText", control.Rtf);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_InvokeRichTextNotEmpty_Success()
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            byte[] buffer = Encoding.ASCII.GetBytes("{\\rtf1Hello World}");
+            stream.Write(buffer, 0, buffer.Length);
+            stream.Position = 0;
+
+            control.LoadFile(stream, RichTextBoxStreamType.RichText);
+            Assert.Equal("Hello World", control.Text);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_InvokeRichTextWithRtf_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Rtf = "{\\rtf1OldText}"
+            };
+            using var stream = new MemoryStream();
+            byte[] buffer = Encoding.ASCII.GetBytes("{\\rtf1Hello World}");
+            stream.Write(buffer, 0, buffer.Length);
+            stream.Position = 0;
+
+            control.LoadFile(stream, RichTextBoxStreamType.RichText);
+            Assert.Equal("Hello World", control.Text);
+            Assert.DoesNotContain("OldText", control.Rtf);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_NullData_ThrowsArgumentNullException()
+        {
+            using var control = new RichTextBox();
+            Assert.Throws<ArgumentNullException>("data", () => control.LoadFile((Stream)null, RichTextBoxStreamType.RichText));
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(RichTextBoxStreamType))]
+        public void RichTextBox_LoadFile_InvalidFileType_ThrowsInvalidEnumArgumentException(RichTextBoxStreamType fileType)
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            Assert.Throws<InvalidEnumArgumentException>("fileType", () => control.LoadFile(stream, fileType));
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [InlineData(RichTextBoxStreamType.RichNoOleObjs)]
+        [InlineData(RichTextBoxStreamType.TextTextOleObjs)]
+        public void RichTextBox_LoadFile_UnprocessableFileType_ThrowsArgumentException(RichTextBoxStreamType fileType)
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            Assert.Throws<ArgumentException>(null, () => control.LoadFile(stream, fileType));
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_RichTextEmpty_ThrowsArgumentException()
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            Assert.Throws<ArgumentException>(null, () => control.LoadFile(stream, RichTextBoxStreamType.RichText));
+            Assert.Empty(control.Text);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_LoadFile_InvalidRtf_ThrowsArgumentException()
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            byte[] buffer = Encoding.ASCII.GetBytes("Hello World");
+            stream.Write(buffer, 0, buffer.Length);
+            stream.Position = 0;
+
+            Assert.Throws<ArgumentException>(null, () => control.LoadFile(stream, RichTextBoxStreamType.RichText));
+        }
+
+        [WinFormsFact]
         public void RichTextBox_GetAutoSizeMode_Invoke_ReturnsExpected()
         {
             using var control = new SubRichTextBox();
@@ -3727,6 +4565,13 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expected, control.GetStyle(flag));
         }
 
+        [WinFormsFact]
+        public void RichTextBox_GetTopLevel_Invoke_ReturnsExpected()
+        {
+            using var control = new SubRichTextBox();
+            Assert.False(control.GetTopLevel());
+        }
+
         [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void RichTextBox_OnBackColorChanged_Invoke_CallsBackColorChanged(EventArgs eventArgs)
@@ -3831,6 +4676,440 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokePlainTextEmpty_Success()
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.PlainText);
+            Assert.Empty(Encoding.ASCII.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokePlainTextNotEmpty_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Hello World"
+            };
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.PlainText);
+            Assert.Empty(Encoding.ASCII.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokePlainTextEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.PlainText);
+            Assert.Empty(Encoding.ASCII.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokePlainTextNotEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Hello World"
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.PlainText);
+            Assert.Equal("Hello World", Encoding.ASCII.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeUnicodeTextEmpty_Success()
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.PlainText);
+            Assert.Empty(Encoding.Unicode.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeUnicodeTextNotEmpty_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Hello World"
+            };
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.PlainText);
+            Assert.Empty(Encoding.Unicode.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeUnicodePlainTextEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.UnicodePlainText);
+            Assert.Empty(Encoding.Unicode.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeUnicodePlainTextNotEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Hello World"
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.UnicodePlainText);
+            Assert.Equal("Hello World", Encoding.Unicode.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeRichTextEmpty_Success()
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.RichText);
+            string text = Encoding.ASCII.GetString(stream.ToArray());
+            Assert.StartsWith("{\\rtf", text);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeRichTextNotEmpty_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Hello World"
+            };
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.RichText);
+            Assert.Empty(Encoding.ASCII.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeRichTextEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.RichText);
+            string text = Encoding.ASCII.GetString(stream.ToArray());
+            Assert.StartsWith("{\\rtf", text);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeRichTextNotEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Hello World"
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.RichText);
+            string text = Encoding.ASCII.GetString(stream.ToArray());
+            Assert.StartsWith("{\\rtf", text);
+            Assert.Contains("Hello World", text);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeTextTextOleObjsEmpty_Success()
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.TextTextOleObjs);
+            Assert.Empty(Encoding.ASCII.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeTextTextOleObjsNotEmpty_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Hello World"
+            };
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.TextTextOleObjs);
+            Assert.Empty(Encoding.ASCII.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeTextTextOleObjsEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.TextTextOleObjs);
+            Assert.Empty(Encoding.ASCII.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeTextTextOleObjsNotEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Hello World"
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.TextTextOleObjs);
+            Assert.Equal("Hello World", Encoding.ASCII.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeRichNoOleObjsNotEmpty_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Hello World"
+            };
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.RichNoOleObjs);
+            Assert.Empty(Encoding.ASCII.GetString(stream.ToArray()));
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeRichNoOleObjsEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.RichNoOleObjs);
+            string text = Encoding.ASCII.GetString(stream.ToArray());
+            Assert.StartsWith("{\\rtf", text);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_InvokeRichNoOleObjsNotEmptyWithHandle_Success()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Hello World"
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            using var stream = new MemoryStream();
+            control.SaveFile(stream, RichTextBoxStreamType.RichNoOleObjs);
+            string text = Encoding.ASCII.GetString(stream.ToArray());
+            Assert.StartsWith("{\\rtf", text);
+            Assert.Contains("Hello World", text);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_NullData_Nop()
+        {
+            using var control = new RichTextBox();
+            control.SaveFile((Stream)null, RichTextBoxStreamType.RichText);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_NullDataWithText_Nop()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Text"
+            };
+            control.SaveFile((Stream)null, RichTextBoxStreamType.RichText);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_NullDataWithHandle_Nop()
+        {
+            using var control = new RichTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            control.SaveFile((Stream)null, RichTextBoxStreamType.RichText);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SaveFile_NullDataWithTextWithHandle_Nop()
+        {
+            using var control = new RichTextBox
+            {
+                Text = "Text"
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            control.SaveFile((Stream)null, RichTextBoxStreamType.RichText);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(RichTextBoxStreamType))]
+        public void RichTextBox_SaveFile_InvalidFileType_ThrowsInvalidEnumArgumentException(RichTextBoxStreamType fileType)
+        {
+            using var control = new RichTextBox();
+            using var stream = new MemoryStream();
+            Assert.Throws<InvalidEnumArgumentException>("fileType", () => control.SaveFile(stream, fileType));
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void RichTextBox_SetAnsiRtf_DoesNotCorrupt()
+        {
+            // RichTextBox.Rtf treats input as code page specific (i.e. not Unicode). To see
+            // that we're actually using the code page we'll set the text to 0xA0 (160 / nbsp) to see
+            // that we can get it back out. If the encoding is not done in the codepage we'll likely
+            // get multiple ASCII bytes back out. UTF-8, for example, encodes the .NET UTF-16 0x00A0 (160)
+            // to 0xC2 0xA0.
+
+            // Ultimately we should really update RichTextBox to always stream data in Unicode as
+            // we're hard-coded to load 4.1 (see RichTextBox.CreateParams).
+
+            using var control = new RichTextBox();
+
+            Span<char> input = stackalloc char[] { (char)0xA0 };
+            control.Rtf = $"{{\\rtf1\\ansi {input[0]}}}";
+
+            Span<byte> output = stackalloc byte[16];
+
+            int currentCodePage = (CodePagesEncodingProvider.Instance.GetEncoding(0) ?? Encoding.UTF8).CodePage;
+
+            // The non-lossy conversion of nbsp only works single byte Windows code pages (e.g. not Japanese).
+            if (currentCodePage >= 1250 && currentCodePage <= 1258)
+            {
+                Assert.Equal(input[0], control.Text[0]);
+            }
+        }
+
         private class CustomGetCharFormatRichTextBox : RichTextBox
         {
             public bool MakeCustom { get; set; }
@@ -3909,6 +5188,8 @@ namespace System.Windows.Forms.Tests
             public new AutoSizeMode GetAutoSizeMode() => base.GetAutoSizeMode();
 
             public new bool GetStyle(ControlStyles flag) => base.GetStyle(flag);
+
+            public new bool GetTopLevel() => base.GetTopLevel();
 
             public new void OnBackColorChanged(EventArgs e) => base.OnBackColorChanged(e);
         }

@@ -11,6 +11,7 @@ using static Interop;
 
 namespace System.Windows.Forms.Tests
 {
+    // NB: doesn't require thread affinity
     public class DataFormatsTests : IClassFixture<ThreadExceptionFixture>
     {
         public static IEnumerable<object[]> KnownFormats_TestData()
@@ -111,12 +112,23 @@ namespace System.Windows.Forms.Tests
         {
             yield return new object[] { null };
             yield return new object[] { string.Empty };
-            yield return new object[] { new string('a', 256) };
         }
 
         [Theory]
         [MemberData(nameof(GetFormat_InvalidString_TestData))]
-        public void DataFormats_GetFormat_NullOrEmptyString_ThrowsWin32Exception(string format)
+        public void DataFormats_GetFormat_NullOrEmptyString_ArgumentException(string format)
+        {
+            Assert.Throws<ArgumentException>(() => DataFormats.GetFormat(format));
+        }
+
+        public static IEnumerable<object[]> GetFormat_InvalidFormat_TestData()
+        {
+            yield return new object[] { new string('a', 256) };
+        }
+
+        [Theory]
+        [MemberData(nameof(GetFormat_InvalidFormat_TestData))]
+        public void DataFormats_GetFormat_InvalidFormat_ThrowsWin32Exception(string format)
         {
             Assert.Throws<Win32Exception>(() => DataFormats.GetFormat(format));
         }

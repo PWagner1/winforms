@@ -28,21 +28,17 @@ namespace System.Windows.Forms.PropertyGridInternal
     {
         protected static readonly Point InvalidPoint = new Point(int.MinValue, int.MinValue);
 
-#if true // RENDERMODE
         public const int RENDERMODE_LEFTDOT = 2;
         public const int RENDERMODE_BOLD = 3;
         public const int RENDERMODE_TRIANGLE = 4;
 
         public static int inheritRenderMode = RENDERMODE_BOLD;
-#endif
 
         public static TraceSwitch GridViewDebugPaint = new TraceSwitch("GridViewDebugPaint", "PropertyGridView: Debug property painting");
 
         private PropertyGrid ownerGrid;                      // the properties window host.
 
-#if true // RENDERMODE
         private const int LEFTDOT_SIZE = 4;
-#endif
         // constants
         private const int EDIT_INDENT = 0;
         private const int OUTLINE_INDENT = 10;
@@ -194,10 +190,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         public override Color BackColor
         {
-            get
-            {
-                return base.BackColor;
-            }
+            get => base.BackColor;
             set
             {
                 backgroundBrush = new SolidBrush(value);
@@ -210,7 +203,8 @@ namespace System.Windows.Forms.PropertyGridInternal
             return backgroundBrush;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public bool CanCopy
         {
             get
@@ -231,7 +225,8 @@ namespace System.Windows.Forms.PropertyGridInternal
             }
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public bool CanCut
         {
             get
@@ -240,7 +235,8 @@ namespace System.Windows.Forms.PropertyGridInternal
             }
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public bool CanPaste
         {
             get
@@ -249,7 +245,8 @@ namespace System.Windows.Forms.PropertyGridInternal
             }
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public bool CanUndo
         {
             get
@@ -4991,7 +4988,6 @@ namespace System.Windows.Forms.PropertyGridInternal
             }
             Edit.AccessibleName = gridEntry.Label;
 
-#if true // RENDERMODE
             switch (inheritRenderMode)
             {
                 case RENDERMODE_BOLD:
@@ -5016,7 +5012,6 @@ namespace System.Windows.Forms.PropertyGridInternal
                     // nothing
                     break;
             }
-#endif
 
             if (GetFlag(FlagIsSplitterMove) || !gridEntry.HasValue || !FocusInside)
             {
@@ -7096,11 +7091,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                     return base.Name;
                 }
-
-                set
-                {
-                    base.Name = value;
-                }
+                set => base.Name = value;
             }
 
             /// <summary>
@@ -7232,6 +7223,12 @@ namespace System.Windows.Forms.PropertyGridInternal
                 return base.FragmentNavigate(direction);
             }
 
+            public override string Name
+            {
+                get => base.Name ?? SR.PropertyGridEntryValuesListDefaultAccessibleName;
+                set => base.Name = value;
+            }
+
             /// <summary>
             ///  Return the element that is the root node of this fragment of UI.
             /// </summary>
@@ -7288,7 +7285,7 @@ namespace System.Windows.Forms.PropertyGridInternal
             internal void SetListBoxItemFocus()
             {
                 var selectedItem = _owningGridViewListBox.SelectedItem;
-                if (_itemAccessibleObjects[selectedItem] is AccessibleObject itemAccessibleObject)
+                if (selectedItem != null && _itemAccessibleObjects[selectedItem] is AccessibleObject itemAccessibleObject)
                 {
                     itemAccessibleObject.SetFocus();
                 }
@@ -7347,10 +7344,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
             public override string Text
             {
-                get
-                {
-                    return base.Text;
-                }
+                get => base.Text;
                 set
                 {
                     fInSetText = true;
@@ -7863,11 +7857,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                         return base.Name;
                     }
-
-                    set
-                    {
-                        base.Name = value;
-                    }
+                    set => base.Name = value;
                 }
 
                 internal override int[] RuntimeId

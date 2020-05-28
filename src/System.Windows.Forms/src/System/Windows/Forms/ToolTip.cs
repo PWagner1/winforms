@@ -31,7 +31,6 @@ namespace System.Windows.Forms
         private const int AutoPopRatio = 10;
 
         private const int BalloonOffsetX = 10;
-        private const int BaloonOffsetY = 8;
 
         private const int LocationIndexTop = 0;
         private const int LocationIndexRight = 1;
@@ -209,23 +208,23 @@ namespace System.Windows.Forms
                 cp.ClassName = WindowClasses.TOOLTIPS_CLASS;
                 if (_showAlways)
                 {
-                    cp.Style = NativeMethods.TTS_ALWAYSTIP;
+                    cp.Style = (int)TTS.ALWAYSTIP;
                 }
                 if (_isBalloon)
                 {
-                    cp.Style |= NativeMethods.TTS_BALLOON;
+                    cp.Style |= (int)TTS.BALLOON;
                 }
                 if (!_stripAmpersands)
                 {
-                    cp.Style |= NativeMethods.TTS_NOPREFIX;
+                    cp.Style |= (int)TTS.NOPREFIX;
                 }
                 if (!_useAnimation)
                 {
-                    cp.Style |= NativeMethods.TTS_NOANIMATE;
+                    cp.Style |= (int)TTS.NOANIMATE;
                 }
                 if (!_useFading)
                 {
-                    cp.Style |= NativeMethods.TTS_NOFADE;
+                    cp.Style |= (int)TTS.NOFADE;
                 }
                 cp.ExStyle = 0;
                 cp.Caption = null;
@@ -419,8 +418,8 @@ namespace System.Windows.Forms
         [Localizable(false)]
         [Bindable(true)]
         [Description(nameof(SR.ControlTagDescr))]
-        [DefaultValue(null),
-        TypeConverter(typeof(StringConverter))]
+        [DefaultValue(null)]
+        [TypeConverter(typeof(StringConverter))]
         public object Tag { get; set; }
 
         /// <summary>
@@ -1029,10 +1028,10 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Retrieves the <see cref="ToolTip"/> text associated with the specified control.
         /// </summary>
-        [DefaultValue(""),
-        Localizable(true)]
-        [Description(nameof(SR.ToolTipToolTipDescr)),
-        Editor("System.ComponentModel.Design.MultilineStringEditor, " + AssemblyRef.SystemDesign, typeof(Drawing.Design.UITypeEditor))]
+        [DefaultValue("")]
+        [Localizable(true)]
+        [Description(nameof(SR.ToolTipToolTipDescr))]
+        [Editor("System.ComponentModel.Design.MultilineStringEditor, " + AssemblyRef.SystemDesign, typeof(Drawing.Design.UITypeEditor))]
         public string GetToolTip(Control control)
         {
             if (control == null)

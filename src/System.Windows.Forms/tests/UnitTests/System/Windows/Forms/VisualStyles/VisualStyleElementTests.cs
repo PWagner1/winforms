@@ -8,11 +8,11 @@ using Xunit;
 
 namespace System.Windows.Forms.VisualStyles.Tests
 {
+    // NB: doesn't require thread affinity
     public class VisualStyleElementTests : IClassFixture<ThreadExceptionFixture>
     {
         public static IEnumerable<object[]> CreateElement_TestData()
         {
-            yield return new object[] { null, 1, 2 };
             yield return new object[] { string.Empty, 0, 0 };
             yield return new object[] { "className", -1, -2 };
         }
@@ -25,6 +25,12 @@ namespace System.Windows.Forms.VisualStyles.Tests
             Assert.Same(className, element.ClassName);
             Assert.Equal(part, element.Part);
             Assert.Equal(state, element.State);
+        }
+
+        [WinFormsFact]
+        public void VisualStyleElement_CreateElement_NullClassName_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>("className", () => VisualStyleElement.CreateElement(null, 1, 2));
         }
 
         public static IEnumerable<object[]> KnownElements_TestData()

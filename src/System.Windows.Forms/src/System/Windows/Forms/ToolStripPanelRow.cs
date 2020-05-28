@@ -4,8 +4,6 @@
 
 #nullable disable
 
-//#define DEBUG_PAINT
-
 using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -84,7 +82,9 @@ namespace System.Windows.Forms
             }
         }
 
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden), SRDescription(nameof(SR.ControlControlsDescr))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.ControlControlsDescr))]
         public Control[] Controls
         {
             get
@@ -98,7 +98,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Collection of child controls.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden), SRDescription(nameof(SR.ControlControlsDescr))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.ControlControlsDescr))]
         internal ToolStripPanelRowControlCollection ControlsInternal
         {
             get
@@ -622,35 +624,6 @@ namespace System.Windows.Forms
             ApplyCachedBounds();
         }
 
-#if DEBUG_PAINT
-        internal void PaintColumns(PaintEventArgs e) {
-            Graphics g = e.Graphics;
-
-            using (Pen pen = new Pen(Color.Green)) {
-                g.DrawRectangle(pen, this.DisplayRectangle);
-            }
-
-            foreach (ToolStripPanelCell c in this.Cells) {
-                Rectangle inner = c.Bounds;
-                Rectangle b = LayoutUtils.InflateRect(inner, c.Margin);
-                if ((b.Width > 0) && (b.Height > 0)) {
-                    using(Brush brush = new System.Drawing.Drawing2D.LinearGradientBrush(b, ProfessionalColors.ButtonSelectedGradientBegin, ProfessionalColors.ButtonSelectedGradientEnd, System.Drawing.Drawing2D.LinearGradientMode.Horizontal)) {
-                        g.FillRectangle(brush, b);
-                        g.DrawRectangle(SystemPens.ControlDarkDark, b.X, b.Y, b.Width -1, b.Height -1);
-                        g.DrawRectangle(Pens.HotPink, inner.X, inner.Y, inner.Width -1, inner.Height -1);
-                        if (c.Control != null) {
-                            g.DrawString("BAD\r\n" + c.Control.Name, ToolStripPanel.Font, SystemBrushes.ControlText, inner);
-                        }
-                        else {
-                            g.DrawString("BAD\r\n" + "NULL control", ToolStripPanel.Font, SystemBrushes.ControlText, inner);
-
-                        }
-                    }
-                }
-            }
-        }
-#endif
-
         private void SetBounds(Rectangle bounds)
         {
             if (bounds != this.bounds)
@@ -994,8 +967,6 @@ namespace System.Windows.Forms
 
         private class HorizontalRowManager : ToolStripPanelRowManager
         {
-            private const int DRAG_BOUNDS_INFLATE = 4;
-
             public HorizontalRowManager(ToolStripPanelRow owner) : base(owner)
             {
                 owner.SuspendLayout();
@@ -1557,8 +1528,6 @@ namespace System.Windows.Forms
 
         private class VerticalRowManager : ToolStripPanelRowManager
         {
-            private const int DRAG_BOUNDS_INFLATE = 4;
-
             public VerticalRowManager(ToolStripPanelRow owner) : base(owner)
             {
                 owner.SuspendLayout();

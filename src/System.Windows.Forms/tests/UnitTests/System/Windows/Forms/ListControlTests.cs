@@ -1281,19 +1281,19 @@ namespace System.Windows.Forms.Tests
 
             // Set different.
             control.DisplayMember = "Value1";
-            Assert.Same("Value1", control.DisplayMember);
+            Assert.Equal("Value1", control.DisplayMember);
             Assert.Equal(1, displayMemberCallCount);
             Assert.Equal(0, dataSourceCallCount);
 
             // Set same.
             control.DisplayMember = "Value1";
-            Assert.Same("Value1", control.DisplayMember);
+            Assert.Equal("Value1", control.DisplayMember);
             Assert.Equal(1, displayMemberCallCount);
             Assert.Equal(0, dataSourceCallCount);
 
             // Set different.
             control.DisplayMember = "Value2";
-            Assert.Same("Value2", control.DisplayMember);
+            Assert.Equal("Value2", control.DisplayMember);
             Assert.Equal(2, displayMemberCallCount);
             Assert.Equal(0, dataSourceCallCount);
 
@@ -1546,17 +1546,17 @@ namespace System.Windows.Forms.Tests
 
             // Set different.
             control.FormatString = "Value1";
-            Assert.Same("Value1", control.FormatString);
+            Assert.Equal("Value1", control.FormatString);
             Assert.Equal(1, callCount);
 
             // Set same.
             control.FormatString = "Value1";
-            Assert.Same("Value1", control.FormatString);
+            Assert.Equal("Value1", control.FormatString);
             Assert.Equal(1, callCount);
 
             // Set different.
             control.FormatString = "Value2";
-            Assert.Same("Value2", control.FormatString);
+            Assert.Equal("Value2", control.FormatString);
             Assert.Equal(2, callCount);
 
             // Set null.
@@ -1874,19 +1874,19 @@ namespace System.Windows.Forms.Tests
 
             // Set different.
             control.ValueMember = "Value1";
-            Assert.Same("Value1", control.ValueMember);
+            Assert.Equal("Value1", control.ValueMember);
             Assert.Equal(1, valueMemberCallCount);
             Assert.Equal(1, selectedValueCallCount);
 
             // Set same.
             control.ValueMember = "Value1";
-            Assert.Same("Value1", control.ValueMember);
+            Assert.Equal("Value1", control.ValueMember);
             Assert.Equal(1, valueMemberCallCount);
             Assert.Equal(1, selectedValueCallCount);
 
             // Set different.
             control.ValueMember = "Value2";
-            Assert.Same("Value2", control.ValueMember);
+            Assert.Equal("Value2", control.ValueMember);
             Assert.Equal(2, valueMemberCallCount);
             Assert.Equal(2, selectedValueCallCount);
 
@@ -2591,6 +2591,13 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expected, control.GetStyle(flag));
         }
 
+        [WinFormsFact]
+        public void ListControl_GetTopLevel_Invoke_ReturnsExpected()
+        {
+            using var control = new SubListControl();
+            Assert.False(control.GetTopLevel());
+        }
+
         [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void ListControl_OnBindingContextChanged_Invoke_CallsBindingContextChanged(EventArgs eventArgs)
@@ -2960,6 +2967,8 @@ namespace System.Windows.Forms.Tests
             public new AutoSizeMode GetAutoSizeMode() => base.GetAutoSizeMode();
 
             public new bool GetStyle(ControlStyles flag) => base.GetStyle(flag);
+
+            public new bool GetTopLevel() => base.GetTopLevel();
 
             public new bool IsInputKey(Keys keyData) => base.IsInputKey(keyData);
 

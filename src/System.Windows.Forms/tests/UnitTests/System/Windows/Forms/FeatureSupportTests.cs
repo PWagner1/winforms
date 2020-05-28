@@ -9,6 +9,7 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
+    // NB: doesn't require thread affinity
     public class FeatureSupportTests : IClassFixture<ThreadExceptionFixture>
     {
         public static IEnumerable<object[]> IsPresent_DefaultMinimumVersion_TestData()
@@ -188,8 +189,10 @@ namespace System.Windows.Forms.Tests
             public static object s_zeroVersionField = new object();
             public static object s_nonZeroVersionField = new object();
 
+#pragma warning disable CA1823 // Unused field
             private readonly object _privateField = new object();
             private static readonly object s_privateField = new object();
+#pragma warning restore CA1823 // Unused field
         }
 
         private class NonIFeatureSupportClass

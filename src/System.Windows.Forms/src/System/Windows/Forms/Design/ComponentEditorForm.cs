@@ -100,7 +100,7 @@ namespace System.Windows.Forms.Design
                             {
                                 return;
                             }
-                            throw e;
+                            throw;
                         }
                     }
                 }
@@ -136,20 +136,17 @@ namespace System.Windows.Forms.Design
         /// <summary>
         ///  Hide the property
         /// </summary>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override bool AutoSize
         {
-            get
-            {
-                return base.AutoSize;
-            }
-            set
-            {
-                base.AutoSize = value;
-            }
+            get => base.AutoSize;
+            set => base.AutoSize = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler AutoSizeChanged
         {
             add => base.AutoSizeChanged += value;
@@ -654,16 +651,17 @@ namespace System.Windows.Forms.Design
                 }
             }
 
-            private void CreateDitherBrush()
+            private unsafe void CreateDitherBrush()
             {
                 Debug.Assert(_hbrushDither == IntPtr.Zero, "Brush should not be recreated.");
 
-                short[] patternBits = new short[] {
+                short* patternBits = stackalloc short[]
+                {
                     unchecked((short)0xAAAA), unchecked((short)0x5555), unchecked((short)0xAAAA), unchecked((short)0x5555),
                     unchecked((short)0xAAAA), unchecked((short)0x5555), unchecked((short)0xAAAA), unchecked((short)0x5555)
                 };
 
-                IntPtr hbitmapTemp = SafeNativeMethods.CreateBitmap(8, 8, 1, 1, patternBits);
+                IntPtr hbitmapTemp = Gdi32.CreateBitmap(8, 8, 1, 1, patternBits);
                 Debug.Assert(hbitmapTemp != IntPtr.Zero,
                              "could not create dither bitmap. Page selector UI will not be correct");
 

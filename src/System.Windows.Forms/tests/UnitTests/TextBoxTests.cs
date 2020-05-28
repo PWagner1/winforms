@@ -16,6 +16,8 @@ namespace System.Windows.Forms.Tests
 
     public class TextBoxTests : IClassFixture<ThreadExceptionFixture>
     {
+        private static int s_preferredHeight = Control.DefaultFont.Height + SystemInformation.BorderSize.Height * 4 + 3;
+
         [WinFormsFact]
         public void TextBox_Ctor_Default()
         {
@@ -299,31 +301,31 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void TextBox_PlaceholderText()
         {
-            var tb = new TextBox
+            using var tb = new TextBox
             {
                 PlaceholderText = "Enter your name"
             };
             Assert.False(string.IsNullOrEmpty(tb.PlaceholderText));
         }
 
-        [Fact]
+        [WinFormsFact]
         public void TextBox_PlaceholderText_DefaultValue()
         {
-            var tb = new TextBox();
+            using var tb = new TextBox();
             Assert.Equal(string.Empty, tb.PlaceholderText);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void TextBox_PlaceholderText_When_InAccessibility_Doesnot_Raise_TextChanged()
         {
-            var tb = new SubTextBox();
+            using var tb = new SubTextBox();
             bool eventRaised = false;
             EventHandler handler = (o, e) => eventRaised = true;
             tb.TextChanged += handler;
-            tb.CreateAccessibility();
+            tb.CreateAccessibilityInstance();
             Assert.False(eventRaised);
             tb.TextChanged -= handler;
         }
@@ -371,18 +373,18 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { tb, msg, true };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(TextBox_ShouldRenderPlaceHolderText_TestData))]
         public void TextBox_ShouldRenderPlaceHolderText(TextBox textBox, Message m, bool expected)
         {
-            var result = textBox.GetTestAccessor().ShouldRenderPlaceHolderText(m);
+            bool result = textBox.TestAccessor().Dynamic.ShouldRenderPlaceHolderText(m);
             Assert.Equal(expected, result);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void TextBox_PlaceholderText_NullValue_CoercedTo_StringEmpty()
         {
-            var tb = new TextBox()
+            using var tb = new TextBox()
             {
                 PlaceholderText = "Text"
             };
@@ -391,18 +393,18 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(string.Empty, tb.PlaceholderText);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void TextBox_PlaceholderText_Overriden()
         {
-            var tb = new SubTextBox();
+            using var tb = new SubTextBox();
 
             Assert.NotNull(tb);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void TextBox_PlaceholderTextAlignments()
         {
-            var tb = new TextBox
+            using var tb = new TextBox
             {
                 PlaceholderText = "Enter your name"
             };
@@ -419,10 +421,10 @@ namespace System.Windows.Forms.Tests
             Assert.False(string.IsNullOrEmpty(tb.PlaceholderText));
         }
 
-        [Fact]
+        [WinFormsFact]
         public void TextBox_PlaceholderTextAlignmentsInRightToLeft()
         {
-            var tb = new TextBox
+            using var tb = new TextBox
             {
                 PlaceholderText = "Enter your name",
                 RightToLeft = RightToLeft.Yes
@@ -438,6 +440,33 @@ namespace System.Windows.Forms.Tests
             User32.SendMessageW(refHandle, User32.WM.PAINT, PARAM.FromBool(false));
 
             Assert.False(string.IsNullOrEmpty(tb.PlaceholderText));
+        }
+
+        [WinFormsFact]
+        public void TextBox_CreateAccessibilityInstance_Invoke_ReturnsExpected()
+        {
+            using var control = new SubTextBox();
+            Control.ControlAccessibleObject instance = Assert.IsType<Control.ControlAccessibleObject>(control.CreateAccessibilityInstance());
+            Assert.NotNull(instance);
+            Assert.Same(control, instance.Owner);
+            Assert.Equal(AccessibleRole.Text, instance.Role);
+            Assert.NotSame(control.CreateAccessibilityInstance(), instance);
+            Assert.NotSame(control.AccessibilityObject, instance);
+        }
+
+        [WinFormsFact]
+        public void TextBox_CreateAccessibilityInstance_InvokeWithCustomRole_ReturnsExpected()
+        {
+            using var control = new SubTextBox
+            {
+                AccessibleRole = AccessibleRole.HelpBalloon
+            };
+            Control.ControlAccessibleObject instance = Assert.IsType<Control.ControlAccessibleObject>(control.CreateAccessibilityInstance());
+            Assert.NotNull(instance);
+            Assert.Same(control, instance.Owner);
+            Assert.Equal(AccessibleRole.HelpBalloon, instance.Role);
+            Assert.NotSame(control.CreateAccessibilityInstance(), instance);
+            Assert.NotSame(control.AccessibilityObject, instance);
         }
 
         [WinFormsFact]
@@ -475,6 +504,158 @@ namespace System.Windows.Forms.Tests
 
             // Call again to test caching.
             Assert.Equal(expected, control.GetStyle(flag));
+        }
+
+        [WinFormsFact]
+        public void TextBox_GetTopLevel_Invoke_ReturnsExpected()
+        {
+            using var control = new SubTextBox();
+            Assert.False(control.GetTopLevel());
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        public void TextBox_OnHandleCreated_Invoke_CallsHandleCreated(EventArgs eventArgs)
+        {
+            using var control = new SubTextBox();
+            int callCount = 0;
+            EventHandler handler = (sender, e) =>
+            {
+                Assert.Same(control, sender);
+                Assert.Same(eventArgs, e);
+                callCount++;
+            };
+
+            // Call with handler.
+            control.HandleCreated += handler;
+            control.OnHandleCreated(eventArgs);
+            Assert.Equal(1, callCount);
+            Assert.Equal(s_preferredHeight, control.Height);
+            Assert.False(control.IsHandleCreated);
+
+            // Remove handler.
+            control.HandleCreated -= handler;
+            control.OnHandleCreated(eventArgs);
+            Assert.Equal(1, callCount);
+            Assert.Equal(s_preferredHeight, control.Height);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        public void TextBox_OnHandleCreated_InvokeWithHandle_CallsHandleCreated(EventArgs eventArgs)
+        {
+            using var control = new SubTextBox();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int callCount = 0;
+            EventHandler handler = (sender, e) =>
+            {
+                Assert.Same(control, sender);
+                Assert.Same(eventArgs, e);
+                callCount++;
+            };
+
+            // Call with handler.
+            control.HandleCreated += handler;
+            control.OnHandleCreated(eventArgs);
+            Assert.Equal(1, callCount);
+            Assert.Equal(s_preferredHeight, control.Height);
+            Assert.True(control.IsHandleCreated);
+
+            // Remove handler.
+            control.HandleCreated -= handler;
+            control.OnHandleCreated(eventArgs);
+            Assert.Equal(1, callCount);
+            Assert.Equal(s_preferredHeight, control.Height);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        public void TextBox_OnHandleDestroyed_Invoke_CallsHandleDestroyed(EventArgs eventArgs)
+        {
+            using var control = new SubTextBox();
+            int callCount = 0;
+            EventHandler handler = (sender, e) =>
+            {
+                Assert.Same(control, sender);
+                Assert.Same(eventArgs, e);
+                callCount++;
+            };
+
+            // Call with handler.
+            control.HandleDestroyed += handler;
+            control.OnHandleDestroyed(eventArgs);
+            Assert.Equal(1, callCount);
+            Assert.False(control.IsHandleCreated);
+
+            // Remove handler.
+            control.HandleDestroyed -= handler;
+            control.OnHandleDestroyed(eventArgs);
+            Assert.Equal(1, callCount);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        public static IEnumerable<object[]> OnHandleDestroyed_TestData()
+        {
+            foreach (bool modified in new bool[] { true, false })
+            {
+                yield return new object[] { modified, null };
+                yield return new object[] { modified, new EventArgs() };
+            }
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(OnHandleDestroyed_TestData))]
+        public void TextBox_OnHandleDestroyed_InvokeWithHandle_CallsHandleDestroyed(bool modified, EventArgs eventArgs)
+        {
+            using var control = new SubTextBox
+            {
+                Text = "Text",
+                SelectionStart = 1,
+                SelectionLength = 2,
+                Modified = modified
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+            int callCount = 0;
+            EventHandler handler = (sender, e) =>
+            {
+                Assert.Same(control, sender);
+                Assert.Same(eventArgs, e);
+                callCount++;
+            };
+
+            // Call with handler.
+            control.HandleDestroyed += handler;
+            control.OnHandleDestroyed(eventArgs);
+            Assert.Equal(1, callCount);
+            Assert.Equal(s_preferredHeight, control.Height);
+            Assert.Equal(0, control.SelectionStart);
+            Assert.Equal(0, control.SelectionLength);
+            Assert.Equal(modified, control.Modified);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Remove handler.
+            control.HandleDestroyed -= handler;
+            control.OnHandleDestroyed(eventArgs);
+            Assert.Equal(1, callCount);
+            Assert.Equal(s_preferredHeight, control.Height);
+            Assert.Equal(0, control.SelectionStart);
+            Assert.Equal(0, control.SelectionLength);
+            Assert.Equal(modified, control.Modified);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
         }
 
         private class SubTextBox : TextBox
@@ -537,15 +718,13 @@ namespace System.Windows.Forms.Tests
 
             public override string PlaceholderText { get => base.PlaceholderText; set => base.PlaceholderText = value; }
 
-            // used to test that PlaceholderText won't raise TextChanged event.
-            public void CreateAccessibility()
-            {
-                this.CreateAccessibilityInstance();
-            }
+            public new AccessibleObject CreateAccessibilityInstance() => base.CreateAccessibilityInstance();
 
             public new AutoSizeMode GetAutoSizeMode() => base.GetAutoSizeMode();
 
             public new bool GetStyle(ControlStyles flag) => base.GetStyle(flag);
+
+            public new bool GetTopLevel() => base.GetTopLevel();
 
             public override bool Focused => IsFocused;
             public override int TextLength => TextCount;
@@ -565,6 +744,10 @@ namespace System.Windows.Forms.Tests
                 get => GetStyle(ControlStyles.UserPaint);
                 set => SetStyle(ControlStyles.UserPaint, value);
             }
+
+            public new void OnHandleCreated(EventArgs e) => base.OnHandleCreated(e);
+
+            public new void OnHandleDestroyed(EventArgs e) => base.OnHandleDestroyed(e);
         }
     }
 }

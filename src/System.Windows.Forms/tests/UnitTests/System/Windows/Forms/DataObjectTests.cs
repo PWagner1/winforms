@@ -8,6 +8,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization;
 using Moq;
 using WinForms.Common.Tests;
@@ -15,6 +17,7 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
+    // NB: doesn't require thread affinity
     public class DataObjectTests : IClassFixture<ThreadExceptionFixture>
     {
         private static readonly string[] s_clipboardFormats =
@@ -608,7 +611,7 @@ namespace System.Windows.Forms.Tests
         public static IEnumerable<object[]> GetFormats_Mocked_TestData()
         {
             yield return new object[] { null };
-            yield return new object[] { new string[0] };
+            yield return new object[] { Array.Empty<string>() };
             yield return new object[] { new string[] { "a", "  ", string.Empty, null } };
         }
 
@@ -631,7 +634,7 @@ namespace System.Windows.Forms.Tests
         public static IEnumerable<object[]> GetFormats_IDataObject_TestData()
         {
             yield return new object[] { null };
-            yield return new object[] { new string[0] };
+            yield return new object[] { Array.Empty<string>() };
             yield return new object[] { new string[] { "a", string.Empty, null } };
             yield return new object[] { new string[] { "a", "  ", string.Empty, null } };
         }
@@ -663,7 +666,7 @@ namespace System.Windows.Forms.Tests
             foreach (bool autoConvert in new bool[] { true, false })
             {
                 yield return new object[] { autoConvert, null };
-                yield return new object[] { autoConvert, new string[0] };
+                yield return new object[] { autoConvert, Array.Empty<string>() };
                 yield return new object[] { autoConvert, new string[] { "a", "  ", string.Empty, null } };
             }
         }
@@ -839,7 +842,7 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> SetAudio_ByteArray_TestData()
         {
-            yield return new object[] { new byte[0] };
+            yield return new object[] { Array.Empty<byte>() };
             yield return new object[] { new byte[] { 1, 2, 3 } };
         }
 
@@ -894,7 +897,7 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> SetAudio_Stream_TestData()
         {
-            yield return new object[] { new MemoryStream(new byte[0]) };
+            yield return new object[] { new MemoryStream(Array.Empty<byte>()) };
             yield return new object[] { new MemoryStream(new byte[] { 1, 2, 3 }) };
         }
 
@@ -1555,7 +1558,51 @@ namespace System.Windows.Forms.Tests
         public void DataObject_SetText_InvalidFormat_ThrowsInvalidEnumArgumentException(TextDataFormat format)
         {
             var dataObject = new DataObject();
-            Assert.Throws<InvalidEnumArgumentException>("format", () => dataObject.SetText("text",  format));
+            Assert.Throws<InvalidEnumArgumentException>("format", () => dataObject.SetText("text", format));
+        }
+
+        [WinFormsFact]
+        public void DataObject_GetData_EnhancedMetafile_DoesNotTerminateProcess()
+        {
+            var data = new DataObject(new DataObjectIgnoringStorageMediumForEnhancedMetafile());
+
+            // Office ignores the storage medium in GetData(EnhancedMetafile) and always returns a handle,
+            // even when asked for a stream. This used to crash the process when DataObject interpreted the
+            // handle as a pointer to a COM IStream without checking the storage medium it retrieved.
+
+            Assert.Null(data.GetData(DataFormats.EnhancedMetafile));
+        }
+
+        private sealed class DataObjectIgnoringStorageMediumForEnhancedMetafile : System.Runtime.InteropServices.ComTypes.IDataObject
+        {
+            public void GetData(ref FORMATETC format, out STGMEDIUM medium)
+            {
+                Marshal.ThrowExceptionForHR(QueryGetData(ref format));
+
+                using var metafile = new Drawing.Imaging.Metafile("bitmaps/milkmateya01.emf");
+
+                medium = default;
+                medium.tymed = TYMED.TYMED_ENHMF;
+                medium.unionmember = metafile.GetHenhmetafile();
+            }
+
+            public int QueryGetData(ref FORMATETC format)
+            {
+                // do not check the requested storage medium, we always return a metafile handle, thats what Office does
+
+                if (format.cfFormat != (short)Interop.User32.CF.ENHMETAFILE || format.dwAspect != DVASPECT.DVASPECT_CONTENT || format.lindex != -1)
+                    return (int)Interop.HRESULT.DV_E_FORMATETC;
+
+                return 0;
+            }
+
+            public IEnumFORMATETC EnumFormatEtc(DATADIR direction) => throw new NotImplementedException();
+            public void GetDataHere(ref FORMATETC format, ref STGMEDIUM medium) => throw new NotImplementedException();
+            public int GetCanonicalFormatEtc(ref FORMATETC formatIn, out FORMATETC formatOut) => throw new NotImplementedException();
+            public void SetData(ref FORMATETC formatIn, ref STGMEDIUM medium, bool release) => throw new NotImplementedException();
+            public int DAdvise(ref FORMATETC pFormatetc, ADVF advf, IAdviseSink adviseSink, out int connection) => throw new NotImplementedException();
+            public void DUnadvise(int connection) => throw new NotImplementedException();
+            public int EnumDAdvise(out IEnumSTATDATA enumAdvise) => throw new NotImplementedException();
         }
     }
 }

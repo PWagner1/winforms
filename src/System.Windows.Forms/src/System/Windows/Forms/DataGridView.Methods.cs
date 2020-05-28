@@ -63,7 +63,6 @@ namespace System.Windows.Forms
 
         internal void AddNewRow(bool createdByEditing)
         {
-            Debug.Assert(Columns.Count > 0);
             Debug.Assert(newRowIndex == -1);
 
             Rows.AddInternal(true /*newRow*/, null /*values*/);
@@ -77,9 +76,7 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            EditorBrowsable(EditorBrowsableState.Advanced)
-        ]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public virtual DataGridViewAdvancedBorderStyle AdjustColumnHeaderBorderStyle(DataGridViewAdvancedBorderStyle dataGridViewAdvancedBorderStyleInput,
                                                                          DataGridViewAdvancedBorderStyle dataGridViewAdvancedBorderStylePlaceholder,
                                                                          bool isFirstDisplayedColumn,
@@ -1832,7 +1829,6 @@ namespace System.Windows.Forms
                 autoSizeColumnCriteriaInternal == (DataGridViewAutoSizeColumnCriteriaInternal.Header | DataGridViewAutoSizeColumnCriteriaInternal.AllRows) ||
                 autoSizeColumnCriteriaInternal == (DataGridViewAutoSizeColumnCriteriaInternal.Header | DataGridViewAutoSizeColumnCriteriaInternal.DisplayedRows));
             Debug.Assert(columnIndex >= 0 && columnIndex < Columns.Count);
-            Debug.Assert(autoSizeColumnCriteriaInternal != DataGridViewAutoSizeColumnCriteriaInternal.Header || ColumnHeadersVisible);
 
             if (!IsHandleCreated)
             {
@@ -4882,7 +4878,6 @@ namespace System.Windows.Forms
             Debug.Assert(dataGridViewColumn.DataGridView == this);
             // dataGridViewColumn.DisplayIndex has been set already.
             Debug.Assert(dataGridViewColumn.DisplayIndex >= 0);
-            Debug.Assert(dataGridViewColumn.DisplayIndex < Columns.Count);
 
             try
             {
@@ -5343,12 +5338,63 @@ namespace System.Windows.Forms
                 }
                 if (handle != IntPtr.Zero)
                 {
-                    cachedScrollableRegion = UnsafeNativeMethods.GetRectsFromRegion(handle);
+                    cachedScrollableRegion = GetRectsFromRegion(handle);
 
                     region.ReleaseHrgn(handle);
                 }
             }
             return cachedScrollableRegion;
+        }
+
+        private unsafe static RECT[] GetRectsFromRegion(IntPtr hRgn)
+        {
+            // see how much memory we need to allocate
+            uint regionDataSize = Gdi32.GetRegionData(hRgn, 0, IntPtr.Zero);
+            if (regionDataSize == 0)
+            {
+                return null;
+            }
+
+            IntPtr pBytes = IntPtr.Zero;
+            try
+            {
+                pBytes = Marshal.AllocCoTaskMem((int)regionDataSize);
+                // get the data
+                uint ret = Gdi32.GetRegionData(hRgn, regionDataSize, pBytes);
+                if (ret != regionDataSize)
+                {
+                    return null;
+                }
+
+                // cast to the structure
+                Gdi32.RGNDATAHEADER* pRgnDataHeader = (Gdi32.RGNDATAHEADER*)pBytes;
+                if (pRgnDataHeader->iType != 1)
+                {
+                    return null;
+                }
+
+                // expecting RDH_RECTANGLES
+                var regionRects = new RECT[pRgnDataHeader->nCount];
+
+                Debug.Assert(regionDataSize == pRgnDataHeader->dwSize + pRgnDataHeader->nCount * pRgnDataHeader->nRgnSize);
+                Debug.Assert(sizeof(RECT) == pRgnDataHeader->nRgnSize || pRgnDataHeader->nRgnSize == 0);
+
+                // use the header size as the offset, and cast each rect in.
+                uint rectStart = pRgnDataHeader->dwSize;
+                for (int i = 0; i < pRgnDataHeader->nCount; i++)
+                {
+                    regionRects[i] = *((RECT*)((byte*)pBytes + rectStart + (sizeof(RECT) * i)));
+                }
+
+                return regionRects;
+            }
+            finally
+            {
+                if (pBytes != IntPtr.Zero)
+                {
+                    Marshal.FreeCoTaskMem(pBytes);
+                }
+            }
         }
 
         private void DiscardNewRow()
@@ -6712,19 +6758,6 @@ namespace System.Windows.Forms
             return brush;
         }
 
-#if DGV_GDI
-        internal WindowsSolidBrush GetCachedWindowsBrush(Color color)
-        {
-            WindowsSolidBrush brush = (WindowsSolidBrush)this.brushes[color];
-            if (brush == null)
-            {
-                brush = new WindowsSolidBrush(color);
-                this.brushes.Add(color, brush);
-            }
-            return brush;
-        }
-#endif // DGV_GDI
-
         internal Pen GetCachedPen(Color color)
         {
             Pen pen = (Pen)pens[color];
@@ -6735,19 +6768,6 @@ namespace System.Windows.Forms
             }
             return pen;
         }
-
-#if DGV_GDI
-        internal WindowsPen GetCachedWindowsPen(Color color)
-        {
-            WindowsPen pen = (WindowsPen)this.pens[color];
-            if (pen == null)
-            {
-                pen = new WindowsPen(color);
-                this.pens.Add(color, pen);
-            }
-            return pen;
-        }
-#endif // DGV_GDI
 
         internal TypeConverter GetCachedTypeConverter(Type type)
         {
@@ -10457,9 +10477,6 @@ namespace System.Windows.Forms
 
         public virtual void NotifyCurrentCellDirty(bool dirty)
         {
-            Debug.Assert(ptCurrentCell.X >= 0 && ptCurrentCell.X < Columns.Count);
-            Debug.Assert(ptCurrentCell.Y >= 0 && ptCurrentCell.Y < Rows.Count);
-
             if (dataGridViewState1[DATAGRIDVIEWSTATE1_ignoringEditingChanges] == false)
             {
                 // autosizing has no effect since edited value hasn't been committed
@@ -10476,7 +10493,6 @@ namespace System.Windows.Forms
         internal void OnAddedColumn(DataGridViewColumn dataGridViewColumn)
         {
             Debug.Assert(dataGridViewColumn.Index >= 0);
-            Debug.Assert(dataGridViewColumn.Index < Columns.Count);
             Debug.Assert(dataGridViewColumn.DataGridView == this);
 
             if (dataGridViewColumn.DisplayIndex == -1 || dataGridViewColumn.DisplayIndex >= Columns.Count)
@@ -14622,12 +14638,10 @@ namespace System.Windows.Forms
             if (RowHeadersVisible && ShowEditingIcon)
             {
                 // Force the pencil to appear in the row header
-                Debug.Assert(ptCurrentCell.Y >= 0);
                 InvalidateCellPrivate(-1, ptCurrentCell.Y);
             }
             if (IsCurrentCellDirty && newRowIndex == ptCurrentCell.Y)
             {
-                Debug.Assert(newRowIndex != -1);
                 Debug.Assert(AllowUserToAddRowsInternal);
                 // First time the 'new' row gets edited.
                 // It becomes a regular row and a new 'new' row is appened.
@@ -26250,15 +26264,6 @@ namespace System.Windows.Forms
                                 ptAnchorCell.X = columnIndex;
                                 ptAnchorCell.Y = rowIndex;
                             }
-
-#if FALSE
-                            if (this.dataGridViewState2[DATAGRIDVIEWSTATE2_rowsCollectionClearedInSetCell])
-                            {
-                                // DATAGRIDVIEWSTATE2_rowsCollectionClearedInSetCell bit will be cleared while executing the
-                                // "finally" block.
-                                return true;
-                            }
-#endif
 
                             currentCell = CurrentCellInternal;
                             if (currentCell.EnterUnsharesRowInternal(rowIndex, throughMouseClick))

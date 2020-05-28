@@ -930,7 +930,7 @@ namespace System.Windows.Forms
                     {
                         Parent = Handle,
                         ClassName = ComCtl32.WindowClasses.TOOLTIPS_CLASS,
-                        Style = NativeMethods.TTS_ALWAYSTIP
+                        Style = (int)ComCtl32.TTS.ALWAYSTIP
                     };
                     _tipWindow = new NativeWindow();
                     _tipWindow.CreateHandle(cparams);
@@ -1733,7 +1733,7 @@ namespace System.Windows.Forms
                             // If width is not multiple of 16, we need to allocate BitmapBitsAllocationSize for remaining bits.
                             int widthInBytes = 2 * ((size.Width + 15) / bitmapBitsAllocationSize); // its in bytes.
                             byte[] bits = new byte[widthInBytes * size.Height];
-                            SafeNativeMethods.GetBitmapBits(new HandleRef(null, mask), bits.Length, bits);
+                            Gdi32.GetBitmapBits(mask, bits.Length, bits);
 
                             for (int y = 0; y < size.Height; y++)
                             {

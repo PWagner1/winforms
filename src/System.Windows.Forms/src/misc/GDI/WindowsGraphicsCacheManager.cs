@@ -2,16 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
-#if WGCM_TEST_SUITE // Enable tracking when built for the test suites.
-#define TRACK_HDC
-#define GDI_FONT_CACHE_TRACK
-#endif
-
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using static Interop;
 
 namespace System.Windows.Forms.Internal
 {
@@ -27,14 +21,14 @@ namespace System.Windows.Forms.Internal
 
         // WindowsGraphics object used for measuring text based on the screen DC.  TLS to avoid synchronization issues.
         [ThreadStatic]
-        private static WindowsGraphics measurementGraphics;
+        private static WindowsGraphics? t_measurementGraphics;
 
         // Circular list implementing the WindowsFont per-process cache.
         private const int CacheSize = 10;
         [ThreadStatic]
-        private static int currentIndex;
+        private static int t_currentIndex;
         [ThreadStatic]
-        private static List<KeyValuePair<Font, WindowsFont>> windowsFontCache;
+        private static List<KeyValuePair<Font, WindowsFont>>? t_windowsFontCache;
 
         /// <summary>
         ///  Static constructor since this is a utility class.
@@ -57,13 +51,13 @@ namespace System.Windows.Forms.Internal
         {
             get
             {
-                if (windowsFontCache == null)
+                if (t_windowsFontCache == null)
                 {
-                    currentIndex = -1;
-                    windowsFontCache = new List<KeyValuePair<Font, WindowsFont>>(CacheSize);
+                    t_currentIndex = -1;
+                    t_windowsFontCache = new List<KeyValuePair<Font, WindowsFont>>(CacheSize);
                 }
 
-                return windowsFontCache;
+                return t_windowsFontCache;
             }
         }
 
@@ -77,37 +71,25 @@ namespace System.Windows.Forms.Internal
         {
             get
             {
-                if (measurementGraphics == null || measurementGraphics.DeviceContext == null /*object disposed*/)
+                if (t_measurementGraphics == null || t_measurementGraphics.DeviceContext == null /*object disposed*/)
                 {
-                    Debug.Assert(measurementGraphics == null || measurementGraphics.DeviceContext != null, "TLS MeasurementGraphics was disposed somewhere, enable TRACK_HDC macro to determine who did it, recreating it for now ...");
-#if TRACK_HDC
-                    Debug.WriteLine( DbgUtil.StackTraceToStr("Initializing MeasurementGraphics"));
-#endif
-                    measurementGraphics = WindowsGraphics.CreateMeasurementWindowsGraphics();
+                    Debug.Assert(t_measurementGraphics == null || t_measurementGraphics.DeviceContext != null, "TLS MeasurementGraphics was disposed somewhere, enable TRACK_HDC macro to determine who did it, recreating it for now ...");
+                    t_measurementGraphics = WindowsGraphics.CreateMeasurementWindowsGraphics();
                 }
 
-                return measurementGraphics;
+                return t_measurementGraphics;
             }
         }
-#if OPTIMIZED_MEASUREMENTDC
+
         // in some cases, we dont want to demand create MeasurementGraphics, as creating it has
         // re-entrant side effects.
-        internal static WindowsGraphics GetCurrentMeasurementGraphics()
-        {
-            return measurementGraphics;
-        }
-#endif
+        internal static WindowsGraphics? GetCurrentMeasurementGraphics() => t_measurementGraphics;
 
         /// <summary>
         ///  Get the cached WindowsFont associated with the specified font if one exists, otherwise create one and
         ///  add it to the cache.
         /// </summary>
-        public static WindowsFont GetWindowsFont(Font font)
-        {
-            return GetWindowsFont(font, Interop.Gdi32.QUALITY.DEFAULT);
-        }
-
-        public static WindowsFont GetWindowsFont(Font font, Interop.Gdi32.QUALITY fontQuality)
+        public static WindowsFont? GetWindowsFont(Font? font, Gdi32.QUALITY fontQuality = Gdi32.QUALITY.DEFAULT)
         {
             if (font == null)
             {
@@ -117,7 +99,7 @@ namespace System.Windows.Forms.Internal
             // First check if font is in the cache.
 
             int count = 0;
-            int index = currentIndex;
+            int index = t_currentIndex;
 
             // Search by index of most recently added object.
             while (count < WindowsFontCache.Count)
@@ -150,23 +132,23 @@ namespace System.Windows.Forms.Internal
             WindowsFont winFont = WindowsFont.FromFont(font, fontQuality);
             KeyValuePair<Font, WindowsFont> newEntry = new KeyValuePair<Font, WindowsFont>(font, winFont);
 
-            currentIndex++;
+            t_currentIndex++;
 
-            if (currentIndex == CacheSize)
+            if (t_currentIndex == CacheSize)
             {
-                currentIndex = 0;
+                t_currentIndex = 0;
             }
 
             if (WindowsFontCache.Count == CacheSize)  // No more room, update current index.
             {
-                WindowsFont wfont = null;
+                WindowsFont? wfont = null;
 
                 // Go through the existing fonts in the cache, and see if any
                 // are not in use by a DC.  If one isn't, replace that.  If
                 // all are in use, new up a new font and do not cache it.
 
                 bool finished = false;
-                int startIndex = currentIndex;
+                int startIndex = t_currentIndex;
                 int loopIndex = startIndex + 1;
                 while (!finished)
                 {
@@ -183,7 +165,7 @@ namespace System.Windows.Forms.Internal
                     wfont = WindowsFontCache[loopIndex].Value;
                     if (!DeviceContexts.IsFontInUse(wfont))
                     {
-                        currentIndex = loopIndex;
+                        t_currentIndex = loopIndex;
                         finished = true;
                         break;
                     }
@@ -196,13 +178,8 @@ namespace System.Windows.Forms.Internal
 
                 if (wfont != null)
                 {
-                    WindowsFontCache[currentIndex] = newEntry;
+                    WindowsFontCache[t_currentIndex] = newEntry;
                     winFont.OwnedByCacheManager = true;
-
-#if GDI_FONT_CACHE_TRACK
-                    Debug.WriteLine("Removing from cache: " + wfont);
-                    Debug.WriteLine( "Adding to cache: " + winFont );
-#endif
 
                     wfont.OwnedByCacheManager = false;
                     wfont.Dispose();
@@ -212,22 +189,13 @@ namespace System.Windows.Forms.Internal
                     // do not cache font - caller is ALWAYS responsible for
                     // disposing now.  If it is owned  by the CM, it will not
                     // disposed.
-
                     winFont.OwnedByCacheManager = false;
-
-#if GDI_FONT_CACHE_TRACK
-                    Debug.WriteLine("Creating uncached font: " + winFont);
-#endif
                 }
             }
             else
             {
                 winFont.OwnedByCacheManager = true;
                 WindowsFontCache.Add(newEntry);
-
-#if GDI_FONT_CACHE_TRACK
-                Debug.WriteLine( "Adding to cache: " + winFont );
-#endif
             }
             return winFont;
         }

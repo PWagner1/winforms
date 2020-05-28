@@ -8,6 +8,7 @@ using System.ComponentModel.Design;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms.VisualStyles;
+using Microsoft.DotNet.RemoteExecutor;
 using Moq;
 using WinForms.Common.Tests;
 using Xunit;
@@ -322,21 +323,25 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TabPage_AutoSize_Set_GetReturnsExpected(bool value)
         {
-            using var control = new TabPage
-            {
-                AutoSize = value
-            };
+            using var control = new TabPage();
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+
+            control.AutoSize = value;
             Assert.Equal(value, control.AutoSize);
+            Assert.Equal(0, layoutCallCount);
             Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.AutoSize = value;
             Assert.Equal(value, control.AutoSize);
+            Assert.Equal(0, layoutCallCount);
             Assert.False(control.IsHandleCreated);
 
             // Set different.
             control.AutoSize = !value;
             Assert.Equal(!value, control.AutoSize);
+            Assert.Equal(0, layoutCallCount);
             Assert.False(control.IsHandleCreated);
         }
 
@@ -383,19 +388,22 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(AutoSizeMode))]
         public void TabPage_AutoSizeMode_Set_GetReturnsExpected(AutoSizeMode value)
         {
-            using var control = new SubTabPage
-            {
-                AutoSizeMode = value
-            };
+            using var control = new SubTabPage();
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+
+            control.AutoSizeMode = value;
             Assert.Equal(AutoSizeMode.GrowOnly, control.AutoSizeMode);
             Assert.Equal(AutoSizeMode.GrowOnly, control.GetAutoSizeMode());
             Assert.False(control.IsHandleCreated);
+            Assert.Equal(0, layoutCallCount);
 
             // Set same.
             control.AutoSizeMode = value;
             Assert.Equal(AutoSizeMode.GrowOnly, control.AutoSizeMode);
             Assert.Equal(AutoSizeMode.GrowOnly, control.GetAutoSizeMode());
             Assert.False(control.IsHandleCreated);
+            Assert.Equal(0, layoutCallCount);
         }
 
         [WinFormsTheory]
@@ -521,31 +529,91 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, parentLayoutCallCount);
         }
 
-        public static IEnumerable<object[]> BackColor_Get_TestData()
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        public static void TabPage_BackColor_Get_ReturnsExpected(bool useVisualStyleBackColor)
         {
-            yield return new object[] { true, null, Control.DefaultBackColor };
-            yield return new object[] { false, null, Control.DefaultBackColor };
+            using var control = new TabPage
+            {
+                UseVisualStyleBackColor = useVisualStyleBackColor
+            };
+            Assert.Equal(Control.DefaultBackColor, control.BackColor);
+        }
 
-            yield return new object[] { true, new TabControl { Appearance = TabAppearance.Normal }, Application.RenderWithVisualStyles ? Color.Transparent : Control.DefaultBackColor };
-            yield return new object[] { false, new TabControl { Appearance = TabAppearance.Normal }, Control.DefaultBackColor };
+        [WinFormsTheory(Skip = "Crash with AbandonedMutexException. See: https://github.com/dotnet/arcade/issues/5325")]
+        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        public static void TabPage_BackColor_GetVisualStyles_ReturnsExpected(bool useVisualStyleBackColorParam)
+        {
+            // Run this from another thread as we call Application.EnableVisualStyles.
+            RemoteExecutor.Invoke((useVisualStyleBackColorString) =>
+            {
+                bool useVisualStyleBackColor = bool.Parse(useVisualStyleBackColorString);
 
-            yield return new object[] { true, new TabControl { Appearance = TabAppearance.Buttons }, Control.DefaultBackColor };
-            yield return new object[] { false, new TabControl { Appearance = TabAppearance.Buttons }, Control.DefaultBackColor };
+                Application.EnableVisualStyles();
 
-            yield return new object[] { true, new TabControl { Appearance = TabAppearance.FlatButtons }, Control.DefaultBackColor };
-            yield return new object[] { false, new TabControl { Appearance = TabAppearance.FlatButtons }, Control.DefaultBackColor };
+                using var control = new TabPage
+                {
+                    UseVisualStyleBackColor = useVisualStyleBackColor
+                };
+                Assert.Equal(Control.DefaultBackColor, control.BackColor);
+            }, useVisualStyleBackColorParam.ToString()).Dispose();
         }
 
         [WinFormsTheory]
-        [MemberData(nameof(BackColor_Get_TestData))]
-        public void TabPage_BackColor_GetWithParent_ReturnsExpected(bool useVisualStyleBackColor, TabControl parent, Color expected)
+        [InlineData(true, TabAppearance.Buttons)]
+        [InlineData(true, TabAppearance.FlatButtons)]
+        [InlineData(true, TabAppearance.Normal)]
+        [InlineData(false, TabAppearance.Buttons)]
+        [InlineData(false, TabAppearance.FlatButtons)]
+        [InlineData(false, TabAppearance.Normal)]
+        public static void TabPage_BackColor_GetWithParent_ReturnsExpected(bool useVisualStyleBackColor, TabAppearance parentAppearance)
         {
+            using var parent = new TabControl
+            {
+                Appearance = parentAppearance
+            };
             using var control = new TabPage
             {
                 UseVisualStyleBackColor = useVisualStyleBackColor,
                 Parent = parent
             };
-            Assert.Equal(expected, control.BackColor);
+            Assert.Equal(Control.DefaultBackColor, control.BackColor);
+        }
+
+        public static IEnumerable<object[]> BackColor_GetVisualStylesWithParent_TestData()
+        {
+            yield return new object[] { true, TabAppearance.Buttons, Control.DefaultBackColor };
+            yield return new object[] { true, TabAppearance.FlatButtons, Control.DefaultBackColor };
+            yield return new object[] { true, TabAppearance.Normal, Color.Transparent };
+            yield return new object[] { false, TabAppearance.Buttons, Control.DefaultBackColor };
+            yield return new object[] { false, TabAppearance.FlatButtons, Control.DefaultBackColor };
+            yield return new object[] { false, TabAppearance.Normal, Control.DefaultBackColor };
+        }
+
+        [WinFormsTheory(Skip = "Crash with AbandonedMutexException. See: https://github.com/dotnet/arcade/issues/5325")]
+        [MemberData(nameof(BackColor_GetVisualStylesWithParent_TestData))]
+        public static void TabPage_BackColor_GetVisualStylesWithParent_ReturnsExpected(bool useVisualStyleBackColorParam, TabAppearance parentAppearanceParam, Color expectedParam)
+        {
+            // Run this from another thread as we call Application.EnableVisualStyles.
+            RemoteExecutor.Invoke((useVisualStyleBackColorString, parentAppearanceString, expectedString) =>
+            {
+                bool useVisualStyleBackColor = bool.Parse(useVisualStyleBackColorString);
+                TabAppearance parentAppearance = (TabAppearance)Enum.Parse(typeof(TabAppearance), parentAppearanceString);
+                Color expected = Color.FromArgb(int.Parse(expectedString));
+
+                Application.EnableVisualStyles();
+
+                using var parent = new TabControl
+                {
+                    Appearance = parentAppearance
+                };
+                using var control = new TabPage
+                {
+                    UseVisualStyleBackColor = useVisualStyleBackColor,
+                    Parent = parent
+                };
+                Assert.Equal(expected.ToArgb(), control.BackColor.ToArgb());
+            }, useVisualStyleBackColorParam.ToString(), parentAppearanceParam.ToString(), expectedParam.ToArgb().ToString()).Dispose();
         }
 
         [WinFormsTheory]
@@ -2358,7 +2426,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
 
@@ -3035,12 +3103,12 @@ namespace System.Windows.Forms.Tests
 
             // Set different.
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(1, callCount);
 
             // Set same.
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(1, callCount);
 
             // Set different.
@@ -3051,7 +3119,7 @@ namespace System.Windows.Forms.Tests
             // Remove handler.
             control.TextChanged -= handler;
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(2, callCount);
         }
 
@@ -3704,6 +3772,13 @@ namespace System.Windows.Forms.Tests
 
             // Call again to test caching.
             Assert.Equal(expected, control.GetStyle(flag));
+        }
+
+        [WinFormsFact]
+        public void TabPage_GetTopLevel_Invoke_ReturnsExpected()
+        {
+            using var control = new SubTabPage();
+            Assert.False(control.GetTopLevel());
         }
 
         [WinFormsFact]
@@ -4894,6 +4969,8 @@ namespace System.Windows.Forms.Tests
             public new bool GetScrollState(int bit) => base.GetScrollState(bit);
 
             public new bool GetStyle(ControlStyles flag) => base.GetStyle(flag);
+
+            public new bool GetTopLevel() => base.GetTopLevel();
 
             public new void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified) => base.SetBoundsCore(x, y, width, height, specified);
 

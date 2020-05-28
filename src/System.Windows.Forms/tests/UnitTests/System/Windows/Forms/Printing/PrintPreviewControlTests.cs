@@ -7,6 +7,7 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
+    // NB: doesn't require thread affinity
     public class PrintPreviewControlTests : IClassFixture<ThreadExceptionFixture>
     {
         private const int emptyColorArgb = 0;
@@ -30,7 +31,7 @@ namespace System.Windows.Forms.Tests
                 control.BackColor = Color.FromArgb(customBackColorArgb);
             }
 
-            int actualBackColorArgb = control.GetTestAccessor().GetBackColor(isHighContrast).ToArgb();
+            int actualBackColorArgb = control.TestAccessor().Dynamic.GetBackColor(isHighContrast).ToArgb();
             Assert.Equal(expectedBackColorArgb, actualBackColorArgb);
 
             // Default AppWorkSpace color in HC theme does not allow to follow HC standards.

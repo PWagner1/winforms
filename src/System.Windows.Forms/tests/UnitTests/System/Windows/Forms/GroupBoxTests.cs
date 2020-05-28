@@ -183,21 +183,25 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void GroupBox_AutoSize_Set_GetReturnsExpected(bool value)
         {
-            using var control = new GroupBox
-            {
-                AutoSize = value
-            };
+            using var control = new GroupBox();
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+
+            control.AutoSize = value;
             Assert.Equal(value, control.AutoSize);
+            Assert.Equal(0, layoutCallCount);
             Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.AutoSize = value;
             Assert.Equal(value, control.AutoSize);
+            Assert.Equal(0, layoutCallCount);
             Assert.False(control.IsHandleCreated);
 
             // Set different.
             control.AutoSize = !value;
             Assert.Equal(!value, control.AutoSize);
+            Assert.Equal(0, layoutCallCount);
             Assert.False(control.IsHandleCreated);
         }
 
@@ -243,19 +247,22 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(AutoSizeMode))]
         public void GroupBox_AutoSizeMode_Set_GetReturnsExpected(AutoSizeMode value)
         {
-            using var control = new SubGroupBox
-            {
-                AutoSizeMode = value
-            };
+            using var control = new SubGroupBox();
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+
+            control.AutoSizeMode = value;
             Assert.Equal(value, control.AutoSizeMode);
             Assert.Equal(value, control.GetAutoSizeMode());
             Assert.False(control.IsHandleCreated);
+            Assert.Equal(0, layoutCallCount);
 
             // Set same.
             control.AutoSizeMode = value;
             Assert.Equal(value, control.AutoSizeMode);
             Assert.Equal(value, control.GetAutoSizeMode());
             Assert.False(control.IsHandleCreated);
+            Assert.Equal(0, layoutCallCount);
         }
 
         [WinFormsTheory]
@@ -421,7 +428,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("AutoSize", e.AffectedProperty);
+                Assert.Equal("AutoSize", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -493,7 +500,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("AutoSize", e.AffectedProperty);
+                Assert.Equal("AutoSize", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -709,7 +716,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedCreatedCallCount, createdCallCount);
         }
 
-        [WinFormsTheory]
+        [WinFormsTheory(Skip = "Crash with AbandonedMutexException. See: https://github.com/dotnet/arcade/issues/5325")]
         [InlineData(FlatStyle.Flat, true, true, true, 1, 0)]
         [InlineData(FlatStyle.Popup, true, true, true, 1, 0)]
         [InlineData(FlatStyle.Standard, false, true, false, 0, 0)]
@@ -825,7 +832,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedCreatedCallCount, createdCallCount);
         }
 
-        [WinFormsTheory]
+        [WinFormsTheory(Skip = "Crash with AbandonedMutexException. See: https://github.com/dotnet/arcade/issues/5325")]
         [InlineData(FlatStyle.Flat, FlatStyle.Flat, false, true, true, 0, 0)]
         [InlineData(FlatStyle.Flat, FlatStyle.Popup, true, true, true, 1, 0)]
         [InlineData(FlatStyle.Flat, FlatStyle.Standard, true, true, true, 1, 0)]
@@ -1143,12 +1150,12 @@ namespace System.Windows.Forms.Tests
 
             // Set different.
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(1, callCount);
 
             // Set same.
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(1, callCount);
 
             // Set different.
@@ -1159,7 +1166,7 @@ namespace System.Windows.Forms.Tests
             // Remove handler.
             control.TextChanged -= handler;
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(2, callCount);
         }
 
@@ -1416,6 +1423,13 @@ namespace System.Windows.Forms.Tests
 
             // Call again to test caching.
             Assert.Equal(expected, control.GetStyle(flag));
+        }
+
+        [WinFormsFact]
+        public void GroupBox_GetTopLevel_Invoke_ReturnsExpected()
+        {
+            using var control = new SubGroupBox();
+            Assert.False(control.GetTopLevel());
         }
 
         [WinFormsTheory]
@@ -2306,6 +2320,8 @@ namespace System.Windows.Forms.Tests
             public new AutoSizeMode GetAutoSizeMode() => base.GetAutoSizeMode();
 
             public new bool GetStyle(ControlStyles flag) => base.GetStyle(flag);
+
+            public new bool GetTopLevel() => base.GetTopLevel();
 
             public new void OnClick(EventArgs e) => base.OnClick(e);
 

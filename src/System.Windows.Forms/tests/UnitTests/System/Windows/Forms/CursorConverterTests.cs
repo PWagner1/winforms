@@ -13,6 +13,7 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
+    // NB: doesn't require thread affinity
     public class CursorConverterTests : IClassFixture<ThreadExceptionFixture>
     {
         [Theory]
@@ -61,7 +62,7 @@ namespace System.Windows.Forms.Tests
         public void CursorConverter_ConvertFrom_InvalidByteArray_ThrowsArgumentException()
         {
             var converter = new CursorConverter();
-            Assert.Throws<ArgumentException>("stream", () => converter.ConvertFrom(new byte[0]));
+            Assert.Throws<ArgumentException>("stream", () => converter.ConvertFrom(Array.Empty<byte>()));
         }
 
         [Theory]

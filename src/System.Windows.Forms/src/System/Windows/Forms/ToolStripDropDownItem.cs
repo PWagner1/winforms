@@ -21,6 +21,7 @@ namespace System.Windows.Forms
     {
         private ToolStripDropDown dropDown = null;
         private ToolStripDropDownDirection toolStripDropDownDirection = ToolStripDropDownDirection.Default;
+        private ToolTip hookedKeyboardTooltip = null;
         private static readonly object EventDropDownShow = new object();
         private static readonly object EventDropDownHide = new object();
         private static readonly object EventDropDownOpened = new object();
@@ -53,11 +54,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The ToolStripDropDown that will be displayed when this item is clicked.
         /// </summary>
-        [
-        TypeConverter(typeof(ReferenceConverter)),
-        SRCategory(nameof(SR.CatData)),
-        SRDescription(nameof(SR.ToolStripDropDownDescr))
-        ]
+        [TypeConverter(typeof(ReferenceConverter))]
+        [SRCategory(nameof(SR.CatData))]
+        [SRDescription(nameof(SR.ToolStripDropDownDescr))]
         public ToolStripDropDown DropDown
         {
             get
@@ -83,6 +82,10 @@ namespace System.Windows.Forms
                 {
                     if (dropDown != null)
                     {
+                        if (hookedKeyboardTooltip != null)
+                        {
+                            KeyboardToolTipStateMachine.Instance.Unhook(dropDown, hookedKeyboardTooltip);
+                        }
                         dropDown.Opened -= new EventHandler(DropDown_Opened);
                         dropDown.Closed -= new ToolStripDropDownClosedEventHandler(DropDown_Closed);
                         dropDown.ItemClicked -= new ToolStripItemClickedEventHandler(DropDown_ItemClicked);
@@ -92,6 +95,10 @@ namespace System.Windows.Forms
                     dropDown = value;
                     if (dropDown != null)
                     {
+                        if (hookedKeyboardTooltip != null)
+                        {
+                            KeyboardToolTipStateMachine.Instance.Hook(dropDown, hookedKeyboardTooltip);
+                        }
                         dropDown.Opened += new EventHandler(DropDown_Opened);
                         dropDown.Closed += new ToolStripDropDownClosedEventHandler(DropDown_Closed);
                         dropDown.ItemClicked += new ToolStripItemClickedEventHandler(DropDown_ItemClicked);
@@ -184,10 +191,8 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Occurs when the dropdown is closed
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAction)),
-        SRDescription(nameof(SR.ToolStripDropDownClosedDecr))
-        ]
+        [SRCategory(nameof(SR.CatAction))]
+        [SRDescription(nameof(SR.ToolStripDropDownClosedDecr))]
         public event EventHandler DropDownClosed
         {
             add => Events.AddHandler(EventDropDownClosed, value);
@@ -207,10 +212,8 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-        SRCategory(nameof(SR.CatAction)),
-        SRDescription(nameof(SR.ToolStripDropDownOpeningDescr))
-        ]
+        [SRCategory(nameof(SR.CatAction))]
+        [SRDescription(nameof(SR.ToolStripDropDownOpeningDescr))]
         public event EventHandler DropDownOpening
         {
             add => Events.AddHandler(EventDropDownShow, value);
@@ -219,10 +222,8 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Occurs when the dropdown is opened
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAction)),
-        SRDescription(nameof(SR.ToolStripDropDownOpenedDescr))
-        ]
+        [SRCategory(nameof(SR.CatAction))]
+        [SRDescription(nameof(SR.ToolStripDropDownOpenedDescr))]
         public event EventHandler DropDownOpened
         {
             add => Events.AddHandler(EventDropDownOpened, value);
@@ -232,11 +233,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Returns the DropDown's items collection.
         /// </summary>
-        [
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Content),
-        SRCategory(nameof(SR.CatData)),
-        SRDescription(nameof(SR.ToolStripDropDownItemsDescr))
-        ]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        [SRCategory(nameof(SR.CatData))]
+        [SRDescription(nameof(SR.ToolStripDropDownItemsDescr))]
         public ToolStripItemCollection DropDownItems
             => DropDown.Items;
 
@@ -260,7 +259,8 @@ namespace System.Windows.Forms
         public bool HasDropDown
             => dropDown != null;
 
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override bool Pressed
         {
             get
@@ -347,6 +347,11 @@ namespace System.Windows.Forms
         {
             if (dropDown != null)
             {
+                if (hookedKeyboardTooltip != null)
+                {
+                    KeyboardToolTipStateMachine.Instance.Unhook(dropDown, hookedKeyboardTooltip);
+                }
+
                 dropDown.Opened -= new EventHandler(DropDown_Opened);
                 dropDown.Closed -= new ToolStripDropDownClosedEventHandler(DropDown_Closed);
                 dropDown.ItemClicked -= new ToolStripItemClickedEventHandler(DropDown_ItemClicked);
@@ -693,13 +698,21 @@ namespace System.Windows.Forms
         internal override void OnKeyboardToolTipHook(ToolTip toolTip)
         {
             base.OnKeyboardToolTipHook(toolTip);
-            KeyboardToolTipStateMachine.Instance.Hook(DropDown, toolTip);
+            hookedKeyboardTooltip = toolTip;
+            if (dropDown != null)
+            {
+                KeyboardToolTipStateMachine.Instance.Hook(dropDown, toolTip);
+            }
         }
 
         internal override void OnKeyboardToolTipUnhook(ToolTip toolTip)
         {
             base.OnKeyboardToolTipUnhook(toolTip);
-            KeyboardToolTipStateMachine.Instance.Unhook(DropDown, toolTip);
+            hookedKeyboardTooltip = null;
+            if (dropDown != null)
+            {
+                KeyboardToolTipStateMachine.Instance.Unhook(dropDown, toolTip);
+            }
         }
 
         internal override void ToolStrip_RescaleConstants(int oldDpi, int newDpi)

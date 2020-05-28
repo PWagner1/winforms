@@ -11,53 +11,15 @@ namespace System.Windows.Forms
     internal static class NativeMethods
     {
         public static IntPtr InvalidIntPtr = (IntPtr)(-1);
-        public static IntPtr LPSTR_TEXTCALLBACK = (IntPtr)(-1);
         public static HandleRef NullHandleRef = new HandleRef(null, IntPtr.Zero);
 
-        public const int STATUS_PENDING = 0x103; //259 = STILL_ALIVE
-
         public const int CW_USEDEFAULT = (unchecked((int)0x80000000));
-
-        public const int
-        DI_NORMAL = 0x0003,
-        DTS_UPDOWN = 0x0001,
-        DTS_SHOWNONE = 0x0002,
-        DTS_LONGDATEFORMAT = 0x0004,
-        DTS_TIMEFORMAT = 0x0009,
-        DTS_RIGHTALIGN = 0x0020,
-        DTN_DATETIMECHANGE = ((0 - 760) + 1),
-        DTN_USERSTRING = ((0 - 760) + 15),
-        DTN_WMKEYDOWN = ((0 - 760) + 16),
-        DTN_FORMAT = ((0 - 760) + 17),
-        DTN_FORMATQUERY = ((0 - 760) + 18),
-        DTN_DROPDOWN = ((0 - 760) + 6),
-        DTN_CLOSEUP = ((0 - 760) + 7);
-
-        public const int FRERR_BUFFERLENGTHZERO = 0x4001;
 
         public const int
         GDI_ERROR = (unchecked((int)0xFFFFFFFF));
 
         public const int
-        HCF_HIGHCONTRASTON = 0x00000001,
-        HDN_ITEMCHANGING = ((0 - 300) - 20),
-        HDN_ITEMCHANGED = ((0 - 300) - 21),
-        HDN_ITEMCLICK = ((0 - 300) - 22),
-        HDN_ITEMDBLCLICK = ((0 - 300) - 23),
-        HDN_DIVIDERDBLCLICK = ((0 - 300) - 25),
-        HDN_BEGINTDRAG = ((0 - 300) - 10),
-        HDN_BEGINTRACK = ((0 - 300) - 26),
-        HDN_ENDDRAG = ((0 - 300) - 11),
-        HDN_ENDTRACK = ((0 - 300) - 27),
-        HDN_TRACK = ((0 - 300) - 28),
-        HDN_GETDISPINFO = ((0 - 300) - 29);
-        // HOVER_DEFAULT = Do not use this value ever! It crashes entire servers.
-
-        public const int HDS_FULLDRAG = 0x0080;
-
-        public const int
-        ICON_SMALL = 0,
-        ICON_BIG = 1;
+        HCF_HIGHCONTRASTON = 0x00000001;
 
         public const int LANG_NEUTRAL = 0x00,
                          LOCALE_IFIRSTDAYOFWEEK = 0x0000100C;   /* first day of week specifier */
@@ -89,27 +51,13 @@ namespace System.Windows.Forms
         }
 
         public const int
-        MDIS_ALLCHILDSTYLES = 0x0001,
-        MCN_VIEWCHANGE = (0 - 750), // MCN_SELECT -4  - give state of calendar view
-        MCN_SELCHANGE = ((0 - 750) + 1),
-        MCN_GETDAYSTATE = ((0 - 750) + 3),
-        MCN_SELECT = ((0 - 750) + 4),
-
-        MSAA_MENU_SIG = (unchecked((int)0xAA0DF00D));
-
-        public const int
-        NIN_BALLOONSHOW = ((int)User32.WM.USER + 2),
-        NIN_BALLOONHIDE = ((int)User32.WM.USER + 3),
-        NIN_BALLOONTIMEOUT = ((int)User32.WM.USER + 4),
-        NIN_BALLOONUSERCLICK = ((int)User32.WM.USER + 5);
+        MDIS_ALLCHILDSTYLES = 0x0001;
 
         public const int
         PATCOPY = 0x00F00021,
         PATINVERT = 0x005A0049;
 
         public const int
-        SIZE_RESTORED = 0,
-        SIZE_MAXIMIZED = 2,
         SORT_DEFAULT = 0x0,
         SUBLANG_DEFAULT = 0x01;
 
@@ -119,16 +67,6 @@ namespace System.Windows.Forms
         HLP_OBJECT = 4;
 
         public const int
-        TV_FIRST = 0x1100,
-        TTS_ALWAYSTIP = 0x01,
-        TTS_NOPREFIX = 0x02,
-        TTS_NOANIMATE = 0x10,
-        TTS_NOFADE = 0x20,
-        TTS_BALLOON = 0x40,
-        //TTI_NONE                =0,
-        //TTI_INFO                =1,
-        TTI_WARNING = 2,
-        //TTI_ERROR               =3,
         TB_LINEUP = 0,
         TB_LINEDOWN = 1,
         TB_PAGEUP = 2,
@@ -199,175 +137,11 @@ namespace System.Windows.Forms
             internal string pszWindow = null;
         }
 
-        public delegate int EditStreamCallback(IntPtr dwCookie, IntPtr buf, int cb, out int transferred);
-
-        [StructLayout(LayoutKind.Sequential)]
-        public class EDITSTREAM
-        {
-            public IntPtr dwCookie = IntPtr.Zero;
-            public int dwError = 0;
-            public EditStreamCallback pfnCallback = null;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public class EDITSTREAM64
-        {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
-            public byte[] contents = new byte[20];
-        }
-
         public delegate IntPtr WndProc(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
         public delegate int ListViewCompareCallback(IntPtr lParam1, IntPtr lParam2, IntPtr lParamSort);
 
         public delegate int TreeViewCompareCallback(IntPtr lParam1, IntPtr lParam2, IntPtr lParamSort);
-
-        // Any change in PRINTDLG, should also be in PRINTDLG_32 and PRINTDLG_64
-        public interface PRINTDLG
-        {
-            int lStructSize { get; set; }
-
-            IntPtr hwndOwner { get; set; }
-            IntPtr hDevMode { get; set; }
-            IntPtr hDevNames { get; set; }
-            IntPtr hDC { get; set; }
-
-            Comdlg32.PD Flags { get; set; }
-
-            short nFromPage { get; set; }
-            short nToPage { get; set; }
-            short nMinPage { get; set; }
-            short nMaxPage { get; set; }
-            short nCopies { get; set; }
-
-            IntPtr hInstance { get; set; }
-            IntPtr lCustData { get; set; }
-
-            WndProc lpfnPrintHook { get; set; }
-            WndProc lpfnSetupHook { get; set; }
-
-            string lpPrintTemplateName { get; set; }
-            string lpSetupTemplateName { get; set; }
-
-            IntPtr hPrintTemplate { get; set; }
-            IntPtr hSetupTemplate { get; set; }
-        }
-
-        // Any change in PRINTDLG_32, should also be in PRINTDLG and PRINTDLG_64
-        // x86 requires EXPLICIT packing of 1.
-        [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Auto)]
-        public class PRINTDLG_32 : PRINTDLG
-        {
-            int m_lStructSize;
-
-            IntPtr m_hwndOwner;
-            IntPtr m_hDevMode;
-            IntPtr m_hDevNames;
-            IntPtr m_hDC;
-
-            short m_nFromPage;
-            short m_nToPage;
-            short m_nMinPage;
-            short m_nMaxPage;
-            short m_nCopies;
-
-            IntPtr m_hInstance;
-            IntPtr m_lCustData;
-
-            WndProc m_lpfnPrintHook;
-            WndProc m_lpfnSetupHook;
-
-            string m_lpPrintTemplateName;
-            string m_lpSetupTemplateName;
-
-            IntPtr m_hPrintTemplate;
-            IntPtr m_hSetupTemplate;
-
-            public int lStructSize { get { return m_lStructSize; } set { m_lStructSize = value; } }
-
-            public IntPtr hwndOwner { get { return m_hwndOwner; } set { m_hwndOwner = value; } }
-            public IntPtr hDevMode { get { return m_hDevMode; } set { m_hDevMode = value; } }
-            public IntPtr hDevNames { get { return m_hDevNames; } set { m_hDevNames = value; } }
-            public IntPtr hDC { get { return m_hDC; } set { m_hDC = value; } }
-
-            public Comdlg32.PD Flags { get; set; }
-
-            public short nFromPage { get { return m_nFromPage; } set { m_nFromPage = value; } }
-            public short nToPage { get { return m_nToPage; } set { m_nToPage = value; } }
-            public short nMinPage { get { return m_nMinPage; } set { m_nMinPage = value; } }
-            public short nMaxPage { get { return m_nMaxPage; } set { m_nMaxPage = value; } }
-            public short nCopies { get { return m_nCopies; } set { m_nCopies = value; } }
-
-            public IntPtr hInstance { get { return m_hInstance; } set { m_hInstance = value; } }
-            public IntPtr lCustData { get { return m_lCustData; } set { m_lCustData = value; } }
-
-            public WndProc lpfnPrintHook { get { return m_lpfnPrintHook; } set { m_lpfnPrintHook = value; } }
-            public WndProc lpfnSetupHook { get { return m_lpfnSetupHook; } set { m_lpfnSetupHook = value; } }
-
-            public string lpPrintTemplateName { get { return m_lpPrintTemplateName; } set { m_lpPrintTemplateName = value; } }
-            public string lpSetupTemplateName { get { return m_lpSetupTemplateName; } set { m_lpSetupTemplateName = value; } }
-
-            public IntPtr hPrintTemplate { get { return m_hPrintTemplate; } set { m_hPrintTemplate = value; } }
-            public IntPtr hSetupTemplate { get { return m_hSetupTemplate; } set { m_hSetupTemplate = value; } }
-        }
-
-        // Any change in PRINTDLG_64, should also be in PRINTDLG_32 and PRINTDLG
-        // x64 does not require EXPLICIT packing of 1.
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public class PRINTDLG_64 : PRINTDLG
-        {
-            int m_lStructSize;
-
-            IntPtr m_hwndOwner;
-            IntPtr m_hDevMode;
-            IntPtr m_hDevNames;
-            IntPtr m_hDC;
-
-            short m_nFromPage;
-            short m_nToPage;
-            short m_nMinPage;
-            short m_nMaxPage;
-            short m_nCopies;
-
-            IntPtr m_hInstance;
-            IntPtr m_lCustData;
-
-            WndProc m_lpfnPrintHook;
-            WndProc m_lpfnSetupHook;
-
-            string m_lpPrintTemplateName;
-            string m_lpSetupTemplateName;
-
-            IntPtr m_hPrintTemplate;
-            IntPtr m_hSetupTemplate;
-
-            public int lStructSize { get { return m_lStructSize; } set { m_lStructSize = value; } }
-
-            public IntPtr hwndOwner { get { return m_hwndOwner; } set { m_hwndOwner = value; } }
-            public IntPtr hDevMode { get { return m_hDevMode; } set { m_hDevMode = value; } }
-            public IntPtr hDevNames { get { return m_hDevNames; } set { m_hDevNames = value; } }
-            public IntPtr hDC { get { return m_hDC; } set { m_hDC = value; } }
-
-            public Comdlg32.PD Flags { get; set; }
-
-            public short nFromPage { get { return m_nFromPage; } set { m_nFromPage = value; } }
-            public short nToPage { get { return m_nToPage; } set { m_nToPage = value; } }
-            public short nMinPage { get { return m_nMinPage; } set { m_nMinPage = value; } }
-            public short nMaxPage { get { return m_nMaxPage; } set { m_nMaxPage = value; } }
-            public short nCopies { get { return m_nCopies; } set { m_nCopies = value; } }
-
-            public IntPtr hInstance { get { return m_hInstance; } set { m_hInstance = value; } }
-            public IntPtr lCustData { get { return m_lCustData; } set { m_lCustData = value; } }
-
-            public WndProc lpfnPrintHook { get { return m_lpfnPrintHook; } set { m_lpfnPrintHook = value; } }
-            public WndProc lpfnSetupHook { get { return m_lpfnSetupHook; } set { m_lpfnSetupHook = value; } }
-
-            public string lpPrintTemplateName { get { return m_lpPrintTemplateName; } set { m_lpPrintTemplateName = value; } }
-            public string lpSetupTemplateName { get { return m_lpSetupTemplateName; } set { m_lpSetupTemplateName = value; } }
-
-            public IntPtr hPrintTemplate { get { return m_hPrintTemplate; } set { m_hPrintTemplate = value; } }
-            public IntPtr hSetupTemplate { get { return m_hSetupTemplate; } set { m_hSetupTemplate = value; } }
-        }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public class PRINTDLGEX
@@ -413,42 +187,6 @@ namespace System.Windows.Forms
         {
             public int nFromPage = 0;
             public int nToPage = 0;
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public class NOTIFYICONDATA
-        {
-            public int cbSize = Marshal.SizeOf<NOTIFYICONDATA>();
-            public IntPtr hWnd;
-            public int uID;
-            public Shell32.NIF uFlags;
-            public int uCallbackMessage;
-            public IntPtr hIcon;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-            public string szTip;
-            public int dwState = 0;
-            public int dwStateMask = 0;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
-            public string szInfo;
-            public int uTimeoutOrVersion;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
-            public string szInfoTitle;
-            public Shell32.NIIF dwInfoFlags;
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        public struct MSAAMENUINFO
-        {
-            public int dwMSAASignature;
-            public int cchWText;
-            public string pszWText;
-
-            public MSAAMENUINFO(string text)
-            {
-                dwMSAASignature = unchecked((int)MSAA_MENU_SIG);
-                cchWText = text.Length;
-                pszWText = text;
-            }
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
@@ -560,17 +298,6 @@ namespace System.Windows.Forms
             public byte[] contents = new byte[56];
         }
 
-        // GetRegionData structures
-        [StructLayout(LayoutKind.Sequential)]
-        public struct RGNDATAHEADER
-        {
-            public int cbSizeOfStruct;
-            public int iType;
-            public int nCount;
-            public int nRgnSize;
-            // public RECT rcBound; // Note that we don't define this field as part of the marshaling
-        }
-
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public class ENPROTECTED
         {
@@ -603,45 +330,6 @@ namespace System.Windows.Forms
             private ActiveX()
             {
             }
-        }
-
-        public delegate bool MonitorEnumProc(IntPtr monitor, IntPtr hdc, IntPtr lprcMonitor, IntPtr lParam);
-
-        [ComImport]
-        [Guid("A7ABA9C1-8983-11cf-8F20-00805F2CD064")]
-        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-        public interface IProvideMultipleClassInfo
-        {
-            // since the inheritance doesn't seem to work...
-            // these are from IProvideClassInfo & IProvideClassInfo2
-            [PreserveSig]
-            void GetClassInfo_Stub();
-            // HRESULT GetClassInfo(out ITypeInfo ppTI);
-
-            [PreserveSig]
-            int GetGUID(int dwGuidKind, [In, Out] ref Guid pGuid);
-
-            [PreserveSig]
-            HRESULT GetMultiTypeInfoCount([In, Out] ref int pcti);
-
-            // we use arrays for most of these since we never use them anyway.
-            [PreserveSig]
-            HRESULT GetInfoOfIndex(int iti, int dwFlags,
-                                [In, Out]
-                                ref Oleaut32.ITypeInfo pTypeInfo,
-                                int pTIFlags,
-                                int pcdispidReserved,
-                                IntPtr piidPrimary,
-                                IntPtr piidSource);
-        }
-
-        [ComImport]
-        [Guid("B196B283-BAB4-101A-B69C-00AA00341D07")]
-        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-        public interface IProvideClassInfo
-        {
-            [PreserveSig]
-            HRESULT GetClassInfo(out Oleaut32.ITypeInfo ppTI);
         }
 
         /// <summary>

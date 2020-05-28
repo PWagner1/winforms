@@ -182,7 +182,7 @@ namespace System.Windows.Forms.Tests.AccessibleObjects
             Assert.Throws<TargetInvocationException>(() => ctor.Invoke(new object[] { null, null }));
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData((int)UiaCore.UIA.IsGridPatternAvailablePropertyId)]
         [InlineData((int)UiaCore.UIA.IsTablePatternAvailablePropertyId)]
         public void PropertyGridViewAccessibleObject_Pattern_IsAvailable(int propertyId)
@@ -192,7 +192,7 @@ namespace System.Windows.Forms.Tests.AccessibleObjects
             Assert.True((bool)accessibleObject.GetPropertyValue((UiaCore.UIA)propertyId));
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData((int)UiaCore.UIA.TablePatternId)]
         [InlineData((int)UiaCore.UIA.GridPatternId)]
         public void PropertyGridViewAccessibleObject_IsPatternSupported(int patternId)
@@ -262,6 +262,43 @@ namespace System.Windows.Forms.Tests.AccessibleObjects
             using PropertyGrid propertyGrid = new PropertyGrid();
             ControlAccessibleObject accessibleObject = (ControlAccessibleObject)propertyGrid.GridViewAccessibleObject;
             Assert.NotNull(accessibleObject.Parent);
+        }
+
+        [WinFormsTheory]
+        [InlineData("Some test text")]
+        [InlineData("")]
+        public void PropertyGridView_GridViewListBoxAccessibleObject_Name_ReturnsDeterminedName(string name)
+        {
+            using PropertyGrid propertyGrid = new PropertyGrid();
+            Control.ControlAccessibleObject gridViewAccessibleObject = (Control.ControlAccessibleObject)propertyGrid.GridViewAccessibleObject;
+            PropertyGridView propertyGridView = (PropertyGridView)gridViewAccessibleObject.Owner;
+
+            propertyGridView.DropDownListBoxAccessibleObject.Name = name;
+            string listAccessibleName = propertyGridView.DropDownListBoxAccessibleObject.Name;
+            Assert.Equal(name, listAccessibleName);
+        }
+
+        [WinFormsFact]
+        public void PropertyGridView_GridViewListBoxAccessibleObject_ReturnsDefaultName()
+        {
+            using PropertyGrid propertyGrid = new PropertyGrid();
+            Control.ControlAccessibleObject gridViewAccessibleObject = (Control.ControlAccessibleObject)propertyGrid.GridViewAccessibleObject;
+            PropertyGridView propertyGridView = (PropertyGridView)gridViewAccessibleObject.Owner;
+
+            string listAccessibleName = propertyGridView.DropDownListBoxAccessibleObject.Name;
+            Assert.Equal(SR.PropertyGridEntryValuesListDefaultAccessibleName, listAccessibleName);
+        }
+
+        [WinFormsFact]
+        public void PropertyGridView_GridViewListBoxAccessibleObject_ReturnsDefaultName_IfBaseNameIsSetAsNull()
+        {
+            using PropertyGrid propertyGrid = new PropertyGrid();
+            Control.ControlAccessibleObject gridViewAccessibleObject = (Control.ControlAccessibleObject)propertyGrid.GridViewAccessibleObject;
+            PropertyGridView propertyGridView = (PropertyGridView)gridViewAccessibleObject.Owner;
+
+            propertyGridView.DropDownListBoxAccessibleObject.Name = null;
+            string listAccessibleName = propertyGridView.DropDownListBoxAccessibleObject.Name;
+            Assert.Equal(SR.PropertyGridEntryValuesListDefaultAccessibleName, listAccessibleName);
         }
     }
 }

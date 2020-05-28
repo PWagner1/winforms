@@ -2,11 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
-// #define TRACK_HDC
-// #define GDI_FINALIZATION_WATCH
-
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -65,33 +60,24 @@ namespace System.Windows.Forms.Internal
         ///  See book "Windows Graphics Programming - Feng Yuang", P315 - Device Context Attributes.
         /// </summary>
         private IntPtr _hDC;
-        public event EventHandler Disposing;
+        public event EventHandler? Disposing;
         private bool _disposed;
 
         // We cache the hWnd when creating the dc from one, to provide support forIDeviceContext.GetHdc/ReleaseHdc.
         // This hWnd could be null, in such case it is referring to the screen.
-        readonly IntPtr _hWnd = (IntPtr)(-1); // Unlikely to be a valid hWnd.
+        private readonly IntPtr _hWnd = (IntPtr)(-1); // Unlikely to be a valid hWnd.
 
-        IntPtr _hInitialPen;
-        IntPtr _hInitialBrush;
-        IntPtr _hInitialBmp;
-        IntPtr _hInitialFont;
+        private IntPtr _hInitialPen;
+        private IntPtr _hInitialBrush;
+        private IntPtr _hInitialBmp;
+        private IntPtr _hInitialFont;
 
-        IntPtr _hCurrentPen;
-        IntPtr _hCurrentBrush;
-        IntPtr _hCurrentBmp;
-        IntPtr _hCurrentFont;
+        private IntPtr _hCurrentPen;
+        private IntPtr _hCurrentBrush;
+        private IntPtr _hCurrentBmp;
+        private IntPtr _hCurrentFont;
 
-        Stack<GraphicsState> _contextStack;
-
-#if GDI_FINALIZATION_WATCH
-        private string AllocationSite = DbgUtil.StackTrace;
-        private string DeAllocationSite = string.Empty;
-#endif
-
-        ///
-        ///  Class properties...
-        ///
+        private Stack<GraphicsState>? _contextStack;
 
         /// <summary>
         ///  The device type the context refers to.
@@ -120,12 +106,6 @@ namespace System.Windows.Forms.Internal
                         _hDC = ((IDeviceContext)this).GetHdc();  // this.hDC will be released on call to Dispose.
                         CacheInitialState();
                     }
-#if GDI_FINALIZATION_WATCH
-                    else
-                    {
-                        try { Debug.WriteLine(string.Format("Allocation stack:\r\n{0}\r\nDeallocation stack:\r\n{1}", AllocationSite, DeAllocationSite)); } catch  {}
-                    }
-#endif
                 }
 
                 return _hDC;
@@ -183,10 +163,6 @@ namespace System.Windows.Forms.Internal
             Gdi32.DeleteObject(handleToDelete);
         }
 
-        //
-        // object construction API.  Publicly constructable from static methods only.
-        //
-
         /// <summary>
         ///  Constructor to contruct a DeviceContext object from an window handle.
         /// </summary>
@@ -198,10 +174,6 @@ namespace System.Windows.Forms.Internal
             DeviceContexts.AddDeviceContext(this);
 
             // the hDc will be created on demand.
-
-#if TRACK_HDC
-            Debug.WriteLine( DbgUtil.StackTraceToStr(String.Format( "DeviceContext( hWnd=0x{0:x8} )", unchecked((int) hWnd))));
-#endif
         }
 
         /// <summary>
@@ -219,9 +191,6 @@ namespace System.Windows.Forms.Internal
             {
                 _hWnd = User32.WindowFromDC(new HandleRef(this, this._hDC));
             }
-#if TRACK_HDC
-            Debug.WriteLine( DbgUtil.StackTraceToStr( String.Format("DeviceContext( hDC=0x{0:X8}, Type={1} )", unchecked((int) hDC), dcType) ));
-#endif
         }
 
         /// <summary>
@@ -248,10 +217,7 @@ namespace System.Windows.Forms.Internal
         /// </summary>
         public static DeviceContext FromHwnd(IntPtr hwnd) => new DeviceContext(hwnd);
 
-        ~DeviceContext()
-        {
-            Dispose(false);
-        }
+        ~DeviceContext() => Dispose(false);
 
         public void Dispose()
         {
@@ -285,10 +251,6 @@ namespace System.Windows.Forms.Internal
 
                     // CreateDC and CreateIC add an HDC handle to the HandleCollector; to remove it properly we need
                     // to call DeleteHDC.
-#if TRACK_HDC
-                    Debug.WriteLine( DbgUtil.StackTraceToStr( String.Format("DC.DeleteHDC(hdc=0x{0:x8})", unchecked((int) this.hDC))));
-#endif
-
                     Gdi32.DeleteDC(_hDC);
                     _hDC = IntPtr.Zero;
                     break;
@@ -297,9 +259,6 @@ namespace System.Windows.Forms.Internal
 
                     // CreatCompatibleDC adds a GDI handle to HandleCollector, to remove it properly we need to call
                     // DeleteDC.
-#if TRACK_HDC
-                    Debug.WriteLine( DbgUtil.StackTraceToStr( String.Format("DC.DeleteDC(hdc=0x{0:x8})", unchecked((int) this.hDC))));
-#endif
                     Gdi32.DeleteDC(_hDC);
                     _hDC = IntPtr.Zero;
                     break;
@@ -310,8 +269,6 @@ namespace System.Windows.Forms.Internal
                     // do nothing, the hdc is not owned by this object.
                     // in this case it is ok if disposed throught finalization.
             }
-
-            DbgUtil.AssertFinalization(this, disposing);
         }
 
         /// <summary>
@@ -328,9 +285,6 @@ namespace System.Windows.Forms.Internal
                 // Note: for common DCs, GetDC assigns default attributes to the DC each time it is retrieved.
                 // For example, the default font is System.
                 _hDC = User32.GetDC(new HandleRef(this, _hWnd));
-#if TRACK_HDC
-                Debug.WriteLine( DbgUtil.StackTraceToStr( String.Format("hdc[0x{0:x8}]=DC.GetHdc(hWnd=0x{1:x8})", unchecked((int) this.hDC), unchecked((int) this.hWnd))));
-#endif
             }
 
             return _hDC;
@@ -344,14 +298,7 @@ namespace System.Windows.Forms.Internal
         {
             if (_hDC != IntPtr.Zero && DeviceContextType == DeviceContextType.Display)
             {
-#if TRACK_HDC
-                int retVal =
-#endif
                 User32.ReleaseDC(new HandleRef(this, _hWnd), _hDC);
-                // Note: retVal == 0 means it was not released but doesn't necessarily means an error; class or private DCs are never released.
-#if TRACK_HDC
-                Debug.WriteLine( DbgUtil.StackTraceToStr( String.Format("[ret={0}]=DC.ReleaseDC(hDc=0x{1:x8}, hWnd=0x{2:x8})", retVal, unchecked((int) this.hDC), unchecked((int) this.hWnd))));
-#endif
                 _hDC = IntPtr.Zero;
             }
         }
@@ -369,15 +316,8 @@ namespace System.Windows.Forms.Internal
         /// </summary>
         public void RestoreHdc()
         {
-#if TRACK_HDC
-            bool result =
-#endif
             // Note: Don't use the Hdc property here, it would force handle creation.
             Gdi32.RestoreDC(new HandleRef(this, _hDC), -1);
-#if TRACK_HDC
-            // Note: Winforms may call this method during app exit at which point the DC may have been finalized already causing this assert to popup.
-            Debug.WriteLine( DbgUtil.StackTraceToStr( String.Format("ret[0]=DC.RestoreHdc(hDc=0x{1:x8})", result, unchecked((int) this.hDC)) ));
-#endif
             Debug.Assert(_contextStack != null, "Someone is calling RestoreHdc() before SaveHdc()");
 
             if (_contextStack != null)
@@ -395,7 +335,7 @@ namespace System.Windows.Forms.Internal
                 }
                 else
                 {
-                    WindowsFont previousFont = ActiveFont;
+                    WindowsFont? previousFont = ActiveFont;
                     ActiveFont = null;
                     if (previousFont != null && MeasurementDCInfo.IsMeasurementDC(this))
                     {
@@ -404,13 +344,10 @@ namespace System.Windows.Forms.Internal
                 }
             }
 
-#if OPTIMIZED_MEASUREMENTDC
             // in this case, GDI will copy back the previously saved font into the DC.
             // we dont actually know what the font is in our measurement DC so
             // we need to clear it off.
             MeasurementDCInfo.ResetIfIsMeasurementDC(_hDC);
-#endif
-
         }
 
         /// <summary>
@@ -426,12 +363,7 @@ namespace System.Windows.Forms.Internal
             HandleRef hdc = new HandleRef(this, Hdc);
             int state = Gdi32.SaveDC(hdc);
 
-            if (_contextStack == null)
-            {
-                _contextStack = new Stack<GraphicsState>();
-            }
-
-            GraphicsState g = new GraphicsState
+            var g = new GraphicsState
             {
                 hBitmap = _hCurrentBmp,
                 hBrush = _hCurrentBrush,
@@ -439,12 +371,8 @@ namespace System.Windows.Forms.Internal
                 hFont = _hCurrentFont,
                 font = new WeakReference(ActiveFont)
             };
-
+            _contextStack ??= new Stack<GraphicsState>();
             _contextStack.Push(g);
-
-#if TRACK_HDC
-            Debug.WriteLine( DbgUtil.StackTraceToStr( String.Format("state[0]=DC.SaveHdc(hDc=0x{1:x8})", state, unchecked((int) this.hDC)) ));
-#endif
 
             return state;
         }
@@ -504,9 +432,9 @@ namespace System.Windows.Forms.Internal
             Gdi32.OffsetViewportOrgEx(new HandleRef(this, Hdc), dx, dy, ref origin);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            DeviceContext other = obj as DeviceContext;
+            DeviceContext? other = obj as DeviceContext;
 
             if (other == this)
             {

@@ -14,12 +14,13 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using Microsoft.Win32;
 using static Interop;
+using static Interop.Ole32;
+using IAdviseSink = System.Runtime.InteropServices.ComTypes.IAdviseSink;
 
 namespace System.Windows.Forms
 {
@@ -45,18 +46,14 @@ namespace System.Windows.Forms
             private static readonly int s_adjustingRect = BitVector32.CreateMask(s_uiDead);
 
             private static Point s_logPixels = Point.Empty;
-            private static Ole32.OLEVERB[] s_axVerbs;
-
-            private static int s_globalActiveXCount = 0;
-            private static bool s_checkedIE;
-            private static bool s_isIE;
+            private static OLEVERB[] s_axVerbs;
 
             private readonly Control _control;
             private readonly IWindowTarget _controlWindowTarget;
             private IntPtr _clipRegion;
-            private Ole32.IOleClientSite _clientSite;
-            private Ole32.IOleInPlaceUIWindow _inPlaceUiWindow;
-            private Ole32.IOleInPlaceFrame _inPlaceFrame;
+            private IOleClientSite _clientSite;
+            private IOleInPlaceUIWindow _inPlaceUiWindow;
+            private IOleInPlaceFrame _inPlaceFrame;
             private readonly ArrayList _adviseList;
             private IAdviseSink _viewAdviseSink;
             private BitVector32 _activeXState;
@@ -80,26 +77,28 @@ namespace System.Windows.Forms
                 _adviseList = new ArrayList();
                 _activeXState = new BitVector32();
                 _ambientProperties = new AmbientProperty[] {
-                    new AmbientProperty("Font", Ole32.DispatchID.AMBIENT_FONT),
-                    new AmbientProperty("BackColor", Ole32.DispatchID.AMBIENT_BACKCOLOR),
-                    new AmbientProperty("ForeColor", Ole32.DispatchID.AMBIENT_FORECOLOR)
+                    new AmbientProperty("Font", DispatchID.AMBIENT_FONT),
+                    new AmbientProperty("BackColor", DispatchID.AMBIENT_BACKCOLOR),
+                    new AmbientProperty("ForeColor", DispatchID.AMBIENT_FORECOLOR)
                 };
             }
 
             /// <summary>
             ///  Retrieves the ambient back color for the control.
             /// </summary>
-            [Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            [Browsable(false)]
+            [EditorBrowsable(EditorBrowsableState.Advanced)]
+            [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             internal Color AmbientBackColor
             {
                 get
                 {
-                    AmbientProperty prop = LookupAmbient(Ole32.DispatchID.AMBIENT_BACKCOLOR);
+                    AmbientProperty prop = LookupAmbient(DispatchID.AMBIENT_BACKCOLOR);
 
                     if (prop.Empty)
                     {
                         object obj = null;
-                        if (GetAmbientProperty(Ole32.DispatchID.AMBIENT_BACKCOLOR, ref obj))
+                        if (GetAmbientProperty(DispatchID.AMBIENT_BACKCOLOR, ref obj))
                         {
                             if (obj != null)
                             {
@@ -135,23 +134,25 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Retrieves the ambient font for the control.
             /// </summary>
-            [Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            [Browsable(false)]
+            [EditorBrowsable(EditorBrowsableState.Advanced)]
+            [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             internal Font AmbientFont
             {
                 get
                 {
-                    AmbientProperty prop = LookupAmbient(Ole32.DispatchID.AMBIENT_FONT);
+                    AmbientProperty prop = LookupAmbient(DispatchID.AMBIENT_FONT);
 
                     if (prop.Empty)
                     {
                         object obj = null;
-                        if (GetAmbientProperty(Ole32.DispatchID.AMBIENT_FONT, ref obj))
+                        if (GetAmbientProperty(DispatchID.AMBIENT_FONT, ref obj))
                         {
                             try
                             {
                                 Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "Object font type=" + obj.GetType().FullName);
                                 Debug.Assert(obj != null, "GetAmbientProperty failed");
-                                Ole32.IFont ifont = (Ole32.IFont)obj;
+                                IFont ifont = (IFont)obj;
                                 prop.Value = Font.FromHfont(ifont.hFont);
                             }
                             catch (Exception e) when (!ClientUtils.IsSecurityOrCriticalException(e))
@@ -169,17 +170,19 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Retrieves the ambient back color for the control.
             /// </summary>
-            [Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            [Browsable(false)]
+            [EditorBrowsable(EditorBrowsableState.Advanced)]
+            [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             internal Color AmbientForeColor
             {
                 get
                 {
-                    AmbientProperty prop = LookupAmbient(Ole32.DispatchID.AMBIENT_FORECOLOR);
+                    AmbientProperty prop = LookupAmbient(DispatchID.AMBIENT_FORECOLOR);
 
                     if (prop.Empty)
                     {
                         object obj = null;
-                        if (GetAmbientProperty(Ole32.DispatchID.AMBIENT_FORECOLOR, ref obj))
+                        if (GetAmbientProperty(DispatchID.AMBIENT_FORECOLOR, ref obj))
                         {
                             if (obj != null)
                             {
@@ -215,7 +218,9 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Determines if events should be frozen.
             /// </summary>
-            [Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            [Browsable(false)]
+            [EditorBrowsable(EditorBrowsableState.Advanced)]
+            [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             internal bool EventsFrozen
             {
                 get
@@ -233,47 +238,6 @@ namespace System.Windows.Forms
             ///  when we are UI active
             /// </summary>
             internal IntPtr HWNDParent { get; private set; }
-
-            /// <summary>
-            ///  Returns true if this app domain is running inside of IE.  The
-            ///  control must be sited for this to succeed (it will assert and
-            ///  return false if the control is not sited).
-            /// </summary>
-            internal bool IsIE
-            {
-                get
-                {
-                    if (!s_checkedIE)
-                    {
-                        if (_clientSite == null)
-                        {
-                            Debug.Fail("Do not reference IsIE property unless control is sited.");
-                            return false;
-                        }
-
-                        // First, is this a managed EXE?  If so, it will correctly shut down
-                        // the runtime.
-                        if (Assembly.GetEntryAssembly() == null)
-                        {
-                            // Now check for IHTMLDocument2
-                            if (_clientSite.GetContainer(out Ole32.IOleContainer container).Succeeded() && container is Mshtml.IHTMLDocument)
-                            {
-                                s_isIE = true;
-                                Debug.WriteLineIf(CompModSwitches.ActiveX.TraceVerbose, "AxSource:IsIE running under IE");
-                            }
-
-                            if (container != null && Marshal.IsComObject(container))
-                            {
-                                Marshal.ReleaseComObject(container);
-                            }
-                        }
-
-                        s_checkedIE = true;
-                    }
-
-                    return s_isIE;
-                }
-            }
 
             /// <summary>
             ///  Retrieves the number of logical pixels per inch on the
@@ -306,15 +270,15 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IOleObject::Close
             /// </summary>
-            internal void Close(Ole32.OLECLOSE dwSaveOption)
+            internal void Close(OLECLOSE dwSaveOption)
             {
                 if (_activeXState[s_inPlaceActive])
                 {
                     InPlaceDeactivate();
                 }
 
-                if ((dwSaveOption == Ole32.OLECLOSE.SAVEIFDIRTY ||
-                     dwSaveOption == Ole32.OLECLOSE.PROMPTSAVE) &&
+                if ((dwSaveOption == OLECLOSE.SAVEIFDIRTY ||
+                     dwSaveOption == OLECLOSE.PROMPTSAVE) &&
                     _activeXState[s_isDirty])
                 {
                     if (_clientSite != null)
@@ -329,9 +293,9 @@ namespace System.Windows.Forms
             ///  Implements IOleObject::DoVerb
             /// </summary>
             internal unsafe HRESULT DoVerb(
-                Ole32.OLEIVERB iVerb,
+                OLEIVERB iVerb,
                 User32.MSG* lpmsg,
-                Ole32.IOleClientSite pActiveSite,
+                IOleClientSite pActiveSite,
                 int lindex,
                 IntPtr hwndParent,
                 RECT* lprcPosRect)
@@ -339,10 +303,10 @@ namespace System.Windows.Forms
                 Debug.WriteLineIf(CompModSwitches.ActiveX.TraceVerbose, "AxSource:ActiveXImpl:DoVerb(" + iVerb + ")");
                 switch (iVerb)
                 {
-                    case Ole32.OLEIVERB.SHOW:
-                    case Ole32.OLEIVERB.INPLACEACTIVATE:
-                    case Ole32.OLEIVERB.UIACTIVATE:
-                    case Ole32.OLEIVERB.PRIMARY:
+                    case OLEIVERB.SHOW:
+                    case OLEIVERB.INPLACEACTIVATE:
+                    case OLEIVERB.UIACTIVATE:
+                    case OLEIVERB.PRIMARY:
                         Debug.WriteLineIf(CompModSwitches.ActiveX.TraceVerbose, "DoVerb:Show, InPlaceActivate, UIActivate");
                         InPlaceActivate(iVerb);
 
@@ -396,7 +360,7 @@ namespace System.Windows.Forms
                         break;
 
                     // These affect our visibility
-                    case Ole32.OLEIVERB.HIDE:
+                    case OLEIVERB.HIDE:
                         Debug.WriteLineIf(CompModSwitches.ActiveX.TraceVerbose, "DoVerb:Hide");
                         UIDeactivate();
                         InPlaceDeactivate();
@@ -420,10 +384,10 @@ namespace System.Windows.Forms
             ///  Implements IViewObject2::Draw.
             /// </summary>
             internal unsafe HRESULT Draw(
-                Ole32.DVASPECT dwDrawAspect,
+                DVASPECT dwDrawAspect,
                 int lindex,
                 IntPtr pvAspect,
-                Ole32.DVTARGETDEVICE* ptd,
+                DVTARGETDEVICE* ptd,
                 IntPtr hdcTargetDev,
                 IntPtr hdcDraw,
                 RECT* prcBounds,
@@ -434,9 +398,9 @@ namespace System.Windows.Forms
                 // support the aspects required for multi-pass drawing
                 switch (dwDrawAspect)
                 {
-                    case Ole32.DVASPECT.CONTENT:
-                    case Ole32.DVASPECT.OPAQUE:
-                    case Ole32.DVASPECT.TRANSPARENT:
+                    case DVASPECT.CONTENT:
+                    case DVASPECT.OPAQUE:
+                    case DVASPECT.TRANSPARENT:
                         break;
                     default:
                         return HRESULT.DV_E_DVASPECT;
@@ -514,27 +478,27 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Returns a new verb enumerator.
             /// </summary>
-            internal static HRESULT EnumVerbs(out Ole32.IEnumOLEVERB ppEnumOleVerb)
+            internal static HRESULT EnumVerbs(out IEnumOLEVERB ppEnumOleVerb)
             {
                 if (s_axVerbs == null)
                 {
-                    var verbShow = new Ole32.OLEVERB();
-                    var verbInplaceActivate = new Ole32.OLEVERB();
-                    var verbUIActivate = new Ole32.OLEVERB();
-                    var verbHide = new Ole32.OLEVERB();
-                    var verbPrimary = new Ole32.OLEVERB();
-                    var verbProperties = new Ole32.OLEVERB();
+                    var verbShow = new OLEVERB();
+                    var verbInplaceActivate = new OLEVERB();
+                    var verbUIActivate = new OLEVERB();
+                    var verbHide = new OLEVERB();
+                    var verbPrimary = new OLEVERB();
+                    var verbProperties = new OLEVERB();
 
-                    verbShow.lVerb = Ole32.OLEIVERB.SHOW;
-                    verbInplaceActivate.lVerb = Ole32.OLEIVERB.INPLACEACTIVATE;
-                    verbUIActivate.lVerb = Ole32.OLEIVERB.UIACTIVATE;
-                    verbHide.lVerb = Ole32.OLEIVERB.HIDE;
-                    verbPrimary.lVerb = Ole32.OLEIVERB.PRIMARY;
-                    verbProperties.lVerb = Ole32.OLEIVERB.PROPERTIES;
+                    verbShow.lVerb = OLEIVERB.SHOW;
+                    verbInplaceActivate.lVerb = OLEIVERB.INPLACEACTIVATE;
+                    verbUIActivate.lVerb = OLEIVERB.UIACTIVATE;
+                    verbHide.lVerb = OLEIVERB.HIDE;
+                    verbPrimary.lVerb = OLEIVERB.PRIMARY;
+                    verbProperties.lVerb = OLEIVERB.PROPERTIES;
                     verbProperties.lpszVerbName = SR.AXProperties;
-                    verbProperties.grfAttribs = Ole32.OLEVERBATTRIB.ONCONTAINERMENU;
+                    verbProperties.grfAttribs = OLEVERBATTRIB.ONCONTAINERMENU;
 
-                    s_axVerbs = new Ole32.OLEVERB[]
+                    s_axVerbs = new OLEVERB[]
                     {
                         verbShow,
                         verbInplaceActivate,
@@ -580,11 +544,11 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IViewObject2::GetAdvise.
             /// </summary>
-            internal unsafe HRESULT GetAdvise(Ole32.DVASPECT* pAspects, Ole32.ADVF* pAdvf, IAdviseSink[] ppAdvSink)
+            internal unsafe HRESULT GetAdvise(DVASPECT* pAspects, ADVF* pAdvf, IAdviseSink[] ppAdvSink)
             {
                 if (pAspects != null)
                 {
-                    *pAspects = Ole32.DVASPECT.CONTENT;
+                    *pAspects = DVASPECT.CONTENT;
                 }
 
                 if (pAdvf != null)
@@ -593,11 +557,11 @@ namespace System.Windows.Forms
 
                     if (_activeXState[s_viewAdviseOnlyOnce])
                     {
-                        *pAdvf |= Ole32.ADVF.ONLYONCE;
+                        *pAdvf |= ADVF.ONLYONCE;
                     }
                     if (_activeXState[s_viewAdvisePrimeFirst])
                     {
-                        *pAdvf |= Ole32.ADVF.PRIMEFIRST;
+                        *pAdvf |= ADVF.PRIMEFIRST;
                     }
                 }
 
@@ -613,7 +577,7 @@ namespace System.Windows.Forms
             ///  Helper function to retrieve an ambient property.  Returns false if the
             ///  property wasn't found.
             /// </summary>
-            private bool GetAmbientProperty(Ole32.DispatchID dispid, ref object obj)
+            private bool GetAmbientProperty(DispatchID dispid, ref object obj)
             {
                 Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetAmbientProperty");
                 Debug.Indent();
@@ -622,7 +586,7 @@ namespace System.Windows.Forms
                 {
                     Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "clientSite implements IDispatch");
 
-                    var dispParams = new Ole32.DISPPARAMS();
+                    var dispParams = new Oleaut32.DISPPARAMS();
                     object[] pvt = new object[1];
                     Guid g = Guid.Empty;
                     HRESULT hr = disp.Invoke(
@@ -652,9 +616,9 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IOleObject::GetClientSite.
             /// </summary>
-            internal Ole32.IOleClientSite GetClientSite() => _clientSite;
+            internal IOleClientSite GetClientSite() => _clientSite;
 
-            internal unsafe HRESULT GetControlInfo(Ole32.CONTROLINFO* pCI)
+            internal unsafe HRESULT GetControlInfo(CONTROLINFO* pCI)
             {
                 if (_accelCount == -1)
                 {
@@ -741,9 +705,9 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IOleObject::GetExtent.
             /// </summary>
-            internal unsafe void GetExtent(Ole32.DVASPECT dwDrawAspect, Size* pSizel)
+            internal unsafe void GetExtent(DVASPECT dwDrawAspect, Size* pSizel)
             {
-                if ((dwDrawAspect & Ole32.DVASPECT.CONTENT) != 0)
+                if ((dwDrawAspect & DVASPECT.CONTENT) != 0)
                 {
                     Size size = _control.Size;
 
@@ -833,12 +797,12 @@ namespace System.Windows.Forms
             /// <summary>
             ///  In place activates this Object.
             /// </summary>
-            internal unsafe void InPlaceActivate(Ole32.OLEIVERB verb)
+            internal unsafe void InPlaceActivate(OLEIVERB verb)
             {
                 // If we don't have a client site, then there's not much to do.
                 // We also punt if this isn't an in-place site, since we can't
                 // go active then.
-                if (!(_clientSite is Ole32.IOleInPlaceSite inPlaceSite))
+                if (!(_clientSite is IOleInPlaceSite inPlaceSite))
                 {
                     return;
                 }
@@ -867,9 +831,9 @@ namespace System.Windows.Forms
                 if (!_activeXState[s_inPlaceVisible])
                 {
                     Debug.WriteLineIf(CompModSwitches.ActiveX.TraceVerbose, "\tActiveXImpl:InPlaceActivate --> inplacevisible");
-                    var inPlaceFrameInfo = new Ole32.OLEINPLACEFRAMEINFO
+                    var inPlaceFrameInfo = new OLEINPLACEFRAMEINFO
                     {
-                        cb = (uint)Marshal.SizeOf<Ole32.OLEINPLACEFRAMEINFO>()
+                        cb = (uint)Marshal.SizeOf<OLEINPLACEFRAMEINFO>()
                     };
 
                     // We are entering a secure context here.
@@ -896,8 +860,8 @@ namespace System.Windows.Forms
                     }
 
                     inPlaceSite.GetWindowContext(
-                        out Ole32.IOleInPlaceFrame pFrame,
-                        out Ole32.IOleInPlaceUIWindow pWindow,
+                        out IOleInPlaceFrame pFrame,
+                        out IOleInPlaceUIWindow pWindow,
                         &posRect,
                         &clipRect,
                         &inPlaceFrameInfo);
@@ -929,7 +893,7 @@ namespace System.Windows.Forms
                 }
 
                 // if we weren't asked to UIActivate, then we're done.
-                if (verb != Ole32.OLEIVERB.PRIMARY && verb != Ole32.OLEIVERB.UIACTIVATE)
+                if (verb != OLEIVERB.PRIMARY && verb != OLEIVERB.UIACTIVATE)
                 {
                     Debug.WriteLineIf(CompModSwitches.ActiveX.TraceVerbose, "\tActiveXImpl:InPlaceActivate --> not becoming UIActive");
                     return;
@@ -1006,7 +970,7 @@ namespace System.Windows.Forms
                 _activeXState[s_inPlaceVisible] = false;
 
                 // Notify our site of our deactivation.
-                if (_clientSite is Ole32.IOleInPlaceSite oleClientSite)
+                if (_clientSite is IOleInPlaceSite oleClientSite)
                 {
                     oleClientSite.OnInPlaceDeactivate();
                 }
@@ -1069,15 +1033,15 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IPersistStorage::Load
             /// </summary>
-            internal void Load(Ole32.IStorage stg)
+            internal void Load(IStorage stg)
             {
-                Ole32.IStream stream;
+                IStream stream;
                 try
                 {
                     stream = stg.OpenStream(
                         GetStreamName(),
                         IntPtr.Zero,
-                        Ole32.STGM.STGM_READ | Ole32.STGM.STGM_SHARE_EXCLUSIVE,
+                        STGM.READ | STGM.SHARE_EXCLUSIVE,
                         0);
                 }
                 catch (COMException e) when (e.ErrorCode == (int)HRESULT.STG_E_FILENOTFOUND)
@@ -1087,7 +1051,7 @@ namespace System.Windows.Forms
                     stream = stg.OpenStream(
                         GetType().FullName,
                         IntPtr.Zero,
-                        Ole32.STGM.STGM_READ | Ole32.STGM.STGM_SHARE_EXCLUSIVE,
+                        STGM.READ | STGM.SHARE_EXCLUSIVE,
                         0);
                 }
 
@@ -1101,7 +1065,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IPersistStreamInit::Load
             /// </summary>
-            internal void Load(Ole32.IStream stream)
+            internal void Load(IStream stream)
             {
                 // We do everything through property bags because we support full fidelity
                 // in them.  So, load through that method.
@@ -1118,7 +1082,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IPersistPropertyBag::Load
             /// </summary>
-            internal unsafe void Load(Ole32.IPropertyBag pPropBag, Ole32.IErrorLog pErrorLog)
+            internal unsafe void Load(Oleaut32.IPropertyBag pPropBag, Oleaut32.IErrorLog pErrorLog)
             {
                 PropertyDescriptorCollection props = TypeDescriptor.GetProperties(_control,
                     new Attribute[] { DesignerSerializationVisibilityAttribute.Visible });
@@ -1209,7 +1173,7 @@ namespace System.Windows.Forms
                                     IntPtr bstrDescription = Marshal.StringToBSTR(errorString);
                                     try
                                     {
-                                        var err = new Ole32.EXCEPINFO
+                                        var err = new Oleaut32.EXCEPINFO
                                         {
                                             bstrSource = bstrSource,
                                             bstrDescription = bstrDescription,
@@ -1247,7 +1211,7 @@ namespace System.Windows.Forms
             ///  Simple lookup to find the AmbientProperty corresponding to the given
             ///  dispid.
             /// </summary>
-            private AmbientProperty LookupAmbient(Ole32.DispatchID dispid)
+            private AmbientProperty LookupAmbient(DispatchID dispid)
             {
                 for (int i = 0; i < _ambientProperties.Length; i++)
                 {
@@ -1322,9 +1286,9 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IOleControl::OnAmbientPropertyChanged
             /// </summary>
-            internal void OnAmbientPropertyChange(Ole32.DispatchID dispID)
+            internal void OnAmbientPropertyChange(DispatchID dispID)
             {
-                if (dispID != Ole32.DispatchID.UNKNOWN)
+                if (dispID != DispatchID.UNKNOWN)
                 {
                     // Look for a specific property that has changed.
                     for (int i = 0; i < _ambientProperties.Length; i++)
@@ -1342,15 +1306,15 @@ namespace System.Windows.Forms
 
                     switch (dispID)
                     {
-                        case Ole32.DispatchID.AMBIENT_UIDEAD:
-                            if (GetAmbientProperty(Ole32.DispatchID.AMBIENT_UIDEAD, ref obj))
+                        case DispatchID.AMBIENT_UIDEAD:
+                            if (GetAmbientProperty(DispatchID.AMBIENT_UIDEAD, ref obj))
                             {
                                 _activeXState[s_uiDead] = (bool)obj;
                             }
                             break;
 
-                        case Ole32.DispatchID.AMBIENT_DISPLAYASDEFAULT:
-                            if (_control is IButtonControl ibuttonControl && GetAmbientProperty(Ole32.DispatchID.AMBIENT_DISPLAYASDEFAULT, ref obj))
+                        case DispatchID.AMBIENT_DISPLAYASDEFAULT:
+                            if (_control is IButtonControl ibuttonControl && GetAmbientProperty(DispatchID.AMBIENT_DISPLAYASDEFAULT, ref obj))
                             {
                                 ibuttonControl.NotifyDefault((bool)obj);
                             }
@@ -1391,14 +1355,14 @@ namespace System.Windows.Forms
             internal void OnFocus(bool focus)
             {
                 Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AXSource: SetFocus:  " + focus.ToString());
-                if (_activeXState[s_inPlaceActive] && _clientSite is Ole32.IOleControlSite)
+                if (_activeXState[s_inPlaceActive] && _clientSite is IOleControlSite)
                 {
-                    ((Ole32.IOleControlSite)_clientSite).OnFocus(focus ? BOOL.TRUE : BOOL.FALSE);
+                    ((IOleControlSite)_clientSite).OnFocus(focus ? BOOL.TRUE : BOOL.FALSE);
                 }
 
                 if (focus && _activeXState[s_inPlaceActive] && !_activeXState[s_uiActive])
                 {
-                    InPlaceActivate(Ole32.OLEIVERB.UIACTIVATE);
+                    InPlaceActivate(OLEIVERB.UIACTIVATE);
                 }
             }
 
@@ -1418,7 +1382,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Our implementation of IQuickActivate::QuickActivate
             /// </summary>
-            internal unsafe HRESULT QuickActivate(Ole32.QACONTAINER pQaContainer, Ole32.QACONTROL* pQaControl)
+            internal unsafe HRESULT QuickActivate(QACONTAINER pQaContainer, QACONTROL* pQaControl)
             {
                 if (pQaControl == null)
                 {
@@ -1426,16 +1390,16 @@ namespace System.Windows.Forms
                 }
 
                 // Hookup our ambient colors
-                AmbientProperty prop = LookupAmbient(Ole32.DispatchID.AMBIENT_BACKCOLOR);
+                AmbientProperty prop = LookupAmbient(DispatchID.AMBIENT_BACKCOLOR);
                 prop.Value = ColorTranslator.FromOle(unchecked((int)pQaContainer.colorBack));
 
-                prop = LookupAmbient(Ole32.DispatchID.AMBIENT_FORECOLOR);
+                prop = LookupAmbient(DispatchID.AMBIENT_FORECOLOR);
                 prop.Value = ColorTranslator.FromOle(unchecked((int)pQaContainer.colorFore));
 
                 // And our ambient font
                 if (pQaContainer.pFont != null)
                 {
-                    prop = LookupAmbient(Ole32.DispatchID.AMBIENT_FONT);
+                    prop = LookupAmbient(DispatchID.AMBIENT_FONT);
 
                     try
                     {
@@ -1449,17 +1413,17 @@ namespace System.Windows.Forms
                 }
 
                 // Now use the rest of the goo that we got passed in.
-                pQaControl->cbSize = (uint)Marshal.SizeOf<Ole32.QACONTROL>();
+                pQaControl->cbSize = (uint)Marshal.SizeOf<QACONTROL>();
 
                 SetClientSite(pQaContainer.pClientSite);
 
                 if (pQaContainer.pAdviseSink != null)
                 {
-                    SetAdvise(Ole32.DVASPECT.CONTENT, 0, pQaContainer.pAdviseSink);
+                    SetAdvise(DVASPECT.CONTENT, 0, pQaContainer.pAdviseSink);
                 }
 
-                Ole32.OLEMISC status = 0;
-                ((Ole32.IOleObject)_control).GetMiscStatus(Ole32.DVASPECT.CONTENT, &status);
+                OLEMISC status = 0;
+                ((IOleObject)_control).GetMiscStatus(DVASPECT.CONTENT, &status);
                 pQaControl->dwMiscStatus = status;
 
                 // Advise the event sink so VB6 can catch events raised from UserControls.
@@ -1793,11 +1757,11 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IPersistStorage::Save
             /// </summary>
-            internal void Save(Ole32.IStorage stg, BOOL fSameAsLoad)
+            internal void Save(IStorage stg, BOOL fSameAsLoad)
             {
-                Ole32.IStream stream = stg.CreateStream(
+                IStream stream = stg.CreateStream(
                     GetStreamName(),
-                    Ole32.STGM.STGM_WRITE | Ole32.STGM.STGM_SHARE_EXCLUSIVE | Ole32.STGM.STGM_CREATE,
+                    STGM.WRITE | STGM.SHARE_EXCLUSIVE | STGM.CREATE,
                     0,
                     0);
                 Debug.Assert(stream != null, "Stream should be non-null, or an exception should have been thrown.");
@@ -1809,7 +1773,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IPersistStreamInit::Save
             /// </summary>
-            internal void Save(Ole32.IStream stream, BOOL fClearDirty)
+            internal void Save(IStream stream, BOOL fClearDirty)
             {
                 // We do everything through property bags because we support full fidelity
                 // in them.  So, save through that method.
@@ -1826,7 +1790,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IPersistPropertyBag::Save
             /// </summary>
-            internal void Save(Ole32.IPropertyBag pPropBag, BOOL fClearDirty, BOOL fSaveAllProperties)
+            internal void Save(Oleaut32.IPropertyBag pPropBag, BOOL fClearDirty, BOOL fSaveAllProperties)
             {
                 PropertyDescriptorCollection props = TypeDescriptor.GetProperties(_control,
                     new Attribute[] { DesignerSerializationVisibilityAttribute.Visible });
@@ -1901,17 +1865,17 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IViewObject2::SetAdvise.
             /// </summary>
-            internal HRESULT SetAdvise(Ole32.DVASPECT aspects, Ole32.ADVF advf, IAdviseSink pAdvSink)
+            internal HRESULT SetAdvise(DVASPECT aspects, ADVF advf, IAdviseSink pAdvSink)
             {
                 // if it's not a content aspect, we don't support it.
-                if ((aspects & Ole32.DVASPECT.CONTENT) == 0)
+                if ((aspects & DVASPECT.CONTENT) == 0)
                 {
                     return HRESULT.DV_E_DVASPECT;
                 }
 
                 // Set up some flags to return from GetAdvise.
-                _activeXState[s_viewAdvisePrimeFirst] = (advf & Ole32.ADVF.PRIMEFIRST) != 0;
-                _activeXState[s_viewAdviseOnlyOnce] = (advf & Ole32.ADVF.ONLYONCE) != 0;
+                _activeXState[s_viewAdvisePrimeFirst] = (advf & ADVF.PRIMEFIRST) != 0;
+                _activeXState[s_viewAdviseOnlyOnce] = (advf & ADVF.ONLYONCE) != 0;
 
                 if (_viewAdviseSink != null && Marshal.IsComObject(_viewAdviseSink))
                 {
@@ -1932,32 +1896,10 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Implements IOleObject::SetClientSite.
             /// </summary>
-            internal void SetClientSite(Ole32.IOleClientSite value)
+            internal void SetClientSite(IOleClientSite value)
             {
                 if (_clientSite != null)
                 {
-                    if (value == null)
-                    {
-                        s_globalActiveXCount--;
-
-                        if (s_globalActiveXCount == 0 && IsIE)
-                        {
-                            // This the last ActiveX control and we are
-                            // being hosted in IE.  Use private reflection
-                            // to ask SystemEvents to shutdown.  This is to
-                            // prevent a crash.
-
-                            MethodInfo method = typeof(SystemEvents).GetMethod("Shutdown",
-                                                                                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.InvokeMethod,
-                                                                                null, Array.Empty<Type>(), Array.Empty<ParameterModifier>());
-                            Debug.Assert(method != null, "No Shutdown method on SystemEvents");
-                            if (method != null)
-                            {
-                                method.Invoke(null, null);
-                            }
-                        }
-                    }
-
                     if (Marshal.IsComObject(_clientSite))
                     {
                         Marshal.FinalReleaseComObject(_clientSite);
@@ -1975,62 +1917,34 @@ namespace System.Windows.Forms
                     _control.Site = null;
                 }
 
-                // Get the ambient properties that effect us...
+                // Get the ambient properties that effect us.
                 object obj = new object();
-                if (GetAmbientProperty(Ole32.DispatchID.AMBIENT_UIDEAD, ref obj))
+                if (GetAmbientProperty(DispatchID.AMBIENT_UIDEAD, ref obj))
                 {
                     _activeXState[s_uiDead] = (bool)obj;
                 }
 
-                if (_control is IButtonControl && GetAmbientProperty(Ole32.DispatchID.AMBIENT_UIDEAD, ref obj))
+                if (_control is IButtonControl buttonControl && GetAmbientProperty(Ole32.DispatchID.AMBIENT_UIDEAD, ref obj))
                 {
-                    ((IButtonControl)_control).NotifyDefault((bool)obj);
+                    buttonControl.NotifyDefault((bool)obj);
                 }
 
-                if (_clientSite == null)
+                if (_clientSite == null && _accelTable != IntPtr.Zero)
                 {
-                    if (_accelTable != IntPtr.Zero)
-                    {
-                        User32.DestroyAcceleratorTable(new HandleRef(this, _accelTable));
-                        _accelTable = IntPtr.Zero;
-                        _accelCount = -1;
-                    }
-
-                    if (IsIE)
-                    {
-                        _control.Dispose();
-                    }
+                    User32.DestroyAcceleratorTable(new HandleRef(this, _accelTable));
+                    _accelTable = IntPtr.Zero;
+                    _accelCount = -1;
                 }
-                else
-                {
-                    s_globalActiveXCount++;
 
-                    if (s_globalActiveXCount == 1 && IsIE)
-                    {
-                        // This the first ActiveX control and we are
-                        // being hosted in IE.  Use private reflection
-                        // to ask SystemEvents to start.  Startup will only
-                        // restart system events if we previously shut it down.
-                        // This is to prevent a crash.
-                        MethodInfo method = typeof(SystemEvents).GetMethod("Startup",
-                                                                            BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.InvokeMethod,
-                                                                            null, Array.Empty<Type>(), Array.Empty<ParameterModifier>());
-                        Debug.Assert(method != null, "No Startup method on SystemEvents");
-                        if (method != null)
-                        {
-                            method.Invoke(null, null);
-                        }
-                    }
-                }
                 _control.OnTopMostActiveXParentChanged(EventArgs.Empty);
             }
 
             /// <summary>
             ///  Implements IOleObject::SetExtent
             /// </summary>
-            internal unsafe void SetExtent(Ole32.DVASPECT dwDrawAspect, Size* pSizel)
+            internal unsafe void SetExtent(DVASPECT dwDrawAspect, Size* pSizel)
             {
-                if ((dwDrawAspect & Ole32.DVASPECT.CONTENT) != 0)
+                if ((dwDrawAspect & DVASPECT.CONTENT) != 0)
                 {
                     if (_activeXState[s_changingExtents])
                     {
@@ -2048,7 +1962,7 @@ namespace System.Windows.Forms
                         // Otherwise, just set it on our control directly.
                         if (_activeXState[s_inPlaceActive])
                         {
-                            if (_clientSite is Ole32.IOleInPlaceSite ioleClientSite)
+                            if (_clientSite is IOleInPlaceSite ioleClientSite)
                             {
                                 Rectangle bounds = _control.Bounds;
                                 bounds.Location = new Point(bounds.X, bounds.Y);
@@ -2332,22 +2246,22 @@ namespace System.Windows.Forms
 
                 // SITE processing.  We're not interested in the message, but the site may be.
                 Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource: Control did not process accelerator, handing to site");
-                if (_clientSite is Ole32.IOleControlSite ioleClientSite)
+                if (_clientSite is IOleControlSite ioleClientSite)
                 {
-                    Ole32.KEYMODIFIERS keyState = 0;
+                    KEYMODIFIERS keyState = 0;
                     if (User32.GetKeyState(User32.VK.SHIFT) < 0)
                     {
-                        keyState |= Ole32.KEYMODIFIERS.SHIFT;
+                        keyState |= KEYMODIFIERS.SHIFT;
                     }
 
                     if (User32.GetKeyState(User32.VK.CONTROL) < 0)
                     {
-                        keyState |= Ole32.KEYMODIFIERS.CONTROL;
+                        keyState |= KEYMODIFIERS.CONTROL;
                     }
 
                     if (User32.GetKeyState(User32.VK.MENU) < 0)
                     {
-                        keyState |= Ole32.KEYMODIFIERS.ALT;
+                        keyState |= KEYMODIFIERS.ALT;
                     }
 
                     return ioleClientSite.TranslateAccelerator(lpmsg, keyState);
@@ -2376,7 +2290,7 @@ namespace System.Windows.Forms
                 Debug.Assert(_inPlaceFrame != null, "No inplace frame -- how dod we go UI active?");
                 _inPlaceFrame.SetActiveObject(null, null);
 
-                if (_clientSite is Ole32.IOleInPlaceSite ioleClientSite)
+                if (_clientSite is IOleInPlaceSite ioleClientSite)
                 {
                     ioleClientSite.OnUIDeactivate(0);
                 }
@@ -2411,7 +2325,7 @@ namespace System.Windows.Forms
             {
                 if (!_activeXState[s_adjustingRect] && _activeXState[s_inPlaceVisible])
                 {
-                    if (_clientSite is Ole32.IOleInPlaceSite ioleClientSite)
+                    if (_clientSite is IOleInPlaceSite ioleClientSite)
                     {
                         var rc = new RECT();
                         if ((flags & User32.SWP.NOMOVE) != 0)
@@ -2473,7 +2387,7 @@ namespace System.Windows.Forms
                 // Setting the count to -1 will recreate the table on demand (when GetControlInfo is called).
                 _accelCount = -1;
 
-                if (_clientSite is Ole32.IOleControlSite ioleClientSite)
+                if (_clientSite is IOleControlSite ioleClientSite)
                 {
                     ioleClientSite.OnControlInfoChanged();
                 }
@@ -2498,7 +2412,7 @@ namespace System.Windows.Forms
                 //       is to make sure we don't call OnViewChange in this case.
                 if (_viewAdviseSink != null && !_activeXState[s_saving])
                 {
-                    _viewAdviseSink.OnViewChange((int)Ole32.DVASPECT.CONTENT, -1);
+                    _viewAdviseSink.OnViewChange((int)DVASPECT.CONTENT, -1);
 
                     if (_activeXState[s_viewAdviseOnlyOnce])
                     {
@@ -2547,11 +2461,11 @@ namespace System.Windows.Forms
             ///  This is a property bag implementation that sits on a stream.  It can
             ///  read and write the bag to the stream.
             /// </summary>
-            private class PropertyBagStream : Ole32.IPropertyBag
+            private class PropertyBagStream : Oleaut32.IPropertyBag
             {
                 private Hashtable _bag = new Hashtable();
 
-                internal void Read(Ole32.IStream istream)
+                internal void Read(IStream istream)
                 {
                     // visual basic's memory streams don't support seeking, so we have to
                     // work around this limitation here.  We do this by copying
@@ -2594,7 +2508,7 @@ namespace System.Windows.Forms
                     }
                 }
 
-                HRESULT Ole32.IPropertyBag.Read(string pszPropName, ref object pVar, Ole32.IErrorLog pErrorLog)
+                HRESULT Oleaut32.IPropertyBag.Read(string pszPropName, ref object pVar, Oleaut32.IErrorLog pErrorLog)
                 {
                     if (!_bag.Contains(pszPropName))
                     {
@@ -2605,13 +2519,13 @@ namespace System.Windows.Forms
                     return HRESULT.S_OK;
                 }
 
-                HRESULT Ole32.IPropertyBag.Write(string pszPropName, ref object pVar)
+                HRESULT Oleaut32.IPropertyBag.Write(string pszPropName, ref object pVar)
                 {
                     _bag[pszPropName] = pVar;
                     return HRESULT.S_OK;
                 }
 
-                internal void Write(Ole32.IStream istream)
+                internal void Write(IStream istream)
                 {
                     Stream stream = new DataStreamFromComStream(istream);
                     BinaryFormatter formatter = new BinaryFormatter();

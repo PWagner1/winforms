@@ -1523,37 +1523,40 @@ namespace System.Windows.Forms.Tests
         {
             foreach (bool showGroups in new bool[] { true, false })
             {
-                yield return new object[] { showGroups, null, HorizontalAlignment.Left, string.Empty, 0x00000001 };
-                yield return new object[] { showGroups, null, HorizontalAlignment.Center, string.Empty, 0x00000002 };
-                yield return new object[] { showGroups, null, HorizontalAlignment.Right, string.Empty, 0x00000004 };
+                yield return new object[] { showGroups, null, HorizontalAlignment.Left, null, HorizontalAlignment.Right, string.Empty, string.Empty, 0x00000021 };
+                yield return new object[] { showGroups, null, HorizontalAlignment.Center, null, HorizontalAlignment.Center, string.Empty, string.Empty, 0x00000012 };
+                yield return new object[] { showGroups, null, HorizontalAlignment.Right, null, HorizontalAlignment.Left, string.Empty, string.Empty, 0x0000000C };
 
-                yield return new object[] { showGroups, string.Empty, HorizontalAlignment.Left, string.Empty, 0x00000001 };
-                yield return new object[] { showGroups, string.Empty, HorizontalAlignment.Center, string.Empty, 0x00000002 };
-                yield return new object[] { showGroups, string.Empty, HorizontalAlignment.Right, string.Empty, 0x00000004 };
+                yield return new object[] { showGroups, string.Empty, HorizontalAlignment.Left, string.Empty, HorizontalAlignment.Right, string.Empty, string.Empty, 0x00000021 };
+                yield return new object[] { showGroups, string.Empty, HorizontalAlignment.Center, string.Empty, HorizontalAlignment.Center, string.Empty, string.Empty, 0x00000012 };
+                yield return new object[] { showGroups, string.Empty, HorizontalAlignment.Right, string.Empty, HorizontalAlignment.Left, string.Empty, string.Empty, 0x0000000C };
 
-                yield return new object[] { showGroups, "text", HorizontalAlignment.Left, "text", 0x00000001 };
-                yield return new object[] { showGroups, "text", HorizontalAlignment.Center, "text", 0x00000002 };
-                yield return new object[] { showGroups, "text", HorizontalAlignment.Right, "text", 0x00000004 };
+                yield return new object[] { showGroups, "header", HorizontalAlignment.Left, "footer", HorizontalAlignment.Right, "header", "footer", 0x00000021 };
+                yield return new object[] { showGroups, "header", HorizontalAlignment.Center, "footer", HorizontalAlignment.Center, "header", "footer", 0x00000012 };
+                yield return new object[] { showGroups, "header", HorizontalAlignment.Right, "footer", HorizontalAlignment.Left, "header", "footer", 0x0000000C };
 
-                yield return new object[] { showGroups, "te\0xt", HorizontalAlignment.Left, "te", 0x00000001 };
-                yield return new object[] { showGroups, "te\0xt", HorizontalAlignment.Center, "te", 0x00000002 };
-                yield return new object[] { showGroups, "te\0xt", HorizontalAlignment.Right, "te", 0x00000004 };
+                yield return new object[] { showGroups, "he\0der", HorizontalAlignment.Left, "fo\0oter", HorizontalAlignment.Right, "he", "fo", 0x00000021 };
+                yield return new object[] { showGroups, "he\0der", HorizontalAlignment.Center, "fo\0oter", HorizontalAlignment.Center, "he", "fo", 0x00000012 };
+                yield return new object[] { showGroups, "he\0der", HorizontalAlignment.Right, "fo\0oter", HorizontalAlignment.Left, "he", "fo", 0x0000000C };
             }
         }
 
-        [WinFormsFact]
+        [WinFormsFact(Skip = "Crash with AbandonedMutexException. See: https://github.com/dotnet/arcade/issues/5325")]
         public unsafe void ListView_Handle_GetWithGroups_Success()
         {
             // Run this from another thread as we call Application.EnableVisualStyles.
-            RemoteExecutor.Invoke(() =>
+            using RemoteInvokeHandle invokerHandle = RemoteExecutor.Invoke(() =>
             {
                 foreach (object[] data in Handle_GetWithGroups_TestData())
                 {
                     bool showGroups = (bool)data[0];
                     string header = (string)data[1];
                     HorizontalAlignment headerAlignment = (HorizontalAlignment)data[2];
-                    string expectedHeaderText = (string)data[3];
-                    int expectedAlign = (int)data[4];
+                    string footer = (string)data[3];
+                    HorizontalAlignment footerAlignment = (HorizontalAlignment)data[4];
+                    string expectedHeaderText = (string)data[5];
+                    string expectedFooterText = (string)data[6];
+                    int expectedAlign = (int)data[7];
 
                     Application.EnableVisualStyles();
 
@@ -1565,39 +1568,51 @@ namespace System.Windows.Forms.Tests
                     var group2 = new ListViewGroup
                     {
                         Header = header,
-                        HeaderAlignment = headerAlignment
+                        HeaderAlignment = headerAlignment,
+                        Footer = footer,
+                        FooterAlignment = footerAlignment
                     };
                     listView.Groups.Add(group1);
                     listView.Groups.Add(group2);
 
                     Assert.Equal((IntPtr)2, User32.SendMessageW(listView.Handle, (User32.WM)LVM.GETGROUPCOUNT, IntPtr.Zero, IntPtr.Zero));
-                    char* buffer = stackalloc char[256];
-                    var lvgroup1 = new ComCtl32.LVGROUPW
+                    char* headerBuffer = stackalloc char[256];
+                    char* footerBuffer = stackalloc char[256];
+                    var lvgroup1 = new LVGROUPW
                     {
-                        cbSize = (uint)Marshal.SizeOf<ComCtl32.LVGROUPW>(),
-                        mask = ComCtl32.LVGF.HEADER | ComCtl32.LVGF.GROUPID | ComCtl32.LVGF.ALIGN,
-                        pszHeader = buffer,
-                        cchHeader = 256
+                        cbSize = (uint)sizeof(LVGROUPW),
+                        mask = LVGF.HEADER | LVGF.FOOTER | LVGF.GROUPID | LVGF.ALIGN,
+                        pszHeader = headerBuffer,
+                        cchHeader = 256,
+                        pszFooter = footerBuffer,
+                        cchFooter = 256,
                     };
                     Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WM)LVM.GETGROUPINFOBYINDEX, (IntPtr)0, ref lvgroup1));
                     Assert.Equal("ListViewGroup", new string(lvgroup1.pszHeader));
+                    Assert.Empty(new string(lvgroup1.pszFooter));
                     Assert.True(lvgroup1.iGroupId >= 0);
-                    Assert.Equal(0x00000001, (int)lvgroup1.uAlign);
+                    Assert.Equal(0x00000009, (int)lvgroup1.uAlign);
 
-                    var lvgroup2 = new ComCtl32.LVGROUPW
+                    var lvgroup2 = new LVGROUPW
                     {
-                        cbSize = (uint)Marshal.SizeOf<ComCtl32.LVGROUPW>(),
-                        mask = ComCtl32.LVGF.HEADER | ComCtl32.LVGF.GROUPID | ComCtl32.LVGF.ALIGN,
-                        pszHeader = buffer,
-                        cchHeader = 256
+                        cbSize = (uint)sizeof(LVGROUPW),
+                        mask = LVGF.HEADER | LVGF.FOOTER | LVGF.GROUPID | LVGF.ALIGN,
+                        pszHeader = headerBuffer,
+                        cchHeader = 256,
+                        pszFooter = footerBuffer,
+                        cchFooter = 256,
                     };
                     Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WM)LVM.GETGROUPINFOBYINDEX, (IntPtr)1, ref lvgroup2));
                     Assert.Equal(expectedHeaderText, new string(lvgroup2.pszHeader));
+                    Assert.Equal(expectedFooterText, new string(lvgroup2.pszFooter));
                     Assert.True(lvgroup2.iGroupId > 0);
                     Assert.Equal(expectedAlign, (int)lvgroup2.uAlign);
                     Assert.True(lvgroup2.iGroupId > lvgroup1.iGroupId);
                 }
-            }).Dispose();
+            });
+
+            // verify the remote process succeeded
+            Assert.Equal(0, invokerHandle.ExitCode);
         }
 
         [WinFormsFact]
@@ -3627,8 +3642,7 @@ namespace System.Windows.Forms.Tests
             Assert.True(control.IsHandleCreated);
 
             Rectangle rect2 = control.GetItemRect(1);
-            Assert.True(rect2.X >= rect1.X + rect1.Width);
-            Assert.Equal(rect2.Y, rect1.Y);
+            Assert.True((rect2.X >= rect1.Right && rect2.Y == rect1.Y) || (rect2.X == rect1.X && rect2.Y >= rect1.Bottom));
             Assert.True(rect2.Width > 0);
             Assert.True(rect2.Height > 0);
             Assert.True(control.IsHandleCreated);
@@ -3662,8 +3676,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
 
             Rectangle rect2 = control.GetItemRect(1);
-            Assert.True(rect2.X >= rect1.X + rect1.Width);
-            Assert.Equal(rect2.Y, rect1.Y);
+            Assert.True((rect2.X >= rect1.Right && rect2.Y == rect1.Y) || (rect2.X == rect1.X && rect2.Y >= rect1.Bottom));
             Assert.True(rect2.Width > 0);
             Assert.True(rect2.Height > 0);
             Assert.True(control.IsHandleCreated);
@@ -3814,6 +3827,13 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expected, control.GetStyle(flag));
         }
 
+        [WinFormsFact]
+        public void ListView_GetTopLevel_Invoke_ReturnsExpected()
+        {
+            using var control = new SubListView();
+            Assert.False(control.GetTopLevel());
+        }
+
         private class SubListView : ListView
         {
             public new bool CanEnableIme => base.CanEnableIme;
@@ -3871,6 +3891,8 @@ namespace System.Windows.Forms.Tests
             public new AutoSizeMode GetAutoSizeMode() => base.GetAutoSizeMode();
 
             public new bool GetStyle(ControlStyles flag) => base.GetStyle(flag);
+
+            public new bool GetTopLevel() => base.GetTopLevel();
 
             public new void SetStyle(ControlStyles flag, bool value) => base.SetStyle(flag, value);
         }

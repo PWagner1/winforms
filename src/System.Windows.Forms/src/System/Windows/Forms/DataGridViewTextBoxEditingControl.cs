@@ -10,10 +10,8 @@ using static Interop;
 
 namespace System.Windows.Forms
 {
-    [
-        ComVisible(true),
-        ClassInterface(ClassInterfaceType.AutoDispatch)
-    ]
+    [ComVisible(true)]
+    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     public class DataGridViewTextBoxEditingControl : TextBox, IDataGridViewEditingControl
     {
         private static readonly DataGridViewContentAlignment anyTop = DataGridViewContentAlignment.TopLeft | DataGridViewContentAlignment.TopCenter | DataGridViewContentAlignment.TopRight;
@@ -103,13 +101,22 @@ namespace System.Windows.Forms
 
         public virtual void ApplyCellStyleToEditingControl(DataGridViewCellStyle dataGridViewCellStyle)
         {
+            if (dataGridViewCellStyle == null)
+            {
+                throw new ArgumentNullException(nameof(dataGridViewCellStyle));
+            }
+
             Font = dataGridViewCellStyle.Font;
             if (dataGridViewCellStyle.BackColor.A < 255)
             {
                 // Our TextBox does not support transparent back colors
                 Color opaqueBackColor = Color.FromArgb(255, dataGridViewCellStyle.BackColor);
                 BackColor = opaqueBackColor;
-                dataGridView.EditingPanel.BackColor = opaqueBackColor;
+
+                if (dataGridView != null)
+                {
+                    dataGridView.EditingPanel.BackColor = opaqueBackColor;
+                }
             }
             else
             {
@@ -224,20 +231,22 @@ namespace System.Windows.Forms
         private void NotifyDataGridViewOfValueChange()
         {
             valueChanged = true;
-            dataGridView.NotifyCurrentCellDirty(true);
+            dataGridView?.NotifyCurrentCellDirty(true);
         }
 
         protected override void OnGotFocus(EventArgs e)
         {
             base.OnGotFocus(e);
-
-            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+            if (IsHandleCreated)
+            {
+                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+            }
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             // Forwarding to grid control. Can't prevent the TextBox from handling the mouse wheel as expected.
-            dataGridView.OnMouseWheelInternal(e);
+            dataGridView?.OnMouseWheelInternal(e);
         }
 
         protected override void OnTextChanged(EventArgs e)
@@ -301,8 +310,10 @@ namespace System.Windows.Forms
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-
-            dataGridView?.SetAccessibleObjectParent(this.AccessibilityObject);
+            if (IsHandleCreated)
+            {
+                dataGridView?.SetAccessibleObjectParent(this.AccessibilityObject);
+            }
         }
     }
 
@@ -345,11 +356,7 @@ namespace System.Windows.Forms
                     return SR.DataGridView_AccEditingControlAccName;
                 }
             }
-
-            set
-            {
-                base.Name = value;
-            }
+            set => base.Name = value;
         }
 
         internal override UiaCore.IRawElementProviderFragment FragmentNavigate(UiaCore.NavigateDirection direction)

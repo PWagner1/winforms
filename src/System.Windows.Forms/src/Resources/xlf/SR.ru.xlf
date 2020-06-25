@@ -232,11 +232,6 @@
         <target state="translated">&amp;Применить</target>
         <note />
       </trans-unit>
-      <trans-unit id="ArraysNotSameSize">
-        <source>Arrays '{0}' and '{1}' must be the same size.</source>
-        <target state="translated">Массивы '{0}' и '{1}' должны быть одинакового размера.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AutoCompleteFailure">
         <source>autoComplete cannot be initialized with given custom source.</source>
         <target state="translated">Невозможно инициализировать autoComplete с данным пользовательским источником.</target>
@@ -5642,6 +5637,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">Индекс {0} вне допустимого диапазона.</target>
         <note />
       </trans-unit>
+      <trans-unit id="InputLanguageCultureNotFound">
+        <source>Could not find an InputLanguage for culture '{0}'.</source>
+        <target state="new">Could not find an InputLanguage for culture '{0}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidArgument">
         <source>InvalidArgument=Value of '{1}' is not valid for '{0}'.</source>
         <target state="translated">InvalidArgument=Значение '{1}' недопустимо для '{0}'.</target>
@@ -6357,6 +6357,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">Отображает линии сетки вокруг элементов и подэлементов. Действует только в представлении Details.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ListViewGroupCollapsedStateChangedDescr">
+        <source>Event raised when the CollapsedState property of a ListViewGroup changes.</source>
+        <target state="translated">Событие, возникающее при изменении свойства CollapsedState для ListViewGroup.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ListViewGroupCollectionBadListViewGroup">
         <source>Parameter must be of type ListViewGroup.</source>
         <target state="translated">Параметр должен иметь тип ListViewGroup.</target>
@@ -6375,6 +6380,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="ListViewGroupNameDescr">
         <source>The name of this group.</source>
         <target state="translated">Имя данной группы.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewGroupTaskLinkClickDescr">
+        <source>Event raised when the TaskLink property of a ListViewGroup is clicked.</source>
+        <target state="translated">Событие, возникающее при нажатии на свойство TaskLink в ListViewGroup.</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewGroupsDescr">
@@ -8190,11 +8200,6 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="PropertyGridPropertyValueSelectedFormat">
         <source>{0} selected.</source>
         <target state="translated">Выбрано: {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PropertyGridRemotedObject">
-        <source>Object {0} is being remoted by a proxy that does not support interface discovery.  This type of remoted object is not supported.</source>
-        <target state="translated">Объект {0} находится за прокси, не поддерживающим обнаружение интерфейса.  Такой тип удаленного объекта не поддерживается.</target>
         <note />
       </trans-unit>
       <trans-unit id="PropertyGridRemoveStaticTabs">

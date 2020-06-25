@@ -18,8 +18,6 @@ namespace System.Windows.Forms.Design
     /// <summary>
     ///  Provides a user interface for <see cref='WindowsFormsComponentEditor'/>.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [ToolboxItem(false)]
     public class ComponentEditorForm : Form
     {
@@ -848,7 +846,7 @@ namespace System.Windows.Forms.Design
 
             protected unsafe override void WndProc(ref Message m)
             {
-                if (m.Msg == (int)(User32.WM.REFLECT | User32.WM.NOTIFY))
+                if (m.Msg == (int)(User32.WM.REFLECT_NOTIFY))
                 {
                     User32.NMHDR* nmhdr = (User32.NMHDR*)m.LParam;
                     if (nmhdr->code == (int)ComCtl32.NM.CUSTOMDRAW)

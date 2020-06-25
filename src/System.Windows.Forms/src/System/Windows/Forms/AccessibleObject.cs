@@ -18,7 +18,6 @@ namespace System.Windows.Forms
     ///  Provides an implementation for an object that can be inspected by an
     ///  accessibility application.
     /// </summary>
-    [ComVisible(true)]
     public partial class AccessibleObject :
         StandardOleMarshalObject,
         IReflect,
@@ -667,7 +666,7 @@ namespace System.Windows.Forms
 
         internal virtual bool IsReadOnly => false;
 
-        internal virtual void SetValue(string newValue)
+        internal virtual void SetValue(string? newValue)
         {
             Value = newValue;
         }
@@ -832,12 +831,14 @@ namespace System.Windows.Forms
 
         IAccessible? UiaCore.ILegacyIAccessibleProvider.GetIAccessible() => AsIAccessible(this);
 
-        object?[] UiaCore.ILegacyIAccessibleProvider.GetSelection()
+        object[]? UiaCore.ILegacyIAccessibleProvider.GetSelection()
         {
-            return new UiaCore.IRawElementProviderSimple?[]
+            if (GetSelected() is UiaCore.IRawElementProviderSimple selected)
             {
-                GetSelected() as UiaCore.IRawElementProviderSimple
-            };
+                return new UiaCore.IRawElementProviderSimple[] { selected };
+            }
+
+            return null;
         }
 
         void UiaCore.ILegacyIAccessibleProvider.Select(int flagsSelect) => Select((AccessibleSelection)flagsSelect);
@@ -856,7 +857,7 @@ namespace System.Windows.Forms
 
         string? UiaCore.IValueProvider.Value => Value;
 
-        void UiaCore.IValueProvider.SetValue(string newValue) => SetValue(newValue);
+        void UiaCore.IValueProvider.SetValue(string? newValue) => SetValue(newValue);
 
         void UiaCore.IToggleProvider.Toggle() => Toggle();
 
@@ -2249,7 +2250,7 @@ namespace System.Windows.Forms
             throw new NotSupportedException(SR.AccessibleObjectLiveRegionNotSupported);
         }
 
-        internal bool RaiseAutomationEvent(UiaCore.UIA eventId)
+        internal virtual bool RaiseAutomationEvent(UiaCore.UIA eventId)
         {
             if (UiaCore.UiaClientsAreListening().IsTrue())
             {
@@ -2260,7 +2261,7 @@ namespace System.Windows.Forms
             return false;
         }
 
-        internal bool RaiseAutomationPropertyChangedEvent(UiaCore.UIA propertyId, object oldValue, object newValue)
+        internal virtual bool RaiseAutomationPropertyChangedEvent(UiaCore.UIA propertyId, object oldValue, object newValue)
         {
             if (UiaCore.UiaClientsAreListening().IsTrue())
             {

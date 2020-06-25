@@ -12,17 +12,9 @@ internal static partial class Interop
         [DllImport(Libraries.User32, ExactSpelling = true)]
         private static extern int SetWindowRgn(IntPtr hwnd, IntPtr hrgn, BOOL fRedraw);
 
-        public static int SetWindowRgn(IHandle hwnd, HandleRef hrgn, BOOL fRedraw)
+        public static int SetWindowRgn(IHandle hwnd, Gdi32.HRGN hrgn, BOOL fRedraw)
         {
             int result = SetWindowRgn(hwnd.Handle, hrgn.Handle, fRedraw);
-            GC.KeepAlive(hwnd);
-            GC.KeepAlive(hrgn.Wrapper);
-            return result;
-        }
-
-        public static int SetWindowRgn(IHandle hwnd, IntPtr hrgn, BOOL fRedraw)
-        {
-            int result = SetWindowRgn(hwnd.Handle, hrgn, fRedraw);
             GC.KeepAlive(hwnd);
             return result;
         }

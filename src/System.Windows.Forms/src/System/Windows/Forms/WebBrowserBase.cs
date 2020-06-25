@@ -30,8 +30,6 @@ namespace System.Windows.Forms
     ///
     ///  The classid of the ActiveX control is specified in the constructor.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [DefaultProperty(nameof(Name))]
     [DefaultEvent(nameof(Enter))]
     [Designer("System.Windows.Forms.Design.AxDesigner, " + AssemblyRef.SystemDesign)]
@@ -381,7 +379,7 @@ namespace System.Windows.Forms
             {
                 // Things we explicitly ignore and pass to the ActiveX's windproc
                 case User32.WM.ERASEBKGND:
-                case User32.WM.REFLECT | User32.WM.NOTIFYFORMAT:
+                case User32.WM.REFLECT_NOTIFYFORMAT:
                 case User32.WM.SETCURSOR:
                 case User32.WM.SYSCOLORCHANGE:
                 case User32.WM.LBUTTONDBLCLK:

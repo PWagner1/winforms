@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -9,6 +9,7 @@ using System.Windows.Forms.Automation;
 using Accessibility;
 using WinForms.Common.Tests;
 using Xunit;
+using static Interop;
 
 namespace System.Windows.Forms.Tests
 {
@@ -873,12 +874,56 @@ namespace System.Windows.Forms.Tests
             using var ownerControl = new AutomationLiveRegionControl();
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
             accessibleObject.RaiseLiveRegionChanged();
-        }        [WinFormsFact]
+        }
+
+        [WinFormsFact]
         public void ControlAccessibleObject_RaiseLiveRegionChanged_InvokeNotIAutomationLiveRegion_ThrowsInvalidOperationException()
         {
             using var ownerControl = new Control();
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
             Assert.Throws<InvalidOperationException>(() => accessibleObject.RaiseLiveRegionChanged());
+        }
+
+        [WinFormsTheory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void ControlAccessibleObject_RaiseAutomationEvent_IsHandleCreatedFlag(bool isHandleCreated)
+        {
+            using var ownerControl = new Control();
+            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
+
+            // TODO: ControlAccessibleObject shouldn't force handle creation, tracked in https://github.com/dotnet/winforms/issues/3062
+            Assert.True(ownerControl.IsHandleCreated);
+
+            if (isHandleCreated)
+            {
+                Assert.NotEqual(IntPtr.Zero, ownerControl.Handle);
+            }
+
+            // TODO: ControlAccessibleObject shouldn't force handle creation, tracked in https://github.com/dotnet/winforms/issues/3062
+            // Assert.Equal(isHandleCreated, accessibleObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId));
+            // Assert.Equal(isHandleCreated, ownerControl.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void ControlAccessibleObject_RaiseAutomationPropertyChangedEvent_IsHandleCreatedFlag(bool isHandleCreated)
+        {
+            using var ownerControl = new Control();
+            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
+
+            // TODO: ControlAccessibleObject shouldn't force handle creation, tracked in https://github.com/dotnet/winforms/issues/3062
+            Assert.True(ownerControl.IsHandleCreated);
+
+            if (isHandleCreated)
+            {
+                Assert.NotEqual(IntPtr.Zero, ownerControl.Handle);
+            }
+
+            // TODO: ControlAccessibleObject shouldn't force handle creation, tracked in https://github.com/dotnet/winforms/issues/3062
+            // Assert.Equal(isHandleCreated, accessibleObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.NamePropertyId, ownerControl.Name, ownerControl.Name));
+            // Assert.Equal(isHandleCreated, ownerControl.IsHandleCreated);
         }
 
         [WinFormsFact]
@@ -1337,6 +1382,30 @@ namespace System.Windows.Forms.Tests
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
             IAccessible iAccessible = accessibleObject;
             Assert.Throws<ArgumentException>(null, () => iAccessible.set_accValue(varChild, "Value"));
+        }
+
+        [WinFormsFact]
+        public void ControlAccessibleObject_DoesntSupport_LegacyIAccessiblePattern()
+        {
+            using var control = new Control();
+            var accessibleObject = control.AccessibilityObject;
+
+            bool expected = control.SupportsUiaProviders;
+            Assert.False(expected);
+
+            bool actual = accessibleObject.IsPatternSupported(UiaCore.UIA.LegacyIAccessiblePatternId);
+            Assert.Equal(expected, actual);
+        }
+
+        [WinFormsFact]
+        public void ControlAccessibleObject_Supports_LegacyIAccessiblePattern_IfOwnerSupportsUia()
+        {
+            using var control = new Label();
+            var accessibleObject = new Control.ControlAccessibleObject(control);
+
+            Assert.True(control.SupportsUiaProviders);
+            bool actual = accessibleObject.IsPatternSupported(UiaCore.UIA.LegacyIAccessiblePatternId);
+            Assert.True(actual);
         }
 
         private class AutomationLiveRegionControl : Control, IAutomationLiveRegion

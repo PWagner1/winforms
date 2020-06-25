@@ -16,7 +16,6 @@ namespace System.Windows.Forms
         /// <summary>
         ///  An implementation of AccessibleChild for use with Controls
         /// </summary>
-        [ComVisible(true)]
         public class ControlAccessibleObject : AccessibleObject
         {
             private static IntPtr s_oleAccAvailable = NativeMethods.InvalidIntPtr;
@@ -380,7 +379,7 @@ namespace System.Windows.Forms
                 {
                     topic = int.Parse(args.HelpKeyword, CultureInfo.InvariantCulture);
                 }
-                catch (Exception e) when (!ClientUtils.IsSecurityOrCriticalException(e))
+                catch (Exception e) when (!ClientUtils.IsCriticalException(e))
                 {
                 }
 
@@ -427,6 +426,16 @@ namespace System.Windows.Forms
                 return RaiseAutomationEvent(UiaCore.UIA.LiveRegionChangedEventId);
             }
 
+            internal override bool IsPatternSupported(UiaCore.UIA patternId)
+            {
+                if (Owner.SupportsUiaProviders && patternId == UiaCore.UIA.LegacyIAccessiblePatternId)
+                {
+                    return true;
+                }
+
+                return base.IsPatternSupported(patternId);
+            }
+
             internal override bool IsIAccessibleExSupported()
                 => Owner is IAutomationLiveRegion ? true : base.IsIAccessibleExSupported();
 
@@ -454,6 +463,26 @@ namespace System.Windows.Forms
                 }
 
                 return base.GetPropertyValue(propertyID);
+            }
+
+            internal override bool RaiseAutomationEvent(UiaCore.UIA eventId)
+            {
+                if (!Owner.IsHandleCreated)
+                {
+                    return false;
+                }
+
+                return base.RaiseAutomationEvent(eventId);
+            }
+
+            internal override bool RaiseAutomationPropertyChangedEvent(UiaCore.UIA propertyId, object oldValue, object newValue)
+            {
+                if (!Owner.IsHandleCreated)
+                {
+                    return false;
+                }
+
+                return base.RaiseAutomationPropertyChangedEvent(propertyId, oldValue, newValue);
             }
 
             internal override UiaCore.IRawElementProviderSimple HostRawElementProvider

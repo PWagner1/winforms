@@ -20,8 +20,6 @@ namespace System.Windows.Forms
     /// <summary>
     ///  Represents a standard Windows label.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [DefaultProperty(nameof(Text))]
     [DefaultBindingProperty(nameof(Text))]
     [Designer("System.Windows.Forms.Design.LabelDesigner, " + AssemblyRef.SystemDesign)]
@@ -452,7 +450,7 @@ namespace System.Windows.Forms
         /// </summary>
         [TypeConverter(typeof(ImageIndexConverter))]
         [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
-        [DefaultValue(-1)]
+        [DefaultValue(ImageList.Indexer.DefaultIndex)]
         [Localizable(true)]
         [RefreshProperties(RefreshProperties.Repaint)]
         [SRDescription(nameof(SR.ButtonImageIndexDescr))]
@@ -471,25 +469,29 @@ namespace System.Windows.Forms
                     }
                     return index;
                 }
-                return -1;
+
+                return ImageList.Indexer.DefaultIndex;
             }
             set
             {
-                if (value < -1)
+                if (value < ImageList.Indexer.DefaultIndex)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ImageIndex), value, -1));
+                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ImageIndex), value, ImageList.Indexer.DefaultIndex));
                 }
-                if (ImageIndex != value)
-                {
-                    if (value != -1)
-                    {
-                        // Image.set calls ImageIndex = -1
-                        Properties.SetObject(PropImage, null);
-                    }
 
-                    ImageIndexer.Index = value;
-                    Invalidate();
+                if (ImageIndex == value && value != ImageList.Indexer.DefaultIndex)
+                {
+                    return;
                 }
+
+                if (value != ImageList.Indexer.DefaultIndex)
+                {
+                    // Image.set calls ImageIndex = -1
+                    Properties.SetObject(PropImage, null);
+                }
+
+                ImageIndexer.Index = value;
+                Invalidate();
             }
         }
 
@@ -500,7 +502,7 @@ namespace System.Windows.Forms
         /// </summary>
         [TypeConverter(typeof(ImageKeyConverter))]
         [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
-        [DefaultValue("")]
+        [DefaultValue(ImageList.Indexer.DefaultKey)]
         [Localizable(true)]
         [RefreshProperties(RefreshProperties.Repaint)]
         [SRDescription(nameof(SR.ButtonImageIndexDescr))]
@@ -517,14 +519,16 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (ImageKey != value)
+                if (ImageKey == value && !string.Equals(value, ImageList.Indexer.DefaultKey))
                 {
-                    // Image.set calls ImageIndex = -1
-                    Properties.SetObject(PropImage, null);
-
-                    ImageIndexer.Key = value;
-                    Invalidate();
+                    return;
                 }
+
+                // Image.set calls ImageIndex = -1
+                Properties.SetObject(PropImage, null);
+
+                ImageIndexer.Key = value;
+                Invalidate();
             }
         }
 
@@ -1271,13 +1275,11 @@ namespace System.Windows.Forms
                     wg.TextPadding = TextPaddingOptions.LeftAndRightPadding;
                 }
 
-                using (WindowsFont wf = WindowsGraphicsCacheManager.GetWindowsFont(Font))
-                {
-                    User32.DRAWTEXTPARAMS dtParams = wg.GetTextMargins(wf);
+                using WindowsFont wf = WindowsGraphicsCacheManager.GetWindowsFont(Font);
+                User32.DRAWTEXTPARAMS dtParams = wg.GetTextMargins(wf);
 
-                    // This is actually leading margin.
-                    return dtParams.iLeftMargin;
-                }
+                // This is actually leading margin.
+                return dtParams.iLeftMargin;
             }
         }
 
@@ -1643,7 +1645,6 @@ namespace System.Windows.Forms
             }
         }
 
-        [ComVisible(true)]
         internal class LabelAccessibleObject : ControlAccessibleObject
         {
             public LabelAccessibleObject(Label owner) : base(owner)
@@ -1667,9 +1668,12 @@ namespace System.Windows.Forms
 
             internal override object GetPropertyValue(UiaCore.UIA propertyID)
             {
-                if (propertyID == UiaCore.UIA.ControlTypePropertyId)
+                switch (propertyID)
                 {
-                    return UiaCore.UIA.TextControlTypeId;
+                    case UiaCore.UIA.NamePropertyId:
+                        return Name;
+                    case UiaCore.UIA.ControlTypePropertyId:
+                        return UiaCore.UIA.TextControlTypeId;
                 }
 
                 return base.GetPropertyValue(propertyID);
@@ -1693,7 +1697,7 @@ namespace System.Windows.Forms
         public override ImageList ImageList
         {
             get { return owner?.ImageList; }
-            set{ Debug.Assert(false, "Setting the image list in this class is not supported"); }
+            set { Debug.Assert(false, "Setting the image list in this class is not supported"); }
         }
 
         public override string Key

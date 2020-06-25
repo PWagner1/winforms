@@ -20,8 +20,6 @@ namespace System.Windows.Forms
     ///  Don't create an <see cref="MdiClient"/> control.
     ///  A form creates and uses the <see cref="MdiClient"/> when you set the <see cref="Form.IsMdiContainer"/> property to <see langword="true"/>.
     /// </remarks>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [ToolboxItem(false)]
     [DesignTimeVisible(false)]
     public sealed class MdiClient : Control
@@ -103,7 +101,10 @@ namespace System.Windows.Forms
                 // to make them not visible but still present.
                 cp.Style |= (int)(User32.WS.VSCROLL | User32.WS.HSCROLL);
                 cp.ExStyle |= (int)User32.WS_EX.CLIENTEDGE;
-                cp.Param = new NativeMethods.CLIENTCREATESTRUCT(IntPtr.Zero, 1);
+                cp.Param = new User32.CLIENTCREATESTRUCT
+                {
+                    idFirstChild = 1
+                };
                 ISite site = ParentInternal?.Site;
                 if (site != null && site.DesignMode)
                 {
@@ -291,59 +292,37 @@ namespace System.Windows.Forms
         /// </summary>
         private void SetWindowRgn()
         {
-            IntPtr rgn1 = IntPtr.Zero;
-            IntPtr rgn2 = IntPtr.Zero;
             RECT rect = new RECT();
             CreateParams cp = CreateParams;
 
             AdjustWindowRectEx(ref rect, cp.Style, false, cp.ExStyle);
 
             Rectangle bounds = Bounds;
-            rgn1 = Gdi32.CreateRectRgn(0, 0, bounds.Width, bounds.Height);
-            try
+            using var rgn1 = new Gdi32.RegionScope(0, 0, bounds.Width, bounds.Height);
+            using var rgn2 = new Gdi32.RegionScope(
+                -rect.left,
+                -rect.top,
+                bounds.Width - rect.right,
+                bounds.Height - rect.bottom);
+
+            if (rgn1.IsNull || rgn2.IsNull)
             {
-                rgn2 = Gdi32.CreateRectRgn(
-                    -rect.left,
-                    -rect.top,
-                    bounds.Width - rect.right,
-                    bounds.Height - rect.bottom);
-
-                try
-                {
-                    if (rgn1 == IntPtr.Zero || rgn2 == IntPtr.Zero)
-                    {
-                        throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
-                    }
-
-                    if (Gdi32.CombineRgn(rgn1, rgn1, rgn2, Gdi32.CombineMode.RGN_DIFF) == 0)
-                    {
-                        throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
-                    }
-
-                    if (User32.SetWindowRgn(this, rgn1, BOOL.TRUE) == 0)
-                    {
-                        throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
-                    }
-                    else
-                    {
-                        // The hwnd now owns the region.
-                        rgn1 = IntPtr.Zero;
-                    }
-                }
-                finally
-                {
-                    if (rgn2 != IntPtr.Zero)
-                    {
-                        Gdi32.DeleteObject(rgn2);
-                    }
-                }
+                throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
             }
-            finally
+
+            if (Gdi32.CombineRgn(rgn1, rgn1, rgn2, Gdi32.CombineMode.RGN_DIFF) == 0)
             {
-                if (rgn1 != IntPtr.Zero)
-                {
-                    Gdi32.DeleteObject(rgn1);
-                }
+                throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
+            }
+
+            if (User32.SetWindowRgn(this, rgn1, BOOL.TRUE) == 0)
+            {
+                throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
+            }
+            else
+            {
+                // The hwnd now owns the region.
+                rgn1.RelinquishOwnership();
             }
         }
 
@@ -420,7 +399,6 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Collection of controls...
         /// </summary>
-        [ComVisible(false)]
         new public class ControlCollection : Control.ControlCollection
         {
             private readonly MdiClient owner;

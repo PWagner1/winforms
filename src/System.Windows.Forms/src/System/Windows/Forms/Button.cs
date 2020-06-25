@@ -18,8 +18,6 @@ namespace System.Windows.Forms
     ///  Represents a
     ///  Windows button.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [SRDescription(nameof(SR.DescriptionButton))]
     [Designer("System.Windows.Forms.Design.ButtonBaseDesigner, " + AssemblyRef.SystemDesign)]
     public class Button : ButtonBase, IButtonControl
@@ -369,7 +367,7 @@ namespace System.Windows.Forms
         {
             switch ((User32.WM)m.Msg)
             {
-                case User32.WM.REFLECT | User32.WM.COMMAND:
+                case User32.WM.REFLECT_COMMAND:
                     if (PARAM.HIWORD(m.WParam) == (int)User32.BN.CLICKED)
                     {
                         if (!ValidationCancelled)

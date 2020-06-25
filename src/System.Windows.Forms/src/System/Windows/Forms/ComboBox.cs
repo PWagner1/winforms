@@ -4,6 +4,7 @@
 
 #nullable disable
 
+using System.Buffers;
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -27,8 +28,6 @@ namespace System.Windows.Forms
     ///  list or to enter new text. Displays only the editing field until the user
     ///  explicitly displays the list.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [DefaultEvent(nameof(SelectedIndexChanged))]
     [DefaultProperty(nameof(Items))]
     [DefaultBindingProperty(nameof(Text))]
@@ -2355,13 +2354,30 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Get the text stored by the native control for the specified list item.
         /// </summary>
-        private string NativeGetItemText(int index)
+        private unsafe string NativeGetItemText(int index)
         {
-            int len = unchecked((int)(long)SendMessageW(this, (WM)CB.GETLBTEXTLEN, (IntPtr)index));
-            return string.Create(len + 1, this, (span, comboBox) =>
+            int maxLength = PARAM.ToInt(SendMessageW(this, (WM)CB.GETLBTEXTLEN, (IntPtr)index));
+            if (maxLength == LB_ERR)
             {
-                SendMessageW(comboBox, (WM)CB.GETLBTEXT, (IntPtr)index, ref span[0]);
-            });
+                return string.Empty;
+            }
+
+            char[] text = ArrayPool<char>.Shared.Rent(maxLength + 1);
+            string result;
+            fixed (char* pText = text)
+            {
+                int actualLength = PARAM.ToInt(SendMessageW(this, (WM)CB.GETLBTEXT, (IntPtr)index, (IntPtr)pText));
+                Debug.Assert(actualLength != LB_ERR, "Should have validated the index above");
+                if (actualLength == LB_ERR)
+                {
+                    return string.Empty;
+                }
+
+                result = new string(pText, 0, Math.Min(maxLength, actualLength));
+            }
+
+            ArrayPool<char>.Shared.Return(text);
+            return result;
         }
 
         /// <summary>
@@ -3696,10 +3712,11 @@ namespace System.Windows.Forms
             MEASUREITEMSTRUCT* mis = (MEASUREITEMSTRUCT*)m.LParam;
 
             // Determine if message was sent by a combo item or the combo edit field
-            if (DrawMode == DrawMode.OwnerDrawVariable && mis->itemID >= 0)
+            int itemID = (int)mis->itemID;
+            if (DrawMode == DrawMode.OwnerDrawVariable && itemID >= 0)
             {
                 using Graphics graphics = CreateGraphicsInternal();
-                var mie = new MeasureItemEventArgs(graphics, (int)mis->itemID, ItemHeight);
+                var mie = new MeasureItemEventArgs(graphics, itemID, ItemHeight);
                 OnMeasureItem(mie);
                 mis->itemHeight = unchecked((uint)mie.ItemHeight);
             }
@@ -3772,13 +3789,13 @@ namespace System.Windows.Forms
                 case WM.PARENTNOTIFY:
                     WmParentNotify(ref m);
                     break;
-                case WM.REFLECT | WM.COMMAND:
+                case WM.REFLECT_COMMAND:
                     WmReflectCommand(ref m);
                     break;
-                case WM.REFLECT | WM.DRAWITEM:
+                case WM.REFLECT_DRAWITEM:
                     WmReflectDrawItem(ref m);
                     break;
-                case WM.REFLECT | WM.MEASUREITEM:
+                case WM.REFLECT_MEASUREITEM:
                     WmReflectMeasureItem(ref m);
                     break;
                 case WM.LBUTTONDOWN:
@@ -3825,60 +3842,43 @@ namespace System.Windows.Forms
                 case WM.PAINT:
                     if (GetStyle(ControlStyles.UserPaint) == false && (FlatStyle == FlatStyle.Flat || FlatStyle == FlatStyle.Popup))
                     {
-                        using (WindowsRegion dr = new WindowsRegion(FlatComboBoxAdapter.dropDownRect))
+                        using var dropDownRegion = new Gdi32.RegionScope(FlatComboBoxAdapter.dropDownRect);
+                        using var windowRegion = new Gdi32.RegionScope(Bounds);
+
+                        // Stash off the region we have to update (the base is going to clear this off in BeginPaint)
+                        bool getRegionSucceeded = GetUpdateRgn(Handle, windowRegion, bErase: BOOL.TRUE) != RegionType.ERROR;
+
+                        Gdi32.CombineRgn(dropDownRegion, windowRegion, dropDownRegion, Gdi32.CombineMode.RGN_DIFF);
+                        RECT updateRegionBoundingRect = default;
+                        Gdi32.GetRgnBox(windowRegion, ref updateRegionBoundingRect);
+
+                        FlatComboBoxAdapter.ValidateOwnerDrawRegions(this, updateRegionBoundingRect);
+
+                        // Call the base class to do its painting (with a clipped DC).
+                        bool useBeginPaint = m.WParam == IntPtr.Zero;
+                        var paintScope = useBeginPaint ? new BeginPaintScope(Handle) : default;
+
+                        IntPtr dc = useBeginPaint ? paintScope : m.WParam;
+
+                        using var savedDcState = new Gdi32.SaveDcScope(dc);
+
+                        if (getRegionSucceeded)
                         {
-                            using (WindowsRegion wr = new WindowsRegion(Bounds))
-                            {
-                                // Stash off the region we have to update (the base is going to clear this off in BeginPaint)
-                                RegionType updateRegionFlags = GetUpdateRgn(Handle, wr.HRegion, BOOL.TRUE);
-
-                                dr.CombineRegion(wr, dr, Gdi32.CombineMode.RGN_DIFF);
-
-                                Rectangle updateRegionBoundingRect = wr.ToRectangle();
-                                FlatComboBoxAdapter.ValidateOwnerDrawRegions(this, updateRegionBoundingRect);
-
-                                // Call the base class to do its painting (with a clipped DC).
-                                var ps = new PAINTSTRUCT();
-                                IntPtr dc;
-                                bool disposeDc = false;
-                                if (m.WParam == IntPtr.Zero)
-                                {
-                                    dc = BeginPaint(new HandleRef(this, Handle), ref ps);
-                                    disposeDc = true;
-                                }
-                                else
-                                {
-                                    dc = m.WParam;
-                                }
-
-                                using (DeviceContext mDC = DeviceContext.FromHdc(dc))
-                                {
-                                    using (WindowsGraphics wg = new WindowsGraphics(mDC))
-                                    {
-                                        if (updateRegionFlags != RegionType.ERROR)
-                                        {
-                                            wg.DeviceContext.SetClip(dr);
-                                        }
-                                        m.WParam = dc;
-                                        DefWndProc(ref m);
-                                        if (updateRegionFlags != RegionType.ERROR)
-                                        {
-                                            wg.DeviceContext.SetClip(wr);
-                                        }
-                                        using (Graphics g = Graphics.FromHdcInternal(dc))
-                                        {
-                                            FlatComboBoxAdapter.DrawFlatCombo(this, g);
-                                        }
-                                    }
-                                }
-
-                                if (disposeDc)
-                                {
-                                    EndPaint(new HandleRef(this, Handle), ref ps);
-                                }
-                            }
-                            return;
+                            Gdi32.SelectClipRgn(dc, dropDownRegion);
                         }
+
+                        m.WParam = dc;
+                        DefWndProc(ref m);
+
+                        if (getRegionSucceeded)
+                        {
+                            Gdi32.SelectClipRgn(dc, windowRegion);
+                        }
+
+                        using Graphics g = Graphics.FromHdcInternal(dc);
+                        FlatComboBoxAdapter.DrawFlatCombo(this, g);
+
+                        return;
                     }
 
                     base.WndProc(ref m);
@@ -3942,7 +3942,6 @@ namespace System.Windows.Forms
             }
         }
 
-        [ComVisible(true)]
         private class ComboBoxChildNativeWindow : NativeWindow
         {
             private readonly ComboBox _owner;
@@ -4534,7 +4533,6 @@ namespace System.Windows.Forms
             }
         } // end ObjectCollection
 
-        [ComVisible(true)]
         public class ChildAccessibleObject : AccessibleObject
         {
             readonly ComboBox owner;
@@ -4559,7 +4557,6 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Represents the ComboBox item accessible object.
         /// </summary>
-        [ComVisible(true)]
         internal class ComboBoxItemAccessibleObject : AccessibleObject
         {
             private readonly ComboBox _owningComboBox;
@@ -4875,7 +4872,6 @@ namespace System.Windows.Forms
         ///  This inherits from the base ComboBoxExAccessibleObject and ComboBoxAccessibleObject
         ///  to have all base functionality.
         /// </summary>
-        [ComVisible(true)]
         internal class ComboBoxAccessibleObject : ControlAccessibleObject
         {
             private const int COMBOBOX_ACC_ITEM_INDEX = 1;
@@ -5341,7 +5337,6 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Represents the ComboBox's child (inner) list native window control accessible object with UI Automation provider functionality.
         /// </summary>
-        [ComVisible(true)]
         internal class ComboBoxChildListUiaProvider : ChildAccessibleObject
         {
             private const string COMBO_BOX_LIST_AUTOMATION_ID = "1000";
@@ -5583,7 +5578,6 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Represents the ComboBox's child text (is used instead of inner Edit when style is DropDownList but not DropDown) accessible object.
         /// </summary>
-        [ComVisible(true)]
         internal class ComboBoxChildTextUiaProvider : AccessibleObject
         {
             private const int COMBOBOX_TEXT_ACC_ITEM_INDEX = 1;
@@ -5758,7 +5752,6 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Represents the ComboBox child (inner) DropDown button accessible object with UI Automation functionality.
         /// </summary>
-        [ComVisible(true)]
         internal class ComboBoxChildDropDownButtonUiaProvider : AccessibleObject
         {
             private const int COMBOBOX_DROPDOWN_BUTTON_ACC_ITEM_INDEX = 2;

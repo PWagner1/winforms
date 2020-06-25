@@ -22,8 +22,6 @@ namespace System.Windows.Forms
     ///  The TabControl.  This control has a lot of the functionality of a TabStrip
     ///  but manages a list of TabPages which are the 'pages' that appear on each tab.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [DefaultProperty(nameof(TabPages))]
     [DefaultEvent(nameof(SelectedIndexChanged))]
     [Designer("System.Windows.Forms.Design.TabControlDesigner, " + AssemblyRef.SystemDesign)]
@@ -2060,16 +2058,16 @@ namespace System.Windows.Forms
         {
             switch ((User32.WM)m.Msg)
             {
-                case User32.WM.REFLECT | User32.WM.DRAWITEM:
+                case User32.WM.REFLECT_DRAWITEM:
                     WmReflectDrawItem(ref m);
                     break;
 
-                case User32.WM.REFLECT | User32.WM.MEASUREITEM:
+                case User32.WM.REFLECT_MEASUREITEM:
                     // We use TCM_SETITEMSIZE instead
                     break;
 
                 case User32.WM.NOTIFY:
-                case User32.WM.REFLECT | User32.WM.NOTIFY:
+                case User32.WM.REFLECT_NOTIFY:
                     User32.NMHDR* nmhdr = (User32.NMHDR*)m.LParam;
                     switch (nmhdr->code)
                     {

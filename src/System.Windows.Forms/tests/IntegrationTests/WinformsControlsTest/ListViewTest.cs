@@ -23,7 +23,7 @@ namespace WinformsControlsTest
             int i = random.Next(100, 300);
 
             Debug.WriteLine(listView1.TileSize);
-            listView1.TileSize = new Size(50, 50);
+            listView1.TileSize = new Size(200, 50);
             listView1.Items[0].ImageIndex = 0;
             listView1.Items[1].ImageIndex = 1;
             listView1.Items[2].ImageIndex = 2;
@@ -36,6 +36,9 @@ namespace WinformsControlsTest
                 var index = listView1.InsertionMark.NearestIndex(pos);
                 Console.WriteLine($"nearest index: {index}");
             };
+
+            AddCollapsibleGroupToListView();
+            AddGroupTasks();
         }
 
         private void CreateMyListView()
@@ -138,6 +141,66 @@ namespace WinformsControlsTest
             // Change a ListViewGroup's header.
             listView2.Groups[0].HeaderAlignment = HorizontalAlignment.Center;
             listView2.Groups[0].Header = "NewText";
+        }
+
+        private void AddCollapsibleGroupToListView()
+        {
+            var lvgroup1 = new ListViewGroup
+            {
+                Header = "CollapsibleGroup1",
+                CollapsedState = ListViewGroupCollapsedState.Expanded
+            };
+
+            listView1.Groups.Add(lvgroup1);
+            listView1.Items.Add(new ListViewItem
+            {
+                Text = "Item",
+                Group = lvgroup1
+            });
+
+            var lvgroup2 = new ListViewGroup
+            {
+                Header = "CollapsibleGroup2",
+                CollapsedState = ListViewGroupCollapsedState.Collapsed
+            };
+
+            listView1.Groups.Add(lvgroup2);
+            listView1.Items.Add(new ListViewItem
+            {
+                Text = "Item",
+                Group = lvgroup2
+            });
+
+            listView1.GroupCollapsedStateChanged += listView1_GroupCollapsedStateChanged;
+        }
+
+        private void listView1_GroupCollapsedStateChanged(object sender, ListViewGroupEventArgs e)
+        {
+            MessageBox.Show("CollapsedState changed at group with index " + e.GroupIndex);
+        }
+
+        private void AddGroupTasks()
+        {
+            listView1.Groups[0].TaskLink = "Task";
+            listView1.GroupTaskLinkClick += listView1_GroupTaskLinkClick;
+
+            var lvgroup1 = new ListViewGroup
+            {
+                Header = "TaskGroup",
+                TaskLink = "Task2"
+            };
+
+            listView1.Groups.Add(lvgroup1);
+            listView1.Items.Add(new ListViewItem
+            {
+                Text = "Item",
+                Group = lvgroup1
+            });
+        }
+
+        private void listView1_GroupTaskLinkClick(object sender, ListViewGroupEventArgs e)
+        {
+            MessageBox.Show(this, "Task at group index " + e.GroupIndex + " was clicked", "GroupClick Event");
         }
 
         private void listView2_Click(object sender, System.EventArgs e)

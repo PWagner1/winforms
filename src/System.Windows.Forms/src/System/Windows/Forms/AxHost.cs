@@ -28,8 +28,6 @@ namespace System.Windows.Forms
     /// <summary>
     ///  Wraps ActiveX controls and exposes them as fully featured windows forms controls.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [ToolboxItem(false)]
     [DesignTimeVisible(false)]
     [DefaultEvent(nameof(Enter))]
@@ -1212,7 +1210,7 @@ namespace System.Windows.Forms
         {
             if (logPixelsX == -1 || force)
             {
-                using ScreenDC dc = ScreenDC.Create();
+                using var dc = User32.GetDcScope.ScreenDC;
                 if (dc == IntPtr.Zero)
                 {
                     return HRESULT.E_FAIL;
@@ -3381,7 +3379,7 @@ namespace System.Windows.Forms
                 // Things we explicitly ignore and pass to the ocx's windproc
                 case User32.WM.ERASEBKGND:
 
-                case User32.WM.REFLECT | User32.WM.NOTIFYFORMAT:
+                case User32.WM.REFLECT_NOTIFYFORMAT:
 
                 case User32.WM.SETCURSOR:
                 case User32.WM.SYSCOLORCHANGE:

@@ -115,9 +115,6 @@
   <data name="ApplyCaption" xml:space="preserve">
     <value>&amp;Apply</value>
   </data>
-  <data name="ArraysNotSameSize" xml:space="preserve">
-    <value>Arrays '{0}' and '{1}' must be the same size.</value>
-  </data>
   <data name="AutoCompleteFailure" xml:space="preserve">
     <value>autoComplete cannot be initialized with given custom source.</value>
   </data>
@@ -4868,9 +4865,6 @@ Stack trace where the illegal operation occurred was:
   <data name="PropertyGridPropertyValueChangedDescr" xml:space="preserve">
     <value>Occurs when a property value changes.</value>
   </data>
-  <data name="PropertyGridRemotedObject" xml:space="preserve">
-    <value>Object {0} is being remoted by a proxy that does not support interface discovery.  This type of remoted object is not supported.</value>
-  </data>
   <data name="PropertyGridRemoveStaticTabs" xml:space="preserve">
     <value>Static tabs cannot be removed from the PropertyGrid.</value>
   </data>
@@ -6706,5 +6700,14 @@ Stack trace where the illegal operation occurred was:
   </data>
   <data name="WindowSubclassHandlerWndProcIsNotExceptedOne" xml:space="preserve">
     <value>The current window procedure is not the expected one.</value>
+  </data>
+  <data name="ListViewGroupCollapsedStateChangedDescr" xml:space="preserve">
+    <value>Event raised when the CollapsedState property of a ListViewGroup changes.</value>
+  </data>
+  <data name="ListViewGroupTaskLinkClickDescr" xml:space="preserve">
+    <value>Event raised when the TaskLink property of a ListViewGroup is clicked.</value>
+  </data>
+  <data name="InputLanguageCultureNotFound" xml:space="preserve">
+    <value>Could not find an InputLanguage for culture '{0}'.</value>
   </data>
 </root>

@@ -19,8 +19,6 @@ namespace System.Windows.Forms
     /// <summary>
     ///  This is a wrapper over the native WebBrowser control implemented in shdocvw.dll.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [DefaultProperty(nameof(Url))]
     [DefaultEvent(nameof(DocumentCompleted))]
     [Docking(DockingBehavior.AutoDock)]
@@ -654,7 +652,7 @@ namespace System.Windows.Forms
             {
                 AxIWebBrowser2.GoBack();
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
                 retVal = false;
             }
@@ -674,7 +672,7 @@ namespace System.Windows.Forms
             {
                 AxIWebBrowser2.GoForward();
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
                 retVal = false;
             }
@@ -789,7 +787,7 @@ namespace System.Windows.Forms
             {
                 AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PRINT, Ole32.OLECMDEXECOPT.DONTPROMPTUSER, IntPtr.Zero, IntPtr.Zero);
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
             }
         }
@@ -812,7 +810,7 @@ namespace System.Windows.Forms
                     AxIWebBrowser2.Refresh();
                 }
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
             }
         }
@@ -838,7 +836,7 @@ namespace System.Windows.Forms
                     AxIWebBrowser2.Refresh2(ref level);
                 }
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
             }
         }
@@ -875,7 +873,7 @@ namespace System.Windows.Forms
             {
                 AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PAGESETUP, Ole32.OLECMDEXECOPT.PROMPTUSER, IntPtr.Zero, IntPtr.Zero);
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
             }
         }
@@ -890,7 +888,7 @@ namespace System.Windows.Forms
             {
                 AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PRINT, Ole32.OLECMDEXECOPT.PROMPTUSER, IntPtr.Zero, IntPtr.Zero);
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
             }
         }
@@ -904,7 +902,7 @@ namespace System.Windows.Forms
             {
                 AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PRINTPREVIEW, Ole32.OLECMDEXECOPT.PROMPTUSER, IntPtr.Zero, IntPtr.Zero);
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
             }
         }
@@ -919,7 +917,7 @@ namespace System.Windows.Forms
             {
                 AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PROPERTIES, Ole32.OLECMDEXECOPT.PROMPTUSER, IntPtr.Zero, IntPtr.Zero);
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
             }
         }
@@ -934,7 +932,7 @@ namespace System.Windows.Forms
             {
                 AxIWebBrowser2.ExecWB(Ole32.OLECMDID.SAVEAS, Ole32.OLECMDEXECOPT.DODEFAULT, IntPtr.Zero, IntPtr.Zero);
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
             }
         }
@@ -948,7 +946,7 @@ namespace System.Windows.Forms
             {
                 AxIWebBrowser2.Stop();
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
             }
         }
@@ -1445,7 +1443,6 @@ namespace System.Windows.Forms
         ///  Provides a default WebBrowserSite implementation for use in the CreateWebBrowserSite
         ///  method in the WebBrowser class.
         /// </summary>
-        [ComVisible(false)]
         protected class WebBrowserSite : WebBrowserSiteBase, IDocHostUIHandler
         {
             /// <summary>

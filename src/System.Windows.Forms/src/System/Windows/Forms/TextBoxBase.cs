@@ -22,8 +22,6 @@ namespace System.Windows.Forms
     ///  Implements the basic functionality required by text
     ///  controls.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [DefaultEvent(nameof(TextChanged))]
     [DefaultBindingProperty(nameof(Text))]
     [Designer("System.Windows.Forms.Design.TextBoxBaseDesigner, " + AssemblyRef.SystemDesign)]
@@ -1715,7 +1713,7 @@ namespace System.Windows.Forms
             IntPtr editOlePtr = IntPtr.Zero;
             try
             {
-                if (SendMessageW(this, (WM)RichEditMessages.EM_GETOLEINTERFACE, IntPtr.Zero, ref editOlePtr) != IntPtr.Zero)
+                if (SendMessageW(this, (WM)Richedit.EM.GETOLEINTERFACE, IntPtr.Zero, ref editOlePtr) != IntPtr.Zero)
                 {
                     IntPtr iTextDocument = IntPtr.Zero;
                     Guid iiTextDocumentGuid = typeof(Richedit.ITextDocument).GUID;
@@ -2180,7 +2178,7 @@ namespace System.Windows.Forms
                     doubleClickFired = true;
                     base.WndProc(ref m);
                     break;
-                case WM.REFLECT | WM.COMMAND:
+                case WM.REFLECT_COMMAND:
                     WmReflectCommand(ref m);
                     break;
                 case WM.GETDLGCODE:

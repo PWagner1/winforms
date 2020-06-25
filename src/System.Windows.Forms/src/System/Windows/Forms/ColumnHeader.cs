@@ -186,7 +186,7 @@ namespace System.Windows.Forms
             }
         }
 
-        [DefaultValue(-1)]
+        [DefaultValue(ImageList.Indexer.DefaultIndex)]
         [TypeConverter(typeof(ImageIndexConverter))]
         [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
         [RefreshProperties(RefreshProperties.Repaint)]
@@ -195,7 +195,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (imageIndexer.Index != -1 && ImageList != null && imageIndexer.Index >= ImageList.Images.Count)
+                if (imageIndexer.Index != ImageList.Indexer.DefaultIndex && ImageList != null && imageIndexer.Index >= ImageList.Images.Count)
                 {
                     return ImageList.Images.Count - 1;
                 }
@@ -203,19 +203,21 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (value < -1)
+                if (value < ImageList.Indexer.DefaultIndex)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ImageIndex), value, -1));
+                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ImageIndex), value, ImageList.Indexer.DefaultIndex));
                 }
 
-                if (imageIndexer.Index != value)
+                if (imageIndexer.Index == value && value != ImageList.Indexer.DefaultIndex)
                 {
-                    imageIndexer.Index = value;
+                    return;
+                }
 
-                    if (ListView != null && ListView.IsHandleCreated)
-                    {
-                        ListView.SetColumnInfo(LVCF.IMAGE, this);
-                    }
+                imageIndexer.Index = value;
+
+                if (ListView != null && ListView.IsHandleCreated)
+                {
+                    ListView.SetColumnInfo(LVCF.IMAGE, this);
                 }
             }
         }
@@ -230,7 +232,7 @@ namespace System.Windows.Forms
             }
         }
 
-        [DefaultValue("")]
+        [DefaultValue(ImageList.Indexer.DefaultKey)]
         [TypeConverter(typeof(ImageKeyConverter))]
         [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
         [RefreshProperties(RefreshProperties.Repaint)]
@@ -243,14 +245,16 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (value != imageIndexer.Key)
+                if (value == imageIndexer.Key && !string.Equals(value, ImageList.Indexer.DefaultKey))
                 {
-                    imageIndexer.Key = value;
+                    return;
+                }
 
-                    if (ListView != null && ListView.IsHandleCreated)
-                    {
-                        ListView.SetColumnInfo(LVCF.IMAGE, this);
-                    }
+                imageIndexer.Key = value;
+
+                if (ListView != null && ListView.IsHandleCreated)
+                {
+                    ListView.SetColumnInfo(LVCF.IMAGE, this);
                 }
             }
         }

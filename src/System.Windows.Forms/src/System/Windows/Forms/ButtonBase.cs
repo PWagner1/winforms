@@ -18,8 +18,6 @@ namespace System.Windows.Forms
     /// <summary>
     ///  Implements the basic functionality required by a button control.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [Designer("System.Windows.Forms.Design.ButtonBaseDesigner, " + AssemblyRef.SystemDesign)]
     public abstract class ButtonBase : Control
     {
@@ -357,7 +355,7 @@ namespace System.Windows.Forms
                 image = value;
                 if (image != null)
                 {
-                    ImageIndex = -1;
+                    ImageIndex = ImageList.Indexer.DefaultIndex;
                     ImageList = null;
                 }
 
@@ -402,7 +400,7 @@ namespace System.Windows.Forms
         [TypeConverter(typeof(ImageIndexConverter))]
         [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
         [Localizable(true)]
-        [DefaultValue(-1)]
+        [DefaultValue(ImageList.Indexer.DefaultIndex)]
         [RefreshProperties(RefreshProperties.Repaint)]
         [SRDescription(nameof(SR.ButtonImageIndexDescr))]
         [SRCategory(nameof(SR.CatAppearance))]
@@ -410,7 +408,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (imageIndex.Index != -1 && imageList != null && imageIndex.Index >= imageList.Images.Count)
+                if (imageIndex.Index != ImageList.Indexer.DefaultIndex && imageList != null && imageIndex.Index >= imageList.Images.Count)
                 {
                     return imageList.Images.Count - 1;
                 }
@@ -418,16 +416,17 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (value < -1)
+                if (value < ImageList.Indexer.DefaultIndex)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ImageIndex), value, -1));
+                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ImageIndex), value, ImageList.Indexer.DefaultIndex));
                 }
-                if (value == imageIndex.Index)
+
+                if (value == imageIndex.Index && value != ImageList.Indexer.DefaultIndex)
                 {
                     return;
                 }
 
-                if (value != -1)
+                if (value != ImageList.Indexer.DefaultIndex)
                 {
                     // Image.set calls ImageIndex = -1
                     image = null;
@@ -446,7 +445,7 @@ namespace System.Windows.Forms
         [TypeConverter(typeof(ImageKeyConverter))]
         [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
         [Localizable(true)]
-        [DefaultValue("")]
+        [DefaultValue(ImageList.Indexer.DefaultKey)]
         [RefreshProperties(RefreshProperties.Repaint)]
         [SRDescription(nameof(SR.ButtonImageIndexDescr))]
         [SRCategory(nameof(SR.CatAppearance))]
@@ -458,7 +457,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (value == ImageKey)
+                if (value == imageIndex.Key && !string.Equals(value, ImageList.Indexer.DefaultKey))
                 {
                     return;
                 }
@@ -556,12 +555,12 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-            ///  The area of the button encompassing any changes between the button's
+        ///  The area of the button encompassing any changes between the button's
         ///  resting appearance and its appearance when the mouse is over it.
-                ///  Consider overriding this property if you override any painting methods,
+        ///  Consider overriding this property if you override any painting methods,
         ///  or your button may not paint correctly or may have flicker. Returning
         ///  ClientRectangle is safe for correct painting but may still cause flicker.
-            /// </summary>
+        /// </summary>
         internal virtual Rectangle OverChangeRectangle
         {
             get
@@ -588,12 +587,12 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-            ///  The area of the button encompassing any changes between the button's
+        ///  The area of the button encompassing any changes between the button's
         ///  appearance when the mouse is over it but not pressed and when it is pressed.
-                ///  Consider overriding this property if you override any painting methods,
+        ///  Consider overriding this property if you override any painting methods,
         ///  or your button may not paint correctly or may have flicker. Returning
         ///  ClientRectangle is safe for correct painting but may still cause flicker.
-            /// </summary>
+        /// </summary>
         internal virtual Rectangle DownChangeRectangle
         {
             get
@@ -1338,7 +1337,7 @@ namespace System.Windows.Forms
             {
                 switch ((User32.WM)m.Msg)
                 {
-                    case User32.WM.REFLECT | User32.WM.COMMAND:
+                    case User32.WM.REFLECT_COMMAND:
                         if (PARAM.HIWORD(m.WParam) == (int)User32.BN.CLICKED && !ValidationCancelled)
                         {
                             OnClick(EventArgs.Empty);
@@ -1351,7 +1350,6 @@ namespace System.Windows.Forms
             }
         }
 
-        [ComVisible(true)]
         public class ButtonBaseAccessibleObject : ControlAccessibleObject
         {
             public ButtonBaseAccessibleObject(Control owner) : base(owner)

@@ -13,8 +13,6 @@ using System.Runtime.InteropServices;
 
 namespace System.Windows.Forms
 {
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [LookupBindingProperties(nameof(ListControl.DataSource), nameof(ListControl.DisplayMember), nameof(ListControl.ValueMember), nameof(ListControl.SelectedValue))]
     public abstract class ListControl : Control
     {
@@ -541,7 +539,7 @@ namespace System.Windows.Forms
             {
                 return (string)Formatter.FormatObject(filteredItem, typeof(string), DisplayMemberConverter, _stringTypeConverter, _formatString, _formatInfo, null, DBNull.Value);
             }
-            catch (Exception exception) when (!ClientUtils.IsSecurityOrCriticalException(exception))
+            catch (Exception exception) when (!ClientUtils.IsCriticalException(exception))
             {
                 // if we did not do any work then return the old ItemText
                 return Convert.ToString(item, CultureInfo.CurrentCulture);

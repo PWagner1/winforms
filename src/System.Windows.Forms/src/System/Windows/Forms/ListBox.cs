@@ -4,6 +4,7 @@
 
 #nullable disable
 
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -38,8 +39,6 @@ namespace System.Windows.Forms
     ///     "D" };
     /// </code>
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [Designer("System.Windows.Forms.Design.ListBoxDesigner, " + AssemblyRef.SystemDesign)]
     [DefaultEvent(nameof(SelectedIndexChanged))]
     [DefaultProperty(nameof(Items))]
@@ -1618,13 +1617,30 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Get the text stored by the native control for the specified list item.
         /// </summary>
-        internal string NativeGetItemText(int index)
+        internal unsafe string NativeGetItemText(int index)
         {
-            int len = unchecked((int)(long)SendMessageW(this, (WM)LB.GETTEXTLEN, (IntPtr)index));
-            return string.Create(len + 1, this, (span, listBox) =>
+            int maxLength = PARAM.ToInt(SendMessageW(this, (WM)LB.GETTEXTLEN, (IntPtr)index));
+            if (maxLength == LB_ERR)
             {
-                SendMessageW(listBox, (WM)LB.GETTEXT, (IntPtr)index, ref span[0]);
-            });
+                return string.Empty;
+            }
+
+            char[] text = ArrayPool<char>.Shared.Rent(maxLength + 1);
+            string result;
+            fixed (char* pText = text)
+            {
+                int actualLength = PARAM.ToInt(SendMessageW(this, (WM)LB.GETTEXT, (IntPtr)index, (IntPtr)pText));
+                Debug.Assert(actualLength != LB_ERR, "Should have validated the index above");
+                if (actualLength == LB_ERR)
+                {
+                    return string.Empty;
+                }
+
+                result = new string(pText, 0, Math.Min(maxLength, actualLength));
+            }
+
+            ArrayPool<char>.Shared.Return(text);
+            return result;
         }
 
         /// <summary>
@@ -2458,13 +2474,13 @@ namespace System.Windows.Forms
         {
             switch ((WM)m.Msg)
             {
-                case WM.REFLECT | WM.COMMAND:
+                case WM.REFLECT_COMMAND:
                     WmReflectCommand(ref m);
                     break;
-                case WM.REFLECT | WM.DRAWITEM:
+                case WM.REFLECT_DRAWITEM:
                     WmReflectDrawItem(ref m);
                     break;
-                case WM.REFLECT | WM.MEASUREITEM:
+                case WM.REFLECT_MEASUREITEM:
                     WmReflectMeasureItem(ref m);
                     break;
                 case WM.PRINT:

@@ -20,8 +20,6 @@ namespace System.Windows.Forms
     /// <summary>
     ///  Displays text that can contain a hyperlink.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [DefaultEvent(nameof(LinkClicked))]
     [ToolboxItem("System.Windows.Forms.Design.AutoSizeToolboxItem," + AssemblyRef.SystemDesign)]
     [SRDescription(nameof(SR.DescriptionLinkLabel))]
@@ -705,12 +703,10 @@ namespace System.Windows.Forms
                                 wg.TextPadding = TextPaddingOptions.LeftAndRightPadding;
                             }
 
-                            using (WindowsFont wf = WindowsGraphicsCacheManager.GetWindowsFont(Font))
-                            {
-                                User32.DRAWTEXTPARAMS dtParams = wg.GetTextMargins(wf);
-                                iLeftMargin = dtParams.iLeftMargin;
-                                iRightMargin = dtParams.iRightMargin;
-                            }
+                            using WindowsFont wf = WindowsGraphicsCacheManager.GetWindowsFont(Font);
+                            User32.DRAWTEXTPARAMS dtParams = wg.GetTextMargins(wf);
+                            iLeftMargin = dtParams.iLeftMargin;
+                            iRightMargin = dtParams.iRightMargin;
                         }
 
                         Rectangle visualRectangle = new Rectangle(clientRectWithPadding.X + iLeftMargin,
@@ -2644,7 +2640,6 @@ namespace System.Windows.Forms
             }
         }
 
-        [ComVisible(true)]
         internal class LinkLabelAccessibleObject : LabelAccessibleObject
         {
             /// <summary>
@@ -2705,7 +2700,6 @@ namespace System.Windows.Forms
             }
         }
 
-        [ComVisible(true)]
         internal class LinkAccessibleObject : AccessibleObject
         {
             private readonly Link link;

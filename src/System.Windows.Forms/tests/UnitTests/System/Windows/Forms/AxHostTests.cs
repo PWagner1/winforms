@@ -19,10 +19,14 @@ namespace System.Windows.Forms.Tests
     using Size = System.Drawing.Size;
     using Point = System.Drawing.Point;
 
+    [Collection("Sequential")] // workaround for WebBrowser control corrupting memory when run on multiple UI threads (instantiated via GUID)
     public class AxHostTests : IClassFixture<ThreadExceptionFixture>
     {
+        private const string EmptyClsidString = "00000000-0000-0000-0000-000000000000";
+        private const string WebBrowserClsidString = "8856f961-340a-11d0-a96b-00c04fd705a2";
+
         [WinFormsTheory]
-        [InlineData("00000000-0000-0000-0000-000000000000")]
+        [InlineData(EmptyClsidString)]
         public void AxHost_Ctor_String(string clsid)
         {
             using var control = new SubAxHost(clsid);
@@ -116,7 +120,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [InlineData("00000000-0000-0000-0000-000000000000", 0)]
+        [InlineData(EmptyClsidString, 0)]
         public void AxHost_Ctor_String_Int(string clsid, int flags)
         {
             using var control = new SubAxHost(clsid, flags);
@@ -227,7 +231,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_CreateParams_GetDefault_ReturnsExpected()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             CreateParams createParams = control.CreateParams;
             Assert.Null(createParams.Caption);
             Assert.Null(createParams.ClassName);
@@ -263,7 +267,7 @@ namespace System.Windows.Forms.Tests
             mockSite
                 .Setup(s => s.DesignMode)
                 .Returns(true);
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2")
+            using var control = new SubAxHost(WebBrowserClsidString)
             {
                 Site = mockSite.Object
             };
@@ -288,7 +292,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetBackColorTheoryData))]
         public void AxHost_BackColor_Set_GetReturnsExpected(Color value, Color expected)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 BackColor = value
             };
@@ -303,7 +307,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
         public void AxHost_BackgroundImage_Set_GetReturnsExpected(Image value)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 BackgroundImage = value
             };
@@ -320,7 +324,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ImageLayout))]
         public void AxHost_BackgroundImageLayout_Set_GetReturnsExpected(ImageLayout value)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 BackgroundImageLayout = value
             };
@@ -337,7 +341,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImageLayout))]
         public void AxHost_BackgroundImageLayout_SetInvalid_ThrowsInvalidEnumArgumentException(ImageLayout value)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             Assert.Throws<InvalidEnumArgumentException>("value", () => control.BackgroundImageLayout = value);
         }
 
@@ -349,7 +353,7 @@ namespace System.Windows.Forms.Tests
             {
                 Parent = grandparent
             };
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 Parent = parent
             };
@@ -367,7 +371,7 @@ namespace System.Windows.Forms.Tests
         public static void AxHost_ContainingControl_GetWithContainerControlParent_ReturnsExpected()
         {
             var parent = new ContainerControl();
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 Parent = parent
             };
@@ -385,7 +389,7 @@ namespace System.Windows.Forms.Tests
         public static void AxHost_ContainingControl_GetWithNonContainerControlParent_ReturnsExpected()
         {
             var parent = new Control();
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 Parent = parent
             };
@@ -417,7 +421,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(ContainingControl_Set_TestData))]
         public void AxHost_ContainingControl_Set_GetReturnsExpected(ContainerControl value)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 ContainingControl = value
             };
@@ -432,7 +436,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetCursorTheoryData))]
         public void AxHost_Cursor_Set_GetReturnsExpected(Cursor value)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 Cursor = value
             };
@@ -447,7 +451,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetCursorTheoryData))]
         public void AxHost_Cursor_SetWithHandle_GetReturnsExpected(Cursor value)
         {
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2");
+            using var control = new SubAxHost(WebBrowserClsidString);
             Assert.NotEqual(IntPtr.Zero, control.Handle);
 
             control.Cursor = value;
@@ -464,7 +468,7 @@ namespace System.Windows.Forms.Tests
         {
             var child1 = new Control();
             var child2 = new Control();
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -494,7 +498,7 @@ namespace System.Windows.Forms.Tests
             {
                 Cursor = cursor2
             };
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -514,7 +518,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetFontTheoryData))]
         public void AxHost_Font_Set_GetReturnsExpected(Font value)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 Font = value
             };
@@ -533,7 +537,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetForeColorTheoryData))]
         public void AxHost_ForeColor_Set_GetReturnsExpected(Color value, Color expected)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 ForeColor = value
             };
@@ -548,7 +552,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ImageLayout))]
         public void AxHost_ImeMode_Set_GetReturnsExpected(ImeMode value)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 ImeMode = value
             };
@@ -563,7 +567,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImeMode))]
         public void AxHost_ImeMode_SetInvalid_ThrowsInvalidEnumArgumentException(ImeMode value)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             Assert.Throws<InvalidEnumArgumentException>("value", () => control.ImeMode = value);
         }
 
@@ -571,7 +575,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void AxHost_Enabled_Set_GetReturnsExpected(bool value)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 Enabled = value
             };
@@ -606,7 +610,7 @@ namespace System.Windows.Forms.Tests
             mockSite1
                 .Setup(s => s.DesignMode)
                 .Returns(true);
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2")
+            using var control = new SubAxHost(WebBrowserClsidString)
             {
                 Site = mockSite1.Object
             };
@@ -670,7 +674,7 @@ namespace System.Windows.Forms.Tests
             mockSite1
                 .Setup(s => s.DesignMode)
                 .Returns(false);
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2")
+            using var control = new SubAxHost(WebBrowserClsidString)
             {
                 Site = mockSite1.Object
             };
@@ -734,7 +738,7 @@ namespace System.Windows.Forms.Tests
             mockSite1
                 .Setup(s => s.DesignMode)
                 .Returns(false);
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2")
+            using var control = new SubAxHost(WebBrowserClsidString)
             {
                 Site = mockSite1.Object
             };
@@ -803,7 +807,7 @@ namespace System.Windows.Forms.Tests
             mockSite1
                 .Setup(s => s.Name)
                 .Returns("Name");
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2");
+            using var control = new SubAxHost(WebBrowserClsidString);
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             int invalidatedCallCount = 0;
             control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -873,7 +877,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void AxHost_Text_Set_GetReturnsExpected(string value)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            using var control = new SubAxHost(EmptyClsidString)
             {
                 Text = value
             };
@@ -890,7 +894,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void AxHost_Text_SetWithHandle_GetReturnsExpected(string value)
         {
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2");
+            using var control = new SubAxHost(WebBrowserClsidString);
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             int invalidatedCallCount = 0;
             control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -918,7 +922,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_BackColorChanged_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.BackColorChanged += handler);
             control.BackColorChanged -= handler;
@@ -927,7 +931,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_BackgroundImageChanged_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.BackgroundImageChanged += handler);
             control.BackgroundImageChanged -= handler;
@@ -936,7 +940,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_BackgroundImageLayoutChanged_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.BackgroundImageLayoutChanged += handler);
             control.BackgroundImageLayoutChanged -= handler;
@@ -945,7 +949,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_BindingContextChanged_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.BindingContextChanged += handler);
             control.BindingContextChanged -= handler;
@@ -954,7 +958,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_ChangeUICues_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             UICuesEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.ChangeUICues += handler);
             control.ChangeUICues -= handler;
@@ -963,7 +967,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_Click_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.Click += handler);
             control.Click -= handler;
@@ -972,7 +976,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_CursorChanged_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.CursorChanged += handler);
             control.CursorChanged -= handler;
@@ -981,7 +985,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_DoubleClick_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.DoubleClick += handler);
             control.DoubleClick -= handler;
@@ -990,7 +994,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_DragDrop_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             DragEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.DragDrop += handler);
             control.DragDrop -= handler;
@@ -999,7 +1003,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_DragEnter_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             DragEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.DragEnter += handler);
             control.DragEnter -= handler;
@@ -1008,7 +1012,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_DragLeave_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.DragLeave += handler);
             control.DragLeave -= handler;
@@ -1017,7 +1021,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_DragOver_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             DragEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.DragOver += handler);
             control.DragOver -= handler;
@@ -1026,7 +1030,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_EnabledChanged_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.EnabledChanged += handler);
             control.EnabledChanged -= handler;
@@ -1035,7 +1039,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_FontChanged_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.FontChanged += handler);
             control.FontChanged -= handler;
@@ -1044,7 +1048,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_ForeColorChanged_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.ForeColorChanged += handler);
             control.ForeColorChanged -= handler;
@@ -1053,7 +1057,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_GiveFeedback_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             GiveFeedbackEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.GiveFeedback += handler);
             control.GiveFeedback -= handler;
@@ -1062,7 +1066,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_HelpRequested_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             HelpEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.HelpRequested += handler);
             control.HelpRequested -= handler;
@@ -1071,7 +1075,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_ImeModeChanged_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.ImeModeChanged += handler);
             control.ImeModeChanged -= handler;
@@ -1080,7 +1084,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_KeyDown_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             KeyEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.KeyDown += handler);
             control.KeyDown -= handler;
@@ -1089,7 +1093,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_KeyPress_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             KeyPressEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.KeyPress += handler);
             control.KeyPress -= handler;
@@ -1098,7 +1102,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_KeyUp_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             KeyEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.KeyUp += handler);
             control.KeyUp -= handler;
@@ -1107,7 +1111,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_Layout_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             LayoutEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.Layout += handler);
             control.Layout -= handler;
@@ -1116,7 +1120,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_MouseClick_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.MouseClick += handler);
             control.MouseClick -= handler;
@@ -1125,7 +1129,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_MouseDoubleClick_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.MouseDoubleClick += handler);
             control.MouseDoubleClick -= handler;
@@ -1134,7 +1138,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_MouseDown_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             MouseEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.MouseDown += handler);
             control.MouseDown -= handler;
@@ -1143,7 +1147,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_MouseEnter_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.MouseEnter += handler);
             control.MouseEnter -= handler;
@@ -1152,7 +1156,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_MouseHover_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.MouseHover += handler);
             control.MouseHover -= handler;
@@ -1161,7 +1165,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_MouseLeave_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.MouseLeave += handler);
             control.MouseLeave -= handler;
@@ -1170,7 +1174,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_MouseMove_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             MouseEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.MouseMove += handler);
             control.MouseMove -= handler;
@@ -1179,7 +1183,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_MouseUp_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             MouseEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.MouseUp += handler);
             control.MouseUp -= handler;
@@ -1188,7 +1192,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_MouseWheel_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             MouseEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.MouseWheel += handler);
             control.MouseWheel -= handler;
@@ -1197,7 +1201,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_Paint_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             PaintEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.Paint += handler);
             control.Paint -= handler;
@@ -1206,7 +1210,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_QueryAccessibilityHelp__AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             QueryAccessibilityHelpEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.QueryAccessibilityHelp += handler);
             control.QueryAccessibilityHelp -= handler;
@@ -1215,7 +1219,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_QueryContinueDrag__AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             QueryContinueDragEventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.QueryContinueDrag += handler);
             control.QueryContinueDrag -= handler;
@@ -1224,7 +1228,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_RightToLeftChanged_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.RightToLeftChanged += handler);
             control.RightToLeftChanged -= handler;
@@ -1233,7 +1237,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_StyleChanged_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.StyleChanged += handler);
             control.StyleChanged -= handler;
@@ -1242,7 +1246,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_TextChanged_AddRemove_ThrowsNotSupportedException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             EventHandler handler = (sender, e) => { };
             Assert.Throws<NotSupportedException>(() => control.TextChanged += handler);
             control.TextChanged -= handler;
@@ -1251,7 +1255,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_AttachInterfaces_Invoke_Nop()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             control.AttachInterfaces();
             control.AttachInterfaces();
         }
@@ -1259,7 +1263,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_BeginInit_Invoke_Nop()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             control.BeginInit();
             control.BeginInit();
             Assert.False(control.Created);
@@ -1282,7 +1286,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(DoVerb_TestData))]
         public void AxHost_DoVerb_InvokeWithHandle_Success(int verb)
         {
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2");
+            using var control = new SubAxHost(WebBrowserClsidString);
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             control.DoVerb(verb);
         }
@@ -1292,7 +1296,7 @@ namespace System.Windows.Forms.Tests
         public void AxHost_DoVerb_InvokeWithHandleWithParent_Success(int verb)
         {
             using var parent = new Control();
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2")
+            using var control = new SubAxHost(WebBrowserClsidString)
             {
                 Parent = parent
             };
@@ -1307,7 +1311,7 @@ namespace System.Windows.Forms.Tests
         public void AxHost_DoVerb_InvokeWithHandleWithParentWithoutHandle_Success(int verb)
         {
             using var parent = new Control();
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2");
+            using var control = new SubAxHost(WebBrowserClsidString);
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             control.Parent = parent;
             Assert.False(parent.IsHandleCreated);
@@ -1319,14 +1323,14 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(DoVerb_TestData))]
         public void AxHost_DoVerb_InvokeWithoutHandle_ThrowsNullReferenceException(int verb)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             Assert.Throws<NullReferenceException>(() => control.DoVerb(verb));
         }
 
         [WinFormsFact]
         public void AxHost_EndInit_Invoke_Nop()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             control.EndInit();
             control.EndInit();
             Assert.False(control.Created);
@@ -1336,7 +1340,7 @@ namespace System.Windows.Forms.Tests
         public void AxHost_EndInit_InvokeWithParent_CreatesControl()
         {
             var parent = new Control();
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2")
+            using var control = new SubAxHost(WebBrowserClsidString)
             {
                 Parent = parent
             };
@@ -1355,7 +1359,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_CreateControl_ValidClsid_Success()
         {
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2");
+            using var control = new SubAxHost(WebBrowserClsidString);
             control.CreateControl();
             Assert.True(control.Created);
             Assert.NotEqual(IntPtr.Zero, control.Handle);
@@ -1367,14 +1371,14 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_CreateControl_InvalidClsid_ThrowsCOMException()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             Assert.Throws<COMException>(() => control.CreateControl());
         }
 
         [WinFormsFact]
         public void AxHost_CreateSink_Invoke_Nop()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             control.CreateSink();
             control.CreateSink();
             Assert.False(control.Created);
@@ -1383,7 +1387,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_DetachSink_Invoke_Nop()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             control.DetachSink();
             control.DetachSink();
             Assert.False(control.Created);
@@ -1392,8 +1396,28 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_GetOcx_NotCreated_ReturnsNull()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             Assert.Null(control.GetOcx());
+        }
+
+        [WinFormsFact]
+        public void AxHost_GetOcx_InvokeWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            object ocx = control.GetOcx();
+            Assert.NotNull(ocx);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
         }
 
         [WinFormsFact]
@@ -1724,7 +1748,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void AxHost_InvokeEditMode_Invoke_Sucess()
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             control.InvokeEditMode();
             Assert.Null(control.GetOcx());
 
@@ -1770,7 +1794,7 @@ namespace System.Windows.Forms.Tests
             mockSite
                 .Setup(s => s.Name)
                 .Returns("Name");
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2")
+            using var control = new SubAxHost(WebBrowserClsidString)
             {
                 Site = mockSite.Object
             };
@@ -1831,7 +1855,7 @@ namespace System.Windows.Forms.Tests
             mockSite
                 .Setup(s => s.Name)
                 .Returns("Name");
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2")
+            using var control = new SubAxHost(WebBrowserClsidString)
             {
                 Parent = parent,
                 Site = mockSite.Object
@@ -1852,7 +1876,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void AxHost_InvokeEditMode_InvokeWithSiteDesignModeWithComponentSelectedNoSelectionStyleProperty_Sucess(bool componentSelected)
         {
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2");
+            using var control = new SubAxHost(WebBrowserClsidString);
             var mockSelectionService = new Mock<ISelectionService>(MockBehavior.Strict);
             mockSelectionService
                 .Setup(s => s.GetComponentSelected(control))
@@ -1907,7 +1931,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void AxHost_InvokeEditMode_InvokeWithSiteDesignModeWithComponentSelectedInvalidSelectionStyleProperty_Sucess(bool componentSelected)
         {
-            using var control = new InvalidSelectionStyleAxHost("8856f961-340a-11d0-a96b-00c04fd705a2");
+            using var control = new InvalidSelectionStyleAxHost(WebBrowserClsidString);
             var mockSelectionService = new Mock<ISelectionService>(MockBehavior.Strict);
             mockSelectionService
                 .Setup(s => s.GetComponentSelected(control))
@@ -1964,7 +1988,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void AxHost_InvokeEditMode_InvokeWithSiteDesignModeWithComponentSelectedValidSelectionStyleProperty_Sucess(bool componentSelected)
         {
-            using var control = new ValidSelectionStyleAxHost("8856f961-340a-11d0-a96b-00c04fd705a2");
+            using var control = new ValidSelectionStyleAxHost(WebBrowserClsidString);
             var mockSelectionService = new Mock<ISelectionService>(MockBehavior.Strict);
             mockSelectionService
                 .Setup(s => s.GetComponentSelected(control))
@@ -2054,7 +2078,7 @@ namespace System.Windows.Forms.Tests
             mockSite
                 .Setup(s => s.Name)
                 .Returns("Name");
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2")
+            using var control = new SubAxHost(WebBrowserClsidString)
             {
                 Site = mockSite.Object
             };
@@ -2119,7 +2143,7 @@ namespace System.Windows.Forms.Tests
             mockSite
                 .Setup(s => s.Name)
                 .Returns("Name");
-            using var control = new SubAxHost("8856f961-340a-11d0-a96b-00c04fd705a2")
+            using var control = new SubAxHost(WebBrowserClsidString)
             {
                 Parent = parent,
                 Site = mockSite.Object
@@ -2155,7 +2179,7 @@ namespace System.Windows.Forms.Tests
         [InlineData(false, 0)]
         public void AxHost_InvokeEditMode_InvokeWithSiteDesignModeWithComponentSelectedValidSelectionStylePropertyWithHandle_Sucess(bool componentSelected, int expectedSelectionStyle)
         {
-            using var control = new ValidSelectionStyleAxHost("8856f961-340a-11d0-a96b-00c04fd705a2");
+            using var control = new ValidSelectionStyleAxHost(WebBrowserClsidString);
             var mockSelectionService = new Mock<ISelectionService>(MockBehavior.Strict);
             mockSelectionService
                 .Setup(s => s.GetComponentSelected(control))
@@ -2226,7 +2250,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void AxHost_OnEnter_Invoke_CallsEnter(EventArgs eventArgs)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -2250,7 +2274,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetKeyEventArgsTheoryData))]
         public void AxHost_OnLeave_Invoke_CallsLeave(KeyEventArgs eventArgs)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -2274,7 +2298,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void AxHost_OnMouseCaptureChanged_Invoke_CallsMouseCaptureChanged(EventArgs eventArgs)
         {
-            using var control = new SubAxHost("00000000-0000-0000-0000-000000000000");
+            using var control = new SubAxHost(EmptyClsidString);
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -2292,6 +2316,788 @@ namespace System.Windows.Forms.Tests
            control.MouseCaptureChanged -= handler;
            control.OnMouseCaptureChanged(eventArgs);
            Assert.Equal(1, callCount);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetAttributes_Invoke_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            AttributeCollection attributes = customTypeDescriptor.GetAttributes();
+            Assert.NotNull(attributes[typeof(CustomAttribute)]);
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            attributes = customTypeDescriptor.GetAttributes();
+            Assert.NotNull(attributes[typeof(CustomAttribute)]);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetAttributes_InvokeWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            AttributeCollection attributes = customTypeDescriptor.GetAttributes();
+            Assert.NotNull(attributes[typeof(CustomAttribute)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            attributes = customTypeDescriptor.GetAttributes();
+            Assert.NotNull(attributes[typeof(CustomAttribute)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetClassName_Invoke_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            Assert.Null(customTypeDescriptor.GetClassName());
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            Assert.Null(customTypeDescriptor.GetClassName());
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetClassName_InvokeWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            Assert.Null(customTypeDescriptor.GetClassName());
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            Assert.Null(customTypeDescriptor.GetClassName());
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetComponentName_Invoke_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            Assert.Null(customTypeDescriptor.GetComponentName());
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            Assert.Null(customTypeDescriptor.GetComponentName());
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetComponentName_InvokeWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            Assert.Null(customTypeDescriptor.GetComponentName());
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            Assert.Null(customTypeDescriptor.GetComponentName());
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetConverter_Invoke_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            Assert.Null(customTypeDescriptor.GetConverter());
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            Assert.Null(customTypeDescriptor.GetConverter());
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetConverter_InvokeWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            Assert.Null(customTypeDescriptor.GetConverter());
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            Assert.Null(customTypeDescriptor.GetConverter());
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetDefaultEvent_Invoke_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            EventDescriptor eventDescriptor = customTypeDescriptor.GetDefaultEvent();
+            Assert.Equal(nameof(AxHost.Enter), eventDescriptor.Name);
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            eventDescriptor = customTypeDescriptor.GetDefaultEvent();
+            Assert.Equal(nameof(AxHost.Enter), eventDescriptor.Name);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetDefaultEvent_InvokeWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            EventDescriptor eventDescriptor = customTypeDescriptor.GetDefaultEvent();
+            Assert.Equal(nameof(AxHost.Enter), eventDescriptor.Name);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            eventDescriptor = customTypeDescriptor.GetDefaultEvent();
+            Assert.Equal(nameof(AxHost.Enter), eventDescriptor.Name);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetDefaultProperty_Invoke_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            PropertyDescriptor propertyDescriptor = customTypeDescriptor.GetDefaultProperty();
+            Assert.Equal(nameof(AxHost.Text), propertyDescriptor.Name);
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            propertyDescriptor = customTypeDescriptor.GetDefaultProperty();
+            Assert.Equal(nameof(AxHost.Text), propertyDescriptor.Name);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetDefaultProperty_InvokeWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            PropertyDescriptor propertyDescriptor = customTypeDescriptor.GetDefaultProperty();
+            Assert.Equal(nameof(AxHost.Text), propertyDescriptor.Name);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            propertyDescriptor = customTypeDescriptor.GetDefaultProperty();
+            Assert.Equal(nameof(AxHost.Text), propertyDescriptor.Name);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsTheory]
+        [InlineData(null)]
+        [InlineData(typeof(int))]
+        [InlineData(typeof(ComponentEditor))]
+        [InlineData(typeof(SubComponentEditor))]
+        public void AxHost_ICustomTypeDescriptorGetEditor_typeInvoke_ReturnsExpected(Type editorBaseType)
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            Assert.Null(customTypeDescriptor.GetEditor(editorBaseType));
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            Assert.Null(customTypeDescriptor.GetEditor(editorBaseType));
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [InlineData(null)]
+        [InlineData(typeof(int))]
+        [InlineData(typeof(ComponentEditor))]
+        [InlineData(typeof(SubComponentEditor))]
+        public void AxHost_ICustomTypeDescriptorGetEditor_typeInvokeWithHandle_ReturnsExpected(Type editorBaseType)
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            Assert.Null(customTypeDescriptor.GetEditor(editorBaseType));
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            Assert.Null(customTypeDescriptor.GetEditor(editorBaseType));
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetEvents_Invoke_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            EventDescriptorCollection events = customTypeDescriptor.GetEvents();
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            events = customTypeDescriptor.GetEvents();
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetEvents_InvokeWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            EventDescriptorCollection events = customTypeDescriptor.GetEvents();
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            events = customTypeDescriptor.GetEvents();
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        public static IEnumerable<object[]> GetEvents_AttributeArray_TestData()
+        {
+            yield return new object[] { null };
+            yield return new object[] { Array.Empty<Attribute>() };
+            yield return new object[] { new Attribute[] { null } };
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(GetEvents_AttributeArray_TestData))]
+        public void AxHost_ICustomTypeDescriptorGetEvents_InvokeAttributeArray_ReturnsExpected(Attribute[] attributes)
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            EventDescriptorCollection events = customTypeDescriptor.GetEvents(attributes);
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            events = customTypeDescriptor.GetEvents(attributes);
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(GetEvents_AttributeArray_TestData))]
+        public void AxHost_ICustomTypeDescriptorGetEvents_InvokeAttributeArrayWithHandle_ReturnsExpected(Attribute[] attributes)
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            EventDescriptorCollection events = customTypeDescriptor.GetEvents(attributes);
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            events = customTypeDescriptor.GetEvents(attributes);
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetEvents_InvokeAttributeArrayCustom_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            EventDescriptorCollection events = customTypeDescriptor.GetEvents(new Attribute[] { new CustomAttribute() });
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            events = customTypeDescriptor.GetEvents(new Attribute[] { new CustomAttribute() });
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetEvents_InvokeAttributeArrayCustomWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            EventDescriptorCollection events = customTypeDescriptor.GetEvents(new Attribute[] { new CustomAttribute() });
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            events = customTypeDescriptor.GetEvents(new Attribute[] { new CustomAttribute() });
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetEvents_InvokeAttributeArrayNoSuch_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            EventDescriptorCollection events = customTypeDescriptor.GetEvents(new Attribute[] { new NoSuchAttribute() });
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            events = customTypeDescriptor.GetEvents(new Attribute[] { new NoSuchAttribute() });
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetEvents_InvokeAttributeArrayNoSuchWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            EventDescriptorCollection events = customTypeDescriptor.GetEvents(new Attribute[] { new NoSuchAttribute() });
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            events = customTypeDescriptor.GetEvents(new Attribute[] { new NoSuchAttribute() });
+            Assert.True(events.Count > 1);
+            Assert.NotNull(events[nameof(CustomAxHost.CustomEvent)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetProperties_Invoke_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            PropertyDescriptorCollection events = customTypeDescriptor.GetProperties();
+            Assert.NotNull(events[nameof(CustomAxHost.CustomProperty)]);
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            events = customTypeDescriptor.GetProperties();
+            Assert.NotNull(events[nameof(CustomAxHost.CustomProperty)]);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetProperties_InvokeWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            PropertyDescriptorCollection events = customTypeDescriptor.GetProperties();
+            Assert.NotNull(events[nameof(CustomAxHost.CustomProperty)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            events = customTypeDescriptor.GetProperties();
+            Assert.NotNull(events[nameof(CustomAxHost.CustomProperty)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        public static IEnumerable<object[]> GetProperties_AttributeArray_TestData()
+        {
+            yield return new object[] { null };
+            yield return new object[] { Array.Empty<Attribute>() };
+#if false
+            yield return new object[] { new Attribute[] { null } };
+#endif
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(GetProperties_AttributeArray_TestData))]
+        public void AxHost_ICustomTypeDescriptorGetProperties_InvokeAttributeArray_ReturnsExpected(Attribute[] attributes)
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            PropertyDescriptorCollection properties = customTypeDescriptor.GetProperties(attributes);
+            Assert.True(properties.Count > 1);
+            Assert.NotNull(properties[nameof(CustomAxHost.CustomProperty)]);
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            properties = customTypeDescriptor.GetProperties(attributes);
+            Assert.True(properties.Count > 1);
+            Assert.NotNull(properties[nameof(CustomAxHost.CustomProperty)]);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(GetProperties_AttributeArray_TestData))]
+        public void AxHost_ICustomTypeDescriptorGetProperties_InvokeAttributeArrayWithHandle_ReturnsExpected(Attribute[] attributes)
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            PropertyDescriptorCollection properties = customTypeDescriptor.GetProperties(attributes);
+            Assert.True(properties.Count > 1);
+            Assert.NotNull(properties[nameof(CustomAxHost.CustomProperty)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            properties = customTypeDescriptor.GetProperties(attributes);
+            Assert.True(properties.Count > 1);
+            Assert.NotNull(properties[nameof(CustomAxHost.CustomProperty)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetProperties_InvokeAttributeArrayCustom_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            PropertyDescriptorCollection properties = customTypeDescriptor.GetProperties(new Attribute[] { new CustomAttribute() });
+            Assert.True(properties.Count > 1);
+            Assert.NotNull(properties[nameof(CustomAxHost.CustomProperty)]);
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            properties = customTypeDescriptor.GetProperties(new Attribute[] { new CustomAttribute() });
+            Assert.True(properties.Count > 1);
+            Assert.NotNull(properties[nameof(CustomAxHost.CustomProperty)]);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetProperties_InvokeAttributeArrayCustomWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            PropertyDescriptorCollection properties = customTypeDescriptor.GetProperties(new Attribute[] { new CustomAttribute() });
+            Assert.True(properties.Count > 1);
+            Assert.NotNull(properties[nameof(CustomAxHost.CustomProperty)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            properties = customTypeDescriptor.GetProperties(new Attribute[] { new CustomAttribute() });
+            Assert.True(properties.Count > 1);
+            Assert.NotNull(properties[nameof(CustomAxHost.CustomProperty)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetProperties_InvokeAttributeArrayNoSuch_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            PropertyDescriptorCollection properties = customTypeDescriptor.GetProperties(new Attribute[] { new NoSuchAttribute() });
+            Assert.True(properties.Count > 1);
+            Assert.NotNull(properties[nameof(CustomAxHost.CustomProperty)]);
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            properties = customTypeDescriptor.GetProperties(new Attribute[] { new NoSuchAttribute() });
+            Assert.True(properties.Count > 1);
+            Assert.NotNull(properties[nameof(CustomAxHost.CustomProperty)]);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void AxHost_ICustomTypeDescriptorGetProperties_InvokeAttributeArrayNoSuchWithHandle_ReturnsExpected()
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            PropertyDescriptorCollection properties = customTypeDescriptor.GetProperties(new Attribute[] { new NoSuchAttribute() });
+            Assert.True(properties.Count > 1);
+            Assert.NotNull(properties[nameof(CustomAxHost.CustomProperty)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            properties = customTypeDescriptor.GetProperties(new Attribute[] { new NoSuchAttribute() });
+            Assert.True(properties.Count > 1);
+            Assert.NotNull(properties[nameof(CustomAxHost.CustomProperty)]);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        public static IEnumerable<object[]> GetPropertyOwner_TestData()
+        {
+            yield return new object[] { null };
+
+            PropertyDescriptor descriptor = TypeDescriptor.GetProperties(typeof(string))[nameof(string.Length)];
+            yield return new object[] { descriptor };
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(GetPropertyOwner_TestData))]
+        public void AxHost_ICustomTypeDescriptorGetPropertyOwner_Invoke_ReturnsExpected(PropertyDescriptor pd)
+        {
+            using var control = new CustomAxHost(EmptyClsidString);
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            Assert.Same(control, customTypeDescriptor.GetPropertyOwner(pd));
+            Assert.False(control.IsHandleCreated);
+
+            // Call again.
+            Assert.Same(control, customTypeDescriptor.GetPropertyOwner(pd));
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(GetPropertyOwner_TestData))]
+        public void AxHost_ICustomTypeDescriptorGetPropertyOwner_InvokeWithHandle_ReturnsExpected(PropertyDescriptor pd)
+        {
+            using var control = new CustomAxHost(WebBrowserClsidString);
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            ((Control)control).StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            ICustomTypeDescriptor customTypeDescriptor = control;
+            Assert.Same(control, customTypeDescriptor.GetPropertyOwner(pd));
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Call again.
+            Assert.Same(control, customTypeDescriptor.GetPropertyOwner(pd));
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        private class SubComponentEditor : ComponentEditor
+        {
+            public override bool EditComponent(ITypeDescriptorContext context, object component)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        [AttributeUsage(AttributeTargets.All)]
+        private class CustomAttribute : Attribute
+        {
+        }
+
+        [AttributeUsage(AttributeTargets.All)]
+        private class NoSuchAttribute : Attribute
+        {
+        }
+
+        [CustomAttribute]
+        private class CustomAxHost : AxHost
+        {
+            public CustomAxHost(string clsid) : base(clsid)
+            {
+            }
+
+            [CustomAttribute]
+            public event EventHandler CustomEvent;
+
+            [CustomAttribute]
+            public string CustomProperty { get; set; }
         }
 
         private class InvalidSelectionStyleAxHost : AxHost

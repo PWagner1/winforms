@@ -1,9 +1,10 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 
@@ -29,11 +30,6 @@ namespace System.Windows.Forms
                     || ex is AccessViolationException;
         }
 #pragma warning restore 618
-
-        public static bool IsSecurityOrCriticalException(Exception ex)
-        {
-            return (ex is Security.SecurityException) || IsCriticalException(ex);
-        }
 
         // Sequential version
         // assumes sequential enum members 0,1,2,3,4 -etc.
@@ -146,7 +142,7 @@ namespace System.Windows.Forms
 
 #if DEBUG
         [ThreadStatic]
-        private static Hashtable enumValueInfo;
+        private static Hashtable? enumValueInfo;
         public const int MAXCACHE = 300;  // we think we're going to get O(100) of these, put in a tripwire if it gets larger.
 
         private class SequentialEnumInfo
@@ -157,7 +153,9 @@ namespace System.Windows.Forms
                 int actualMaximum = int.MinValue;
                 int countEnumVals = 0;
 
+#pragma warning disable CS8605 // Unboxing a possibly null value.
                 foreach (int iVal in Enum.GetValues(t))
+#pragma warning restore CS8605 // Unboxing a possibly null value.
                 {
                     actualMinimum = Math.Min(actualMinimum, iVal);
                     actualMaximum = Math.Max(actualMaximum, iVal);
@@ -184,7 +182,7 @@ namespace System.Windows.Forms
                 enumValueInfo = new Hashtable();
             }
 
-            SequentialEnumInfo sequentialEnumInfo = null;
+            SequentialEnumInfo? sequentialEnumInfo = null;
 
             if (enumValueInfo.ContainsKey(t))
             {
@@ -218,7 +216,9 @@ namespace System.Windows.Forms
         {
             Type t = value.GetType();
             uint newmask = 0;
+#pragma warning disable CS8605 // Unboxing a possibly null value.
             foreach (int iVal in Enum.GetValues(t))
+#pragma warning restore CS8605 // Unboxing a possibly null value.
             {
                 newmask |= (uint)iVal;
             }
@@ -232,7 +232,9 @@ namespace System.Windows.Forms
                int checkedValue = Convert.ToInt32(value, CultureInfo.InvariantCulture);
                int maxBitsFound = 0;
                bool foundValue = false;
+#pragma warning disable CS8605 // Unboxing a possibly null value.
                foreach (int iVal in Enum.GetValues(t)){
+#pragma warning restore CS8605 // Unboxing a possibly null value.
                    actualMinimum = Math.Min(actualMinimum, iVal);
                    actualMaximum = Math.Max(actualMaximum, iVal);
                    maxBitsFound = Math.Max(maxBitsFound, BitOperations.PopCount((uint)iVal));

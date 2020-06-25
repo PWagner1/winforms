@@ -22,8 +22,6 @@ namespace System.Windows.Forms
     ///  Uses the services from the System.ComponentModel.MaskedTextBoxProvider class.
     ///  See spec at http://dotnetclient/whidbey/Specs/MaskEdit.doc
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [DefaultEvent(nameof(MaskInputRejected))]
     [DefaultBindingProperty(nameof(Text))]
     [DefaultProperty(nameof(Mask))]
@@ -2339,7 +2337,7 @@ namespace System.Windows.Forms
                     }
                     catch (Exception exception)
                     {
-                        if (ClientUtils.IsSecurityOrCriticalException(exception))
+                        if (ClientUtils.IsCriticalException(exception))
                         {
                             throw;
                         }
@@ -2747,7 +2745,7 @@ namespace System.Windows.Forms
                 // Note: Sometimes the above operation throws but it successfully sets the
                 // data in the clipboard. This usually happens when the Application's Main
                 // is not attributed with [STAThread].
-                if (ClientUtils.IsSecurityOrCriticalException(ex))
+                if (ClientUtils.IsCriticalException(ex))
                 {
                     throw;
                 }
@@ -2886,7 +2884,7 @@ namespace System.Windows.Forms
             }
             catch (Exception ex)
             {
-                if (ClientUtils.IsSecurityOrCriticalException(ex))
+                if (ClientUtils.IsCriticalException(ex))
                 {
                     throw;
                 }

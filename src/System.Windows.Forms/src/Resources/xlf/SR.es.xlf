@@ -232,11 +232,6 @@
         <target state="translated">&amp;Aplicar</target>
         <note />
       </trans-unit>
-      <trans-unit id="ArraysNotSameSize">
-        <source>Arrays '{0}' and '{1}' must be the same size.</source>
-        <target state="translated">Las matrices '{0}' y '{1}' deben tener el mismo tamaño.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AutoCompleteFailure">
         <source>autoComplete cannot be initialized with given custom source.</source>
         <target state="translated">No se puede inicializar autoComplete con el origen personalizado dado.</target>
@@ -5641,6 +5636,11 @@ El seguimiento de la pila donde tuvo lugar la operación no válida fue:
         <target state="translated">El índice {0} está fuera del intervalo.</target>
         <note />
       </trans-unit>
+      <trans-unit id="InputLanguageCultureNotFound">
+        <source>Could not find an InputLanguage for culture '{0}'.</source>
+        <target state="new">Could not find an InputLanguage for culture '{0}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidArgument">
         <source>InvalidArgument=Value of '{1}' is not valid for '{0}'.</source>
         <target state="translated">InvalidArgument=El valor de '{1}' no es válido para '{0}'.</target>
@@ -6356,6 +6356,11 @@ El seguimiento de la pila donde tuvo lugar la operación no válida fue:
         <target state="translated">Muestra las líneas de la cuadrícula alrededor de los elementos y subelementos. Sólo se muestra en la vista de detalles.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ListViewGroupCollapsedStateChangedDescr">
+        <source>Event raised when the CollapsedState property of a ListViewGroup changes.</source>
+        <target state="translated">Evento que se desencadena cuando cambia la propiedad CollapsedState de un elemento ListViewGroup.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ListViewGroupCollectionBadListViewGroup">
         <source>Parameter must be of type ListViewGroup.</source>
         <target state="translated">El parámetro debe ser de tipo ListViewGroup.</target>
@@ -6374,6 +6379,11 @@ El seguimiento de la pila donde tuvo lugar la operación no válida fue:
       <trans-unit id="ListViewGroupNameDescr">
         <source>The name of this group.</source>
         <target state="translated">Nombre de este grupo.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewGroupTaskLinkClickDescr">
+        <source>Event raised when the TaskLink property of a ListViewGroup is clicked.</source>
+        <target state="translated">Evento que se desencadena al hacer clic en la propiedad TaskLink de un elemento ListViewGroup.</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewGroupsDescr">
@@ -8191,11 +8201,6 @@ El seguimiento de la pila donde tuvo lugar la operación no válida fue:
         <target state="translated">{0} seleccionado.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PropertyGridRemotedObject">
-        <source>Object {0} is being remoted by a proxy that does not support interface discovery.  This type of remoted object is not supported.</source>
-        <target state="translated">El objeto {0} está siendo tratado como remoto por un proxy que no admite la detección de interfaz. No se admite este tipo de objeto remoto.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PropertyGridRemoveStaticTabs">
         <source>Static tabs cannot be removed from the PropertyGrid.</source>
         <target state="translated">Las pestañas estáticas no se pueden quitar de PropertyGrid.</target>
@@ -9148,7 +9153,7 @@ El seguimiento de la pila donde tuvo lugar la operación no válida fue:
       </trans-unit>
       <trans-unit id="TaskDialogCollectionAlreadyBound">
         <source>One of the collections of this {0} is already bound to a {1} instance.</source>
-        <target state="translated">Una de las colecciones de este elemento de {0} ya está enlazada a una instancia de {1}.</target>
+        <target state="translated">Una de las colecciones de esta página {0} ya está enlazada a una instancia de {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="TaskDialogControlAlreadyAddedToCollection">

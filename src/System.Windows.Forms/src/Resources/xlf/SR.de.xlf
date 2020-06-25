@@ -232,11 +232,6 @@
         <target state="translated">&amp;Anwenden</target>
         <note />
       </trans-unit>
-      <trans-unit id="ArraysNotSameSize">
-        <source>Arrays '{0}' and '{1}' must be the same size.</source>
-        <target state="translated">Die Arrays {0} und {1} müssen dieselbe Größe haben.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AutoCompleteFailure">
         <source>autoComplete cannot be initialized with given custom source.</source>
         <target state="translated">autoComplete kann mit der angegebenen benutzerdefinierten Quelle nicht initialisiert werden.</target>
@@ -5641,6 +5636,11 @@ Stapelüberwachung, in der der unzulässige Vorgang auftrat:
         <target state="translated">Der Index {0} liegt außerhalb des Bereichs.</target>
         <note />
       </trans-unit>
+      <trans-unit id="InputLanguageCultureNotFound">
+        <source>Could not find an InputLanguage for culture '{0}'.</source>
+        <target state="new">Could not find an InputLanguage for culture '{0}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidArgument">
         <source>InvalidArgument=Value of '{1}' is not valid for '{0}'.</source>
         <target state="translated">InvalidArgument=Value mit dem Wert {1} ist für {0} ungültig.</target>
@@ -6356,6 +6356,11 @@ Stapelüberwachung, in der der unzulässige Vorgang auftrat:
         <target state="translated">Zeigt Rasterlinien um Elemente und SubItems an (nur in der Details-Ansicht).</target>
         <note />
       </trans-unit>
+      <trans-unit id="ListViewGroupCollapsedStateChangedDescr">
+        <source>Event raised when the CollapsedState property of a ListViewGroup changes.</source>
+        <target state="translated">Das ausgelöste Ereignis, wenn sich die CollapsedState-Eigenschaft für ein ListViewGroup-Element ändert.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ListViewGroupCollectionBadListViewGroup">
         <source>Parameter must be of type ListViewGroup.</source>
         <target state="translated">Der Parametertyp muss ListViewGroup sein.</target>
@@ -6374,6 +6379,11 @@ Stapelüberwachung, in der der unzulässige Vorgang auftrat:
       <trans-unit id="ListViewGroupNameDescr">
         <source>The name of this group.</source>
         <target state="translated">Der Name dieser Gruppe.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewGroupTaskLinkClickDescr">
+        <source>Event raised when the TaskLink property of a ListViewGroup is clicked.</source>
+        <target state="translated">Das ausgelöste Ereignis, wenn auf die TaskLink-Eigenschaft für ein ListViewGroup-Element geklickt wird.</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewGroupsDescr">
@@ -8191,11 +8201,6 @@ Stapelüberwachung, in der der unzulässige Vorgang auftrat:
         <target state="translated">{0} ausgewählt.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PropertyGridRemotedObject">
-        <source>Object {0} is being remoted by a proxy that does not support interface discovery.  This type of remoted object is not supported.</source>
-        <target state="translated">Das {0}-Objekt wird remote von einem Proxy gesteuert, der keine Schnittstellenermittlung unterstützt. Dieser Remoteobjekttyp wird nicht unterstützt.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PropertyGridRemoveStaticTabs">
         <source>Static tabs cannot be removed from the PropertyGrid.</source>
         <target state="translated">Die statischen Registerkarten können nicht aus dem PropertyGrid entfernt werden.</target>
@@ -9188,7 +9193,7 @@ Stapelüberwachung, in der der unzulässige Vorgang auftrat:
       </trans-unit>
       <trans-unit id="TaskDialogNavigationNotCompleted">
         <source>Navigation of the task dialog did not complete yet. Please wait for the {0} event to occur.</source>
-        <target state="translated">Die Navigation des Aufgabendialogfelds wurde noch nicht abgeschlossen. Warten Sie, bis das Ereignis "{0}" auftritt.</target>
+        <target state="translated">Die Aufgabendialogfeldnavigation wurde noch nicht abgeschlossen. Warten Sie, bis das Ereignis "{0}" auftritt.</target>
         <note />
       </trans-unit>
       <trans-unit id="TaskDialogOnlySingleRadioButtonCanBeChecked">

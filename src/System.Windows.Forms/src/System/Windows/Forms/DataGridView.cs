@@ -14,8 +14,6 @@ using static Interop;
 
 namespace System.Windows.Forms
 {
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [Designer("System.Windows.Forms.Design.DataGridViewDesigner, " + AssemblyRef.SystemDesign)]
     [DefaultEvent(nameof(CellContentClick))]
     [ComplexBindingProperties(nameof(DataSource), nameof(DataMember))]
@@ -2990,7 +2988,7 @@ namespace System.Windows.Forms
                 }
 
                 // The mouse probably is not over the same cell after the scroll.
-                UpdateMouseEnteredCell(null /*HitTestInfo*/, null /*MouseEventArgs*/);
+                UpdateMouseEnteredCell(hti: null, e: null);
 
                 if (oldFirstVisibleScrollingCol == displayedBandsInfo.FirstDisplayedScrollingCol)
                 {

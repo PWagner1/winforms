@@ -22,8 +22,6 @@ namespace System.Windows.Forms
     ///
     ///  of each item.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [LookupBindingProperties]
     [SRDescription(nameof(SR.DescriptionCheckedListBox))]
     public class CheckedListBox : ListBox
@@ -1012,10 +1010,10 @@ namespace System.Windows.Forms
         {
             switch ((WM)m.Msg)
             {
-                case WM.REFLECT | WM.CHARTOITEM:
+                case WM.REFLECT_CHARTOITEM:
                     m.Result = NativeMethods.InvalidIntPtr;
                     break;
-                case WM.REFLECT | WM.VKEYTOITEM:
+                case WM.REFLECT_VKEYTOITEM:
                     WmReflectVKeyToItem(ref m);
                     break;
                 default:
@@ -1466,7 +1464,6 @@ namespace System.Windows.Forms
 
         internal override bool SupportsUiaProviders => false;
 
-        [ComVisible(true)]
         internal class CheckedListBoxAccessibleObject : ControlAccessibleObject
         {
             /// <summary>
@@ -1567,7 +1564,6 @@ namespace System.Windows.Forms
             }
         }
 
-        [ComVisible(true)]
         internal class CheckedListBoxItemAccessibleObject : AccessibleObject
         {
             private string name;

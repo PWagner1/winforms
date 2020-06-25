@@ -461,7 +461,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(BackColor_Set_TestData))]
         public void ListView_BackColor_Set_GetReturnsExpected(Color value, Color expected)
         {
-            var control = new ListView
+            using var control = new ListView
             {
                 BackColor = value
             };
@@ -484,7 +484,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(BackColor_SetWithHandle_TestData))]
         public void ListView_BackColor_SetWithHandle_GetReturnsExpected(Color value, Color expected, int expectedInvalidatedCallCount)
         {
-            var control = new ListView();
+            using var control = new ListView();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             int invalidatedCallCount = 0;
             control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -522,7 +522,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void ListView_BackColor_SetWithHandler_CallsBackColorChanged()
         {
-            var control = new ListView();
+            using var control = new ListView();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -558,7 +558,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ImageLayout))]
         public void ListView_BackgroundImageLayout_Set_GetReturnsExpected(ImageLayout value)
         {
-            var control = new SubListView
+            using var control = new SubListView
             {
                 BackgroundImageLayout = value
             };
@@ -576,7 +576,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void ListView_BackgroundImageLayout_SetWithHandler_CallsBackgroundImageLayoutChanged()
         {
-            var control = new ListView();
+            using var control = new ListView();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -612,7 +612,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImageLayout))]
         public void ListView_BackgroundImageLayout_SetInvalid_ThrowsInvalidEnumArgumentException(ImageLayout value)
         {
-            var control = new ListView();
+            using var control = new ListView();
             Assert.Throws<InvalidEnumArgumentException>("value", () => control.BackgroundImageLayout = value);
         }
 
@@ -1092,11 +1092,43 @@ namespace System.Windows.Forms.Tests
             Assert.False(listView.CheckBoxes);
         }
 
+        [WinFormsFact]
+        public void ListView_DisposeWithReferencedImageListDoesNotLeak()
+        {
+            // must be separate function because GC of local variables is not precise
+            static WeakReference CreateAndDisposeListViewWithImageListReference(ImageList imageList)
+            {
+                // short lived test code, whatever you need to trigger the leak
+                using var listView = new ListView();
+                listView.LargeImageList = imageList;
+
+                // return a weak reference to whatever you want to track GC of
+                // creating a long weak reference to make sure finalizer does not resurrect the ListView
+                return new WeakReference(listView, true);
+            }
+
+            // simulate a long-living ImageList by keeping it alive for the test
+            using var imageList = new ImageList();
+
+            // simulate a short-living ListView by disposing it (returning a WeakReference to track finalization)
+            var listViewRef = CreateAndDisposeListViewWithImageListReference(imageList);
+
+            GC.Collect(); // mark for finalization (also would clear normal weak references)
+            GC.WaitForPendingFinalizers(); // wait until finalizer is executed
+            GC.Collect(); // wait for long weak reference to be cleared
+
+            // at this point the WeakReference is cleared if -and only if- the finalizer was called and did not resurrect the object
+            // (if the test ever fails you can set a breakpoint here, debug the test, and make heap snapshot in VS;
+            // then search for the ListView in the heap snapshot UI and look who is referencing it, usually you
+            // can derive from types referencing the ListView who is to blame)
+            Assert.False(listViewRef.IsAlive);
+        }
+
         [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ListView_DoubleBuffered_Get_ReturnsExpected(bool value)
         {
-            var control = new SubListView();
+            using var control = new SubListView();
             control.SetStyle(ControlStyles.OptimizedDoubleBuffer, value);
             Assert.Equal(value, control.DoubleBuffered);
         }
@@ -1105,7 +1137,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ListView_DoubleBuffered_Set_GetReturnsExpected(bool value)
         {
-            var control = new SubListView
+            using var control = new SubListView
             {
                 DoubleBuffered = value
             };
@@ -1131,7 +1163,7 @@ namespace System.Windows.Forms.Tests
         [InlineData(false, 0)]
         public void ListView_DoubleBuffered_SetWithHandle_GetReturnsExpected(bool value, int expectedInvalidatedCallCount)
         {
-            var control = new SubListView();
+            using var control = new SubListView();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             int invalidatedCallCount = 0;
             control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -1177,7 +1209,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(FocusedItem_Set_TestData))]
         public void ListView_FocusedItem_Set_GetReturnsExpected(ListViewItem value, bool? expectedFocused)
         {
-            var control = new SubListView
+            using var control = new SubListView
             {
                 FocusedItem = value
             };
@@ -1196,7 +1228,7 @@ namespace System.Windows.Forms.Tests
         public void ListView_FocusedItem_SetChild_GetReturnsExpected()
         {
             var value = new ListViewItem();
-            var control = new SubListView();
+            using var control = new SubListView();
             control.Items.Add(value);
 
             control.FocusedItem = value;
@@ -1221,7 +1253,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(FocusedItem_Set_TestData))]
         public void ListView_FocusedItem_SetWithHandle_GetReturnsExpected(ListViewItem value, bool? expectedFocused)
         {
-            var control = new SubListView();
+            using var control = new SubListView();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
 
             control.FocusedItem = value;
@@ -1238,7 +1270,7 @@ namespace System.Windows.Forms.Tests
         public void ListView_FocusedItem_SetChildWithHandle_GetReturnsExpected()
         {
             var value = new ListViewItem();
-            var control = new SubListView();
+            using var control = new SubListView();
             control.Items.Add(value);
             Assert.NotEqual(IntPtr.Zero, control.Handle);
 
@@ -1270,7 +1302,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(ForeColor_Set_TestData))]
         public void ListView_ForeColor_Set_GetReturnsExpected(Color value, Color expected)
         {
-            var control = new ListView
+            using var control = new ListView
             {
                 ForeColor = value
             };
@@ -1296,7 +1328,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(ForeColor_SetWithHandle_TestData))]
         public void ListView_ForeColor_SetWithHandle_GetReturnsExpected(Color value, Color expected, int expectedInvalidatedCallCount)
         {
-            var control = new ListView();
+            using var control = new ListView();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             int invalidatedCallCount = 0;
             control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -1334,7 +1366,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void ListView_ForeColor_SetWithHandler_CallsForeColorChanged()
         {
-            var control = new ListView();
+            using var control = new ListView();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -1620,7 +1652,9 @@ namespace System.Windows.Forms.Tests
         {
             using var control = new ListView();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
-            Assert.Equal((IntPtr)0xFFFFFFFF, User32.SendMessageW(control.Handle, (User32.WM)LVM.GETTEXTBKCOLOR));
+
+            IntPtr expected = IntPtr.Size == 8 ? (IntPtr)0xFFFFFFFF : (IntPtr)(-1);
+            Assert.Equal(expected, User32.SendMessageW(control.Handle, (User32.WM)LVM.GETTEXTBKCOLOR));
         }
 
         [WinFormsFact]
@@ -2169,12 +2203,13 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(LargeImageList_Set_GetReturnsExpected))]
         public void ListView_LargeImageList_SetWithNonNullOldValue_GetReturnsExpected(bool autoArrange, bool virtualMode, View view, ImageList value)
         {
+            using var imageList = new ImageList();
             using var listView = new ListView
             {
                 AutoArrange = autoArrange,
                 VirtualMode = virtualMode,
                 View = view,
-                LargeImageList = new ImageList()
+                LargeImageList = imageList
             };
 
             listView.LargeImageList = value;
@@ -2333,12 +2368,13 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(LargeImageList_SetWithHandleWithNonNullOldValue_GetReturnsExpected))]
         public void ListView_LargeImageList_SetWithHandleWithNonNullOldValue_GetReturnsExpected(bool autoArrange, bool virtualMode, View view, ImageList value, int expectedInvalidatedCallCount)
         {
+            using var imageList = new ImageList();
             using var listView = new ListView
             {
                 AutoArrange = autoArrange,
                 VirtualMode = virtualMode,
                 View = view,
-                LargeImageList = new ImageList()
+                LargeImageList = imageList
             };
             Assert.NotEqual(IntPtr.Zero, listView.Handle);
             int invalidatedCallCount = 0;
@@ -2776,12 +2812,13 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(SmallImageList_Set_GetReturnsExpected))]
         public void ListView_SmallImageList_SetWithNonNullOldValue_GetReturnsExpected(bool autoArrange, bool virtualMode, View view, ImageList value)
         {
+            using var imageList = new ImageList();
             using var listView = new ListView
             {
                 AutoArrange = autoArrange,
                 VirtualMode = virtualMode,
                 View = view,
-                SmallImageList = new ImageList()
+                SmallImageList = imageList
             };
 
             listView.SmallImageList = value;
@@ -2940,12 +2977,13 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(SmallImageList_SetWithHandleWithNonNullOldValue_GetReturnsExpected))]
         public void ListView_SmallImageList_SetWithHandleWithNonNullOldValue_GetReturnsExpected(bool autoArrange, bool virtualMode, View view, ImageList value, int expectedInvalidatedCallCount, int expectedStyleChangedCallCount)
         {
+            using var imageList = new ImageList();
             using var listView = new ListView
             {
                 AutoArrange = autoArrange,
                 VirtualMode = virtualMode,
                 View = view,
-                SmallImageList = new ImageList()
+                SmallImageList = imageList
             };
             Assert.NotEqual(IntPtr.Zero, listView.Handle);
             int invalidatedCallCount = 0;
@@ -3096,6 +3134,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(StateImageList_Set_GetReturnsExpected))]
         public void ListView_StateImageList_SetWithNonNullOldValue_GetReturnsExpected(bool useCompatibleStateImageBehavior, bool checkBoxes, bool autoArrange, bool virtualMode, View view, ImageList value)
         {
+            using var imageList = new ImageList();
             using var listView = new ListView
             {
                 UseCompatibleStateImageBehavior = useCompatibleStateImageBehavior,
@@ -3103,7 +3142,7 @@ namespace System.Windows.Forms.Tests
                 AutoArrange = autoArrange,
                 VirtualMode = virtualMode,
                 View = view,
-                StateImageList = new ImageList()
+                StateImageList = imageList
             };
 
             listView.StateImageList = value;
@@ -3460,6 +3499,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(StateImageList_SetWithHandleWithNonNullOldValue_GetReturnsExpected))]
         public void ListView_StateImageList_SetWithHandleWithNonNullOldValue_GetReturnsExpected(bool useCompatibleStateImageBehavior, bool checkBoxes, bool autoArrange, bool virtualMode, View view, ImageList value, int expectedInvalidatedCallCount, int expectedCreatedCallCount)
         {
+            using var imageList = new ImageList();
             using var listView = new ListView
             {
                 UseCompatibleStateImageBehavior = useCompatibleStateImageBehavior,
@@ -3467,7 +3507,7 @@ namespace System.Windows.Forms.Tests
                 AutoArrange = autoArrange,
                 VirtualMode = virtualMode,
                 View = view,
-                StateImageList = new ImageList()
+                StateImageList = imageList
             };
             Assert.NotEqual(IntPtr.Zero, listView.Handle);
             int invalidatedCallCount = 0;

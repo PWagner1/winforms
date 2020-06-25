@@ -16,6 +16,7 @@ using static Interop;
 
 namespace System.Windows.Forms.Tests
 {
+    [Collection("Sequential")] // workaround for WebBrowser control corrupting memory when run on multiple UI threads (instantiated via GUID)
     public class ControlControlCollectionTests : IClassFixture<ThreadExceptionFixture>
     {
         [WinFormsFact]
@@ -1451,7 +1452,7 @@ namespace System.Windows.Forms.Tests
             // Don't search all children.
             Assert.Equal(new Control[] { child2, child3 }, collection.Find(key, searchAllChildren: false));
 
-            // Call again..
+            // Call again.
             Assert.Equal(new Control[] { child2, child3 }, collection.Find(key, searchAllChildren: false));
         }
 

@@ -687,16 +687,6 @@
         <target state="translated">ドキュメントが印刷された後にドキュメントの変更やドキュメントへの追加はできません。</target>
         <note />
       </trans-unit>
-      <trans-unit id="CannotConvertDoubleToDate">
-        <source>Double cannot be converted to a date.</source>
-        <target state="translated">double を date に変換できません。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotConvertIntToFloat">
-        <source>Integer cannot be converted to a float.</source>
-        <target state="translated">integer を float に変換できません。</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CantNestMessageLoops">
         <source>Starting a second message loop on a single thread is not a valid operation. Use Form.ShowDialog instead.</source>
         <target state="translated">単一スレッド上で 2 回目のメッセージ ループを開始することは有効な操作ではありません。Form.ShowDialog を使用してください。</target>
@@ -1175,6 +1165,11 @@
       <trans-unit id="ConnPointUnhandledType">
         <source>Unhandled type {0}.</source>
         <target state="translated">ハンドルされていない型 {0} です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConstructorArgumentInvalidValueType">
+        <source>Argument '{0}' cannot be converted to type '{1}'.</source>
+        <target state="translated">引数 '{0}' は型 '{1}' に変換できません。</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainerControlActiveControlDescr">
@@ -5432,6 +5427,11 @@ Do you want to replace it?</source>
         <target state="translated">テーブルの行数です。</target>
         <note />
       </trans-unit>
+      <trans-unit id="HScrollBarDefaultAccessibleName">
+        <source>Horizontal</source>
+        <target state="new">Horizontal</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HandleAlreadyExists">
         <source>Window handle already exists.</source>
         <target state="translated">ウィンドウ ハンドルは既に存在します。</target>
@@ -5551,6 +5551,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">ImageList ハンドルを作成できませんでした。</target>
         <note />
       </trans-unit>
+      <trans-unit id="ImageListDuplicateFailed">
+        <source>Duplication of the ImageList handle did not succeed.</source>
+        <target state="new">Duplication of the ImageList handle did not succeed.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ImageListEntryType">
         <source>Image added to an ImageList must either derive from Image or be an Icon.</source>
         <target state="translated">ImageList に追加されるイメージは Image から派生しているか、またはアイコンでなければなりません。</target>
@@ -5638,7 +5643,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="InputLanguageCultureNotFound">
         <source>Could not find an InputLanguage for culture '{0}'.</source>
-        <target state="new">Could not find an InputLanguage for culture '{0}'.</target>
+        <target state="translated">カルチャ '{0}' の InputLanguage が見つかりませんでした。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidArgument">
@@ -6374,6 +6379,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="ListViewGroupDefaultHeader">
         <source>ListViewGroup</source>
         <target state="translated">ListViewGroup</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewGroupImageListDescr">
+        <source>The ImageList control used by the ListView for ListViewGroup images in all views.</source>
+        <target state="translated">すべてのビュー内の ListViewGroup イメージに対して、ListView により使用される ImageList コントロールです。</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewGroupNameDescr">
@@ -10784,6 +10794,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="UserControlOnLoadDescr">
         <source>Occurs whenever the user control loads.</source>
         <target state="translated">ユーザー コントロールを読み込むときに発生します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="VScrollBarDefaultAccessibleName">
+        <source>Vertical</source>
+        <target state="new">Vertical</target>
         <note />
       </trans-unit>
       <trans-unit id="VisualStyleHandleCreationFailed">

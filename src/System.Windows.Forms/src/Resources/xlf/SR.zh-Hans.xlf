@@ -687,16 +687,6 @@
         <target state="translated">打印文档后将无法更改文档或向其中添加内容。</target>
         <note />
       </trans-unit>
-      <trans-unit id="CannotConvertDoubleToDate">
-        <source>Double cannot be converted to a date.</source>
-        <target state="translated">无法将 double 转换为 date。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotConvertIntToFloat">
-        <source>Integer cannot be converted to a float.</source>
-        <target state="translated">无法将 integer 转换为 float。</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CantNestMessageLoops">
         <source>Starting a second message loop on a single thread is not a valid operation. Use Form.ShowDialog instead.</source>
         <target state="translated">在单个线程上开始另一个消息循环是无效操作。请改用 Form.ShowDialog。</target>
@@ -1175,6 +1165,11 @@
       <trans-unit id="ConnPointUnhandledType">
         <source>Unhandled type {0}.</source>
         <target state="translated">未处理的类型 {0}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConstructorArgumentInvalidValueType">
+        <source>Argument '{0}' cannot be converted to type '{1}'.</source>
+        <target state="translated">参数“{0}”无法转换为类型“{1}”。</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainerControlActiveControlDescr">
@@ -5432,6 +5427,11 @@ Do you want to replace it?</source>
         <target state="translated">表中的行数。</target>
         <note />
       </trans-unit>
+      <trans-unit id="HScrollBarDefaultAccessibleName">
+        <source>Horizontal</source>
+        <target state="new">Horizontal</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HandleAlreadyExists">
         <source>Window handle already exists.</source>
         <target state="translated">窗口句柄已存在。</target>
@@ -5551,6 +5551,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">创建 ImageList 句柄失败。</target>
         <note />
       </trans-unit>
+      <trans-unit id="ImageListDuplicateFailed">
+        <source>Duplication of the ImageList handle did not succeed.</source>
+        <target state="new">Duplication of the ImageList handle did not succeed.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ImageListEntryType">
         <source>Image added to an ImageList must either derive from Image or be an Icon.</source>
         <target state="translated">添加到 ImageList 的图像必须从 Image 派生或者为 Icon。</target>
@@ -5638,7 +5643,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="InputLanguageCultureNotFound">
         <source>Could not find an InputLanguage for culture '{0}'.</source>
-        <target state="new">Could not find an InputLanguage for culture '{0}'.</target>
+        <target state="translated">找不到区域性“{0}”的 InputLanguage。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidArgument">
@@ -6374,6 +6379,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="ListViewGroupDefaultHeader">
         <source>ListViewGroup</source>
         <target state="translated">ListViewGroup</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewGroupImageListDescr">
+        <source>The ImageList control used by the ListView for ListViewGroup images in all views.</source>
+        <target state="translated">ListView 对所有视图中的 ListViewGroup 图像使用的 ImageList 控件。</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewGroupNameDescr">
@@ -10784,6 +10794,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="UserControlOnLoadDescr">
         <source>Occurs whenever the user control loads.</source>
         <target state="translated">每当用户控件加载时发生。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="VScrollBarDefaultAccessibleName">
+        <source>Vertical</source>
+        <target state="new">Vertical</target>
         <note />
       </trans-unit>
       <trans-unit id="VisualStyleHandleCreationFailed">

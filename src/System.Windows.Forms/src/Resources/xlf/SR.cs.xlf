@@ -687,16 +687,6 @@
         <target state="translated">Po vytištění nelze dokument upravovat ani do něj již nelze přidávat položky.</target>
         <note />
       </trans-unit>
-      <trans-unit id="CannotConvertDoubleToDate">
-        <source>Double cannot be converted to a date.</source>
-        <target state="translated">Nelze převést typ Double na typ Date.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotConvertIntToFloat">
-        <source>Integer cannot be converted to a float.</source>
-        <target state="translated">Nelze převést typ Integer na typ Float.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CantNestMessageLoops">
         <source>Starting a second message loop on a single thread is not a valid operation. Use Form.ShowDialog instead.</source>
         <target state="translated">Vytvoření druhé smyčky zpráv v jednom vlákně je neplatná operace. Použijte místo toho funkci Application.RunDialog nebo Form.ShowDialog.</target>
@@ -1175,6 +1165,11 @@
       <trans-unit id="ConnPointUnhandledType">
         <source>Unhandled type {0}.</source>
         <target state="translated">Nezpracovaný typ {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConstructorArgumentInvalidValueType">
+        <source>Argument '{0}' cannot be converted to type '{1}'.</source>
+        <target state="translated">Argument {0} nelze převést na typ {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainerControlActiveControlDescr">
@@ -5432,6 +5427,11 @@ Chcete jej nahradit?</target>
         <target state="translated">Počet řádků v tabulce</target>
         <note />
       </trans-unit>
+      <trans-unit id="HScrollBarDefaultAccessibleName">
+        <source>Horizontal</source>
+        <target state="new">Horizontal</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HandleAlreadyExists">
         <source>Window handle already exists.</source>
         <target state="translated">Popisovač okna již existuje.</target>
@@ -5551,6 +5551,11 @@ Trasování zásobníku, kde došlo k neplatné operaci:
         <target state="translated">Vytvoření popisovače ImageList se nezdařilo.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ImageListDuplicateFailed">
+        <source>Duplication of the ImageList handle did not succeed.</source>
+        <target state="new">Duplication of the ImageList handle did not succeed.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ImageListEntryType">
         <source>Image added to an ImageList must either derive from Image or be an Icon.</source>
         <target state="translated">Obrázek přidaný do seznamu ImageList musí být buď odvozen od objektu Image, nebo musí být objektem Icon.</target>
@@ -5638,7 +5643,7 @@ Trasování zásobníku, kde došlo k neplatné operaci:
       </trans-unit>
       <trans-unit id="InputLanguageCultureNotFound">
         <source>Could not find an InputLanguage for culture '{0}'.</source>
-        <target state="new">Could not find an InputLanguage for culture '{0}'.</target>
+        <target state="translated">Nepovedlo se najít InputLanguage pro jazykovou verzi {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidArgument">
@@ -6374,6 +6379,11 @@ Trasování zásobníku, kde došlo k neplatné operaci:
       <trans-unit id="ListViewGroupDefaultHeader">
         <source>ListViewGroup</source>
         <target state="translated">ListViewGroup</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewGroupImageListDescr">
+        <source>The ImageList control used by the ListView for ListViewGroup images in all views.</source>
+        <target state="translated">Ovládací prvek ImageList používaný v zobrazení ListView pro ListViewGroup pro obrázky ve všech zobrazeních</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewGroupNameDescr">
@@ -9193,7 +9203,7 @@ Trasování zásobníku, kde došlo k neplatné operaci:
       </trans-unit>
       <trans-unit id="TaskDialogNavigationNotCompleted">
         <source>Navigation of the task dialog did not complete yet. Please wait for the {0} event to occur.</source>
-        <target state="translated">Navigace dialogem úlohy ještě neskončila. Počkejte prosím, než dojde k události {0}.</target>
+        <target state="translated">Navigace v dialogu úlohy ještě neskončila. Počkejte prosím, než dojde k události {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="TaskDialogOnlySingleRadioButtonCanBeChecked">
@@ -10784,6 +10794,11 @@ Trasování zásobníku, kde došlo k neplatné operaci:
       <trans-unit id="UserControlOnLoadDescr">
         <source>Occurs whenever the user control loads.</source>
         <target state="translated">Vyvolá se při každém načtení uživatelského ovládacího prvku.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="VScrollBarDefaultAccessibleName">
+        <source>Vertical</source>
+        <target state="new">Vertical</target>
         <note />
       </trans-unit>
       <trans-unit id="VisualStyleHandleCreationFailed">

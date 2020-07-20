@@ -54,7 +54,7 @@ namespace System.Windows.Forms
         private static readonly Type cellType = typeof(DataGridViewComboBoxCell);
 
         private byte flags;  // see DATAGRIDVIEWCOMBOBOXCELL_ consts above
-        private static bool mouseInDropDownButtonBounds = false;
+        private static bool mouseInDropDownButtonBounds;
         private static int cachedDropDownWidth = -1;
 
         // Autosizing changed for VS
@@ -63,8 +63,8 @@ namespace System.Windows.Forms
         //private object keyUsedDuringAutoSize    = null;
         //private object valueUsedDuringAutoSize  = null;
 
-        private static bool isScalingInitialized = false;
-        private static readonly int OFFSET_2PIXELS = 2;
+        private static bool isScalingInitialized;
+        private const int OFFSET_2PIXELS = 2;
         private static int offset2X = OFFSET_2PIXELS;
         private static int offset2Y = OFFSET_2PIXELS;
         private static byte nonXPTriangleHeight = DATAGRIDVIEWCOMBOBOXCELL_nonXPTriangleHeight;
@@ -721,9 +721,9 @@ namespace System.Windows.Forms
                                          size.Height - borderAndPaddingWidths.Y - borderAndPaddingWidths.Height);
 
             int dropHeight;
-            using (Graphics g = WindowsFormsUtils.CreateMeasurementGraphics())
+            using (var screen = GdiCache.GetScreenDCGraphics())
             {
-                dropHeight = Math.Min(GetDropDownButtonHeight(g, cellStyle), adjustedSize.Height - 2);
+                dropHeight = Math.Min(GetDropDownButtonHeight(screen, cellStyle), adjustedSize.Height - 2);
             }
 
             int dropWidth = Math.Min(SystemInformation.HorizontalScrollBarThumbWidth, adjustedSize.Width - 2 * DATAGRIDVIEWCOMBOBOXCELL_margin - 1);
@@ -1864,9 +1864,9 @@ namespace System.Windows.Forms
                 cellState |= State;
 
                 Rectangle dropDownButtonRect;
-                using (Graphics g = WindowsFormsUtils.CreateMeasurementGraphics())
+                using (var screen = GdiCache.GetScreenDCGraphics())
                 {
-                    PaintPrivate(g,
+                    PaintPrivate(screen,
                         cellBounds,
                         cellBounds,
                         rowIndex,

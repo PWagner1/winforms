@@ -26,9 +26,9 @@ namespace System.Windows.Forms
     {
         private ImageList.Indexer _imageIndexer;
         private string _toolTipText = string.Empty;
-        private bool _enterFired = false;
-        private bool _leaveFired = false;
-        private bool _useVisualStyleBackColor = false;
+        private bool _enterFired;
+        private bool _leaveFired;
+        private bool _useVisualStyleBackColor;
 
         /// <summary>
         ///  Constructs an empty TabPage.
@@ -503,7 +503,7 @@ namespace System.Windows.Forms
                 // there is no good way to determine the padding used on the TabPage.
                 Rectangle rectWithBorder = new Rectangle(inflateRect.X - 4, inflateRect.Y - 2, inflateRect.Width + 8, inflateRect.Height + 6);
 
-                TabRenderer.DrawTabPage(e.Graphics, rectWithBorder);
+                TabRenderer.DrawTabPage(e, rectWithBorder);
 
                 // TabRenderer does not support painting the background image on the panel, so
                 // draw it ourselves.

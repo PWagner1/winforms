@@ -63,15 +63,15 @@ namespace System.Windows.Forms.Design
 
         private bool _ctrlSelect; // if the CTRL key was down at the mouse down
         private bool _toolPassThrough; // a tool is selected, allow the parent to draw a rect for it.
-        private bool _removalNotificationHooked = false;
+        private bool _removalNotificationHooked;
         private bool _revokeDragDrop = true;
         private bool _hadDragDrop;
-        private static bool s_inContextMenu = false;
+        private static bool s_inContextMenu;
         private DockingActionList _dockingAction;
         private StatusCommandUI _statusCommandUI; // UI for setting the StatusBar Information..
 
         private bool _forceVisible = true;
-        private bool _autoResizeHandles = false; // used for disabling AutoSize effect on resize modes. Needed for compat.
+        private bool _autoResizeHandles; // used for disabling AutoSize effect on resize modes. Needed for compat.
         private Dictionary<IntPtr, bool> _subclassedChildren;
 
         protected BehaviorService BehaviorService
@@ -119,7 +119,7 @@ namespace System.Windows.Forms.Design
             }
         }
 
-        protected AccessibleObject accessibilityObj = null;
+        protected AccessibleObject accessibilityObj;
 
         public virtual AccessibleObject AccessibilityObject
         {
@@ -547,12 +547,12 @@ namespace System.Windows.Forms.Design
         {
             if (child == null)
             {
-                throw new ArgumentNullException("child");
+                throw new ArgumentNullException(nameof(child));
             }
 
             if (name == null)
             {
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
             }
 
             if (!(GetService(typeof(INestedContainer)) is INestedContainer nc))
@@ -1053,20 +1053,20 @@ namespace System.Windows.Forms.Design
 
         private bool AllowDrop
         {
-            get => (bool)ShadowProperties["AllowDrop"];
-            set => ShadowProperties["AllowDrop"] = value;
+            get => (bool)ShadowProperties[nameof(AllowDrop)];
+            set => ShadowProperties[nameof(AllowDrop)] = value;
         }
 
         private bool Enabled
         {
-            get => (bool)ShadowProperties["Enabled"];
-            set => ShadowProperties["Enabled"] = value;
+            get => (bool)ShadowProperties[nameof(Enabled)];
+            set => ShadowProperties[nameof(Enabled)] = value;
         }
 
         private bool Visible
         {
-            get => (bool)ShadowProperties["Visible"];
-            set => ShadowProperties["Visible"] = value;
+            get => (bool)ShadowProperties[nameof(Visible)];
+            set => ShadowProperties[nameof(Visible)] = value;
         }
 
         /// <summary>
@@ -2025,10 +2025,10 @@ namespace System.Windows.Forms.Design
                         }
                         else
                         {
-                            var ps = new User32.PAINTSTRUCT();
-                            User32.BeginPaint(m.HWnd, ref ps);
-                            PaintException(pevent, _thrownException);
-                            User32.EndPaint(m.HWnd, ref ps);
+                            using (var scope = new User32.BeginPaintScope())
+                            {
+                                PaintException(pevent, _thrownException);
+                            }
                         }
 
                         if (OverlayService != null)
@@ -2341,10 +2341,10 @@ namespace System.Windows.Forms.Design
 
         public class ControlDesignerAccessibleObject : AccessibleObject
         {
-            private readonly ControlDesigner _designer = null;
-            private readonly Control _control = null;
-            private IDesignerHost _host = null;
-            private ISelectionService _selSvc = null;
+            private readonly ControlDesigner _designer;
+            private readonly Control _control;
+            private IDesignerHost _host;
+            private ISelectionService _selSvc;
 
             public ControlDesignerAccessibleObject(ControlDesigner designer, Control control)
             {

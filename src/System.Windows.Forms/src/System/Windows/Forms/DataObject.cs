@@ -27,8 +27,8 @@ namespace System.Windows.Forms
     [ClassInterface(ClassInterfaceType.None)]
     public partial class DataObject : IDataObject, IComDataObject
     {
-        private static readonly string CF_DEPRECATED_FILENAME = "FileName";
-        private static readonly string CF_DEPRECATED_FILENAMEW = "FileNameW";
+        private const string CF_DEPRECATED_FILENAME = "FileName";
+        private const string CF_DEPRECATED_FILENAMEW = "FileNameW";
 
         private const int DATA_S_SAMEFORMATETC = 0x00040130;
 
@@ -38,7 +38,7 @@ namespace System.Windows.Forms
             TYMED.TYMED_ISTREAM,
             TYMED.TYMED_GDI};
 
-        private readonly IDataObject innerData = null;
+        private readonly IDataObject innerData;
 
         // We use this to identify that a stream is actually a serialized object.  On read,
         // we don't know if the contents of a stream were saved "raw" or if the stream is really
@@ -117,14 +117,14 @@ namespace System.Windows.Forms
             Debug.Assert(innerData != null, "You must have an innerData on all DataObjects");
         }
 
-        private IntPtr GetCompatibleBitmap(Bitmap bm)
+        private Gdi32.HBITMAP GetCompatibleBitmap(Bitmap bm)
         {
             using var screenDC = User32.GetDcScope.ScreenDC;
 
             // GDI+ returns a DIBSECTION based HBITMAP. The clipboard deals well
             // only with bitmaps created using CreateCompatibleBitmap(). So, we
             // convert the DIBSECTION into a compatible bitmap.
-            IntPtr hBitmap = bm.GetHbitmap();
+            Gdi32.HBITMAP hBitmap = bm.GetHBITMAP();
 
             // Create a compatible DC to render the source bitmap.
             var sourceDC = new Gdi32.CreateDcScope(screenDC);
@@ -132,7 +132,7 @@ namespace System.Windows.Forms
 
             // Create a compatible DC and a new compatible bitmap.
             var destinationDC = new Gdi32.CreateDcScope(screenDC);
-            IntPtr bitmap = Gdi32.CreateCompatibleBitmap(screenDC, bm.Size.Width, bm.Size.Height);
+            Gdi32.HBITMAP bitmap = Gdi32.CreateCompatibleBitmap(screenDC, bm.Size.Width, bm.Size.Height);
 
             // Select the new bitmap into a compatible DC and render the blt the original bitmap.
             var destinationBitmapSelection = new Gdi32.SelectObjectScope(destinationDC, bitmap);
@@ -519,7 +519,7 @@ namespace System.Windows.Forms
                             && bm != null)
                         {
                             // save bitmap
-                            medium.unionmember = GetCompatibleBitmap(bm);
+                            medium.unionmember = (IntPtr)GetCompatibleBitmap(bm);
                         }
                     }
                     else

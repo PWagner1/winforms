@@ -101,7 +101,7 @@ namespace System.Windows.Forms
 
         private const int SizeGripSize = 16;
 
-        private static Icon defaultIcon = null;
+        private static Icon defaultIcon;
         private static readonly object internalSyncObject = new object();
 
         // Property store keys for properties.  The property store allocates most efficiently
@@ -139,7 +139,7 @@ namespace System.Windows.Forms
         // Note: Do not add anything to this list unless absolutely necessary.
 
         private BitVector32 formState = new BitVector32(0x21338);   // magic value... all the defaults... see the ctor for details...
-        private BitVector32 formStateEx = new BitVector32();
+        private BitVector32 formStateEx;
 
         private Icon icon;
         private Icon smallIcon;
@@ -150,7 +150,7 @@ namespace System.Windows.Forms
         private DialogResult dialogResult;
         private MdiClient ctlClient;
         private NativeWindow ownerWindow;
-        private bool rightToLeftLayout = false;
+        private bool rightToLeftLayout;
 
         private Rectangle restoreBounds = new Rectangle(-1, -1, -1, -1);
         private CloseReason closeReason = CloseReason.None;
@@ -1785,7 +1785,7 @@ namespace System.Windows.Forms
 
                 if (value != null && !TopLevel)
                 {
-                    throw new ArgumentException(SR.NonTopLevelCantHaveOwner, "value");
+                    throw new ArgumentException(SR.NonTopLevelCantHaveOwner, nameof(value));
                 }
 
                 CheckParentingCycle(this, value);
@@ -2125,7 +2125,7 @@ namespace System.Windows.Forms
             {
                 if (!value && ((Form)this).IsMdiContainer && !DesignMode)
                 {
-                    throw new ArgumentException(SR.MDIContainerMustBeTopLevel, "value");
+                    throw new ArgumentException(SR.MDIContainerMustBeTopLevel, nameof(value));
                 }
                 SetTopLevel(value);
             }
@@ -4146,7 +4146,7 @@ namespace System.Windows.Forms
             base.OnPaint(e);
             if (formState[FormStateRenderSizeGrip] != 0)
             {
-                Size sz = ClientSize;
+                Size size = ClientSize;
                 if (Application.RenderWithVisualStyles)
                 {
                     if (sizeGripRenderer == null)
@@ -4154,17 +4154,26 @@ namespace System.Windows.Forms
                         sizeGripRenderer = new VisualStyleRenderer(VisualStyleElement.Status.Gripper.Normal);
                     }
 
-                    sizeGripRenderer.DrawBackground(e.Graphics, new Rectangle(sz.Width - SizeGripSize, sz.Height - SizeGripSize, SizeGripSize, SizeGripSize));
+                    using var hdc = new DeviceContextHdcScope(e);
+                    sizeGripRenderer.DrawBackground(
+                        hdc,
+                        new Rectangle(size.Width - SizeGripSize, size.Height - SizeGripSize, SizeGripSize, SizeGripSize));
                 }
                 else
                 {
-                    ControlPaint.DrawSizeGrip(e.Graphics, BackColor, sz.Width - SizeGripSize, sz.Height - SizeGripSize, SizeGripSize, SizeGripSize);
+                    ControlPaint.DrawSizeGrip(
+                        e,
+                        BackColor,
+                        size.Width - SizeGripSize,
+                        size.Height - SizeGripSize,
+                        SizeGripSize,
+                        SizeGripSize);
                 }
             }
 
             if (IsMdiContainer)
             {
-                e.Graphics.FillRectangle(SystemBrushes.AppWorkspace, ClientRectangle);
+                e.GraphicsInternal.FillRectangle(SystemBrushes.AppWorkspace, ClientRectangle);
             }
         }
 
@@ -5096,8 +5105,7 @@ namespace System.Windows.Forms
                 // Catch the case of a window trying to own its owner
                 if (User32.GetWindowLong(new HandleRef(owner, hWndOwner), User32.GWL.HWNDPARENT) == Handle)
                 {
-                    throw new ArgumentException(string.Format(SR.OwnsSelfOrOwner,
-                                                      "show"), "owner");
+                    throw new ArgumentException(string.Format(SR.OwnsSelfOrOwner, "show"), nameof(owner));
                 }
 
                 // Set the new owner.
@@ -5202,8 +5210,7 @@ namespace System.Windows.Forms
                     // Catch the case of a window trying to own its owner
                     if (User32.GetWindowLong(new HandleRef(owner, hWndOwner), User32.GWL.HWNDPARENT) == Handle)
                     {
-                        throw new ArgumentException(string.Format(SR.OwnsSelfOrOwner,
-                                                          "showDialog"), "owner");
+                        throw new ArgumentException(string.Format(SR.OwnsSelfOrOwner, "showDialog"), nameof(owner));
                     }
 
                     // In a multi DPI environment and applications in PMV2 mode, DPI changed events triggered
@@ -6568,12 +6575,12 @@ namespace System.Windows.Forms
                 {
                     if (!owner.TopLevel && !owner.DesignMode)
                     {
-                        throw new ArgumentException(SR.MDIContainerMustBeTopLevel, "value");
+                        throw new ArgumentException(SR.MDIContainerMustBeTopLevel, nameof(value));
                     }
                     owner.AutoScroll = false;
                     if (owner.IsMdiChild)
                     {
-                        throw new ArgumentException(SR.FormMDIParentAndChild, "value");
+                        throw new ArgumentException(SR.FormMDIParentAndChild, nameof(value));
                     }
                     owner.ctlClient = (MdiClient)value;
                 }
@@ -6582,7 +6589,7 @@ namespace System.Windows.Forms
                 //
                 if (value is Form && ((Form)value).MdiParentInternal != null)
                 {
-                    throw new ArgumentException(SR.FormMDIParentCannotAdd, "value");
+                    throw new ArgumentException(SR.FormMDIParentCannotAdd, nameof(value));
                 }
 
                 base.Add(value);

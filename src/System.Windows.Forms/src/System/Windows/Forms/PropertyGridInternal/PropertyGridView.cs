@@ -66,22 +66,22 @@ namespace System.Windows.Forms.PropertyGridInternal
         private const int DOWNARROW_ICONWIDTH = 16;
         private const int DOWNARROW_ICONHEIGHT = 16;
 
-        private static readonly int OFFSET_2PIXELS = 2;
+        private const int OFFSET_2PIXELS = 2;
         private int offset_2Units = OFFSET_2PIXELS;
 
         protected static readonly Point InvalidPosition = new Point(int.MinValue, int.MinValue);
 
         // colors and fonts
-        private Brush backgroundBrush = null;
-        private Font fontBold = null;
+        private Brush backgroundBrush;
+        private Font fontBold;
         private Color grayTextColor;
 
         // for backwards compatibility of default colors
-        private bool grayTextColorModified = false; // true if someone has set the grayTextColor property
+        private bool grayTextColorModified; // true if someone has set the grayTextColor property
 
         // property collections
-        private GridEntryCollection topLevelGridEntries = null;     // top level props
-        private GridEntryCollection allGridEntries = null;  // cache of viewable props
+        private GridEntryCollection topLevelGridEntries;     // top level props
+        private GridEntryCollection allGridEntries;  // cache of viewable props
 
         // row information
         internal int totalProps = -1;        // # of viewable props
@@ -93,20 +93,20 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         // current selected row and tooltip.
         private int selectedRow = -1;
-        private GridEntry selectedGridEntry = null;
+        private GridEntry selectedGridEntry;
         private int tipInfo = -1;
 
         // editors & controls
-        private GridViewEdit edit = null;
-        private DropDownButton btnDropDown = null;
-        private DropDownButton btnDialog = null;
-        private GridViewListBox listBox = null;
-        private DropDownHolder dropDownHolder = null;
+        private GridViewEdit edit;
+        private DropDownButton btnDropDown;
+        private DropDownButton btnDialog;
+        private GridViewListBox listBox;
+        private DropDownHolder dropDownHolder;
         private Rectangle lastClientRect = Rectangle.Empty;
-        private Control currentEditor = null;
-        private ScrollBar scrollBar = null;
-        internal GridToolTip toolTip = null;
-        private GridErrorDlg errorDlg = null;
+        private Control currentEditor;
+        private ScrollBar scrollBar;
+        internal GridToolTip toolTip;
+        private GridErrorDlg errorDlg;
 
         // flags
         private const short FlagNeedsRefresh = 0x0001;
@@ -126,9 +126,9 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         private Point ptOurLocation = new Point(1, 1);
 
-        private string originalTextValue = null;     // original text, in case of ESC
-        private int cumulativeVerticalWheelDelta = 0;
-        private long rowSelectTime = 0;
+        private string originalTextValue;     // original text, in case of ESC
+        private int cumulativeVerticalWheelDelta;
+        private long rowSelectTime;
         private Point rowSelectPos = Point.Empty; // the position that we clicked on a row to test for double clicks
         private Point lastMouseDown = InvalidPosition;
         private int lastMouseMove;
@@ -4261,6 +4261,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 bool fBtnDropDown = gridEntry.NeedsDropDownButton;
                 bool fEnum = gridEntry.Enumerable;
                 bool fBtnDialog = gridEntry.NeedsCustomEditorButton;
+
                 if (fEnum && !fBtnDropDown)
                 {
                     DropDownListBox.Items.Clear();
@@ -4271,16 +4272,16 @@ namespace System.Windows.Forms.PropertyGridInternal
                     // The listbox draws with GDI, not GDI+.  So, we
                     // use a normal DC here.
 
-                    IntPtr hdc = User32.GetDC(new HandleRef(DropDownListBox, DropDownListBox.Handle));
-
-                    // This creates a copy of the given Font, and as such we need to
-                    IntPtr hFont = Font.ToHfont();
+                    using var hdc = new User32.GetDcScope(DropDownListBox.Handle);
 
                     var tm = new Gdi32.TEXTMETRICW();
                     int iSel = -1;
-                    try
+
+                    // This creates a copy of the given Font, and as such we need to delete it
+                    Gdi32.HFONT hFont = (Gdi32.HFONT)Font.ToHfont();
+                    using (var fontScope = new Gdi32.ObjectScope(hFont))
                     {
-                        hFont = Gdi32.SelectObject(hdc, hFont);
+                        using var fontSelection = new Gdi32.SelectObjectScope(hdc, hFont);
 
                         iSel = GetCurrentValueIndex(gridEntry);
                         if (rgItems != null && rgItems.Length > 0)
@@ -4297,17 +4298,10 @@ namespace System.Windows.Forms.PropertyGridInternal
                             }
                         }
 
-                        Gdi32.GetTextMetricsW(new HandleRef(DropDownListBox, hdc), ref tm);
+                        Gdi32.GetTextMetricsW(hdc, ref tm);
 
                         // border + padding + scrollbar
                         maxWidth += 2 + tm.tmMaxCharWidth + SystemInformation.VerticalScrollBarWidth;
-
-                        hFont = Gdi32.SelectObject(hdc, hFont);
-                    }
-                    finally
-                    {
-                        Gdi32.DeleteObject(hFont);
-                        User32.ReleaseDC(new HandleRef(DropDownListBox, DropDownListBox.Handle), hdc);
                     }
 
                     // Microsoft, 4/25/1998 - must check for -1 and not call the set...
@@ -4315,6 +4309,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                     {
                         DropDownListBox.SelectedIndex = iSel;
                     }
+
                     SetFlag(FlagDropDownCommit, false);
                     DropDownListBox.Height = Math.Max(tm.tmHeight + 2, Math.Min(maxListBoxHeight, DropDownListBox.PreferredHeight));
                     DropDownListBox.Width = Math.Max(maxWidth, GetRectangle(row, ROWVALUE).Width);
@@ -6134,40 +6129,37 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         private class DropDownHolder : Form, IMouseHookClient
         {
-            private Control currentControl = null; // the control that is hosted in the holder
-            private readonly PropertyGridView gridView;              // the owner gridview
-            private readonly MouseHook mouseHook;             // we use this to hook mouse downs, etc. to know when to close the dropdown.
+            private Control currentControl;                     // the control that is hosted in the holder
+            private readonly PropertyGridView gridView;         // the owner gridview
+            private readonly MouseHook mouseHook;               // we use this to hook mouse downs, etc. to know when to close the dropdown.
 
-            private LinkLabel createNewLink = null;
+            private LinkLabel createNewLink;
 
             // all the resizing goo...
             //
-            private bool resizable = true;  // true if we're showing the resize widget.
-            private bool resizing = false; // true if we're in the middle of a resize operation.
-            private bool resizeUp = false; // true if the dropdown is above the grid row, which means the resize widget is at the top.
-            private Point dragStart = Point.Empty;     // the point at which the drag started to compute the delta
-            private Rectangle dragBaseRect = Rectangle.Empty; // the original bounds of our control.
-            private int currentMoveType = MoveTypeNone;    // what type of move are we processing? left, bottom, or both?
+            private bool resizable = true;                      // true if we're showing the resize widget.
+            private bool resizing;                              // true if we're in the middle of a resize operation.
+            private bool resizeUp;                              // true if the dropdown is above the grid row, which means the resize widget is at the top.
+            private Point dragStart = Point.Empty;              // the point at which the drag started to compute the delta
+            private Rectangle dragBaseRect = Rectangle.Empty;   // the original bounds of our control.
+            private int currentMoveType = MoveTypeNone;         // what type of move are we processing? left, bottom, or both?
 
-            private readonly static int ResizeBarSize;    // the thickness of the resize bar
-            private readonly static int ResizeBorderSize; // the thickness of the 2-way resize area along the outer edge of the resize bar
-            private readonly static int ResizeGripSize;   // the size of the 4-way resize grip at outermost corner of the resize bar
-            private readonly static Size MinDropDownSize;  // the minimum size for the control.
-            private Bitmap sizeGripGlyph;    // our cached size grip glyph.  Control paint only does right bottom glyphs, so we cache a mirrored one.  See GetSizeGripGlyph
+            // The size of the 4-way resize grip at outermost corner of the resize bar.
+            private readonly static int ResizeGripSize = SystemInformation.HorizontalScrollBarHeight;
+            // The thickness of the resize bar.
+            private readonly static int ResizeBarSize = ResizeGripSize + 1;
+            // The thickness of the 2-way resize area along the outer edge of the resize bar.
+            private readonly static int ResizeBorderSize = ResizeBarSize / 2;
+            // The minimum size for the control.
+            private readonly static Size MinDropDownSize = new Size(SystemInformation.VerticalScrollBarWidth * 4, SystemInformation.HorizontalScrollBarHeight * 4);
+            // our cached size grip glyph.  Control paint only does right bottom glyphs, so we cache a mirrored one.  See GetSizeGripGlyph
+            private Bitmap sizeGripGlyph;
 
             private const int DropDownHolderBorder = 1;
             private const int MoveTypeNone = 0x0;
             private const int MoveTypeBottom = 0x1;
             private const int MoveTypeLeft = 0x2;
             private const int MoveTypeTop = 0x4;
-
-            static DropDownHolder()
-            {
-                MinDropDownSize = new Size(SystemInformation.VerticalScrollBarWidth * 4, SystemInformation.HorizontalScrollBarHeight * 4);
-                ResizeGripSize = SystemInformation.HorizontalScrollBarHeight;
-                ResizeBarSize = ResizeGripSize + 1;
-                ResizeBorderSize = ResizeBarSize / 2;
-            }
 
             internal DropDownHolder(PropertyGridView psheet)
             : base()
@@ -6847,7 +6839,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         private class GridViewListBox : ListBox
         {
-            internal bool fInSetSelectedIndex = false;
+            internal bool fInSetSelectedIndex;
             private readonly PropertyGridView _owningPropertyGridView;
 
             public GridViewListBox(PropertyGridView gridView)
@@ -7292,10 +7284,10 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         private class GridViewEdit : TextBox, IMouseHookClient
         {
-            internal bool fInSetText = false;
-            internal bool filter = false;
-            internal PropertyGridView psheet = null;
-            private bool dontFocusMe = false;
+            internal bool fInSetText;
+            internal bool filter;
+            internal PropertyGridView psheet;
+            private bool dontFocusMe;
             private int lastMove;
 
             private readonly MouseHook mouseHook;
@@ -7915,10 +7907,10 @@ namespace System.Windows.Forms.PropertyGridInternal
             private readonly Control control;
             private readonly IMouseHookClient client;
 
-            internal uint _thisProcessID = 0;
+            internal uint _thisProcessID;
             private GCHandle _mouseHookRoot;
             private IntPtr _mouseHookHandle = IntPtr.Zero;
-            private bool hookDisable = false;
+            private bool hookDisable;
 
             private bool processing;
 

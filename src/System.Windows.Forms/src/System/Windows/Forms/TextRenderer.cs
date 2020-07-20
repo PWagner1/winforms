@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Drawing;
-using System.Windows.Forms.Internal;
+using System.Drawing.Text;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -13,270 +13,229 @@ namespace System.Windows.Forms
     /// </summary>
     public static class TextRenderer
     {
+        private static readonly Gdi32.QUALITY _defaultQuality = GetDefaultFontQuality();
+
+        // Used to clear TextRenderer specific flags from TextFormatFlags
+        internal const int GdiUnsupportedFlagMask = (unchecked((int)0xFF000000));
+
+        internal static Size MaxSize { get; } = new Size(int.MaxValue, int.MaxValue);
+
         public static void DrawText(IDeviceContext dc, string? text, Font? font, Point pt, Color foreColor)
-        {
-            if (dc == null)
-            {
-                throw new ArgumentNullException(nameof(dc));
-            }
-
-            Gdi32.QUALITY fontQuality = WindowsFont.WindowsFontQualityFromTextRenderingHint(dc as Graphics);
-
-            IntPtr hdc = dc.GetHdc();
-
-            try
-            {
-                using WindowsGraphics wg = WindowsGraphics.FromHdc(hdc);
-                using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font, fontQuality);
-                wg.DrawText(text, wf, pt, foreColor);
-            }
-            finally
-            {
-                dc.ReleaseHdc();
-            }
-        }
+            => DrawTextInternal(dc, text, font, pt, foreColor);
 
         public static void DrawText(IDeviceContext dc, string? text, Font? font, Point pt, Color foreColor, Color backColor)
-        {
-            if (dc == null)
-            {
-                throw new ArgumentNullException(nameof(dc));
-            }
+            => DrawTextInternal(dc, text, font, pt, foreColor, backColor);
 
-            Gdi32.QUALITY fontQuality = WindowsFont.WindowsFontQualityFromTextRenderingHint(dc as Graphics);
+        public static void DrawText(
+            IDeviceContext dc,
+            string? text,
+            Font? font,
+            Point pt,
+            Color foreColor,
+            TextFormatFlags flags)
+            => DrawTextInternal(dc, text, font, pt, foreColor, flags: GetTextFormatFlags(flags));
 
-            IntPtr hdc = dc.GetHdc();
-
-            try
-            {
-                using WindowsGraphics wg = WindowsGraphics.FromHdc(hdc);
-                using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font, fontQuality);
-                wg.DrawText(text, wf, pt, foreColor, backColor);
-            }
-            finally
-            {
-                dc.ReleaseHdc();
-            }
-        }
-
-        public static void DrawText(IDeviceContext dc, string? text, Font? font, Point pt, Color foreColor, TextFormatFlags flags)
-        {
-            if (dc == null)
-            {
-                throw new ArgumentNullException(nameof(dc));
-            }
-
-            Gdi32.QUALITY fontQuality = WindowsFont.WindowsFontQualityFromTextRenderingHint(dc as Graphics);
-
-            using var wgr = new WindowsGraphicsWrapper(dc, flags);
-            using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font, fontQuality);
-            wgr.WindowsGraphics.DrawText(text, wf, pt, foreColor, GetTextFormatFlags(flags));
-        }
-
-        public static void DrawText(IDeviceContext dc, string? text, Font? font, Point pt, Color foreColor, Color backColor, TextFormatFlags flags)
-        {
-            if (dc == null)
-            {
-                throw new ArgumentNullException(nameof(dc));
-            }
-
-            Gdi32.QUALITY fontQuality = WindowsFont.WindowsFontQualityFromTextRenderingHint(dc as Graphics);
-
-            using var wgr = new WindowsGraphicsWrapper(dc, flags);
-            using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font, fontQuality);
-            wgr.WindowsGraphics.DrawText(text, wf, pt, foreColor, backColor, GetTextFormatFlags(flags));
-        }
+        public static void DrawText(
+            IDeviceContext dc,
+            string? text,
+            Font? font,
+            Point pt,
+            Color foreColor,
+            Color backColor,
+            TextFormatFlags flags)
+            => DrawTextInternal(dc, text, font, pt, foreColor, backColor, flags: GetTextFormatFlags(flags));
 
         public static void DrawText(IDeviceContext dc, string? text, Font? font, Rectangle bounds, Color foreColor)
+            => DrawTextInternal(dc, text, font, bounds, foreColor);
+
+        public static void DrawText(
+            IDeviceContext dc,
+            string? text, Font?
+            font, Rectangle bounds,
+            Color foreColor,
+            Color backColor)
+            => DrawTextInternal(dc, text, font, bounds, foreColor, backColor);
+
+        public static void DrawText(
+            IDeviceContext dc,
+            string? text,
+            Font? font,
+            Rectangle bounds,
+            Color foreColor,
+            TextFormatFlags flags)
+            => DrawTextInternal(dc, text, font, bounds, foreColor, flags: GetTextFormatFlags(flags));
+
+        public static void DrawText(
+            IDeviceContext dc,
+            string? text,
+            Font? font,
+            Rectangle bounds,
+            Color foreColor,
+            Color backColor,
+            TextFormatFlags flags)
+            => DrawTextInternal(dc, text, font, bounds, foreColor, backColor, flags: GetTextFormatFlags(flags));
+
+        private static void DrawTextInternal(
+            IDeviceContext dc,
+            string? text,
+            Font? font,
+            Point pt,
+            Color foreColor,
+            Color backColor = default,
+            User32.DT flags = User32.DT.DEFAULT)
+            => DrawTextInternal(dc, text, font, new Rectangle(pt, MaxSize), foreColor, backColor, flags);
+
+        private static void DrawTextInternal(
+            IDeviceContext dc,
+            string? text,
+            Font? font,
+            Rectangle bounds,
+            Color foreColor,
+            Color backColor = default,
+            User32.DT flags = User32.DT.CENTER | User32.DT.VCENTER)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
 
-            Gdi32.QUALITY fontQuality = WindowsFont.WindowsFontQualityFromTextRenderingHint(dc as Graphics);
+            // Avoid creating the HDC, etc if we're not going to do any drawing
+            if (string.IsNullOrEmpty(text) || foreColor == Color.Transparent)
+                return;
 
-            IntPtr hdc = dc.GetHdc();
+            // This MUST come before retreiving the HDC, which locks the Graphics object
+            Gdi32.QUALITY quality = FontQualityFromTextRenderingHint(dc);
 
-            try
+            using var hdc = new DeviceContextHdcScope(dc);
+
+            DrawTextInternal(hdc, text, font, bounds, foreColor, quality, backColor, flags);
+        }
+
+        internal static void DrawTextInternal(
+            PaintEventArgs e,
+            string? text,
+            Font? font,
+            Rectangle bounds,
+            Color foreColor,
+            TextFormatFlags flags)
+            => DrawTextInternal(e, text, font, bounds, foreColor, flags: GetTextFormatFlags(flags));
+
+        internal static void DrawTextInternal(
+            PaintEventArgs e,
+            string? text,
+            Font? font,
+            Rectangle bounds,
+            Color foreColor,
+            Color backColor = default,
+            User32.DT flags = User32.DT.CENTER | User32.DT.VCENTER)
+        {
+            Gdi32.HDC hdc = e.HDC;
+            if (hdc.IsNull)
             {
-                using WindowsGraphics wg = WindowsGraphics.FromHdc(hdc);
-                using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font, fontQuality);
-                wg.DrawText(text, wf, bounds, foreColor);
+                // This MUST come before retreiving the HDC, which locks the Graphics object
+                Gdi32.QUALITY quality = FontQualityFromTextRenderingHint(e.GraphicsInternal);
+
+                using var graphicsHdc = new DeviceContextHdcScope(e.GraphicsInternal, applyGraphicsState: false);
+                DrawTextInternal(graphicsHdc, text, font, bounds, foreColor, quality, backColor, flags);
             }
-            finally
+            else
             {
-                dc.ReleaseHdc();
+                DrawTextInternal(hdc, text, font, bounds, foreColor, _defaultQuality, backColor, flags);
             }
         }
 
-        public static void DrawText(IDeviceContext dc, string? text, Font? font, Rectangle bounds, Color foreColor, Color backColor)
+        internal static void DrawTextInternal(
+            Gdi32.HDC hdc,
+            string? text,
+            Font? font,
+            Rectangle bounds,
+            Color foreColor,
+            Gdi32.QUALITY fontQuality,
+            TextFormatFlags flags)
+            => DrawTextInternal(hdc, text, font, bounds, foreColor, fontQuality, default, GetTextFormatFlags(flags));
+
+        internal static void DrawTextInternal(
+            Gdi32.HDC hdc,
+            string? text,
+            Font? font,
+            Rectangle bounds,
+            Color foreColor,
+            Gdi32.QUALITY fontQuality,
+            Color backColor,
+            User32.DT flags)
         {
-            if (dc == null)
-            {
-                throw new ArgumentNullException(nameof(dc));
-            }
-
-            Gdi32.QUALITY fontQuality = WindowsFont.WindowsFontQualityFromTextRenderingHint(dc as Graphics);
-
-            IntPtr hdc = dc.GetHdc();
-
-            try
-            {
-                using WindowsGraphics wg = WindowsGraphics.FromHdc(hdc);
-                using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font, fontQuality);
-                wg.DrawText(text, wf, bounds, foreColor, backColor);
-            }
-            finally
-            {
-                dc.ReleaseHdc();
-            }
-        }
-
-        public static void DrawText(IDeviceContext dc, string? text, Font? font, Rectangle bounds, Color foreColor, TextFormatFlags flags)
-        {
-            if (dc == null)
-            {
-                throw new ArgumentNullException(nameof(dc));
-            }
-
-            Gdi32.QUALITY fontQuality = WindowsFont.WindowsFontQualityFromTextRenderingHint(dc as Graphics);
-
-            using var wgr = new WindowsGraphicsWrapper(dc, flags);
-            using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font, fontQuality);
-            wgr.WindowsGraphics.DrawText(text, wf, bounds, foreColor, GetTextFormatFlags(flags));
-        }
-
-        public static void DrawText(IDeviceContext dc, string? text, Font? font, Rectangle bounds, Color foreColor, Color backColor, TextFormatFlags flags)
-        {
-            if (dc == null)
-            {
-                throw new ArgumentNullException(nameof(dc));
-            }
-
-            Gdi32.QUALITY fontQuality = WindowsFont.WindowsFontQualityFromTextRenderingHint(dc as Graphics);
-
-            using var wgr = new WindowsGraphicsWrapper(dc, flags);
-            using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font, fontQuality);
-            wgr.WindowsGraphics.DrawText(text, wf, bounds, foreColor, backColor, GetTextFormatFlags(flags));
+            using var hfont = GdiCache.GetHFONT(font, fontQuality);
+            hdc.DrawText(text, hfont, bounds, foreColor, flags, backColor);
         }
 
         private static User32.DT GetTextFormatFlags(TextFormatFlags flags)
         {
-            if (((uint)flags & WindowsGraphics.GdiUnsupportedFlagMask) == 0)
+            if (((uint)flags & GdiUnsupportedFlagMask) == 0)
             {
                 return (User32.DT)flags;
             }
 
             // Clear TextRenderer custom flags.
-            User32.DT windowsGraphicsSupportedFlags = (User32.DT)(((uint)flags) & ~WindowsGraphics.GdiUnsupportedFlagMask);
+            User32.DT windowsGraphicsSupportedFlags = (User32.DT)((uint)flags & ~GdiUnsupportedFlagMask);
 
             return windowsGraphicsSupportedFlags;
         }
 
         public static Size MeasureText(string? text, Font? font)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                return Size.Empty;
-            }
-
-            using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font);
-            return WindowsGraphicsCacheManager.MeasurementGraphics.MeasureText(text, wf);
-        }
+            => MeasureTextInternal(text, font, MaxSize);
 
         public static Size MeasureText(string? text, Font? font, Size proposedSize)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                return Size.Empty;
-            }
-
-            using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font);
-            return WindowsGraphicsCacheManager.MeasurementGraphics.MeasureText(text, wf, proposedSize);
-        }
+            => MeasureTextInternal(text, font, proposedSize);
 
         public static Size MeasureText(string? text, Font? font, Size proposedSize, TextFormatFlags flags)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                return Size.Empty;
-            }
-
-            using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font);
-            return WindowsGraphicsCacheManager.MeasurementGraphics.MeasureText(text, wf, proposedSize, GetTextFormatFlags(flags));
-        }
+            => MeasureTextInternal(text, font, proposedSize, flags);
 
         public static Size MeasureText(IDeviceContext dc, string? text, Font? font)
-        {
-            if (dc == null)
-            {
-                throw new ArgumentNullException(nameof(dc));
-            }
-            if (string.IsNullOrEmpty(text))
-            {
-                return Size.Empty;
-            }
-
-            Gdi32.QUALITY fontQuality = WindowsFont.WindowsFontQualityFromTextRenderingHint(dc as Graphics);
-
-            IntPtr hdc = dc.GetHdc();
-
-            try
-            {
-                using WindowsGraphics wg = WindowsGraphics.FromHdc(hdc);
-                using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font, fontQuality);
-                return wg.MeasureText(text, wf);
-            }
-            finally
-            {
-                dc.ReleaseHdc();
-            }
-        }
+            => MeasureTextInternal(dc, text, font, MaxSize);
 
         public static Size MeasureText(IDeviceContext dc, string? text, Font? font, Size proposedSize)
+            => MeasureTextInternal(dc, text, font, proposedSize);
+
+        public static Size MeasureText(
+            IDeviceContext dc,
+            string? text,
+            Font? font,
+            Size proposedSize,
+            TextFormatFlags flags)
+            => MeasureTextInternal(dc, text, font, proposedSize, flags);
+
+        private static Size MeasureTextInternal(
+            string? text,
+            Font? font,
+            Size proposedSize,
+            TextFormatFlags flags = TextFormatFlags.Bottom)
         {
-            if (dc == null)
-            {
-                throw new ArgumentNullException(nameof(dc));
-            }
             if (string.IsNullOrEmpty(text))
-            {
                 return Size.Empty;
-            }
 
-            Gdi32.QUALITY fontQuality = WindowsFont.WindowsFontQualityFromTextRenderingHint(dc as Graphics);
+            using var hfont = GdiCache.GetHFONT(font);
+            using var screen = GdiCache.GetScreenHdc();
 
-            IntPtr hdc = dc.GetHdc();
-
-            try
-            {
-                using WindowsGraphics wg = WindowsGraphics.FromHdc(hdc);
-                using WindowsFont? wf = WindowsGraphicsCacheManager.GetWindowsFont(font, fontQuality);
-                return wg.MeasureText(text, wf, proposedSize);
-            }
-            finally
-            {
-                dc.ReleaseHdc();
-            }
+            return screen.HDC.MeasureText(text, hfont, proposedSize, GetTextFormatFlags(flags));
         }
 
-        public static Size MeasureText(IDeviceContext dc, string? text, Font? font, Size proposedSize, TextFormatFlags flags)
+        private static Size MeasureTextInternal(
+            IDeviceContext dc,
+            string? text,
+            Font? font,
+            Size proposedSize,
+            TextFormatFlags flags = TextFormatFlags.Bottom)
         {
             if (dc == null)
-            {
                 throw new ArgumentNullException(nameof(dc));
-            }
+
             if (string.IsNullOrEmpty(text))
-            {
                 return Size.Empty;
-            }
 
-            Gdi32.QUALITY fontQuality = WindowsFont.WindowsFontQualityFromTextRenderingHint(dc as Graphics);
+            // This MUST come before retreiving the HDC, which locks the Graphics object
+            Gdi32.QUALITY quality = FontQualityFromTextRenderingHint(dc);
 
-            using var wgr = new WindowsGraphicsWrapper(dc, flags);
-            using var wf = WindowsGraphicsCacheManager.GetWindowsFont(font, fontQuality);
-            return wgr.WindowsGraphics.MeasureText(text, wf, proposedSize, GetTextFormatFlags(flags));
+            using var hdc = new DeviceContextHdcScope(dc);
+            using var hfont = GdiCache.GetHFONT(font, quality);
+            return hdc.MeasureText(text, hfont, proposedSize, GetTextFormatFlags(flags));
         }
 
         internal static Color DisabledTextColor(Color backColor)
@@ -286,14 +245,55 @@ namespace System.Windows.Forms
                 return SystemColors.GrayText;
             }
 
-            //Theme specs -- if the backcolor is darker than Control, we use
-            // ControlPaint.Dark(backcolor).  Otherwise we use ControlDark.
-            Color disabledTextForeColor = SystemColors.ControlDark;
-            if (ControlPaint.IsDarker(backColor, SystemColors.Control))
+            // If the color is darker than SystemColors.Control make it slightly darker,
+            // otherwise use the standard control dark color.
+
+            return ControlPaint.IsDarker(backColor, SystemColors.Control)
+                ? ControlPaint.Dark(backColor)
+                : SystemColors.ControlDark;
+        }
+
+        /// <summary>
+        ///  Attempts to match the TextRenderingHint of the specified Graphics object with a LOGFONT.lfQuality value.
+        /// </summary>
+        internal static Gdi32.QUALITY FontQualityFromTextRenderingHint(IDeviceContext? deviceContext)
+        {
+            if (!(deviceContext is Graphics g))
             {
-                disabledTextForeColor = ControlPaint.Dark(backColor);
+                return Gdi32.QUALITY.DEFAULT;
             }
-            return disabledTextForeColor;
+
+            switch (g.TextRenderingHint)
+            {
+                case TextRenderingHint.ClearTypeGridFit:
+                    return Gdi32.QUALITY.CLEARTYPE;
+                case TextRenderingHint.AntiAliasGridFit:
+                case TextRenderingHint.AntiAlias:
+                    return Gdi32.QUALITY.ANTIALIASED;
+                case TextRenderingHint.SingleBitPerPixelGridFit:
+                    return Gdi32.QUALITY.PROOF;
+                case TextRenderingHint.SingleBitPerPixel:
+                    return Gdi32.QUALITY.DRAFT;
+                default:
+                case TextRenderingHint.SystemDefault:
+                    return Gdi32.QUALITY.DEFAULT;
+            }
+        }
+
+        /// <summary>
+        ///  Returns what <see cref="FontQualityFromTextRenderingHint(IDeviceContext?)"/> would return in an
+        ///  unmodified <see cref="Graphics"/> object (i.e. the default).
+        /// </summary>
+        private static Gdi32.QUALITY GetDefaultFontQuality()
+        {
+            if (!SystemInformation.IsFontSmoothingEnabled)
+            {
+                return Gdi32.QUALITY.PROOF;
+            }
+
+            // FE_FONTSMOOTHINGCLEARTYPE = 0x0002
+            return SystemInformation.FontSmoothingType == 0x0002
+                ? Gdi32.QUALITY.CLEARTYPE : Gdi32.QUALITY.ANTIALIASED;
         }
     }
 }

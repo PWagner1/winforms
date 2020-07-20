@@ -9,6 +9,8 @@ internal static partial class Interop
         public const string Comctl32 = "comctl32.dll";
         public const string Comdlg32 = "comdlg32.dll";
         public const string Gdi32 = "gdi32.dll";
+        public const string Gdiplus = "gdiplus.dll";
+        public const string Hhctrl = "hhctrl.ocx";
         public const string Imm32 = "imm32.dll";
         public const string Kernel32 = "kernel32.dll";
         public const string NtDll = "ntdll.dll";
@@ -16,6 +18,7 @@ internal static partial class Interop
         public const string Oleacc = "oleacc.dll";
         public const string Oleaut32 = "oleaut32.dll";
         public const string Powrprof = "Powrprof.dll";
+        public const string Propsys = "Propsys.dll";
         public const string RichEdit41 = "MsftEdit.DLL";
         public const string SHCore = "SHCore.dll";
         public const string Shell32 = "shell32.dll";

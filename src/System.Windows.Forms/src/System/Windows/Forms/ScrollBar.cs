@@ -14,18 +14,18 @@ namespace System.Windows.Forms
     /// </summary>
     [DefaultProperty(nameof(Value))]
     [DefaultEvent(nameof(Scroll))]
-    public abstract class ScrollBar : Control
+    public abstract partial class ScrollBar : Control
     {
         private static readonly object s_scrollEvent = new object();
         private static readonly object s_valueChangedEvent = new object();
 
-        private int _minimum = 0;
+        private int _minimum;
         private int _maximum = 100;
         private int _smallChange = 1;
         private int _largeChange = 10;
-        private int _value = 0;
+        private int _value;
         private readonly ScrollOrientation _scrollOrientation;
-        private int _wheelDelta = 0;
+        private int _wheelDelta;
         private bool _scaleScrollBarForDpiChange = true;
 
         /// <summary>
@@ -488,7 +488,7 @@ namespace System.Windows.Forms
             return base.GetScaledBounds(bounds, factor, specified);
         }
 
-        internal override IntPtr InitializeDCForWmCtlColor(IntPtr dc, int msg) => IntPtr.Zero;
+        internal override Gdi32.HBRUSH InitializeDCForWmCtlColor(Gdi32.HDC dc, User32.WM msg) => default;
 
         protected override void OnEnabledChanged(EventArgs e)
         {
@@ -738,5 +738,15 @@ namespace System.Windows.Forms
                     break;
             }
         }
+
+        /// <summary>
+        ///  Creates a new AccessibleObject for this <see cref='ScrollBar'/> instance.
+        ///  The AccessibleObject instance returned by this method supports ControlType UIA property.
+        /// </summary>
+        /// <returns>
+        ///  AccessibleObject for this <see cref='ScrollBar'/> instance.
+        /// </returns>
+        protected override AccessibleObject CreateAccessibilityInstance()
+            => new ScrollBarAccessibleObject(this);
     }
 }

@@ -45,7 +45,7 @@ namespace System.Windows.Forms
 
         private AutoScaleMode _autoScaleMode = AutoScaleMode.Inherit;
 
-        private BitVector32 _state = new BitVector32();
+        private BitVector32 _state;
 
         /// <summary>
         ///  True if we need to perform scaling when layout resumes
@@ -320,12 +320,12 @@ namespace System.Windows.Forms
                             // Screen Dpi
                             if (DpiHelper.IsPerMonitorV2Awareness)
                             {
-                                _currentAutoScaleDimensions = new SizeF((float)_deviceDpi, (float)_deviceDpi);
+                                _currentAutoScaleDimensions = new SizeF(_deviceDpi, _deviceDpi);
                             }
                             else
                             {
                                 // this DPI value comes from the primary monitor.
-                                _currentAutoScaleDimensions = WindowsGraphicsCacheManager.MeasurementGraphics.DeviceContext.Dpi;
+                                _currentAutoScaleDimensions = new SizeF(DpiHelper.DeviceDpi, DpiHelper.DeviceDpi);
                             }
                             break;
 
@@ -708,8 +708,8 @@ namespace System.Windows.Forms
             // Windows uses CreateCompatibleDC(NULL) to get a memory DC for
             // the monitor the application is currently on.
 
-            using var dc = new Gdi32.CreateDcScope(IntPtr.Zero);
-            if (dc.HDC == IntPtr.Zero)
+            using var dc = new Gdi32.CreateDcScope(default);
+            if (dc.IsNull)
             {
                 throw new Win32Exception();
             }

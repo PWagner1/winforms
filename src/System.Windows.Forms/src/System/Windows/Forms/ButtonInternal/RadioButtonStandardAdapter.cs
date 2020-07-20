@@ -20,7 +20,7 @@ namespace System.Windows.Forms.ButtonInternal
             }
             else
             {
-                ColorData colors = PaintRender(e.Graphics).Calculate();
+                ColorData colors = PaintRender(e).Calculate();
                 LayoutData layout = Layout(e).Layout();
                 PaintButtonBackground(e, Control.ClientRectangle, null);
 
@@ -68,8 +68,6 @@ namespace System.Windows.Forms.ButtonInternal
             return new ButtonStandardAdapter(Control);
         }
 
-        #region Temp
-
         protected override LayoutOptions Layout(PaintEventArgs e)
         {
             LayoutOptions layout = CommonLayout();
@@ -79,19 +77,18 @@ namespace System.Windows.Forms.ButtonInternal
             if (Application.RenderWithVisualStyles)
             {
                 ButtonBase b = Control;
-                using (Graphics g = WindowsFormsUtils.CreateMeasurementGraphics())
-                {
-                    layout.checkSize = RadioButtonRenderer.GetGlyphSize(g, RadioButtonRenderer.ConvertFromButtonState(GetState(), b.MouseIsOver), b.HandleInternal).Width;
-                }
+                using var screen = GdiCache.GetScreenHdc();
+                layout.checkSize = RadioButtonRenderer.GetGlyphSize(
+                    screen,
+                    RadioButtonRenderer.ConvertFromButtonState(GetState(), b.MouseIsOver),
+                    b.HandleInternal).Width;
             }
             else
             {
-                layout.checkSize = (int)(layout.checkSize * GetDpiScaleRatio(e.Graphics));
+                layout.checkSize = (int)(layout.checkSize * GetDpiScaleRatio());
             }
 
             return layout;
         }
-
-        #endregion
     }
 }

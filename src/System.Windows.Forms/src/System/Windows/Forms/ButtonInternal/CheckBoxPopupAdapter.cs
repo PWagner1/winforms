@@ -23,18 +23,24 @@ namespace System.Windows.Forms.ButtonInternal
             }
             else
             {
-                Graphics g = e.Graphics;
-                ColorData colors = PaintPopupRender(e.Graphics).Calculate();
-                LayoutData layout = PaintPopupLayout(e, false).Layout();
+                ColorData colors = PaintPopupRender(e).Calculate();
+                LayoutData layout = PaintPopupLayout(show3D: false).Layout();
 
-                Region original = e.Graphics.Clip;
                 PaintButtonBackground(e, Control.ClientRectangle, null);
 
                 PaintImage(e, layout);
 
-                DrawCheckBackground(e, layout.checkBounds, colors.windowText, colors.options.highContrast ? colors.buttonFace : colors.highlight, true, colors);
-                DrawFlatBorder(e.Graphics, layout.checkBounds,
-                    (colors.options.highContrast && !Control.Enabled) ? colors.windowFrame : colors.buttonShadow);
+                DrawCheckBackground(
+                    e,
+                    layout.checkBounds,
+                    colors.windowText,
+                    colors.options.HighContrast ? colors.buttonFace : colors.highlight,
+                    disabledColors: true,
+                    colors);
+                ControlPaint.DrawBorderSolid(
+                    e,
+                    layout.checkBounds,
+                    (colors.options.HighContrast && !Control.Enabled) ? colors.windowFrame : colors.buttonShadow);
                 DrawCheckOnly(e, layout, colors, colors.windowText, colors.highlight);
 
                 AdjustFocusRectangle(layout);
@@ -44,7 +50,6 @@ namespace System.Windows.Forms.ButtonInternal
 
         internal override void PaintOver(PaintEventArgs e, CheckState state)
         {
-            Graphics g = e.Graphics;
             if (Control.Appearance == Appearance.Button)
             {
                 ButtonPopupAdapter adapter = new ButtonPopupAdapter(Control);
@@ -52,16 +57,23 @@ namespace System.Windows.Forms.ButtonInternal
             }
             else
             {
-                ColorData colors = PaintPopupRender(e.Graphics).Calculate();
-                LayoutData layout = PaintPopupLayout(e, true).Layout();
+                ColorData colors = PaintPopupRender(e).Calculate();
+                LayoutData layout = PaintPopupLayout(show3D: true).Layout();
 
                 Region original = e.Graphics.Clip;
                 PaintButtonBackground(e, Control.ClientRectangle, null);
 
                 PaintImage(e, layout);
 
-                DrawCheckBackground(e, layout.checkBounds, colors.windowText, colors.options.highContrast ? colors.buttonFace : colors.highlight, true, colors);
-                DrawPopupBorder(g, layout.checkBounds, colors);
+                DrawCheckBackground(
+                    e,
+                    layout.checkBounds,
+                    colors.windowText,
+                    colors.options.HighContrast ? colors.buttonFace : colors.highlight,
+                    disabledColors: true,
+                    colors);
+
+                DrawPopupBorder(e, layout.checkBounds, colors);
                 DrawCheckOnly(e, layout, colors, colors.windowText, colors.highlight);
 
                 if (!string.IsNullOrEmpty(Control.Text))
@@ -86,7 +98,7 @@ namespace System.Windows.Forms.ButtonInternal
             {
                 Graphics g = e.Graphics;
                 ColorData colors = PaintPopupRender(e.Graphics).Calculate();
-                LayoutData layout = PaintPopupLayout(e, true).Layout();
+                LayoutData layout = PaintPopupLayout(show3D: true).Layout();
 
                 Region original = e.Graphics.Clip;
                 PaintButtonBackground(e, Control.ClientRectangle, null);
@@ -94,7 +106,7 @@ namespace System.Windows.Forms.ButtonInternal
                 PaintImage(e, layout);
 
                 DrawCheckBackground(e, layout.checkBounds, colors.windowText, colors.buttonFace, true, colors);
-                DrawPopupBorder(g, layout.checkBounds, colors);
+                DrawPopupBorder(e, layout.checkBounds, colors);
                 DrawCheckOnly(e, layout, colors, colors.windowText, colors.buttonFace);
 
                 AdjustFocusRectangle(layout);
@@ -111,42 +123,51 @@ namespace System.Windows.Forms.ButtonInternal
 
         protected override LayoutOptions Layout(PaintEventArgs e)
         {
-            LayoutOptions layout = PaintPopupLayout(e, /* up = */ true);
+            LayoutOptions layout = PaintPopupLayout(show3D: true);
             Debug.Assert(layout.GetPreferredSizeCore(LayoutUtils.MaxSize)
-                == PaintPopupLayout(e, /* up = */ false).GetPreferredSizeCore(LayoutUtils.MaxSize),
+                == PaintPopupLayout(show3D: false).GetPreferredSizeCore(LayoutUtils.MaxSize),
                 "The state of show3D should not effect PreferredSize");
             return layout;
         }
 
-        internal static LayoutOptions PaintPopupLayout(Graphics g, bool show3D, int checkSize, Rectangle clientRectangle, Padding padding,
-                                                       bool isDefault, Font font, string text, bool enabled, ContentAlignment textAlign, RightToLeft rtl,
-                                                       Control control = null)
+        internal static LayoutOptions PaintPopupLayout(
+            bool show3D,
+            int checkSize,
+            Rectangle clientRectangle,
+            Padding padding,
+            bool isDefault,
+            Font font,
+            string text,
+            bool enabled,
+            ContentAlignment textAlign,
+            RightToLeft rtl,
+            Control control = null)
         {
             LayoutOptions layout = CommonLayout(clientRectangle, padding, isDefault, font, text, enabled, textAlign, rtl);
             layout.shadowedText = false;
             if (show3D)
             {
-                layout.checkSize = (int)(checkSize * GetDpiScaleRatio(g, control) + 1);
+                layout.checkSize = (int)(checkSize * GetDpiScaleRatio(control) + 1);
             }
             else
             {
-                layout.checkSize = (int)(checkSize * GetDpiScaleRatio(g, control));
+                layout.checkSize = (int)(checkSize * GetDpiScaleRatio(control));
                 layout.checkPaddingSize = 1;
             }
             return layout;
         }
 
-        private LayoutOptions PaintPopupLayout(PaintEventArgs e, bool show3D)
+        private LayoutOptions PaintPopupLayout(bool show3D)
         {
             LayoutOptions layout = CommonLayout();
             layout.shadowedText = false;
             if (show3D)
             {
-                layout.checkSize = (int)(flatCheckSize * GetDpiScaleRatio(e.Graphics) + 1);
+                layout.checkSize = (int)(flatCheckSize * GetDpiScaleRatio() + 1);
             }
             else
             {
-                layout.checkSize = (int)(flatCheckSize * GetDpiScaleRatio(e.Graphics));
+                layout.checkSize = (int)(flatCheckSize * GetDpiScaleRatio());
                 layout.checkPaddingSize = 1;
             }
             return layout;

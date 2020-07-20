@@ -27,7 +27,7 @@ namespace System.Windows.Forms
         private readonly byte[]? _cursorData;
         private IntPtr _handle = IntPtr.Zero;       // handle to loaded image
         private bool _ownHandle = true;
-        private readonly int _resourceId = 0;
+        private readonly int _resourceId;
 
         /// <summary>
         ///  Private constructor. If you want a standard system cursor, use one of the
@@ -338,7 +338,7 @@ namespace System.Windows.Forms
                 // is merely a matter of offsetting and clipping.
                 Gdi32.IntersectClipRect(this, targetX, targetY, targetX + clipWidth, targetY + clipHeight);
                 User32.DrawIconEx(
-                    dc,
+                    (Gdi32.HDC)dc,
                     targetX - imageX,
                     targetY - imageY,
                     this,
@@ -396,12 +396,12 @@ namespace System.Windows.Forms
         private Size GetIconSize(IntPtr iconHandle)
         {
             using User32.ICONINFO info = User32.GetIconInfo(iconHandle);
-            if (info.hbmColor != IntPtr.Zero)
+            if (!info.hbmColor.IsNull)
             {
                 Gdi32.GetObjectW(info.hbmColor, out Gdi32.BITMAP bitmap);
                 return new Size(bitmap.bmWidth, bitmap.bmHeight);
             }
-            else if (info.hbmMask != IntPtr.Zero)
+            else if (!info.hbmMask.IsNull)
             {
                 Gdi32.GetObjectW(info.hbmMask, out Gdi32.BITMAP bitmap);
                 return new Size(bitmap.bmWidth, bitmap.bmHeight / 2);

@@ -16,23 +16,36 @@ internal static partial class Interop
         ///  Use in a <see langword="using" /> statement. If you must pass this around, always pass
         ///  by <see langword="ref" /> to avoid duplicating the handle and risking a double selection.
         /// </remarks>
-        internal ref struct SelectObjectScope
+        internal readonly ref struct SelectObjectScope
         {
-            private readonly IntPtr _hdc;
-            public IntPtr PreviousObject;
+            private readonly HDC _hdc;
+            public HGDIOBJ PreviousObject { get; }
 
             /// <summary>
-            ///  Selects <paramref name="object"/> into the given <paramref name="hdc"/>.
+            ///  Selects <paramref name="object"/> into the given <paramref name="hdc"/> using
+            ///  <see cref="SelectObject(HDC, HGDIOBJ)"/>.
             /// </summary>
-            public SelectObjectScope(IntPtr hdc, IntPtr @object)
+            public SelectObjectScope(HDC hdc, HGDIOBJ @object)
             {
-                _hdc = hdc;
-                PreviousObject = SelectObject(hdc, @object);
+                // Selecting null doesn't mean anything
+
+                if (@object.IsNull)
+                {
+                    this = default;
+                }
+                else
+                {
+                    _hdc = hdc;
+                    PreviousObject = SelectObject(hdc, @object);
+                }
             }
 
             public void Dispose()
             {
-                SelectObject(_hdc, PreviousObject);
+                if (!_hdc.IsNull)
+                {
+                    SelectObject(_hdc, PreviousObject);
+                }
             }
         }
     }

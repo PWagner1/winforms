@@ -11,7 +11,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.Design.Behavior;
 using static Interop;
 
@@ -28,57 +27,57 @@ namespace System.Windows.Forms.Design
         //brush used to draw the resizeable selection borders around controls/components
         private static HatchBrush s_selectionBorderBrush = new HatchBrush(HatchStyle.Percent50, SystemColors.ControlDarkDark, Color.Transparent);
         //Pens and Brushes used via GDI to render our grabhandles
-        private static IntPtr s_grabHandleFillBrushPrimary = Gdi32.CreateSolidBrush(ColorTranslator.ToWin32(SystemColors.Window));
-        private static IntPtr s_grabHandleFillBrush = Gdi32.CreateSolidBrush(ColorTranslator.ToWin32(SystemColors.ControlText));
-        private static IntPtr s_grabHandlePenPrimary = Gdi32.CreatePen(Gdi32.PS.SOLID, 1, ColorTranslator.ToWin32(SystemColors.ControlText));
-        private static IntPtr s_grabHandlePen = Gdi32.CreatePen(Gdi32.PS.SOLID, 1, ColorTranslator.ToWin32(SystemColors.Window));
+        private static Gdi32.HBRUSH s_grabHandleFillBrushPrimary = Gdi32.CreateSolidBrush(ColorTranslator.ToWin32(SystemColors.Window));
+        private static Gdi32.HBRUSH s_grabHandleFillBrush = Gdi32.CreateSolidBrush(ColorTranslator.ToWin32(SystemColors.ControlText));
+        private static Gdi32.HPEN s_grabHandlePenPrimary = Gdi32.CreatePen(Gdi32.PS.SOLID, 1, ColorTranslator.ToWin32(SystemColors.ControlText));
+        private static Gdi32.HPEN s_grabHandlePen = Gdi32.CreatePen(Gdi32.PS.SOLID, 1, ColorTranslator.ToWin32(SystemColors.Window));
 
         //The box-like image used as the user is dragging comps from the toolbox
-        private static Bitmap s_boxImage = null;
-        public static int BOXIMAGESIZE = 16;
+        private static Bitmap s_boxImage;
+        public static int BOXIMAGESIZE = ScaleLogicalToDeviceUnitsX(16);
 
         // selection border size
-        public static int SELECTIONBORDERSIZE = 1;
+        public static int SELECTIONBORDERSIZE = ScaleLogicalToDeviceUnitsX(1);
         // Although the selection border is only 1, we actually want a 3 pixel hittestarea
-        public static int SELECTIONBORDERHITAREA = 3;
+        public static int SELECTIONBORDERHITAREA = ScaleLogicalToDeviceUnitsX(3);
 
         // We want to make sure that the 1 pixel selectionborder is centered on the handles. The fact that the border is actually 3 pixels wide works like magic. If you draw a picture, then you will see why.
         //grabhandle size (diameter)
-        public static int HANDLESIZE = 7;
+        public static int HANDLESIZE = ScaleLogicalToDeviceUnitsX(7);
         //how much should the grabhandle overlap the control
-        public static int HANDLEOVERLAP = 2;
+        public static int HANDLEOVERLAP = ScaleLogicalToDeviceUnitsX(2);
         //we want the selection border to be centered on a grabhandle, so how much do. we need to offset the border from the control to make that happen
         public static int SELECTIONBORDEROFFSET = ((HANDLESIZE - SELECTIONBORDERSIZE) / 2) - HANDLEOVERLAP;
 
         //no-resize handle size (diameter)
-        public static int NORESIZEHANDLESIZE = 5;
+        public static int NORESIZEHANDLESIZE = ScaleLogicalToDeviceUnitsX(5);
         //we want the selection border to be centered on a grabhandle, so how much do
         //we need to offset the border from the control to make that happen
         public static int NORESIZEBORDEROFFSET = ((NORESIZEHANDLESIZE - SELECTIONBORDERSIZE) / 2);
 
         //lock handle height
-        public static int LOCKHANDLEHEIGHT = 9;
+        public static int LOCKHANDLEHEIGHT = ScaleLogicalToDeviceUnitsX(9);
         //total lock handle width
-        public static int LOCKHANDLEWIDTH = 7;
+        public static int LOCKHANDLEWIDTH = ScaleLogicalToDeviceUnitsX(7);
         //how much should the lockhandle overlap the control
-        public static int LOCKHANDLEOVERLAP = 2;
+        public static int LOCKHANDLEOVERLAP = ScaleLogicalToDeviceUnitsX(2);
         //we want the selection border to be centered on the no-resize handle, so calculate how many pixels we need
         //to offset the selection border from the control -- since the handle is not square, we need one in each direction
         public static int LOCKEDSELECTIONBORDEROFFSET_Y = ((LOCKHANDLEHEIGHT - SELECTIONBORDERSIZE) / 2) - LOCKHANDLEOVERLAP;
         public static int LOCKEDSELECTIONBORDEROFFSET_X = ((LOCKHANDLEWIDTH - SELECTIONBORDERSIZE) / 2) - LOCKHANDLEOVERLAP;
 
         // upper rectangle size (diameter)
-        public static int LOCKHANDLESIZE_UPPER = 5;
+        public static int LOCKHANDLESIZE_UPPER = ScaleLogicalToDeviceUnitsX(5);
         // lower rectangle size
-        public static int LOCKHANDLEHEIGHT_LOWER = 6;
-        public static int LOCKHANDLEWIDTH_LOWER = 7;
+        public static int LOCKHANDLEHEIGHT_LOWER = ScaleLogicalToDeviceUnitsX(6);
+        public static int LOCKHANDLEWIDTH_LOWER = ScaleLogicalToDeviceUnitsX(7);
 
         //Offset used when drawing the upper rect of a lock handle
         public static int LOCKHANDLEUPPER_OFFSET = (LOCKHANDLEWIDTH_LOWER - LOCKHANDLESIZE_UPPER) / 2;
         //Offset used when drawing the lower rect of a lock handle
         public static int LOCKHANDLELOWER_OFFSET = (LOCKHANDLEHEIGHT - LOCKHANDLEHEIGHT_LOWER);
 
-        public static int CONTAINERGRABHANDLESIZE = 15;
+        public static int CONTAINERGRABHANDLESIZE = ScaleLogicalToDeviceUnitsX(15);
         //delay for showing snaplines on keyboard movements
         public static int SNAPELINEDELAY = 1000;
 
@@ -95,47 +94,14 @@ namespace System.Windows.Forms.Design
         public static int DEFAULTCOLUMNCOUNT = 2;
 
         //size of the col/row grab handle glyphs for teh table layout panel
-        public static int RESIZEGLYPHSIZE = 4;
+        public static int RESIZEGLYPHSIZE = ScaleLogicalToDeviceUnitsX(4);
 
         //default value for Form padding if it has not been set in the designer (usability study request)
         public static int DEFAULTFORMPADDING = 9;
 
         //use these value to signify ANY of the right, top, left, center, or bottom alignments with the ContentAlignment enum.
-        public static readonly ContentAlignment anyTopAlignment = ContentAlignment.TopLeft | ContentAlignment.TopCenter | ContentAlignment.TopRight;
-        public static readonly ContentAlignment anyMiddleAlignment = ContentAlignment.MiddleLeft | ContentAlignment.MiddleCenter | ContentAlignment.MiddleRight;
-
-        /// <summary>
-        ///  Scale all hardcoded sizes if needed
-        /// </summary>
-        static DesignerUtils()
-        {
-            if (!DpiHelper.IsScalingRequired)
-            {
-                return;
-            }
-
-            BOXIMAGESIZE = DpiHelper.LogicalToDeviceUnitsX(BOXIMAGESIZE);
-            SELECTIONBORDERSIZE = DpiHelper.LogicalToDeviceUnitsX(SELECTIONBORDERSIZE);
-            SELECTIONBORDERHITAREA = DpiHelper.LogicalToDeviceUnitsX(SELECTIONBORDERHITAREA);
-            HANDLESIZE = DpiHelper.LogicalToDeviceUnitsX(HANDLESIZE);
-            HANDLEOVERLAP = DpiHelper.LogicalToDeviceUnitsX(HANDLEOVERLAP);
-            NORESIZEHANDLESIZE = DpiHelper.LogicalToDeviceUnitsX(NORESIZEHANDLESIZE);
-            LOCKHANDLEHEIGHT = DpiHelper.LogicalToDeviceUnitsX(LOCKHANDLEHEIGHT);
-            LOCKHANDLEWIDTH = DpiHelper.LogicalToDeviceUnitsX(LOCKHANDLEWIDTH);
-            LOCKHANDLEOVERLAP = DpiHelper.LogicalToDeviceUnitsX(LOCKHANDLEOVERLAP);
-            LOCKHANDLESIZE_UPPER = DpiHelper.LogicalToDeviceUnitsX(LOCKHANDLESIZE_UPPER);
-            LOCKHANDLEHEIGHT_LOWER = DpiHelper.LogicalToDeviceUnitsX(LOCKHANDLEHEIGHT_LOWER);
-            LOCKHANDLEWIDTH_LOWER = DpiHelper.LogicalToDeviceUnitsX(LOCKHANDLEWIDTH_LOWER);
-            CONTAINERGRABHANDLESIZE = DpiHelper.LogicalToDeviceUnitsX(CONTAINERGRABHANDLESIZE);
-            RESIZEGLYPHSIZE = DpiHelper.LogicalToDeviceUnitsX(RESIZEGLYPHSIZE);
-
-            SELECTIONBORDEROFFSET = ((HANDLESIZE - SELECTIONBORDERSIZE) / 2) - HANDLEOVERLAP;
-            NORESIZEBORDEROFFSET = ((NORESIZEHANDLESIZE - SELECTIONBORDERSIZE) / 2);
-            LOCKEDSELECTIONBORDEROFFSET_Y = ((LOCKHANDLEHEIGHT - SELECTIONBORDERSIZE) / 2) - LOCKHANDLEOVERLAP;
-            LOCKEDSELECTIONBORDEROFFSET_X = ((LOCKHANDLEWIDTH - SELECTIONBORDERSIZE) / 2) - LOCKHANDLEOVERLAP;
-            LOCKHANDLEUPPER_OFFSET = (LOCKHANDLEWIDTH_LOWER - LOCKHANDLESIZE_UPPER) / 2;
-            LOCKHANDLELOWER_OFFSET = (LOCKHANDLEHEIGHT - LOCKHANDLEHEIGHT_LOWER);
-        }
+        public const ContentAlignment AnyTopAlignment = ContentAlignment.TopLeft | ContentAlignment.TopCenter | ContentAlignment.TopRight;
+        public const ContentAlignment AnyMiddleAlignment = ContentAlignment.MiddleLeft | ContentAlignment.MiddleCenter | ContentAlignment.MiddleRight;
 
         /// <summary>
         ///  Used when the user clicks and drags a toolbox item onto the documentdesigner - this is the small box that is painted beneath the mouse pointer.
@@ -282,24 +248,14 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public static void DrawGrabHandle(Graphics graphics, Rectangle bounds, bool isPrimary, Glyph glyph)
         {
-            IntPtr hDC = graphics.GetHdc();
-            try
-            {
-                //set our pen and brush based on primary selection
-                IntPtr oldBrush = Gdi32.SelectObject(hDC, isPrimary ? s_grabHandleFillBrushPrimary : s_grabHandleFillBrush);
-                IntPtr oldPen = Gdi32.SelectObject(hDC, isPrimary ? s_grabHandlePenPrimary : s_grabHandlePen);
+            using var hDC = new DeviceContextHdcScope(graphics, applyGraphicsState: false);
 
-                //draw our rounded rect grabhandle
-                Gdi32.RoundRect(hDC, bounds.Left, bounds.Top, bounds.Right, bounds.Bottom, 2, 2);
+            // Set our pen and brush based on primary selection
+            using var brushSelection = new Gdi32.SelectObjectScope(hDC, isPrimary ? s_grabHandleFillBrushPrimary : s_grabHandleFillBrush);
+            using var penSelection = new Gdi32.SelectObjectScope(hDC, isPrimary ? s_grabHandlePenPrimary : s_grabHandlePen);
 
-                //restore old pen and brush
-                Gdi32.SelectObject(hDC, oldBrush);
-                Gdi32.SelectObject(hDC, oldPen);
-            }
-            finally
-            {
-                graphics.ReleaseHdcInternal(hDC);
-            }
+            // Draw our rounded rect grabhandle
+            Gdi32.RoundRect(hDC, bounds.Left, bounds.Top, bounds.Right, bounds.Bottom, 2, 2);
         }
 
         /// <summary>
@@ -307,23 +263,14 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public static void DrawNoResizeHandle(Graphics graphics, Rectangle bounds, bool isPrimary, Glyph glyph)
         {
-            IntPtr hDC = graphics.GetHdc();
-            try
-            {
-                //set our pen and brush based on primary selection
-                IntPtr oldBrush = Gdi32.SelectObject(hDC, isPrimary ? s_grabHandleFillBrushPrimary : s_grabHandleFillBrush);
-                IntPtr oldPen = Gdi32.SelectObject(hDC, s_grabHandlePenPrimary);
+            using var hDC = new DeviceContextHdcScope(graphics, applyGraphicsState: false);
 
-                //draw our rect no-resize handle
-                Gdi32.Rectangle(hDC, bounds.Left, bounds.Top, bounds.Right, bounds.Bottom);
-                //restore old pen and brush
-                Gdi32.SelectObject(hDC, oldBrush);
-                Gdi32.SelectObject(hDC, oldPen);
-            }
-            finally
-            {
-                graphics.ReleaseHdcInternal(hDC);
-            }
+            // Set our pen and brush based on primary selection
+            using var brushSelection = new Gdi32.SelectObjectScope(hDC, isPrimary ? s_grabHandleFillBrushPrimary : s_grabHandleFillBrush);
+            using var penSelection = new Gdi32.SelectObjectScope(hDC, s_grabHandlePenPrimary);
+
+            // Draw our rect no-resize handle
+            Gdi32.Rectangle(hDC, bounds.Left, bounds.Top, bounds.Right, bounds.Bottom);
         }
 
         /// <summary>
@@ -331,26 +278,17 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public static void DrawLockedHandle(Graphics graphics, Rectangle bounds, bool isPrimary, Glyph glyph)
         {
-            IntPtr hDC = graphics.GetHdc();
-            try
-            {
-                IntPtr oldPen = Gdi32.SelectObject(hDC, s_grabHandlePenPrimary);
-                // Upper rect - upper rect is always filled with the primary brush
-                IntPtr oldBrush = Gdi32.SelectObject(hDC, s_grabHandleFillBrushPrimary);
-                Gdi32.RoundRect(hDC, bounds.Left + LOCKHANDLEUPPER_OFFSET, bounds.Top, bounds.Left + LOCKHANDLEUPPER_OFFSET + LOCKHANDLESIZE_UPPER, bounds.Top + LOCKHANDLESIZE_UPPER, 2, 2);
+            using var hDC = new DeviceContextHdcScope(graphics, applyGraphicsState: false);
 
-                // Lower rect - its fillbrush depends on the primary selection
-                Gdi32.SelectObject(hDC, isPrimary ? s_grabHandleFillBrushPrimary : s_grabHandleFillBrush);
-                Gdi32.Rectangle(hDC, bounds.Left, bounds.Top + LOCKHANDLELOWER_OFFSET, bounds.Right, bounds.Bottom);
+            using var penSelection = new Gdi32.SelectObjectScope(hDC, s_grabHandlePenPrimary);
 
-                //restore old pen and brush
-                Gdi32.SelectObject(hDC, oldBrush);
-                Gdi32.SelectObject(hDC, oldPen);
-            }
-            finally
-            {
-                graphics.ReleaseHdcInternal(hDC);
-            }
+            // Upper rect - upper rect is always filled with the primary brush
+            using var brushSelection = new Gdi32.SelectObjectScope(hDC, s_grabHandleFillBrushPrimary);
+            Gdi32.RoundRect(hDC, bounds.Left + LOCKHANDLEUPPER_OFFSET, bounds.Top, bounds.Left + LOCKHANDLEUPPER_OFFSET + LOCKHANDLESIZE_UPPER, bounds.Top + LOCKHANDLESIZE_UPPER, 2, 2);
+
+            // Lower rect - its fillbrush depends on the primary selection
+            Gdi32.SelectObject(hDC, isPrimary ? s_grabHandleFillBrushPrimary : s_grabHandleFillBrush);
+            Gdi32.Rectangle(hDC, bounds.Left, bounds.Top + LOCKHANDLELOWER_OFFSET, bounds.Right, bounds.Bottom);
         }
 
         /// <summary>
@@ -455,39 +393,33 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public static void GenerateSnapShotWithBitBlt(Control control, ref Image image)
         {
-            //get the DC's and create our image
-            HandleRef hWnd = new HandleRef(control, control.Handle);
-            IntPtr controlDC = User32.GetDC(hWnd);
-            image = new Bitmap(Math.Max(control.Width, MINCONTROLBITMAPSIZE), Math.Max(control.Height, MINCONTROLBITMAPSIZE), PixelFormat.Format32bppPArgb);
+            // Get the DC's and create our image
+            using var controlDC = new User32.GetDcScope(control.Handle);
+            image = new Bitmap(
+                Math.Max(control.Width, MINCONTROLBITMAPSIZE),
+                Math.Max(control.Height, MINCONTROLBITMAPSIZE),
+                PixelFormat.Format32bppPArgb);
 
-            using (Graphics gDest = Graphics.FromImage(image))
+            using Graphics gDest = Graphics.FromImage(image);
+
+            if (control.BackColor == Color.Transparent)
             {
-                if (control.BackColor == Color.Transparent)
-                {
-                    gDest.Clear(SystemColors.Control);
-                }
-
-                IntPtr destDC = gDest.GetHdc();
-                try
-                {
-                    // Perform our bitblit operation to push the image into the dest bitmap
-                    Gdi32.BitBlt(
-                        destDC,
-                        0,
-                        0,
-                        image.Width,
-                        image.Height,
-                        controlDC,
-                        0,
-                        0,
-                        Gdi32.ROP.SRCCOPY);
-                }
-                finally
-                {
-                    // Clean up all our handles and what not
-                    gDest.ReleaseHdc(destDC);
-                }
+                gDest.Clear(SystemColors.Control);
             }
+
+            using var destDC = new DeviceContextHdcScope(gDest, applyGraphicsState: false);
+
+            // Perform our bitblit operation to push the image into the dest bitmap
+            Gdi32.BitBlt(
+                destDC,
+                0,
+                0,
+                image.Width,
+                image.Height,
+                controlDC,
+                0,
+                0,
+                Gdi32.ROP.SRCCOPY);
         }
 
         /// <summary>
@@ -613,34 +545,25 @@ namespace System.Windows.Forms.Design
             //get the font metrics via gdi
             int fontAscent = 0;
             int fontHeight = 0;
-            using (Graphics g = ctrl.CreateGraphics())
-            {
-                IntPtr dc = g.GetHdc();
-                IntPtr hFont = ctrl.Font.ToHfont();
-                IntPtr hFontOld;
-                try
-                {
-                    hFontOld = Gdi32.SelectObject(dc, hFont);
-                    var metrics = new Gdi32.TEXTMETRICW();
-                    Gdi32.GetTextMetricsW(new HandleRef(ctrl, dc), ref metrics);
-                    //add the font ascent to the baseline
-                    fontAscent = metrics.tmAscent + 1;
-                    fontHeight = metrics.tmHeight;
-                    Gdi32.SelectObject(dc, hFontOld);
-                }
-                finally
-                {
-                    Gdi32.DeleteObject(hFont);
-                    g.ReleaseHdc(dc);
-                }
-            }
 
-            //now add it all up
-            if ((alignment & anyTopAlignment) != 0)
+            using Graphics g = ctrl.CreateGraphics();
+            using var dc = new DeviceContextHdcScope(g, applyGraphicsState: false);
+            using var hFont = new Gdi32.ObjectScope(ctrl.Font.ToHFONT());
+            using var hFontOld = new Gdi32.SelectObjectScope(dc, hFont);
+
+            var metrics = new Gdi32.TEXTMETRICW();
+            Gdi32.GetTextMetricsW(dc, ref metrics);
+
+            // Add the font ascent to the baseline
+            fontAscent = metrics.tmAscent + 1;
+            fontHeight = metrics.tmHeight;
+
+            // Now add it all up
+            if ((alignment & AnyTopAlignment) != 0)
             {
                 return face.Top + fontAscent;
             }
-            else if ((alignment & anyMiddleAlignment) != 0)
+            else if ((alignment & AnyMiddleAlignment) != 0)
             {
                 return face.Top + (face.Height / 2) - (fontHeight / 2) + fontAscent;
             }
@@ -922,6 +845,9 @@ namespace System.Windows.Forms.Design
                 }
             }
         }
+
+        private static int ScaleLogicalToDeviceUnitsX(int unit)
+            => DpiHelper.IsScalingRequired ? DpiHelper.LogicalToDeviceUnitsX(unit) : unit;
 
         private static ComCtl32.TVS_EX TreeView_GetExtendedStyle(IntPtr handle)
         {

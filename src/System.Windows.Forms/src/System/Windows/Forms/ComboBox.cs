@@ -57,7 +57,7 @@ namespace System.Windows.Forms
         private const int DefaultSimpleStyleHeight = 150;
         private const int DefaultDropDownHeight = 106;
         private const int AutoCompleteTimeout = 10000000; // 1 second timeout for resetting the MatchingText
-        private bool autoCompleteDroppedDown = false;
+        private bool autoCompleteDroppedDown;
 
         private FlatStyle flatStyle = FlatStyle.Standard;
         private int updateCount;
@@ -125,7 +125,7 @@ namespace System.Windows.Forms
         /// </summary>
         private AutoCompleteStringCollection autoCompleteCustomSource;
         private StringSource stringSource;
-        private bool fromHandleCreate = false;
+        private bool fromHandleCreate;
 
         private ComboBoxChildListUiaProvider childListAccessibleObject;
         private ComboBoxChildEditUiaProvider childEditAccessibleObject;
@@ -134,7 +134,7 @@ namespace System.Windows.Forms
         // Indicates whether the dropdown list will be closed  after
         // selection (on getting CBN_SELENDOK notification) to prevent
         // focusing on the list item after hiding the list.
-        private bool dropDownWillBeClosed = false;
+        private bool dropDownWillBeClosed;
 
         /// <summary>
         ///  Creates a new ComboBox control.  The default style for the combo is
@@ -963,10 +963,11 @@ namespace System.Windows.Forms
             // controls to be the same height.
             Size textExtent = Size.Empty;
 
-            using (WindowsFont font = WindowsFont.FromFont(Font))
+            using (var hfont = GdiCache.GetHFONT(Font))
+            using (var screen = GdiCache.GetScreenHdc())
             {
                 // this is the character that Windows uses to determine the extent
-                textExtent = WindowsGraphicsCacheManager.MeasurementGraphics.GetTextExtent("0", font);
+                textExtent = screen.HDC.GetTextExtent("0", hfont);
             }
 
             int dyEdit = textExtent.Height + SystemInformation.Border3DSize.Height;
@@ -2170,16 +2171,16 @@ namespace System.Windows.Forms
             return listNativeWindow != null ? listNativeWindow.GetHashCode() : 0;
         }
 
-        internal override IntPtr InitializeDCForWmCtlColor(IntPtr dc, int msg)
+        internal override Gdi32.HBRUSH InitializeDCForWmCtlColor(Gdi32.HDC dc, User32.WM msg)
         {
-            if ((msg == (int)WM.CTLCOLORSTATIC) && !ShouldSerializeBackColor())
+            if (msg == WM.CTLCOLORSTATIC && !ShouldSerializeBackColor())
             {
                 // Let the Win32 Edit control handle background colors itself.
                 // This is necessary because a disabled edit control will display a different
                 // BackColor than when enabled.
-                return IntPtr.Zero;
+                return default;
             }
-            else if ((msg == (int)WM.CTLCOLORLISTBOX) && GetStyle(ControlStyles.UserPaint))
+            else if (msg == WM.CTLCOLORLISTBOX && GetStyle(ControlStyles.UserPaint))
             {
                 // Base class returns hollow brush when UserPaint style is set, to avoid flicker in
                 // main control. But when returning colors for child dropdown list, return normal ForeColor/BackColor,
@@ -3690,19 +3691,17 @@ namespace System.Windows.Forms
         private unsafe void WmReflectDrawItem(ref Message m)
         {
             DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)m.LParam;
-            IntPtr oldPal = SetUpPalette(dis->hDC, force: false, realizePalette: false);
-            try
-            {
-                using Graphics g = Graphics.FromHdcInternal(dis->hDC);
-                OnDrawItem(new DrawItemEventArgs(g, Font, dis->rcItem, (int)dis->itemID, (DrawItemState)dis->itemState, ForeColor, BackColor));
-            }
-            finally
-            {
-                if (oldPal != IntPtr.Zero)
-                {
-                    Gdi32.SelectPalette(dis->hDC, oldPal, BOOL.FALSE);
-                }
-            }
+
+            using var e = new DrawItemEventArgs(
+                dis->hDC,
+                Font,
+                dis->rcItem,
+                dis->itemID,
+                dis->itemState,
+                ForeColor,
+                BackColor);
+
+            OnDrawItem(e);
 
             m.Result = (IntPtr)1;
         }
@@ -3781,7 +3780,7 @@ namespace System.Windows.Forms
                     break;
                 case WM.CTLCOLOREDIT:
                 case WM.CTLCOLORLISTBOX:
-                    m.Result = InitializeDCForWmCtlColor(m.WParam, m.Msg);
+                    m.Result = (IntPtr)InitializeDCForWmCtlColor((Gdi32.HDC)m.WParam, (User32.WM)m.Msg);
                     break;
                 case WM.ERASEBKGND:
                     WmEraseBkgnd(ref m);
@@ -3858,7 +3857,7 @@ namespace System.Windows.Forms
                         bool useBeginPaint = m.WParam == IntPtr.Zero;
                         var paintScope = useBeginPaint ? new BeginPaintScope(Handle) : default;
 
-                        IntPtr dc = useBeginPaint ? paintScope : m.WParam;
+                        Gdi32.HDC dc = useBeginPaint ? paintScope : (Gdi32.HDC)m.WParam;
 
                         using var savedDcState = new Gdi32.SaveDcScope(dc);
 
@@ -3867,7 +3866,7 @@ namespace System.Windows.Forms
                             Gdi32.SelectClipRgn(dc, dropDownRegion);
                         }
 
-                        m.WParam = dc;
+                        m.WParam = (IntPtr)dc;
                         DefWndProc(ref m);
 
                         if (getRegionSucceeded)
@@ -3875,7 +3874,7 @@ namespace System.Windows.Forms
                             Gdi32.SelectClipRgn(dc, windowRegion);
                         }
 
-                        using Graphics g = Graphics.FromHdcInternal(dc);
+                        using Graphics g = Graphics.FromHdcInternal((IntPtr)dc);
                         FlatComboBoxAdapter.DrawFlatCombo(this, g);
 
                         return;
@@ -6097,7 +6096,7 @@ namespace System.Windows.Forms
         {
             private const int MaxClassName = 256;
             private const string AutoCompleteClassName = "Auto-Suggest Dropdown";
-            bool shouldSubClass = false; //nonstatic
+            bool shouldSubClass; //nonstatic
 
             internal void FindDropDowns()
             {
@@ -6169,7 +6168,7 @@ namespace System.Windows.Forms
 
             private const int WhiteFillRectWidth = 5; // used for making the button look smaller than it is
 
-            private static readonly int OFFSET_2PIXELS = 2;
+            private const int OFFSET_2PIXELS = 2;
             protected static int Offset2Pixels = OFFSET_2PIXELS;
 
             public FlatComboAdapter(ComboBox comboBox, bool smallButton)

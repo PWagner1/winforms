@@ -36,7 +36,7 @@ namespace System.Windows.Forms
         ///  Decides whether or not to ignore the next LBN_SELCHANGE
         ///  message - used to prevent cursor keys from toggling checkboxes
         /// </summary>
-        private bool killnextselect = false;
+        private bool killnextselect;
 
         /// <summary>
         ///  Current listener of the onItemCheck event.
@@ -48,7 +48,7 @@ namespace System.Windows.Forms
         ///  click on an item, or whether we should wait for the user to click
         ///  again.
         /// </summary>
-        private bool checkOnClick = false;
+        private bool checkOnClick;
 
         /// <summary>
         ///  Should we use 3d checkboxes or flat ones?
@@ -65,17 +65,11 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The collection of checked items in the CheckedListBox.
         /// </summary>
-        private CheckedItemCollection checkedItemCollection = null;
-        private CheckedIndexCollection checkedIndexCollection = null;
+        private CheckedItemCollection checkedItemCollection;
+        private CheckedIndexCollection checkedIndexCollection;
 
-        private static readonly WM LBC_GETCHECKSTATE;
-        private static readonly WM LBC_SETCHECKSTATE;
-
-        static CheckedListBox()
-        {
-            LBC_GETCHECKSTATE = RegisterWindowMessageW("LBC_GETCHECKSTATE");
-            LBC_SETCHECKSTATE = RegisterWindowMessageW("LBC_SETCHECKSTATE");
-        }
+        private static readonly WM LBC_GETCHECKSTATE = RegisterWindowMessageW("LBC_GETCHECKSTATE");
+        private static readonly WM LBC_SETCHECKSTATE = RegisterWindowMessageW("LBC_SETCHECKSTATE");
 
         /// <summary>
         ///  Creates a new CheckedListBox for the user.
@@ -561,17 +555,16 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-                    // If the item is not part of our collection, we will just
-                    // get the string for it and display it.
-                    //
+                    // If the item is not part of our collection, we will just get the string for it and display it.
+
                     item = NativeGetItemText(e.Index);
                 }
 
                 Rectangle bounds = e.Bounds;
                 int height = ItemHeight;
 
-                // set up the appearance of the checkbox
-                //
+                // Set up the appearance of the checkbox
+
                 ButtonState state = ButtonState.Normal;
                 if (flat)
                 {
@@ -590,16 +583,18 @@ namespace System.Windows.Forms
                     }
                 }
 
-                // If we are drawing themed CheckBox .. get the size from renderer..
-                // the Renderer might return a different size in different DPI modes..
+                // If we are drawing themed CheckBox get the size from the renderer which can change with DPI.
                 if (Application.RenderWithVisualStyles)
                 {
-                    VisualStyles.CheckBoxState cbState = CheckBoxRenderer.ConvertFromButtonState(state, false, ((e.State & DrawItemState.HotLight) == DrawItemState.HotLight));
-                    idealCheckSize = (int)(CheckBoxRenderer.GetGlyphSize(e.Graphics, cbState, HandleInternal)).Width;
+                    VisualStyles.CheckBoxState cbState = CheckBoxRenderer.ConvertFromButtonState(
+                        state,
+                        isMixed: false,
+                        (e.State & DrawItemState.HotLight) == DrawItemState.HotLight);
+
+                    idealCheckSize = CheckBoxRenderer.GetGlyphSize(e, cbState, HandleInternal).Width;
                 }
 
                 // Determine bounds for the checkbox
-                //
                 int centeringFactor = Math.Max((height - idealCheckSize) / 2, 0);
 
                 // Keep the checkbox within the item's upper and lower bounds
@@ -608,10 +603,11 @@ namespace System.Windows.Forms
                     centeringFactor = bounds.Height - idealCheckSize;
                 }
 
-                Rectangle box = new Rectangle(bounds.X + scaledListItemStartPosition,
-                                              bounds.Y + centeringFactor,
-                                              idealCheckSize,
-                                              idealCheckSize);
+                Rectangle box = new Rectangle(
+                    bounds.X + scaledListItemStartPosition,
+                    bounds.Y + centeringFactor,
+                    idealCheckSize,
+                    idealCheckSize);
 
                 if (RightToLeft == RightToLeft.Yes)
                 {
@@ -622,11 +618,15 @@ namespace System.Windows.Forms
                 }
 
                 // Draw the checkbox.
-                //
+
                 if (Application.RenderWithVisualStyles)
                 {
-                    VisualStyles.CheckBoxState cbState = CheckBoxRenderer.ConvertFromButtonState(state, false, ((e.State & DrawItemState.HotLight) == DrawItemState.HotLight));
-                    CheckBoxRenderer.DrawCheckBox(e.Graphics, new Point(box.X, box.Y), cbState, HandleInternal);
+                    VisualStyles.CheckBoxState cbState = CheckBoxRenderer.ConvertFromButtonState(
+                        state,
+                        isMixed: false,
+                        ((e.State & DrawItemState.HotLight) == DrawItemState.HotLight));
+
+                    CheckBoxRenderer.DrawCheckBoxWithVisualStyles(e, new Point(box.X, box.Y), cbState, HandleInternal);
                 }
                 else
                 {
@@ -634,12 +634,12 @@ namespace System.Windows.Forms
                 }
 
                 // Determine bounds for the text portion of the item
-                //
                 Rectangle textBounds = new Rectangle(
-                                                    bounds.X + idealCheckSize + (scaledListItemStartPosition * 2),
-                                                    bounds.Y,
-                                                    bounds.Width - (idealCheckSize + (scaledListItemStartPosition * 2)),
-                                                    bounds.Height);
+                    bounds.X + idealCheckSize + (scaledListItemStartPosition * 2),
+                    bounds.Y,
+                    bounds.Width - (idealCheckSize + (scaledListItemStartPosition * 2)),
+                    bounds.Height);
+
                 if (RightToLeft == RightToLeft.Yes)
                 {
                     // For a RightToLeft checked list box, we want the text
@@ -648,9 +648,6 @@ namespace System.Windows.Forms
                     textBounds.X = bounds.X;
                 }
 
-                // Setup text font, color, and text
-                //
-                string text = string.Empty;
                 Color backColor = (SelectionMode != SelectionMode.None) ? e.BackColor : BackColor;
                 Color foreColor = (SelectionMode != SelectionMode.None) ? e.ForeColor : ForeColor;
                 if (!Enabled)
@@ -659,7 +656,9 @@ namespace System.Windows.Forms
                 }
                 Font font = Font;
 
-                text = GetItemText(item);
+                // Setup text font, color, and text
+
+                string text = GetItemText(item);
 
                 if (SelectionMode != SelectionMode.None && (e.State & DrawItemState.Selected) == DrawItemState.Selected)
                 {
@@ -676,75 +675,81 @@ namespace System.Windows.Forms
                 }
 
                 // Draw the text
-                //
 
                 // Due to some sort of unpredictable painting optimization in the Windows ListBox control,
                 // we need to always paint the background rectangle for the current line.
-                using (Brush b = new SolidBrush(backColor))
+
+                if (!backColor.HasTransparency())
                 {
-                    e.Graphics.FillRectangle(b, textBounds);
+                    using var hdc = new DeviceContextHdcScope(e);
+                    using var hbrush = new Gdi32.CreateBrushScope();
+                    hdc.FillRectangle(textBounds, hbrush);
+                }
+                else
+                {
+                    // Need to use GDI+
+                    using Brush b = new SolidBrush(backColor);
+                    e.GraphicsInternal.FillRectangle(b, textBounds);
                 }
 
                 Rectangle stringBounds = new Rectangle(
-                                                      textBounds.X + BORDER_SIZE,
-                                                      textBounds.Y,
-                                                      textBounds.Width - BORDER_SIZE,
-                                                      textBounds.Height - 2 * BORDER_SIZE); // minus borders
+                    textBounds.X + BORDER_SIZE,
+                    textBounds.Y,
+                    textBounds.Width - BORDER_SIZE,
+                    textBounds.Height - 2 * BORDER_SIZE); // minus borders
 
                 if (UseCompatibleTextRendering)
                 {
-                    using (StringFormat format = new StringFormat())
+                    using StringFormat format = new StringFormat();
+                    if (UseTabStops)
                     {
-                        if (UseTabStops)
+                        //  Set tab stops so it looks similar to a ListBox, at least with the default font size.
+                        float tabDistance = 3.6f * Font.Height; // about 7 characters
+                        float[] tabStops = new float[15];
+                        float tabOffset = -(idealCheckSize + (scaledListItemStartPosition * 2));
+                        for (int i = 1; i < tabStops.Length; i++)
                         {
-                            //  Set tab stops so it looks similar to a ListBox, at least with the default font size.
-                            float tabDistance = 3.6f * Font.Height; // about 7 characters
-                            float[] tabStops = new float[15];
-                            float tabOffset = -(idealCheckSize + (scaledListItemStartPosition * 2));
-                            for (int i = 1; i < tabStops.Length; i++)
-                            {
-                                tabStops[i] = tabDistance;
-                            }
-
-                            //(
-                            if (Math.Abs(tabOffset) < tabDistance)
-                            {
-                                tabStops[0] = tabDistance + tabOffset;
-                            }
-                            else
-                            {
-                                tabStops[0] = tabDistance;
-                            }
-                            format.SetTabStops(0, tabStops);
-                        }
-                        else if (UseCustomTabOffsets)
-                        {
-                            //Set TabStops to userDefined values
-                            int wpar = CustomTabOffsets.Count;
-                            float[] tabStops = new float[wpar];
-                            CustomTabOffsets.CopyTo(tabStops, 0);
-                            format.SetTabStops(0, tabStops);
+                            tabStops[i] = tabDistance;
                         }
 
-                        // Adjust string format for Rtl controls
-                        if (RightToLeft == RightToLeft.Yes)
+                        //(
+                        if (Math.Abs(tabOffset) < tabDistance)
                         {
-                            format.FormatFlags |= StringFormatFlags.DirectionRightToLeft;
+                            tabStops[0] = tabDistance + tabOffset;
                         }
-
-                        // ListBox doesn't word-wrap its items, so neither should CheckedListBox
-                        //
-                        format.FormatFlags |= StringFormatFlags.NoWrap;
-
-                        // Set Trimming to None to prevent DrawString() from whacking the entire
-                        // string when there is only one character per tab included in the string.
-                        format.Trimming = StringTrimming.None;
-
-                        // Do actual drawing
-                        using (SolidBrush brush = new SolidBrush(foreColor))
+                        else
                         {
-                            e.Graphics.DrawString(text, font, brush, stringBounds, format);
+                            tabStops[0] = tabDistance;
                         }
+                        format.SetTabStops(0, tabStops);
+                    }
+                    else if (UseCustomTabOffsets)
+                    {
+                        //Set TabStops to userDefined values
+                        int wpar = CustomTabOffsets.Count;
+                        float[] tabStops = new float[wpar];
+                        CustomTabOffsets.CopyTo(tabStops, 0);
+                        format.SetTabStops(0, tabStops);
+                    }
+
+                    // Adjust string format for Rtl controls
+                    if (RightToLeft == RightToLeft.Yes)
+                    {
+                        format.FormatFlags |= StringFormatFlags.DirectionRightToLeft;
+                    }
+
+                    // ListBox doesn't word-wrap its items, so neither should CheckedListBox
+                    //
+                    format.FormatFlags |= StringFormatFlags.NoWrap;
+
+                    // Set Trimming to None to prevent DrawString() from whacking the entire
+                    // string when there is only one character per tab included in the string.
+                    format.Trimming = StringTrimming.None;
+
+                    // Do actual drawing
+                    using (SolidBrush brush = new SolidBrush(foreColor))
+                    {
+                        e.Graphics.DrawString(text, font, brush, stringBounds, format);
                     }
                 }
                 else
@@ -765,7 +770,7 @@ namespace System.Windows.Forms
                     }
 
                     // Do actual drawing
-                    TextRenderer.DrawText(e.Graphics, text, font, stringBounds, foreColor, flags);
+                    TextRenderer.DrawText(e, text, font, stringBounds, foreColor, flags);
                 }
 
                 // Draw the focus rect if required

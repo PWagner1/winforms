@@ -35,51 +35,51 @@ namespace System.Windows.Forms
         private static Size onePixel = new Size(1, 1);
         internal static Point InvalidMouseEnter = new Point(int.MaxValue, int.MaxValue);
 
-        private ToolStripItemCollection toolStripItemCollection = null;
-        private ToolStripOverflowButton toolStripOverflowButton = null;
-        private ToolStripGrip toolStripGrip = null;
-        private ToolStripItemCollection displayedItems = null;
-        private ToolStripItemCollection overflowItems = null;
-        private ToolStripDropTargetManager dropTargetManager = null;
+        private ToolStripItemCollection toolStripItemCollection;
+        private ToolStripOverflowButton toolStripOverflowButton;
+        private ToolStripGrip toolStripGrip;
+        private ToolStripItemCollection displayedItems;
+        private ToolStripItemCollection overflowItems;
+        private ToolStripDropTargetManager dropTargetManager;
         private IntPtr hwndThatLostFocus = IntPtr.Zero;
-        private ToolStripItem lastMouseActiveItem = null;
-        private ToolStripItem lastMouseDownedItem = null;
-        private LayoutEngine layoutEngine = null;
+        private ToolStripItem lastMouseActiveItem;
+        private ToolStripItem lastMouseDownedItem;
+        private LayoutEngine layoutEngine;
         private ToolStripLayoutStyle layoutStyle = ToolStripLayoutStyle.StackWithOverflow;
-        private LayoutSettings layoutSettings = null;
+        private LayoutSettings layoutSettings;
         private Rectangle lastInsertionMarkRect = Rectangle.Empty;
-        private ImageList imageList = null;
+        private ImageList imageList;
         private ToolStripGripStyle toolStripGripStyle = ToolStripGripStyle.Visible;
-        private ISupportOleDropSource itemReorderDropSource = null;
-        private IDropTarget itemReorderDropTarget = null;
-        private int toolStripState = 0;
-        private bool showItemToolTips = false;
-        private MouseHoverTimer mouseHoverTimer = null;
+        private ISupportOleDropSource itemReorderDropSource;
+        private IDropTarget itemReorderDropTarget;
+        private int toolStripState;
+        private bool showItemToolTips;
+        private MouseHoverTimer mouseHoverTimer;
         private ToolStripItem currentlyActiveTooltipItem;
         private NativeWindow dropDownOwnerWindow;
-        private byte mouseDownID = 0;  // NEVER use this directly from another class, 0 should never be returned to another class.
+        private byte mouseDownID;  // NEVER use this directly from another class, 0 should never be returned to another class.
 
         private Orientation orientation = Orientation.Horizontal;
 
         private readonly ArrayList activeDropDowns = new ArrayList(1);
-        private ToolStripRenderer renderer = null;
+        private ToolStripRenderer renderer;
         private Type currentRendererType = typeof(Type);
-        private Hashtable shortcuts = null;
-        private Stack<MergeHistory> mergeHistoryStack = null;
+        private Hashtable shortcuts;
+        private Stack<MergeHistory> mergeHistoryStack;
         private ToolStripDropDownDirection toolStripDropDownDirection = ToolStripDropDownDirection.Default;
         private Size largestDisplayedItemSize = Size.Empty;
-        private CachedItemHdcInfo cachedItemHdcInfo = null;
-        private bool alreadyHooked = false;
+        private CachedItemHdcInfo cachedItemHdcInfo;
+        private bool alreadyHooked;
 
         private Size imageScalingSize;
         private const int ICON_DIMENSION = 16;
         private static int iconWidth = ICON_DIMENSION;
         private static int iconHeight = ICON_DIMENSION;
 
-        private Font defaultFont = null;
+        private Font defaultFont;
         private RestoreFocusMessageFilter restoreFocusFilter;
 
-        private bool layoutRequired = false;
+        private bool layoutRequired;
 
         private static readonly Padding defaultPadding = new Padding(0, 0, 1, 0);
         private static readonly Padding defaultGripMargin = new Padding(2);
@@ -2632,11 +2632,6 @@ namespace System.Windows.Forms
         }
         #endregion
 
-        internal static Graphics GetMeasurementGraphics()
-        {
-            return WindowsFormsUtils.CreateMeasurementGraphics();
-        }
-
         internal ToolStripItem GetSelectedItem()
         {
             ToolStripItem selectedItem = null;
@@ -2905,38 +2900,30 @@ namespace System.Windows.Forms
 
         // This function will print to the PrinterDC. ToolStrip have there own buffered painting and doesnt play very well
         // with the DC translations done by base Control class. Hence we do our own Painting and the BitBLT the DC into the printerDc.
-        private protected override void PrintToMetaFileRecursive(IntPtr hDC, IntPtr lParam, Rectangle bounds)
+        private protected override void PrintToMetaFileRecursive(Gdi32.HDC hDC, IntPtr lParam, Rectangle bounds)
         {
-            using (Bitmap image = new Bitmap(bounds.Width, bounds.Height))
-            using (Graphics g = Graphics.FromImage(image))
-            {
-                IntPtr imageHdc = g.GetHdc();
-                try
-                {
-                    //send the actual wm_print message
-                    User32.SendMessageW(
-                        this,
-                        User32.WM.PRINT,
-                        (IntPtr)imageHdc,
-                        (IntPtr)(User32.PRF.CHILDREN | User32.PRF.CLIENT | User32.PRF.ERASEBKGND | User32.PRF.NONCLIENT));
+            using Bitmap image = new Bitmap(bounds.Width, bounds.Height);
+            using Graphics g = Graphics.FromImage(image);
+            using var imageHdc = new DeviceContextHdcScope(g, applyGraphicsState: false);
 
-                    // Now BLT the result to the destination bitmap.
-                    Gdi32.BitBlt(
-                        new HandleRef(this, hDC),
-                        bounds.X,
-                        bounds.Y,
-                        bounds.Width,
-                        bounds.Height,
-                        new HandleRef(g, imageHdc),
-                        0,
-                        0,
-                        Gdi32.ROP.SRCCOPY);
-                }
-                finally
-                {
-                    g.ReleaseHdcInternal(imageHdc);
-                }
-            }
+            // Send the actual wm_print message
+            User32.SendMessageW(
+                this,
+                User32.WM.PRINT,
+                (IntPtr)imageHdc.HDC,
+                (IntPtr)(User32.PRF.CHILDREN | User32.PRF.CLIENT | User32.PRF.ERASEBKGND | User32.PRF.NONCLIENT));
+
+            // Now BLT the result to the destination bitmap.
+            Gdi32.BitBlt(
+                hDC,
+                bounds.X,
+                bounds.Y,
+                bounds.Width,
+                bounds.Height,
+                imageHdc,
+                0,
+                0,
+                Gdi32.ROP.SRCCOPY);
         }
 
         protected override bool ProcessCmdKey(ref Message m, Keys keyData)
@@ -3753,176 +3740,166 @@ namespace System.Windows.Forms
             bool excludedTransparentRegion = false;
 
             Rectangle viewableArea = DisplayRectangle;
-            Region transparentRegion = Renderer.GetTransparentRegion(this);
+            using Region transparentRegion = Renderer.GetTransparentRegion(this);
 
-            try
+            // Paint the items
+            // The idea here is to let items pretend they are controls.
+            // they should get paint events at 0,0 and have proper clipping regions
+            // set up for them.  We cannot use g.TranslateTransform as that does
+            // not translate the GDI world, and things like Visual Styles and the
+            // TextRenderer only know how to speak GDI.
+            //
+            // The previous appropach was to set up the GDI clipping region and allocate a graphics
+            // from that, but that meant we were allocating graphics objects left and right, which
+            // turned out to be slow.
+            //
+            // So now we allocate an offscreen bitmap of size == MaxItemSize, copy the background
+            // of the toolstrip into that bitmap, then paint the item on top of the bitmap, then copy
+            // the contents of the bitmap back onto the toolstrip.  This gives us our paint event starting
+            // at 0,0.  Combine this with double buffering of the toolstrip and the entire toolstrip is updated
+            // after returning from this function.
+            if (!LayoutUtils.IsZeroWidthOrHeight(bitmapSize))
             {
-                // Paint the items
-                // The idea here is to let items pretend they are controls.
-                // they should get paint events at 0,0 and have proper clipping regions
-                // set up for them.  We cannot use g.TranslateTransform as that does
-                // not translate the GDI world, and things like Visual Styles and the
-                // TextRenderer only know how to speak GDI.
-                //
-                // The previous appropach was to set up the GDI clipping region and allocate a graphics
-                // from that, but that meant we were allocating graphics objects left and right, which
-                // turned out to be slow.
-                //
-                // So now we allocate an offscreen bitmap of size == MaxItemSize, copy the background
-                // of the toolstrip into that bitmap, then paint the item on top of the bitmap, then copy
-                // the contents of the bitmap back onto the toolstrip.  This gives us our paint event starting
-                // at 0,0.  Combine this with double buffering of the toolstrip and the entire toolstrip is updated
-                // after returning from this function.
-                if (!LayoutUtils.IsZeroWidthOrHeight(bitmapSize))
-                {
-                    // cant create a 0x0 bmp.
+                // cant create a 0x0 bmp.
 
-                    // Supporting RoundedEdges...
-                    // we've got a concept of a region that we shouldnt paint (the TransparentRegion as specified in the Renderer).
-                    // in order to support this we're going to intersect that region with the clipping region.
-                    // this new region will be excluded during the guts of OnPaint, and restored at the end of OnPaint.
-                    if (transparentRegion != null)
-                    {
-                        // only use the intersection so we can easily add back in the bits we took out at the end.
-                        transparentRegion.Intersect(toolstripGraphics.Clip);
-                        toolstripGraphics.ExcludeClip(transparentRegion);
-                        excludedTransparentRegion = true;
-                    }
-
-                    // Preparing for painting the individual items...
-                    // using WindowsGraphics here because we want to preserve the clipping information.
-
-                    // calling GetHdc by itself does not set up the clipping info.
-                    using (WindowsGraphics toolStripWindowsGraphics = WindowsGraphics.FromGraphics(toolstripGraphics, ApplyGraphicsProperties.Clipping))
-                    {
-                        // get the cached item HDC.
-                        HandleRef toolStripHDC = new HandleRef(this, toolStripWindowsGraphics.GetHdc());
-                        IntPtr itemHDC = ItemHdcInfo.GetCachedItemDC(toolStripHDC, bitmapSize);
-
-                        Graphics itemGraphics = Graphics.FromHdcInternal(itemHDC);
-                        try
-                        {
-                            // Painting the individual items...
-                            // iterate through all the items, painting them
-                            // one by one into the compatible offscreen DC, and then copying
-                            // them back onto the main toolstrip.
-                            for (int i = 0; i < DisplayedItems.Count; i++)
-                            {
-                                ToolStripItem item = DisplayedItems[i];
-                                if (item != null)
-                                { //
-                                    Rectangle clippingRect = e.ClipRectangle;
-                                    Rectangle bounds = item.Bounds;
-
-                                    if (!IsDropDown && item.Owner == this)
-                                    {
-                                        // owned items should not paint outside the client
-                                        // area. (this is mainly to prevent obscuring the grip
-                                        // and overflowbutton - ToolStripDropDownMenu places items
-                                        // outside of the display rectangle - so we need to allow for this
-                                        // in dropdoowns).
-                                        clippingRect.Intersect(viewableArea);
-                                    }
-
-                                    // get the intersection of these two.
-                                    clippingRect.Intersect(bounds);
-
-                                    if (LayoutUtils.IsZeroWidthOrHeight(clippingRect))
-                                    {
-                                        continue;  // no point newing up a graphics object if there's nothing to paint.
-                                    }
-
-                                    Size itemSize = item.Size;
-
-                                    // check if our item buffer is large enough to handle.
-                                    if (!LayoutUtils.AreWidthAndHeightLarger(bitmapSize, itemSize))
-                                    {
-                                        // the cached HDC isnt big enough for this item.  make it bigger.
-                                        largestDisplayedItemSize = itemSize;
-                                        bitmapSize = itemSize;
-                                        // dispose the old graphics - create a new, bigger one.
-                                        itemGraphics.Dispose();
-
-                                        // calling this should take the existing DC and select in a bigger bitmap.
-                                        itemHDC = ItemHdcInfo.GetCachedItemDC(toolStripHDC, bitmapSize);
-
-                                        // allocate a new graphics.
-                                        itemGraphics = Graphics.FromHdcInternal(itemHDC);
-                                    }
-
-                                    // since the item graphics object will have 0,0 at the
-                                    // corner we need to actually shift the origin of the rect over
-                                    // so it will be 0,0 too.
-                                    clippingRect.Offset(-bounds.X, -bounds.Y);
-
-                                    // PERF - consider - we only actually need to copy the clipping rect.
-                                    // copy the background from the toolstrip onto the offscreen bitmap
-                                    Gdi32.BitBlt(
-                                        new HandleRef(ItemHdcInfo, itemHDC),
-                                        0,
-                                        0,
-                                        item.Size.Width,
-                                        item.Size.Height,
-                                        toolStripHDC,
-                                        item.Bounds.X,
-                                        item.Bounds.Y,
-                                        Gdi32.ROP.SRCCOPY);
-
-                                    // paint the item into the offscreen bitmap
-                                    using (PaintEventArgs itemPaintEventArgs = new PaintEventArgs(itemGraphics, clippingRect))
-                                    {
-                                        item.FireEvent(itemPaintEventArgs, ToolStripItemEventType.Paint);
-                                    }
-
-                                    // copy the item back onto the toolstrip
-                                    Gdi32.BitBlt(
-                                        toolStripHDC,
-                                        item.Bounds.X,
-                                        item.Bounds.Y,
-                                        item.Size.Width,
-                                        item.Size.Height,
-                                        new HandleRef(ItemHdcInfo, itemHDC),
-                                        0,
-                                        0,
-                                        Gdi32.ROP.SRCCOPY);
-
-                                    GC.KeepAlive(ItemHdcInfo);
-                                }
-                            }
-                        }
-                        finally
-                        {
-                            if (itemGraphics != null)
-                            {
-                                itemGraphics.Dispose();
-                            }
-                        }
-                    }
-                }
-
-                // Painting the edge effects...
-                // These would include things like (shadow line on the bottom, some overflow effects)
-                Renderer.DrawToolStripBorder(new ToolStripRenderEventArgs(toolstripGraphics, this));
-
-                // Restoring the clip region to its original state...
-                // the transparent region should be added back in as the insertion mark should paint over it.
-                if (excludedTransparentRegion)
-                {
-                    toolstripGraphics.SetClip(transparentRegion, CombineMode.Union);
-                }
-
-                // Paint the item re-order insertion mark...
-                // This should ignore the transparent region and paint
-                // over the entire area.
-                PaintInsertionMark(toolstripGraphics);
-            }
-            finally
-            {
+                // Supporting RoundedEdges...
+                // we've got a concept of a region that we shouldnt paint (the TransparentRegion as specified in the Renderer).
+                // in order to support this we're going to intersect that region with the clipping region.
+                // this new region will be excluded during the guts of OnPaint, and restored at the end of OnPaint.
                 if (transparentRegion != null)
                 {
-                    transparentRegion.Dispose();
+                    // only use the intersection so we can easily add back in the bits we took out at the end.
+                    transparentRegion.Intersect(toolstripGraphics.Clip);
+                    toolstripGraphics.ExcludeClip(transparentRegion);
+                    excludedTransparentRegion = true;
+                }
+
+                // Preparing for painting the individual items...
+                // using WindowsGraphics here because we want to preserve the clipping information.
+
+                // calling GetHdc by itself does not set up the clipping info.
+                using (var toolStripWindowsGraphics = new DeviceContextHdcScope(toolstripGraphics, ApplyGraphicsProperties.Clipping))
+                {
+                    // get the cached item HDC.
+                    Gdi32.HDC toolStripHDC = toolStripWindowsGraphics.HDC;
+                    Gdi32.HDC itemHDC = ItemHdcInfo.GetCachedItemDC(toolStripHDC, bitmapSize);
+
+                    Graphics itemGraphics = itemHDC.CreateGraphics();
+                    try
+                    {
+                        // Painting the individual items...
+                        // iterate through all the items, painting them
+                        // one by one into the compatible offscreen DC, and then copying
+                        // them back onto the main toolstrip.
+                        for (int i = 0; i < DisplayedItems.Count; i++)
+                        {
+                            ToolStripItem item = DisplayedItems[i];
+                            if (item != null)
+                            {
+                                Rectangle clippingRect = e.ClipRectangle;
+                                Rectangle bounds = item.Bounds;
+
+                                if (!IsDropDown && item.Owner == this)
+                                {
+                                    // owned items should not paint outside the client
+                                    // area. (this is mainly to prevent obscuring the grip
+                                    // and overflowbutton - ToolStripDropDownMenu places items
+                                    // outside of the display rectangle - so we need to allow for this
+                                    // in dropdoowns).
+                                    clippingRect.Intersect(viewableArea);
+                                }
+
+                                // get the intersection of these two.
+                                clippingRect.Intersect(bounds);
+
+                                if (LayoutUtils.IsZeroWidthOrHeight(clippingRect))
+                                {
+                                    continue;  // no point newing up a graphics object if there's nothing to paint.
+                                }
+
+                                Size itemSize = item.Size;
+
+                                // check if our item buffer is large enough to handle.
+                                if (!LayoutUtils.AreWidthAndHeightLarger(bitmapSize, itemSize))
+                                {
+                                    // the cached HDC isnt big enough for this item.  make it bigger.
+                                    largestDisplayedItemSize = itemSize;
+                                    bitmapSize = itemSize;
+                                    // dispose the old graphics - create a new, bigger one.
+                                    itemGraphics.Dispose();
+
+                                    // calling this should take the existing DC and select in a bigger bitmap.
+                                    itemHDC = ItemHdcInfo.GetCachedItemDC(toolStripHDC, bitmapSize);
+
+                                    // allocate a new graphics.
+                                    itemGraphics = itemHDC.CreateGraphics();
+                                }
+
+                                // since the item graphics object will have 0,0 at the
+                                // corner we need to actually shift the origin of the rect over
+                                // so it will be 0,0 too.
+                                clippingRect.Offset(-bounds.X, -bounds.Y);
+
+                                // PERF - consider - we only actually need to copy the clipping rect.
+                                // copy the background from the toolstrip onto the offscreen bitmap
+                                Gdi32.BitBlt(
+                                    ItemHdcInfo,
+                                    0,
+                                    0,
+                                    item.Size.Width,
+                                    item.Size.Height,
+                                    toolStripHDC,
+                                    item.Bounds.X,
+                                    item.Bounds.Y,
+                                    Gdi32.ROP.SRCCOPY);
+
+                                // paint the item into the offscreen bitmap
+                                using (PaintEventArgs itemPaintEventArgs = new PaintEventArgs(itemGraphics, clippingRect))
+                                {
+                                    item.FireEvent(itemPaintEventArgs, ToolStripItemEventType.Paint);
+                                }
+
+                                // copy the item back onto the toolstrip
+                                Gdi32.BitBlt(
+                                    toolStripHDC,
+                                    item.Bounds.X,
+                                    item.Bounds.Y,
+                                    item.Size.Width,
+                                    item.Size.Height,
+                                    ItemHdcInfo,
+                                    0,
+                                    0,
+                                    Gdi32.ROP.SRCCOPY);
+
+                                GC.KeepAlive(ItemHdcInfo);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (itemGraphics != null)
+                        {
+                            itemGraphics.Dispose();
+                        }
+                    }
                 }
             }
+
+            // Painting the edge effects...
+            // These would include things like (shadow line on the bottom, some overflow effects)
+            Renderer.DrawToolStripBorder(new ToolStripRenderEventArgs(toolstripGraphics, this));
+
+            // Restoring the clip region to its original state...
+            // the transparent region should be added back in as the insertion mark should paint over it.
+            if (excludedTransparentRegion)
+            {
+                toolstripGraphics.SetClip(transparentRegion, CombineMode.Union);
+            }
+
+            // Paint the item re-order insertion mark...
+            // This should ignore the transparent region and paint
+            // over the entire area.
+            PaintInsertionMark(toolstripGraphics);
         }
 
         [EditorBrowsable(EditorBrowsableState.Advanced)]
@@ -5439,36 +5416,37 @@ namespace System.Windows.Forms
         }
     }
 
-    internal class CachedItemHdcInfo : IDisposable
+    internal class CachedItemHdcInfo : IDisposable, IHandle
     {
         internal CachedItemHdcInfo()
         {
         }
 
-        private IntPtr _cachedItemHDC = IntPtr.Zero;
+        private Gdi32.HDC _cachedItemHDC;
         private Size _cachedHDCSize = Size.Empty;
-        private IntPtr _cachedItemBitmap = IntPtr.Zero;
+        private Gdi32.HBITMAP _cachedItemBitmap;
+
+        public IntPtr Handle => (IntPtr)_cachedItemHDC;
 
         // this DC is cached and should only be deleted on Dispose or when the size changes.
 
-        public IntPtr GetCachedItemDC(HandleRef toolStripHDC, Size bitmapSize)
+        public Gdi32.HDC GetCachedItemDC(Gdi32.HDC toolStripHDC, Size bitmapSize)
         {
             if (_cachedHDCSize.Width < bitmapSize.Width
                  || _cachedHDCSize.Height < bitmapSize.Height)
             {
-                if (_cachedItemHDC == IntPtr.Zero)
+                if (_cachedItemHDC.IsNull)
                 {
-                    // create a new DC - we dont have one yet.
-                    IntPtr compatibleHDC = Gdi32.CreateCompatibleDC(toolStripHDC.Handle);
-                    _cachedItemHDC = compatibleHDC;
+                    // Create a new DC - we dont have one yet.
+                    _cachedItemHDC = Gdi32.CreateCompatibleDC(toolStripHDC);
                 }
 
-                // create compatible bitmap with the correct size.
+                // Create compatible bitmap with the correct size.
                 _cachedItemBitmap = Gdi32.CreateCompatibleBitmap(toolStripHDC, bitmapSize.Width, bitmapSize.Height);
-                IntPtr oldBitmap = Gdi32.SelectObject(_cachedItemHDC, _cachedItemBitmap);
+                Gdi32.HGDIOBJ oldBitmap = Gdi32.SelectObject(_cachedItemHDC, _cachedItemBitmap);
 
-                // delete the old bitmap
-                if (oldBitmap != IntPtr.Zero)
+                // Delete the old bitmap
+                if (!oldBitmap.IsNull)
                 {
                     Gdi32.DeleteObject(oldBitmap);
                 }
@@ -5482,21 +5460,19 @@ namespace System.Windows.Forms
 
         public void Dispose()
         {
-            if (_cachedItemHDC != IntPtr.Zero)
+            if (!_cachedItemHDC.IsNull)
             {
-                // delete the bitmap
-                if (_cachedItemBitmap != IntPtr.Zero)
+                if (!_cachedItemBitmap.IsNull)
                 {
                     Gdi32.DeleteObject(_cachedItemBitmap);
-                    _cachedItemBitmap = IntPtr.Zero;
                 }
 
                 // delete the DC itself.
                 Gdi32.DeleteDC(_cachedItemHDC);
             }
 
-            _cachedItemHDC = IntPtr.Zero;
-            _cachedItemBitmap = IntPtr.Zero;
+            _cachedItemHDC = default;
+            _cachedItemBitmap = default;
             _cachedHDCSize = Size.Empty;
 
             GC.SuppressFinalize(this);
@@ -5512,7 +5488,7 @@ namespace System.Windows.Forms
     {
         private Timer mouseHoverTimer = new Timer();
         // consider - weak reference?
-        private ToolStripItem currentItem = null;
+        private ToolStripItem currentItem;
 
         public MouseHoverTimer()
         {

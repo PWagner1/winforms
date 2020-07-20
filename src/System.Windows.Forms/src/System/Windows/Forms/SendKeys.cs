@@ -114,9 +114,9 @@ namespace System.Windows.Forms
             SendInput = 3
         }
 
-        private static SendMethodTypes? sendMethod = null;
+        private static SendMethodTypes? sendMethod;
 
-        private static bool? hookSupported = null;
+        private static bool? hookSupported;
 
         // Used only for SendInput because SendInput alters the global state of the keyboard
         private static bool capslockChanged;
@@ -124,7 +124,9 @@ namespace System.Windows.Forms
         private static bool scrollLockChanged;
         private static bool kanaChanged;
 
+#pragma warning disable CA1810 // Initialize reference type static fields inline (False positive: https://github.com/dotnet/roslyn-analyzers/issues/3852)
         static SendKeys()
+#pragma warning restore CA1810 // Initialize reference type static fields inline
         {
             Application.ThreadExit += new EventHandler(OnThreadExit);
             messageWindow = new SKWindow();
@@ -1126,7 +1128,7 @@ namespace System.Windows.Forms
             // get an HC_SKIP before an HC_GETNEXT.  So in that case, we just ignore the HC_SKIP calls
             // until we get an HC_GETNEXT.  We also sleep a bit in the Unhook...
             //
-            private bool gotNextEvent = false;
+            private bool gotNextEvent;
 
             public unsafe virtual IntPtr Callback(User32.HC nCode, IntPtr wparam, IntPtr lparam)
             {
@@ -1134,7 +1136,7 @@ namespace System.Windows.Forms
 
                 if (User32.GetAsyncKeyState((int)Keys.Pause) != 0)
                 {
-                    SendKeys.s_stopHook = true;
+                    s_stopHook = true;
                 }
 
                 switch (nCode)

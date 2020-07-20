@@ -69,21 +69,21 @@ namespace System.Windows.Forms
         int columnWidth;
         int requestedHeight;
         int topIndex;
-        int horizontalExtent = 0;
+        int horizontalExtent;
         int maxWidth = -1;
-        int updateCount = 0;
+        int updateCount;
 
-        bool sorted = false;
-        bool scrollAlwaysVisible = false;
+        bool sorted;
+        bool scrollAlwaysVisible;
         bool integralHeight = true;
-        bool integralHeightAdjust = false;
-        bool multiColumn = false;
-        bool horizontalScrollbar = false;
+        bool integralHeightAdjust;
+        bool multiColumn;
+        bool horizontalScrollbar;
         bool useTabStops = true;
-        bool useCustomTabOffsets = false;
-        bool fontIsChanged = false;
-        bool doubleClickFired = false;
-        bool selectedValueChangedFired = false;
+        bool useCustomTabOffsets;
+        bool fontIsChanged;
+        bool doubleClickFired;
+        bool selectedValueChangedFired;
 
         DrawMode drawMode = System.Windows.Forms.DrawMode.Normal;
         BorderStyle borderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
@@ -94,7 +94,7 @@ namespace System.Windows.Forms
         //In this case we set a bool denoting that we are changing SelectionMode and
         //in this case we should always use the cachedValue instead of the currently set value.
         //We need to change this in the count as well as SelectedIndex code where we access the SelectionMode.
-        private bool selectionModeChanging = false;
+        private bool selectionModeChanging;
 
         /// <summary>
         ///  This field stores focused ListBox item Accessible object before focus changing.
@@ -106,7 +106,7 @@ namespace System.Windows.Forms
         ///  This field stores current items count.
         ///  Used in ItemsCountIsChanged method.
         /// </summary>
-        private int itemsCount = 0;
+        private int itemsCount;
 
         /// <summary>
         ///  This value stores the array of custom tabstops in the listbox. the array should be populated by
@@ -429,7 +429,7 @@ namespace System.Windows.Forms
                 {
                     if (MultiColumn && value == DrawMode.OwnerDrawVariable)
                     {
-                        throw new ArgumentException(SR.ListBoxVarHeightMultiCol, "value");
+                        throw new ArgumentException(SR.ListBoxVarHeightMultiCol, nameof(value));
                     }
                     drawMode = value;
                     RecreateHandle();
@@ -734,7 +734,7 @@ namespace System.Windows.Forms
                 {
                     if (value && drawMode == DrawMode.OwnerDrawVariable)
                     {
-                        throw new ArgumentException(SR.ListBoxVarHeightMultiCol, "value");
+                        throw new ArgumentException(SR.ListBoxVarHeightMultiCol, nameof(value));
                     }
                     multiColumn = value;
                     RecreateHandle();
@@ -2415,32 +2415,23 @@ namespace System.Windows.Forms
         private unsafe void WmReflectDrawItem(ref Message m)
         {
             DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)m.LParam;
-            IntPtr oldPal = SetUpPalette(dis->hDC, force: false, realizePalette: false);
-            try
-            {
-                using Graphics g = Graphics.FromHdcInternal(dis->hDC);
-                Rectangle bounds = dis->rcItem;
-                if (HorizontalScrollbar)
-                {
-                    if (MultiColumn)
-                    {
-                        bounds.Width = Math.Max(ColumnWidth, bounds.Width);
-                    }
-                    else
-                    {
-                        bounds.Width = Math.Max(MaxItemWidth, bounds.Width);
-                    }
-                }
 
-                OnDrawItem(new DrawItemEventArgs(g, Font, bounds, (int)dis->itemID, (DrawItemState)dis->itemState, ForeColor, BackColor));
-            }
-            finally
+            Rectangle bounds = dis->rcItem;
+            if (HorizontalScrollbar)
             {
-                if (oldPal != IntPtr.Zero)
-                {
-                    Gdi32.SelectPalette(dis->hDC, oldPal, BOOL.FALSE);
-                }
+                bounds.Width = MultiColumn ? Math.Max(ColumnWidth, bounds.Width) : Math.Max(MaxItemWidth, bounds.Width);
             }
+
+            using var e = new DrawItemEventArgs(
+                dis->hDC,
+                Font,
+                bounds,
+                dis->itemID,
+                dis->itemState,
+                ForeColor,
+                BackColor);
+
+            OnDrawItem(e);
 
             m.Result = (IntPtr)1;
         }

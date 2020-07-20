@@ -2,7 +2,7 @@ parameters:
   # parameters should default to values for running in the External / Public
   # be read from a user-defined variable (Azure DevOps limitation)
   agentPoolName: NetCorePublic-Pool
-  agentPool: 'buildpool.windows.10.amd64.vs2019.open'
+  agentPool: 'BuildPool.Windows.10.Amd64.VS2019.Pre.Open'
   runAsPublic: true
   repoName: dotnet/winforms
 
@@ -92,7 +92,7 @@ stages:
             -configuration $(_BuildConfig)
             $(_OfficialBuildIdArgs)
             /p:Coverage=$(_Coverage)
-            /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\BuildSrc.binlog          
+            /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\BuildSrc.binlog
           displayName: Build
 
         # Run Unit Tests
@@ -140,14 +140,13 @@ stages:
 - ${{ if eq(parameters.runAsPublic, 'false') }}:
   - template: /eng/common/templates/post-build/post-build.yml
     parameters:
-      # Symbol validation isn't being very reliable lately. This should be enabled back
-      # once this issue is resolved: https://github.com/dotnet/arcade/issues/2871
       enableSymbolValidation: false
-      enableSourceLinkValidation: true
-
+      enableSigningValidation: false
+      enableNugetValidation: false
+      enableSourceLinkValidation: false
       # these param values come from the DotNet-Winforms-SDLValidation-Params azdo variable group
       SDLValidationParameters:
-        enable: true
+        enable: false
         params: ' -SourceToolsList $(_TsaSourceToolsList)
         -TsaInstanceURL $(_TsaInstanceURL)
         -TsaProjectName $(_TsaProjectName)

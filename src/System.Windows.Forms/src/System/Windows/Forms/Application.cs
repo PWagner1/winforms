@@ -38,14 +38,14 @@ namespace System.Windows.Forms
         private static string s_productName;
         private static string s_productVersion;
         private static string s_safeTopLevelCaptionSuffix;
-        private static bool s_comCtlSupportsVisualStylesInitialized = false;
-        private static bool s_comCtlSupportsVisualStyles = false;
-        private static FormCollection s_forms = null;
+        private static bool s_comCtlSupportsVisualStylesInitialized;
+        private static bool s_comCtlSupportsVisualStyles;
+        private static FormCollection s_forms;
         private static readonly object s_internalSyncObject = new object();
-        private static bool s_useWaitCursor = false;
+        private static bool s_useWaitCursor;
 
-        private static bool s_useEverettThreadAffinity = false;
-        private static bool s_checkedThreadAffinity = false;
+        private static bool s_useEverettThreadAffinity;
+        private static bool s_checkedThreadAffinity;
         private const string EverettThreadAffinityValue = "EnableSystemEventsThreadAffinityCompatibility";
 
         /// <summary>
@@ -549,7 +549,7 @@ namespace System.Windows.Forms
         ///  The visual styles can be enabled by calling <see cref="EnableVisualStyles"/>.
         ///  The visual styles will not be enabled if the OS does not support them, or theming is disabled at the OS level.
         /// </remarks>
-        public static bool UseVisualStyles { get; private set; } = false;
+        public static bool UseVisualStyles { get; private set; }
 
         /// <remarks>
         ///  Don't never ever change this name, since the window class and partner teams
@@ -808,13 +808,13 @@ namespace System.Windows.Forms
         ///  Processes all Windows messages currently in the message queue.
         /// </summary>
         public static void DoEvents()
-            => ThreadContext.FromCurrent().RunMessageLoop(Interop.Mso.msoloop.DoEvents, null);
+            => ThreadContext.FromCurrent().RunMessageLoop(Mso.msoloop.DoEvents, null);
 
         internal static void DoEventsModal()
-            => ThreadContext.FromCurrent().RunMessageLoop(Interop.Mso.msoloop.DoEventsModal, null);
+            => ThreadContext.FromCurrent().RunMessageLoop(Mso.msoloop.DoEventsModal, null);
 
         /// <summary>
-        ///  Enables visual styles for all subsequent <see cref="Application.Run()"/> and <see cref="Control.CreateHandle"/> calls.
+        ///  Enables visual styles for all subsequent <see cref="Run()"/> and <see cref="Control.CreateHandle"/> calls.
         ///  Uses the default theming manifest file shipped with the redist.
         /// </summary>
         public static void EnableVisualStyles()

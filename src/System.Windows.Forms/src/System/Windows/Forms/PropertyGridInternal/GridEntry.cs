@@ -98,13 +98,13 @@ namespace System.Windows.Forms.PropertyGridInternal
         private CacheItems cacheItems;
 
         // instance variables.
-        protected TypeConverter converter = null;
-        protected UITypeEditor editor = null;
-        internal GridEntry parentPE = null;
-        private GridEntryCollection childCollection = null;
-        internal int flags = 0;
-        private int propertyDepth = 0;
-        protected bool hasFocus = false;
+        protected TypeConverter converter;
+        protected UITypeEditor editor;
+        internal GridEntry parentPE;
+        private GridEntryCollection childCollection;
+        internal int flags;
+        private int propertyDepth;
+        protected bool hasFocus;
         private Rectangle outlineRect = Rectangle.Empty;
         protected PropertySort PropertySort;
 
@@ -121,9 +121,9 @@ namespace System.Windows.Forms.PropertyGridInternal
         private static readonly object EVENT_OUTLINE_DBLCLICK = new object();
         private static readonly object EVENT_RECREATE_CHILDREN = new object();
 
-        private GridEntryAccessibleObject accessibleObject = null;
+        private GridEntryAccessibleObject accessibleObject;
 
-        private bool lastPaintWithExplorerStyle = false;
+        private bool lastPaintWithExplorerStyle;
 
         private static Color InvertColor(Color color)
         {
@@ -2205,15 +2205,9 @@ namespace System.Windows.Forms.PropertyGridInternal
                     return;
                 }
 
-                VisualStyleElement element = null;
-                if (fExpanded)
-                {
-                    element = VisualStyleElement.ExplorerTreeView.Glyph.Opened;
-                }
-                else
-                {
-                    element = VisualStyleElement.ExplorerTreeView.Glyph.Closed;
-                }
+                VisualStyleElement element = fExpanded
+                    ? VisualStyleElement.ExplorerTreeView.Glyph.Opened
+                    : VisualStyleElement.ExplorerTreeView.Glyph.Closed;
 
                 // Invert color if it is not overriden by developer.
                 if (colorInversionNeededInHC)
@@ -2228,7 +2222,9 @@ namespace System.Windows.Forms.PropertyGridInternal
                 }
 
                 VisualStyleRenderer explorerTreeRenderer = new VisualStyleRenderer(element);
-                explorerTreeRenderer.DrawBackground(g, outline, handle);
+
+                using var hdc = new DeviceContextHdcScope(g);
+                explorerTreeRenderer.DrawBackground(hdc, outline, handle);
             }
         }
 
@@ -2390,8 +2386,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 int textWidth = GetValueTextWidth(strValue, g, f);
                 bool doToolTip = false;
 
-                // To check if text contains multiple lines
-                //
+                // Check if text contains multiple lines
                 if (textWidth >= rect.Width || GetMultipleLines(strValue))
                 {
                     doToolTip = true;
@@ -2403,8 +2398,6 @@ namespace System.Windows.Forms.PropertyGridInternal
                 }
 
                 // Do actual drawing
-
-                //strValue = ReplaceCRLF(strValue);
 
                 // bump the text down 2 pixels and over 1 pixel.
                 if ((paintFlags & PaintValueFlags.PaintInPlace) != PaintValueFlags.None)
@@ -2418,9 +2411,10 @@ namespace System.Windows.Forms.PropertyGridInternal
                 }
 
                 Matrix m = g.Transform;
-                IntPtr hdc = g.GetHdc();
+
+                using var hdc = new DeviceContextHdcScope(g);
                 RECT lpRect = new Rectangle(rect.X + (int)m.OffsetX + 2, rect.Y + (int)m.OffsetY - 1, rect.Width - 4, rect.Height);
-                IntPtr hfont = GetHfont(valueModified);
+                Gdi32.HGDIOBJ hfont = (Gdi32.HGDIOBJ)GetHfont(valueModified);
 
                 int oldTextColor = 0;
                 int oldBkColor = 0;
@@ -2429,9 +2423,9 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                 try
                 {
-                    oldTextColor = Gdi32.SetTextColor(new HandleRef(g, hdc), COLORREF.RgbToCOLORREF(textColor.ToArgb()));
-                    oldBkColor = Gdi32.SetBkColor(new HandleRef(g, hdc), COLORREF.RgbToCOLORREF(bkColor.ToArgb()));
-                    hfont = Gdi32.SelectObject(hdc, hfont);
+                    oldTextColor = Gdi32.SetTextColor(hdc, COLORREF.RgbToCOLORREF(textColor.ToArgb()));
+                    oldBkColor = Gdi32.SetBkColor(hdc, COLORREF.RgbToCOLORREF(bkColor.ToArgb()));
+                    using var fontSelection = new Gdi32.SelectObjectScope(hdc, hfont);
                     User32.DT format = User32.DT.EDITCONTROL | User32.DT.EXPANDTABS | User32.DT.NOCLIP | User32.DT.SINGLELINE | User32.DT.NOPREFIX;
                     if (gridHost.DrawValuesRightToLeft)
                     {
@@ -2450,14 +2444,12 @@ namespace System.Windows.Forms.PropertyGridInternal
                         strValue = new string(passwordReplaceChar, strValue.Length);
                     }
 
-                    User32.DrawTextW(new HandleRef(g, hdc), strValue, strValue.Length, ref lpRect, format);
+                    User32.DrawTextW(hdc, strValue, strValue.Length, ref lpRect, format);
                 }
                 finally
                 {
-                    Gdi32.SetTextColor(new HandleRef(g, hdc), oldTextColor);
-                    Gdi32.SetBkColor(new HandleRef(g, hdc), oldBkColor);
-                    hfont = Gdi32.SelectObject(hdc, hfont);
-                    g.ReleaseHdcInternal(hdc);
+                    Gdi32.SetTextColor(hdc, oldTextColor);
+                    Gdi32.SetBkColor(hdc, oldBkColor);
                 }
 
                 if (doToolTip)
@@ -3011,9 +3003,9 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         public class GridEntryAccessibleObject : AccessibleObject
         {
-            protected GridEntry owner = null;
+            protected GridEntry owner;
             private delegate void SelectDelegate(AccessibleSelection flags);
-            private int[] runtimeId = null; // Used by UIAutomation
+            private int[] runtimeId; // Used by UIAutomation
 
             public GridEntryAccessibleObject(GridEntry owner) : base()
             {

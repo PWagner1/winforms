@@ -76,12 +76,11 @@ namespace System.Windows.Forms.ButtonInternal
 
         void PaintFlatWorker(PaintEventArgs e, Color checkColor, Color checkBackground, Color checkBorder, ColorData colors)
         {
-            Graphics g = e.Graphics;
             LayoutData layout = Layout(e).Layout();
             PaintButtonBackground(e, Control.ClientRectangle, null);
 
             PaintImage(e, layout);
-            DrawCheckFlat(e, layout, checkColor, colors.options.highContrast ? colors.buttonFace : checkBackground, checkBorder);
+            DrawCheckFlat(e, layout, checkColor, colors.options.HighContrast ? colors.buttonFace : checkBackground, checkBorder);
             AdjustFocusRectangle(layout);
             PaintField(e, layout, colors, checkColor, true);
         }
@@ -97,7 +96,7 @@ namespace System.Windows.Forms.ButtonInternal
         protected override LayoutOptions Layout(PaintEventArgs e)
         {
             LayoutOptions layout = CommonLayout();
-            layout.checkSize = (int)(flatCheckSize * GetDpiScaleRatio(e.Graphics));
+            layout.checkSize = (int)(flatCheckSize * GetDpiScaleRatio());
             layout.shadowedText = false;
 
             return layout;

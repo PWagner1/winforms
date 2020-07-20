@@ -26,7 +26,7 @@ namespace System.Windows.Forms
     [ToolboxItem("System.Windows.Forms.Design.AutoSizeToolboxItem," + AssemblyRef.SystemDesign)]
     [SRDescription(nameof(SR.DescriptionLabel))]
     // If not for FormatControl, we could inherit from ButtonBase and get foreground images for free.
-    public class Label : Control, IAutomationLiveRegion
+    public partial class Label : Control, IAutomationLiveRegion
     {
         private static readonly object EVENT_TEXTALIGNCHANGED = new object();
 
@@ -55,17 +55,17 @@ namespace System.Windows.Forms
         // Label.
         //
 
-        BitVector32 labelState = new BitVector32();
+        BitVector32 labelState;
         int requestedHeight;
         int requestedWidth;
         LayoutUtils.MeasureTextCache textMeasurementCache;
 
         //Tooltip is shown only if the Text in the Label is cut.
-        internal bool showToolTip = false;
+        internal bool showToolTip;
         ToolTip textToolTip;
         // This bool suggests that the User has added a toolTip to this label
         // In such a case we should not show the AutoEllipsis tooltip.
-        bool controlToolTip = false;
+        bool controlToolTip;
         AutomationLiveSetting liveSetting;
 
         // } End Members
@@ -1068,6 +1068,7 @@ namespace System.Windows.Forms
         {
             return CreateTextFormatFlags(Size - GetBordersAndPadding());
         }
+
         /// <summary>
         ///  Get TextFormatFlags flags for rendering text using GDI (TextRenderer).
         /// </summary>
@@ -1125,10 +1126,26 @@ namespace System.Windows.Forms
             base.Dispose(disposing);
         }
 
+        private void DrawImage(PaintEventArgs e, Image image, Rectangle r, ContentAlignment align)
+        {
+            if (GetType() == typeof(Label))
+            {
+                // We're not overridden, use the internal graphics accessor as we know it won't be modified.
+                DrawImage(e.GraphicsInternal, image, r, align);
+            }
+            else
+            {
+                DrawImage(e.Graphics, image, r, align);
+            }
+        }
+
         /// <summary>
         ///  Draws an <see cref='Drawing.Image'/> within the specified bounds.
         /// </summary>
         protected void DrawImage(Graphics g, Image image, Rectangle r, ContentAlignment align)
+            => DrawImageInternal(g, image, r, align);
+
+        private void DrawImageInternal(Graphics g, Image image, Rectangle r, ContentAlignment align)
         {
             Rectangle loc = CalcImageRenderBounds(image, r, align);
 
@@ -1212,10 +1229,11 @@ namespace System.Windows.Forms
             if (string.IsNullOrEmpty(Text))
             {
                 // empty labels return the font height + borders
-                using (WindowsFont font = WindowsFont.FromFont(Font))
+                using (var hfont = GdiCache.GetHFONT(Font))
+                using (var screen = GdiCache.GetScreenHdc())
                 {
                     // this is the character that Windows uses to determine the extent
-                    requiredSize = WindowsGraphicsCacheManager.MeasurementGraphics.GetTextExtent("0", font);
+                    requiredSize = screen.HDC.GetTextExtent("0", hfont);
                     requiredSize.Width = 0;
                 }
             }
@@ -1227,16 +1245,14 @@ namespace System.Windows.Forms
             else
             {
                 // GDI+ rendering.
-                using (Graphics measurementGraphics = WindowsFormsUtils.CreateMeasurementGraphics())
+                using (var screen = GdiCache.GetScreenDCGraphics())
+                using (StringFormat stringFormat = CreateStringFormat())
                 {
-                    using (StringFormat stringFormat = CreateStringFormat())
-                    {
-                        SizeF bounds = (proposedConstraints.Width == 1) ?
-                            new SizeF(0, proposedConstraints.Height) :
-                            new SizeF(proposedConstraints.Width, proposedConstraints.Height);
+                    SizeF bounds = (proposedConstraints.Width == 1) ?
+                        new SizeF(0, proposedConstraints.Height) :
+                        new SizeF(proposedConstraints.Width, proposedConstraints.Height);
 
-                        requiredSize = Size.Ceiling(measurementGraphics.MeasureString(Text, Font, bounds, stringFormat));
-                    }
+                    requiredSize = Size.Ceiling(screen.Graphics.MeasureString(Text, Font, bounds, stringFormat));
                 }
             }
 
@@ -1262,25 +1278,23 @@ namespace System.Windows.Forms
                 return 0;
             }
 
-            using (WindowsGraphics wg = WindowsGraphics.FromHwnd(Handle))
+            TextFormatFlags flags = CreateTextFormatFlags();
+            TextPaddingOptions padding = default;
+
+            if ((flags & TextFormatFlags.NoPadding) == TextFormatFlags.NoPadding)
             {
-                TextFormatFlags flags = CreateTextFormatFlags();
-
-                if ((flags & TextFormatFlags.NoPadding) == TextFormatFlags.NoPadding)
-                {
-                    wg.TextPadding = TextPaddingOptions.NoPadding;
-                }
-                else if ((flags & TextFormatFlags.LeftAndRightPadding) == TextFormatFlags.LeftAndRightPadding)
-                {
-                    wg.TextPadding = TextPaddingOptions.LeftAndRightPadding;
-                }
-
-                using WindowsFont wf = WindowsGraphicsCacheManager.GetWindowsFont(Font);
-                User32.DRAWTEXTPARAMS dtParams = wg.GetTextMargins(wf);
-
-                // This is actually leading margin.
-                return dtParams.iLeftMargin;
+                padding = TextPaddingOptions.NoPadding;
             }
+            else if ((flags & TextFormatFlags.LeftAndRightPadding) == TextFormatFlags.LeftAndRightPadding)
+            {
+                padding = TextPaddingOptions.LeftAndRightPadding;
+            }
+
+            using var hfont = GdiCache.GetHFONT(Font);
+            User32.DRAWTEXTPARAMS dtParams = hfont.GetTextMargins(padding);
+
+            // This is actually leading margin.
+            return dtParams.iLeftMargin;
         }
 
         private void ImageListRecreateHandle(object sender, EventArgs e)
@@ -1416,7 +1430,7 @@ namespace System.Windows.Forms
             Image i = Image;
             if (i != null)
             {
-                DrawImage(e.Graphics, i, face, RtlTranslateAlignment(ImageAlign));
+                DrawImage(e, i, face, RtlTranslateAlignment(ImageAlign));
             }
 
             Color color;
@@ -1426,18 +1440,8 @@ namespace System.Windows.Forms
             }
             else
             {
-                IntPtr hdc = e.Graphics.GetHdc();
-                try
-                {
-                    using (WindowsGraphics wg = WindowsGraphics.FromHdc(hdc))
-                    {
-                        color = wg.GetNearestColor((Enabled) ? ForeColor : DisabledColor);
-                    }
-                }
-                finally
-                {
-                    e.Graphics.ReleaseHdc();
-                }
+                using var hdc = new DeviceContextHdcScope(e);
+                color = hdc.GetNearestColor(Enabled ? ForeColor : DisabledColor);
             }
 
             // Do actual drawing
@@ -1461,12 +1465,12 @@ namespace System.Windows.Forms
                     {
                         using (Brush brush = new SolidBrush(color))
                         {
-                            e.Graphics.DrawString(Text, Font, brush, face, stringFormat);
+                            e.GraphicsInternal.DrawString(Text, Font, brush, face, stringFormat);
                         }
                     }
                     else
                     {
-                        ControlPaint.DrawStringDisabled(e.Graphics, Text, Font, color, face, stringFormat);
+                        ControlPaint.DrawStringDisabled(e.GraphicsInternal, Text, Font, color, face, stringFormat);
                     }
                 }
             }
@@ -1476,7 +1480,7 @@ namespace System.Windows.Forms
 
                 if (Enabled)
                 {
-                    TextRenderer.DrawText(e.Graphics, Text, Font, face, color, flags);
+                    TextRenderer.DrawTextInternal(e, Text, Font, face, color, flags: flags);
                 }
                 else
                 {
@@ -1484,7 +1488,7 @@ namespace System.Windows.Forms
                     // ControlPaint.Dark(backcolor).  Otherwise we use ControlDark.
 
                     Color disabledTextForeColor = TextRenderer.DisabledTextColor(BackColor);
-                    TextRenderer.DrawText(e.Graphics, Text, Font, face, disabledTextForeColor, flags);
+                    TextRenderer.DrawTextInternal(e, Text, Font, face, disabledTextForeColor, flags: flags);
                 }
             }
 
@@ -1528,12 +1532,12 @@ namespace System.Windows.Forms
             Animate();
         }
 
-        private protected override void PrintToMetaFileRecursive(IntPtr hDC, IntPtr lParam, Rectangle bounds)
+        private protected override void PrintToMetaFileRecursive(Gdi32.HDC hDC, IntPtr lParam, Rectangle bounds)
         {
             base.PrintToMetaFileRecursive(hDC, lParam, bounds);
 
             using var mapping = new DCMapping(hDC, bounds);
-            using Graphics g = Graphics.FromHdcInternal(hDC);
+            using Graphics g = hDC.CreateGraphics();
             ControlPaint.PrintBorder(g, new Rectangle(Point.Empty, Size), BorderStyle, Border3DStyle.SunkenOuter);
         }
 
@@ -1645,97 +1649,62 @@ namespace System.Windows.Forms
             }
         }
 
-        internal class LabelAccessibleObject : ControlAccessibleObject
+        /// <summary>
+        ///  Override ImageList.Indexer to support Label's ImageList semantics.
+        /// </summary>
+        internal class LabelImageIndexer : ImageList.Indexer
         {
-            public LabelAccessibleObject(Label owner) : base(owner)
+            private readonly Label owner;
+            private bool useIntegerIndex = true;
+
+            public LabelImageIndexer(Label owner)
             {
+                this.owner = owner;
             }
 
-            public override AccessibleRole Role
+            public override ImageList ImageList
+            {
+                get { return owner?.ImageList; }
+                set { Debug.Assert(false, "Setting the image list in this class is not supported"); }
+            }
+
+            public override string Key
+            {
+                get => base.Key;
+                set
+                {
+                    base.Key = value;
+                    useIntegerIndex = false;
+                }
+            }
+
+            public override int Index
+            {
+                get => base.Index;
+                set
+                {
+                    base.Index = value;
+                    useIntegerIndex = true;
+                }
+            }
+
+            public override int ActualIndex
             {
                 get
                 {
-                    AccessibleRole role = Owner.AccessibleRole;
-                    if (role != AccessibleRole.Default)
+                    if (useIntegerIndex)
                     {
-                        return role;
+                        // The behavior of label is to return the last item in the Images collection
+                        // if the index is currently set higher than the count.
+                        return (Index < ImageList.Images.Count) ? Index : ImageList.Images.Count - 1;
                     }
-                    return AccessibleRole.StaticText;
+                    else if (ImageList != null)
+                    {
+                        return ImageList.Images.IndexOfKey(Key);
+                    }
+
+                    return -1;
                 }
-            }
-
-            internal override bool IsIAccessibleExSupported() => true;
-
-            internal override object GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                switch (propertyID)
-                {
-                    case UiaCore.UIA.NamePropertyId:
-                        return Name;
-                    case UiaCore.UIA.ControlTypePropertyId:
-                        return UiaCore.UIA.TextControlTypeId;
-                }
-
-                return base.GetPropertyValue(propertyID);
-            }
-        }
-    }
-
-    /// <summary>
-    ///  Override ImageList.Indexer to support Label's ImageList semantics.
-    /// </summary>
-    internal class LabelImageIndexer : ImageList.Indexer
-    {
-        private readonly Label owner;
-        private bool useIntegerIndex = true;
-
-        public LabelImageIndexer(Label owner)
-        {
-            this.owner = owner;
-        }
-
-        public override ImageList ImageList
-        {
-            get { return owner?.ImageList; }
-            set { Debug.Assert(false, "Setting the image list in this class is not supported"); }
-        }
-
-        public override string Key
-        {
-            get => base.Key;
-            set
-            {
-                base.Key = value;
-                useIntegerIndex = false;
-            }
-        }
-
-        public override int Index
-        {
-            get => base.Index;
-            set
-            {
-                base.Index = value;
-                useIntegerIndex = true;
-            }
-        }
-
-        public override int ActualIndex
-        {
-            get
-            {
-                if (useIntegerIndex)
-                {
-                    // The behavior of label is to return the last item in the Images collection
-                    // if the index is currently set higher than the count.
-                    return (Index < ImageList.Images.Count) ? Index : ImageList.Images.Count - 1;
-                }
-                else if (ImageList != null)
-                {
-                    return ImageList.Images.IndexOfKey(Key);
-                }
-
-                return -1;
             }
         }
     }

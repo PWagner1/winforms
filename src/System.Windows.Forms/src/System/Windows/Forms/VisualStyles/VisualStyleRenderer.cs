@@ -5,8 +5,6 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Drawing;
-using System.Runtime.InteropServices;
-using System.Text;
 using Microsoft.Win32;
 using static Interop;
 using static Interop.UxTheme;
@@ -18,21 +16,16 @@ namespace System.Windows.Forms.VisualStyles
     /// </summary>
     public sealed class VisualStyleRenderer : IHandle
     {
-        private const TextFormatFlags AllGraphicsProperties = TextFormatFlags.PreserveGraphicsClipping | TextFormatFlags.PreserveGraphicsTranslateTransform;
-
-        private string _class;
-        private int part;
-        private int state;
-        private HRESULT lastHResult = 0;
-        private static readonly int numberOfPossibleClasses = VisualStyleElement.Count; //used as size for themeHandles
+        private HRESULT _lastHResult;
+        private const int NumberOfPossibleClasses = VisualStyleElement.Count; //used as size for themeHandles
 
         [ThreadStatic]
-        private static Hashtable? themeHandles; // per-thread cache of ThemeHandle objects.
+        private static Hashtable? t_themeHandles; // per-thread cache of ThemeHandle objects.
 
         [ThreadStatic]
-        private static long threadCacheVersion = 0;
+        private static long t_threadCacheVersion;
 
-        private static long globalCacheVersion = 0;
+        private static long s_globalCacheVersion;
 
         static VisualStyleRenderer()
         {
@@ -68,7 +61,7 @@ namespace System.Windows.Forms.VisualStyles
                     // In some cases, this check isn't enough, since the theme handle creation
                     // could fail for some other reason. Try creating a theme handle here - if successful, return true,
                     // else return false.
-                    IntPtr hTheme = GetHandle("BUTTON", false); //Button is an arbitrary choice.
+                    IntPtr hTheme = GetHandle("BUTTON", false); // Button is an arbitrary choice.
                     supported = (hTheme != IntPtr.Zero);
                 }
 
@@ -87,9 +80,7 @@ namespace System.Windows.Forms.VisualStyles
         public static bool IsElementDefined(VisualStyleElement element)
         {
             if (element == null)
-            {
                 throw new ArgumentNullException(nameof(element));
-            }
 
             return IsCombinationDefined(element.ClassName, element.Part);
         }
@@ -100,14 +91,9 @@ namespace System.Windows.Forms.VisualStyles
 
             if (!IsSupported)
             {
-                if (!VisualStyleInformation.IsEnabledByUser)
-                {
-                    throw new InvalidOperationException(SR.VisualStyleNotActive);
-                }
-                else
-                {
-                    throw new InvalidOperationException(SR.VisualStylesDisabledInClientArea);
-                }
+                throw new InvalidOperationException(VisualStyleInformation.IsEnabledByUser
+                    ? SR.VisualStylesDisabledInClientArea
+                    : SR.VisualStyleNotActive);
             }
 
             IntPtr hTheme = GetHandle(className, false);
@@ -126,7 +112,7 @@ namespace System.Windows.Forms.VisualStyles
                 }
             }
 
-            //if the combo isn't defined, check the validity of our theme handle cache
+            // If the combo isn't defined, check the validity of our theme handle cache
             if (!returnVal)
             {
                 using (ThemeHandle? tHandle = ThemeHandle.Create(className, false))
@@ -136,7 +122,7 @@ namespace System.Windows.Forms.VisualStyles
                         returnVal = IsThemePartDefined(tHandle, part, 0).IsTrue();
                     }
 
-                    //if we did, in fact get a new correct theme handle, our cache is out of date -- update it now.
+                    // If we did, in fact get a new correct theme handle, our cache is out of date -- update it now.
                     if (returnVal)
                     {
                         RefreshCache();
@@ -161,51 +147,30 @@ namespace System.Windows.Forms.VisualStyles
         public VisualStyleRenderer(string className, int part, int state)
         {
             if (className == null)
-            {
                 throw new ArgumentNullException(nameof(className));
-            }
-            if (!IsCombinationDefined(className, part))
-            {
-                throw new ArgumentException(SR.VisualStylesInvalidCombination);
-            }
 
-            _class = className;
-            this.part = part;
-            this.state = state;
+            if (!IsCombinationDefined(className, part))
+                throw new ArgumentException(SR.VisualStylesInvalidCombination);
+
+            Class = className;
+            Part = part;
+            State = state;
         }
 
         /// <summary>
         ///  Returns the current _class. Use SetParameters to set.
         /// </summary>
-        public string Class
-        {
-            get
-            {
-                return _class;
-            }
-        }
+        public string Class { get; private set; }
 
         /// <summary>
         ///  Returns the current part. Use SetParameters to set.
         /// </summary>
-        public int Part
-        {
-            get
-            {
-                return part;
-            }
-        }
+        public int Part { get; private set; }
 
         /// <summary>
         ///  Returns the current state. Use SetParameters to set.
         /// </summary>
-        public int State
-        {
-            get
-            {
-                return state;
-            }
-        }
+        public int State { get; private set; }
 
         /// <summary>
         ///  Returns the underlying HTheme handle.
@@ -220,17 +185,12 @@ namespace System.Windows.Forms.VisualStyles
             {
                 if (!IsSupported)
                 {
-                    if (!VisualStyleInformation.IsEnabledByUser)
-                    {
-                        throw new InvalidOperationException(SR.VisualStyleNotActive);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException(SR.VisualStylesDisabledInClientArea);
-                    }
+                    throw new InvalidOperationException(VisualStyleInformation.IsEnabledByUser
+                        ? SR.VisualStylesDisabledInClientArea
+                        : SR.VisualStyleNotActive);
                 }
 
-                return GetHandle(_class);
+                return GetHandle(Class);
             }
         }
 
@@ -239,10 +199,8 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public void SetParameters(VisualStyleElement element)
         {
-            if (element == null)
-            {
+            if (element is null)
                 throw new ArgumentNullException(nameof(element));
-            }
 
             SetParameters(element.ClassName, element.Part, element.State);
         }
@@ -255,13 +213,11 @@ namespace System.Windows.Forms.VisualStyles
         public void SetParameters(string className, int part, int state)
         {
             if (!IsCombinationDefined(className, part))
-            {
                 throw new ArgumentException(SR.VisualStylesInvalidCombination);
-            }
 
-            _class = className;
-            this.part = part;
-            this.state = state;
+            Class = className;
+            Part = part;
+            State = state;
         }
 
         /// <summary>
@@ -269,36 +225,32 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public void DrawBackground(IDeviceContext dc, Rectangle bounds)
         {
-            DrawBackground(dc, bounds, IntPtr.Zero);
+            if (dc is null)
+                throw new ArgumentNullException(nameof(dc));
+
+            using var hdc = new DeviceContextHdcScope(dc);
+            DrawBackground(hdc, bounds, IntPtr.Zero);
         }
 
-        internal unsafe void DrawBackground(IDeviceContext dc, Rectangle bounds, IntPtr hWnd)
+        internal unsafe void DrawBackground(Gdi32.HDC dc, Rectangle bounds, IntPtr hwnd = default)
         {
-            if (dc == null)
-            {
-                throw new ArgumentNullException(nameof(dc));
-            }
             if (bounds.Width < 0 || bounds.Height < 0)
-            {
                 return;
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
+            if (IntPtr.Zero != hwnd)
             {
-                var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
-                if (IntPtr.Zero != hWnd)
+                using var htheme = new UxTheme.OpenThemeDataScope(hwnd, Class);
+                if (htheme.IsNull)
                 {
-                    using (ThemeHandle hTheme = ThemeHandle.Create(_class, true, hWnd)!)
-                    {
-                        RECT rect  = bounds;
-                        lastHResult = DrawThemeBackground(hTheme, hdc, part, state, ref rect, null);
-                    }
+                    throw new InvalidOperationException(SR.VisualStyleHandleCreationFailed);
                 }
-                else
-                {
-                    RECT rect  = bounds;
-                    lastHResult = DrawThemeBackground(this, hdc, part, state, ref rect, null);
-                }
+                RECT rect = bounds;
+                _lastHResult = DrawThemeBackground(htheme, dc, Part, State, ref rect, null);
+            }
+            else
+            {
+                RECT rect  = bounds;
+                _lastHResult = DrawThemeBackground(this, dc, Part, State, ref rect, null);
             }
         }
 
@@ -307,42 +259,34 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public void DrawBackground(IDeviceContext dc, Rectangle bounds, Rectangle clipRectangle)
         {
-            DrawBackground(dc, bounds, clipRectangle, IntPtr.Zero);
+            if (dc is null)
+                throw new ArgumentNullException(nameof(dc));
+
+            using var hdc = new DeviceContextHdcScope(dc);
+            DrawBackground(hdc, bounds, clipRectangle, IntPtr.Zero);
         }
 
-        internal unsafe void DrawBackground(IDeviceContext dc, Rectangle bounds, Rectangle clipRectangle, IntPtr hWnd)
+        internal unsafe void DrawBackground(Gdi32.HDC dc, Rectangle bounds, Rectangle clipRectangle, IntPtr hwnd)
         {
-            if (dc == null)
-            {
-                throw new ArgumentNullException(nameof(dc));
-            }
-            if (bounds.Width < 0 || bounds.Height < 0)
-            {
+            if (bounds.Width < 0 || bounds.Height < 0 || clipRectangle.Width < 0 || clipRectangle.Height < 0)
                 return;
-            }
-            if (clipRectangle.Width < 0 || clipRectangle.Height < 0)
-            {
-                return;
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
+            if (IntPtr.Zero != hwnd)
             {
-                var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
-                if (IntPtr.Zero != hWnd)
+                using var htheme = new UxTheme.OpenThemeDataScope(hwnd, Class);
+                if (htheme.IsNull)
                 {
-                    using (ThemeHandle hTheme = ThemeHandle.Create(_class, true, hWnd)!)
-                    {
-                        RECT rect = bounds;
-                        RECT clipRect = clipRectangle;
-                        lastHResult = DrawThemeBackground(hTheme, hdc, part, state, ref rect, &clipRect);
-                    }
+                    throw new InvalidOperationException(SR.VisualStyleHandleCreationFailed);
                 }
-                else
-                {
-                    RECT rect = bounds;
-                    RECT clipRect = clipRectangle;
-                    lastHResult = DrawThemeBackground(this, hdc, part, state, ref rect, &clipRect);
-                }
+                RECT rect = bounds;
+                RECT clipRect = clipRectangle;
+                _lastHResult = DrawThemeBackground(htheme, dc, Part, State, ref rect, &clipRect);
+            }
+            else
+            {
+                RECT rect = bounds;
+                RECT clipRect = clipRectangle;
+                _lastHResult = DrawThemeBackground(this, dc, Part, State, ref rect, &clipRect);
             }
         }
 
@@ -351,31 +295,36 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public Rectangle DrawEdge(IDeviceContext dc, Rectangle bounds, Edges edges, EdgeStyle style, EdgeEffects effects)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
 
+            using var hdc = new DeviceContextHdcScope(dc);
+            return DrawEdge(hdc, bounds, edges, style, effects);
+        }
+
+        internal Rectangle DrawEdge(Gdi32.HDC dc, Rectangle bounds, Edges edges, EdgeStyle style, EdgeEffects effects)
+        {
             if (!ClientUtils.IsEnumValid_Masked(edges, (int)edges, (uint)(Edges.Left | Edges.Top | Edges.Right | Edges.Bottom | Edges.Diagonal)))
-            {
                 throw new InvalidEnumArgumentException(nameof(edges), (int)edges, typeof(Edges));
-            }
 
             if (!ClientUtils.IsEnumValid_NotSequential(style, (int)style, (int)EdgeStyle.Raised, (int)EdgeStyle.Sunken, (int)EdgeStyle.Etched, (int)EdgeStyle.Bump))
-            {
                 throw new InvalidEnumArgumentException(nameof(style), (int)style, typeof(EdgeStyle));
-            }
 
             if (!ClientUtils.IsEnumValid_Masked(effects, (int)effects, (uint)(EdgeEffects.FillInterior | EdgeEffects.Flat | EdgeEffects.Soft | EdgeEffects.Mono)))
-            {
                 throw new InvalidEnumArgumentException(nameof(effects), (int)effects, typeof(EdgeEffects));
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
             RECT destRect = bounds;
             var contentRect = new RECT();
-            lastHResult = DrawThemeEdge(this, hdc, part, state, ref destRect, (User32.EDGE)style, (User32.BF)edges | (User32.BF)effects | User32.BF.ADJUST, ref contentRect);
+            _lastHResult = DrawThemeEdge(
+                this,
+                dc,
+                Part,
+                State,
+                ref destRect,
+                (User32.EDGE)style,
+                (User32.BF)edges | (User32.BF)effects | User32.BF.ADJUST,
+                ref contentRect);
+
             return contentRect;
         }
 
@@ -386,19 +335,13 @@ namespace System.Windows.Forms.VisualStyles
         public void DrawImage(Graphics g, Rectangle bounds, Image image)
         {
             if (g == null)
-            {
                 throw new ArgumentNullException(nameof(g));
-            }
 
             if (image == null)
-            {
                 throw new ArgumentNullException(nameof(image));
-            }
 
             if (bounds.Width < 0 || bounds.Height < 0)
-            {
                 return;
-            }
 
             g.DrawImage(image, bounds);
         }
@@ -410,24 +353,16 @@ namespace System.Windows.Forms.VisualStyles
         public void DrawImage(Graphics g, Rectangle bounds, ImageList imageList, int imageIndex)
         {
             if (g == null)
-            {
                 throw new ArgumentNullException(nameof(g));
-            }
 
             if (imageList == null)
-            {
                 throw new ArgumentNullException(nameof(imageList));
-            }
 
             if (imageIndex < 0 || imageIndex >= imageList.Images.Count)
-            {
                 throw new ArgumentOutOfRangeException(nameof(imageIndex), imageIndex, string.Format(SR.InvalidArgument, nameof(imageIndex), imageIndex));
-            }
 
             if (bounds.Width < 0 || bounds.Height < 0)
-            {
                 return;
-            }
 
             // DrawThemeIcon currently seems to do nothing, but still return S_OK. As a workaround,
             // we call DrawImage on the graphics object itself for now.
@@ -441,26 +376,20 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public void DrawParentBackground(IDeviceContext dc, Rectangle bounds, Control childControl)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
+
             if (childControl == null)
-            {
                 throw new ArgumentNullException(nameof(childControl));
-            }
 
             if (bounds.Width < 0 || bounds.Height < 0)
-            {
                 return;
-            }
 
             if (childControl.IsHandleCreated)
             {
-                using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-                var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
+                using var hdc = new DeviceContextHdcScope(dc);
                 RECT rc = bounds;
-                lastHResult = DrawThemeParentBackground(childControl, hdc, ref rc);
+                _lastHResult = DrawThemeParentBackground(childControl, hdc, ref rc);
             }
         }
 
@@ -485,23 +414,23 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public void DrawText(IDeviceContext dc, Rectangle bounds, string? textToDraw, bool drawDisabled, TextFormatFlags flags)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
 
+            using var hdc = new DeviceContextHdcScope(dc);
+            DrawText(hdc, bounds, textToDraw, drawDisabled, flags);
+        }
+
+        internal void DrawText(Gdi32.HDC dc, Rectangle bounds, string? textToDraw, bool drawDisabled, TextFormatFlags flags)
+        {
             if (bounds.Width < 0 || bounds.Height < 0)
-            {
                 return;
-            }
 
             if (!string.IsNullOrEmpty(textToDraw))
             {
-                using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-                var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
                 uint disableFlag = drawDisabled ? 0x1u : 0u;
                 RECT rect = bounds;
-                lastHResult = DrawThemeText(this, hdc, part, state, textToDraw, textToDraw.Length, (User32.DT)flags, disableFlag, ref rect);
+                _lastHResult = DrawThemeText(this, dc, Part, State, textToDraw, textToDraw.Length, (User32.DT)flags, disableFlag, ref rect);
             }
         }
 
@@ -510,19 +439,20 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public Rectangle GetBackgroundContentRectangle(IDeviceContext dc, Rectangle bounds)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
-            if (bounds.Width < 0 || bounds.Height < 0)
-            {
-                return Rectangle.Empty;
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
+            using var hdc = new DeviceContextHdcScope(dc);
+            return GetBackgroundContentRectangle(hdc, bounds);
+        }
+
+        internal Rectangle GetBackgroundContentRectangle(Gdi32.HDC dc, Rectangle bounds)
+        {
+            if (bounds.Width < 0 || bounds.Height < 0)
+                return Rectangle.Empty;
+
             RECT boundsRect = bounds;
-            lastHResult = GetThemeBackgroundContentRect(this, hdc, part, state, ref boundsRect, out RECT rect);
+            _lastHResult = GetThemeBackgroundContentRect(this, dc, Part, State, ref boundsRect, out RECT rect);
             return rect;
         }
 
@@ -531,19 +461,15 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public Rectangle GetBackgroundExtent(IDeviceContext dc, Rectangle contentBounds)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
-            if (contentBounds.Width < 0 || contentBounds.Height < 0)
-            {
-                return Rectangle.Empty;
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
+            if (contentBounds.Width < 0 || contentBounds.Height < 0)
+                return Rectangle.Empty;
+
+            using var hdc = new DeviceContextHdcScope(dc);
             RECT contentBoundsRect = contentBounds;
-            lastHResult = GetThemeBackgroundExtent(this, hdc, part, state, ref contentBoundsRect, out RECT extentRect);
+            _lastHResult = GetThemeBackgroundExtent(this, hdc, Part, State, ref contentBoundsRect, out RECT extentRect);
             return extentRect;
         }
 
@@ -554,31 +480,27 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public Region? GetBackgroundRegion(IDeviceContext dc, Rectangle bounds)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
-            if (bounds.Width < 0 || bounds.Height < 0)
-            {
-                return null;
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
+            if (bounds.Width < 0 || bounds.Height < 0)
+                return null;
+
+            using var hdc = new DeviceContextHdcScope(dc);
             RECT boundsRect = bounds;
-            lastHResult = GetThemeBackgroundRegion(this, hdc, part, state, ref boundsRect, out IntPtr hRegion);
+            _lastHResult = GetThemeBackgroundRegion(this, hdc, Part, State, ref boundsRect, out Gdi32.HRGN hRegion);
 
             // GetThemeBackgroundRegion returns a null hRegion if it fails to create one, it could be because the bounding
             // box is too big. For more info see code in %xpsrc%\shell\themes\uxtheme\imagefile.cpp if you have an enlistment to it.
 
-            if (hRegion == IntPtr.Zero)
+            if (hRegion.IsNull)
             {
                 return null;
             }
 
             // From the GDI+ sources it doesn't appear as if they take ownership of the hRegion, so this is safe to do.
             // We need to DeleteObject in order to not leak.
-            Region region = Region.FromHrgn(hRegion);
+            Region region = Region.FromHrgn(hRegion.Handle);
             Gdi32.DeleteObject(hRegion);
             return region;
         }
@@ -589,12 +511,10 @@ namespace System.Windows.Forms.VisualStyles
         public bool GetBoolean(BooleanProperty prop)
         {
             if (!ClientUtils.IsEnumValid(prop, (int)prop, (int)BooleanProperty.Transparent, (int)BooleanProperty.SourceShrink))
-            {
                 throw new InvalidEnumArgumentException(nameof(prop), (int)prop, typeof(BooleanProperty));
-            }
 
             BOOL val = BOOL.FALSE;
-            lastHResult = GetThemeBool(this, part, state, (int)prop, ref val);
+            _lastHResult = GetThemeBool(this, Part, State, (int)prop, ref val);
             return val.IsTrue();
         }
 
@@ -603,14 +523,12 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public Color GetColor(ColorProperty prop)
         {
-            //valid values are 0xed9 to 0xeef
+            // Valid values are 0xed9 to 0xeef
             if (!ClientUtils.IsEnumValid(prop, (int)prop, (int)ColorProperty.BorderColor, (int)ColorProperty.AccentColorHint))
-            {
                 throw new InvalidEnumArgumentException(nameof(prop), (int)prop, typeof(ColorProperty));
-            }
 
             int color = 0;
-            lastHResult = GetThemeColor(this, part, state, (int)prop, ref color);
+            _lastHResult = GetThemeColor(this, Part, State, (int)prop, ref color);
             return ColorTranslator.FromWin32(color);
         }
 
@@ -619,14 +537,12 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public int GetEnumValue(EnumProperty prop)
         {
-            //valid values are 0xfa1 to 0xfaf
+            // Valid values are 0xfa1 to 0xfaf
             if (!ClientUtils.IsEnumValid(prop, (int)prop, (int)EnumProperty.BackgroundType, (int)EnumProperty.TrueSizeScalingType))
-            {
                 throw new InvalidEnumArgumentException(nameof(prop), (int)prop, typeof(EnumProperty));
-            }
 
             int val = 0;
-            lastHResult = GetThemeEnumValue(this, part, state, (int)prop, ref val);
+            _lastHResult = GetThemeEnumValue(this, Part, State, (int)prop, ref val);
             return val;
         }
 
@@ -635,16 +551,14 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public unsafe string GetFilename(FilenameProperty prop)
         {
-            //valid values are 0xbb9 to 0xbc0
+            // Valid values are 0xbb9 to 0xbc0
             if (!ClientUtils.IsEnumValid(prop, (int)prop, (int)FilenameProperty.ImageFile, (int)FilenameProperty.GlyphImageFile))
-            {
                 throw new InvalidEnumArgumentException(nameof(prop), (int)prop, typeof(FilenameProperty));
-            }
 
             Span<char> filename = stackalloc char[512];
             fixed (char* pFilename = filename)
             {
-                lastHResult = GetThemeFilename(this, part, state, (int)prop, pFilename, filename.Length);
+                _lastHResult = GetThemeFilename(this, Part, State, (int)prop, pFilename, filename.Length);
             }
             return filename.SliceAtFirstNull().ToString();
         }
@@ -655,22 +569,17 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public Font? GetFont(IDeviceContext dc, FontProperty prop)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
 
             if (!ClientUtils.IsEnumValid_NotSequential(prop, (int)prop, (int)FontProperty.TextFont, (int)FontProperty.GlyphFont))
-            {
                 throw new InvalidEnumArgumentException(nameof(prop), (int)prop, typeof(FontProperty));
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
-            lastHResult = GetThemeFont(this, hdc, part, state, (int)prop, out User32.LOGFONTW logfont);
+            using var hdc = new DeviceContextHdcScope(dc);
+            _lastHResult = GetThemeFont(this, hdc, Part, State, (int)prop, out User32.LOGFONTW logfont);
 
             // Check for a failed HR.
-            if (!lastHResult.Succeeded())
+            if (!_lastHResult.Succeeded())
             {
                 return null;
             }
@@ -696,14 +605,12 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public int GetInteger(IntegerProperty prop)
         {
-            //valid values are 0x961 to 0x978
+            // Valid values are 0x961 to 0x978
             if (!ClientUtils.IsEnumValid(prop, (int)prop, (int)IntegerProperty.ImageCount, (int)IntegerProperty.MinDpi5))
-            {
                 throw new InvalidEnumArgumentException(nameof(prop), (int)prop, typeof(IntegerProperty));
-            }
 
             int val = 0;
-            lastHResult = GetThemeInt(this, part, state, (int)prop, ref val);
+            _lastHResult = GetThemeInt(this, Part, State, (int)prop, ref val);
             return val;
         }
 
@@ -712,34 +619,31 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public Size GetPartSize(IDeviceContext dc, ThemeSizeType type)
         {
-            return GetPartSize(dc, type, IntPtr.Zero);
+            if (dc is null)
+                throw new ArgumentNullException(nameof(dc));
+
+            using var hdc = new DeviceContextHdcScope(dc);
+            return GetPartSize(hdc, type, IntPtr.Zero);
         }
 
-        internal unsafe Size GetPartSize(IDeviceContext dc, ThemeSizeType type, IntPtr hWnd)
+        internal unsafe Size GetPartSize(Gdi32.HDC dc, ThemeSizeType type, IntPtr hwnd = default)
         {
-            if (dc == null)
-            {
-                throw new ArgumentNullException(nameof(dc));
-            }
-
-            // valid values are 0x0 to 0x2
+            // Valid values are 0x0 to 0x2
             if (!ClientUtils.IsEnumValid(type, (int)type, (int)ThemeSizeType.Minimum, (int)ThemeSizeType.Draw))
-            {
                 throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(ThemeSizeType));
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
-            if (DpiHelper.IsPerMonitorV2Awareness && hWnd != IntPtr.Zero)
+            if (DpiHelper.IsPerMonitorV2Awareness && hwnd != IntPtr.Zero)
             {
-                using (ThemeHandle hTheme = ThemeHandle.Create(_class, true, hWnd)!)
+                using var htheme = new UxTheme.OpenThemeDataScope(hwnd, Class);
+                if (htheme.IsNull)
                 {
-                    lastHResult = GetThemePartSize(new HandleRef(this, hTheme.Handle), hdc, part, state, null, type, out Size dpiSize);
-                    return dpiSize;
+                    throw new InvalidOperationException(SR.VisualStyleHandleCreationFailed);
                 }
+                _lastHResult = GetThemePartSize(htheme, dc, Part, State, null, type, out Size dpiSize);
+                return dpiSize;
             }
 
-            lastHResult = GetThemePartSize(this, hdc, part, state, null, type, out Size size);
+            _lastHResult = GetThemePartSize(this, dc, Part, State, null, type, out Size size);
             return size;
         }
 
@@ -748,21 +652,16 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public unsafe Size GetPartSize(IDeviceContext dc, Rectangle bounds, ThemeSizeType type)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
 
-            //valid values are 0x0 to 0x2
+            // Valid values are 0x0 to 0x2
             if (!ClientUtils.IsEnumValid(type, (int)type, (int)ThemeSizeType.Minimum, (int)ThemeSizeType.Draw))
-            {
                 throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(ThemeSizeType));
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
+            using var hdc = new DeviceContextHdcScope(dc);
             RECT boundsRect = bounds;
-            lastHResult = GetThemePartSize(this, hdc, part, state, &boundsRect, type, out Size size);
+            _lastHResult = GetThemePartSize(this, hdc, Part, State, &boundsRect, type, out Size size);
             return size;
         }
 
@@ -773,11 +672,9 @@ namespace System.Windows.Forms.VisualStyles
         {
             //valid values are 0xd49 to 0xd50
             if (!ClientUtils.IsEnumValid(prop, (int)prop, (int)PointProperty.Offset, (int)PointProperty.MinSize5))
-            {
                 throw new InvalidEnumArgumentException(nameof(prop), (int)prop, typeof(PointProperty));
-            }
 
-            lastHResult = GetThemePosition(this, part, state, (int)prop, out Point point);
+            _lastHResult = GetThemePosition(this, Part, State, (int)prop, out Point point);
             return point;
         }
 
@@ -786,20 +683,15 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public unsafe Padding GetMargins(IDeviceContext dc, MarginProperty prop)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
 
-            //valid values are 0xe11 to 0xe13
+            // Valid values are 0xe11 to 0xe13
             if (!ClientUtils.IsEnumValid(prop, (int)prop, (int)MarginProperty.SizingMargins, (int)MarginProperty.CaptionMargins))
-            {
                 throw new InvalidEnumArgumentException(nameof(prop), (int)prop, typeof(MarginProperty));
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
-            lastHResult = GetThemeMargins(this, hdc, part, state, (int)prop, null, out MARGINS margins);
+            using var hdc = new DeviceContextHdcScope(dc);
+            _lastHResult = GetThemeMargins(this, hdc, Part, State, (int)prop, null, out MARGINS margins);
 
             return new Padding(margins.cxLeftWidth, margins.cyTopHeight, margins.cxRightWidth, margins.cyBottomHeight);
         }
@@ -809,16 +701,14 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public unsafe string GetString(StringProperty prop)
         {
-            //valid values are 0xc81 to 0xc81
+            // Valid values are 0xc81 to 0xc81
             if (!ClientUtils.IsEnumValid(prop, (int)prop, (int)StringProperty.Text, (int)StringProperty.Text))
-            {
                 throw new InvalidEnumArgumentException(nameof(prop), (int)prop, typeof(StringProperty));
-            }
 
             Span<char> aString = stackalloc char[512];
             fixed (char* pString = aString)
             {
-                lastHResult = GetThemeString(this, part, state, (int)prop, pString, aString.Length);
+                _lastHResult = GetThemeString(this, Part, State, (int)prop, pString, aString.Length);
             }
             return aString.SliceAtFirstNull().ToString();
         }
@@ -828,19 +718,14 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public unsafe Rectangle GetTextExtent(IDeviceContext dc, string textToDraw, TextFormatFlags flags)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
 
             if (string.IsNullOrEmpty(textToDraw))
-            {
                 throw new ArgumentNullException(nameof(textToDraw));
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
-            lastHResult = GetThemeTextExtent(this, hdc, part, state, textToDraw, textToDraw.Length, (uint)flags, null, out RECT rect);
+            using var hdc = new DeviceContextHdcScope(dc);
+            _lastHResult = GetThemeTextExtent(this, hdc, Part, State, textToDraw, textToDraw.Length, (uint)flags, null, out RECT rect);
             return rect;
         }
 
@@ -849,20 +734,15 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public unsafe Rectangle GetTextExtent(IDeviceContext dc, Rectangle bounds, string textToDraw, TextFormatFlags flags)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
 
             if (string.IsNullOrEmpty(textToDraw))
-            {
                 throw new ArgumentNullException(nameof(textToDraw));
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
+            using var hdc = new DeviceContextHdcScope(dc);
             RECT boundsRect = bounds;
-            lastHResult = GetThemeTextExtent(this, hdc, part, state, textToDraw, textToDraw.Length, (uint)flags, &boundsRect, out RECT rect);
+            _lastHResult = GetThemeTextExtent(this, hdc, Part, State, textToDraw, textToDraw.Length, (uint)flags, &boundsRect, out RECT rect);
             return rect;
         }
 
@@ -871,14 +751,11 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public TextMetrics GetTextMetrics(IDeviceContext dc)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
-            lastHResult = GetThemeTextMetrics(this, hdc, part, state, out TextMetrics tm);
+            using var hdc = new DeviceContextHdcScope(dc);
+            _lastHResult = GetThemeTextMetrics(this, hdc, Part, State, out TextMetrics tm);
             return tm;
         }
 
@@ -887,15 +764,12 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public HitTestCode HitTestBackground(IDeviceContext dc, Rectangle backgroundRectangle, Point pt, HitTestOptions options)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
+            using var hdc = new DeviceContextHdcScope(dc);
             RECT backgroundRect = backgroundRectangle;
-            lastHResult = HitTestThemeBackground(this, hdc, part, state, (uint)options, ref backgroundRect, IntPtr.Zero, pt, out ushort htCode);
+            _lastHResult = HitTestThemeBackground(this, hdc, Part, State, (uint)options, ref backgroundRect, IntPtr.Zero, pt, out ushort htCode);
             return (HitTestCode)htCode;
         }
 
@@ -905,13 +779,10 @@ namespace System.Windows.Forms.VisualStyles
         public HitTestCode HitTestBackground(Graphics g, Rectangle backgroundRectangle, Region region, Point pt, HitTestOptions options)
         {
             if (g == null)
-            {
                 throw new ArgumentNullException(nameof(g));
-            }
+
             if (region == null)
-            {
                 throw new ArgumentNullException(nameof(region));
-            }
 
             IntPtr hRgn = region.GetHrgn(g);
             return HitTestBackground(g, backgroundRectangle, hRgn, pt, options);
@@ -922,15 +793,12 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public HitTestCode HitTestBackground(IDeviceContext dc, Rectangle backgroundRectangle, IntPtr hRgn, Point pt, HitTestOptions options)
         {
-            if (dc == null)
-            {
+            if (dc is null)
                 throw new ArgumentNullException(nameof(dc));
-            }
 
-            using var wgr = new WindowsGraphicsWrapper(dc, AllGraphicsProperties);
-            var hdc = new HandleRef(wgr, wgr.WindowsGraphics.DeviceContext.Hdc);
+            using var hdc = new DeviceContextHdcScope(dc);
             RECT backgroundRect = backgroundRectangle;
-            lastHResult = HitTestThemeBackground(this, hdc, part, state, (uint)options, ref backgroundRect, hRgn, pt, out ushort htCode);
+            _lastHResult = HitTestThemeBackground(this, hdc, Part, State, (uint)options, ref backgroundRect, hRgn, pt, out ushort htCode);
             return (HitTestCode)htCode;
         }
 
@@ -939,27 +807,21 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         public bool IsBackgroundPartiallyTransparent()
         {
-            return IsThemeBackgroundPartiallyTransparent(this, part, state).IsTrue();
+            return IsThemeBackgroundPartiallyTransparent(this, Part, State).IsTrue();
         }
 
         /// <summary>
         ///  This is similar to GetLastError in Win32.  It returns the last HRESULT returned from a native call
         ///  into theme apis.  We eat the errors and let the user handle any errors that occurred.
         /// </summary>
-        public int LastHResult
-        {
-            get
-            {
-                return (int)lastHResult;
-            }
-        }
+        public int LastHResult => (int)_lastHResult;
 
         /// <summary>
         ///  Instantiates the ThemeHandle cache hashtable.
         /// </summary>
         private static void CreateThemeHandleHashtable()
         {
-            themeHandles = new Hashtable(numberOfPossibleClasses);
+            t_themeHandles = new Hashtable(NumberOfPossibleClasses);
         }
 
         /// <summary>
@@ -976,7 +838,7 @@ namespace System.Windows.Forms.VisualStyles
                 // its handle, this whole version check won't work, but it is unlikely to happen.
 
                 // this is not ideal.
-                globalCacheVersion++;
+                s_globalCacheVersion++;
             }
         }
 
@@ -987,14 +849,14 @@ namespace System.Windows.Forms.VisualStyles
         {
             ThemeHandle? tHandle = null;
 
-            if (themeHandles != null)
+            if (t_themeHandles != null)
             {
-                string[] classNames = new string[themeHandles.Keys.Count];
-                themeHandles.Keys.CopyTo(classNames, 0);
+                string[] classNames = new string[t_themeHandles.Keys.Count];
+                t_themeHandles.Keys.CopyTo(classNames, 0);
 
                 foreach (string className in classNames)
                 {
-                    tHandle = (ThemeHandle?)themeHandles[className];
+                    tHandle = (ThemeHandle?)t_themeHandles[className];
                     if (tHandle != null)
                     {
                         tHandle.Dispose();
@@ -1007,7 +869,7 @@ namespace System.Windows.Forms.VisualStyles
                         tHandle = ThemeHandle.Create(className, false);
                         if (tHandle != null)
                         {
-                            themeHandles[className] = tHandle;
+                            t_themeHandles[className] = tHandle;
                         }
                     }
                 }
@@ -1025,18 +887,18 @@ namespace System.Windows.Forms.VisualStyles
         /// </summary>
         private static IntPtr GetHandle(string className, bool throwExceptionOnFail)
         {
-            if (themeHandles == null)
+            if (t_themeHandles == null)
             {
                 CreateThemeHandleHashtable();
             }
 
-            if (threadCacheVersion != globalCacheVersion)
+            if (t_threadCacheVersion != s_globalCacheVersion)
             {
                 RefreshCache();
-                threadCacheVersion = globalCacheVersion;
+                t_threadCacheVersion = s_globalCacheVersion;
             }
 
-            if (!themeHandles!.Contains(className))
+            if (!t_themeHandles!.Contains(className))
             {
                 // See if it is already in cache
                 ThemeHandle? tHandle = ThemeHandle.Create(className, throwExceptionOnFail);
@@ -1045,11 +907,11 @@ namespace System.Windows.Forms.VisualStyles
                     return IntPtr.Zero;
                 }
 
-                themeHandles.Add(className, tHandle);
+                t_themeHandles.Add(className, tHandle);
                 return tHandle.Handle;
             }
 
-            return ((ThemeHandle)themeHandles[className]!).Handle;
+            return ((ThemeHandle)t_themeHandles[className]!).Handle;
         }
 
         // This wrapper class is needed for safely cleaning up TLS cache of handles.
@@ -1070,20 +932,7 @@ namespace System.Windows.Forms.VisualStyles
             internal static ThemeHandle? Create(string className, bool throwExceptionOnFail, IntPtr hWndRef)
             {
                 // HThemes require an HWND when display scaling is different between monitors.
-                IntPtr hTheme = IntPtr.Zero;
-                try
-                {
-                    hTheme = OpenThemeData(hWndRef, className);
-                }
-                catch (Exception e) when (!ClientUtils.IsCriticalException(e))
-                {
-                    if (throwExceptionOnFail)
-                    {
-                        throw new InvalidOperationException(SR.VisualStyleHandleCreationFailed, e);
-                    }
-
-                    return null;
-                }
+                IntPtr hTheme = OpenThemeData(hWndRef, className);
 
                 if (hTheme == IntPtr.Zero)
                 {

@@ -22,8 +22,8 @@ namespace System.Windows.Forms
         private WebBrowserBase siteUIActive;
         private WebBrowserBase siteActive;
         private readonly Hashtable containerCache = new Hashtable();  // name -> Control
-        private Hashtable components = null;  // Control -> any
-        private WebBrowserBase ctlInEditMode = null;
+        private Hashtable components;  // Control -> any
+        private WebBrowserBase ctlInEditMode;
 
         internal WebBrowserContainer(WebBrowserBase parent)
         {
@@ -350,7 +350,7 @@ namespace System.Windows.Forms
         {
             if (containerCache.Contains(ctl))
             {
-                throw new ArgumentException(string.Format(SR.AXDuplicateControl, GetNameForControl(ctl)), "ctl");
+                throw new ArgumentException(string.Format(SR.AXDuplicateControl, GetNameForControl(ctl)), nameof(ctl));
             }
 
             containerCache.Add(ctl, ctl);

@@ -38,14 +38,14 @@ namespace System.Windows.Forms.ButtonInternal
                 return ButtonAdapter.GetPreferredSizeCore(proposedSize);
             }
 
-            using (Graphics measurementGraphics = WindowsFormsUtils.CreateMeasurementGraphics())
+            LayoutOptions options = default;
+            using (var screen = GdiCache.GetScreenHdc())
+            using (PaintEventArgs pe = new PaintEventArgs(screen, new Rectangle()))
             {
-                using (PaintEventArgs pe = new PaintEventArgs(measurementGraphics, new Rectangle()))
-                {
-                    LayoutOptions options = Layout(pe);
-                    return options.GetPreferredSizeCore(proposedSize);
-                }
+                options = Layout(pe);
             }
+
+            return options.GetPreferredSizeCore(proposedSize);
         }
 
         protected abstract ButtonBaseAdapter CreateButtonAdapter();
@@ -81,12 +81,12 @@ namespace System.Windows.Forms.ButtonInternal
             return layout;
         }
 
-        internal double GetDpiScaleRatio(Graphics g)
+        internal double GetDpiScaleRatio()
         {
-            return GetDpiScaleRatio(g, Control);
+            return GetDpiScaleRatio(Control);
         }
 
-        internal static double GetDpiScaleRatio(Graphics g, Control control)
+        internal static double GetDpiScaleRatio(Control control)
         {
             if (DpiHelper.IsPerMonitorV2Awareness
                 && control != null && control.IsHandleCreated)
@@ -94,12 +94,7 @@ namespace System.Windows.Forms.ButtonInternal
                 return control._deviceDpi / DpiHelper.LogicalDpi;
             }
 
-            if (g == null)
-            {
-                return 1.0F;
-            }
-
-            return g.DpiX / 96;
+            return DpiHelper.LogicalToDeviceUnitsScalingFactor;
         }
     }
 }

@@ -687,16 +687,6 @@
         <target state="translated">Vous ne pouvez modifier ni ajouter le document une fois que vous l'avez imprimé.</target>
         <note />
       </trans-unit>
-      <trans-unit id="CannotConvertDoubleToDate">
-        <source>Double cannot be converted to a date.</source>
-        <target state="translated">Impossible de convertir une valeur double en date.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotConvertIntToFloat">
-        <source>Integer cannot be converted to a float.</source>
-        <target state="translated">Impossible de convertir une valeur integer en float.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CantNestMessageLoops">
         <source>Starting a second message loop on a single thread is not a valid operation. Use Form.ShowDialog instead.</source>
         <target state="translated">Le démarrage d'une deuxième boucle de messages sur un seul thread n'est pas une opération valide. Utilisez Form.ShowDialog à la place.</target>
@@ -1175,6 +1165,11 @@
       <trans-unit id="ConnPointUnhandledType">
         <source>Unhandled type {0}.</source>
         <target state="translated">Type {0} non géré.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConstructorArgumentInvalidValueType">
+        <source>Argument '{0}' cannot be converted to type '{1}'.</source>
+        <target state="translated">L'argument '{0}' ne peut pas être converti en type '{1}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainerControlActiveControlDescr">
@@ -5432,6 +5427,11 @@ Voulez-vous le remplacer ?</target>
         <target state="translated">Nombre de ligne de la table.</target>
         <note />
       </trans-unit>
+      <trans-unit id="HScrollBarDefaultAccessibleName">
+        <source>Horizontal</source>
+        <target state="new">Horizontal</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HandleAlreadyExists">
         <source>Window handle already exists.</source>
         <target state="translated">Le handle de fenêtre existe déjà.</target>
@@ -5551,6 +5551,11 @@ Cette opération non conforme s'est produite sur la trace de la pile :
         <target state="translated">Échec de la création du handle ImageList.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ImageListDuplicateFailed">
+        <source>Duplication of the ImageList handle did not succeed.</source>
+        <target state="new">Duplication of the ImageList handle did not succeed.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ImageListEntryType">
         <source>Image added to an ImageList must either derive from Image or be an Icon.</source>
         <target state="translated">Une image ajoutée à ImageList doit dériver de Image ou être un Icon.</target>
@@ -5638,7 +5643,7 @@ Cette opération non conforme s'est produite sur la trace de la pile :
       </trans-unit>
       <trans-unit id="InputLanguageCultureNotFound">
         <source>Could not find an InputLanguage for culture '{0}'.</source>
-        <target state="new">Could not find an InputLanguage for culture '{0}'.</target>
+        <target state="translated">InputLanguage introuvable pour la culture '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidArgument">
@@ -6374,6 +6379,11 @@ Cette opération non conforme s'est produite sur la trace de la pile :
       <trans-unit id="ListViewGroupDefaultHeader">
         <source>ListViewGroup</source>
         <target state="translated">ListViewGroup</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewGroupImageListDescr">
+        <source>The ImageList control used by the ListView for ListViewGroup images in all views.</source>
+        <target state="translated">Contrôle ImageList utilisé par ListView pour les images ListViewGroup dans toutes les vues.</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewGroupNameDescr">
@@ -10784,6 +10794,11 @@ Cette opération non conforme s'est produite sur la trace de la pile :
       <trans-unit id="UserControlOnLoadDescr">
         <source>Occurs whenever the user control loads.</source>
         <target state="translated">Se produit lors du chargement du contrôle utilisateur.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="VScrollBarDefaultAccessibleName">
+        <source>Vertical</source>
+        <target state="new">Vertical</target>
         <note />
       </trans-unit>
       <trans-unit id="VisualStyleHandleCreationFailed">

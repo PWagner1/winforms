@@ -436,12 +436,6 @@
   <data name="CannotChangePrintedDocument" xml:space="preserve">
     <value>You cannot alter the document or add to it once you have printed it.</value>
   </data>
-  <data name="CannotConvertDoubleToDate" xml:space="preserve">
-    <value>Double cannot be converted to a date.</value>
-  </data>
-  <data name="CannotConvertIntToFloat" xml:space="preserve">
-    <value>Integer cannot be converted to a float.</value>
-  </data>
   <data name="CantNestMessageLoops" xml:space="preserve">
     <value>Starting a second message loop on a single thread is not a valid operation. Use Form.ShowDialog instead.</value>
   </data>
@@ -3343,6 +3337,9 @@ Stack trace where the illegal operation occurred was:
   </data>
   <data name="ImageListCreateFailed" xml:space="preserve">
     <value>Creation of the ImageList handle did not succeed.</value>
+  </data>
+  <data name="ImageListDuplicateFailed" xml:space="preserve">
+    <value>Duplication of the ImageList handle did not succeed.</value>
   </data>
   <data name="ImageListEntryType" xml:space="preserve">
     <value>Image added to an ImageList must either derive from Image or be an Icon.</value>
@@ -6650,6 +6647,12 @@ Stack trace where the illegal operation occurred was:
   <data name="TaskDialogCanUpdateStateOnlyWhenShown" xml:space="preserve">
     <value>Can only update the state of a task dialog while it is shown.</value>
   </data>
+  <data name="HScrollBarDefaultAccessibleName" xml:space="preserve">
+    <value>Horizontal</value>
+  </data>
+  <data name="VScrollBarDefaultAccessibleName" xml:space="preserve">
+    <value>Vertical</value>
+  </data>
   <data name="TaskDialogCollectionAlreadyBound" xml:space="preserve">
     <value>One of the collections of this {0} is already bound to a {1} instance.</value>
   </data>
@@ -6709,5 +6712,11 @@ Stack trace where the illegal operation occurred was:
   </data>
   <data name="InputLanguageCultureNotFound" xml:space="preserve">
     <value>Could not find an InputLanguage for culture '{0}'.</value>
+  </data>
+  <data name="ListViewGroupImageListDescr" xml:space="preserve">
+    <value>The ImageList control used by the ListView for ListViewGroup images in all views.</value>
+  </data>
+  <data name="ConstructorArgumentInvalidValueType" xml:space="preserve">
+    <value>Argument '{0}' cannot be converted to type '{1}'.</value> 
   </data>
 </root>

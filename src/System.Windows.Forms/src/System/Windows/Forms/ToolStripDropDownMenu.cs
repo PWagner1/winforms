@@ -25,10 +25,10 @@ namespace System.Windows.Forms
         // This is totally a UI Fudge - if we have an image or check margin with
         // no image or checks in it use this - which is consistent with office
         // and an image margin with a 16x16 icon in it.
-        private static readonly int DefaultImageMarginWidth = 24; // 24+1px border - with scaling we add this 1px to new, scaled, field value
-        private static readonly int DefaultImageAndCheckMarginWidth = 46;  // 46+1px border - with scaling we add this 1px to new, scaled, field value
+        private const int DefaultImageMarginWidth = 24; // 24+1px border - with scaling we add this 1px to new, scaled, field value
+        private const int DefaultImageAndCheckMarginWidth = 46;  // 46+1px border - with scaling we add this 1px to new, scaled, field value
 
-        private static readonly int ArrowSize = 10;
+        private const int ArrowSize = 10;
 
         private Size maxItemSize = Size.Empty;
         private Rectangle checkRectangle = Rectangle.Empty;
@@ -36,15 +36,15 @@ namespace System.Windows.Forms
         private Rectangle arrowRectangle = Rectangle.Empty;
         private Rectangle textRectangle = Rectangle.Empty;
         private Rectangle imageMarginBounds = Rectangle.Empty;
-        private int paddingToTrim = 0;
+        private int paddingToTrim;
         private int tabWidth = -1;
 
-        private ToolStripScrollButton upScrollButton = null;
-        private ToolStripScrollButton downScrollButton = null;
-        private int scrollAmount = 0;
+        private ToolStripScrollButton upScrollButton;
+        private ToolStripScrollButton downScrollButton;
+        private int scrollAmount;
         private int indexOfFirstDisplayedItem = -1;
 
-        private BitVector32 state = new BitVector32();
+        private BitVector32 state;
 
         private static readonly int stateShowImageMargin = BitVector32.CreateMask();
         private static readonly int stateShowCheckMargin = BitVector32.CreateMask(stateShowImageMargin);

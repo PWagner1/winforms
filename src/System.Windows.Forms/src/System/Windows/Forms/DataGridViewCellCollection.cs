@@ -19,7 +19,7 @@ namespace System.Windows.Forms
     {
         CollectionChangeEventHandler onCollectionChanged;
         readonly ArrayList items = new ArrayList();
-        readonly DataGridViewRow owner = null;
+        readonly DataGridViewRow owner;
 
         int IList.Add(object value)
         {
@@ -179,7 +179,7 @@ namespace System.Windows.Forms
                 }
                 if (dataGridViewColumn == null)
                 {
-                    throw new ArgumentException(string.Format(SR.DataGridViewColumnCollection_ColumnNotFound, columnName), "columnName");
+                    throw new ArgumentException(string.Format(SR.DataGridViewColumnCollection_ColumnNotFound, columnName), nameof(columnName));
                 }
                 return (DataGridViewCell)items[dataGridViewColumn.Index];
             }
@@ -192,7 +192,7 @@ namespace System.Windows.Forms
                 }
                 if (dataGridViewColumn == null)
                 {
-                    throw new ArgumentException(string.Format(SR.DataGridViewColumnCollection_ColumnNotFound, columnName), "columnName");
+                    throw new ArgumentException(string.Format(SR.DataGridViewColumnCollection_ColumnNotFound, columnName), nameof(columnName));
                 }
                 this[dataGridViewColumn.Index] = value;
             }

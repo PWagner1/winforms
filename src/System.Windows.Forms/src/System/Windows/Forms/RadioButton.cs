@@ -24,10 +24,10 @@ namespace System.Windows.Forms
     [ToolboxItem("System.Windows.Forms.Design.AutoSizeToolboxItem," + AssemblyRef.SystemDesign)]
     [Designer("System.Windows.Forms.Design.RadioButtonDesigner, " + AssemblyRef.SystemDesign)]
     [SRDescription(nameof(SR.DescriptionRadioButton))]
-    public class RadioButton : ButtonBase
+    public partial class RadioButton : ButtonBase
     {
         private static readonly object EVENT_CHECKEDCHANGED = new object();
-        private static readonly ContentAlignment anyRight = ContentAlignment.TopRight | ContentAlignment.MiddleRight | ContentAlignment.BottomRight;
+        private const ContentAlignment AnyRight = ContentAlignment.TopRight | ContentAlignment.MiddleRight | ContentAlignment.BottomRight;
 
         // Used to see if we need to iterate through the autochecked items and modify their tabstops.
         private bool firstfocus = true;
@@ -250,7 +250,7 @@ namespace System.Windows.Forms
                     // Determine the alignment of the radio button
                     //
                     ContentAlignment align = RtlTranslateContent(CheckAlign);
-                    if ((int)(align & anyRight) != 0)
+                    if ((int)(align & AnyRight) != 0)
                     {
                         cp.Style |= (int)User32.BS.RIGHTBUTTON;
                     }
@@ -344,6 +344,8 @@ namespace System.Windows.Forms
             }
         }
 
+        internal override bool SupportsUiaProviders => true;
+
         [DefaultValue(false)]
         new public bool TabStop
         {
@@ -400,8 +402,14 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnCheckedChanged(EventArgs e)
         {
+            // MSAA events:
             AccessibilityNotifyClients(AccessibleEvents.StateChange, -1);
             AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
+
+            // UIA events:
+            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.SelectionItemIsSelectedPropertyId, Checked, !Checked);
+            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId);
+
             ((EventHandler)Events[EVENT_CHECKEDCHANGED])?.Invoke(this, e);
         }
 
@@ -599,57 +607,6 @@ namespace System.Windows.Forms
         {
             string s = base.ToString();
             return s + ", Checked: " + Checked.ToString();
-        }
-
-        public class RadioButtonAccessibleObject : ButtonBaseAccessibleObject
-        {
-            public RadioButtonAccessibleObject(RadioButton owner) : base(owner)
-            {
-            }
-
-            public override string DefaultAction
-            {
-                get
-                {
-                    string defaultAction = Owner.AccessibleDefaultActionDescription;
-                    if (defaultAction != null)
-                    {
-                        return defaultAction;
-                    }
-
-                    return SR.AccessibleActionCheck;
-                }
-            }
-
-            public override AccessibleRole Role
-            {
-                get
-                {
-                    AccessibleRole role = Owner.AccessibleRole;
-                    if (role != AccessibleRole.Default)
-                    {
-                        return role;
-                    }
-                    return AccessibleRole.RadioButton;
-                }
-            }
-
-            public override AccessibleStates State
-            {
-                get
-                {
-                    if (((RadioButton)Owner).Checked)
-                    {
-                        return AccessibleStates.Checked | base.State;
-                    }
-                    return base.State;
-                }
-            }
-
-            public override void DoDefaultAction()
-            {
-                ((RadioButton)Owner).PerformClick();
-            }
         }
     }
 }

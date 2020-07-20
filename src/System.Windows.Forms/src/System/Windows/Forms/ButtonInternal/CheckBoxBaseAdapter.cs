@@ -7,7 +7,6 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Windows.Forms.Internal;
 using static Interop;
 
 namespace System.Windows.Forms.ButtonInternal
@@ -38,9 +37,16 @@ namespace System.Windows.Forms.ButtonInternal
 
         #region Drawing Helpers
 
-        protected void DrawCheckFlat(PaintEventArgs e, LayoutData layout, Color checkColor, Color checkBackground, Color checkBorder, ColorData colors)
+        protected void DrawCheckFlat(
+            PaintEventArgs e,
+            LayoutData layout,
+            Color checkColor,
+            Color checkBackground,
+            Color checkBorder,
+            ColorData colors)
         {
             Rectangle bounds = layout.checkBounds;
+
             // Removed subtracting one for Width and Height. In Everett we needed to do this,
             // since we were using GDI+ to draw the border. Now that we are using GDI,
             // we should not do before drawing the border.
@@ -50,12 +56,11 @@ namespace System.Windows.Forms.ButtonInternal
                 bounds.Width--;
                 bounds.Height--;
             }
-            using (WindowsGraphics wg = WindowsGraphics.FromGraphics(e.Graphics))
+
+            using (var hdc = new DeviceContextHdcScope(e))
             {
-                using (WindowsPen pen = new WindowsPen(wg.DeviceContext, checkBorder))
-                {
-                    wg.DrawRectangle(pen, bounds);
-                }
+                using var hpen = new Gdi32.CreatePenScope(checkBorder);
+                hdc.DrawRectangle(bounds, hpen);
 
                 // Now subtract, since the rest of the code is like Everett.
                 if (layout.options.everettButtonCompat)
@@ -65,6 +70,7 @@ namespace System.Windows.Forms.ButtonInternal
                 }
                 bounds.Inflate(-1, -1);
             }
+
             if (Control.CheckState == CheckState.Indeterminate)
             {
                 bounds.Width++;
@@ -73,69 +79,71 @@ namespace System.Windows.Forms.ButtonInternal
             }
             else
             {
-                using (WindowsGraphics wg = WindowsGraphics.FromGraphics(e.Graphics))
-                {
-                    using (WindowsBrush brush = new WindowsSolidBrush(wg.DeviceContext, checkBackground))
-                    {
-                        // Even though we are using GDI here as opposed to GDI+ in Everett, we still need to add 1.
-                        bounds.Width++;
-                        bounds.Height++;
-                        wg.FillRectangle(brush, bounds);
-                    }
-                }
+                using var hdc = new DeviceContextHdcScope(e);
+                using var hbrush = new Gdi32.CreateBrushScope(checkBackground);
+
+                // Even though we are using GDI here as opposed to GDI+ in Everett, we still need to add 1.
+                bounds.Width++;
+                bounds.Height++;
+                hdc.FillRectangle(bounds, hbrush);
             }
+
             DrawCheckOnly(e, layout, colors, checkColor, checkBackground);
         }
 
         // used by DataGridViewCheckBoxCell
-        internal static void DrawCheckBackground(bool controlEnabled, CheckState controlCheckState, Graphics g, Rectangle bounds, Color checkColor, Color checkBackground, bool disabledColors, ColorData colors)
+        internal static void DrawCheckBackground(
+            bool controlEnabled,
+            CheckState controlCheckState,
+            Graphics g,
+            Rectangle bounds,
+            Color checkBackground,
+            bool disabledColors)
         {
-            using (WindowsGraphics wg = WindowsGraphics.FromGraphics(g))
-            {
-                WindowsBrush brush;
-                if (!controlEnabled && disabledColors)
-                {
-                    brush = new WindowsSolidBrush(wg.DeviceContext, SystemColors.Control);
-                }
-                else if (controlCheckState == CheckState.Indeterminate && checkBackground == SystemColors.Window && disabledColors)
-                {
-                    Color comboColor = SystemInformation.HighContrast ? SystemColors.ControlDark :
-                            SystemColors.Control;
-                    byte R = (byte)((comboColor.R + SystemColors.Window.R) / 2);
-                    byte G = (byte)((comboColor.G + SystemColors.Window.G) / 2);
-                    byte B = (byte)((comboColor.B + SystemColors.Window.B) / 2);
-                    brush = new WindowsSolidBrush(wg.DeviceContext, Color.FromArgb(R, G, B));
-                }
-                else
-                {
-                    brush = new WindowsSolidBrush(wg.DeviceContext, checkBackground);
-                }
+            using var hdc = new DeviceContextHdcScope(g);
 
-                try
-                {
-                    wg.FillRectangle(brush, bounds);
-                }
-                finally
-                {
-                    if (brush != null)
-                    {
-                        brush.Dispose();
-                    }
-                }
+            Color color;
+
+            if (!controlEnabled && disabledColors)
+            {
+                color = SystemColors.Control;
             }
+            else if (controlCheckState == CheckState.Indeterminate && checkBackground == SystemColors.Window && disabledColors)
+            {
+                Color comboColor = SystemInformation.HighContrast ? SystemColors.ControlDark : SystemColors.Control;
+                color = Color.FromArgb(
+                    (byte)((comboColor.R + SystemColors.Window.R) / 2),
+                    (byte)((comboColor.G + SystemColors.Window.G) / 2),
+                    (byte)((comboColor.B + SystemColors.Window.B) / 2));
+            }
+            else
+            {
+                color = checkBackground;
+            }
+
+            using var hbrush = new Gdi32.CreateBrushScope(color);
+
+            RECT rect = bounds;
+            User32.FillRect(hdc, ref rect, hbrush);
         }
 
-        protected void DrawCheckBackground(PaintEventArgs e, Rectangle bounds, Color checkColor, Color checkBackground, bool disabledColors, ColorData colors)
+        protected void DrawCheckBackground(
+            PaintEventArgs e,
+            Rectangle bounds,
+            Color checkColor,
+            Color checkBackground,
+            bool disabledColors,
+            ColorData colors)
         {
-            // area behind check
-            //
+            // Area behind check
+
             if (Control.CheckState == CheckState.Indeterminate)
             {
                 DrawDitheredFill(e.Graphics, colors.buttonFace, checkBackground, bounds);
             }
             else
             {
-                DrawCheckBackground(Control.Enabled, Control.CheckState, e.Graphics, bounds, checkColor, checkBackground, disabledColors, colors);
+                DrawCheckBackground(Control.Enabled, Control.CheckState, e.Graphics, bounds, checkBackground, disabledColors);
             }
         }
 
@@ -144,11 +152,10 @@ namespace System.Windows.Forms.ButtonInternal
             DrawCheckOnly(flatCheckSize, Control.Checked, Control.Enabled, Control.CheckState, e.Graphics, layout, colors, checkColor, checkBackground);
         }
 
-        // used by DataGridViewCheckBoxCell
         internal static void DrawCheckOnly(int checkSize, bool controlChecked, bool controlEnabled, CheckState controlCheckState, Graphics g, LayoutData layout, ColorData colors, Color checkColor, Color checkBackground)
         {
-            // check
-            //
+            // Check
+
             if (controlChecked)
             {
                 if (!controlEnabled)
@@ -198,22 +205,31 @@ namespace System.Windows.Forms.ButtonInternal
 
         internal static Rectangle DrawPopupBorder(Graphics g, Rectangle r, ColorData colors)
         {
-            using (WindowsGraphics wg = WindowsGraphics.FromGraphics(g))
-            {
-                using (WindowsPen high = new WindowsPen(wg.DeviceContext, colors.highlight),
-                   shadow = new WindowsPen(wg.DeviceContext, colors.buttonShadow),
-                   face = new WindowsPen(wg.DeviceContext, colors.buttonFace))
-                {
-                    wg.DrawLine(high, r.Right - 1, r.Top, r.Right - 1, r.Bottom);
-                    wg.DrawLine(high, r.Left, r.Bottom - 1, r.Right, r.Bottom - 1);
+            using var hdc = new DeviceContextHdcScope(g);
+            return DrawPopupBorder(hdc, r, colors);
+        }
 
-                    wg.DrawLine(shadow, r.Left, r.Top, r.Left, r.Bottom);
-                    wg.DrawLine(shadow, r.Left, r.Top, r.Right - 1, r.Top);
+        internal static Rectangle DrawPopupBorder(PaintEventArgs e, Rectangle r, ColorData colors)
+        {
+            using var hdc = new DeviceContextHdcScope(e);
+            return DrawPopupBorder(hdc, r, colors);
+        }
 
-                    wg.DrawLine(face, r.Right - 2, r.Top + 1, r.Right - 2, r.Bottom - 1);
-                    wg.DrawLine(face, r.Left + 1, r.Bottom - 2, r.Right - 1, r.Bottom - 2);
-                }
-            }
+        internal static Rectangle DrawPopupBorder(Gdi32.HDC hdc, Rectangle r, ColorData colors)
+        {
+            using var high = new Gdi32.CreatePenScope(colors.highlight);
+            using var shadow = new Gdi32.CreatePenScope(colors.buttonShadow);
+            using var face = new Gdi32.CreatePenScope(colors.buttonFace);
+
+            hdc.DrawLine(high, r.Right - 1, r.Top, r.Right - 1, r.Bottom);
+            hdc.DrawLine(high, r.Left, r.Bottom - 1, r.Right, r.Bottom - 1);
+
+            hdc.DrawLine(shadow, r.Left, r.Top, r.Left, r.Bottom);
+            hdc.DrawLine(shadow, r.Left, r.Top, r.Right - 1, r.Top);
+
+            hdc.DrawLine(face, r.Right - 2, r.Top + 1, r.Right - 2, r.Bottom - 1);
+            hdc.DrawLine(face, r.Left + 1, r.Bottom - 2, r.Right - 1, r.Bottom - 2);
+
             r.Inflate(-1, -1);
             return r;
         }
@@ -246,30 +262,36 @@ namespace System.Windows.Forms.ButtonInternal
 
         protected void DrawCheckBox(PaintEventArgs e, LayoutData layout)
         {
-            Graphics g = e.Graphics;
-
             ButtonState style = GetState();
 
             if (Control.CheckState == CheckState.Indeterminate)
             {
                 if (Application.RenderWithVisualStyles)
                 {
-                    CheckBoxRenderer.DrawCheckBox(g, new Point(layout.checkBounds.Left, layout.checkBounds.Top), CheckBoxRenderer.ConvertFromButtonState(style, true, Control.MouseIsOver), Control.HandleInternal);
+                    CheckBoxRenderer.DrawCheckBoxWithVisualStyles(
+                        e,
+                        new Point(layout.checkBounds.Left, layout.checkBounds.Top),
+                        CheckBoxRenderer.ConvertFromButtonState(style, true, Control.MouseIsOver),
+                        Control.HandleInternal);
                 }
                 else
                 {
-                    ControlPaint.DrawMixedCheckBox(g, layout.checkBounds, style);
+                    ControlPaint.DrawMixedCheckBox(e.GraphicsInternal, layout.checkBounds, style);
                 }
             }
             else
             {
                 if (Application.RenderWithVisualStyles)
                 {
-                    CheckBoxRenderer.DrawCheckBox(g, new Point(layout.checkBounds.Left, layout.checkBounds.Top), CheckBoxRenderer.ConvertFromButtonState(style, false, Control.MouseIsOver), Control.HandleInternal);
+                    CheckBoxRenderer.DrawCheckBoxWithVisualStyles(
+                        e,
+                        new Point(layout.checkBounds.Left, layout.checkBounds.Top),
+                        CheckBoxRenderer.ConvertFromButtonState(style, false, Control.MouseIsOver),
+                        Control.HandleInternal);
                 }
                 else
                 {
-                    ControlPaint.DrawCheckBox(g, layout.checkBounds, style);
+                    ControlPaint.DrawCheckBox(e.GraphicsInternal, layout.checkBounds, style);
                 }
             }
         }
@@ -286,30 +308,21 @@ namespace System.Windows.Forms.ButtonInternal
                 return cacheCheckImage;
             }
 
-            if (cacheCheckImage != null)
-            {
-                cacheCheckImage.Dispose();
-            }
+            cacheCheckImage?.Dispose();
 
-            // We draw the checkmark slightly off center to eliminate 3-D border artifacts,
-            // and compensate below
+            // We draw the checkmark slightly off center to eliminate 3-D border artifacts and compensate below
             RECT rcCheck = new Rectangle(0, 0, fullSize.Width, fullSize.Height);
             Bitmap bitmap = new Bitmap(fullSize.Width, fullSize.Height);
-            Graphics offscreen = Graphics.FromImage(bitmap);
-            offscreen.Clear(Color.Transparent);
-            IntPtr dc = offscreen.GetHdc();
-            try
+
+            using (Graphics offscreen = Graphics.FromImage(bitmap))
             {
+                offscreen.Clear(Color.Transparent);
+                using var hdc = new DeviceContextHdcScope(offscreen, applyGraphicsState: false);
                 User32.DrawFrameControl(
-                    new HandleRef(offscreen, dc),
+                    hdc,
                     ref rcCheck,
                     User32.DFC.MENU,
                     User32.DFCS.MENUCHECK);
-            }
-            finally
-            {
-                offscreen.ReleaseHdcInternal(dc);
-                offscreen.Dispose();
             }
 
             bitmap.MakeTransparent();

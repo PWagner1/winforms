@@ -19,16 +19,16 @@ namespace System.Windows.Forms
         private object dataSource;
         private IList list;
 
-        private bool bound = false;
+        private bool bound;
         private bool shouldBind = true;
 
         protected int listposition = -1;
 
         private int lastGoodKnownRow = -1;
-        private bool pullingData = false;
+        private bool pullingData;
 
-        private bool inChangeRecordState = false;
-        private bool suspendPushDataInCurrentChanged = false;
+        private bool inChangeRecordState;
+        private bool suspendPushDataInCurrentChanged;
         private ItemChangedEventHandler onItemChanged;
         private ListChangedEventHandler onListChanged;
         private readonly ItemChangedEventArgs resetEvent = new ItemChangedEventArgs(-1);
@@ -220,7 +220,7 @@ namespace System.Windows.Forms
                     {
                         throw new ArgumentNullException(nameof(dataSource));
                     }
-                    throw new ArgumentException(string.Format(SR.ListManagerSetDataSource, tempList.GetType().FullName), "dataSource");
+                    throw new ArgumentException(string.Format(SR.ListManagerSetDataSource, tempList.GetType().FullName), nameof(dataSource));
                 }
             }
         }
@@ -648,8 +648,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Gets the <see cref='T:System.ComponentModel.PropertyDescriptorCollection'/> for
-        ///  the list.
+        ///  Gets the <see cref='PropertyDescriptorCollection'/> for the list.
         /// </summary>
         public override PropertyDescriptorCollection GetItemProperties()
         {
@@ -657,7 +656,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Gets the <see cref='T:System.ComponentModel.PropertyDescriptorCollection'/> for the specified list.
+        ///  Gets the <see cref='PropertyDescriptorCollection'/> for the specified list.
         /// </summary>
         private void List_ListChanged(object sender, ListChangedEventArgs e)
         {

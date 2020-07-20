@@ -429,10 +429,10 @@ namespace System.ComponentModel.Design
         {
             private PushButtonState _state;
             private const int PushButtonWidth = 14;
-            private Rectangle _dropDownRectangle = new Rectangle();
-            private bool _showSplit = false;
+            private Rectangle _dropDownRectangle;
+            private bool _showSplit;
 
-            private static bool s_isScalingInitialized = false;
+            private static bool s_isScalingInitialized;
             private const int Offset2Pixels = 2;
             private static int s_offset2X = Offset2Pixels;
             private static int s_offset2Y = Offset2Pixels;
@@ -624,6 +624,7 @@ namespace System.ComponentModel.Design
 
                 ButtonRenderer.DrawButton(g, bounds, State);
 
+                Color color = SystemColors.ButtonHighlight;
                 _dropDownRectangle = new Rectangle(bounds.Right - PushButtonWidth - 1, 4, PushButtonWidth, bounds.Height - 8);
 
                 if (RightToLeft == RightToLeft.Yes)
@@ -656,7 +657,7 @@ namespace System.ComponentModel.Design
 
                 if (!string.IsNullOrEmpty(Text))
                 {
-                    TextRenderer.DrawText(g, Text, Font, bounds, SystemColors.ControlText, formatFlags);
+                    TextRenderer.DrawText(pevent, Text, Font, bounds, SystemColors.ControlText, formatFlags);
                 }
 
                 if (Focused)
@@ -665,9 +666,11 @@ namespace System.ComponentModel.Design
                 }
             }
 
-            private void PaintArrow(Graphics g, Rectangle dropDownRect)
+            private void PaintArrow(IDeviceContext deviceContext, Rectangle dropDownRect)
             {
-                Point middle = new Point(Convert.ToInt32(dropDownRect.Left + dropDownRect.Width / 2), Convert.ToInt32(dropDownRect.Top + dropDownRect.Height / 2));
+                Point middle = new Point(
+                    Convert.ToInt32(dropDownRect.Left + dropDownRect.Width / 2),
+                    Convert.ToInt32(dropDownRect.Top + dropDownRect.Height / 2));
 
                 // If the width is odd - favor pushing it over one pixel right.
                 middle.X += (dropDownRect.Width % 2);
@@ -678,7 +681,7 @@ namespace System.ComponentModel.Design
                     new Point(middle.X, middle.Y + s_offset2Y)
                 };
 
-                g.FillPolygon(SystemBrushes.ControlText, arrow);
+                deviceContext.TryGetGraphics(create: true).FillPolygon(SystemBrushes.ControlText, arrow);
             }
 
             private void ShowContextMenuStrip()
@@ -749,7 +752,7 @@ namespace System.ComponentModel.Design
             private TableLayoutPanel _overArchingTableLayoutPanel;
             private TableLayoutPanel _addRemoveTableLayoutPanel;
 
-            private int _suspendEnabledCount = 0;
+            private int _suspendEnabledCount;
 
             private bool _dirty;
 
@@ -2378,7 +2381,7 @@ namespace System.ComponentModel.Design
         internal class PropertyGridSite : ISite
         {
             private readonly IServiceProvider _sp;
-            private bool _inGetService = false;
+            private bool _inGetService;
 
             public PropertyGridSite(IServiceProvider sp, IComponent comp)
             {

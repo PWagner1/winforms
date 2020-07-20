@@ -49,13 +49,13 @@ namespace System.Windows.Forms
         private TreeNodeMouseHoverEventHandler onNodeMouseHover;
         private EventHandler onRightToLeftLayoutChanged;
 
-        internal TreeNode selectedNode = null;
+        internal TreeNode selectedNode;
         private ImageList.Indexer imageIndexer;
         private ImageList.Indexer selectedImageIndexer;
-        private bool setOddHeight = false;
-        private TreeNode prevHoveredNode = null;
-        private bool hoveredAlready = false;
-        private bool rightToLeftLayout = false;
+        private bool setOddHeight;
+        private TreeNode prevHoveredNode;
+        private bool hoveredAlready;
+        private bool rightToLeftLayout;
 
         private IntPtr hNodeMouseDown = IntPtr.Zero;//ensures we fire nodeclick on the correct node
 
@@ -80,8 +80,8 @@ namespace System.Windows.Forms
         // PERF: take all the bools and put them into a state variable
         private Collections.Specialized.BitVector32 treeViewState; // see TREEVIEWSTATE_ consts above
 
-        private static bool isScalingInitialized = false;
-        private static Size? scaledStateImageSize = null;
+        private static bool isScalingInitialized;
+        private static Size? scaledStateImageSize;
         private static Size? ScaledStateImageSize
         {
             get
@@ -131,11 +131,11 @@ namespace System.Windows.Forms
         private string pathSeparator = backSlash;
         private BorderStyle borderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
 
-        internal TreeNodeCollection nodes = null;
+        internal TreeNodeCollection nodes;
         internal TreeNode editNode;
         internal TreeNode root;
         internal Hashtable nodeTable = new Hashtable();
-        internal bool nodesCollectionClear = false; //this is set when the treeNodeCollection is getting cleared and used by TreeView
+        internal bool nodesCollectionClear; //this is set when the treeNodeCollection is getting cleared and used by TreeView
         private MouseButtons downButton;
         private TreeViewDrawMode drawMode = TreeViewDrawMode.Normal;
 
@@ -144,10 +144,10 @@ namespace System.Windows.Forms
         private TreeNode topNode;
         private ImageList stateImageList;
         private Color lineColor;
-        private string controlToolTipText = null;
+        private string controlToolTipText;
 
         // Sorting
-        private IComparer treeViewNodeSorter = null;
+        private IComparer treeViewNodeSorter;
 
         //Events
         private TreeNodeMouseClickEventHandler onNodeMouseClick;
@@ -2712,7 +2712,7 @@ namespace System.Windows.Forms
                     }
                     else if (drawMode == TreeViewDrawMode.OwnerDrawAll)
                     {
-                        Graphics g = Graphics.FromHdcInternal(nmtvcd->nmcd.hdc);
+                        Graphics g = nmtvcd->nmcd.hdc.CreateGraphics();
 
                         DrawTreeNodeEventArgs e;
 
@@ -2751,7 +2751,7 @@ namespace System.Windows.Forms
                         }
                     }
 
-                    //TreeViewDrawMode.Normal case
+                    // TreeViewDrawMode.Normal case
                     OwnerDrawPropertyBag renderinfo = GetItemRenderStyles(node, (int)state);
 
                     // TreeView has problems with drawing items at times; it gets confused
@@ -2771,7 +2771,8 @@ namespace System.Windows.Forms
                     if (renderinfo != null && renderinfo.Font != null)
                     {
                         // Mess with the DC directly...
-                        Gdi32.SelectObject(new HandleRef(nmtvcd->nmcd, nmtvcd->nmcd.hdc), new HandleRef(renderinfo, renderinfo.FontHandle));
+                        Gdi32.SelectObject(nmtvcd->nmcd.hdc, renderinfo.FontHandle);
+
                         // There is a problem in winctl that clips node fonts if the fontsize
                         // is larger than the treeview font size. The behavior is much better in comctl 5 and above.
                         m.Result = (IntPtr)CDRF.NEWFONT;
@@ -2797,7 +2798,7 @@ namespace System.Windows.Forms
                             return;
                         }
 
-                        Graphics g = Graphics.FromHdcInternal(nmtvcd->nmcd.hdc);
+                        Graphics g = nmtvcd->nmcd.hdc.CreateGraphics();
 
                         DrawTreeNodeEventArgs e;
 

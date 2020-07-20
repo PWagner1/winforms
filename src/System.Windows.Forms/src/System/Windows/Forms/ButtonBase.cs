@@ -19,7 +19,7 @@ namespace System.Windows.Forms
     ///  Implements the basic functionality required by a button control.
     /// </summary>
     [Designer("System.Windows.Forms.Design.ButtonBaseDesigner, " + AssemblyRef.SystemDesign)]
-    public abstract class ButtonBase : Control
+    public abstract partial class ButtonBase : Control
     {
         private FlatStyle flatStyle = System.Windows.Forms.FlatStyle.Standard;
         private ContentAlignment imageAlign = ContentAlignment.MiddleCenter;
@@ -39,14 +39,14 @@ namespace System.Windows.Forms
         private const int FlagIsDefault = 0x0040;
         private const int FlagUseMnemonic = 0x0080;
         private const int FlagShowToolTip = 0x0100;
-        private int state = 0;
+        private int state;
 
         private ToolTip textToolTip;
 
         //this allows the user to disable visual styles for the button so that it inherits its background color
         private bool enableVisualStyleBackground = true;
 
-        private bool isEnableVisualStyleBackgroundSet = false;
+        private bool isEnableVisualStyleBackgroundSet;
 
         /// <summary>
         ///  Initializes a new instance of the <see cref='ButtonBase'/> class.
@@ -968,7 +968,7 @@ namespace System.Windows.Forms
             return LayoutUtils.UnionSizes(prefSize + Padding.Size, MinimumSize);
         }
 
-        private ButtonBaseAdapter _adapter = null;
+        private ButtonBaseAdapter _adapter;
         private FlatStyle _cachedAdapterType;
 
         internal ButtonBaseAdapter Adapter
@@ -1346,34 +1346,6 @@ namespace System.Windows.Forms
                     default:
                         base.WndProc(ref m);
                         break;
-                }
-            }
-        }
-
-        public class ButtonBaseAccessibleObject : ControlAccessibleObject
-        {
-            public ButtonBaseAccessibleObject(Control owner) : base(owner)
-            {
-            }
-
-            public override void DoDefaultAction()
-            {
-                ((ButtonBase)Owner).OnClick(EventArgs.Empty);
-            }
-
-            public override AccessibleStates State
-            {
-                get
-                {
-                    AccessibleStates state = base.State;
-
-                    ButtonBase owner = (ButtonBase)Owner;
-                    if (owner.OwnerDraw && owner.MouseIsDown)
-                    {
-                        state |= AccessibleStates.Pressed;
-                    }
-
-                    return state;
                 }
             }
         }

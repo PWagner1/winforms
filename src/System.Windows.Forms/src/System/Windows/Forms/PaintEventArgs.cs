@@ -7,54 +7,58 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Runtime.InteropServices;
+using System.Drawing.Printing;
 using static Interop;
 
 namespace System.Windows.Forms
 {
     /// <summary>
-    ///  Provides data for the <see cref='Control.Paint'/>
-    ///  event.
-    ///  NOTE: Please keep this class consistent with PrintPageEventArgs.
+    ///  Provides data for the <see cref='Control.Paint'/> event.
     /// </summary>
-    public class PaintEventArgs : EventArgs, IDisposable
+    /// <remarks>
+    ///  Please keep this class consistent with <see cref="PrintPageEventArgs"/>.
+    /// </remarks>
+    public partial class PaintEventArgs : EventArgs, IDisposable, IDeviceContext, IGraphicsHdcProvider
     {
-        /// <summary>
-        ///  Graphics object with which painting should be done.
-        /// </summary>
-        private Graphics _graphics;
+        private readonly DrawingEventArgs _event;
 
-        /// <summary>
-        ///  See ResetGraphics()
-        /// </summary>
+        /// <remarks>
+        ///  This is only needed for <see cref="ResetGraphics"/> callers and applies in the following places:
+        ///
+        ///    1. In <see cref="Control.WmPaint(ref Message)"/> when we are painting the background.
+        ///    2. In <see cref="Control.WmPrintClient(ref Message)"/>.
+        ///
+        ///  We can potentially optimize further by skipping the save when we only use <see cref="GraphicsInternal"/>
+        ///  as we shouldn't have messed with the clipping there.
+        /// </remarks>
         private GraphicsState _savedGraphicsState;
 
-        /// <summary>
-        ///  DC (Display context) for obtaining the graphics object. Used to delay
-        ///  getting the graphics object until absolutely necessary (for perf reasons)
-        /// </summary>
-        private readonly IntPtr _dc = IntPtr.Zero;
-
-        private IntPtr oldPal = IntPtr.Zero;
-
-        /// <summary>
-        ///  Initializes a new instance of the <see cref='PaintEventArgs'/>
-        ///  class with the specified graphics and clipping rectangle.
-        /// </summary>
-        public PaintEventArgs(Graphics graphics, Rectangle clipRect)
+        public PaintEventArgs(Graphics graphics, Rectangle clipRect) : this(
+            graphics,
+            clipRect,
+            // If Graphics comes in on the public constructor we don't know that it has no transform or clip
+            flags: DrawingEventFlags.GraphicsStateUnclean)
         {
-            _graphics = graphics ?? throw new ArgumentNullException(nameof(graphics));
-            ClipRectangle = clipRect;
+        }
+
+        internal PaintEventArgs(
+            Graphics graphics,
+            Rectangle clipRect,
+            DrawingEventFlags flags)
+        {
+            _event = new DrawingEventArgs(graphics, clipRect, flags);
+            SaveStateIfNeeded(graphics);
         }
 
         /// <summary>
-        ///  Internal version of constructor for performance
-        ///  We try to avoid getting the graphics object until needed
+        ///  Internal version of constructor for performance. We try to avoid getting the graphics object until needed.
         /// </summary>
-        internal PaintEventArgs(IntPtr dc, Rectangle clipRect)
+        internal PaintEventArgs(
+            Gdi32.HDC hdc,
+            Rectangle clipRect,
+            DrawingEventFlags flags = DrawingEventFlags.CheckState)
         {
-            _dc = dc;
-            ClipRectangle = clipRect;
+            _event = new DrawingEventArgs(hdc, clipRect, flags);
         }
 
         ~PaintEventArgs() => Dispose(false);
@@ -62,37 +66,15 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets the rectangle in which to paint.
         /// </summary>
-        public Rectangle ClipRectangle { get; }
-
-        /// <summary>
-        ///  Gets the HDC this paint event is connected to.  If there is no associated
-        ///  HDC, or the GDI+ Graphics object has been created (meaning GDI+ now owns the
-        ///  HDC), 0 is returned.
-        /// </summary>
-        internal IntPtr HDC => _graphics == null ? _dc : IntPtr.Zero;
+        public Rectangle ClipRectangle => _event.ClipRectangle;
 
         /// <summary>
         ///  Gets the <see cref='Drawing.Graphics'/> object used to paint.
         /// </summary>
-        public Graphics Graphics
-        {
-            get
-            {
-                if (_graphics == null && _dc != IntPtr.Zero)
-                {
-                    oldPal = Control.SetUpPalette(_dc, force: false, realizePalette: false);
-                    _graphics = Graphics.FromHdcInternal(_dc);
-                    _graphics.PageUnit = GraphicsUnit.Pixel;
-                    _savedGraphicsState = _graphics.Save(); // See ResetGraphics() below
-                }
-
-                return _graphics;
-            }
-        }
+        public Graphics Graphics => _event.Graphics;
 
         /// <summary>
-        ///  Disposes of the resources (other than memory) used by the
-        /// <see cref='PaintEventArgs'/>.
+        ///  Disposes of the resources (other than memory) used by the <see cref='PaintEventArgs'/>.
         /// </summary>
         public void Dispose()
         {
@@ -100,42 +82,48 @@ namespace System.Windows.Forms
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                // Only dispose the graphics object if we created it via the dc.
-                if (_graphics != null && _dc != IntPtr.Zero)
-                {
-                    _graphics.Dispose();
-                }
-            }
-
-            if (oldPal != IntPtr.Zero && _dc != IntPtr.Zero)
-            {
-                Gdi32.SelectPalette(new HandleRef(this, _dc), new HandleRef(this, oldPal), BOOL.FALSE);
-                oldPal = IntPtr.Zero;
-            }
-        }
+        protected virtual void Dispose(bool disposing) => _event.Dispose(disposing);
 
         /// <summary>
-        ///  If ControlStyles.AllPaintingInWmPaint, we call this method
-        ///  after OnPaintBackground so it appears to OnPaint that it's getting a fresh
-        ///  Graphics.  We want to make sure AllPaintingInWmPaint is purely an optimization,
-        ///  and doesn't change behavior, so we need to make sure any clipping regions established
-        ///  in OnPaintBackground don't apply to OnPaint.
+        ///  If ControlStyles.AllPaintingInWmPaint, we call this method after OnPaintBackground so it appears to
+        ///  OnPaint that it's getting a fresh Graphics.  We want to make sure AllPaintingInWmPaint is purely an
+        ///  optimization, and doesn't change behavior, so we need to make sure any clipping regions established in
+        ///  OnPaintBackground don't apply to OnPaint.
         /// </summary>
         internal void ResetGraphics()
         {
-            if (_graphics != null)
+            Graphics graphics = _event.GetGraphics(create: false);
+            if (_event.Flags.HasFlag(DrawingEventFlags.SaveState) && graphics != null)
             {
-                Debug.Assert(_dc == IntPtr.Zero || _savedGraphicsState != null, "Called ResetGraphics more than once?");
                 if (_savedGraphicsState != null)
                 {
-                    _graphics.Restore(_savedGraphicsState);
+                    graphics.Restore(_savedGraphicsState);
                     _savedGraphicsState = null;
+                }
+                else
+                {
+                    Debug.Fail("Called ResetGraphics more than once?");
                 }
             }
         }
+
+        private void SaveStateIfNeeded(Graphics graphics)
+            => _savedGraphicsState = _event.Flags.HasFlag(DrawingEventFlags.SaveState) ? graphics.Save() : default;
+
+        /// <summary>
+        ///  For internal use to improve performance. DO NOT use this method if you modify the Graphics Clip or Transform.
+        /// </summary>
+        internal Graphics GraphicsInternal => _event.GetOrCreateGraphicsInternal(SaveStateIfNeeded);
+
+        /// <summary>
+        ///  Returns the <see cref="Gdi32.HDC"/> the event was created off of, if any.
+        /// </summary>
+        internal Gdi32.HDC HDC => _event.HDC;
+
+        IntPtr IDeviceContext.GetHdc() => Graphics?.GetHdc() ?? IntPtr.Zero;
+        void IDeviceContext.ReleaseHdc() => Graphics?.ReleaseHdc();
+        Gdi32.HDC IGraphicsHdcProvider.GetHDC() => _event.GetHDC();
+        Graphics IGraphicsHdcProvider.GetGraphics(bool create) => _event.GetGraphics(create);
+        bool IGraphicsHdcProvider.IsGraphicsStateClean => _event.IsStateClean;
     }
 }

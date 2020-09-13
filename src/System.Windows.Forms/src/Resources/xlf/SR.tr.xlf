@@ -192,6 +192,11 @@
         <target state="translated">Daralt</target>
         <note />
       </trans-unit>
+      <trans-unit id="AccessibleActionDoubleClick">
+        <source>Double Click</source>
+        <target state="translated">Çift Tıklama</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AccessibleActionExpand">
         <source>Expand</source>
         <target state="translated">Genişlet</target>
@@ -2207,6 +2212,16 @@
         <target state="translated">Kılavuzdaki bir hücrenin ValueType özelliği null olamaz.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridViewCheckBoxCellCheckedStateDescription">
+        <source>{0} check box checked</source>
+        <target state="translated">{0} onay kutusu işaretli</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewCheckBoxCellUncheckedStateDescription">
+        <source>{0} check box unchecked</source>
+        <target state="translated">{0} onay kutusu işaretlenmemiş</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardChecked">
         <source>Selected</source>
         <target state="translated">Seçili</target>
@@ -4214,11 +4229,6 @@ Bu varsayılan iletişim kutusunu değiştirmek için, lütfen DataError olayın
         <target state="translated">Düzenle</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDomainUpDownAccessibleName">
-        <source>DomainUpDown</source>
-        <target state="translated">DomainUpDown</target>
-        <note />
-      </trans-unit>
       <trans-unit id="DefaultNumericUpDownAccessibleName">
         <source>NumericUpDown</source>
         <target state="translated">NumericUpDown</target>
@@ -5429,7 +5439,7 @@ Bunu değiştirmek istiyor musunuz?</target>
       </trans-unit>
       <trans-unit id="HScrollBarDefaultAccessibleName">
         <source>Horizontal</source>
-        <target state="new">Horizontal</target>
+        <target state="translated">Yatay</target>
         <note />
       </trans-unit>
       <trans-unit id="HandleAlreadyExists">
@@ -5553,7 +5563,7 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       </trans-unit>
       <trans-unit id="ImageListDuplicateFailed">
         <source>Duplication of the ImageList handle did not succeed.</source>
-        <target state="new">Duplication of the ImageList handle did not succeed.</target>
+        <target state="translated">ImageList işleyicisi çoğaltılamadı.</target>
         <note />
       </trans-unit>
       <trans-unit id="ImageListEntryType">
@@ -5679,6 +5689,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       <trans-unit id="InvalidGDIHandle">
         <source>Win32 handle passed to {0} is not valid or is the wrong type.</source>
         <target state="translated">{0} öğesine geçirilen Win32 işleyicisi geçerli değil veya yanlış türde.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidHdcType">
+        <source>Invalid HDC type: {0}</source>
+        <target state="translated">Geçersiz HDC türü: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHighBoundArgument">
@@ -8296,6 +8311,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">Kılavuz alanını çevreleyen kenarlığın rengi.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PropertyGridViewDropDownControlHolderAccessibleName">
+        <source>Drop down control holder</source>
+        <target state="new">Drop down control holder</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PropertyGridViewEditorCreatedInvalidObject">
         <source>Editor created an object that is not valid.  The created object must be of type '{0}'.</source>
         <target state="translated">Düzenleyici geçerli olmayan bir nesne oluşturdu. Oluşturulan nesnenin '{0}' türünde olması gerekir.</target>
@@ -8739,11 +8759,6 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       <trans-unit id="SortedDescendingAccessibleStatus">
         <source>Sorted descending.</source>
         <target state="translated">Azalan düzende sıralı.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="SpinnerAccessibleName">
-        <source>Spinner</source>
-        <target state="translated">Değer Değiştirici</target>
         <note />
       </trans-unit>
       <trans-unit id="SplitContainerFixedPanelDescr">
@@ -9399,6 +9414,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       <trans-unit id="TextBoxWordWrapDescr">
         <source>Indicates if lines are automatically word-wrapped for multiline edit controls.</source>
         <target state="translated">Çok satırlı düzenleme denetimlerinde satırlarda otomatik olarak sözcük kaydırılıp kaydırılmayacağını gösterir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TextFormatFlagsModifyStringNotAllowed">
+        <source>TextFormatFlags.ModifyString is not allowed.</source>
+        <target state="translated">TextFormatFlags.ModifyString öğesine izin verilmez.</target>
         <note />
       </trans-unit>
       <trans-unit id="TextParseFailedFormat">
@@ -10798,7 +10818,7 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       </trans-unit>
       <trans-unit id="VScrollBarDefaultAccessibleName">
         <source>Vertical</source>
-        <target state="new">Vertical</target>
+        <target state="translated">Dikey</target>
         <note />
       </trans-unit>
       <trans-unit id="VisualStyleHandleCreationFailed">

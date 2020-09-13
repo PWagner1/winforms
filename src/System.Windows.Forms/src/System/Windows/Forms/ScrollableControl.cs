@@ -670,6 +670,9 @@ namespace System.Windows.Forms
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
+            if (e is null)
+                throw new ArgumentNullException(nameof(e));
+
             if ((HScroll || VScroll) &&
                 BackgroundImage != null &&
                 (BackgroundImageLayout == ImageLayout.Zoom || BackgroundImageLayout == ImageLayout.Stretch || BackgroundImageLayout == ImageLayout.Center))
@@ -816,7 +819,7 @@ namespace System.Windows.Forms
         /// </summary>
         public void ScrollControlIntoView(Control activeControl)
         {
-            if (activeControl == null)
+            if (activeControl is null)
             {
                 return;
             }
@@ -1491,7 +1494,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         if (_left == _right && _top == _bottom && _left == _top)
                         {
@@ -1521,7 +1524,7 @@ namespace System.Windows.Forms
                 }
                 set
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         _left = value;
                         _top = value;
@@ -1542,10 +1545,10 @@ namespace System.Windows.Forms
             [SRDescription(nameof(SR.PaddingBottomDescr))]
             public int Bottom
             {
-                get => _owner == null ? _bottom : _owner.Padding.Bottom;
+                get => _owner is null ? _bottom : _owner.Padding.Bottom;
                 set
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         _bottom = value;
                     }
@@ -1565,10 +1568,10 @@ namespace System.Windows.Forms
             [SRDescription(nameof(SR.PaddingLeftDescr))]
             public int Left
             {
-                get => _owner == null ? _left : _owner.Padding.Left;
+                get => _owner is null ? _left : _owner.Padding.Left;
                 set
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         _left = value;
                     }
@@ -1588,10 +1591,10 @@ namespace System.Windows.Forms
             [SRDescription(nameof(SR.PaddingRightDescr))]
             public int Right
             {
-                get => _owner == null ? _right : _owner.Padding.Right;
+                get => _owner is null ? _right : _owner.Padding.Right;
                 set
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         _right = value;
                     }
@@ -1611,10 +1614,10 @@ namespace System.Windows.Forms
             [SRDescription(nameof(SR.PaddingTopDescr))]
             public int Top
             {
-                get => _owner == null ? _top : _owner.Padding.Top;
+                get => _owner is null ? _top : _owner.Padding.Top;
                 set
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         _top = value;
                     }

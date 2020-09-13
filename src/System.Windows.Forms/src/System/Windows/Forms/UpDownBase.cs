@@ -463,21 +463,6 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Gets an accessible name.
-        /// </summary>
-        /// <param name="baseName">The base name.</param>
-        /// <returns>The accessible name.</returns>
-        internal string GetAccessibleName(string baseName)
-        {
-            if (baseName == null)
-            {
-                return SR.SpinnerAccessibleName;
-            }
-
-            return baseName;
-        }
-
-        /// <summary>
         ///  When overridden in a derived class, handles rescaling of any magic numbers used in control painting.
         ///  For UpDown controls, scale the width of the up/down buttons.
         ///  Must call the base class method to get the current DPI values. This method is invoked only when
@@ -572,7 +557,7 @@ namespace System.Windows.Forms
                     if (transparent)
                     {
                         // Need to use GDI+
-                        using Pen pen = new Pen(backColor);
+                        using var pen = backColor.GetCachedPenScope();
                         e.GraphicsInternal.DrawRectangle(pen, backRect);
                     }
                 }
@@ -600,7 +585,7 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-                    using Pen pen = new Pen(backColor, width);
+                    using var pen = backColor.GetCachedPenScope(width);
                     e.GraphicsInternal.DrawRectangle(pen, backRect);
                 }
             }
@@ -612,7 +597,7 @@ namespace System.Windows.Forms
                 // we only want to do this when BackColor is not serialized, since otherwise
                 // we should display the backcolor instead of the usual grayed textbox.
                 editBounds.Inflate(1, 1);
-                ControlPaint.DrawBorderSolid(e, editBounds, SystemColors.Control);
+                ControlPaint.DrawBorderSimple(e, editBounds, SystemColors.Control);
             }
         }
 
@@ -976,7 +961,7 @@ namespace System.Windows.Forms
                 case User32.WM.SETFOCUS:
                     if (!HostedInWin32DialogManager)
                     {
-                        if (ActiveControl == null)
+                        if (ActiveControl is null)
                         {
                             SetActiveControl(TextBox);
                         }

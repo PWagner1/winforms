@@ -159,7 +159,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (shortcutsToDisable == null)
+                if (shortcutsToDisable is null)
                 {
                     shortcutsToDisable = new int[] {(int)Shortcut.CtrlZ, (int)Shortcut.CtrlC, (int)Shortcut.CtrlX,
                     (int)Shortcut.CtrlV, (int)Shortcut.CtrlA, (int)Shortcut.CtrlL, (int)Shortcut.CtrlR,
@@ -210,17 +210,17 @@ namespace System.Windows.Forms
             {
                 if (SelectionLength != 0)
                 {
-                    SetSelectedTextInternal("", clearUndo: false);
+                    SetSelectedTextInternal(string.Empty, clearUndo: false);
                 }
                 else if (SelectionStart != 0)
                 {
-                    int boundaryStart = ClientUtils.GetWordBoundaryStart(Text.ToCharArray(), SelectionStart);
+                    int boundaryStart = ClientUtils.GetWordBoundaryStart(Text, SelectionStart);
                     int length = SelectionStart - boundaryStart;
                     BeginUpdateInternal();
                     SelectionStart = boundaryStart;
                     SelectionLength = length;
                     EndUpdateInternal();
-                    SetSelectedTextInternal("", clearUndo: false);
+                    SetSelectedTextInternal(string.Empty, clearUndo: false);
                 }
                 return true;
             }
@@ -897,9 +897,8 @@ namespace System.Windows.Forms
             // Reduce constraints by border/padding size
             proposedConstraints -= bordersAndPadding;
 
-            // Fit the text to the remaining space
-            // Fix for Dev10
-
+            // Fit the text to the remaining space.
+            // Fixed for .NET Framework 4.0
             TextFormatFlags format = TextFormatFlags.NoPrefix;
             if (!Multiline)
             {
@@ -960,7 +959,7 @@ namespace System.Windows.Forms
 
                 end = start + length - 1;
 
-                if (t == null)
+                if (t is null)
                 {
                     len = 0;
                 }
@@ -1043,7 +1042,7 @@ namespace System.Windows.Forms
                 CreateHandle();
             }
 
-            if (text == null)
+            if (text is null)
             {
                 text = string.Empty;
             }
@@ -1170,7 +1169,7 @@ namespace System.Windows.Forms
 
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -1198,7 +1197,7 @@ namespace System.Windows.Forms
         /// </summary>
         internal void ForceWindowText(string value)
         {
-            if (value == null)
+            if (value is null)
             {
                 value = string.Empty;
             }
@@ -2136,7 +2135,7 @@ namespace System.Windows.Forms
         /// </summary>
         private void WmTextBoxContextMenu(ref Message m)
         {
-            if (ContextMenuStrip == null)
+            if (ContextMenuStrip is null)
             {
                 return;
             }

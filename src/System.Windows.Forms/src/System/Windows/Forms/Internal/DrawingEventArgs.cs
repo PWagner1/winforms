@@ -50,6 +50,17 @@ namespace System.Windows.Forms
             Rectangle clipRect,
             DrawingEventFlags flags)
         {
+            if (dc.IsNull)
+                throw new ArgumentNullException(nameof(dc));
+
+#if DEBUG
+            Gdi32.OBJ type = Gdi32.GetObjectType(dc);
+            Debug.Assert(type == Gdi32.OBJ.DC
+                || type == Gdi32.OBJ.ENHMETADC
+                || type == Gdi32.OBJ.MEMDC
+                || type == Gdi32.OBJ.METADC);
+#endif
+
             _hdc = dc;
             _graphics = null;
             _oldPalette = default;
@@ -86,7 +97,7 @@ namespace System.Windows.Forms
         /// </summary>
         internal Graphics GetOrCreateGraphicsInternal(Action<Graphics>? creationAction = null)
         {
-            if (_graphics == null)
+            if (_graphics is null)
             {
                 Debug.Assert(!_hdc.IsNull);
 
@@ -95,6 +106,8 @@ namespace System.Windows.Forms
                     _hdc,
                     forceBackground: false,
                     realizePalette: false);
+
+                GC.SuppressFinalize(palleteScope);
 
                 _oldPalette = palleteScope.HPalette;
 

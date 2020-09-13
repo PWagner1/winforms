@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using System.Drawing;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Windows.Forms.Automation;
 using Accessibility;
@@ -20,23 +20,23 @@ namespace System.Windows.Forms.Tests
         {
             using var ownerControl = new Control();
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            Assert.True(ownerControl.IsHandleCreated);
+            Assert.False(ownerControl.IsHandleCreated);
 
             Assert.True(accessibleObject.Bounds.X >= 0);
             Assert.True(accessibleObject.Bounds.Y >= 0);
             Assert.Equal(0, accessibleObject.Bounds.Width);
             Assert.Equal(0, accessibleObject.Bounds.Height);
+            Assert.Equal(IntPtr.Zero, accessibleObject.HandleInternal);
             Assert.Null(accessibleObject.DefaultAction);
             Assert.Null(accessibleObject.Description);
-            Assert.Equal(ownerControl.Handle, accessibleObject.Handle);
             Assert.Null(accessibleObject.Help);
             Assert.Null(accessibleObject.KeyboardShortcut);
             Assert.Null(accessibleObject.Name);
             Assert.Same(ownerControl, accessibleObject.Owner);
-            Assert.NotNull(accessibleObject.Parent);
-            Assert.Equal(AccessibleRole.Client, accessibleObject.Role);
-            Assert.Equal(AccessibleStates.Focusable, accessibleObject.State);
-            Assert.Null(accessibleObject.Value);
+            Assert.Null(accessibleObject.Parent);
+            Assert.Equal(AccessibleRole.None, accessibleObject.Role);
+            Assert.Equal(AccessibleStates.None, accessibleObject.State);
+            Assert.Equal(string.Empty, accessibleObject.Value);
         }
 
         [WinFormsFact]
@@ -80,6 +80,77 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<ArgumentNullException>("ownerControl", () => new Control.ControlAccessibleObject(null));
         }
 
+        [WinFormsFact]
+        public void ControlAccessibleObject_created_via_owner_ensure_handle_set_when_owner_created()
+        {
+            using var ownerControl = new Control();
+
+            AccessibleObject accessibleObject = ownerControl.AccessibilityObject;
+            Assert.IsType<Control.ControlAccessibleObject>(accessibleObject);
+
+            Control.ControlAccessibleObject controlAccessibleObject = (Control.ControlAccessibleObject)accessibleObject;
+            Assert.False(ownerControl.IsHandleCreated);
+            Assert.Equal(IntPtr.Zero, controlAccessibleObject.HandleInternal);
+
+            // force the owner contrl to create its handle
+            ownerControl.CreateControl();
+
+            Assert.True(ownerControl.IsHandleCreated);
+            Assert.Equal(ownerControl.Handle, controlAccessibleObject.Handle);
+        }
+
+        [WinFormsFact]
+        public void ControlAccessibleObject_created_via_owner_ensure_handle_reset_when_owner_destroyed()
+        {
+            using var ownerControl = new Control();
+            ownerControl.CreateControl();
+
+            AccessibleObject accessibleObject = ownerControl.AccessibilityObject;
+            Assert.IsType<Control.ControlAccessibleObject>(accessibleObject);
+
+            Control.ControlAccessibleObject controlAccessibleObject = (Control.ControlAccessibleObject)accessibleObject;
+            Assert.True(ownerControl.IsHandleCreated);
+            Assert.Equal(ownerControl.Handle, controlAccessibleObject.Handle);
+
+            ownerControl.Dispose();
+
+            Assert.False(ownerControl.IsHandleCreated);
+            Assert.Equal(IntPtr.Zero, controlAccessibleObject.Handle);
+        }
+
+        [WinFormsFact]
+        public void ControlAccessibleObject_created_detached_owner_ensure_handle_set_when_owner_created()
+        {
+            using var ownerControl = new Control();
+            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
+            Assert.False(ownerControl.IsHandleCreated);
+            Assert.Equal(IntPtr.Zero, accessibleObject.HandleInternal);
+
+            // force the owner contrl to create its handle
+            ownerControl.CreateControl();
+
+            Assert.True(ownerControl.IsHandleCreated);
+            Assert.Equal(ownerControl.Handle, accessibleObject.Handle);
+        }
+
+        [WinFormsFact]
+        public void ControlAccessibleObject_created_detached_owner_ensure_handle_reset_when_owner_destroyed()
+        {
+            using var ownerControl = new Control();
+            var controlAccessibleObject = new Control.ControlAccessibleObject(ownerControl);
+            ownerControl.CreateControl();
+
+            Assert.True(ownerControl.IsHandleCreated);
+            Assert.Equal(ownerControl.Handle, controlAccessibleObject.Handle);
+
+            ownerControl.Dispose();
+
+            Assert.False(ownerControl.IsHandleCreated);
+
+            // NB: Detached object, so we don't get notifications
+            Assert.NotEqual(IntPtr.Zero, controlAccessibleObject.Handle);
+        }
+
         [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void ControlAccessibleObject_DefaultAction_GetWithAccessibleDefaultActionDescription_ReturnsExpected(string accessibleDefaultActionDescription)
@@ -118,6 +189,8 @@ namespace System.Windows.Forms.Tests
         public void ControlAccessibleObject_Handle_Set_Success(IntPtr value)
         {
             using var ownerControl = new Control();
+            ownerControl.CreateControl();
+            Assert.True(ownerControl.IsHandleCreated);
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
             Assert.True(ownerControl.IsHandleCreated);
 
@@ -693,9 +766,10 @@ namespace System.Windows.Forms.Tests
 
         [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
-        public void ControlAccessibleObject_Value_Set_GetReturnsNull(string value)
+        public void ControlAccessibleObject_Value_Set_GetReturnsNull_IfHandleIsCreated(string value)
         {
             using var ownerControl = new Control();
+            ownerControl.CreateControl();
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
 
             accessibleObject.Value = value;
@@ -704,6 +778,23 @@ namespace System.Windows.Forms.Tests
             // Set same.
             accessibleObject.Value = value;
             Assert.Null(accessibleObject.Value);
+            Assert.True(ownerControl.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        public void ControlAccessibleObject_Value_Set_GetReturnsNull_IfHandleIsNotCreated(string value)
+        {
+            using var ownerControl = new Control();
+            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
+
+            accessibleObject.Value = value;
+            Assert.Equal(string.Empty, accessibleObject.Value);
+
+            // Set same.
+            accessibleObject.Value = value;
+            Assert.Equal(string.Empty, accessibleObject.Value);
+            Assert.False(ownerControl.IsHandleCreated);
         }
 
         [WinFormsFact]
@@ -760,14 +851,30 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [InlineData(null, null, 0)]
-        [InlineData("", "", 0)]
-        [InlineData("HelpNamespace", "invalid", 0)]
-        [InlineData("HelpNamespace", "1", 1)]
-        public void ControlAccessibleObject_GetHelpTopic_InvokeWithQueryAccessibilityHelpEvent_ReturnsExpected(string helpNamespace, string helpKeyword, int expectedResult)
+        [InlineData(null, null, 0, true, 0)]
+        [InlineData("", "", 0, true, 0)]
+        [InlineData("HelpNamespace", "invalid", 0, true, 0)]
+        [InlineData("HelpNamespace", "1", 1, true, 0)]
+        [InlineData(null, null, 0, false, -1)]
+        [InlineData("", "", 0, false, -1)]
+        [InlineData("HelpNamespace", "invalid", 0, false, -1)]
+        [InlineData("HelpNamespace", "1", 1, false, -1)]
+        public void ControlAccessibleObject_GetHelpTopic_InvokeWithQueryAccessibilityHelpEvent_ReturnsExpected(
+            string helpNamespace,
+            string helpKeyword,
+            int expectedResult,
+            bool createControl,
+            int exectedResultWithoutHandler)
         {
             using var ownerControl = new Control();
+            if (createControl)
+            {
+                ownerControl.CreateControl();
+            }
+
+            Assert.Equal(createControl, ownerControl.IsHandleCreated);
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
+            Assert.Equal(createControl, ownerControl.IsHandleCreated);
 
             int callCount = 0;
             void handler(object sender, QueryAccessibilityHelpEventArgs e)
@@ -795,7 +902,7 @@ namespace System.Windows.Forms.Tests
 
             // Remove handler.
             ownerControl.QueryAccessibilityHelp -= handler;
-            Assert.Equal(0, accessibleObject.GetHelpTopic(out fileName));
+            Assert.Equal(exectedResultWithoutHandler, accessibleObject.GetHelpTopic(out fileName));
             Assert.Null(fileName);
             Assert.Equal(2, callCount);
         }
@@ -826,15 +933,6 @@ namespace System.Windows.Forms.Tests
             using var ownerControl = new Control();
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
             Assert.Null(accessibleObject.Navigate(navdir));
-        }
-
-        [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(AccessibleNavigation))]
-        public void AccessibleObject_Navigate_InvalidNavDir_ThrowsArgumentException(AccessibleNavigation navdir)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            Assert.Throws<ArgumentException>(null, () => accessibleObject.Navigate(navdir));
         }
 
         [WinFormsTheory]
@@ -892,17 +990,15 @@ namespace System.Windows.Forms.Tests
             using var ownerControl = new Control();
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
 
-            // TODO: ControlAccessibleObject shouldn't force handle creation, tracked in https://github.com/dotnet/winforms/issues/3062
-            Assert.True(ownerControl.IsHandleCreated);
+            Assert.False(ownerControl.IsHandleCreated);
 
             if (isHandleCreated)
             {
                 Assert.NotEqual(IntPtr.Zero, ownerControl.Handle);
             }
 
-            // TODO: ControlAccessibleObject shouldn't force handle creation, tracked in https://github.com/dotnet/winforms/issues/3062
-            // Assert.Equal(isHandleCreated, accessibleObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId));
-            // Assert.Equal(isHandleCreated, ownerControl.IsHandleCreated);
+            Assert.Equal(isHandleCreated, accessibleObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId));
+            Assert.Equal(isHandleCreated, ownerControl.IsHandleCreated);
         }
 
         [WinFormsTheory]
@@ -913,17 +1009,15 @@ namespace System.Windows.Forms.Tests
             using var ownerControl = new Control();
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
 
-            // TODO: ControlAccessibleObject shouldn't force handle creation, tracked in https://github.com/dotnet/winforms/issues/3062
-            Assert.True(ownerControl.IsHandleCreated);
+            Assert.False(ownerControl.IsHandleCreated);
 
             if (isHandleCreated)
             {
                 Assert.NotEqual(IntPtr.Zero, ownerControl.Handle);
             }
 
-            // TODO: ControlAccessibleObject shouldn't force handle creation, tracked in https://github.com/dotnet/winforms/issues/3062
-            // Assert.Equal(isHandleCreated, accessibleObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.NamePropertyId, ownerControl.Name, ownerControl.Name));
-            // Assert.Equal(isHandleCreated, ownerControl.IsHandleCreated);
+            Assert.Equal(isHandleCreated, accessibleObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.NamePropertyId, ownerControl.Name, ownerControl.Name));
+            Assert.Equal(isHandleCreated, ownerControl.IsHandleCreated);
         }
 
         [WinFormsFact]
@@ -941,30 +1035,6 @@ namespace System.Windows.Forms.Tests
             Assert.Equal("ControlAccessibleObject: Owner = null", accessibleObject.ToString());
         }
 
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleaccDoDefaultAction_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.accDoDefaultAction(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleaccDoDefaultAction_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.accDoDefaultAction(varChild));
-        }
-
         [WinFormsFact]
         public void ControlAccessibleObject_IAccessibleaccFocus_InvokeDefault_ReturnsNull()
         {
@@ -975,96 +1045,45 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [InlineData(-1, -2)]
-        [InlineData(0, 0)]
-        [InlineData(1, 2)]
-        public void AccessibleObject_IAccessibleaccHitTest_InvokeDefault_ReturnsNull(int x, int y)
+        [InlineData(true, -1, -2, 0)]
+        [InlineData(true, 0, 0, 0)]
+        [InlineData(true, 1, 2, 0)]
+        [InlineData(false, -1, -2, null)]
+        [InlineData(false, 0, 0, null)]
+        [InlineData(false, 1, 2, null)]
+        public void AccessibleObject_IAccessibleaccHitTest_InvokeDefault_ReturnsExpectedValue(bool createControl, int x, int y, int? expectedValue)
         {
             using var ownerControl = new Control();
+            if (createControl)
+            {
+                ownerControl.CreateControl();
+            }
+
+            Assert.Equal(createControl, ownerControl.IsHandleCreated);
+
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
+            Assert.Equal(createControl, ownerControl.IsHandleCreated);
             IAccessible iAccessible = accessibleObject;
-            Assert.Equal(0, iAccessible.accHitTest(x, y));
+            Assert.Equal(expectedValue, iAccessible.accHitTest(x, y));
         }
 
         [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleaccLocation_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
+        [InlineData(true)]
+        [InlineData(false)]
+        public void ControlAccessibleObject_IAccessibleaccParent_InvokeDefault_ReturnsExpectedValue(bool createControl)
         {
-            using var child = new Control();
             using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, varChild));
-        }
+            if (createControl)
+            {
+                ownerControl.CreateControl();
+            }
 
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleaccLocation_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, varChild));
-        }
+            Assert.Equal(createControl, ownerControl.IsHandleCreated);
 
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleaccNavigate_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
+            Assert.Equal(createControl, ownerControl.IsHandleCreated);
             IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.accNavigate((int)AccessibleNavigation.Down, varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleaccNavigate_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.accNavigate((int)AccessibleNavigation.Down, varChild));
-        }
-
-        [WinFormsFact]
-        public void ControlAccessibleObject_IAccessibleaccParent_InvokeDefault_ReturnsExpected()
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.NotNull(iAccessible.accParent);
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleaccSelect_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.accSelect((int)AccessibleSelection.AddSelection, varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleaccSelect_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.accSelect((int)AccessibleSelection.AddSelection, varChild));
+            Assert.Equal(createControl, iAccessible.accParent != null);
         }
 
         [WinFormsFact]
@@ -1074,19 +1093,6 @@ namespace System.Windows.Forms.Tests
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
             IAccessible iAccessible = accessibleObject;
             Assert.Null(iAccessible.accSelection);
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accChild_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accChild(varChild));
         }
 
         [WinFormsTheory]
@@ -1109,172 +1115,24 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, iAccessible.accChildCount);
         }
 
-        [WinFormsFact]
-        public void ControlAccessibleObject_IAccessibleget_accChildCount_InvokeWithChildren_ReturnsExpected()
+        [WinFormsTheory]
+        [InlineData(true, 1)]
+        [InlineData(false, 0)]
+        public void ControlAccessibleObject_IAccessibleget_accChildCount_InvokeWithChildren_ReturnsExpected(bool createControl, int expectedCount)
         {
             using var child = new Control();
             using var ownerControl = new Control();
+            if (createControl)
+            {
+                ownerControl.CreateControl();
+            }
+
+            Assert.Equal(createControl, ownerControl.IsHandleCreated);
             ownerControl.Controls.Add(child);
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
+            Assert.Equal(createControl, ownerControl.IsHandleCreated);
             IAccessible iAccessible = accessibleObject;
-            Assert.Equal(1, iAccessible.accChildCount);
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accDefaultAction_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accDefaultAction(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accDefaultAction_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accDefaultAction(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accDescription_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accDescription(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accDescription_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accDescription(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accHelp_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accHelp(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accHelp_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accHelp(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accHelpTopic_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accHelpTopic(out string fileName, varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accHelpTopic_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accHelpTopic(out string fileName, varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accKeyboardShortcut_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accKeyboardShortcut(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accKeyboardShortcut_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accKeyboardShortcut(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accName_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accName(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accName_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accName(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accRole_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accRole(varChild));
+            Assert.Equal(expectedCount, iAccessible.accChildCount);
         }
 
         [WinFormsTheory]
@@ -1286,102 +1144,6 @@ namespace System.Windows.Forms.Tests
             var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
             IAccessible iAccessible = accessibleObject;
             Assert.Null(iAccessible.get_accRole(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accState_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accState(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accState_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accState(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accValue_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accValue(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleget_accValue_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.get_accValue(varChild));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleset_accName_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.set_accName(varChild, "Name"));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleset_accName_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.set_accName(varChild, "Name"));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleset_accValue_InvokeNoSuchChildWithChildren_ThrowsArgumentException(object varChild)
-        {
-            using var child = new Control();
-            using var ownerControl = new Control();
-            ownerControl.Controls.Add(child);
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.set_accValue(varChild, "Value"));
-        }
-
-        [WinFormsTheory]
-        [InlineData(-1)]
-        [InlineData(1)]
-        public void ControlAccessibleObject_IAccessibleset_accValue_InvokeNoSuchChild_ThrowsArgumentException(object varChild)
-        {
-            using var ownerControl = new Control();
-            var accessibleObject = new Control.ControlAccessibleObject(ownerControl);
-            IAccessible iAccessible = accessibleObject;
-            Assert.Throws<ArgumentException>(null, () => iAccessible.set_accValue(varChild, "Value"));
         }
 
         [WinFormsFact]
@@ -1406,6 +1168,121 @@ namespace System.Windows.Forms.Tests
             Assert.True(control.SupportsUiaProviders);
             bool actual = accessibleObject.IsPatternSupported(UiaCore.UIA.LegacyIAccessiblePatternId);
             Assert.True(actual);
+        }
+
+        public static IEnumerable<object[]> ControlAccessibleObject_TestData()
+        {
+            return ReflectionHelper.GetPublicNotAbstractClasses<Control>().Select(type => new object[] { type });
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(ControlAccessibleObject_TestData))]
+        public void ControlAccessibleObject_Custom_Role_ReturnsExpected(Type type)
+        {
+            using Control control = ReflectionHelper.InvokePublicConstructor<Control>(type);
+
+            if (!control.SupportsUiaProviders)
+            {
+                return;
+            }
+
+            control.AccessibleRole = AccessibleRole.Link;
+            AccessibleObject controlAccessibleObject = control.AccessibilityObject;
+
+            var accessibleObjectRole = controlAccessibleObject.Role;
+
+            Assert.Equal(AccessibleRole.Link, accessibleObjectRole);
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(ControlAccessibleObject_TestData))]
+        public void ControlAccessibleObject_IsPatternSupported_LegacyIAccessible_ReturnsTrue(Type type)
+        {
+            using Control control = ReflectionHelper.InvokePublicConstructor<Control>(type);
+
+            if (!control.SupportsUiaProviders)
+            {
+                return;
+            }
+
+            AccessibleObject controlAccessibleObject = control.AccessibilityObject;
+
+            bool supportsLegacyIAccessiblePatternId = controlAccessibleObject.IsPatternSupported(UiaCore.UIA.LegacyIAccessiblePatternId);
+
+            Assert.True(supportsLegacyIAccessiblePatternId);
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(ControlAccessibleObject_TestData))]
+        public void ControlAccessibleObject_Custom_Description_ReturnsExpected(Type type)
+        {
+            using Control control = ReflectionHelper.InvokePublicConstructor<Control>(type);
+
+            if (!control.SupportsUiaProviders)
+            {
+                return;
+            }
+
+            control.AccessibleDescription = "Test Accessible Description";
+            AccessibleObject controlAccessibleObject = control.AccessibilityObject;
+
+            var accessibleObjectDescription = controlAccessibleObject.Description;
+
+            Assert.Equal("Test Accessible Description", accessibleObjectDescription);
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(ControlAccessibleObject_TestData))]
+        public void ControlAccessibleObject_GetPropertyValue_Custom_Name_ReturnsExpected(Type type)
+        {
+            using Control control = ReflectionHelper.InvokePublicConstructor<Control>(type);
+
+            if (!control.SupportsUiaProviders)
+            {
+                return;
+            }
+
+            AccessibleObject controlAccessibleObject = control.AccessibilityObject;
+            control.Name = "Name1";
+            control.AccessibleName = "Test Name";
+
+            var accessibleName = controlAccessibleObject.GetPropertyValue(UiaCore.UIA.NamePropertyId);
+
+            Assert.Equal("Test Name", accessibleName);
+        }
+
+        public static IEnumerable<object[]> ControlAccessibleObject_DefaultName_TestData()
+        {
+            // These controls have AccessibleName defined.
+            // MonthCalendar has "Month" view by default and returns current date as AccessibleName
+            var typeDefaultValues = new Dictionary<Type, string> {
+                { typeof(DataGridViewTextBoxEditingControl), SR.DataGridView_AccEditingControlAccName},
+                { typeof(PrintPreviewDialog), SR.PrintPreviewDialog_PrintPreview},
+                { typeof(MonthCalendar), string.Format(SR.MonthCalendarSingleDateSelected, DateTime.Now.ToLongDateString())}
+            };
+
+            foreach (Type type in ReflectionHelper.GetPublicNotAbstractClasses<Control>())
+            {
+                yield return new object[] {
+                    type,
+                    typeDefaultValues.ContainsKey(type) ? typeDefaultValues[type] : null
+                };
+            }
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(ControlAccessibleObject_DefaultName_TestData))]
+        public void ControlAccessibleObject_GetPropertyValue_Default_Name_ReturnsExpected(Type type, string expectedName)
+        {
+            using Control control = ReflectionHelper.InvokePublicConstructor<Control>(type);
+
+            if (!control.SupportsUiaProviders)
+            {
+                return;
+            }
+
+            AccessibleObject controlAccessibleObject = control.AccessibilityObject;
+            Assert.Equal(expectedName, controlAccessibleObject.GetPropertyValue(UiaCore.UIA.NamePropertyId));
         }
 
         private class AutomationLiveRegionControl : Control, IAutomationLiveRegion

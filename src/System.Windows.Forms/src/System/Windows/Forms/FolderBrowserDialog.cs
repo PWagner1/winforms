@@ -131,7 +131,7 @@ namespace System.Windows.Forms
         [DefaultValue(false)]
         [Localizable(true)]
         [SRCategory(nameof(SR.CatFolderBrowsing))]
-        [Description(nameof(SR.FolderBrowserDialogUseDescriptionForTitle))]
+        [SRDescription(nameof(SR.FolderBrowserDialogUseDescriptionForTitle))]
         public bool UseDescriptionForTitle { get; set; }
 
         private bool UseVistaDialogInternal
@@ -231,7 +231,7 @@ namespace System.Windows.Forms
             if (!string.IsNullOrEmpty(_selectedPath))
             {
                 string parent = Path.GetDirectoryName(_selectedPath);
-                if (parent == null || !Directory.Exists(parent))
+                if (parent is null || !Directory.Exists(parent))
                 {
                     dialog.SetFileName(_selectedPath);
                 }

@@ -246,7 +246,7 @@ namespace System.Windows.Forms.Design
 
         private void UpdateControlVisibility(FormatTypeClass formatType)
         {
-            if (formatType == null)
+            if (formatType is null)
             {
                 explanationLabel.Visible = false;
                 sampleLabel.Visible = false;
@@ -261,7 +261,7 @@ namespace System.Windows.Forms.Design
             }
 
             tableLayoutPanel1.SuspendLayout();
-            secondRowLabel.Text = "";
+            secondRowLabel.Text = string.Empty;
 
             // process the decimalPlacesLabelVisible
             if (formatType.DropDownVisible)
@@ -315,14 +315,7 @@ namespace System.Windows.Forms.Design
                 dateTimeFormatsListBox.Visible = false;
             }
 
-            if (secondRowLabel.Text == "")
-            {
-                secondRowLabel.Visible = false;
-            }
-            else
-            {
-                secondRowLabel.Visible = true;
-            }
+            secondRowLabel.Visible = secondRowLabel.Text.Length > 0;
 
             tableLayoutPanel1.ResumeLayout(true /*performLayout*/);
         }
@@ -866,7 +859,7 @@ namespace System.Windows.Forms.Design
             {
                 get
                 {
-                    if (_owner.dateTimeFormatsListBox.SelectedItem == null)
+                    if (_owner.dateTimeFormatsListBox.SelectedItem is null)
                     {
                         return "";
                     }

@@ -7,7 +7,6 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -95,7 +94,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (_runtimeId == null)
+                    if (_runtimeId is null)
                     {
                         // we need to provide a unique ID
                         // others are implementing this in the same manner
@@ -263,7 +262,7 @@ namespace System.Windows.Forms
                 if (Owner != null)
                 {
                     ToolStrip parent = Owner.ParentInternal;
-                    if (parent == null)
+                    if (parent is null)
                     {
                         return null;
                     }
@@ -468,6 +467,16 @@ namespace System.Windows.Forms
                 }
 
                 return -1;
+            }
+
+            internal override bool IsPatternSupported(UiaCore.UIA patternId)
+            {
+                if (patternId == UiaCore.UIA.LegacyIAccessiblePatternId)
+                {
+                    return true;
+                }
+
+                return base.IsPatternSupported(patternId);
             }
 
             internal override void SetFocus() => Owner.Select();

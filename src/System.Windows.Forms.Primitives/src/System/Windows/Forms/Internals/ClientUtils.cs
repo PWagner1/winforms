@@ -4,7 +4,6 @@
 
 using System.Collections;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 
@@ -12,9 +11,6 @@ namespace System.Windows.Forms
 {
     static internal class ClientUtils
     {
-        private const int SurrogateRangeStart = 0xD800;
-        private const int SurrogateRangeEnd = 0xDFFF;
-
         // ExecutionEngineException is obsolete and shouldn't be used (to catch, throw or reference) anymore.
         // Pragma added to prevent converting the "type is obsolete" warning into build error.
         // File owner should fix this.
@@ -111,11 +107,13 @@ namespace System.Windows.Forms
             NonWord
         }
 
-        // Imitates the backwards word selection logic of the native SHAutoComplete Ctrl+Backspace handler.
-        // The selection will consist of any run of word characters and any run of non-word characters at the end of that word.
-        // If the selection reaches the second character in the input, and the first character is non-word, it is also selected.
-        // Here, word characters are equivalent to the "\w" regex class but with UnicodeCategory.ConnectorPunctuation excluded.
-        public static int GetWordBoundaryStart(char[] text, int endIndex)
+        /// <summary>
+        ///  Imitates the backwards word selection logic of the native SHAutoComplete Ctrl+Backspace handler.
+        ///  The selection will consist of any run of word characters and any run of non-word characters at the end of that word.
+        ///  If the selection reaches the second character in the input, and the first character is non-word, it is also selected.
+        ///  Here, word characters are equivalent to the "\w" regex class but with UnicodeCategory.ConnectorPunctuation excluded.
+        /// </summary>
+        public static int GetWordBoundaryStart(string text, int endIndex)
         {
             bool seenWord = false;
             CharType lastSeen = CharType.None;
@@ -123,10 +121,11 @@ namespace System.Windows.Forms
             for (; index >= 0; index--)
             {
                 char character = text[index];
-                if (character >= SurrogateRangeStart && character <= SurrogateRangeEnd)
+                if (char.IsSurrogate(character))
                 {
                     break;
                 }
+
                 bool isWord = char.IsLetterOrDigit(character) ||
                     CharUnicodeInfo.GetUnicodeCategory(character) == UnicodeCategory.NonSpacingMark;
                 if ((isWord && lastSeen == CharType.NonWord && seenWord) ||
@@ -134,9 +133,11 @@ namespace System.Windows.Forms
                 {
                     break;
                 }
+
                 seenWord |= isWord;
                 lastSeen = isWord ? CharType.Word : CharType.NonWord;
             }
+
             return index + 1;
         }
 
@@ -177,7 +178,7 @@ namespace System.Windows.Forms
         {
             Type t = value.GetType();
 
-            if (enumValueInfo == null)
+            if (enumValueInfo is null)
             {
                 enumValueInfo = new Hashtable();
             }
@@ -188,7 +189,7 @@ namespace System.Windows.Forms
             {
                 sequentialEnumInfo = enumValueInfo[t] as SequentialEnumInfo;
             }
-            if (sequentialEnumInfo == null)
+            if (sequentialEnumInfo is null)
             {
                 sequentialEnumInfo = new SequentialEnumInfo(t);
 

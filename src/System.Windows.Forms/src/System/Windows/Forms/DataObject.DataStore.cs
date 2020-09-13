@@ -5,12 +5,14 @@
 #nullable disable
 
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 
 namespace System.Windows.Forms
@@ -55,8 +57,8 @@ namespace System.Windows.Forms
                 object original = baseVar;
 
                 if (autoConvert
-                    && (dse == null || dse.autoConvert)
-                    && (baseVar == null || baseVar is MemoryStream))
+                    && (dse is null || dse.autoConvert)
+                    && (baseVar is null || baseVar is MemoryStream))
                 {
                     string[] mappedFormats = GetMappedFormats(format);
                     if (mappedFormats != null)
@@ -107,7 +109,7 @@ namespace System.Windows.Forms
                 Debug.WriteLineIf(CompModSwitches.DataObject.TraceVerbose, "DataStore: SetData: " + format + ", " + autoConvert.ToString() + ", " + data?.ToString() ?? "(null)");
                 if (string.IsNullOrWhiteSpace(format))
                 {
-                    if (format == null)
+                    if (format is null)
                     {
                         throw new ArgumentNullException(nameof(format));
                     }
@@ -143,7 +145,7 @@ namespace System.Windows.Forms
             public virtual void SetData(Type format, object data)
             {
                 Debug.WriteLineIf(CompModSwitches.DataObject.TraceVerbose, "DataStore: SetData: " + format?.FullName ?? "(null)" + ", " + data?.ToString() ?? "(null)");
-                if (format == null)
+                if (format is null)
                 {
                     throw new ArgumentNullException(nameof(format));
                 }
@@ -154,7 +156,7 @@ namespace System.Windows.Forms
             public virtual void SetData(object data)
             {
                 Debug.WriteLineIf(CompModSwitches.DataObject.TraceVerbose, "DataStore: SetData: " + data?.ToString() ?? "(null)");
-                if (data == null)
+                if (data is null)
                 {
                     throw new ArgumentNullException(nameof(data));
                 }
@@ -225,8 +227,10 @@ namespace System.Windows.Forms
                 {
                     Debug.WriteLineIf(CompModSwitches.DataObject.TraceVerbose, "DataStore: applying autoConvert");
 
-                    ArrayList formats = new ArrayList();
-                    for (int i = 0; i < baseVar.Length; i++)
+                    // Since we are only adding elements to the HashSet, the order will be preserved.
+                    int baseVarLength = baseVar.Length;
+                    HashSet<string> distinctFormats = new HashSet<string>(baseVarLength);
+                    for (int i = 0; i < baseVarLength; i++)
                     {
                         Debug.Assert(data[baseVar[i]] != null, "Null item in data collection with key '" + baseVar[i] + "'");
                         if (((DataStoreEntry)data[baseVar[i]]).autoConvert)
@@ -235,18 +239,16 @@ namespace System.Windows.Forms
                             Debug.Assert(cur != null, "GetMappedFormats returned null for '" + baseVar[i] + "'");
                             for (int j = 0; j < cur.Length; j++)
                             {
-                                formats.Add(cur[j]);
+                                distinctFormats.Add(cur[j]);
                             }
                         }
                         else
                         {
-                            formats.Add(baseVar[i]);
+                            distinctFormats.Add(baseVar[i]);
                         }
                     }
 
-                    string[] temp = new string[formats.Count];
-                    formats.CopyTo(temp, 0);
-                    baseVar = GetDistinctStrings(temp);
+                    baseVar = distinctFormats.ToArray();
                 }
                 Debug.WriteLineIf(CompModSwitches.DataObject.TraceVerbose, "DataStore: returing " + baseVar.Length.ToString(CultureInfo.InvariantCulture) + " formats from GetFormats");
                 return baseVar;

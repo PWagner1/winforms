@@ -68,7 +68,7 @@ namespace System.Windows.Forms
                     int dpi = CurrentDpi;
 
                     Font retFont = null;
-                    if (s_defaultFontCache.TryGetValue(dpi, out retFont) == false || retFont == null)
+                    if (s_defaultFontCache.TryGetValue(dpi, out retFont) == false || retFont is null)
                     {
                         // Default to menu font
                         sysFont = SystemInformation.GetMenuFontForDpi(dpi);
@@ -94,18 +94,18 @@ namespace System.Windows.Forms
                     // Threadsafe local reference
                     Font retFont = s_defaultFont;
 
-                    if (retFont == null)
+                    if (retFont is null)
                     {
                         lock (s_internalSyncObject)
                         {
                             // Double check the defaultFont after the lock.
                             retFont = s_defaultFont;
 
-                            if (retFont == null)
+                            if (retFont is null)
                             {
                                 // Default to menu font
                                 sysFont = SystemFonts.MenuFont;
-                                if (sysFont == null)
+                                if (sysFont is null)
                                 {
                                     // ...or to control font if menu font unavailable
                                     sysFont = Control.DefaultFont;
@@ -190,7 +190,7 @@ namespace System.Windows.Forms
 
         private static bool CanChangeSelection(ToolStrip start, ToolStrip toolStrip)
         {
-            if (toolStrip == null)
+            if (toolStrip is null)
             {
                 Debug.Fail("passed in bogus toolstrip, why?");
                 return false;
@@ -219,7 +219,7 @@ namespace System.Windows.Forms
 
         private static bool ChangeSelection(ToolStrip start, ToolStrip toolStrip)
         {
-            if (toolStrip == null || start == null)
+            if (toolStrip is null || start is null)
             {
                 Debug.Assert(toolStrip != null, "passed in bogus toolstrip, why?");
                 Debug.Assert(start != null, "passed in bogus start, why?");
@@ -254,7 +254,7 @@ namespace System.Windows.Forms
         {
             lock (s_internalSyncObject)
             {
-                if (t_staticEventHandlers == null)
+                if (t_staticEventHandlers is null)
                 {
                     return null;
                 }
@@ -326,14 +326,14 @@ namespace System.Windows.Forms
         /// </summary>
         internal static void PruneToolStripList()
         {
-            if (t_toolStripWeakArrayList == null || t_toolStripWeakArrayList.Count == 0)
+            if (t_toolStripWeakArrayList is null || t_toolStripWeakArrayList.Count == 0)
             {
                 return;
             }
 
             for (int i = t_toolStripWeakArrayList.Count - 1; i >= 0; i--)
             {
-                if (t_toolStripWeakArrayList[i] == null)
+                if (t_toolStripWeakArrayList[i] is null)
                 {
                     t_toolStripWeakArrayList.RemoveAt(i);
                 }
@@ -358,7 +358,7 @@ namespace System.Windows.Forms
         /// </summary>
         internal static bool SelectNextToolStrip(ToolStrip start, bool forward)
         {
-            if (start == null || start.ParentInternal == null)
+            if (start is null || start.ParentInternal is null)
             {
                 Debug.Assert(start != null, "why is null passed here?");
                 return false;
@@ -382,7 +382,7 @@ namespace System.Windows.Forms
                 }
 
                 int nextControlTabIndex = toolStrip.TabIndex;
-                Debug.WriteLineIf(ToolStrip.ControlTabDebug.TraceVerbose, "SELECTNEXTTOOLSTRIP: start: " + startTabIndex.ToString(CultureInfo.CurrentCulture) + " " + start.Name);
+                Debug.WriteLineIf(ToolStrip.s_controlTabDebug.TraceVerbose, "SELECTNEXTTOOLSTRIP: start: " + startTabIndex.ToString(CultureInfo.CurrentCulture) + " " + start.Name);
                 // since CanChangeSelection can iterate through all the items in a toolstrip,
                 // defer the checking until we think we've got a viable TabIndex candidate.
                 // this brings it to O(n+m) instead of O(n*m) where n is # toolstrips & m is avg number
@@ -391,8 +391,8 @@ namespace System.Windows.Forms
                 {
                     if (nextControlTabIndex >= startTabIndex && CanChangeSelection(start, toolStrip))
                     {
-                        Debug.WriteLineIf(ToolStrip.ControlTabDebug.TraceVerbose, "FORWARD considering selection " + toolStrip.Name + " " + toolStrip.TabIndex.ToString(CultureInfo.CurrentCulture));
-                        if (nextControl == null)
+                        Debug.WriteLineIf(ToolStrip.s_controlTabDebug.TraceVerbose, "FORWARD considering selection " + toolStrip.Name + " " + toolStrip.TabIndex.ToString(CultureInfo.CurrentCulture));
+                        if (nextControl is null)
                         {
                             nextControl = toolStrip;
                         }
@@ -403,11 +403,11 @@ namespace System.Windows.Forms
                             nextControl = toolStrip;
                         }
                     }
-                    else if (((wrappedControl == null) || (toolStrip.TabIndex < wrappedControl.TabIndex))
+                    else if (((wrappedControl is null) || (toolStrip.TabIndex < wrappedControl.TabIndex))
                               && CanChangeSelection(start, toolStrip))
                     {
                         // We've found a candidate for wrapping (the one with the smallest tab index in the collection)
-                        Debug.WriteLineIf(ToolStrip.ControlTabDebug.TraceVerbose, "\tFORWARD new wrap candidate " + toolStrip.Name);
+                        Debug.WriteLineIf(ToolStrip.s_controlTabDebug.TraceVerbose, "\tFORWARD new wrap candidate " + toolStrip.Name);
                         wrappedControl = toolStrip;
                     }
                 }
@@ -415,8 +415,8 @@ namespace System.Windows.Forms
                 {
                     if (nextControlTabIndex <= startTabIndex && CanChangeSelection(start, toolStrip))
                     {
-                        Debug.WriteLineIf(ToolStrip.ControlTabDebug.TraceVerbose, "\tREVERSE selecting " + toolStrip.Name);
-                        if (nextControl == null)
+                        Debug.WriteLineIf(ToolStrip.s_controlTabDebug.TraceVerbose, "\tREVERSE selecting " + toolStrip.Name);
+                        if (nextControl is null)
                         {
                             nextControl = toolStrip;
                         }
@@ -427,17 +427,17 @@ namespace System.Windows.Forms
                             nextControl = toolStrip;
                         }
                     }
-                    else if (((wrappedControl == null) || (toolStrip.TabIndex > wrappedControl.TabIndex))
+                    else if (((wrappedControl is null) || (toolStrip.TabIndex > wrappedControl.TabIndex))
                                && CanChangeSelection(start, toolStrip))
                     {
                         // We've found a candidate for wrapping (the one with the largest tab index in the collection)
-                        Debug.WriteLineIf(ToolStrip.ControlTabDebug.TraceVerbose, "\tREVERSE new wrap candidate " + toolStrip.Name);
+                        Debug.WriteLineIf(ToolStrip.s_controlTabDebug.TraceVerbose, "\tREVERSE new wrap candidate " + toolStrip.Name);
 
                         wrappedControl = toolStrip;
                     }
                     else
                     {
-                        Debug.WriteLineIf(ToolStrip.ControlTabDebug.TraceVerbose, "\tREVERSE skipping wrap candidate " + toolStrip.Name + toolStrip.TabIndex.ToString(CultureInfo.CurrentCulture));
+                        Debug.WriteLineIf(ToolStrip.s_controlTabDebug.TraceVerbose, "\tREVERSE skipping wrap candidate " + toolStrip.Name + toolStrip.TabIndex.ToString(CultureInfo.CurrentCulture));
                     }
                 }
                 if (nextControl != null
@@ -450,12 +450,12 @@ namespace System.Windows.Forms
             }
             if (nextControl != null)
             {
-                Debug.WriteLineIf(ToolStrip.ControlTabDebug.TraceVerbose, "SELECTING " + nextControl.Name);
+                Debug.WriteLineIf(ToolStrip.s_controlTabDebug.TraceVerbose, "SELECTING " + nextControl.Name);
                 return ChangeSelection(start, nextControl);
             }
             else if (wrappedControl != null)
             {
-                Debug.WriteLineIf(ToolStrip.ControlTabDebug.TraceVerbose, "WRAPPING " + wrappedControl.Name);
+                Debug.WriteLineIf(ToolStrip.s_controlTabDebug.TraceVerbose, "WRAPPING " + wrappedControl.Name);
 
                 return ChangeSelection(start, wrappedControl);
             }
@@ -499,7 +499,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (t_defaultRenderer == null)
+                if (t_defaultRenderer is null)
                 {
                     t_defaultRenderer = CreateRenderer(RenderMode);
                 }
@@ -509,7 +509,7 @@ namespace System.Windows.Forms
             {
                 if (t_defaultRenderer != value)
                 {
-                    CurrentRendererType = (value == null) ? s_defaultRendererType : value.GetType();
+                    CurrentRendererType = (value is null) ? s_defaultRendererType : value.GetType();
                     t_defaultRenderer = value;
 
                     ((EventHandler)GetEventHandler(StaticEventDefaultRendererChanged))?.Invoke(null, EventArgs.Empty);
@@ -659,7 +659,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void LoadSettings(Form targetForm)
         {
-            if (targetForm == null)
+            if (targetForm is null)
             {
                 throw new ArgumentNullException(nameof(targetForm));
             }
@@ -672,7 +672,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void LoadSettings(Form targetForm, string key)
         {
-            if (targetForm == null)
+            if (targetForm is null)
             {
                 throw new ArgumentNullException(nameof(targetForm));
             }
@@ -692,7 +692,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void SaveSettings(Form sourceForm)
         {
-            if (sourceForm == null)
+            if (sourceForm is null)
             {
                 throw new ArgumentNullException(nameof(sourceForm));
             }
@@ -705,7 +705,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void SaveSettings(Form sourceForm, string key)
         {
-            if (sourceForm == null)
+            if (sourceForm is null)
             {
                 throw new ArgumentNullException(nameof(sourceForm));
             }
@@ -987,7 +987,7 @@ namespace System.Windows.Forms
                 return false;
             }
 
-            Debug.WriteLineIf(ToolStrip.SnapFocusDebug.TraceVerbose, "[ProcessMenuKey] Determining whether we should send focus to MenuStrip");
+            Debug.WriteLineIf(ToolStrip.s_snapFocusDebug.TraceVerbose, "[ProcessMenuKey] Determining whether we should send focus to MenuStrip");
 
             Keys keyData = (Keys)(int)m.LParam;
 
@@ -1008,7 +1008,7 @@ namespace System.Windows.Forms
                         // Only activate the menu if there's no win32 menu. Win32 menus trump menustrips.
                         menuStripToActivate = GetMainMenuStrip(toplevelControl);
                     }
-                    Debug.WriteLineIf(ToolStrip.SnapFocusDebug.TraceVerbose, string.Format(CultureInfo.CurrentCulture, "[ProcessMenuKey] MenuStripToActivate is: {0}", menuStripToActivate));
+                    Debug.WriteLineIf(ToolStrip.s_snapFocusDebug.TraceVerbose, string.Format(CultureInfo.CurrentCulture, "[ProcessMenuKey] MenuStripToActivate is: {0}", menuStripToActivate));
                 }
             }
 
@@ -1037,14 +1037,14 @@ namespace System.Windows.Forms
                 {
                     // If it's Shift+F10 and we're already InMenuMode, then we
                     // need to cancel this message, otherwise we'll enter the native modal menu loop.
-                    Debug.WriteLineIf(ToolStrip.SnapFocusDebug.TraceVerbose, "[ProcessMenuKey] DETECTED SHIFT+F10" + keyData.ToString());
+                    Debug.WriteLineIf(ToolStrip.s_snapFocusDebug.TraceVerbose, "[ProcessMenuKey] DETECTED SHIFT+F10" + keyData.ToString());
                     return ToolStripManager.ModalMenuFilter.InMenuMode;
                 }
                 else
                 {
                     if (menuStripToActivate != null && !ModalMenuFilter.MenuKeyToggle)
                     {
-                        Debug.WriteLineIf(ToolStrip.SnapFocusDebug.TraceVerbose, "[ProcessMenuKey] attempting to set focus to menustrip");
+                        Debug.WriteLineIf(ToolStrip.s_snapFocusDebug.TraceVerbose, "[ProcessMenuKey] attempting to set focus to menustrip");
 
                         // If we've alt-tabbed away dont snap/restore focus.
                         IntPtr topmostParentOfMenu = User32.GetAncestor(menuStripToActivate, User32.GA.ROOT);
@@ -1052,13 +1052,13 @@ namespace System.Windows.Forms
 
                         if (topmostParentOfMenu == foregroundWindow)
                         {
-                            Debug.WriteLineIf(ToolStrip.SnapFocusDebug.TraceVerbose, "[ProcessMenuKey] ToolStripManager call MenuStrip.OnMenuKey");
+                            Debug.WriteLineIf(ToolStrip.s_snapFocusDebug.TraceVerbose, "[ProcessMenuKey] ToolStripManager call MenuStrip.OnMenuKey");
                             return menuStripToActivate.OnMenuKey();
                         }
                     }
                     else if (menuStripToActivate != null)
                     {
-                        Debug.WriteLineIf(ToolStrip.SnapFocusDebug.TraceVerbose, "[ProcessMenuKey] Resetting MenuKeyToggle");
+                        Debug.WriteLineIf(ToolStrip.s_snapFocusDebug.TraceVerbose, "[ProcessMenuKey] Resetting MenuKeyToggle");
                         ModalMenuFilter.MenuKeyToggle = false;
                         return true;
                     }
@@ -1070,7 +1070,7 @@ namespace System.Windows.Forms
 
         internal static MenuStrip GetMainMenuStrip(Control control)
         {
-            if (control == null)
+            if (control is null)
             {
                 Debug.Fail("why are we passing null to GetMainMenuStrip?");
                 return null;
@@ -1095,7 +1095,7 @@ namespace System.Windows.Forms
                 // to the same parent close to each other.
                 for (int i = 0; i < controlsToLookIn.Count; i++)
                 {
-                    if (controlsToLookIn[i] == null)
+                    if (controlsToLookIn[i] is null)
                     {
                         continue;
                     }
@@ -1108,7 +1108,7 @@ namespace System.Windows.Forms
                 // Recursive search for controls in child collections.
                 for (int i = 0; i < controlsToLookIn.Count; i++)
                 {
-                    if (controlsToLookIn[i] == null)
+                    if (controlsToLookIn[i] is null)
                     {
                         continue;
                     }
@@ -1150,7 +1150,7 @@ namespace System.Windows.Forms
                     }
                 }
 
-                if (result == null && source.MergeIndex > -1 && source.MergeIndex < destinationItems.Count)
+                if (result is null && source.MergeIndex > -1 && source.MergeIndex < destinationItems.Count)
                 {
                     result = destinationItems[source.MergeIndex];
                 }
@@ -1186,11 +1186,11 @@ namespace System.Windows.Forms
         /// </summary>
         public static bool Merge(ToolStrip sourceToolStrip, ToolStrip targetToolStrip)
         {
-            if (sourceToolStrip == null)
+            if (sourceToolStrip is null)
             {
                 throw new ArgumentNullException(nameof(sourceToolStrip));
             }
-            if (targetToolStrip == null)
+            if (targetToolStrip is null)
             {
                 throw new ArgumentNullException(nameof(targetToolStrip));
             }
@@ -1360,17 +1360,17 @@ namespace System.Windows.Forms
         /// </summary>
         public static bool Merge(ToolStrip sourceToolStrip, string targetName)
         {
-            if (sourceToolStrip == null)
+            if (sourceToolStrip is null)
             {
                 throw new ArgumentNullException(nameof(sourceToolStrip));
             }
-            if (targetName == null)
+            if (targetName is null)
             {
                 throw new ArgumentNullException(nameof(targetName));
             }
 
             ToolStrip target = FindToolStrip(targetName);
-            if (target == null)
+            if (target is null)
             {
                 return false;
             }
@@ -1386,7 +1386,7 @@ namespace System.Windows.Forms
         internal static bool RevertMergeInternal(ToolStrip targetToolStrip, ToolStrip sourceToolStrip, bool revertMDIControls)
         {
             bool result = false;
-            if (targetToolStrip == null)
+            if (targetToolStrip is null)
             {
                 throw new ArgumentNullException(nameof(targetToolStrip));
             }
@@ -1432,7 +1432,7 @@ namespace System.Windows.Forms
                     {
                         foundToolStrip = true;
                     }
-                    else if (!revertMDIControls && sourceToolStrip == null)
+                    else if (!revertMDIControls && sourceToolStrip is null)
                     {
                         // Calling ToolStripManager.RevertMerge should not pull out MDIControlStrip && MDIWindowListStrip.
                         if (IsSpecialMDIStrip(history.MergedToolStrip))
@@ -1492,7 +1492,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static bool RevertMerge(ToolStrip targetToolStrip, ToolStrip sourceToolStrip)
         {
-            if (sourceToolStrip == null)
+            if (sourceToolStrip is null)
             {
                 throw new ArgumentNullException(nameof(sourceToolStrip));
             }
@@ -1506,7 +1506,7 @@ namespace System.Windows.Forms
         public static bool RevertMerge(string targetName)
         {
             ToolStrip target = FindToolStrip(targetName);
-            if (target == null)
+            if (target is null)
             {
                 return false;
             }

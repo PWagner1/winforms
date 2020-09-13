@@ -11,13 +11,11 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using Microsoft.Win32;
 using static Interop;
 using static Interop.Ole32;
 using IAdviseSink = System.Runtime.InteropServices.ComTypes.IAdviseSink;
@@ -121,7 +119,7 @@ namespace System.Windows.Forms
                         }
                     }
 
-                    if (prop.Value == null)
+                    if (prop.Value is null)
                     {
                         return Color.Empty;
                     }
@@ -205,7 +203,7 @@ namespace System.Windows.Forms
                         }
                     }
 
-                    if (prop.Value == null)
+                    if (prop.Value is null)
                     {
                         return Color.Empty;
                     }
@@ -412,8 +410,8 @@ namespace System.Windows.Forms
                 // the caller figures it out and sends us a different DC.
 
                 Gdi32.HDC hdc = (Gdi32.HDC)hdcDraw;
-                Gdi32.ObjectType hdcType = Gdi32.GetObjectType(hdc);
-                if (hdcType == Gdi32.ObjectType.OBJ_METADC)
+                Gdi32.OBJ hdcType = Gdi32.GetObjectType(hdc);
+                if (hdcType == Gdi32.OBJ.METADC)
                 {
                     return HRESULT.VIEW_E_DRAW;
                 }
@@ -452,7 +450,7 @@ namespace System.Windows.Forms
                 try
                 {
                     IntPtr flags = (IntPtr)(User32.PRF.CHILDREN | User32.PRF.CLIENT | User32.PRF.ERASEBKGND | User32.PRF.NONCLIENT);
-                    if (hdcType != Gdi32.ObjectType.OBJ_ENHMETADC)
+                    if (hdcType != Gdi32.OBJ.ENHMETADC)
                     {
                         User32.SendMessageW(_control, User32.WM.PRINT, hdcDraw, flags);
                     }
@@ -482,7 +480,7 @@ namespace System.Windows.Forms
             /// </summary>
             internal static HRESULT EnumVerbs(out IEnumOLEVERB ppEnumOleVerb)
             {
-                if (s_axVerbs == null)
+                if (s_axVerbs is null)
                 {
                     var verbShow = new OLEVERB();
                     var verbInplaceActivate = new OLEVERB();
@@ -594,7 +592,7 @@ namespace System.Windows.Forms
                     HRESULT hr = disp.Invoke(
                         dispid,
                         &g,
-                        NativeMethods.LOCALE_USER_DEFAULT,
+                        Kernel32.LCID.USER_DEFAULT,
                         Oleaut32.DISPATCH.PROPERTYGET,
                         &dispParams,
                         pvt,
@@ -768,7 +766,7 @@ namespace System.Windows.Forms
             /// </summary>
             internal unsafe HRESULT GetWindow(IntPtr* phwnd)
             {
-                if (phwnd == null)
+                if (phwnd is null)
                 {
                     return HRESULT.E_POINTER;
                 }
@@ -1123,7 +1121,9 @@ namespace System.Windows.Forms
                                     byte[] bytes = Convert.FromBase64String(obj.ToString());
                                     MemoryStream stream = new MemoryStream(bytes);
                                     BinaryFormatter formatter = new BinaryFormatter();
+#pragma warning disable CS0618 // Type or member is obsolete
                                     props[i].SetValue(_control, formatter.Deserialize(stream));
+#pragma warning restore CS0618 // Type or member is obsolete
                                 }
                                 else
                                 {
@@ -1375,7 +1375,7 @@ namespace System.Windows.Forms
             /// </summary>
             internal unsafe HRESULT QuickActivate(QACONTAINER pQaContainer, QACONTROL* pQaControl)
             {
-                if (pQaControl == null)
+                if (pQaControl is null)
                 {
                     return HRESULT.E_FAIL;
                 }
@@ -1526,7 +1526,9 @@ namespace System.Windows.Forms
                     public SafeIUnknown(object obj, bool addRefIntPtr, Guid iid)
                         : base(IntPtr.Zero, true)
                     {
+#pragma warning disable SYSLIB0004 // Type or member is obsolete
                         RuntimeHelpers.PrepareConstrainedRegions();
+#pragma warning restore SYSLIB0004 // Type or member is obsolete
                         try
                         {
                             // Set this.handle in a finally block to ensure the com ptr is set in the SafeHandle
@@ -1736,7 +1738,7 @@ namespace System.Windows.Forms
                     ComSourceInterfacesAttribute coms = (ComSourceInterfacesAttribute)custom[0];
                     string eventName = coms.Value.Split(new char[] { '\0' })[0];
                     eventInterface = controlType.Module.Assembly.GetType(eventName, false);
-                    if (eventInterface == null)
+                    if (eventInterface is null)
                     {
                         eventInterface = Type.GetType(eventName, false);
                     }
@@ -1799,7 +1801,9 @@ namespace System.Windows.Forms
                             // Resource property.  Save this to the bag as a 64bit encoded string.
                             MemoryStream stream = new MemoryStream();
                             BinaryFormatter formatter = new BinaryFormatter();
+#pragma warning disable CS0618 // Type or member is obsolete
                             formatter.Serialize(stream, props[i].GetValue(_control));
+#pragma warning restore CS0618 // Type or member is obsolete
                             byte[] bytes = new byte[(int)stream.Length];
                             stream.Position = 0;
                             stream.Read(bytes, 0, bytes.Length);
@@ -1920,7 +1924,7 @@ namespace System.Windows.Forms
                     buttonControl.NotifyDefault((bool)obj);
                 }
 
-                if (_clientSite == null && _accelTable != IntPtr.Zero)
+                if (_clientSite is null && _accelTable != IntPtr.Zero)
                 {
                     User32.DestroyAcceleratorTable(new HandleRef(this, _accelTable));
                     _accelTable = IntPtr.Zero;
@@ -2019,7 +2023,7 @@ namespace System.Windows.Forms
             /// </summary>
             internal unsafe HRESULT SetObjectRects(RECT* lprcPosRect, RECT* lprcClipRect)
             {
-                if (lprcPosRect == null || lprcClipRect == null)
+                if (lprcPosRect is null || lprcClipRect is null)
                 {
                     return HRESULT.E_INVALIDARG;
                 }
@@ -2154,7 +2158,7 @@ namespace System.Windows.Forms
             /// </summary>
             internal unsafe HRESULT TranslateAccelerator(User32.MSG* lpmsg)
             {
-                if (lpmsg == null)
+                if (lpmsg is null)
                 {
                     return HRESULT.E_POINTER;
                 }
@@ -2282,7 +2286,7 @@ namespace System.Windows.Forms
             /// </summary>
             internal HRESULT Unadvise(uint dwConnection)
             {
-                if (dwConnection > _adviseList.Count || _adviseList[(int)dwConnection - 1] == null)
+                if (dwConnection > _adviseList.Count || _adviseList[(int)dwConnection - 1] is null)
                 {
                     return HRESULT.OLE_E_NOCONNECTION;
                 }
@@ -2473,7 +2477,9 @@ namespace System.Windows.Forms
                     BinaryFormatter formatter = new BinaryFormatter();
                     try
                     {
+#pragma warning disable CS0618 // Type or member is obsolete
                         _bag = (Hashtable)formatter.Deserialize(stream);
+#pragma warning restore CS0618 // Type or member is obsolete
                     }
                     catch (Exception e)
                     {
@@ -2508,7 +2514,9 @@ namespace System.Windows.Forms
                 {
                     Stream stream = new DataStreamFromComStream(istream);
                     BinaryFormatter formatter = new BinaryFormatter();
+#pragma warning disable CS0618 // Type or member is obsolete
                     formatter.Serialize(stream, _bag);
+#pragma warning restore CS0618 // Type or member is obsolete
                 }
             }
         }

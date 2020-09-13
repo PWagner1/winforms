@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -23,7 +23,9 @@ namespace System.Windows.Forms
                 BinaryFormatter formatter = new BinaryFormatter();
                 try
                 {
+#pragma warning disable CS0618 // Type or member is obsolete
                     bag = (Hashtable)formatter.Deserialize(stream);
+#pragma warning restore CS0618 // Type or member is obsolete
                 }
                 catch
                 {
@@ -42,14 +44,14 @@ namespace System.Windows.Forms
                 }
 
                 pVar = bag[pszPropName];
-                Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "\tValue=" + ((pVar == null) ? "<null>" : pVar.ToString()));
+                Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "\tValue=" + ((pVar is null) ? "<null>" : pVar.ToString()));
 
                 // The EE returns a VT_EMPTY for a null. The problem is that visual basic6 expects the caller to respect the
                 // "hint" it gives in the VariantType. For eg., for a VT_BSTR, it expects that the callee will null
                 // out the BSTR field of the variant. Since, the EE or us cannot do anything about this, we will return
                 // a E_INVALIDARG rather than let visual basic6 crash.
                 //
-                return (pVar == null) ? HRESULT.E_INVALIDARG : HRESULT.S_OK;
+                return (pVar is null) ? HRESULT.E_INVALIDARG : HRESULT.S_OK;
             }
 
             HRESULT Oleaut32.IPropertyBag.Write(string pszPropName, ref object pVar)
@@ -68,7 +70,9 @@ namespace System.Windows.Forms
             internal void Write(Stream stream)
             {
                 BinaryFormatter formatter = new BinaryFormatter();
+#pragma warning disable CS0618 // Type or member is obsolete
                 formatter.Serialize(stream, bag);
+#pragma warning restore CS0618 // Type or member is obsolete
             }
         }
     }

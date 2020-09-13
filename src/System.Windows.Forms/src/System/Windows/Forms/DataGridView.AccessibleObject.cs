@@ -5,7 +5,6 @@
 #nullable disable
 
 using System.Drawing;
-using System.Runtime.InteropServices;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -28,23 +27,6 @@ namespace System.Windows.Forms
 
             internal override bool IsReadOnly => owner.ReadOnly;
 
-            public override string Name
-            {
-                get
-                {
-                    string name = Owner.AccessibleName;
-                    if (!string.IsNullOrEmpty(name))
-                    {
-                        return name;
-                    }
-                    else
-                    {
-                        // The default name should not be localized.
-                        return "DataGridView";
-                    }
-                }
-            }
-
             public override AccessibleRole Role
             {
                 get
@@ -64,7 +46,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (topRowAccessibilityObject == null)
+                    if (topRowAccessibilityObject is null)
                     {
                         topRowAccessibilityObject = new DataGridViewTopRowAccessibleObject(owner);
                     }
@@ -77,7 +59,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (selectedCellsAccessibilityObject == null)
+                    if (selectedCellsAccessibilityObject is null)
                     {
                         selectedCellsAccessibilityObject = new DataGridViewSelectedCellsAccessibleObject(owner);
                     }
@@ -112,11 +94,11 @@ namespace System.Windows.Forms
 
                 index -= owner.Rows.GetRowCount(DataGridViewElementStates.Visible);
 
-                if (owner.horizScrollBar.Visible)
+                if (owner._horizScrollBar.Visible)
                 {
                     if (index == 0)
                     {
-                        return owner.horizScrollBar.AccessibilityObject;
+                        return owner._horizScrollBar.AccessibilityObject;
                     }
                     else
                     {
@@ -124,11 +106,11 @@ namespace System.Windows.Forms
                     }
                 }
 
-                if (owner.vertScrollBar.Visible)
+                if (owner._vertScrollBar.Visible)
                 {
                     if (index == 0)
                     {
-                        return owner.vertScrollBar.AccessibilityObject;
+                        return owner._vertScrollBar.AccessibilityObject;
                     }
                 }
 
@@ -150,12 +132,12 @@ namespace System.Windows.Forms
                     childCount++;
                 }
 
-                if (owner.horizScrollBar.Visible)
+                if (owner._horizScrollBar.Visible)
                 {
                     childCount++;
                 }
 
-                if (owner.vertScrollBar.Visible)
+                if (owner._vertScrollBar.Visible)
                 {
                     childCount++;
                 }
@@ -182,6 +164,11 @@ namespace System.Windows.Forms
 
             public override AccessibleObject HitTest(int x, int y)
             {
+                if (!owner.IsHandleCreated)
+                {
+                    return null;
+                }
+
                 Point pt = owner.PointToClient(new Point(x, y));
                 HitTestInfo hti = owner.HitTest(pt.X, pt.Y);
 
@@ -240,7 +227,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (runtimeId == null)
+                    if (runtimeId is null)
                     {
                         runtimeId = new int[2];
                         runtimeId[0] = RuntimeIDFirstItem; // first item is static - 0x2a
@@ -425,7 +412,7 @@ namespace System.Windows.Forms
 
             internal override void SetFocus()
             {
-                if (owner.CanFocus)
+                if (owner.IsHandleCreated && owner.CanFocus)
                 {
                     owner.Focus();
                 }
@@ -436,14 +423,9 @@ namespace System.Windows.Forms
             #region IRawElementProviderFragmentRoot Implementation
 
             internal override UiaCore.IRawElementProviderFragment ElementProviderFromPoint(double x, double y)
-            {
-                return HitTest((int)x, (int)y);
-            }
+                => owner.IsHandleCreated ? HitTest((int)x, (int)y) : null;
 
-            internal override UiaCore.IRawElementProviderFragment GetFocus()
-            {
-                return GetFocused();
-            }
+            internal override UiaCore.IRawElementProviderFragment GetFocus() => GetFocused();
 
             #endregion
         }

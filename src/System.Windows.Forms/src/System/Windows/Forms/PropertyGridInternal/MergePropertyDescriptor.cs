@@ -170,7 +170,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         private object CopyValue(object value)
         {
             // null is always OK
-            if (value == null)
+            if (value is null)
             {
                 return value;
             }
@@ -192,7 +192,7 @@ namespace System.Windows.Forms.PropertyGridInternal
             }
 
             // Next, access the type converter
-            if (clonedValue == null)
+            if (clonedValue is null)
             {
                 TypeConverter converter = TypeDescriptor.GetConverter(value);
                 if (converter.CanConvertTo(typeof(InstanceDescriptor)))
@@ -207,7 +207,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 }
 
                 // If that didn't work, try conversion to/from string
-                if (clonedValue == null && converter.CanConvertTo(typeof(string)) && converter.CanConvertFrom(typeof(string)))
+                if (clonedValue is null && converter.CanConvertTo(typeof(string)) && converter.CanConvertFrom(typeof(string)))
                 {
                     object stringRep = converter.ConvertToInvariantString(value);
                     clonedValue = converter.ConvertFromInvariantString((string)stringRep);
@@ -215,13 +215,15 @@ namespace System.Windows.Forms.PropertyGridInternal
             }
 
             // How about serialization?
-            if (clonedValue == null && type.IsSerializable)
+            if (clonedValue is null && type.IsSerializable)
             {
                 BinaryFormatter f = new BinaryFormatter();
                 MemoryStream ms = new MemoryStream();
+#pragma warning disable CS0618 // Type or member is obsolete
                 f.Serialize(ms, value);
                 ms.Position = 0;
                 clonedValue = f.Deserialize(ms);
+#pragma warning restore CS0618 // Type or member is obsolete
             }
 
             if (clonedValue != null)
@@ -279,7 +281,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
             if (obj is ICollection)
             {
-                if (collection == null)
+                if (collection is null)
                 {
                     collection = new MultiMergeCollection((ICollection)obj);
                 }
@@ -305,7 +307,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                         return null;
                     }
                 }
-                else if ((obj == null && objCur == null) ||
+                else if ((obj is null && objCur is null) ||
                          (obj != null && obj.Equals(objCur)))
                 {
                     continue;
@@ -491,7 +493,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
             public void CopyTo(Array array, int index)
             {
-                if (items == null)
+                if (items is null)
                 {
                     return;
                 }
@@ -532,7 +534,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 newCollection.CopyTo(newItems, 0);
                 for (int i = 0; i < newItems.Length; i++)
                 {
-                    if (((newItems[i] == null) != (items[i] == null)) ||
+                    if (((newItems[i] is null) != (items[i] is null)) ||
                         (items[i] != null && !items[i].Equals(newItems[i])))
                     {
                         items = Array.Empty<object>();
@@ -575,7 +577,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
             private Attribute GetCommonAttribute(Type attributeType)
             {
-                if (attributeCollections == null)
+                if (attributeCollections is null)
                 {
                     attributeCollections = new AttributeCollection[owner.descriptors.Length];
                     for (int i = 0; i < owner.descriptors.Length; i++)
@@ -601,7 +603,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                 value = attributeCollections[0][attributeType];
 
-                if (value == null)
+                if (value is null)
                 {
                     return null;
                 }
@@ -616,7 +618,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                     }
                 }
 
-                if (foundAttributes == null)
+                if (foundAttributes is null)
                 {
                     foundAttributes = new Hashtable();
                 }

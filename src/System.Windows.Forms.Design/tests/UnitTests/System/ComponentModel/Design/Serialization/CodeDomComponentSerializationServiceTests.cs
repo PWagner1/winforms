@@ -804,7 +804,9 @@ namespace System.ComponentModel.Design.Serialization.Tests
             using (var stream = new MemoryStream())
             {
                 var formatter = new BinaryFormatter();
+#pragma warning disable CS0618 // Type or member is obsolete
                 Assert.Throws<SerializationException>(() => formatter.Serialize(stream, store));
+#pragma warning restore CS0618 // Type or member is obsolete
             }
         }
 
@@ -1811,7 +1813,7 @@ namespace System.ComponentModel.Design.Serialization.Tests
                 Console.WriteLine(key);
                 object[] valueState = (object[])state[key];
                 CodeStatementCollection state0 = (CodeStatementCollection)valueState[0];
-                if (state0 == null)
+                if (state0 is null)
                 {
                     Console.WriteLine("- [0]: null");
                 }
@@ -1825,7 +1827,7 @@ namespace System.ComponentModel.Design.Serialization.Tests
                 }
 
                 object state1 = valueState[1];
-                if (state1 == null)
+                if (state1 is null)
                 {
                     Console.WriteLine("- [1]: null");
                 }
@@ -1835,7 +1837,7 @@ namespace System.ComponentModel.Design.Serialization.Tests
                 }
 
                 object state2 = valueState[2];
-                if (state2 == null)
+                if (state2 is null)
                 {
                     Console.WriteLine("- [2]: null");
                 }
@@ -1845,7 +1847,7 @@ namespace System.ComponentModel.Design.Serialization.Tests
                 }
 
                 object state3 = valueState[3];
-                if (state3 == null)
+                if (state3 is null)
                 {
                     Console.WriteLine("- [3]: null");
                 }
@@ -1855,7 +1857,7 @@ namespace System.ComponentModel.Design.Serialization.Tests
                 }
 
                 object state4 = valueState[4];
-                if (state4 == null)
+                if (state4 is null)
                 {
                     Console.WriteLine("- [4]: null");
                 }
@@ -1865,7 +1867,7 @@ namespace System.ComponentModel.Design.Serialization.Tests
                 }
 
                 object state5 = valueState[5];
-                if (state5 == null)
+                if (state5 is null)
                 {
                     Console.WriteLine("- [5]: null");
                 }

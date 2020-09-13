@@ -192,6 +192,11 @@
         <target state="translated">Comprimi</target>
         <note />
       </trans-unit>
+      <trans-unit id="AccessibleActionDoubleClick">
+        <source>Double Click</source>
+        <target state="translated">Doppio clic</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AccessibleActionExpand">
         <source>Expand</source>
         <target state="translated">Espandi</target>
@@ -2207,6 +2212,16 @@
         <target state="translated">La proprietà ValueType di una cella in una griglia non può essere null.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridViewCheckBoxCellCheckedStateDescription">
+        <source>{0} check box checked</source>
+        <target state="translated">Casella di controllo {0} selezionata</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewCheckBoxCellUncheckedStateDescription">
+        <source>{0} check box unchecked</source>
+        <target state="translated">Casella di controllo {0} deselezionata</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardChecked">
         <source>Selected</source>
         <target state="translated">Selezionato</target>
@@ -4214,11 +4229,6 @@ Per sostituire questa finestra di dialogo predefinita, gestire l'evento DataErro
         <target state="translated">Modifica</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDomainUpDownAccessibleName">
-        <source>DomainUpDown</source>
-        <target state="translated">DomainUpDown</target>
-        <note />
-      </trans-unit>
       <trans-unit id="DefaultNumericUpDownAccessibleName">
         <source>NumericUpDown</source>
         <target state="translated">NumericUpDown</target>
@@ -5429,7 +5439,7 @@ Sostituirlo?</target>
       </trans-unit>
       <trans-unit id="HScrollBarDefaultAccessibleName">
         <source>Horizontal</source>
-        <target state="new">Horizontal</target>
+        <target state="translated">Orizzontale</target>
         <note />
       </trans-unit>
       <trans-unit id="HandleAlreadyExists">
@@ -5454,7 +5464,7 @@ Sostituirlo?</target>
       </trans-unit>
       <trans-unit id="HelpProviderHelpNamespaceDescr">
         <source>The Help namespace (for example HTML 1.0 Help file) that will be used. It is only used for controls that have the HelpKeyword set.</source>
-        <target state="translated">Lo spazio dei nomi della Guida (ad esempio, file della Guida HTML 1.0) che verrà utilizzato. Viene utilizzato solo per i controlli per i quali si è impostato HelpKeyword.</target>
+        <target state="translated">Spazio dei nomi della Guida (ad esempio, file della Guida HTML 1.0) che verrà usato. Viene usato solo per i controlli per i quali è stato impostato HelpKeyword.</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpProviderHelpStringDescr">
@@ -5553,7 +5563,7 @@ Traccia dello stack da cui si è verificata l'operazione non valida:
       </trans-unit>
       <trans-unit id="ImageListDuplicateFailed">
         <source>Duplication of the ImageList handle did not succeed.</source>
-        <target state="new">Duplication of the ImageList handle did not succeed.</target>
+        <target state="translated">La duplicazione dell'handle di ImageList non è riuscita.</target>
         <note />
       </trans-unit>
       <trans-unit id="ImageListEntryType">
@@ -5679,6 +5689,11 @@ Traccia dello stack da cui si è verificata l'operazione non valida:
       <trans-unit id="InvalidGDIHandle">
         <source>Win32 handle passed to {0} is not valid or is the wrong type.</source>
         <target state="translated">L'handle Win32 passato a {0} non è valido o è di un tipo non corretto.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidHdcType">
+        <source>Invalid HDC type: {0}</source>
+        <target state="translated">Tipo HDC non valido: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHighBoundArgument">
@@ -8296,6 +8311,11 @@ Traccia dello stack da cui si è verificata l'operazione non valida:
         <target state="translated">Colore del bordo che delimita l'area della griglia.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PropertyGridViewDropDownControlHolderAccessibleName">
+        <source>Drop down control holder</source>
+        <target state="new">Drop down control holder</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PropertyGridViewEditorCreatedInvalidObject">
         <source>Editor created an object that is not valid.  The created object must be of type '{0}'.</source>
         <target state="translated">Oggetto non valido creato dall'editor. L'oggetto creato deve essere di tipo '{0}'.</target>
@@ -8739,11 +8759,6 @@ Traccia dello stack da cui si è verificata l'operazione non valida:
       <trans-unit id="SortedDescendingAccessibleStatus">
         <source>Sorted descending.</source>
         <target state="translated">Ordinamento decrescente.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="SpinnerAccessibleName">
-        <source>Spinner</source>
-        <target state="translated">Casella di selezione</target>
         <note />
       </trans-unit>
       <trans-unit id="SplitContainerFixedPanelDescr">
@@ -9399,6 +9414,11 @@ Traccia dello stack da cui si è verificata l'operazione non valida:
       <trans-unit id="TextBoxWordWrapDescr">
         <source>Indicates if lines are automatically word-wrapped for multiline edit controls.</source>
         <target state="translated">Indica se le righe verranno portate automaticamente a capo in un controllo di modifica su più righe.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TextFormatFlagsModifyStringNotAllowed">
+        <source>TextFormatFlags.ModifyString is not allowed.</source>
+        <target state="translated">TextFormatFlags.ModifyString non è consentito.</target>
         <note />
       </trans-unit>
       <trans-unit id="TextParseFailedFormat">
@@ -10798,7 +10818,7 @@ Traccia dello stack da cui si è verificata l'operazione non valida:
       </trans-unit>
       <trans-unit id="VScrollBarDefaultAccessibleName">
         <source>Vertical</source>
-        <target state="new">Vertical</target>
+        <target state="translated">Verticale</target>
         <note />
       </trans-unit>
       <trans-unit id="VisualStyleHandleCreationFailed">

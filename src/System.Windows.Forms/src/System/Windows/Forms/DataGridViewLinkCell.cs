@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using static Interop;
 
 namespace System.Windows.Forms
 {
@@ -19,28 +18,28 @@ namespace System.Windows.Forms
         private const DataGridViewContentAlignment AnyRight = DataGridViewContentAlignment.TopRight | DataGridViewContentAlignment.MiddleRight | DataGridViewContentAlignment.BottomRight;
         private const DataGridViewContentAlignment AnyBottom = DataGridViewContentAlignment.BottomRight | DataGridViewContentAlignment.BottomCenter | DataGridViewContentAlignment.BottomLeft;
 
-        private static readonly Type defaultFormattedValueType = typeof(string);
-        private static readonly Type defaultValueType = typeof(object);
-        private static readonly Type cellType = typeof(DataGridViewLinkCell);
+        private static readonly Type s_defaultFormattedValueType = typeof(string);
+        private static readonly Type s_defaultValueType = typeof(object);
+        private static readonly Type s_cellType = typeof(DataGridViewLinkCell);
 
-        private static readonly int PropLinkCellActiveLinkColor = PropertyStore.CreateKey();
-        private static readonly int PropLinkCellLinkBehavior = PropertyStore.CreateKey();
-        private static readonly int PropLinkCellLinkColor = PropertyStore.CreateKey();
-        private static readonly int PropLinkCellLinkState = PropertyStore.CreateKey();
-        private static readonly int PropLinkCellTrackVisitedState = PropertyStore.CreateKey();
-        private static readonly int PropLinkCellUseColumnTextForLinkValue = PropertyStore.CreateKey();
-        private static readonly int PropLinkCellVisitedLinkColor = PropertyStore.CreateKey();
+        private static readonly int s_propLinkCellActiveLinkColor = PropertyStore.CreateKey();
+        private static readonly int s_propLinkCellLinkBehavior = PropertyStore.CreateKey();
+        private static readonly int s_propLinkCellLinkColor = PropertyStore.CreateKey();
+        private static readonly int s_propLinkCellLinkState = PropertyStore.CreateKey();
+        private static readonly int s_propLinkCellTrackVisitedState = PropertyStore.CreateKey();
+        private static readonly int s_propLinkCellUseColumnTextForLinkValue = PropertyStore.CreateKey();
+        private static readonly int s_propLinkCellVisitedLinkColor = PropertyStore.CreateKey();
 
-        private const byte DATAGRIDVIEWLINKCELL_horizontalTextMarginLeft = 1;
-        private const byte DATAGRIDVIEWLINKCELL_horizontalTextMarginRight = 2;
-        private const byte DATAGRIDVIEWLINKCELL_verticalTextMarginTop = 1;
-        private const byte DATAGRIDVIEWLINKCELL_verticalTextMarginBottom = 1;
+        private const byte HorizontalTextMarginLeft = 1;
+        private const byte HorizontalTextMarginRight = 2;
+        private const byte VerticalTextMarginTop = 1;
+        private const byte VerticalTextMarginBottom = 1;
 
         // we cache LinkVisited because it will be set multiple times
-        private bool linkVisited;
-        private bool linkVisitedSet;
+        private bool _linkVisited;
+        private bool _linkVisitedSet;
 
-        private static Cursor dataGridViewCursor;
+        private static Cursor s_dataGridViewCursor;
 
         public DataGridViewLinkCell()
         {
@@ -50,9 +49,9 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (Properties.ContainsObject(PropLinkCellActiveLinkColor))
+                if (Properties.ContainsObject(s_propLinkCellActiveLinkColor))
                 {
-                    return (Color)Properties.GetObject(PropLinkCellActiveLinkColor);
+                    return (Color)Properties.GetObject(s_propLinkCellActiveLinkColor);
                 }
                 else if (SystemInformation.HighContrast)
                 {
@@ -68,7 +67,7 @@ namespace System.Windows.Forms
             {
                 if (!value.Equals(ActiveLinkColor))
                 {
-                    Properties.SetObject(PropLinkCellActiveLinkColor, value);
+                    Properties.SetObject(s_propLinkCellActiveLinkColor, value);
                     if (DataGridView != null)
                     {
                         if (RowIndex != -1)
@@ -90,7 +89,7 @@ namespace System.Windows.Forms
             {
                 if (!value.Equals(ActiveLinkColor))
                 {
-                    Properties.SetObject(PropLinkCellActiveLinkColor, value);
+                    Properties.SetObject(s_propLinkCellActiveLinkColor, value);
                 }
             }
         }
@@ -118,7 +117,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return defaultFormattedValueType;
+                return s_defaultFormattedValueType;
             }
         }
 
@@ -127,7 +126,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                int linkBehavior = Properties.GetInteger(PropLinkCellLinkBehavior, out bool found);
+                int linkBehavior = Properties.GetInteger(s_propLinkCellLinkBehavior, out bool found);
                 if (found)
                 {
                     return (LinkBehavior)linkBehavior;
@@ -143,7 +142,7 @@ namespace System.Windows.Forms
                 }
                 if (value != LinkBehavior)
                 {
-                    Properties.SetInteger(PropLinkCellLinkBehavior, (int)value);
+                    Properties.SetInteger(s_propLinkCellLinkBehavior, (int)value);
                     if (DataGridView != null)
                     {
                         if (RowIndex != -1)
@@ -166,7 +165,7 @@ namespace System.Windows.Forms
                 Debug.Assert(value >= LinkBehavior.SystemDefault && value <= LinkBehavior.NeverUnderline);
                 if (value != LinkBehavior)
                 {
-                    Properties.SetInteger(PropLinkCellLinkBehavior, (int)value);
+                    Properties.SetInteger(s_propLinkCellLinkBehavior, (int)value);
                 }
             }
         }
@@ -175,9 +174,9 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (Properties.ContainsObject(PropLinkCellLinkColor))
+                if (Properties.ContainsObject(s_propLinkCellLinkColor))
                 {
-                    return (Color)Properties.GetObject(PropLinkCellLinkColor);
+                    return (Color)Properties.GetObject(s_propLinkCellLinkColor);
                 }
                 else if (SystemInformation.HighContrast)
                 {
@@ -193,7 +192,7 @@ namespace System.Windows.Forms
             {
                 if (!value.Equals(LinkColor))
                 {
-                    Properties.SetObject(PropLinkCellLinkColor, value);
+                    Properties.SetObject(s_propLinkCellLinkColor, value);
                     if (DataGridView != null)
                     {
                         if (RowIndex != -1)
@@ -215,7 +214,7 @@ namespace System.Windows.Forms
             {
                 if (!value.Equals(LinkColor))
                 {
-                    Properties.SetObject(PropLinkCellLinkColor, value);
+                    Properties.SetObject(s_propLinkCellLinkColor, value);
                 }
             }
         }
@@ -234,7 +233,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                int linkState = Properties.GetInteger(PropLinkCellLinkState, out bool found);
+                int linkState = Properties.GetInteger(s_propLinkCellLinkState, out bool found);
                 if (found)
                 {
                     return (LinkState)linkState;
@@ -245,7 +244,7 @@ namespace System.Windows.Forms
             {
                 if (LinkState != value)
                 {
-                    Properties.SetInteger(PropLinkCellLinkState, (int)value);
+                    Properties.SetInteger(s_propLinkCellLinkState, (int)value);
                 }
             }
         }
@@ -254,9 +253,9 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (linkVisitedSet)
+                if (_linkVisitedSet)
                 {
-                    return linkVisited;
+                    return _linkVisited;
                 }
 
                 // the default is false
@@ -264,10 +263,10 @@ namespace System.Windows.Forms
             }
             set
             {
-                linkVisitedSet = true;
+                _linkVisitedSet = true;
                 if (value != LinkVisited)
                 {
-                    linkVisited = value;
+                    _linkVisited = value;
                     if (DataGridView != null)
                     {
                         if (RowIndex != -1)
@@ -285,7 +284,7 @@ namespace System.Windows.Forms
 
         private bool ShouldSerializeLinkVisited()
         {
-            return linkVisitedSet = true;
+            return _linkVisitedSet = true;
         }
 
         [DefaultValue(true)]
@@ -293,7 +292,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                int trackVisitedState = Properties.GetInteger(PropLinkCellTrackVisitedState, out bool found);
+                int trackVisitedState = Properties.GetInteger(s_propLinkCellTrackVisitedState, out bool found);
                 if (found)
                 {
                     return trackVisitedState == 0 ? false : true;
@@ -304,7 +303,7 @@ namespace System.Windows.Forms
             {
                 if (value != TrackVisitedState)
                 {
-                    Properties.SetInteger(PropLinkCellTrackVisitedState, value ? 1 : 0);
+                    Properties.SetInteger(s_propLinkCellTrackVisitedState, value ? 1 : 0);
                     if (DataGridView != null)
                     {
                         if (RowIndex != -1)
@@ -326,7 +325,7 @@ namespace System.Windows.Forms
             {
                 if (value != TrackVisitedState)
                 {
-                    Properties.SetInteger(PropLinkCellTrackVisitedState, value ? 1 : 0);
+                    Properties.SetInteger(s_propLinkCellTrackVisitedState, value ? 1 : 0);
                 }
             }
         }
@@ -336,7 +335,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                int useColumnTextForLinkValue = Properties.GetInteger(PropLinkCellUseColumnTextForLinkValue, out bool found);
+                int useColumnTextForLinkValue = Properties.GetInteger(s_propLinkCellUseColumnTextForLinkValue, out bool found);
                 if (found)
                 {
                     return useColumnTextForLinkValue == 0 ? false : true;
@@ -347,7 +346,7 @@ namespace System.Windows.Forms
             {
                 if (value != UseColumnTextForLinkValue)
                 {
-                    Properties.SetInteger(PropLinkCellUseColumnTextForLinkValue, value ? 1 : 0);
+                    Properties.SetInteger(s_propLinkCellUseColumnTextForLinkValue, value ? 1 : 0);
                     OnCommonChange();
                 }
             }
@@ -360,7 +359,7 @@ namespace System.Windows.Forms
                 // Caller is responsible for invalidation
                 if (value != UseColumnTextForLinkValue)
                 {
-                    Properties.SetInteger(PropLinkCellUseColumnTextForLinkValue, value ? 1 : 0);
+                    Properties.SetInteger(s_propLinkCellUseColumnTextForLinkValue, value ? 1 : 0);
                 }
             }
         }
@@ -369,9 +368,9 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (Properties.ContainsObject(PropLinkCellVisitedLinkColor))
+                if (Properties.ContainsObject(s_propLinkCellVisitedLinkColor))
                 {
-                    return (Color)Properties.GetObject(PropLinkCellVisitedLinkColor);
+                    return (Color)Properties.GetObject(s_propLinkCellVisitedLinkColor);
                 }
                 else if (SystemInformation.HighContrast)
                 {
@@ -387,7 +386,7 @@ namespace System.Windows.Forms
             {
                 if (!value.Equals(VisitedLinkColor))
                 {
-                    Properties.SetObject(PropLinkCellVisitedLinkColor, value);
+                    Properties.SetObject(s_propLinkCellVisitedLinkColor, value);
                     if (DataGridView != null)
                     {
                         if (RowIndex != -1)
@@ -409,7 +408,7 @@ namespace System.Windows.Forms
             {
                 if (!value.Equals(VisitedLinkColor))
                 {
-                    Properties.SetObject(PropLinkCellVisitedLinkColor, value);
+                    Properties.SetObject(s_propLinkCellVisitedLinkColor, value);
                 }
             }
         }
@@ -444,7 +443,7 @@ namespace System.Windows.Forms
                 {
                     return valueType;
                 }
-                return defaultValueType;
+                return s_defaultValueType;
             }
         }
 
@@ -453,7 +452,7 @@ namespace System.Windows.Forms
             DataGridViewLinkCell dataGridViewCell;
             Type thisType = GetType();
 
-            if (thisType == cellType) //performance improvement
+            if (thisType == s_cellType) //performance improvement
             {
                 dataGridViewCell = new DataGridViewLinkCell();
             }
@@ -465,37 +464,37 @@ namespace System.Windows.Forms
             }
             base.CloneInternal(dataGridViewCell);
 
-            if (Properties.ContainsObject(PropLinkCellActiveLinkColor))
+            if (Properties.ContainsObject(s_propLinkCellActiveLinkColor))
             {
                 dataGridViewCell.ActiveLinkColorInternal = ActiveLinkColor;
             }
 
-            if (Properties.ContainsInteger(PropLinkCellUseColumnTextForLinkValue))
+            if (Properties.ContainsInteger(s_propLinkCellUseColumnTextForLinkValue))
             {
                 dataGridViewCell.UseColumnTextForLinkValueInternal = UseColumnTextForLinkValue;
             }
 
-            if (Properties.ContainsInteger(PropLinkCellLinkBehavior))
+            if (Properties.ContainsInteger(s_propLinkCellLinkBehavior))
             {
                 dataGridViewCell.LinkBehaviorInternal = LinkBehavior;
             }
 
-            if (Properties.ContainsObject(PropLinkCellLinkColor))
+            if (Properties.ContainsObject(s_propLinkCellLinkColor))
             {
                 dataGridViewCell.LinkColorInternal = LinkColor;
             }
 
-            if (Properties.ContainsInteger(PropLinkCellTrackVisitedState))
+            if (Properties.ContainsInteger(s_propLinkCellTrackVisitedState))
             {
                 dataGridViewCell.TrackVisitedStateInternal = TrackVisitedState;
             }
 
-            if (Properties.ContainsObject(PropLinkCellVisitedLinkColor))
+            if (Properties.ContainsObject(s_propLinkCellVisitedLinkColor))
             {
                 dataGridViewCell.VisitedLinkColorInternal = VisitedLinkColor;
             }
 
-            if (linkVisitedSet)
+            if (_linkVisitedSet)
             {
                 dataGridViewCell.LinkVisited = LinkVisited;
             }
@@ -517,12 +516,12 @@ namespace System.Windows.Forms
 
         protected override Rectangle GetContentBounds(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex)
         {
-            if (cellStyle == null)
+            if (cellStyle is null)
             {
                 throw new ArgumentNullException(nameof(cellStyle));
             }
 
-            if (DataGridView == null || rowIndex < 0 || OwningColumn == null)
+            if (DataGridView is null || rowIndex < 0 || OwningColumn is null)
             {
                 return Rectangle.Empty;
             }
@@ -578,14 +577,14 @@ namespace System.Windows.Forms
 
         protected override Rectangle GetErrorIconBounds(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex)
         {
-            if (cellStyle == null)
+            if (cellStyle is null)
             {
                 throw new ArgumentNullException(nameof(cellStyle));
             }
 
-            if (DataGridView == null ||
+            if (DataGridView is null ||
                 rowIndex < 0 ||
-                OwningColumn == null ||
+                OwningColumn is null ||
                 !DataGridView.ShowCellErrors ||
                 string.IsNullOrEmpty(GetErrorText(rowIndex)))
             {
@@ -616,12 +615,12 @@ namespace System.Windows.Forms
 
         protected override Size GetPreferredSize(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex, Size constraintSize)
         {
-            if (DataGridView == null)
+            if (DataGridView is null)
             {
                 return new Size(-1, -1);
             }
 
-            if (cellStyle == null)
+            if (cellStyle is null)
             {
                 throw new ArgumentNullException(nameof(cellStyle));
             }
@@ -644,7 +643,7 @@ namespace System.Windows.Forms
                 {
                     case DataGridViewFreeDimension.Width:
                         {
-                            int maxHeight = constraintSize.Height - borderAndPaddingHeights - DATAGRIDVIEWLINKCELL_verticalTextMarginTop - DATAGRIDVIEWLINKCELL_verticalTextMarginBottom;
+                            int maxHeight = constraintSize.Height - borderAndPaddingHeights - VerticalTextMarginTop - VerticalTextMarginBottom;
                             if ((cellStyle.Alignment & AnyBottom) != 0)
                             {
                                 maxHeight--;
@@ -663,7 +662,7 @@ namespace System.Windows.Forms
                                                      DataGridViewCell.MeasureTextHeight(graphics,
                                                                                         formattedString,
                                                                                         cellStyle.Font,
-                                                                                        Math.Max(1, constraintSize.Width - borderAndPaddingWidths - DATAGRIDVIEWLINKCELL_horizontalTextMarginLeft - DATAGRIDVIEWLINKCELL_horizontalTextMarginRight),
+                                                                                        Math.Max(1, constraintSize.Width - borderAndPaddingWidths - HorizontalTextMarginLeft - HorizontalTextMarginRight),
                                                                                         flags));
                             break;
                         }
@@ -704,24 +703,24 @@ namespace System.Windows.Forms
 
             if (freeDimension != DataGridViewFreeDimension.Height)
             {
-                preferredSize.Width += DATAGRIDVIEWLINKCELL_horizontalTextMarginLeft + DATAGRIDVIEWLINKCELL_horizontalTextMarginRight + borderAndPaddingWidths;
+                preferredSize.Width += HorizontalTextMarginLeft + HorizontalTextMarginRight + borderAndPaddingWidths;
                 if (DataGridView.ShowCellErrors)
                 {
                     // Making sure that there is enough room for the potential error icon
-                    preferredSize.Width = Math.Max(preferredSize.Width, borderAndPaddingWidths + DATAGRIDVIEWCELL_iconMarginWidth * 2 + iconsWidth);
+                    preferredSize.Width = Math.Max(preferredSize.Width, borderAndPaddingWidths + IconMarginWidth * 2 + s_iconsWidth);
                 }
             }
             if (freeDimension != DataGridViewFreeDimension.Width)
             {
-                preferredSize.Height += DATAGRIDVIEWLINKCELL_verticalTextMarginTop + DATAGRIDVIEWLINKCELL_verticalTextMarginBottom + borderAndPaddingHeights;
+                preferredSize.Height += VerticalTextMarginTop + VerticalTextMarginBottom + borderAndPaddingHeights;
                 if ((cellStyle.Alignment & AnyBottom) != 0)
                 {
-                    preferredSize.Height += DATAGRIDVIEWLINKCELL_verticalTextMarginBottom;
+                    preferredSize.Height += VerticalTextMarginBottom;
                 }
                 if (DataGridView.ShowCellErrors)
                 {
                     // Making sure that there is enough room for the potential error icon
-                    preferredSize.Height = Math.Max(preferredSize.Height, borderAndPaddingHeights + DATAGRIDVIEWCELL_iconMarginHeight * 2 + iconsHeight);
+                    preferredSize.Height = Math.Max(preferredSize.Height, borderAndPaddingHeights + IconMarginHeight * 2 + s_iconsHeight);
                 }
             }
             return preferredSize;
@@ -788,7 +787,7 @@ namespace System.Windows.Forms
 
         protected override void OnKeyUp(KeyEventArgs e, int rowIndex)
         {
-            if (DataGridView == null)
+            if (DataGridView is null)
             {
                 return;
             }
@@ -811,7 +810,7 @@ namespace System.Windows.Forms
 
         protected override void OnMouseDown(DataGridViewCellMouseEventArgs e)
         {
-            if (DataGridView == null)
+            if (DataGridView is null)
             {
                 return;
             }
@@ -826,14 +825,14 @@ namespace System.Windows.Forms
 
         protected override void OnMouseLeave(int rowIndex)
         {
-            if (DataGridView == null)
+            if (DataGridView is null)
             {
                 return;
             }
-            if (dataGridViewCursor != null)
+            if (s_dataGridViewCursor != null)
             {
-                DataGridView.Cursor = dataGridViewCursor;
-                dataGridViewCursor = null;
+                DataGridView.Cursor = s_dataGridViewCursor;
+                s_dataGridViewCursor = null;
             }
             if (LinkState != LinkState.Normal)
             {
@@ -846,7 +845,7 @@ namespace System.Windows.Forms
 
         protected override void OnMouseMove(DataGridViewCellMouseEventArgs e)
         {
-            if (DataGridView == null)
+            if (DataGridView is null)
             {
                 return;
             }
@@ -858,9 +857,9 @@ namespace System.Windows.Forms
                     DataGridView.InvalidateCell(ColumnIndex, e.RowIndex);
                 }
 
-                if (dataGridViewCursor == null)
+                if (s_dataGridViewCursor is null)
                 {
-                    dataGridViewCursor = DataGridView.UserSetCursor;
+                    s_dataGridViewCursor = DataGridView.UserSetCursor;
                 }
 
                 if (DataGridView.Cursor != Cursors.Hand)
@@ -873,7 +872,7 @@ namespace System.Windows.Forms
                 if ((LinkState & LinkState.Hover) != 0)
                 {
                     LinkState &= ~LinkState.Hover;
-                    DataGridView.Cursor = dataGridViewCursor;
+                    DataGridView.Cursor = s_dataGridViewCursor;
                     DataGridView.InvalidateCell(ColumnIndex, e.RowIndex);
                 }
             }
@@ -883,7 +882,7 @@ namespace System.Windows.Forms
 
         protected override void OnMouseUp(DataGridViewCellMouseEventArgs e)
         {
-            if (DataGridView == null)
+            if (DataGridView is null)
             {
                 return;
             }
@@ -905,7 +904,7 @@ namespace System.Windows.Forms
             DataGridViewAdvancedBorderStyle advancedBorderStyle,
             DataGridViewPaintParts paintParts)
         {
-            if (cellStyle == null)
+            if (cellStyle is null)
             {
                 throw new ArgumentNullException(nameof(cellStyle));
             }
@@ -955,7 +954,7 @@ namespace System.Windows.Forms
             Debug.Assert(!computeErrorIconBounds || !paint || !computeContentBounds);
             Debug.Assert(cellStyle != null);
 
-            if (paint && DataGridViewCell.PaintBorder(paintParts))
+            if (paint && PaintBorder(paintParts))
             {
                 PaintBorder(g, clipBounds, cellBounds, cellStyle, advancedBorderStyle);
             }
@@ -971,11 +970,14 @@ namespace System.Windows.Forms
             Point ptCurrentCell = DataGridView.CurrentCellAddress;
             bool cellCurrent = ptCurrentCell.X == ColumnIndex && ptCurrentCell.Y == rowIndex;
             bool cellSelected = (cellState & DataGridViewElementStates.Selected) != 0;
-            SolidBrush br = DataGridView.GetCachedBrush((DataGridViewCell.PaintSelectionBackground(paintParts) && cellSelected) ? cellStyle.SelectionBackColor : cellStyle.BackColor);
+            Color brushColor = PaintSelectionBackground(paintParts) && cellSelected
+                ? cellStyle.SelectionBackColor
+                : cellStyle.BackColor;
 
-            if (paint && DataGridViewCell.PaintBackground(paintParts) && br.Color.A == 255)
+            if (paint && PaintBackground(paintParts) && !brushColor.HasTransparency())
             {
-                g.FillRectangle(br, valBounds);
+                using var brush = brushColor.GetCachedSolidBrushScope();
+                g.FillRectangle(brush, valBounds);
             }
 
             if (cellStyle.Padding != Padding.Empty)
@@ -997,33 +999,53 @@ namespace System.Windows.Forms
             if (formattedValue is string formattedValueStr && (paint || computeContentBounds))
             {
                 // Font independent margins
-                valBounds.Offset(DATAGRIDVIEWLINKCELL_horizontalTextMarginLeft, DATAGRIDVIEWLINKCELL_verticalTextMarginTop);
-                valBounds.Width -= DATAGRIDVIEWLINKCELL_horizontalTextMarginLeft + DATAGRIDVIEWLINKCELL_horizontalTextMarginRight;
-                valBounds.Height -= DATAGRIDVIEWLINKCELL_verticalTextMarginTop + DATAGRIDVIEWLINKCELL_verticalTextMarginBottom;
+                valBounds.Offset(HorizontalTextMarginLeft, VerticalTextMarginTop);
+                valBounds.Width -= HorizontalTextMarginLeft + HorizontalTextMarginRight;
+                valBounds.Height -= VerticalTextMarginTop + VerticalTextMarginBottom;
                 if ((cellStyle.Alignment & AnyBottom) != 0)
                 {
-                    valBounds.Height -= DATAGRIDVIEWLINKCELL_verticalTextMarginBottom;
+                    valBounds.Height -= VerticalTextMarginBottom;
                 }
 
-                Font linkFont = null;
-                Font hoverFont = null;
-                LinkUtilities.EnsureLinkFonts(cellStyle.Font, LinkBehavior, ref linkFont, ref hoverFont);
-                TextFormatFlags flags = DataGridViewUtilities.ComputeTextFormatFlagsForCellStyleAlignment(DataGridView.RightToLeftInternal, cellStyle.Alignment, cellStyle.WrapMode);
-                // paint the focus rectangle around the link
-                if (paint)
+                Font getLinkFont = null;
+                Font getHoverFont = null;
+
+                LinkUtilities.EnsureLinkFonts(cellStyle.Font, LinkBehavior, ref getLinkFont, ref getHoverFont);
+                TextFormatFlags flags = DataGridViewUtilities.ComputeTextFormatFlagsForCellStyleAlignment(
+                    DataGridView.RightToLeftInternal,
+                    cellStyle.Alignment,
+                    cellStyle.WrapMode);
+
+                using Font linkFont = getLinkFont;
+                using Font hoverFont = getHoverFont;
+
+                // Paint the focus rectangle around the link
+                if (!paint)
+                {
+                    Debug.Assert(computeContentBounds);
+                    resultBounds = DataGridViewUtilities.GetTextBounds(
+                        valBounds,
+                        formattedValueStr,
+                        flags,
+                        cellStyle,
+                        LinkState == LinkState.Hover ? hoverFont : linkFont);
+                }
+                else
                 {
                     if (valBounds.Width > 0 && valBounds.Height > 0)
                     {
                         if (cellCurrent &&
                             DataGridView.ShowFocusCues &&
                             DataGridView.Focused &&
-                            DataGridViewCell.PaintFocus(paintParts))
+                            PaintFocus(paintParts))
                         {
-                            Rectangle focusBounds = DataGridViewUtilities.GetTextBounds(valBounds,
-                                                                                        formattedValueStr,
-                                                                                        flags,
-                                                                                        cellStyle,
-                                                                                        LinkState == LinkState.Hover ? hoverFont : linkFont);
+                            Rectangle focusBounds = DataGridViewUtilities.GetTextBounds(
+                                valBounds,
+                                formattedValueStr,
+                                flags,
+                                cellStyle,
+                                LinkState == LinkState.Hover ? hoverFont : linkFont);
+
                             if ((cellStyle.Alignment & AnyLeft) != 0)
                             {
                                 focusBounds.X--;
@@ -1034,9 +1056,11 @@ namespace System.Windows.Forms
                                 focusBounds.X++;
                                 focusBounds.Width++;
                             }
+
                             focusBounds.Height += 2;
-                            ControlPaint.DrawFocusRectangle(g, focusBounds, Color.Empty, br.Color);
+                            ControlPaint.DrawFocusRectangle(g, focusBounds, Color.Empty, brushColor);
                         }
+
                         Color linkColor;
                         if ((LinkState & LinkState.Active) == LinkState.Active)
                         {
@@ -1050,40 +1074,35 @@ namespace System.Windows.Forms
                         {
                             linkColor = LinkColor;
                         }
-                        if (DataGridViewCell.PaintContentForeground(paintParts))
+
+                        if (PaintContentForeground(paintParts))
                         {
                             if ((flags & TextFormatFlags.SingleLine) != 0)
                             {
                                 flags |= TextFormatFlags.EndEllipsis;
                             }
-                            TextRenderer.DrawText(g,
-                                                  formattedValueStr,
-                                                  LinkState == LinkState.Hover ? hoverFont : linkFont,
-                                                  valBounds,
-                                                  linkColor,
-                                                  flags);
+
+                            TextRenderer.DrawText(
+                                g,
+                                formattedValueStr,
+                                LinkState == LinkState.Hover ? hoverFont : linkFont,
+                                valBounds,
+                                linkColor,
+                                flags);
                         }
                     }
                     else if (cellCurrent &&
-                             DataGridView.ShowFocusCues &&
-                             DataGridView.Focused &&
-                             DataGridViewCell.PaintFocus(paintParts) &&
-                             errorBounds.Width > 0 &&
-                             errorBounds.Height > 0)
+                        DataGridView.ShowFocusCues &&
+                        DataGridView.Focused &&
+                        PaintFocus(paintParts) &&
+                        errorBounds.Width > 0 &&
+                        errorBounds.Height > 0)
                     {
                         // Draw focus rectangle
-                        ControlPaint.DrawFocusRectangle(g, errorBounds, Color.Empty, br.Color);
+                        ControlPaint.DrawFocusRectangle(g, errorBounds, Color.Empty, brushColor);
                     }
                 }
-                else
-                {
-                    Debug.Assert(computeContentBounds);
-                    resultBounds = DataGridViewUtilities.GetTextBounds(valBounds,
-                                                                       formattedValueStr,
-                                                                       flags,
-                                                                       cellStyle,
-                                                                       LinkState == LinkState.Hover ? hoverFont : linkFont);
-                }
+
                 linkFont.Dispose();
                 hoverFont.Dispose();
             }
@@ -1092,13 +1111,13 @@ namespace System.Windows.Forms
                 if (cellCurrent &&
                     DataGridView.ShowFocusCues &&
                     DataGridView.Focused &&
-                    DataGridViewCell.PaintFocus(paintParts) &&
+                    PaintFocus(paintParts) &&
                     paint &&
                     valBounds.Width > 0 &&
                     valBounds.Height > 0)
                 {
                     // Draw focus rectangle
-                    ControlPaint.DrawFocusRectangle(g, valBounds, Color.Empty, br.Color);
+                    ControlPaint.DrawFocusRectangle(g, valBounds, Color.Empty, brushColor);
                 }
             }
             else if (computeErrorIconBounds)
@@ -1109,7 +1128,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            if (DataGridView.ShowCellErrors && paint && DataGridViewCell.PaintErrorIcon(paintParts))
+            if (DataGridView.ShowCellErrors && paint && PaintErrorIcon(paintParts))
             {
                 PaintErrorIcon(g, cellStyle, rowIndex, cellBounds, errorBounds, errorText);
             }

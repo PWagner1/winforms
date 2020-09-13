@@ -192,6 +192,11 @@
         <target state="translated">Sbalit</target>
         <note />
       </trans-unit>
+      <trans-unit id="AccessibleActionDoubleClick">
+        <source>Double Click</source>
+        <target state="translated">Dvakrát kliknout</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AccessibleActionExpand">
         <source>Expand</source>
         <target state="translated">Rozbalit</target>
@@ -2207,6 +2212,16 @@
         <target state="translated">Vlastnost ValueType buňky v mřížce nemůže mít hodnotu Null.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridViewCheckBoxCellCheckedStateDescription">
+        <source>{0} check box checked</source>
+        <target state="translated">Zaškrtávací políčko {0} je zaškrtnuté.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewCheckBoxCellUncheckedStateDescription">
+        <source>{0} check box unchecked</source>
+        <target state="translated">Zaškrtávací políčko {0} není zaškrtnuté.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardChecked">
         <source>Selected</source>
         <target state="translated">Vybráno</target>
@@ -4214,11 +4229,6 @@ Chcete-li nahradit toto výchozí dialogové okno, nastavte popisovač události
         <target state="translated">Upravit</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDomainUpDownAccessibleName">
-        <source>DomainUpDown</source>
-        <target state="translated">DomainUpDown</target>
-        <note />
-      </trans-unit>
       <trans-unit id="DefaultNumericUpDownAccessibleName">
         <source>NumericUpDown</source>
         <target state="translated">NumericUpDown</target>
@@ -5429,7 +5439,7 @@ Chcete jej nahradit?</target>
       </trans-unit>
       <trans-unit id="HScrollBarDefaultAccessibleName">
         <source>Horizontal</source>
-        <target state="new">Horizontal</target>
+        <target state="translated">Vodorovně</target>
         <note />
       </trans-unit>
       <trans-unit id="HandleAlreadyExists">
@@ -5553,7 +5563,7 @@ Trasování zásobníku, kde došlo k neplatné operaci:
       </trans-unit>
       <trans-unit id="ImageListDuplicateFailed">
         <source>Duplication of the ImageList handle did not succeed.</source>
-        <target state="new">Duplication of the ImageList handle did not succeed.</target>
+        <target state="translated">Popisovač ImageList se nepovedlo duplikovat.</target>
         <note />
       </trans-unit>
       <trans-unit id="ImageListEntryType">
@@ -5679,6 +5689,11 @@ Trasování zásobníku, kde došlo k neplatné operaci:
       <trans-unit id="InvalidGDIHandle">
         <source>Win32 handle passed to {0} is not valid or is the wrong type.</source>
         <target state="translated">Popisovač Win32 předaný {0} je neplatný nebo je chybného typu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidHdcType">
+        <source>Invalid HDC type: {0}</source>
+        <target state="translated">Neplatný typ HDC: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHighBoundArgument">
@@ -8296,6 +8311,11 @@ Trasování zásobníku, kde došlo k neplatné operaci:
         <target state="translated">Barva ohraničení oblasti mřížky</target>
         <note />
       </trans-unit>
+      <trans-unit id="PropertyGridViewDropDownControlHolderAccessibleName">
+        <source>Drop down control holder</source>
+        <target state="new">Drop down control holder</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PropertyGridViewEditorCreatedInvalidObject">
         <source>Editor created an object that is not valid.  The created object must be of type '{0}'.</source>
         <target state="translated">Editor vytvořil objekt, který není platný. Vytvořený objekt musí být typu {0}.</target>
@@ -8739,11 +8759,6 @@ Trasování zásobníku, kde došlo k neplatné operaci:
       <trans-unit id="SortedDescendingAccessibleStatus">
         <source>Sorted descending.</source>
         <target state="translated">Seřazeno sestupně</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="SpinnerAccessibleName">
-        <source>Spinner</source>
-        <target state="translated">Číselník</target>
         <note />
       </trans-unit>
       <trans-unit id="SplitContainerFixedPanelDescr">
@@ -9399,6 +9414,11 @@ Trasování zásobníku, kde došlo k neplatné operaci:
       <trans-unit id="TextBoxWordWrapDescr">
         <source>Indicates if lines are automatically word-wrapped for multiline edit controls.</source>
         <target state="translated">Určuje, zda jsou pro víceřádková textová pole automaticky zalamována slova.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TextFormatFlagsModifyStringNotAllowed">
+        <source>TextFormatFlags.ModifyString is not allowed.</source>
+        <target state="translated">TextFormatFlags.ModifyString se nepovoluje.</target>
         <note />
       </trans-unit>
       <trans-unit id="TextParseFailedFormat">
@@ -10798,7 +10818,7 @@ Trasování zásobníku, kde došlo k neplatné operaci:
       </trans-unit>
       <trans-unit id="VScrollBarDefaultAccessibleName">
         <source>Vertical</source>
-        <target state="new">Vertical</target>
+        <target state="translated">Svisle</target>
         <note />
       </trans-unit>
       <trans-unit id="VisualStyleHandleCreationFailed">

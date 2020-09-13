@@ -6,14 +6,12 @@
 
 using System.Buffers;
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms.Layout;
 using System.Windows.Forms.VisualStyles;
 using static Interop;
@@ -665,7 +663,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (itemsCollection == null)
+                if (itemsCollection is null)
                 {
                     itemsCollection = CreateItemCollection();
                 }
@@ -767,8 +765,8 @@ namespace System.Windows.Forms
                     {
                         if (itemsCollection != null)
                         {
-                            int cnt = itemsCollection.Count;
-                            for (int i = 0; i < cnt; i++)
+                            int count = itemsCollection.Count;
+                            for (int i = 0; i < count; i++)
                             {
                                 height += GetItemHeight(i);
                             }
@@ -777,9 +775,16 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-                    //When the list is empty, we don't want to multiply by 0 here.
-                    int cnt = (itemsCollection == null || itemsCollection.Count == 0) ? 1 : itemsCollection.Count;
-                    height = GetItemHeight(0) * cnt;
+                    height = GetItemHeight(0);
+
+                    if (itemsCollection != null)
+                    {
+                        int count = itemsCollection.Count;
+                        if (count != 0)
+                        {
+                            height *= count;
+                        }
+                    }
                 }
 
                 if (borderStyle != BorderStyle.None)
@@ -809,6 +814,7 @@ namespace System.Windows.Forms
             {
                 return DefaultSize;
             }
+
             return new Size(width, height) + Padding.Size;
         }
 
@@ -884,7 +890,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                int itemCount = (itemsCollection == null) ? 0 : itemsCollection.Count;
+                int itemCount = (itemsCollection is null) ? 0 : itemsCollection.Count;
 
                 if (value < -1 || value >= itemCount)
                 {
@@ -954,7 +960,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (selectedIndices == null)
+                if (selectedIndices is null)
                 {
                     selectedIndices = new SelectedIndexCollection(this);
                 }
@@ -1015,7 +1021,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (selectedItems == null)
+                if (selectedItems is null)
                 {
                     selectedItems = new SelectedObjectCollection(this);
                 }
@@ -1126,7 +1132,7 @@ namespace System.Windows.Forms
                 // Scan through the list items looking for the supplied text string.  If we find it,
                 // select it.
                 //
-                if (SelectionMode != SelectionMode.None && value != null && (SelectedItem == null || !value.Equals(GetItemText(SelectedItem))))
+                if (SelectionMode != SelectionMode.None && value != null && (SelectedItem is null || !value.Equals(GetItemText(SelectedItem))))
                 {
                     int cnt = Items.Count;
                     for (int index = 0; index < cnt; ++index)
@@ -1217,7 +1223,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (customTabOffsets == null)
+                if (customTabOffsets is null)
                 {
                     customTabOffsets = new IntegerCollection(this);
                 }
@@ -1231,7 +1237,7 @@ namespace System.Windows.Forms
         [Obsolete("This method has been deprecated.  There is no replacement.  http://go.microsoft.com/fwlink/?linkid=14202")]
         protected virtual void AddItemsCore(object[] value)
         {
-            int count = value == null ? 0 : value.Length;
+            int count = value is null ? 0 : value.Length;
             if (count == 0)
             {
                 return;
@@ -1374,7 +1380,7 @@ namespace System.Windows.Forms
         {
             bool hadSelection = false;
 
-            int itemCount = (itemsCollection == null) ? 0 : itemsCollection.Count;
+            int itemCount = (itemsCollection is null) ? 0 : itemsCollection.Count;
             for (int x = 0; x < itemCount; x++)
             {
                 if (SelectedItems.GetSelected(x))
@@ -1459,7 +1465,7 @@ namespace System.Windows.Forms
         /// </summary>
         public int GetItemHeight(int index)
         {
-            int itemCount = (itemsCollection == null) ? 0 : itemsCollection.Count;
+            int itemCount = (itemsCollection is null) ? 0 : itemsCollection.Count;
 
             // Note: index == 0 is OK even if the ListBox currently has
             // no items.
@@ -1814,7 +1820,7 @@ namespace System.Windows.Forms
 
             //for getting the current Locale to set the Scrollbars...
             //
-            SendMessageW(this, (WM)LB.SETLOCALE, (IntPtr)CultureInfo.CurrentCulture.LCID);
+            SendMessageW(this, (WM)LB.SETLOCALE, (IntPtr)Kernel32.GetThreadLocale().RawValue);
 
             if (columnWidth != 0)
             {
@@ -1986,7 +1992,7 @@ namespace System.Windows.Forms
 
         protected override void OnDataSourceChanged(EventArgs e)
         {
-            if (DataSource == null)
+            if (DataSource is null)
             {
                 BeginUpdate();
                 SelectedIndex = -1;
@@ -2058,7 +2064,7 @@ namespace System.Windows.Forms
 
             object[] newItems = null;
 
-            // if we have a dataSource and a DisplayMember, then use it
+            // If we have a DataSource and a DisplayMember, then use it
             // to populate the Items collection
             //
             if (DataManager != null && DataManager.Count != -1)
@@ -2088,7 +2094,7 @@ namespace System.Windows.Forms
             {
                 if (DataManager != null)
                 {
-                    // put the selectedIndex in sync w/ the position in the dataManager
+                    // Put the selectedIndex in sync with the position in the dataManager
                     SelectedIndex = DataManager.Position;
                 }
                 else
@@ -2161,7 +2167,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void SetItemsCore(IList value)
         {
-            if (value == null)
+            if (value is null)
             {
                 throw new ArgumentNullException(nameof(value));
             }
@@ -2209,7 +2215,7 @@ namespace System.Windows.Forms
         /// </summary>
         public void SetSelected(int index, bool value)
         {
-            int itemCount = (itemsCollection == null) ? 0 : itemsCollection.Count;
+            int itemCount = (itemsCollection is null) ? 0 : itemsCollection.Count;
             if (index < 0 || index >= itemCount)
             {
                 throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
@@ -2381,16 +2387,12 @@ namespace System.Windows.Forms
             base.WndProc(ref m);
             if (((PRF)m.LParam & PRF.NONCLIENT) != 0 && Application.RenderWithVisualStyles && BorderStyle == BorderStyle.Fixed3D)
             {
-                using (Graphics g = Graphics.FromHdc(m.WParam))
-                {
-                    Rectangle rect = new Rectangle(0, 0, Size.Width - 1, Size.Height - 1);
-                    using (Pen pen = new Pen(VisualStyleInformation.TextControlBorder))
-                    {
-                        g.DrawRectangle(pen, rect);
-                    }
-                    rect.Inflate(-1, -1);
-                    g.DrawRectangle(SystemPens.Window, rect);
-                }
+                using Graphics g = Graphics.FromHdc(m.WParam);
+                Rectangle rect = new Rectangle(0, 0, Size.Width - 1, Size.Height - 1);
+                using var pen = VisualStyleInformation.TextControlBorder.GetCachedPenScope();
+                g.DrawRectangle(pen, rect);
+                rect.Inflate(-1, -1);
+                g.DrawRectangle(SystemPens.Window, rect);
             }
         }
 

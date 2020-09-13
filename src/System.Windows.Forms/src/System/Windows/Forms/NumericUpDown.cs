@@ -8,7 +8,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -96,7 +95,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (accelerations == null)
+                if (accelerations is null)
                 {
                     accelerations = new NumericUpDownAccelerationCollection();
                 }
@@ -941,15 +940,6 @@ namespace System.Windows.Forms
                 }
             }
 
-            /// <summary>
-            ///  Gets or sets the accessible name.
-            /// </summary>
-            public override string Name
-            {
-                get => base.Name ?? SR.DefaultNumericUpDownAccessibleName;
-                set => base.Name = value;
-            }
-
             public override AccessibleRole Role
             {
                 get
@@ -969,7 +959,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         return base.RuntimeId;
                     }
@@ -981,7 +971,7 @@ namespace System.Windows.Forms
 
                     var runtimeId = new int[3];
                     runtimeId[0] = RuntimeIDFirstItem;
-                    runtimeId[1] = (int)(long)_owner.Handle;
+                    runtimeId[1] = (int)(long)_owner.InternalHandle;
                     runtimeId[2] = _owner.GetHashCode();
 
                     return runtimeId;

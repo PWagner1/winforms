@@ -192,6 +192,11 @@
         <target state="translated">Свернуть</target>
         <note />
       </trans-unit>
+      <trans-unit id="AccessibleActionDoubleClick">
+        <source>Double Click</source>
+        <target state="translated">Двойной щелчок</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AccessibleActionExpand">
         <source>Expand</source>
         <target state="translated">Развертывание</target>
@@ -2207,6 +2212,16 @@
         <target state="translated">Свойство ValueType ячейки в сетке не может принимать пустое значение.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridViewCheckBoxCellCheckedStateDescription">
+        <source>{0} check box checked</source>
+        <target state="translated">Флажок {0} установлен.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewCheckBoxCellUncheckedStateDescription">
+        <source>{0} check box unchecked</source>
+        <target state="translated">Флажок {0} снят.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardChecked">
         <source>Selected</source>
         <target state="translated">Выбрано</target>
@@ -4214,11 +4229,6 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">Изменить</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDomainUpDownAccessibleName">
-        <source>DomainUpDown</source>
-        <target state="translated">DomainUpDown</target>
-        <note />
-      </trans-unit>
       <trans-unit id="DefaultNumericUpDownAccessibleName">
         <source>NumericUpDown</source>
         <target state="translated">NumericUpDown</target>
@@ -5430,7 +5440,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="HScrollBarDefaultAccessibleName">
         <source>Horizontal</source>
-        <target state="new">Horizontal</target>
+        <target state="translated">Горизонтальная</target>
         <note />
       </trans-unit>
       <trans-unit id="HandleAlreadyExists">
@@ -5554,7 +5564,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="ImageListDuplicateFailed">
         <source>Duplication of the ImageList handle did not succeed.</source>
-        <target state="new">Duplication of the ImageList handle did not succeed.</target>
+        <target state="translated">Не удалось создать копию дескриптора ImageList.</target>
         <note />
       </trans-unit>
       <trans-unit id="ImageListEntryType">
@@ -5680,6 +5690,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="InvalidGDIHandle">
         <source>Win32 handle passed to {0} is not valid or is the wrong type.</source>
         <target state="translated">Дескриптор Win32, переданный в {0}, является недопустимым либо имеет неверный тип.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidHdcType">
+        <source>Invalid HDC type: {0}</source>
+        <target state="translated">Недопустимый тип HDC: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHighBoundArgument">
@@ -8297,6 +8312,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">Цвет границы вокруг области таблицы.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PropertyGridViewDropDownControlHolderAccessibleName">
+        <source>Drop down control holder</source>
+        <target state="new">Drop down control holder</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PropertyGridViewEditorCreatedInvalidObject">
         <source>Editor created an object that is not valid.  The created object must be of type '{0}'.</source>
         <target state="translated">Элемент Editor создал недействительный объект.  Созданный объект должен быть типа '{0}'.</target>
@@ -8740,11 +8760,6 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="SortedDescendingAccessibleStatus">
         <source>Sorted descending.</source>
         <target state="translated">Отсортировано по убыванию.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="SpinnerAccessibleName">
-        <source>Spinner</source>
-        <target state="translated">Вертушка</target>
         <note />
       </trans-unit>
       <trans-unit id="SplitContainerFixedPanelDescr">
@@ -9400,6 +9415,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="TextBoxWordWrapDescr">
         <source>Indicates if lines are automatically word-wrapped for multiline edit controls.</source>
         <target state="translated">Указывает, выполняется ли автоматический перенос на новую строку в многострочных полях редактирования.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TextFormatFlagsModifyStringNotAllowed">
+        <source>TextFormatFlags.ModifyString is not allowed.</source>
+        <target state="translated">TextFormatFlags.ModifyString не допускается.</target>
         <note />
       </trans-unit>
       <trans-unit id="TextParseFailedFormat">
@@ -10799,7 +10819,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="VScrollBarDefaultAccessibleName">
         <source>Vertical</source>
-        <target state="new">Vertical</target>
+        <target state="translated">Вертикальная</target>
         <note />
       </trans-unit>
       <trans-unit id="VisualStyleHandleCreationFailed">

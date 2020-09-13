@@ -143,7 +143,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (rtlLayoutGrip == null)
+                if (rtlLayoutGrip is null)
                 {
                     rtlLayoutGrip = new RightToLeftLayoutGrip();
                 }
@@ -713,14 +713,9 @@ namespace System.Windows.Forms
             }
 
             internal override UiaCore.IRawElementProviderFragment ElementProviderFromPoint(double x, double y)
-            {
-                return HitTest((int)x, (int)y);
-            }
+                => Owner.IsHandleCreated ? HitTest((int)x, (int)y) : null;
 
-            internal override UiaCore.IRawElementProviderFragment GetFocus()
-            {
-                return GetFocused();
-            }
+            internal override UiaCore.IRawElementProviderFragment GetFocus() => Owner.IsHandleCreated ? GetFocused() : null;
         }
     }
 }

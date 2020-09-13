@@ -77,7 +77,7 @@ namespace System.Resources
 
         public ResXDataNode(string name, object value, Func<Type, string> typeNameConverter)
         {
-            if (name == null)
+            if (name is null)
             {
                 throw (new ArgumentNullException(nameof(name)));
             }
@@ -89,7 +89,7 @@ namespace System.Resources
 
             _typeNameConverter = typeNameConverter;
 
-            Type valueType = (value == null) ? typeof(object) : value.GetType();
+            Type valueType = (value is null) ? typeof(object) : value.GetType();
 
             if (value != null && !valueType.IsSerializable)
             {
@@ -168,7 +168,7 @@ namespace System.Resources
             get
             {
                 string result = _comment;
-                if (result == null && _nodeInfo != null)
+                if (result is null && _nodeInfo != null)
                 {
                     result = _nodeInfo.Comment;
                 }
@@ -185,7 +185,7 @@ namespace System.Resources
             get
             {
                 string result = _name;
-                if (result == null && _nodeInfo != null)
+                if (result is null && _nodeInfo != null)
                 {
                     result = _nodeInfo.Name;
                 }
@@ -193,7 +193,7 @@ namespace System.Resources
             }
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     throw new ArgumentNullException(nameof(Name));
                 }
@@ -209,11 +209,11 @@ namespace System.Resources
         {
             get
             {
-                if (FileRefFullPath == null)
+                if (FileRefFullPath is null)
                 {
                     return null;
                 }
-                if (_fileRef == null)
+                if (_fileRef is null)
                 {
                     _fileRef =
                         string.IsNullOrEmpty(_fileRefTextEncoding)
@@ -293,7 +293,7 @@ namespace System.Resources
             }
             else
             {
-                Type valueType = (value == null) ? typeof(object) : value.GetType();
+                Type valueType = (value is null) ? typeof(object) : value.GetType();
                 if (value != null && !valueType.IsSerializable)
                 {
                     throw new InvalidOperationException(string.Format(SR.NotSerializableType, _name, valueType.FullName));
@@ -334,14 +334,14 @@ namespace System.Resources
                     return;
                 }
 
-                if (value == null)
+                if (value is null)
                 {
                     nodeInfo.ValueData = string.Empty;
                     nodeInfo.TypeName = MultitargetUtil.GetAssemblyQualifiedName(typeof(ResXNullRef), _typeNameConverter);
                 }
                 else
                 {
-                    if (_binaryFormatter == null)
+                    if (_binaryFormatter is null)
                     {
                         _binaryFormatter = new BinaryFormatter
                         {
@@ -351,7 +351,9 @@ namespace System.Resources
 
                     using (MemoryStream ms = new MemoryStream())
                     {
+#pragma warning disable CS0618 // Type or member is obsolete
                         _binaryFormatter.Serialize(ms, value);
+#pragma warning restore CS0618 // Type or member is obsolete
                         nodeInfo.ValueData = ToBase64WrappedString(ms.ToArray());
                     }
 
@@ -377,7 +379,7 @@ namespace System.Resources
                     string text = dataNodeInfo.ValueData;
                     byte[] serializedData = FromBase64WrappedString(text);
 
-                    if (_binaryFormatter == null)
+                    if (_binaryFormatter is null)
                     {
                         _binaryFormatter = new BinaryFormatter
                         {
@@ -388,7 +390,9 @@ namespace System.Resources
                     IFormatter formatter = _binaryFormatter;
                     if (serializedData != null && serializedData.Length > 0)
                     {
+#pragma warning disable CS0618 // Type or member is obsolete
                         result = formatter.Deserialize(new MemoryStream(serializedData));
+#pragma warning restore CS0618 // Type or member is obsolete
                         if (result is ResXNullRef)
                         {
                             result = null;
@@ -706,7 +710,7 @@ namespace System.Resources
                 // strong-name information to try again.
 
                 resolvedType = typeResolver.GetType(typeName, false);
-                if (resolvedType == null)
+                if (resolvedType is null)
                 {
                     string[] typeParts = typeName.Split(',');
 
@@ -721,7 +725,7 @@ namespace System.Resources
                 }
             }
 
-            if (resolvedType == null)
+            if (resolvedType is null)
             {
                 resolvedType = Type.GetType(typeName, false);
             }

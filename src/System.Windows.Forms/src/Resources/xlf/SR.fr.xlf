@@ -192,6 +192,11 @@
         <target state="translated">Réduire</target>
         <note />
       </trans-unit>
+      <trans-unit id="AccessibleActionDoubleClick">
+        <source>Double Click</source>
+        <target state="translated">Double-clic</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AccessibleActionExpand">
         <source>Expand</source>
         <target state="translated">Développer</target>
@@ -2207,6 +2212,16 @@
         <target state="translated">La propriété ValueType d'une cellule d'une grille ne peut pas avoir une valeur null.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridViewCheckBoxCellCheckedStateDescription">
+        <source>{0} check box checked</source>
+        <target state="translated">Case à cocher {0} activée</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewCheckBoxCellUncheckedStateDescription">
+        <source>{0} check box unchecked</source>
+        <target state="translated">Case à cocher {0} désactivée</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardChecked">
         <source>Selected</source>
         <target state="translated">Sélectionné</target>
@@ -4214,11 +4229,6 @@ Pour remplacer cette boîte de dialogue par défaut, traitez l'événement DataE
         <target state="translated">Modifier</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDomainUpDownAccessibleName">
-        <source>DomainUpDown</source>
-        <target state="translated">DomainUpDown</target>
-        <note />
-      </trans-unit>
       <trans-unit id="DefaultNumericUpDownAccessibleName">
         <source>NumericUpDown</source>
         <target state="translated">NumericUpDown</target>
@@ -5429,7 +5439,7 @@ Voulez-vous le remplacer ?</target>
       </trans-unit>
       <trans-unit id="HScrollBarDefaultAccessibleName">
         <source>Horizontal</source>
-        <target state="new">Horizontal</target>
+        <target state="translated">Horizontal</target>
         <note />
       </trans-unit>
       <trans-unit id="HandleAlreadyExists">
@@ -5553,7 +5563,7 @@ Cette opération non conforme s'est produite sur la trace de la pile :
       </trans-unit>
       <trans-unit id="ImageListDuplicateFailed">
         <source>Duplication of the ImageList handle did not succeed.</source>
-        <target state="new">Duplication of the ImageList handle did not succeed.</target>
+        <target state="translated">Échec de la duplication du descripteur de ImageList.</target>
         <note />
       </trans-unit>
       <trans-unit id="ImageListEntryType">
@@ -5679,6 +5689,11 @@ Cette opération non conforme s'est produite sur la trace de la pile :
       <trans-unit id="InvalidGDIHandle">
         <source>Win32 handle passed to {0} is not valid or is the wrong type.</source>
         <target state="translated">Le handle Win32 passé à {0} n'est pas valide ou d'un type incorrect.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidHdcType">
+        <source>Invalid HDC type: {0}</source>
+        <target state="translated">Type HDC non valide : {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHighBoundArgument">
@@ -8296,6 +8311,11 @@ Cette opération non conforme s'est produite sur la trace de la pile :
         <target state="translated">Couleur des bordures de la grille.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PropertyGridViewDropDownControlHolderAccessibleName">
+        <source>Drop down control holder</source>
+        <target state="new">Drop down control holder</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PropertyGridViewEditorCreatedInvalidObject">
         <source>Editor created an object that is not valid.  The created object must be of type '{0}'.</source>
         <target state="translated">L'Éditeur a créé un objet non valide. L'objet créé doit être de type '{0}'.</target>
@@ -8739,11 +8759,6 @@ Cette opération non conforme s'est produite sur la trace de la pile :
       <trans-unit id="SortedDescendingAccessibleStatus">
         <source>Sorted descending.</source>
         <target state="translated">Trié en ordre décroissant.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="SpinnerAccessibleName">
-        <source>Spinner</source>
-        <target state="translated">Compteur</target>
         <note />
       </trans-unit>
       <trans-unit id="SplitContainerFixedPanelDescr">
@@ -9399,6 +9414,11 @@ Cette opération non conforme s'est produite sur la trace de la pile :
       <trans-unit id="TextBoxWordWrapDescr">
         <source>Indicates if lines are automatically word-wrapped for multiline edit controls.</source>
         <target state="translated">Indique si les lignes sont automatiquement enveloppées pour les contrôles d'édition multiligne.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TextFormatFlagsModifyStringNotAllowed">
+        <source>TextFormatFlags.ModifyString is not allowed.</source>
+        <target state="translated">TextFormatFlags.ModifyString n'est pas autorisé.</target>
         <note />
       </trans-unit>
       <trans-unit id="TextParseFailedFormat">
@@ -10798,7 +10818,7 @@ Cette opération non conforme s'est produite sur la trace de la pile :
       </trans-unit>
       <trans-unit id="VScrollBarDefaultAccessibleName">
         <source>Vertical</source>
-        <target state="new">Vertical</target>
+        <target state="translated">Vertical</target>
         <note />
       </trans-unit>
       <trans-unit id="VisualStyleHandleCreationFailed">

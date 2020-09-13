@@ -25,9 +25,16 @@ namespace System.Windows.Forms
                 _owner = owner;
             }
 
-            public override Rectangle Bounds => _owner.RectangleToScreen(_owner.ClientRectangle);
+            public override Rectangle Bounds => _owner.IsHandleCreated ? _owner.RectangleToScreen(_owner.ClientRectangle) : Rectangle.Empty;
 
-            internal override Rectangle BoundingRectangle => _owner.Bounds;
+            internal override Rectangle BoundingRectangle => _owner.IsHandleCreated ? _owner.Bounds : Rectangle.Empty;
+
+            internal override object GetPropertyValue(UiaCore.UIA propertyID)
+            {
+                return propertyID == UiaCore.UIA.NamePropertyId
+                    ? Name
+                    : base.GetPropertyValue(propertyID);
+            }
 
             internal override bool IsIAccessibleExSupported()
             {
@@ -38,13 +45,6 @@ namespace System.Windows.Forms
 
                 return base.IsIAccessibleExSupported();
             }
-
-            internal override bool IsPatternSupported(UiaCore.UIA patternId)
-                => patternId switch
-                {
-                    UiaCore.UIA.LegacyIAccessiblePatternId => true,
-                    _ => base.IsPatternSupported(patternId),
-                };
 
             internal override void SetValue(string newValue)
             {

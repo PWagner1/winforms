@@ -5,7 +5,6 @@
 #nullable disable
 
 using System.ComponentModel;
-using System.Globalization;
 using static Interop;
 
 namespace System.Windows.Forms.ComponentModel.Com2Interop
@@ -53,7 +52,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                     return SR.PropertyCategoryDDE;
             }
 
-            if (catObj.GetCategoryName(categoryID, (uint)CultureInfo.CurrentCulture.LCID, out string categoryName) == HRESULT.S_OK)
+            if (catObj.GetCategoryName(categoryID, Kernel32.GetThreadLocale(), out string categoryName) == HRESULT.S_OK)
             {
                 return categoryName;
             }
@@ -63,7 +62,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
         public override void SetupPropertyHandlers(Com2PropertyDescriptor[] propDesc)
         {
-            if (propDesc == null)
+            if (propDesc is null)
             {
                 return;
             }

@@ -4,6 +4,7 @@
 
 #nullable disable
 
+using System.Buffers;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -33,7 +34,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (richTextDbg == null)
+                if (richTextDbg is null)
                 {
                     richTextDbg = new TraceSwitch("RichTextDbg", "Debug info about RichTextBox");
                 }
@@ -455,7 +456,7 @@ namespace System.Windows.Forms
                 {
                     if (User32.GetWindowTextLengthW(new HandleRef(this, Handle)) > 0)
                     {
-                        if (value == null)
+                        if (value is null)
                         {
                             base.Font = null;
                             SetCharFormatFont(false, Font);
@@ -465,7 +466,7 @@ namespace System.Windows.Forms
                             try
                             {
                                 Font f = GetCharFormatFont(false);
-                                if (f == null || !f.Equals(value))
+                                if (f is null || !f.Equals(value))
                                 {
                                     SetCharFormatFont(false, value);
                                     // update controlfont from "resolved" font from the attempt
@@ -611,7 +612,7 @@ namespace System.Windows.Forms
             get { return richTextBoxFlags[richTextShortcutsEnabledSection] != 0; }
             set
             {
-                if (shortcutsToDisable == null)
+                if (shortcutsToDisable is null)
                 {
                     shortcutsToDisable = new int[] { (int)Shortcut.CtrlL, (int)Shortcut.CtrlR, (int)Shortcut.CtrlE, (int)Shortcut.CtrlJ };
                 }
@@ -685,7 +686,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -1205,7 +1206,7 @@ namespace System.Windows.Forms
             set
             {
                 ForceHandleCreate();
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -1318,7 +1319,7 @@ namespace System.Windows.Forms
                 // we need to get the number of tabstops to copy
                 User32.SendMessageW(this, (User32.WM)EM.GETPARAFORMAT, IntPtr.Zero, ref pf);
 
-                pf.cTabCount = (short)((value == null) ? 0 : value.Length);
+                pf.cTabCount = (short)((value is null) ? 0 : value.Length);
                 pf.dwMask = PFM.TABSTOPS;
                 for (int x = 0; x < pf.cTabCount; x++)
                 {
@@ -1343,9 +1344,7 @@ namespace System.Windows.Forms
             get
             {
                 ForceHandleCreate();
-
-                string text = StreamOut(SF.F_SELECTION | SF.TEXT | SF.UNICODE);
-                return text;
+                return GetTextEx(GT.SELECTION);
             }
             set
             {
@@ -1423,7 +1422,7 @@ namespace System.Windows.Forms
                     return "";
                 }
 
-                if (!IsHandleCreated && textRtf == null)
+                if (!IsHandleCreated && textRtf is null)
                 {
                     if (textPlain != null)
                     {
@@ -1443,7 +1442,7 @@ namespace System.Windows.Forms
                     //
                     ForceHandleCreate();
 
-                    return StreamOut(SF.TEXT | SF.UNICODE);
+                    return GetTextEx();
                 }
             }
             set
@@ -1458,7 +1457,7 @@ namespace System.Windows.Forms
                     else
                     {
                         textPlain = null;
-                        if (value == null)
+                        if (value is null)
                         {
                             value = string.Empty;
                         }
@@ -1736,7 +1735,7 @@ namespace System.Windows.Forms
                 {
                     case RichTextBox.OUTPUT:
                         {
-                            if (editStream == null)
+                            if (editStream is null)
                             {
                                 editStream = new MemoryStream();
                             }
@@ -1891,7 +1890,7 @@ namespace System.Windows.Forms
         /// </summary>
         public unsafe int Find(string str, int start, int end, RichTextBoxFinds options)
         {
-            if (str == null)
+            if (str is null)
             {
                 throw new ArgumentNullException(nameof(str));
             }
@@ -2046,7 +2045,7 @@ namespace System.Windows.Forms
 
             int textLength = TextLength;
 
-            if (characterSet == null)
+            if (characterSet is null)
             {
                 throw new ArgumentNullException(nameof(characterSet));
             }
@@ -2422,7 +2421,7 @@ namespace System.Windows.Forms
         /// </summary>
         public void LoadFile(Stream data, RichTextBoxStreamType fileType)
         {
-            if (data == null)
+            if (data is null)
             {
                 throw new ArgumentNullException(nameof(data));
             }
@@ -3137,12 +3136,56 @@ namespace System.Windows.Forms
             }
         }
 
+        private unsafe string GetTextEx(GT flags = GT.DEFAULT)
+        {
+            Debug.Assert(IsHandleCreated);
+
+            // Unicode UTF-16, little endian byte order (BMP of ISO 10646); available only to managed applications
+            // https://docs.microsoft.com/windows/win32/intl/code-page-identifiers
+            const int UNICODE = 1200;
+
+            GETTEXTLENGTHEX gtl = new GETTEXTLENGTHEX
+            {
+                codepage = UNICODE,
+                flags = GTL.DEFAULT
+            };
+
+            GETTEXTLENGTHEX* pGtl = &gtl;
+            int expectedLength = PARAM.ToInt(User32.SendMessageW(Handle, (User32.WM)User32.EM.GETTEXTLENGTHEX, (IntPtr)pGtl));
+            if (expectedLength == (int)HRESULT.E_INVALIDARG)
+                throw new Win32Exception(expectedLength);
+
+            // buffer has to have enough space for final \0. Without this, the last character is missing!
+            // in case flags contains GT_SELECTION we'll allocate too much memory (for the whole text and not just the selection),
+            // but there's no appropriate flag for EM_GETTEXTLENGTHEX
+            int maxLength = (expectedLength + 1) * sizeof(char);
+
+            GETTEXTEX gt = new GETTEXTEX
+            {
+                cb = (uint)maxLength,
+                flags = flags,
+                codepage = UNICODE,
+            };
+
+            char[] text = ArrayPool<char>.Shared.Rent(maxLength);
+            string result;
+            GETTEXTEX* pGt = &gt;
+            fixed (char* pText = text)
+            {
+                int actualLength = PARAM.ToInt(User32.SendMessageW(Handle, (User32.WM)User32.EM.GETTEXTEX, (IntPtr)pGt, (IntPtr)pText));
+                result = new string(pText, 0, actualLength);
+            }
+
+            ArrayPool<char>.Shared.Return(text);
+            return result;
+        }
+
         private void UpdateOleCallback()
         {
             Debug.WriteLineIf(RichTextDbg.TraceVerbose, "update ole callback (" + AllowDrop + ")");
             if (IsHandleCreated)
             {
-                if (oleCallback == null)
+                if (oleCallback is null)
                 {
                     Debug.WriteLineIf(RichTextDbg.TraceVerbose, "binding ole callback");
 
@@ -3836,7 +3879,7 @@ namespace System.Windows.Forms
 
             public unsafe HRESULT GetDragDropEffect(BOOL fDrag, User32.MK grfKeyState, Ole32.DROPEFFECT* pdwEffect)
             {
-                if (pdwEffect == null)
+                if (pdwEffect is null)
                 {
                     return HRESULT.E_POINTER;
                 }

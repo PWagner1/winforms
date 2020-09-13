@@ -290,7 +290,7 @@ namespace System.Windows.Forms
 
                 if (checkedState == CheckState.Indeterminate)
                 {
-                    if (indeterminateCheckedImage == null)
+                    if (indeterminateCheckedImage is null)
                     {
                         if (DpiHelper.IsScalingRequirementMet)
                         {
@@ -313,7 +313,7 @@ namespace System.Windows.Forms
                 }
                 else if (checkedState == CheckState.Checked)
                 {
-                    if (checkedImage == null)
+                    if (checkedImage is null)
                     {
                         if (DpiHelper.IsScalingRequirementMet)
                         {
@@ -585,7 +585,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return (ParentInternal as ToolStripDropDown == null);
+                return (ParentInternal as ToolStripDropDown is null);
             }
         }
 
@@ -869,7 +869,7 @@ namespace System.Windows.Forms
 
         internal string GetShortcutText()
         {
-            if (cachedShortcutText == null)
+            if (cachedShortcutText is null)
             {
                 cachedShortcutText = ShortcutToText(ShortcutKeys, ShortcutKeyDisplayString);
             }
@@ -938,7 +938,7 @@ namespace System.Windows.Forms
 
         protected override void OnDropDownHide(EventArgs e)
         {
-            Debug.WriteLineIf(ToolStrip.MenuAutoExpandDebug.TraceVerbose, "[ToolStripMenuItem.OnDropDownHide] MenuTimer.Cancel called");
+            Debug.WriteLineIf(ToolStrip.s_menuAutoExpandDebug.TraceVerbose, "[ToolStripMenuItem.OnDropDownHide] MenuTimer.Cancel called");
             MenuTimer.Cancel(this);
             base.OnDropDownHide(e);
         }
@@ -947,7 +947,7 @@ namespace System.Windows.Forms
         {
             // if someone has beaten us to the punch by arrowing around
             // cancel the current menu timer.
-            Debug.WriteLineIf(ToolStrip.MenuAutoExpandDebug.TraceVerbose, "[ToolStripMenuItem.OnDropDownShow] MenuTimer.Cancel called");
+            Debug.WriteLineIf(ToolStrip.s_menuAutoExpandDebug.TraceVerbose, "[ToolStripMenuItem.OnDropDownShow] MenuTimer.Cancel called");
             MenuTimer.Cancel(this);
             if (ParentInternal != null)
             {
@@ -972,7 +972,7 @@ namespace System.Windows.Forms
             // Opening should happen on mouse down
             // we use a mouse down ID to ensure that the reshow
 
-            Debug.WriteLineIf(ToolStrip.MenuAutoExpandDebug.TraceVerbose, "[ToolStripMenuItem.OnMouseDown] MenuTimer.Cancel called");
+            Debug.WriteLineIf(ToolStrip.s_menuAutoExpandDebug.TraceVerbose, "[ToolStripMenuItem.OnMouseDown] MenuTimer.Cancel called");
             MenuTimer.Cancel(this);
             OnMouseButtonStateChange(e, /*isMouseDown=*/true);
         }
@@ -1007,7 +1007,7 @@ namespace System.Windows.Forms
                 {
                     // opening should happen on mouse down.
                     Debug.Assert(ParentInternal != null, "Parent is null here, not going to get accurate ID");
-                    openMouseId = (ParentInternal == null) ? (byte)0 : ParentInternal.GetMouseId();
+                    openMouseId = (ParentInternal is null) ? (byte)0 : ParentInternal.GetMouseId();
                     ShowDropDown(/*mousePush =*/true);
                 }
                 else if (!isMouseDown && !showDropDown)
@@ -1015,7 +1015,7 @@ namespace System.Windows.Forms
                     // closing should happen on mouse up.  ensure it's not the mouse
                     // up for the mouse down we opened with.
                     Debug.Assert(ParentInternal != null, "Parent is null here, not going to get accurate ID");
-                    byte closeMouseId = (ParentInternal == null) ? (byte)0 : ParentInternal.GetMouseId();
+                    byte closeMouseId = (ParentInternal is null) ? (byte)0 : ParentInternal.GetMouseId();
                     int openedMouseID = openMouseId;
                     if (closeMouseId != openedMouseID)
                     {
@@ -1036,7 +1036,7 @@ namespace System.Windows.Forms
             {
                 Debug.WriteLineIf(ToolStripItem.s_mouseDebugging.TraceVerbose, "received mouse enter - calling drop down");
 
-                Debug.WriteLineIf(ToolStrip.MenuAutoExpandDebug.TraceVerbose, "[ToolStripMenuItem.OnMouseEnter] MenuTimer.Cancel / MenuTimer.Start called");
+                Debug.WriteLineIf(ToolStrip.s_menuAutoExpandDebug.TraceVerbose, "[ToolStripMenuItem.OnMouseEnter] MenuTimer.Cancel / MenuTimer.Start called");
 
                 MenuTimer.Cancel(this);
                 MenuTimer.Start(this);
@@ -1046,7 +1046,7 @@ namespace System.Windows.Forms
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            Debug.WriteLineIf(ToolStrip.MenuAutoExpandDebug.TraceVerbose, "[ToolStripMenuItem.OnMouseLeave] MenuTimer.Cancel called");
+            Debug.WriteLineIf(ToolStrip.s_menuAutoExpandDebug.TraceVerbose, "[ToolStripMenuItem.OnMouseLeave] MenuTimer.Cancel called");
             MenuTimer.Cancel(this);
             base.OnMouseLeave(e);
         }
@@ -1344,7 +1344,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                Debug.WriteLineIf(ToolStrip.MenuAutoExpandDebug.TraceVerbose && currentItem != value, "[MenuTimer.CurrentItem] changed: " + ((value == null) ? "null" : value.ToString()));
+                Debug.WriteLineIf(ToolStrip.s_menuAutoExpandDebug.TraceVerbose && currentItem != value, "[MenuTimer.CurrentItem] changed: " + ((value is null) ? "null" : value.ToString()));
                 currentItem = value;
             }
         }
@@ -1380,9 +1380,9 @@ namespace System.Windows.Forms
 
         public void Transition(ToolStripMenuItem fromItem, ToolStripMenuItem toItem)
         {
-            Debug.WriteLineIf(ToolStrip.MenuAutoExpandDebug.TraceVerbose, "[MenuTimer.Transition] transitioning items " + fromItem.ToString() + " " + toItem.ToString());
+            Debug.WriteLineIf(ToolStrip.s_menuAutoExpandDebug.TraceVerbose, "[MenuTimer.Transition] transitioning items " + fromItem.ToString() + " " + toItem.ToString());
 
-            if (toItem == null && InTransition)
+            if (toItem is null && InTransition)
             {
                 Cancel();
                 // in this case we're likely to have hit an item that's not a menu item
@@ -1478,14 +1478,14 @@ namespace System.Windows.Forms
         {
             autoMenuExpandTimer.Enabled = false;
 
-            if (CurrentItem == null)
+            if (CurrentItem is null)
             {
                 return;
             }
             EndTransition(/*forceClose*/false);
             if (CurrentItem != null && !CurrentItem.IsDisposed && CurrentItem.Selected && CurrentItem.Enabled && ToolStripManager.ModalMenuFilter.InMenuMode)
             {
-                Debug.WriteLineIf(ToolStrip.MenuAutoExpandDebug.TraceVerbose, "[MenuTimer.OnTick] calling OnMenuAutoExpand");
+                Debug.WriteLineIf(ToolStrip.s_menuAutoExpandDebug.TraceVerbose, "[MenuTimer.OnTick] calling OnMenuAutoExpand");
                 CurrentItem.OnMenuAutoExpand();
             }
         }

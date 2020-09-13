@@ -50,12 +50,12 @@ namespace System.Windows.Forms.Tests
 
             bag.Font = value;
             Assert.Same(value, bag.Font);
-            Assert.Equal(value == null, bag.IsEmpty());
+            Assert.Equal(value is null, bag.IsEmpty());
 
             // Set same.
             bag.Font = value;
             Assert.Same(value, bag.Font);
-            Assert.Equal(value == null, bag.IsEmpty());
+            Assert.Equal(value is null, bag.IsEmpty());
         }
 
         [WinFormsTheory]
@@ -117,10 +117,12 @@ namespace System.Windows.Forms.Tests
             using (var stream = new MemoryStream())
             {
                 var formatter = new BinaryFormatter();
+#pragma warning disable CS0618 // Type or member is obsolete
                 formatter.Serialize(stream, original);
 
                 stream.Position = 0;
                 OwnerDrawPropertyBag bag = Assert.IsType<OwnerDrawPropertyBag>(formatter.Deserialize(stream));
+#pragma warning restore CS0618 // Type or member is obsolete
                 Assert.Equal(Color.Blue, bag.BackColor);
                 Assert.Equal(SystemFonts.MenuFont.Name, bag.Font.Name);
                 Assert.Equal(Color.Red, bag.ForeColor);

@@ -131,7 +131,7 @@ namespace System.Windows.Forms
                 DenyIfBoundAndNotCreated(); // Shouldn't throw here as the control must have been created.
                 DenyIfWaitingForInitialization();
 
-                if (BoundPage == null)
+                if (BoundPage is null)
                 {
                     _checked = value;
 
@@ -199,10 +199,10 @@ namespace System.Windows.Forms
                 // endless loop of TDN_RADIO_BUTTON_CLICKED notifications even
                 // when we don't send any further messages to the dialog.
                 // See documentation/repro in
-                // /Documentation/src/System/Windows/Forms/TaskDialog/Issue_RadioButton_InfiniteLoop.md
+                // /docs/src/System/Windows/Forms/TaskDialog/Issue_RadioButton_InfiniteLoop.md
                 //
                 // See also:
-                // /Documentation/src/System/Windows/Forms/TaskDialog/Issue_RadioButton_WeirdBehavior.md
+                // /docs/src/System/Windows/Forms/TaskDialog/Issue_RadioButton_WeirdBehavior.md
                 if (BoundPage.BoundDialog!.RadioButtonClickedStackCount > 0)
                 {
                     throw new InvalidOperationException(string.Format(

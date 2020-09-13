@@ -14,8 +14,8 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms.VisualStyles;
 using Microsoft.Win32;
-using Directory = System.IO.Directory;
 using static Interop;
+using Directory = System.IO.Directory;
 
 namespace System.Windows.Forms
 {
@@ -51,8 +51,8 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Events the user can hook into
         /// </summary>
-        private static readonly object EVENT_APPLICATIONEXIT = new object();
-        private static readonly object EVENT_THREADEXIT = new object();
+        private static readonly object s_eventApplicationExit = new object();
+        private static readonly object s_eventThreadExit = new object();
 
         // Constant string used in Application.Restart()
         private const string IEEXEC = "ieexec.exe";
@@ -197,7 +197,7 @@ namespace System.Windows.Forms
             {
                 lock (s_internalSyncObject)
                 {
-                    if (s_companyName == null)
+                    if (s_companyName is null)
                     {
                         // Custom attribute
                         Assembly entryAssembly = Assembly.GetEntryAssembly();
@@ -211,7 +211,7 @@ namespace System.Windows.Forms
                         }
 
                         // Win32 version
-                        if (s_companyName == null || s_companyName.Length == 0)
+                        if (s_companyName is null || s_companyName.Length == 0)
                         {
                             s_companyName = GetAppFileVersionInfo().CompanyName;
                             if (s_companyName != null)
@@ -222,7 +222,7 @@ namespace System.Windows.Forms
 
                         // fake it with a namespace
                         // won't work with MC++ see GetAppMainType.
-                        if (s_companyName == null || s_companyName.Length == 0)
+                        if (s_companyName is null || s_companyName.Length == 0)
                         {
                             Type t = GetAppMainType();
 
@@ -284,7 +284,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (s_executablePath == null)
+                if (s_executablePath is null)
                 {
                     StringBuilder sb = UnsafeNativeMethods.GetModuleFileNameLongPath(NativeMethods.NullHandleRef);
                     s_executablePath = Path.GetFullPath(sb.ToString());
@@ -340,7 +340,7 @@ namespace System.Windows.Forms
             {
                 lock (s_internalSyncObject)
                 {
-                    if (s_productName == null)
+                    if (s_productName is null)
                     {
                         // Custom attribute
                         Assembly entryAssembly = Assembly.GetEntryAssembly();
@@ -354,7 +354,7 @@ namespace System.Windows.Forms
                         }
 
                         // Win32 version info
-                        if (s_productName == null || s_productName.Length == 0)
+                        if (s_productName is null || s_productName.Length == 0)
                         {
                             s_productName = GetAppFileVersionInfo().ProductName;
                             if (s_productName != null)
@@ -365,7 +365,7 @@ namespace System.Windows.Forms
 
                         // fake it with namespace
                         // won't work with MC++ see GetAppMainType.
-                        if (s_productName == null || s_productName.Length == 0)
+                        if (s_productName is null || s_productName.Length == 0)
                         {
                             Type t = GetAppMainType();
 
@@ -408,7 +408,7 @@ namespace System.Windows.Forms
             {
                 lock (s_internalSyncObject)
                 {
-                    if (s_productVersion == null)
+                    if (s_productVersion is null)
                     {
                         // Custom attribute
                         Assembly entryAssembly = Assembly.GetEntryAssembly();
@@ -422,7 +422,7 @@ namespace System.Windows.Forms
                         }
 
                         // Win32 version info
-                        if (s_productVersion == null || s_productVersion.Length == 0)
+                        if (s_productVersion is null || s_productVersion.Length == 0)
                         {
                             s_productVersion = GetAppFileVersionInfo().ProductVersion;
                             if (s_productVersion != null)
@@ -432,7 +432,7 @@ namespace System.Windows.Forms
                         }
 
                         // fake it
-                        if (s_productVersion == null || s_productVersion.Length == 0)
+                        if (s_productVersion is null || s_productVersion.Length == 0)
                         {
                             s_productVersion = "1.0.0.0";
                         }
@@ -464,7 +464,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (s_safeTopLevelCaptionSuffix == null)
+                if (s_safeTopLevelCaptionSuffix is null)
                 {
                     s_safeTopLevelCaptionSuffix = SR.SafeTopLevelCaptionFormat; // 0 - original, 1 - zone, 2 - site
                 }
@@ -472,7 +472,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -488,7 +488,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (s_startupPath == null)
+                if (s_startupPath is null)
                 {
                     // StringBuilder sb = UnsafeNativeMethods.GetModuleFileNameLongPath(NativeMethods.NullHandleRef);
                     // startupPath = Path.GetDirectoryName(sb.ToString());
@@ -632,15 +632,15 @@ namespace System.Windows.Forms
         /// </summary>
         public static event EventHandler ApplicationExit
         {
-            add => AddEventHandler(EVENT_APPLICATIONEXIT, value);
-            remove => RemoveEventHandler(EVENT_APPLICATIONEXIT, value);
+            add => AddEventHandler(s_eventApplicationExit, value);
+            remove => RemoveEventHandler(s_eventApplicationExit, value);
         }
 
         private static void AddEventHandler(object key, Delegate value)
         {
             lock (s_internalSyncObject)
             {
-                if (null == s_eventHandlers)
+                if (s_eventHandlers is null)
                 {
                     s_eventHandlers = new EventHandlerList();
                 }
@@ -652,7 +652,7 @@ namespace System.Windows.Forms
         {
             lock (s_internalSyncObject)
             {
-                if (null == s_eventHandlers)
+                if (s_eventHandlers is null)
                 {
                     return;
                 }
@@ -793,8 +793,8 @@ namespace System.Windows.Forms
         /// </summary>
         public static event EventHandler ThreadExit
         {
-            add => AddEventHandler(EVENT_THREADEXIT, value);
-            remove => RemoveEventHandler(EVENT_THREADEXIT, value);
+            add => AddEventHandler(s_eventThreadExit, value);
+            remove => RemoveEventHandler(s_eventThreadExit, value);
         }
 
         /// <summary>
@@ -938,7 +938,7 @@ namespace System.Windows.Forms
         {
             lock (s_internalSyncObject)
             {
-                if (s_appFileVersion == null)
+                if (s_appFileVersion is null)
                 {
                     Type t = GetAppMainType();
                     if (t != null)
@@ -962,7 +962,7 @@ namespace System.Windows.Forms
         {
             lock (s_internalSyncObject)
             {
-                if (s_mainType == null)
+                if (s_mainType is null)
                 {
                     Assembly exe = Assembly.GetEntryAssembly();
 
@@ -1017,7 +1017,7 @@ namespace System.Windows.Forms
         {
             if (s_eventHandlers != null)
             {
-                Delegate exit = s_eventHandlers[EVENT_APPLICATIONEXIT];
+                Delegate exit = s_eventHandlers[s_eventApplicationExit];
                 if (exit != null)
                 {
                     ((EventHandler)exit)(null, EventArgs.Empty);
@@ -1032,7 +1032,7 @@ namespace System.Windows.Forms
         {
             if (s_eventHandlers != null)
             {
-                Delegate exit = s_eventHandlers[EVENT_THREADEXIT];
+                Delegate exit = s_eventHandlers[s_eventThreadExit];
                 if (exit != null)
                 {
                     ((EventHandler)exit)(null, EventArgs.Empty);
@@ -1117,7 +1117,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void Restart()
         {
-            if (Assembly.GetEntryAssembly() == null)
+            if (Assembly.GetEntryAssembly() is null)
             {
                 throw new NotSupportedException(SR.RestartNotSupported);
             }

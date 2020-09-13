@@ -167,7 +167,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 }
                 else
                 {
-                    ControlPaint.DrawBorderSolid(e, r, ControlPaint.Dark(Control.BackColor));
+                    ControlPaint.DrawBorderSimple(e, r, ControlPaint.Dark(Control.BackColor));
                 }
             }
             else
@@ -196,7 +196,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 }
                 else
                 {
-                    ControlPaint.DrawBorderSolid(e, r, ControlPaint.Dark(Control.BackColor));
+                    ControlPaint.DrawBorderSimple(e, r, ControlPaint.Dark(Control.BackColor));
                 }
             }
         }
@@ -251,12 +251,18 @@ namespace System.Windows.Forms.PropertyGridInternal
             _owningDropDownButton = owningDropDownButton;
             _owningPropertyGrid = owningDropDownButton.Parent as PropertyGridView;
 
-            UseStdAccessibleObjects(owningDropDownButton.Handle);
+            if (owningDropDownButton.IsHandleCreated)
+            {
+                UseStdAccessibleObjects(owningDropDownButton.Handle);
+            }
         }
 
         public override void DoDefaultAction()
         {
-            _owningDropDownButton.PerformButtonClick();
+            if (_owningDropDownButton.IsHandleCreated)
+            {
+                _owningDropDownButton.PerformButtonClick();
+            }
         }
 
         /// <summary>
@@ -306,14 +312,6 @@ namespace System.Windows.Forms.PropertyGridInternal
         };
 
         /// <summary>
-        ///  Indicates whether the specified pattern is supported.
-        /// </summary>
-        /// <param name="patternId">The pattern ID.</param>
-        /// <returns>True if specified pattern is supported, otherwise false.</returns>
-        internal override bool IsPatternSupported(UiaCore.UIA patternId)
-            => patternId == UiaCore.UIA.LegacyIAccessiblePatternId || base.IsPatternSupported(patternId);
-
-        /// <summary>
         ///  Gets the accessible role.
         /// </summary>
         public override AccessibleRole Role => AccessibleRole.PushButton;
@@ -326,6 +324,11 @@ namespace System.Windows.Forms.PropertyGridInternal
         /// </summary>
         internal override void SetFocus()
         {
+            if (!_owningDropDownButton.IsHandleCreated)
+            {
+                return;
+            }
+
             RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
 
             base.SetFocus();

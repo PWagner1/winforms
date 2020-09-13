@@ -155,7 +155,7 @@ namespace System.Windows.Forms
             get
             {
                 Font result = font;
-                if (result == null)
+                if (result is null)
                 {
                     result = Control.DefaultFont;
                 }
@@ -464,7 +464,7 @@ namespace System.Windows.Forms
                 return false;
             }
 
-            if (logFont.FaceName.Length > 0)
+            if (!logFont.FaceName.IsEmpty)
             {
                 UpdateFont(ref logFont);
                 UpdateColor(cf.rgbColors);

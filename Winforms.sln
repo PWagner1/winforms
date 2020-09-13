@@ -80,20 +80,20 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{462AD69A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "documentation", "documentation", "{C029199F-7D5C-417C-AA52-913A214E3285}"
 	ProjectSection(SolutionItems) = preProject
-		Documentation\building.md = Documentation\building.md
+		docs\building.md = docs\building.md
 		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
-		Documentation\contributing.md = Documentation\contributing.md
-		Documentation\debugging.md = Documentation\debugging.md
-		Documentation\developer-guide.md = Documentation\developer-guide.md
-		Documentation\getting-started.md = Documentation\getting-started.md
-		Documentation\intellisense.md = Documentation\intellisense.md
-		Documentation\issue-guide.md = Documentation\issue-guide.md
-		Documentation\porting-guidelines.md = Documentation\porting-guidelines.md
+		docs\contributing.md = docs\contributing.md
+		docs\debugging.md = docs\debugging.md
+		docs\developer-guide.md = docs\developer-guide.md
+		docs\getting-started.md = docs\getting-started.md
+		docs\intellisense.md = docs\intellisense.md
+		docs\issue-guide.md = docs\issue-guide.md
+		docs\porting-guidelines.md = docs\porting-guidelines.md
 		README.md = README.md
 		roadmap.md = roadmap.md
-		Documentation\testing.md = Documentation\testing.md
+		docs\testing.md = docs\testing.md
 		THIRD-PARTY-NOTICES.TXT = THIRD-PARTY-NOTICES.TXT
-		Documentation\winforms-designer.md = Documentation\winforms-designer.md
+		docs\winforms-designer.md = docs\winforms-designer.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "accessibility", "accessibility", "{D390F7D2-1E11-4DEE-B7F1-4FD0681A81F0}"
@@ -134,6 +134,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Windows.Forms.TestUtilities", "src\System.Windows.Forms\tests\TestUtilities\System.Windows.Forms.TestUtilities.csproj", "{86418F0B-39DC-4B5A-8145-6D607E6150AC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MauiToolStripTests", "src\System.Windows.Forms\tests\IntegrationTests\MauiTests\MauiToolStripTests\MauiToolStripTests.csproj", "{83634671-CF3A-43B0-B729-42CCBA62DF2C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Windows.Forms.Interop.Tests", "src\System.Windows.Forms\tests\InteropTests\System.Windows.Forms.Interop.Tests.csproj", "{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -277,6 +279,18 @@ Global
 		{83634671-CF3A-43B0-B729-42CCBA62DF2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83634671-CF3A-43B0-B729-42CCBA62DF2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83634671-CF3A-43B0-B729-42CCBA62DF2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}.Debug|Any CPU.Build.0 = Debug|x86
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}.Release|Any CPU.ActiveCfg = Release|x86
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}.Release|Any CPU.Build.0 = Release|x86
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}.Debug|x86.ActiveCfg = Debug|x86
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}.Debug|x86.Build.0 = Debug|x86
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}.Release|x86.ActiveCfg = Release|x86
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}.Release|x86.Build.0 = Release|x86
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}.Debug|x64.ActiveCfg = Debug|x64
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}.Debug|x64.Build.0 = Debug|x64
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}.Release|x64.ActiveCfg = Release|x64
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -321,6 +335,7 @@ Global
 		{73B0857A-966B-4E7D-8A83-FECFE0281AB9} = {DF68A171-D27B-4E6A-8A7E-63A651622355}
 		{86418F0B-39DC-4B5A-8145-6D607E6150AC} = {DF68A171-D27B-4E6A-8A7E-63A651622355}
 		{83634671-CF3A-43B0-B729-42CCBA62DF2C} = {8F20A905-BD37-4D80-B8DF-FA45276FC23F}
+		{C272DA06-B98D-4BB7-B1C4-ECF58F54B224} = {583F1292-AE8D-4511-B8D8-A81FE4642DDC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7B1B0433-F612-4E5A-BE7E-FCF5B9F6E136}

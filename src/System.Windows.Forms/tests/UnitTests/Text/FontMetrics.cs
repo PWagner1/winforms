@@ -26,7 +26,7 @@ namespace System.Windows.Forms.Tests.Text
             }
 
             using var hfont = GdiCache.GetHFONT(font, Gdi32.QUALITY.CLEARTYPE);
-            Assert.Equal(height, hfont.FontHeight);
+            Assert.Equal(height, hfont.Data.Height);
         }
 
         [Theory]
@@ -85,7 +85,7 @@ namespace System.Windows.Forms.Tests.Text
 
             using var hfont = GdiCache.GetHFONT(font, Gdi32.QUALITY.CLEARTYPE);
             using var screen = GdiCache.GetScreenHdc();
-            Size measure = screen.HDC.MeasureText("Windows Foundation Classes", hfont, proposedSize, (User32.DT)dt);
+            Size measure = screen.HDC.MeasureText("Windows Foundation Classes", hfont, proposedSize, (TextFormatFlags)dt);
             Assert.Equal(expected, measure);
         }
 
@@ -142,7 +142,7 @@ namespace System.Windows.Forms.Tests.Text
 
             using var hfont = GdiCache.GetHFONT(font, Gdi32.QUALITY.CLEARTYPE);
             using var screen = GdiCache.GetScreenHdc();
-            using var fontSelection = new Gdi32.SelectObjectScope(screen, hfont);
+            using var fontSelection = new Gdi32.SelectObjectScope(screen, hfont.Object);
 
             User32.DRAWTEXTPARAMS param = default;
             Rectangle result = screen.HDC.AdjustForVerticalAlignment(

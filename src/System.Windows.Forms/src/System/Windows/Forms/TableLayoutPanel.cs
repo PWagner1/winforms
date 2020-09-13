@@ -8,7 +8,6 @@ using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.Layout;
 
 namespace System.Windows.Forms
@@ -26,7 +25,7 @@ namespace System.Windows.Forms
     public class TableLayoutPanel : Panel, IExtenderProvider
     {
         private readonly TableLayoutSettings _tableLayoutSettings;
-        private static readonly object EventCellPaint = new object();
+        private static readonly object s_eventCellPaint = new object();
 
         public TableLayoutPanel()
         {
@@ -314,7 +313,7 @@ namespace System.Windows.Forms
         public int[] GetColumnWidths()
         {
             TableLayout.ContainerInfo containerInfo = TableLayout.GetContainerInfo(this);
-            if (containerInfo.Columns == null)
+            if (containerInfo.Columns is null)
             {
                 return Array.Empty<int>();
             }
@@ -335,7 +334,7 @@ namespace System.Windows.Forms
         public int[] GetRowHeights()
         {
             TableLayout.ContainerInfo containerInfo = TableLayout.GetContainerInfo(this);
-            if (containerInfo.Rows == null)
+            if (containerInfo.Rows is null)
             {
                 return Array.Empty<int>();
             }
@@ -356,8 +355,8 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.TableLayoutPanelOnPaintCellDescr))]
         public event TableLayoutCellPaintEventHandler CellPaint
         {
-            add => Events.AddHandler(EventCellPaint, value);
-            remove => Events.RemoveHandler(EventCellPaint, value);
+            add => Events.AddHandler(s_eventCellPaint, value);
+            remove => Events.RemoveHandler(s_eventCellPaint, value);
         }
 
         /// <summary>
@@ -373,7 +372,7 @@ namespace System.Windows.Forms
 
         protected virtual void OnCellPaint(TableLayoutCellPaintEventArgs e)
         {
-            ((TableLayoutCellPaintEventHandler)Events[EventCellPaint])?.Invoke(this, e);
+            ((TableLayoutCellPaintEventHandler)Events[s_eventCellPaint])?.Invoke(this, e);
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
@@ -388,22 +387,24 @@ namespace System.Windows.Forms
             TableLayout.Strip[] rowStrips = containerInfo.Rows;
             TableLayoutPanelCellBorderStyle cellBorderStyle = CellBorderStyle;
 
-            if (colStrips == null || rowStrips == null)
+            if (colStrips is null || rowStrips is null)
             {
                 return;
             }
+
             int cols = colStrips.Length;
             int rows = rowStrips.Length;
 
             int totalColumnWidths = 0, totalColumnHeights = 0;
 
-            Graphics g = e.Graphics;
             Rectangle displayRect = DisplayRectangle;
             Rectangle clipRect = e.ClipRectangle;
 
-            //leave the space for the border
+            Graphics g = e.GraphicsInternal;
+
+            // Leave the space for the border
             int startx;
-            bool isRTL = (RightToLeft == RightToLeft.Yes);
+            bool isRTL = RightToLeft == RightToLeft.Yes;
             if (isRTL)
             {
                 startx = displayRect.Right - (cellBorderWidth / 2);
@@ -424,21 +425,38 @@ namespace System.Windows.Forms
 
                 for (int j = 0; j < rows; j++)
                 {
-                    Rectangle outsideCellBounds = new Rectangle(startx, starty, ((TableLayout.Strip)colStrips[i]).MinSize, ((TableLayout.Strip)rowStrips[j]).MinSize);
+                    Rectangle outsideCellBounds = new Rectangle(
+                        startx,
+                        starty,
+                        colStrips[i].MinSize,
+                        rowStrips[j].MinSize);
 
-                    Rectangle insideCellBounds = new Rectangle(outsideCellBounds.X + (cellBorderWidth + 1) / 2, outsideCellBounds.Y + (cellBorderWidth + 1) / 2, outsideCellBounds.Width - (cellBorderWidth + 1) / 2, outsideCellBounds.Height - (cellBorderWidth + 1) / 2);
+                    Rectangle insideCellBounds = new Rectangle(
+                        outsideCellBounds.X + (cellBorderWidth + 1) / 2,
+                        outsideCellBounds.Y + (cellBorderWidth + 1) / 2,
+                        outsideCellBounds.Width - (cellBorderWidth + 1) / 2,
+                        outsideCellBounds.Height - (cellBorderWidth + 1) / 2);
 
                     if (clipRect.IntersectsWith(insideCellBounds))
                     {
-                        //first, call user's painting code
-                        using (TableLayoutCellPaintEventArgs pcea = new TableLayoutCellPaintEventArgs(g, clipRect, insideCellBounds, i, j))
+                        // First, call user's painting code
+                        using (var pcea = new TableLayoutCellPaintEventArgs(e, clipRect, insideCellBounds, i, j))
                         {
                             OnCellPaint(pcea);
+                            if (!((IGraphicsHdcProvider)pcea).IsGraphicsStateClean)
+                            {
+                                // The Graphics object got touched, hit the public property on our original args
+                                // to mark it as dirty as well.
+
+                                g = e.Graphics;
+                            }
                         }
-                        // paint the table border on top.
+
+                        // Paint the table border on top.
                         ControlPaint.PaintTableCellBorder(cellBorderStyle, g, outsideCellBounds);
                     }
                     starty += rowStrips[j].MinSize;
+
                     // Only sum this up once...
                     if (i == 0)
                     {
@@ -450,31 +468,58 @@ namespace System.Windows.Forms
                 {
                     startx += colStrips[i].MinSize;
                 }
+
                 totalColumnWidths += colStrips[i].MinSize;
             }
 
             if (!HScroll && !VScroll && cellBorderStyle != TableLayoutPanelCellBorderStyle.None)
             {
-                Rectangle tableBounds = new Rectangle(cellBorderWidth / 2 + displayRect.X, cellBorderWidth / 2 + displayRect.Y, displayRect.Width - cellBorderWidth, displayRect.Height - cellBorderWidth);
-                // paint the border of the table if we are not auto scrolling.
-                // if the borderStyle is Inset or Outset, we can only paint the lower bottom half since otherwise we will have 1 pixel loss at the border.
+                // Paint the border of the table if we are not auto scrolling.
+
+                Rectangle tableBounds = new Rectangle(
+                    cellBorderWidth / 2 + displayRect.X,
+                    cellBorderWidth / 2 + displayRect.Y,
+                    displayRect.Width - cellBorderWidth,
+                    displayRect.Height - cellBorderWidth);
+
+                // If the borderStyle is Inset or Outset, we can only paint the lower bottom half since otherwise we
+                // will have 1 pixel loss at the border.
                 if (cellBorderStyle == TableLayoutPanelCellBorderStyle.Inset)
                 {
-                    g.DrawLine(SystemPens.ControlDark, tableBounds.Right, tableBounds.Y, tableBounds.Right, tableBounds.Bottom);
-                    g.DrawLine(SystemPens.ControlDark, tableBounds.X, tableBounds.Y + tableBounds.Height - 1, tableBounds.X + tableBounds.Width - 1, tableBounds.Y + tableBounds.Height - 1);
+                    g.DrawLine(
+                        SystemPens.ControlDark,
+                        tableBounds.Right,
+                        tableBounds.Y,
+                        tableBounds.Right,
+                        tableBounds.Bottom);
+
+                    g.DrawLine(
+                        SystemPens.ControlDark,
+                        tableBounds.X,
+                        tableBounds.Y + tableBounds.Height - 1,
+                        tableBounds.X + tableBounds.Width - 1,
+                        tableBounds.Y + tableBounds.Height - 1);
                 }
                 else if (cellBorderStyle == TableLayoutPanelCellBorderStyle.Outset)
                 {
-                    using (Pen pen = new Pen(SystemColors.Window))
-                    {
-                        g.DrawLine(pen, tableBounds.X + tableBounds.Width - 1, tableBounds.Y, tableBounds.X + tableBounds.Width - 1, tableBounds.Y + tableBounds.Height - 1);
-                        g.DrawLine(pen, tableBounds.X, tableBounds.Y + tableBounds.Height - 1, tableBounds.X + tableBounds.Width - 1, tableBounds.Y + tableBounds.Height - 1);
-                    }
+                    g.DrawLine(
+                        SystemPens.Window,
+                        tableBounds.X + tableBounds.Width - 1,
+                        tableBounds.Y,
+                        tableBounds.X + tableBounds.Width - 1,
+                        tableBounds.Y + tableBounds.Height - 1);
+                    g.DrawLine(
+                        SystemPens.Window,
+                        tableBounds.X,
+                        tableBounds.Y + tableBounds.Height - 1,
+                        tableBounds.X + tableBounds.Width - 1,
+                        tableBounds.Y + tableBounds.Height - 1);
                 }
                 else
                 {
                     ControlPaint.PaintTableCellBorder(cellBorderStyle, g, tableBounds);
                 }
+
                 ControlPaint.PaintTableControlBorder(cellBorderStyle, g, displayRect);
             }
             else

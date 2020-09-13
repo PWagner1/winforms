@@ -12,7 +12,6 @@ using System.Drawing;
 using System.Drawing.Design;
 using System.Drawing.Drawing2D;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.Design;
 using System.Windows.Forms.VisualStyles;
 using static Interop;
@@ -176,7 +175,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             get
             {
-                return SystemInformation.HighContrast && !OwnerGrid.developerOverride;
+                return SystemInformation.HighContrast && !OwnerGrid._developerOverride;
             }
         }
 
@@ -184,7 +183,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             get
             {
-                if (accessibleObject == null)
+                if (accessibleObject is null)
                 {
                     accessibleObject = GetAccessibilityObject();
                 }
@@ -198,75 +197,30 @@ namespace System.Windows.Forms.PropertyGridInternal
         }
 
         /// <summary>
-        ///  specify that this grid entry should be allowed to be merged for.
-        ///  multi-select.
+        ///  Specify that this grid entry should be allowed to be merged for multi-select.
         /// </summary>
-        public virtual bool AllowMerge
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public virtual bool AllowMerge => true;
 
-        internal virtual bool AlwaysAllowExpand
-        {
-            get
-            {
-                return false;
-            }
-        }
+        internal virtual bool AlwaysAllowExpand => false;
 
-        internal virtual AttributeCollection Attributes
-        {
-            get
-            {
-                return TypeDescriptor.GetAttributes(PropertyType);
-            }
-        }
+        internal virtual AttributeCollection Attributes => TypeDescriptor.GetAttributes(PropertyType);
 
         /// <summary>
-        ///  Gets the value of the background brush to use.  Override
-        ///  this member to cause the entry to paint it's background in a different color.
-        ///  The base implementation returns null.
+        ///  Gets the value of the background brush to use. Override this member to cause the entry to paint it's
+        ///  background in a different color. The base implementation returns null.
         /// </summary>
-        protected virtual Brush GetBackgroundBrush(Graphics g)
-        {
-            return GridEntryHost.GetBackgroundBrush(g);
-        }
+        protected virtual Color GetBackgroundColor() => GridEntryHost.BackColor;
 
         protected virtual Color LabelTextColor
-        {
-            get
-            {
-                if (ShouldRenderReadOnly)
-                {
-                    return GridEntryHost.GrayTextColor;
-                }
-                else
-                {
-                    return GridEntryHost.GetTextColor();
-                }
-            }
-        }
+            => ShouldRenderReadOnly ? GridEntryHost.GrayTextColor : GridEntryHost.GetTextColor();
 
         /// <summary>
         ///  The set of attributes that will be used for browse filtering
         /// </summary>
         public virtual AttributeCollection BrowsableAttributes
         {
-            get
-            {
-                if (parentPE != null)
-                {
-                    return parentPE.BrowsableAttributes;
-                }
-                return null;
-            }
-            set
-            {
-                parentPE.BrowsableAttributes = value;
-            }
+            get => parentPE?.BrowsableAttributes;
+            set => parentPE.BrowsableAttributes = value;
         }
 
         /// <summary>
@@ -328,7 +282,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             get
             {
-                if (childCollection == null)
+                if (childCollection is null)
                 {
                     childCollection = new GridEntryCollection(this, null);
                 }
@@ -336,7 +290,7 @@ namespace System.Windows.Forms.PropertyGridInternal
             }
             set
             {
-                Debug.Assert(value == null || !Disposed, "Why are we putting new children in after we are disposed?");
+                Debug.Assert(value is null || !Disposed, "Why are we putting new children in after we are disposed?");
                 if (childCollection != value)
                 {
                     if (childCollection != null)
@@ -365,7 +319,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             get
             {
-                if (childCollection == null && !Disposed)
+                if (childCollection is null && !Disposed)
                 {
                     CreateChildren();
                 }
@@ -456,7 +410,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                     return false;
                 }
 
-                if (fExpandable && (cacheItems == null || cacheItems.lastValue == null) && PropertyValue == null)
+                if (fExpandable && (cacheItems is null || cacheItems.lastValue is null) && PropertyValue is null)
                 {
                     fExpandable = false;
                 }
@@ -490,7 +444,7 @@ namespace System.Windows.Forms.PropertyGridInternal
             get
             {
                 // short circuit if we don't have children
-                if (childCollection == null || childCollection.Count == 0)
+                if (childCollection is null || childCollection.Count == 0)
                 {
                     return false;
                 }
@@ -776,7 +730,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 {
                     keyWord = parentPE.HelpKeyword;
                 }
-                if (keyWord == null)
+                if (keyWord is null)
                 {
                     keyWord = string.Empty;
                 }
@@ -869,7 +823,7 @@ namespace System.Windows.Forms.PropertyGridInternal
             {
                 object owner = GetValueOwner();
 
-                if (parentPE != null && owner == null)
+                if (parentPE != null && owner is null)
                 {
                     return parentPE.Instance;
                 }
@@ -1140,10 +1094,10 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             get
             {
-                if (converter == null)
+                if (converter is null)
                 {
                     object value = PropertyValue;
-                    if (value == null)
+                    if (value is null)
                     {
                         converter = TypeDescriptor.GetConverter(PropertyType);
                     }
@@ -1164,7 +1118,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             get
             {
-                if (editor == null && PropertyType != null)
+                if (editor is null && PropertyType != null)
                 {
                     editor = (UITypeEditor)TypeDescriptor.GetEditor(PropertyType, typeof(UITypeEditor));
                 }
@@ -1315,7 +1269,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             IRootGridEntry pe = null;
 
-            if (rgobjs == null || rgobjs.Length == 0)
+            if (rgobjs is null || rgobjs.Length == 0)
             {
                 return null;
             }
@@ -1593,7 +1547,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         protected int GetLabelTextWidth(string labelText, Graphics g, Font f)
         {
-            if (cacheItems == null)
+            if (cacheItems is null)
             {
                 cacheItems = new CacheItems();
             }
@@ -1614,7 +1568,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         internal int GetValueTextWidth(string valueString, Graphics g, Font f)
         {
-            if (cacheItems == null)
+            if (cacheItems is null)
             {
                 cacheItems = new CacheItems();
             }
@@ -1648,7 +1602,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         /// </summary>
         public virtual object GetValueOwner()
         {
-            if (parentPE == null)
+            if (parentPE is null)
             {
                 return PropertyValue;
             }
@@ -1695,7 +1649,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             string str = "object = (";
             string textVal = GetPropertyTextValue();
-            if (textVal == null)
+            if (textVal is null)
             {
                 textVal = "(null)";
             }
@@ -1705,7 +1659,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 textVal = textVal.Replace((char)0, ' ');
             }
             Type type = PropertyType;
-            if (type == null)
+            if (type is null)
             {
                 type = typeof(object);
             }
@@ -1729,7 +1683,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         protected virtual GridEntry[] GetPropEntries(GridEntry peParent, object obj, Type objType)
         {
             // we don't want to create subprops for null objects.
-            if (obj == null)
+            if (obj is null)
             {
                 return null;
             }
@@ -1771,14 +1725,14 @@ namespace System.Windows.Forms.PropertyGridInternal
                         defProp = TypeDescriptor.GetDefaultProperty(obj);
                     }
 
-                    if (props == null)
+                    if (props is null)
                     {
                         return null;
                     }
 
                     if ((PropertySort & PropertySort.Alphabetical) != 0)
                     {
-                        if (objType == null || !objType.IsArray)
+                        if (objType is null || !objType.IsArray)
                         {
                             props = props.Sort(GridEntry.DisplayNameComparer);
                         }
@@ -1789,7 +1743,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                         props = new PropertyDescriptorCollection(SortParenProperties(propertyDescriptors));
                     }
 
-                    if (defProp == null && props.Count > 0)
+                    if (defProp is null && props.Count > 0)
                     {
                         defProp = props[0];
                     }
@@ -1797,7 +1751,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                     // if the target object is an array and nothing else has provided a set of
                     // properties to use, then expand the array.
                     //
-                    if ((props == null || props.Count == 0) && objType != null && objType.IsArray && obj != null)
+                    if ((props is null || props.Count == 0) && objType != null && objType.IsArray && obj != null)
                     {
                         Array objArray = (Array)obj;
 
@@ -1948,7 +1902,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 Debug.Fail("Bad Type Converter! " + t.GetType().Name + ", " + t.Message + "," + converter.ToString(), t.ToString());
             }
 
-            if (str == null)
+            if (str is null)
             {
                 str = string.Empty;
             }
@@ -1992,18 +1946,6 @@ namespace System.Windows.Forms.PropertyGridInternal
             }
         }
 
-        protected IntPtr GetHfont(bool boldFont)
-        {
-            if (boldFont)
-            {
-                return GridEntryHost.GetBoldHfont();
-            }
-            else
-            {
-                return GridEntryHost.GetBaseHfont();
-            }
-        }
-
         /// <summary>
         ///  Retrieves the requested service.  This may
         ///  return null if the requested service is not
@@ -2030,7 +1972,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 return true;
             }
 
-            if (obj == null)
+            if (obj is null)
             {
                 return false;
             }
@@ -2047,9 +1989,8 @@ namespace System.Windows.Forms.PropertyGridInternal
         }
 
         /// <summary>
-        ///  Paints the label portion of this GridEntry into the given Graphics object.  This
-        ///  is called by the GridEntry host (the PropertyGridView) when this GridEntry is
-        ///  to be painted.
+        ///  Paints the label portion of this GridEntry into the given Graphics object. This is called by the GridEntry
+        ///  host (the PropertyGridView) when this GridEntry is to be painted.
         /// </summary>
         public virtual void PaintLabel(Graphics g, Rectangle rect, Rectangle clipRect, bool selected, bool paintFullLabel)
         {
@@ -2060,49 +2001,54 @@ namespace System.Windows.Forms.PropertyGridInternal
             int borderWidth = gridHost.GetOutlineIconSize() + OUTLINE_ICON_PADDING;
 
             // fill the background if necessary
-            Brush bkBrush = selected ? gridHost.GetSelectedItemWithFocusBackBrush(g) : GetBackgroundBrush(g);
+            Color backColor = selected ? gridHost.GetSelectedItemWithFocusBackColor() : GetBackgroundColor();
+
             // if we don't have focus, paint with the line color
             if (selected && !hasFocus)
             {
-                bkBrush = gridHost.GetLineBrush(g);
+                backColor = gridHost.GetLineColor();
             }
 
-            bool fBold = ((Flags & GridEntry.FLAG_LABEL_BOLD) != 0);
+            bool fBold = ((Flags & FLAG_LABEL_BOLD) != 0);
             Font font = GetFont(fBold);
 
             int labelWidth = GetLabelTextWidth(strLabel, g, font);
 
             int neededWidth = paintFullLabel ? labelWidth : 0;
             int stringX = rect.X + PropertyLabelIndent;
-            Brush blank = bkBrush;
 
+            using var backBrush = backColor.GetCachedSolidBrushScope();
             if (paintFullLabel && (neededWidth >= (rect.Width - (stringX + 2))))
             {
-                int totalWidth = stringX + neededWidth + PropertyGridView.GDIPLUS_SPACE; // 5 = extra needed to ensure text draws completely and isn't clipped.
+                // GDIPLUS_SPACE = extra needed to ensure text draws completely and isn't clipped.
+                int totalWidth = stringX + neededWidth + PropertyGridView.GDIPLUS_SPACE;
 
                 // blank out the space we're going to use
-                g.FillRectangle(blank, borderWidth - 1, rect.Y, totalWidth - borderWidth + 3, rect.Height);
+                g.FillRectangle(backBrush, borderWidth - 1, rect.Y, totalWidth - borderWidth + 3, rect.Height);
 
                 // draw an end line
-                Pen linePen = new Pen(gridHost.GetLineColor());
+                using var linePen = gridHost.GetLineColor().GetCachedPenScope();
                 g.DrawLine(linePen, totalWidth, rect.Y, totalWidth, rect.Height);
-                linePen.Dispose();
 
                 // set the new width that we can draw into
                 rect.Width = totalWidth - rect.X;
             }
             else
-            { // Normal case -- no pseudo-tooltip for the label
-                g.FillRectangle(blank, rect.X, rect.Y, rect.Width, rect.Height);
+            {
+                // Normal case -- no pseudo-tooltip for the label
+                g.FillRectangle(backBrush, rect.X, rect.Y, rect.Width, rect.Height);
             }
 
-            // draw the border stripe on the left
-            Brush stripeBrush = gridHost.GetLineBrush(g);
+            // Draw the border stripe on the left
+            using var stripeBrush = gridHost.GetLineColor().GetCachedSolidBrushScope();
             g.FillRectangle(stripeBrush, rect.X, rect.Y, borderWidth, rect.Height);
 
             if (selected && hasFocus)
             {
-                g.FillRectangle(gridHost.GetSelectedItemWithFocusBackBrush(g), stringX, rect.Y, rect.Width - stringX - 1, rect.Height);
+                using var focusBrush = gridHost.GetSelectedItemWithFocusBackColor().GetCachedSolidBrushScope();
+                g.FillRectangle(
+                    focusBrush,
+                    stringX, rect.Y, rect.Width - stringX - 1, rect.Height);
             }
 
             int maxSpace = Math.Min(rect.Width - stringX - 1, labelWidth + PropertyGridView.GDIPLUS_SPACE);
@@ -2113,28 +2059,32 @@ namespace System.Windows.Forms.PropertyGridInternal
                 Region oldClip = g.Clip;
                 g.SetClip(textRect);
 
-                //We need to Invert color only if in Highcontrast mode, targeting 4.7.1 and above, Gridcategory and not a developer override. This is required to achieve required contrast ratio.
+                // We need to Invert color only if in Highcontrast mode, targeting 4.7.1 and above, Gridcategory and
+                // not a developer override. This is required to achieve required contrast ratio.
                 var shouldInvertForHC = colorInversionNeededInHC && (fBold || (selected && !hasFocus));
 
                 // Do actual drawing
                 // A brush is needed if using GDI+ only (UseCompatibleTextRendering); if using GDI, only the color is needed.
-                Color textColor = selected && hasFocus ? gridHost.GetSelectedItemWithFocusForeColor() : shouldInvertForHC ? InvertColor(ownerGrid.LineColor) : g.GetNearestColor(LabelTextColor);
+                Color textColor = selected && hasFocus
+                    ? gridHost.GetSelectedItemWithFocusForeColor()
+                    : shouldInvertForHC
+                        ? InvertColor(ownerGrid.LineColor)
+                        : g.FindNearestColor(LabelTextColor);
 
                 if (ownerGrid.UseCompatibleTextRendering)
                 {
-                    using (Brush textBrush = new SolidBrush(textColor))
+                    using var textBrush = textColor.GetCachedSolidBrushScope();
+                    StringFormat stringFormat = new StringFormat(StringFormatFlags.NoWrap)
                     {
-                        StringFormat stringFormat = new StringFormat(StringFormatFlags.NoWrap)
-                        {
-                            Trimming = StringTrimming.None
-                        };
-                        g.DrawString(strLabel, font, textBrush, textRect, stringFormat);
-                    }
+                        Trimming = StringTrimming.None
+                    };
+                    g.DrawString(strLabel, font, textBrush, textRect, stringFormat);
                 }
                 else
                 {
                     TextRenderer.DrawText(g, strLabel, font, textRect, textColor, PropertyGrid.MeasureTextHelper.GetTextRendererFlags());
                 }
+
                 g.SetClip(oldClip, CombineMode.Replace);
                 oldClip.Dispose();   // clip is actually copied out.
 
@@ -2215,9 +2165,8 @@ namespace System.Windows.Forms.PropertyGridInternal
                     Color textColor = InvertColor(ownerGrid.LineColor);
                     if (g != null)
                     {
-                        Brush b = new SolidBrush(textColor);
-                        g.FillRectangle(b, outline);
-                        b.Dispose();
+                        using var brush = textColor.GetCachedSolidBrushScope();
+                        g.FillRectangle(brush, outline);
                     }
                 }
 
@@ -2230,7 +2179,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         private void PaintOutlineWithClassicStyle(Graphics g, Rectangle r)
         {
-            // draw outline box.
+            // Draw outline box.
             if (Expandable)
             {
                 bool fExpanded = InternalExpanded;
@@ -2243,9 +2192,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                     return;
                 }
 
-                // draw border area box
-                Brush b = GetBackgroundBrush(g);
-                Pen p;
+                // Draw border area box
                 Color penColor = GridEntryHost.GetTextColor();
 
                 // inverting text color to back ground to get required contrast ratio
@@ -2256,74 +2203,68 @@ namespace System.Windows.Forms.PropertyGridInternal
                 else
                 {
                     // Filling rectangle as it was in all cases where we do not invert colors.
-                    g.FillRectangle(b, outline);
+                    Color brushColor = GetBackgroundColor();
+                    using var brush = brushColor.GetCachedSolidBrushScope();
+                    g.FillRectangle(brush, outline);
                 }
 
-                if (penColor.IsSystemColor)
-                {
-                    p = SystemPens.FromSystemColor(penColor);
-                }
-                else
-                {
-                    p = new Pen(penColor);
-                }
+                using var pen = penColor.GetCachedPenScope();
 
-                g.DrawRectangle(p, outline.X, outline.Y, outline.Width - 1, outline.Height - 1);
+                g.DrawRectangle(pen, outline.X, outline.Y, outline.Width - 1, outline.Height - 1);
 
                 // draw horizontal line for +/-
                 int indent = 2;
-                g.DrawLine(p, outline.X + indent, outline.Y + outline.Height / 2,
-                           outline.X + outline.Width - indent - 1, outline.Y + outline.Height / 2);
+                g.DrawLine(
+                    pen,
+                    outline.X + indent,
+                    outline.Y + outline.Height / 2,
+                    outline.X + outline.Width - indent - 1,
+                    outline.Y + outline.Height / 2);
 
                 // draw vertical line to make a +
                 if (!fExpanded)
                 {
-                    g.DrawLine(p, outline.X + outline.Width / 2, outline.Y + indent,
-                               outline.X + outline.Width / 2, outline.Y + outline.Height - indent - 1);
-                }
-
-                if (!penColor.IsSystemColor)
-                {
-                    p.Dispose();
+                    g.DrawLine(
+                        pen,
+                        outline.X + outline.Width / 2,
+                        outline.Y + indent,
+                        outline.X + outline.Width / 2,
+                        outline.Y + outline.Height - indent - 1);
                 }
             }
         }
 
         /// <summary>
-        ///  Paints the value portion of this GridEntry into the given Graphics object.  This
-        ///  is called by the GridEntry host (the PropertyGridView) when this GridEntry is
-        ///  to be painted.
+        ///  Paints the value portion of this GridEntry into the given Graphics object. This is called by the GridEntry
+        ///  host (the PropertyGridView) when this GridEntry is to be painted.
         /// </summary>
         public virtual void PaintValue(object val, Graphics g, Rectangle rect, Rectangle clipRect, PaintValueFlags paintFlags)
         {
             PropertyGridView gridHost = GridEntryHost;
-            Debug.Assert(gridHost != null, "No propEntryHost");
-            int cPaint = 0;
+            Debug.Assert(gridHost != null);
 
-            Color textColor = gridHost.GetTextColor();
-            if (ShouldRenderReadOnly)
-            {
-                textColor = GridEntryHost.GrayTextColor;
-            }
+            Color textColor = ShouldRenderReadOnly ? GridEntryHost.GrayTextColor : gridHost.GetTextColor();
 
-            string strValue;
+            string text;
 
-            if ((paintFlags & PaintValueFlags.FetchValue) != PaintValueFlags.None)
+            if (paintFlags.HasFlag(PaintValueFlags.FetchValue))
             {
                 if (cacheItems != null && cacheItems.useValueString)
                 {
-                    strValue = cacheItems.lastValueString;
+                    text = cacheItems.lastValueString;
                     val = cacheItems.lastValue;
                 }
                 else
                 {
                     val = PropertyValue;
-                    strValue = GetPropertyTextValue(val);
-                    if (cacheItems == null)
+                    text = GetPropertyTextValue(val);
+
+                    if (cacheItems is null)
                     {
                         cacheItems = new CacheItems();
                     }
-                    cacheItems.lastValueString = strValue;
+
+                    cacheItems.lastValueString = text;
                     cacheItems.useValueString = true;
                     cacheItems.lastValueTextWidth = -1;
                     cacheItems.lastValueFont = null;
@@ -2332,137 +2273,125 @@ namespace System.Windows.Forms.PropertyGridInternal
             }
             else
             {
-                strValue = GetPropertyTextValue(val);
+                text = GetPropertyTextValue(val);
             }
 
-            // paint out the main rect using the appropriate brush
-            Brush bkBrush = GetBackgroundBrush(g);
-            Debug.Assert(bkBrush != null, "We didn't find a good background brush for PaintValue");
+            // Paint out the main rect using the appropriate brush
+            Color backColor = GetBackgroundColor();
 
-            if ((paintFlags & PaintValueFlags.DrawSelected) != PaintValueFlags.None)
+            if (paintFlags.HasFlag(PaintValueFlags.DrawSelected))
             {
-                bkBrush = gridHost.GetSelectedItemWithFocusBackBrush(g);
+                backColor = gridHost.GetSelectedItemWithFocusBackColor();
                 textColor = gridHost.GetSelectedItemWithFocusForeColor();
             }
 
-            Brush blank = bkBrush;
-            g.FillRectangle(blank, clipRect);
+            using var backBrush = backColor.GetCachedSolidBrushScope();
+            g.FillRectangle(backBrush, clipRect);
 
+            int paintIndent = 0;
             if (IsCustomPaint)
             {
-                cPaint = gridHost.GetValuePaintIndent();
-                Rectangle rectPaint = new Rectangle(rect.X + 1, rect.Y + 1, gridHost.GetValuePaintWidth(), gridHost.GetGridEntryHeight() - 2);
+                paintIndent = gridHost.GetValuePaintIndent();
+                Rectangle rectPaint = new Rectangle(
+                    rect.X + 1,
+                    rect.Y + 1,
+                    gridHost.GetValuePaintWidth(),
+                    gridHost.GetGridEntryHeight() - 2);
 
                 if (!Rectangle.Intersect(rectPaint, clipRect).IsEmpty)
                 {
-                    UITypeEditor uie = UITypeEditor;
-                    if (uie != null)
-                    {
-                        uie.PaintValue(new PaintValueEventArgs(this, val, g, rectPaint));
-                    }
+                    UITypeEditor?.PaintValue(new PaintValueEventArgs(this, val, g, rectPaint));
 
-                    // paint a border around the area
+                    // Paint a border around the area
                     rectPaint.Width--;
                     rectPaint.Height--;
                     g.DrawRectangle(SystemPens.WindowText, rectPaint);
                 }
             }
 
-            rect.X += cPaint + gridHost.GetValueStringIndent();
-            rect.Width -= cPaint + 2 * gridHost.GetValueStringIndent();
+            rect.X += paintIndent + gridHost.GetValueStringIndent();
+            rect.Width -= paintIndent + 2 * gridHost.GetValueStringIndent();
 
-            // bold the property if we need to persist it (e.g. it's not the default value)
-            bool valueModified = ((paintFlags & PaintValueFlags.CheckShouldSerialize) != PaintValueFlags.None) && ShouldSerializePropertyValue();
+            // Bold the property if we need to persist it (e.g. it's not the default value)
+            bool valueModified = paintFlags.HasFlag(PaintValueFlags.CheckShouldSerialize) && ShouldSerializePropertyValue();
 
             // If we have text to paint, paint it
-            if (strValue != null && strValue.Length > 0)
+            if (string.IsNullOrEmpty(text))
             {
-                Font f = GetFont(valueModified);
-
-                if (strValue.Length > maximumLengthOfPropertyString)
-                {
-                    strValue = strValue.Substring(0, maximumLengthOfPropertyString);
-                }
-                int textWidth = GetValueTextWidth(strValue, g, f);
-                bool doToolTip = false;
-
-                // Check if text contains multiple lines
-                if (textWidth >= rect.Width || GetMultipleLines(strValue))
-                {
-                    doToolTip = true;
-                }
-
-                if (Rectangle.Intersect(rect, clipRect).IsEmpty)
-                {
-                    return;
-                }
-
-                // Do actual drawing
-
-                // bump the text down 2 pixels and over 1 pixel.
-                if ((paintFlags & PaintValueFlags.PaintInPlace) != PaintValueFlags.None)
-                {
-                    rect.Offset(1, 2);
-                }
-                else
-                {
-                    // only go down one pixel when we're painting in the listbox
-                    rect.Offset(1, 1);
-                }
-
-                Matrix m = g.Transform;
-
-                using var hdc = new DeviceContextHdcScope(g);
-                RECT lpRect = new Rectangle(rect.X + (int)m.OffsetX + 2, rect.Y + (int)m.OffsetY - 1, rect.Width - 4, rect.Height);
-                Gdi32.HGDIOBJ hfont = (Gdi32.HGDIOBJ)GetHfont(valueModified);
-
-                int oldTextColor = 0;
-                int oldBkColor = 0;
-
-                Color bkColor = ((paintFlags & PaintValueFlags.DrawSelected) != PaintValueFlags.None) ? GridEntryHost.GetSelectedItemWithFocusBackColor() : GridEntryHost.BackColor;
-
-                try
-                {
-                    oldTextColor = Gdi32.SetTextColor(hdc, COLORREF.RgbToCOLORREF(textColor.ToArgb()));
-                    oldBkColor = Gdi32.SetBkColor(hdc, COLORREF.RgbToCOLORREF(bkColor.ToArgb()));
-                    using var fontSelection = new Gdi32.SelectObjectScope(hdc, hfont);
-                    User32.DT format = User32.DT.EDITCONTROL | User32.DT.EXPANDTABS | User32.DT.NOCLIP | User32.DT.SINGLELINE | User32.DT.NOPREFIX;
-                    if (gridHost.DrawValuesRightToLeft)
-                    {
-                        format |= User32.DT.RIGHT | User32.DT.RTLREADING;
-                    }
-
-                    // For password mode, replace the string value with a bullet.
-                    if (ShouldRenderPassword)
-                    {
-                        if (passwordReplaceChar == '\0')
-                        {
-                            // Bullet is 2022, but edit box uses round circle 25CF
-                            passwordReplaceChar = '\u25CF';
-                        }
-
-                        strValue = new string(passwordReplaceChar, strValue.Length);
-                    }
-
-                    User32.DrawTextW(hdc, strValue, strValue.Length, ref lpRect, format);
-                }
-                finally
-                {
-                    Gdi32.SetTextColor(hdc, oldTextColor);
-                    Gdi32.SetBkColor(hdc, oldBkColor);
-                }
-
-                if (doToolTip)
-                {
-                    ValueToolTipLocation = new Point(rect.X + 2, rect.Y - 1);
-                }
-                else
-                {
-                    ValueToolTipLocation = InvalidPoint;
-                }
+                return;
             }
 
-            return;
+            if (text.Length > maximumLengthOfPropertyString)
+            {
+                text = text.Substring(0, maximumLengthOfPropertyString);
+            }
+
+            int textWidth = GetValueTextWidth(text, g, GetFont(valueModified));
+            bool doToolTip = false;
+
+            // Check if text contains multiple lines
+            if (textWidth >= rect.Width || GetMultipleLines(text))
+            {
+                doToolTip = true;
+            }
+
+            if (Rectangle.Intersect(rect, clipRect).IsEmpty)
+            {
+                return;
+            }
+
+            // Do actual drawing, shifting to match the PropertyGridView.GridViewListbox content alignment
+
+            if (paintFlags.HasFlag(PaintValueFlags.PaintInPlace))
+            {
+                rect.Offset(1, 2);
+            }
+            else
+            {
+                // Only go down one pixel when we're painting in the listbox
+                rect.Offset(1, 1);
+            }
+
+            Rectangle textRectangle = new Rectangle(
+                rect.X - 1,
+                rect.Y - 1,
+                rect.Width - 4,
+                rect.Height);
+
+            backColor = paintFlags.HasFlag(PaintValueFlags.DrawSelected)
+                ? GridEntryHost.GetSelectedItemWithFocusBackColor()
+                : GridEntryHost.BackColor;
+
+            User32.DT format = User32.DT.EDITCONTROL | User32.DT.EXPANDTABS | User32.DT.NOCLIP
+                | User32.DT.SINGLELINE | User32.DT.NOPREFIX;
+
+            if (gridHost.DrawValuesRightToLeft)
+            {
+                format |= User32.DT.RIGHT | User32.DT.RTLREADING;
+            }
+
+            // For password mode, replace the string value with a bullet.
+            if (ShouldRenderPassword)
+            {
+                if (passwordReplaceChar == '\0')
+                {
+                    // Bullet is 2022, but edit box uses round circle 25CF
+                    passwordReplaceChar = '\u25CF';
+                }
+
+                text = new string(passwordReplaceChar, text.Length);
+            }
+
+            TextRenderer.DrawTextInternal(
+                g,
+                text,
+                GetFont(boldFont: valueModified),
+                textRectangle,
+                textColor,
+                backColor,
+                (TextFormatFlags)format);
+
+            ValueToolTipLocation = doToolTip ? new Point(rect.X + 2, rect.Y - 1) : InvalidPoint;
         }
 
         public virtual bool OnComponentChanging()
@@ -2719,7 +2648,7 @@ namespace System.Windows.Forms.PropertyGridInternal
             {
                 if (((ParenthesizePropertyNameAttribute)props[i].Attributes[typeof(ParenthesizePropertyNameAttribute)]).NeedParenthesis)
                 {
-                    if (newProps == null)
+                    if (newProps is null)
                     {
                         newProps = new PropertyDescriptor[props.Length];
                     }
@@ -2761,7 +2690,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         internal virtual bool NotifyValue(int type)
         {
-            if (parentPE == null)
+            if (parentPE is null)
             {
                 return true;
             }
@@ -2908,7 +2837,7 @@ namespace System.Windows.Forms.PropertyGridInternal
             // Locking 'this' here is ok since this is an internal class.
             lock (this)
             {
-                if (handler == null)
+                if (handler is null)
                 {
                     return;
                 }
@@ -2955,7 +2884,7 @@ namespace System.Windows.Forms.PropertyGridInternal
             // Locking this here is ok since this is an internal class.
             lock (this)
             {
-                if (handler == null)
+                if (handler is null)
                 {
                     return;
                 }
@@ -2965,9 +2894,9 @@ namespace System.Windows.Forms.PropertyGridInternal
                     if (e.key == key)
                     {
                         e.handler = Delegate.Remove(e.handler, handler);
-                        if (e.handler == null)
+                        if (e.handler is null)
                         {
-                            if (prev == null)
+                            if (prev is null)
                             {
                                 eventList = e.next;
                             }
@@ -3015,10 +2944,9 @@ namespace System.Windows.Forms.PropertyGridInternal
 
             public override Rectangle Bounds
             {
-                get
-                {
-                    return PropertyGridView.AccessibilityGetGridEntryBounds(owner);
-                }
+                get => PropertyGridView != null && PropertyGridView.IsHandleCreated
+                    ? PropertyGridView.AccessibilityGetGridEntryBounds(owner)
+                    : Rectangle.Empty;
             }
 
             public override string DefaultAction
@@ -3118,7 +3046,12 @@ namespace System.Windows.Forms.PropertyGridInternal
             {
                 get
                 {
-                    if (runtimeId == null)
+                    if (owner.GridEntryHost is null || !owner.GridEntryHost.IsHandleCreated)
+                    {
+                        return base.RuntimeId;
+                    }
+
+                    if (runtimeId is null)
                     {
                         // we need to provide a unique ID
                         // others are implementing this in the same manner
@@ -3129,7 +3062,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                         runtimeId = new int[3];
                         runtimeId[0] = 0x2a;
-                        runtimeId[1] = (int)(long)owner.GridEntryHost.Handle;
+                        runtimeId[1] = (int)(long)owner.GridEntryHost.InternalHandle;
                         runtimeId[2] = GetHashCode();
                     }
 
@@ -3199,7 +3132,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                     case UiaCore.UIA.GridItemPatternId:
                     case UiaCore.UIA.TableItemPatternId:
-                        if (owner == null || owner.OwnerGrid == null || owner.OwnerGrid.SortedByCategories)
+                        if (owner is null || owner.OwnerGrid is null || owner.OwnerGrid.SortedByCategories)
                         {
                             break;
                         }
@@ -3253,7 +3186,10 @@ namespace System.Windows.Forms.PropertyGridInternal
 
             public override void DoDefaultAction()
             {
-                owner.OnOutlineClick(EventArgs.Empty);
+                if (PropertyGridView.IsHandleCreated)
+                {
+                    owner.OnOutlineClick(EventArgs.Empty);
+                }
             }
 
             public override string Name
@@ -3298,6 +3234,11 @@ namespace System.Windows.Forms.PropertyGridInternal
             {
                 get
                 {
+                    if (!PropertyGridView.IsHandleCreated)
+                    {
+                        return AccessibleStates.None;
+                    }
+
                     AccessibleStates state = AccessibleStates.Selectable | AccessibleStates.Focusable;
 
                     // Determine focus
@@ -3417,6 +3358,11 @@ namespace System.Windows.Forms.PropertyGridInternal
 
             public override void Select(AccessibleSelection flags)
             {
+                if (!PropertyGridView.IsHandleCreated)
+                {
+                    return;
+                }
+
                 // make sure we're on the right thread.
                 //
                 if (PropertyGridView.InvokeRequired)
@@ -3442,6 +3388,11 @@ namespace System.Windows.Forms.PropertyGridInternal
 
             internal override void SetFocus()
             {
+                if (!PropertyGridView.IsHandleCreated)
+                {
+                    return;
+                }
+
                 base.SetFocus();
 
                 RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
@@ -3452,19 +3403,19 @@ namespace System.Windows.Forms.PropertyGridInternal
                 get
                 {
                     var parent = Parent as PropertyGridView.PropertyGridViewAccessibleObject;
-                    if (parent == null)
+                    if (parent is null)
                     {
                         return -1;
                     }
 
                     var gridView = parent.Owner as PropertyGridView;
-                    if (gridView == null)
+                    if (gridView is null)
                     {
                         return -1;
                     }
 
                     var topLevelGridEntries = gridView.TopLevelGridEntries;
-                    if (topLevelGridEntries == null)
+                    if (topLevelGridEntries is null)
                     {
                         return -1;
                     }
@@ -3509,13 +3460,13 @@ namespace System.Windows.Forms.PropertyGridInternal
             string result;
             object typeId = a.TypeId;
 
-            if (typeId == null)
+            if (typeId is null)
             {
                 Debug.Fail("Attribute '" + a.GetType().FullName + "' does not have a typeid.");
                 return "";
             }
 
-            if (typeIds == null)
+            if (typeIds is null)
             {
                 typeIds = new Hashtable();
                 result = null;
@@ -3525,7 +3476,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 result = typeIds[typeId] as string;
             }
 
-            if (result == null)
+            if (result is null)
             {
                 result = typeId.ToString();
                 typeIds[typeId] = result;
@@ -3538,15 +3489,15 @@ namespace System.Windows.Forms.PropertyGridInternal
             Attribute a1 = obj1 as Attribute;
             Attribute a2 = obj2 as Attribute;
 
-            if (a1 == null && a2 == null)
+            if (a1 is null && a2 is null)
             {
                 return 0;
             }
-            else if (a1 == null)
+            else if (a1 is null)
             {
                 return -1;
             }
-            else if (a2 == null)
+            else if (a2 is null)
             {
                 return 1;
             }

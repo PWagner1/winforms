@@ -476,7 +476,7 @@ namespace System.Windows.Forms
             if (UseCompatibleTextRendering)
             {
                 Graphics graphics = e.GraphicsInternal;
-                using Brush textBrush = ForeColor.CreateStaticBrush();
+                using var textBrush = ForeColor.GetCachedSolidBrushScope();
                 using StringFormat format = new StringFormat
                 {
                     HotkeyPrefix = ShowKeyboardCues ? HotkeyPrefix.Show : HotkeyPrefix.Hide
@@ -518,11 +518,11 @@ namespace System.Windows.Forms
                 }
 
                 using var hfont = GdiCache.GetHFONT(Font);
-                textSize = hdc.MeasureText(Text, hfont, new Size(textRectangle.Width, int.MaxValue), flags);
+                textSize = hdc.HDC.MeasureText(Text, hfont, new Size(textRectangle.Width, int.MaxValue), (TextFormatFlags)flags);
 
                 if (Enabled)
                 {
-                    hdc.DrawText(Text, hfont, textRectangle, ForeColor, flags);
+                    hdc.HDC.DrawText(Text, hfont, textRectangle, ForeColor, (TextFormatFlags)flags);
                 }
                 else
                 {
@@ -564,7 +564,7 @@ namespace System.Windows.Forms
                 if (boxColor.HasTransparency())
                 {
                     Graphics graphics = e.GraphicsInternal;
-                    using Pen boxPen = boxColor.CreateStaticPen();
+                    using var boxPen = boxColor.GetCachedPenScope();
                     graphics.DrawLines(boxPen, lines);
                 }
                 else
@@ -671,15 +671,14 @@ namespace System.Windows.Forms
             if (backColor.HasTransparency())
             {
                 using Graphics graphics = Graphics.FromHdcInternal(m.WParam);
-                using Brush brush = backColor.CreateStaticBrush();
+                using var brush = backColor.GetCachedSolidBrushScope();
                 graphics.FillRectangle(brush, rect);
             }
             else
             {
                 var hdc = (Gdi32.HDC)m.WParam;
                 using var hbrush = new Gdi32.CreateBrushScope(backColor);
-                using var selection = new Gdi32.SelectObjectScope(hdc, hbrush);
-                Gdi32.Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
+                User32.FillRect(hdc, ref rect, hbrush);
             }
 
             m.Result = (IntPtr)1;

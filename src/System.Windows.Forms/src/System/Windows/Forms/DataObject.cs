@@ -4,7 +4,6 @@
 
 #nullable disable
 
-using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -16,8 +15,8 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using IComDataObject = System.Runtime.InteropServices.ComTypes.IDataObject;
 using static Interop;
+using IComDataObject = System.Runtime.InteropServices.ComTypes.IDataObject;
 
 namespace System.Windows.Forms
 {
@@ -127,15 +126,15 @@ namespace System.Windows.Forms
             Gdi32.HBITMAP hBitmap = bm.GetHBITMAP();
 
             // Create a compatible DC to render the source bitmap.
-            var sourceDC = new Gdi32.CreateDcScope(screenDC);
-            var sourceBitmapSelection = new Gdi32.SelectObjectScope(sourceDC, hBitmap);
+            using var sourceDC = new Gdi32.CreateDcScope(screenDC);
+            using var sourceBitmapSelection = new Gdi32.SelectObjectScope(sourceDC, hBitmap);
 
             // Create a compatible DC and a new compatible bitmap.
-            var destinationDC = new Gdi32.CreateDcScope(screenDC);
+            using var destinationDC = new Gdi32.CreateDcScope(screenDC);
             Gdi32.HBITMAP bitmap = Gdi32.CreateCompatibleBitmap(screenDC, bm.Size.Width, bm.Size.Height);
 
             // Select the new bitmap into a compatible DC and render the blt the original bitmap.
-            var destinationBitmapSelection = new Gdi32.SelectObjectScope(destinationDC, bitmap);
+            using var destinationBitmapSelection = new Gdi32.SelectObjectScope(destinationDC, bitmap);
             Gdi32.BitBlt(
                 destinationDC,
                 0,
@@ -179,7 +178,7 @@ namespace System.Windows.Forms
         public virtual object GetData(Type format)
         {
             Debug.WriteLineIf(CompModSwitches.DataObject.TraceVerbose, "Request data: " + format?.FullName ?? "(null)");
-            if (format == null)
+            if (format is null)
             {
                 return null;
             }
@@ -195,7 +194,7 @@ namespace System.Windows.Forms
         public virtual bool GetDataPresent(Type format)
         {
             Debug.WriteLineIf(CompModSwitches.DataObject.TraceVerbose, "Check data: " + format?.FullName ?? "(null)");
-            if (format == null)
+            if (format is null)
             {
                 return false;
             }
@@ -332,7 +331,7 @@ namespace System.Windows.Forms
 
         public virtual void SetAudio(byte[] audioBytes)
         {
-            if (audioBytes == null)
+            if (audioBytes is null)
             {
                 throw new ArgumentNullException(nameof(audioBytes));
             }
@@ -341,7 +340,7 @@ namespace System.Windows.Forms
 
         public virtual void SetAudio(Stream audioStream)
         {
-            if (audioStream == null)
+            if (audioStream is null)
             {
                 throw new ArgumentNullException(nameof(audioStream));
             }
@@ -350,7 +349,7 @@ namespace System.Windows.Forms
 
         public virtual void SetFileDropList(StringCollection filePaths)
         {
-            if (filePaths == null)
+            if (filePaths is null)
             {
                 throw new ArgumentNullException(nameof(filePaths));
             }
@@ -361,7 +360,7 @@ namespace System.Windows.Forms
 
         public virtual void SetImage(Image image)
         {
-            if (image == null)
+            if (image is null)
             {
                 throw new ArgumentNullException(nameof(image));
             }
@@ -412,31 +411,11 @@ namespace System.Windows.Forms
         // END - WHIDBEY ADDITIONS -->
 
         /// <summary>
-        ///  Retrieves a list of distinct strings from the array.
-        /// </summary>
-        private static string[] GetDistinctStrings(string[] formats)
-        {
-            ArrayList distinct = new ArrayList();
-            for (int i = 0; i < formats.Length; i++)
-            {
-                string s = formats[i];
-                if (!distinct.Contains(s))
-                {
-                    distinct.Add(s);
-                }
-            }
-
-            string[] temp = new string[distinct.Count];
-            distinct.CopyTo(temp, 0);
-            return temp;
-        }
-
-        /// <summary>
         ///  Returns all the "synonyms" for the specified format.
         /// </summary>
         private static string[] GetMappedFormats(string format)
         {
-            if (format == null)
+            if (format is null)
             {
                 return null;
             }
@@ -825,7 +804,9 @@ namespace System.Windows.Forms
                 formatter.Binder = new BitmapBinder();
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
             formatter.Serialize(stream, data);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         /// <summary>
@@ -868,7 +849,7 @@ namespace System.Windows.Forms
         /// </summary>
         private unsafe HRESULT SaveFileListToHandle(IntPtr handle, string[] files)
         {
-            if (files == null || files.Length == 0)
+            if (files is null || files.Length == 0)
             {
                 return HRESULT.S_OK;
             }
@@ -963,7 +944,7 @@ namespace System.Windows.Forms
                 }
 
                 char* ptr = (char*)Kernel32.GlobalLock(newHandle);
-                if (ptr == null)
+                if (ptr is null)
                 {
                     return HRESULT.E_OUTOFMEMORY;
                 }
@@ -987,7 +968,7 @@ namespace System.Windows.Forms
                     }
 
                     byte* ptr = (byte*)Kernel32.GlobalLock(newHandle);
-                    if (ptr == null)
+                    if (ptr is null)
                     {
                         return HRESULT.E_OUTOFMEMORY;
                     }
@@ -1019,7 +1000,7 @@ namespace System.Windows.Forms
             }
 
             byte* ptr = (byte*)Kernel32.GlobalLock(newHandle);
-            if (ptr == null)
+            if (ptr is null)
             {
                 return HRESULT.E_OUTOFMEMORY;
             }

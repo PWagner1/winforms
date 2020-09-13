@@ -4,16 +4,15 @@
 
 #nullable disable
 
-using System.Diagnostics;
-using System.Drawing.Design;
 using System.Collections;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing.Design;
 using System.Globalization;
-using System.Runtime.InteropServices;
 
 namespace System.Windows.Forms
 {
-    [LookupBindingProperties(nameof(ListControl.DataSource), nameof(ListControl.DisplayMember), nameof(ListControl.ValueMember), nameof(ListControl.SelectedValue))]
+    [LookupBindingProperties(nameof(DataSource), nameof(DisplayMember), nameof(ValueMember), nameof(SelectedValue))]
     public abstract class ListControl : Control
     {
         private static readonly object s_dataSourceChangedEvent = new object();
@@ -80,7 +79,7 @@ namespace System.Windows.Forms
                     // the ListControl should also eat the exception - this is the RTM behavior and doing anything else is a breaking change
                     DisplayMember = string.Empty;
                 }
-                if (value == null)
+                if (value is null)
                 {
                     DisplayMember = string.Empty;
                 }
@@ -138,7 +137,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (_displayMemberConverter == null)
+                if (_displayMemberConverter is null)
                 {
                     PropertyDescriptorCollection props = DataManager?.GetItemProperties();
                     if (props != null)
@@ -207,7 +206,7 @@ namespace System.Windows.Forms
             get => _formatString;
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -295,7 +294,7 @@ namespace System.Windows.Forms
             get => _valueMember.BindingMember;
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -461,11 +460,11 @@ namespace System.Windows.Forms
 
         private protected int FindStringInternal(string str, IList items, int startIndex, bool exact, bool ignoreCase)
         {
-            if (str == null)
+            if (str is null)
             {
                 return -1;
             }
-            if (items == null || items.Count == 0)
+            if (items is null || items.Count == 0)
             {
                 return -1;
             }
@@ -506,13 +505,13 @@ namespace System.Windows.Forms
         {
             if (!_formattingEnabled)
             {
-                if (item == null)
+                if (item is null)
                 {
                     return string.Empty;
                 }
 
                 item = FilterItemOnProperty(item, _displayMember.BindingField);
-                if (item == null)
+                if (item is null)
                 {
                     return string.Empty;
                 }
@@ -531,7 +530,7 @@ namespace System.Windows.Forms
             }
 
             // Try Formatter.FormatObject
-            if (_stringTypeConverter == null)
+            if (_stringTypeConverter is null)
             {
                 _stringTypeConverter = TypeDescriptor.GetConverter(typeof(string));
             }
@@ -665,7 +664,7 @@ namespace System.Windows.Forms
                 {
                     _inSetDataConnection = true;
                     IList currentList = DataManager?.List;
-                    bool currentManagerIsNull = DataManager == null;
+                    bool currentManagerIsNull = DataManager is null;
 
                     UnwireDataSource();
 

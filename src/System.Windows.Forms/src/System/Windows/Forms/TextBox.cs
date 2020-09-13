@@ -188,7 +188,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (autoCompleteCustomSource == null)
+                if (autoCompleteCustomSource is null)
                 {
                     autoCompleteCustomSource = new AutoCompleteStringCollection();
                     autoCompleteCustomSource.CollectionChanged += new CollectionChangeEventHandler(OnAutoCompleteCustomSourceChanged);
@@ -740,7 +740,7 @@ namespace System.Windows.Forms
                         }
                         else
                         {
-                            if (stringSource == null)
+                            if (stringSource is null)
                             {
                                 stringSource = new StringSource(GetStringsForAutoComplete());
                                 if (!stringSource.Bind(new HandleRef(this, Handle), (Shell32.AUTOCOMPLETEOPTIONS)AutoCompleteMode))
@@ -803,18 +803,15 @@ namespace System.Windows.Forms
         private void WmPrint(ref Message m)
         {
             base.WndProc(ref m);
-            if (((PRF)m.LParam & PRF.NONCLIENT) != 0 && Application.RenderWithVisualStyles && BorderStyle == BorderStyle.Fixed3D)
+            if (((PRF)m.LParam & PRF.NONCLIENT) != 0 && Application.RenderWithVisualStyles
+                && BorderStyle == BorderStyle.Fixed3D)
             {
-                using (Graphics g = Graphics.FromHdc(m.WParam))
-                {
-                    Rectangle rect = new Rectangle(0, 0, Size.Width - 1, Size.Height - 1);
-                    using (Pen pen = new Pen(VisualStyleInformation.TextControlBorder))
-                    {
-                        g.DrawRectangle(pen, rect);
-                    }
-                    rect.Inflate(-1, -1);
-                    g.DrawRectangle(SystemPens.Window, rect);
-                }
+                using Graphics g = Graphics.FromHdc(m.WParam);
+                Rectangle rect = new Rectangle(0, 0, Size.Width - 1, Size.Height - 1);
+                using var pen = VisualStyleInformation.TextControlBorder.GetCachedPenScope();
+                g.DrawRectangle(pen, rect);
+                rect.Inflate(-1, -1);
+                g.DrawRectangle(SystemPens.Window, rect);
             }
         }
 
@@ -833,7 +830,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }

@@ -7,7 +7,6 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -49,7 +48,7 @@ namespace System.Windows.Forms
             get
             {
                 Image result = base.BackgroundImage;
-                if (result == null && ParentInternal != null)
+                if (result is null && ParentInternal != null)
                 {
                     result = ParentInternal.BackgroundImage;
                 }
@@ -237,7 +236,7 @@ namespace System.Windows.Forms
         protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
         {
             ISite site = ParentInternal?.Site;
-            if (IsHandleCreated && (site == null || !site.DesignMode))
+            if (IsHandleCreated && (site is null || !site.DesignMode))
             {
                 Rectangle oldBounds = Bounds;
                 base.SetBoundsCore(x, y, width, height, specified);
@@ -310,7 +309,7 @@ namespace System.Windows.Forms
                 throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
             }
 
-            if (Gdi32.CombineRgn(rgn1, rgn1, rgn2, Gdi32.CombineMode.RGN_DIFF) == 0)
+            if (Gdi32.CombineRgn(rgn1, rgn1, rgn2, Gdi32.RGN.DIFF) == 0)
             {
                 throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
             }
@@ -363,7 +362,7 @@ namespace System.Windows.Forms
                     {
                         childForm = ((Form)ParentInternal).ActiveMdiChildInternal;
                     }
-                    if (childForm == null && MdiChildren.Length > 0 && MdiChildren[0].IsMdiChildFocusable)
+                    if (childForm is null && MdiChildren.Length > 0 && MdiChildren[0].IsMdiChildFocusable)
                     {
                         childForm = MdiChildren[0];
                     }
@@ -427,7 +426,7 @@ namespace System.Windows.Forms
             /// </summary>
             public override void Add(Control value)
             {
-                if (value == null)
+                if (value is null)
                 {
                     return;
                 }

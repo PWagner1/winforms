@@ -102,7 +102,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (imageIndexer == null)
+                if (imageIndexer is null)
                 {
                     imageIndexer = new ImageList.Indexer();
                 }
@@ -115,7 +115,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (selectedImageIndexer == null)
+                if (selectedImageIndexer is null)
                 {
                     selectedImageIndexer = new ImageList.Indexer();
                 }
@@ -558,7 +558,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (imageList == null)
+                if (imageList is null)
                 {
                     return ImageList.Indexer.DefaultIndex;
                 }
@@ -659,10 +659,10 @@ namespace System.Windows.Forms
                     if (IsHandleCreated)
                     {
                         User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, IntPtr.Zero,
-                                    value == null ? IntPtr.Zero : value.Handle);
+                                    value is null ? IntPtr.Zero : value.Handle);
                         if (StateImageList != null && StateImageList.Images.Count > 0 && internalStateImageList != null)
                         {
-                            SetStateImageList(internalStateImageList.Handle);
+                            SetStateImageList(internalStateImageList.CreateUniqueHandle());
                         }
                     }
                     UpdateCheckedState(root, true);
@@ -742,7 +742,7 @@ namespace System.Windows.Forms
                         // and stateimage value for each node.
                         UpdateCheckedState(root, true);
 
-                        if ((value == null || stateImageList.Images.Count == 0) && CheckBoxes)
+                        if ((value is null || stateImageList.Images.Count == 0) && CheckBoxes)
                         {
                             // Requires Handle Recreate to force on the checkBoxes and states..
                             RecreateHandle();
@@ -934,7 +934,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (nodes == null)
+                if (nodes is null)
                 {
                     nodes = new TreeNodeCollection(root);
                 }
@@ -1074,7 +1074,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (imageList == null)
+                if (imageList is null)
                 {
                     return ImageList.Indexer.DefaultIndex;
                 }
@@ -1178,14 +1178,14 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (IsHandleCreated && (value == null || value.TreeView == this))
+                if (IsHandleCreated && (value is null || value.TreeView == this))
                 {
                     // This class invariant is not quite correct -- if the selected node does not belong to this Treeview,
                     // selectedNode != null even though the handle is created.  We will call set_SelectedNode
                     // to inform the handle that the selected node has been added to the TreeView.
-                    Debug.Assert(selectedNode == null || selectedNode.TreeView != this, "handle is created, but we're still caching selectedNode");
+                    Debug.Assert(selectedNode is null || selectedNode.TreeView != this, "handle is created, but we're still caching selectedNode");
 
-                    IntPtr hnode = (value == null ? IntPtr.Zero : value.Handle);
+                    IntPtr hnode = (value is null ? IntPtr.Zero : value.Handle);
                     User32.SendMessageW(this, (User32.WM)TVM.SELECTITEM, (IntPtr)TVGN.CARET, hnode);
                     selectedNode = null;
                 }
@@ -1315,7 +1315,7 @@ namespace System.Windows.Forms
                 if (Sorted != value)
                 {
                     treeViewState[TREEVIEWSTATE_sorted] = value;
-                    if (Sorted && TreeViewNodeSorter == null && Nodes.Count >= 1)
+                    if (Sorted && TreeViewNodeSorter is null && Nodes.Count >= 1)
                     {
                         RefreshNodes();
                     }
@@ -1388,14 +1388,14 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (IsHandleCreated && (value == null || value.TreeView == this))
+                if (IsHandleCreated && (value is null || value.TreeView == this))
                 {
                     // This class invariant is not quite correct -- if the selected node does not belong to this Treeview,
                     // selectedNode != null even though the handle is created.  We will call set_SelectedNode
                     // to inform the handle that the selected node has been added to the TreeView.
-                    Debug.Assert(topNode == null || topNode.TreeView != this, "handle is created, but we're still caching selectedNode");
+                    Debug.Assert(topNode is null || topNode.TreeView != this, "handle is created, but we're still caching selectedNode");
 
-                    IntPtr hnode = (value == null ? IntPtr.Zero : value.Handle);
+                    IntPtr hnode = (value is null ? IntPtr.Zero : value.Handle);
                     User32.SendMessageW(this, (User32.WM)TVM.SELECTITEM, (IntPtr)TVGN.FIRSTVISIBLE, hnode);
                     topNode = null;
                 }
@@ -1781,7 +1781,7 @@ namespace System.Windows.Forms
         {
             if (IsHandleCreated)
             {
-                IntPtr handle = (ImageList == null) ? IntPtr.Zero : ImageList.Handle;
+                IntPtr handle = (ImageList is null) ? IntPtr.Zero : ImageList.Handle;
                 User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, IntPtr.Zero, handle);
             }
         }
@@ -1819,7 +1819,7 @@ namespace System.Windows.Forms
                 IntPtr handle = IntPtr.Zero;
                 if (internalStateImageList != null)
                 {
-                    handle = internalStateImageList.Handle;
+                    handle = internalStateImageList.CreateUniqueHandle();
                 }
                 SetStateImageList(handle);
             }
@@ -1859,10 +1859,10 @@ namespace System.Windows.Forms
                             internalStateImageList.ImageSize = (Size)ScaledStateImageSize;
                         }
 
-                        SetStateImageList(internalStateImageList.Handle);
+                        SetStateImageList(internalStateImageList.CreateUniqueHandle());
                     }
                 }
-                else //stateImageList == null || stateImageList.Images.Count = 0;
+                else //stateImageList is null || stateImageList.Images.Count = 0;
                 {
                     UpdateCheckedState(root, true);
                 }
@@ -2050,7 +2050,7 @@ namespace System.Windows.Forms
                     images[i] = stateImageList.Images[i - 1];
                 }
                 newImageList.Images.AddRange(images);
-                User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, (IntPtr)TVSIL.STATE, newImageList.Handle);
+                User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, (IntPtr)TVSIL.STATE, newImageList.CreateUniqueHandle());
 
                 if (internalStateImageList != null)
                 {
@@ -2067,7 +2067,8 @@ namespace System.Windows.Forms
             IntPtr handleOld = User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, (IntPtr)TVSIL.STATE, handle);
             if ((handleOld != IntPtr.Zero) && (handleOld != handle))
             {
-                ComCtl32.ImageList.Destroy(new HandleRef(this, handleOld));
+                var result = ComCtl32.ImageList.Destroy(new HandleRef(this, handleOld));
+                Debug.Assert(result.IsTrue());
             }
         }
 
@@ -2078,7 +2079,8 @@ namespace System.Windows.Forms
             IntPtr handle = User32.SendMessageW(this, (User32.WM)TVM.GETIMAGELIST, (IntPtr)TVSIL.STATE);
             if (handle != IntPtr.Zero)
             {
-                ComCtl32.ImageList.Destroy(new HandleRef(this, handle));
+                var result = ComCtl32.ImageList.Destroy(new HandleRef(this, handle));
+                Debug.Assert(result.IsTrue());
                 if (reset)
                 {
                     User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, (IntPtr)TVSIL.STATE);
@@ -2619,7 +2621,7 @@ namespace System.Windows.Forms
                     // user's images.
                     if (internalStateImageList != null)
                     {
-                        SetStateImageList(internalStateImageList.Handle);
+                        SetStateImageList(internalStateImageList.CreateUniqueHandle());
                     }
                 }
             }
@@ -2690,7 +2692,7 @@ namespace System.Windows.Forms
                     Debug.Assert(nmtvcd->nmcd.dwItemSpec != IntPtr.Zero, "Invalid node handle in ITEMPREPAINT");
                     TreeNode node = NodeFromHandle((IntPtr)nmtvcd->nmcd.dwItemSpec);
 
-                    if (node == null)
+                    if (node is null)
                     {
                         // this can happen if we are presently inserting the node - it hasn't yet
                         // been added to the handle table
@@ -2789,27 +2791,23 @@ namespace System.Windows.Forms
                         Debug.Assert(nmtvcd->nmcd.dwItemSpec != IntPtr.Zero, "Invalid node handle in ITEMPOSTPAINT");
 
                         // Get the node
-                        node = NodeFromHandle((IntPtr)nmtvcd->nmcd.dwItemSpec);
+                        node = NodeFromHandle(nmtvcd->nmcd.dwItemSpec);
 
-                        if (node == null)
+                        if (node is null)
                         {
                             // this can happen if we are presently inserting the node - it hasn't yet
                             // been added to the handle table
                             return;
                         }
 
-                        Graphics g = nmtvcd->nmcd.hdc.CreateGraphics();
-
-                        DrawTreeNodeEventArgs e;
-
-                        try
+                        using (Graphics g = nmtvcd->nmcd.hdc.CreateGraphics())
                         {
                             Rectangle bounds = node.Bounds;
                             Size textSize = TextRenderer.MeasureText(node.Text, node.TreeView.Font);
                             Point textLoc = new Point(bounds.X - 1, bounds.Y); // required to center the text
                             bounds = new Rectangle(textLoc, new Size(textSize.Width, bounds.Height));
 
-                            e = new DrawTreeNodeEventArgs(g, node, bounds, (TreeNodeStates)(nmtvcd->nmcd.uItemState));
+                            DrawTreeNodeEventArgs e = new DrawTreeNodeEventArgs(g, node, bounds, (TreeNodeStates)(nmtvcd->nmcd.uItemState));
                             OnDrawNode(e);
 
                             if (e.DrawDefault)
@@ -2829,18 +2827,12 @@ namespace System.Windows.Forms
                                 }
                                 else
                                 {
-                                    using (Brush brush = new SolidBrush(BackColor))
-                                    {
-                                        g.FillRectangle(brush, bounds);
-                                    }
+                                    using var brush = BackColor.GetCachedSolidBrushScope();
+                                    g.FillRectangle(brush, bounds);
 
                                     TextRenderer.DrawText(g, e.Node.Text, font, bounds, color, TextFormatFlags.Default);
                                 }
                             }
-                        }
-                        finally
-                        {
-                            g.Dispose();
                         }
 
                         m.Result = (IntPtr)CDRF.NOTIFYSUBITEMDRAW;
@@ -2863,7 +2855,7 @@ namespace System.Windows.Forms
         protected OwnerDrawPropertyBag GetItemRenderStyles(TreeNode node, int state)
         {
             OwnerDrawPropertyBag retval = new OwnerDrawPropertyBag();
-            if (node == null || node.propBag == null)
+            if (node is null || node.propBag is null)
             {
                 return retval;
             }
@@ -3081,13 +3073,12 @@ namespace System.Windows.Forms
 
             if (((User32.PRF)m.LParam & User32.PRF.NONCLIENT) != 0 && Application.RenderWithVisualStyles && BorderStyle == BorderStyle.Fixed3D)
             {
-                using (Graphics g = Graphics.FromHdc(m.WParam))
-                {
-                    Rectangle rect = new Rectangle(0, 0, Size.Width - 1, Size.Height - 1);
-                    g.DrawRectangle(new Pen(VisualStyleInformation.TextControlBorder), rect);
-                    rect.Inflate(-1, -1);
-                    g.DrawRectangle(SystemPens.Window, rect);
-                }
+                using Graphics g = Graphics.FromHdc(m.WParam);
+                Rectangle rect = new Rectangle(0, 0, Size.Width - 1, Size.Height - 1);
+                using var pen = VisualStyleInformation.TextControlBorder.GetCachedPenScope();
+                g.DrawRectangle(pen, rect);
+                rect.Inflate(-1, -1);
+                g.DrawRectangle(SystemPens.Window, rect);
             }
         }
 

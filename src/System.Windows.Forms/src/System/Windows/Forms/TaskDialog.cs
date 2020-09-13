@@ -56,7 +56,7 @@ namespace System.Windows.Forms
         /// </para>
         /// <para>
         ///   See documentation/repro in
-        ///   /Documentation/src/System/Windows/Forms/TaskDialog/Issue_ButtonClickHandlerCalledTwice.md
+        ///   /docs/src/System/Windows/Forms/TaskDialog/Issue_ButtonClickHandlerCalledTwice.md
         /// </para>
         /// <para>
         ///   Note: We use a WM_APP message with a high value (WM_USER is not
@@ -102,6 +102,8 @@ namespace System.Windows.Forms
         ///   <see cref="TaskDialog"/> instance.
         /// </summary>
         private IntPtr _instanceHandlePtr;
+
+        private IntPtr _handle;
 
         private WindowSubclassHandler? _windowSubclassHandler;
 
@@ -222,7 +224,22 @@ namespace System.Windows.Forms
         ///   Gets the window handle of the task dialog window, or <see cref="IntPtr.Zero"/>
         ///   if the dialog is currently not being shown.
         /// </summary>
-        public IntPtr Handle { get; private set; }
+        public IntPtr Handle
+        {
+            get
+            {
+                // Check that the current thread is the same than the one which created the window,
+                // similar to the check in Control.Handle. While the task dialog is showing, it must
+                // only be accessed from the original thread because the implementation is not
+                // thread-safe.
+                if (Control.CheckForIllegalCrossThreadCalls && InvokeRequired)
+                {
+                    throw new InvalidOperationException(string.Format(SR.IllegalCrossThreadCall, nameof(TaskDialog)));
+                }
+
+                return _handle;
+            }
+        }
 
         /// <summary>
         ///   Gets a value that indicates whether <see cref="ShowDialog(IntPtr, TaskDialogPage, TaskDialogStartupLocation)"/> is
@@ -243,7 +260,10 @@ namespace System.Windows.Forms
         ///   callback should have been called setting the handle.
         /// </para>
         /// </remarks>
-        internal bool IsHandleCreated => Handle != IntPtr.Zero;
+        internal bool IsHandleCreated => _handle != IntPtr.Zero;
+
+        internal bool InvokeRequired => IsHandleCreated &&
+            User32.GetWindowThreadProcessId(_handle, out _) != Kernel32.GetCurrentThreadId();
 
         /// <summary>
         ///   Gets or sets the current count of stack frames that are in the
@@ -389,7 +409,7 @@ namespace System.Windows.Forms
         public static unsafe TaskDialogButton ShowDialog(IntPtr hwndOwner, TaskDialogPage page,
                                                   TaskDialogStartupLocation startupLocation = TaskDialogStartupLocation.CenterOwner)
         {
-            if (page == null)
+            if (page is null)
             {
                 throw new ArgumentNullException(nameof(page));
             }
@@ -522,7 +542,7 @@ namespace System.Windows.Forms
                     // thrown (which means the native task dialog is still showing),
                     // which we should avoid as it is not supported.
                     // TODO: Maybe FailFast() in that case to prevent future errors.
-                    Debug.Assert(Handle == IntPtr.Zero);
+                    Debug.Assert(_handle == IntPtr.Zero);
 
                     // Ensure to keep the callback delegate alive until
                     // TaskDialogIndirect() returns (in case we could not undo the
@@ -537,7 +557,7 @@ namespace System.Windows.Forms
                     // raiseClosed/raisePageDestroyed flags are is cleared even if
                     // the TDN_DESTROYED notification did not occur (although that
                     // should only happen when there was an exception).
-                    Handle = IntPtr.Zero;
+                    _handle = IntPtr.Zero;
                     _raisedPageCreated = false;
 
                     // Clear cached objects and other fields.
@@ -815,7 +835,7 @@ namespace System.Windows.Forms
                                        .ToString());
             }
 
-            User32.SetWindowTextW(Handle, caption);
+            User32.SetWindowTextW(_handle, caption);
         }
 
         private HRESULT HandleTaskDialogCallback(
@@ -826,8 +846,8 @@ namespace System.Windows.Forms
             Debug.Assert(_boundPage != null);
 
             // Set the hWnd as this may be the first time that we get it.
-            bool isFirstNotification = Handle == IntPtr.Zero;
-            Handle = hWnd;
+            bool isFirstNotification = _handle == IntPtr.Zero;
+            _handle = hWnd;
 
             try
             {
@@ -920,7 +940,7 @@ namespace System.Windows.Forms
                             // must not continue to send any notifications to the dialog
                             // after the callback function has returned from being called
                             // with the 'Destroyed' notification.
-                            Handle = IntPtr.Zero;
+                            _handle = IntPtr.Zero;
                         }
                         break;
 
@@ -976,7 +996,7 @@ namespace System.Windows.Forms
                             // the native TaskDialog.
                             //
                             // See documentation/repro in
-                            // /Documentation/src/System/Windows/Forms/TaskDialog/Issue_AccessViolation_NavigationInButtonClicked.md
+                            // /docs/src/System/Windows/Forms/TaskDialog/Issue_AccessViolation_NavigationInButtonClicked.md
                             //
                             // To fix the memory access problems, we simply always return
                             // S_FALSE when the callback received a TDN_NAVIGATED
@@ -1114,7 +1134,7 @@ namespace System.Windows.Forms
             // until we receive the TDN_NAVIGATED notification).
             // See:
             // https://github.com/dotnet/winforms/issues/146#issuecomment-466784079
-            // and /Documentation/src/System/Windows/Forms/TaskDialog/Issue_AccessViolation_NavigationInRadioButtonClicked.md
+            // and /docs/src/System/Windows/Forms/TaskDialog/Issue_AccessViolation_NavigationInRadioButtonClicked.md
             if (RadioButtonClickedStackCount > 0)
             {
                 throw new InvalidOperationException(string.Format(
@@ -1425,7 +1445,7 @@ namespace System.Windows.Forms
 
                         char* MarshalString(string? str)
                         {
-                            if (str == null)
+                            if (str is null)
                             {
                                 return null;
                             }
@@ -1479,7 +1499,7 @@ namespace System.Windows.Forms
 
             static long SizeOfString(string? str)
             {
-                return str == null ? 0 : ((long)str.Length + 1) * sizeof(char);
+                return str is null ? 0 : ((long)str.Length + 1) * sizeof(char);
             }
         }
 
@@ -1525,7 +1545,9 @@ namespace System.Windows.Forms
 
         private void DenyIfDialogNotUpdatable(bool checkWaitingForNavigation = true)
         {
-            if (!IsHandleCreated)
+            // Use the Handle getter (rather than HandleCreated) to check for illegal
+            // cross thread calls.
+            if (Handle == IntPtr.Zero)
             {
                 throw new InvalidOperationException(SR.TaskDialogCanUpdateStateOnlyWhenShown);
             }
@@ -1572,7 +1594,7 @@ namespace System.Windows.Forms
             DenyIfDialogNotUpdatable(checkWaitingForNavigation);
 
             User32.SendMessageW(
-                Handle,
+                _handle,
                 (User32.WM)message,
                 wParam,
                 lParam);

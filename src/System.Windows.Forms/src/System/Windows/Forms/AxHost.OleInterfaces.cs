@@ -10,8 +10,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Reflection;
-using System.Threading;
 using System.Runtime.InteropServices;
+using System.Threading;
 using static Interop;
 using static Interop.Ole32;
 
@@ -49,7 +49,7 @@ namespace System.Windows.Forms
                     if (!AppDomain.CurrentDomain.IsFinalizingForUnload())
                     {
                         SynchronizationContext context = SynchronizationContext.Current;
-                        if (context == null)
+                        if (context is null)
                         {
                             Debug.Fail("Attempted to disconnect ConnectionPointCookie from the finalizer with no SynchronizationContext.");
                         }
@@ -97,7 +97,7 @@ namespace System.Windows.Forms
 
             void AttemptStopEvents(object trash)
             {
-                if (connectionPoint == null)
+                if (connectionPoint is null)
                 {
                     return;
                 }
@@ -126,7 +126,7 @@ namespace System.Windows.Forms
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in GetObject");
 
-                if (rval == null || riid == null)
+                if (rval is null || riid is null)
                 {
                     return HRESULT.E_INVALIDARG;
                 }
@@ -250,21 +250,27 @@ namespace System.Windows.Forms
                 return HRESULT.E_NOTIMPL;
             }
 
-            HRESULT IOleControlSite.GetExtendedControl(out object ppDisp)
+            unsafe HRESULT IOleControlSite.GetExtendedControl(IntPtr* ppDisp)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in GetExtendedControl " + host.ToString());
-                ppDisp = host.GetParentContainer().GetProxyForControl(host);
-                if (ppDisp == null)
+                if (ppDisp is null)
+                {
+                    return HRESULT.E_POINTER;
+                }
+
+                object proxy = host.GetParentContainer().GetProxyForControl(host);
+                if (proxy is null)
                 {
                     return HRESULT.E_NOTIMPL;
                 }
 
+                *ppDisp = Marshal.GetIDispatchForObject(proxy);
                 return HRESULT.S_OK;
             }
 
             unsafe HRESULT IOleControlSite.TransformCoords(Point *pPtlHimetric, PointF *pPtfContainer, XFORMCOORDS dwFlags)
             {
-                if (pPtlHimetric == null || pPtfContainer == null)
+                if (pPtlHimetric is null || pPtfContainer is null)
                 {
                     return HRESULT.E_INVALIDARG;
                 }
@@ -322,7 +328,7 @@ namespace System.Windows.Forms
 
             unsafe HRESULT IOleControlSite.TranslateAccelerator(User32.MSG* pMsg, KEYMODIFIERS grfModifiers)
             {
-                if (pMsg == null)
+                if (pMsg is null)
                 {
                     return HRESULT.E_POINTER;
                 }
@@ -364,7 +370,7 @@ namespace System.Windows.Forms
 
             unsafe HRESULT IOleClientSite.GetMoniker(OLEGETMONIKER dwAssign, OLEWHICHMK dwWhichMoniker, IntPtr* ppmk)
             {
-                if (ppmk == null)
+                if (ppmk is null)
                 {
                     return HRESULT.E_POINTER;
                 }
@@ -374,11 +380,10 @@ namespace System.Windows.Forms
                 return HRESULT.E_NOTIMPL;
             }
 
-            HRESULT IOleClientSite.GetContainer(out IOleContainer container)
+            IOleContainer IOleClientSite.GetContainer()
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in getContainer");
-                container = host.GetParentContainer();
-                return HRESULT.S_OK;
+                return host.GetParentContainer();
             }
 
             unsafe HRESULT IOleClientSite.ShowObject()
@@ -444,7 +449,7 @@ namespace System.Windows.Forms
 
             unsafe HRESULT IOleInPlaceSite.GetWindow(IntPtr* phwnd)
             {
-                if (phwnd == null)
+                if (phwnd is null)
                 {
                     return HRESULT.E_POINTER;
                 }
@@ -494,7 +499,7 @@ namespace System.Windows.Forms
                 ppDoc = null;
                 ppFrame = host.GetParentContainer();
 
-                if (lprcPosRect == null || lprcClipRect == null)
+                if (lprcPosRect is null || lprcClipRect is null)
                 {
                     return HRESULT.E_POINTER;
                 }
@@ -555,7 +560,7 @@ namespace System.Windows.Forms
 
             unsafe HRESULT IOleInPlaceSite.OnPosRectChange(RECT* lprcPosRect)
             {
-                if (lprcPosRect == null)
+                if (lprcPosRect is null)
                 {
                     return HRESULT.E_INVALIDARG;
                 }

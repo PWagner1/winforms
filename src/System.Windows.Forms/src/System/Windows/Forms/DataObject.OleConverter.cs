@@ -4,19 +4,20 @@
 
 #nullable disable
 
-using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using IComDataObject = System.Runtime.InteropServices.ComTypes.IDataObject;
 using static Interop;
+using IComDataObject = System.Runtime.InteropServices.ComTypes.IDataObject;
 
 namespace System.Windows.Forms
 {
@@ -285,11 +286,11 @@ namespace System.Windows.Forms
                 try
                 {
                     data = GetDataFromOleOther(format);
-                    if (data == null)
+                    if (data is null)
                     {
                         data = GetDataFromOleHGLOBAL(format, out done);
                     }
-                    if (data == null && !done)
+                    if (data is null && !done)
                     {
                         data = GetDataFromOleIStream(format);
                     }
@@ -378,7 +379,9 @@ namespace System.Windows.Forms
                     formatter.Binder = new BitmapBinder();
                 }
                 formatter.AssemblyFormat = FormatterAssemblyStyle.Simple;
+#pragma warning disable CS0618 // Type or member is obsolete
                 return formatter.Deserialize(stream);
+#pragma warning restore CS0618 // Type or member is obsolete
             }
 
             /// <summary>
@@ -462,7 +465,7 @@ namespace System.Windows.Forms
                 object baseVar = GetDataFromBoundOleDataObject(format, out bool done);
                 object original = baseVar;
 
-                if (!done && autoConvert && (baseVar == null || baseVar is MemoryStream))
+                if (!done && autoConvert && (baseVar is null || baseVar is MemoryStream))
                 {
                     string[] mappedFormats = GetMappedFormats(format);
                     if (mappedFormats != null)
@@ -597,7 +600,9 @@ namespace System.Windows.Forms
                 Debug.Assert(innerData != null, "You must have an innerData on all DataObjects");
 
                 IEnumFORMATETC enumFORMATETC = null;
-                ArrayList formats = new ArrayList();
+
+                // Since we are only adding elements to the HashSet, the order will be preserved.
+                HashSet<string> distinctFormats = new HashSet<string>();
                 try
                 {
                     enumFORMATETC = innerData.EnumFormatEtc(DATADIR.DATADIR_GET);
@@ -632,20 +637,18 @@ namespace System.Windows.Forms
                                 string[] mappedFormats = GetMappedFormats(name);
                                 for (int i = 0; i < mappedFormats.Length; i++)
                                 {
-                                    formats.Add(mappedFormats[i]);
+                                    distinctFormats.Add(mappedFormats[i]);
                                 }
                             }
                             else
                             {
-                                formats.Add(name);
+                                distinctFormats.Add(name);
                             }
                         }
                     }
                 }
 
-                string[] temp = new string[formats.Count];
-                formats.CopyTo(temp, 0);
-                return GetDistinctStrings(temp);
+                return distinctFormats.ToArray();
             }
 
             public virtual string[] GetFormats()

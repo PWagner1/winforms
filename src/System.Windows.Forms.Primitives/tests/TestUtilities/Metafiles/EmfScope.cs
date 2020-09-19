@@ -5,7 +5,9 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text;
 using static Interop;
 
 namespace System.Windows.Forms.Metafiles
@@ -136,22 +138,59 @@ namespace System.Windows.Forms.Metafiles
                     case Gdi32.EMR.DELETEOBJECT:
                         state.GdiObjects[(int)record.DeleteObjectRecord->index] = default;
                         break;
+                    case Gdi32.EMR.SETWORLDTRANSFORM:
+                        state.Transform = record.SetWorldTransformRecord->xform;
+                        break;
+                    case Gdi32.EMR.MODIFYWORLDTRANSFORM:
+                        var transform = record.ModifyWorldTransformRecord;
+                        switch (transform->iMode)
+                        {
+                            case Gdi32.MWT.IDENTITY:
+                                state.Transform = Matrix3x2.Identity;
+                                break;
+                            case Gdi32.MWT.LEFTMULTIPLY:
+                                state.Transform = transform->xform * state.Transform;
+                                break;
+                            case Gdi32.MWT.RIGHTMULTIPLY:
+                                state.Transform = state.Transform * transform->xform;
+                                break;
+                        }
+                        break;
+                    case Gdi32.EMR.SAVEDC:
+                        state.SaveDC();
+                        break;
+                    case Gdi32.EMR.RESTOREDC:
+                        state.RestoreDC(record.RestoreDCRecord->iRelative);
+                        break;
                 }
 
                 return result;
             }
         }
 
-        public List<string> RecordsToString()
+        public string RecordsToString()
         {
-            var strings = new List<string>();
+            StringBuilder sb = new StringBuilder(1024);
             Enumerate((ref EmfRecord record) =>
             {
-                strings.Add(record.ToString());
+                sb.AppendLine(record.ToString());
                 return true;
             });
 
-            return strings;
+            return sb.ToString();
+        }
+
+        public string RecordsToStringWithState(DeviceContextState state)
+        {
+            StringBuilder sb = new StringBuilder(1024);
+            EnumerateWithState((ref EmfRecord record, DeviceContextState state) =>
+            {
+                sb.AppendLine(record.ToString(state));
+                return true;
+            },
+            state);
+
+            return sb.ToString();
         }
 
         private static unsafe BOOL CallBack(

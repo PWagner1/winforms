@@ -647,6 +647,48 @@ namespace System.Windows.Forms
             base.OnHandleDestroyed(e);
         }
 
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            base.OnKeyUp(e);
+
+            if (IsHandleCreated && ContainsNavigationKeyCode(e.KeyCode))
+            {
+                AccessibilityObject?.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+            }
+        }
+
+        private bool ContainsNavigationKeyCode(Keys keyCode)
+        {
+            switch (keyCode)
+            {
+                case Keys.Up:
+                case Keys.Down:
+                case Keys.PageUp:
+                case Keys.PageDown:
+                case Keys.Home:
+                case Keys.End:
+                case Keys.Left:
+                case Keys.Right:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+
+            if (IsHandleCreated)
+            {
+                // As there is no corresponding windows notification
+                // about text selection changed for TextBox assuming
+                // that any mouse down on textbox leads to change of
+                // the caret position and thereby change the selection.
+                AccessibilityObject?.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+            }
+        }
+
         protected virtual void OnTextAlignChanged(EventArgs e)
         {
             if (Events[EVENT_TEXTALIGNCHANGED] is EventHandler eh)
@@ -849,7 +891,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Draws the <see cref="PlaceholderText"/> in the client area of the <see cref="TextBox"/> using the default font and color.
         /// </summary>
-        private void DrawPlaceholderText(Graphics graphics)
+        private void DrawPlaceholderText(Gdi32.HDC hdc)
         {
             TextFormatFlags flags = TextFormatFlags.NoPadding | TextFormatFlags.Top |
                                     TextFormatFlags.EndEllipsis;
@@ -894,7 +936,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            TextRenderer.DrawText(graphics, PlaceholderText, Font, rectangle, SystemColors.GrayText, BackColor, flags);
+            TextRenderer.DrawTextInternal(hdc, PlaceholderText, Font, rectangle, SystemColors.GrayText, TextRenderer.DefaultQuality, flags);
         }
 
         /// <summary>
@@ -902,7 +944,7 @@ namespace System.Windows.Forms
         ///  to add extra functionality, but should not forget to call
         ///  base.wndProc(m); to ensure the combo continues to function properly.
         /// </summary>
-        protected override void WndProc(ref Message m)
+        protected unsafe override void WndProc(ref Message m)
         {
             switch ((User32.WM)m.Msg)
             {
@@ -917,26 +959,55 @@ namespace System.Windows.Forms
                         base.WndProc(ref m);
                     }
                     break;
+
+                case User32.WM.PAINT:
+                    {
+                        // The native control tracks its own state, so it is get into a state Where either the native control invalidates
+                        // itself, and thus blastsover the placeholder text
+                        // - or -
+                        // The placeholder text is written multiple times without being cleared first.
+                        //
+                        // To avoid either of the above we need the following operations.
+                        //
+                        // NOTE: there is still an observable flicker with this implementations. We're getting a second WM_PAINT after we
+                        // do our begin/end paint. Something is apparently invalidating the control again. Explicitly calling ValidateRect
+                        // should, in theory, prevent this second call but it clearly isn't happening.
+
+                        // Invalidate the whole control to make sure the native control doesn't make any assumptions over what it has to paint
+                        if (ShouldRenderPlaceHolderText())
+                        {
+                            User32.InvalidateRect(Handle, null, bErase: BOOL.TRUE);
+                        }
+
+                        // Let the native implementation draw the background and animate the frame
+                        base.WndProc(ref m);
+
+                        if (ShouldRenderPlaceHolderText())
+                        {
+                            // Invalidate again because the native WM_PAINT already validated everything by calling BeginPaint itself.
+                            User32.InvalidateRect(Handle, null, bErase: BOOL.TRUE);
+
+                            // Use BeginPaint instead of GetDC to prevent flicker and support print-to-image scenarios.
+                            using var paintScope = new User32.BeginPaintScope(Handle);
+                            DrawPlaceholderText(paintScope);
+
+                            User32.ValidateRect(this, null);
+                        }
+                    }
+                    break;
+
                 case User32.WM.PRINT:
                     WmPrint(ref m);
                     break;
+
                 default:
                     base.WndProc(ref m);
                     break;
             }
-
-            if (ShouldRenderPlaceHolderText(m))
-            {
-                using (Graphics g = CreateGraphics())
-                {
-                    DrawPlaceholderText(g);
-                }
-            }
         }
 
-        private bool ShouldRenderPlaceHolderText(in Message m) =>
+        private bool ShouldRenderPlaceHolderText() =>
             !string.IsNullOrEmpty(PlaceholderText) &&
-            (m.Msg == (int)User32.WM.PAINT || m.Msg == (int)User32.WM.KILLFOCUS) &&
             !GetStyle(ControlStyles.UserPaint) &&
             !Focused &&
             TextLength == 0;

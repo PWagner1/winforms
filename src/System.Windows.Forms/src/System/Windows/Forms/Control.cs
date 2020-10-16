@@ -3837,7 +3837,7 @@ namespace System.Windows.Forms
             while (!processed)
             {
                 //Get the thread's exit code, if we found the thread as expected
-                if (threadHandle != null)
+                if (threadHandle != IntPtr.Zero)
                 {
                     returnValue = Kernel32.GetExitCodeThread(threadHandle, out exitCode);
                 }
@@ -10291,9 +10291,7 @@ namespace System.Windows.Forms
                     // enumerate
                     for (int i = 0; i < controlsCollection.Count; i++)
                     {
-#pragma warning disable 618
                         controlsCollection[i].Scale(dx, dy);
-#pragma warning restore 618
                     }
                 }
             }

@@ -276,9 +276,6 @@ System.Windows.Forms.AutoValidate.Disable = 0 -> System.Windows.Forms.AutoValida
 System.Windows.Forms.AutoValidate.EnableAllowFocusChange = 2 -> System.Windows.Forms.AutoValidate
 System.Windows.Forms.AutoValidate.EnablePreventFocusChange = 1 -> System.Windows.Forms.AutoValidate
 System.Windows.Forms.AutoValidate.Inherit = -1 -> System.Windows.Forms.AutoValidate
-System.Windows.Forms.Automation.IAutomationLiveRegion
-System.Windows.Forms.Automation.IAutomationLiveRegion.LiveSetting.get -> System.Windows.Forms.Automation.AutomationLiveSetting
-System.Windows.Forms.Automation.IAutomationLiveRegion.LiveSetting.set -> void
 System.Windows.Forms.AxHost
 System.Windows.Forms.AxHost.AboutBoxDelegate
 System.Windows.Forms.AxHost.ActiveXInvokeKind
@@ -9528,13 +9525,13 @@ System.Windows.Forms.CheckBox.CheckBoxAccessibleObject.CheckBoxAccessibleObject(
 ~System.Windows.Forms.DataGridView.CurrentCell.get -> System.Windows.Forms.DataGridViewCell
 ~System.Windows.Forms.DataGridView.CurrentCell.set -> void
 ~System.Windows.Forms.DataGridView.CurrentRow.get -> System.Windows.Forms.DataGridViewRow
-~System.Windows.Forms.DataGridView.DataGridViewAccessibleObject.DataGridViewAccessibleObject(System.Windows.Forms.DataGridView owner) -> void
+System.Windows.Forms.DataGridView.DataGridViewAccessibleObject.DataGridViewAccessibleObject(System.Windows.Forms.DataGridView! owner) -> void
 ~System.Windows.Forms.DataGridView.DataGridViewControlCollection.CopyTo(System.Windows.Forms.Control[] array, int index) -> void
 ~System.Windows.Forms.DataGridView.DataGridViewControlCollection.DataGridViewControlCollection(System.Windows.Forms.DataGridView owner) -> void
 ~System.Windows.Forms.DataGridView.DataGridViewControlCollection.Insert(int index, System.Windows.Forms.Control value) -> void
-~System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.DataGridViewTopRowAccessibleObject(System.Windows.Forms.DataGridView owner) -> void
-~System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.Owner.get -> System.Windows.Forms.DataGridView
-~System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.Owner.set -> void
+System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.DataGridViewTopRowAccessibleObject(System.Windows.Forms.DataGridView! owner) -> void
+System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.Owner.get -> System.Windows.Forms.DataGridView?
+System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.Owner.set -> void
 ~System.Windows.Forms.DataGridView.DataMember.get -> string
 ~System.Windows.Forms.DataGridView.DataMember.set -> void
 ~System.Windows.Forms.DataGridView.DataSource.get -> object
@@ -10723,7 +10720,7 @@ System.Windows.Forms.ScrollProperties.ScrollProperties(System.Windows.Forms.Scro
 ~System.Windows.Forms.ToolStripControlHost.Control.get -> System.Windows.Forms.Control
 ~System.Windows.Forms.ToolStripControlHost.ToolStripControlHost(System.Windows.Forms.Control c) -> void
 ~System.Windows.Forms.ToolStripControlHost.ToolStripControlHost(System.Windows.Forms.Control c, string name) -> void
-~System.Windows.Forms.ToolStripControlHost.ToolStripHostedControlAccessibleObject.ToolStripHostedControlAccessibleObject(System.Windows.Forms.Control toolStripHostedControl, System.Windows.Forms.ToolStripControlHost toolStripControlHost) -> void
+System.Windows.Forms.ToolStripControlHost.ToolStripHostedControlAccessibleObject.ToolStripHostedControlAccessibleObject(System.Windows.Forms.Control! toolStripHostedControl, System.Windows.Forms.ToolStripControlHost? toolStripControlHost) -> void
 ~System.Windows.Forms.ToolStripDropDown.ContextMenuStrip.get -> System.Windows.Forms.ContextMenuStrip
 ~System.Windows.Forms.ToolStripDropDown.ContextMenuStrip.set -> void
 ~System.Windows.Forms.ToolStripDropDown.OverflowButton.get -> System.Windows.Forms.ToolStripOverflowButton
@@ -11167,17 +11164,17 @@ override System.Windows.Forms.CheckBox.CheckBoxAccessibleObject.DefaultAction.ge
 ~override System.Windows.Forms.DataGridView.BackgroundImage.set -> void
 ~override System.Windows.Forms.DataGridView.CreateAccessibilityInstance() -> System.Windows.Forms.AccessibleObject
 ~override System.Windows.Forms.DataGridView.CreateControlsInstance() -> System.Windows.Forms.Control.ControlCollection
-~override System.Windows.Forms.DataGridView.DataGridViewAccessibleObject.GetChild(int index) -> System.Windows.Forms.AccessibleObject
-~override System.Windows.Forms.DataGridView.DataGridViewAccessibleObject.GetFocused() -> System.Windows.Forms.AccessibleObject
-~override System.Windows.Forms.DataGridView.DataGridViewAccessibleObject.GetSelected() -> System.Windows.Forms.AccessibleObject
-~override System.Windows.Forms.DataGridView.DataGridViewAccessibleObject.HitTest(int x, int y) -> System.Windows.Forms.AccessibleObject
-~override System.Windows.Forms.DataGridView.DataGridViewAccessibleObject.Navigate(System.Windows.Forms.AccessibleNavigation navigationDirection) -> System.Windows.Forms.AccessibleObject
+override System.Windows.Forms.DataGridView.DataGridViewAccessibleObject.GetChild(int index) -> System.Windows.Forms.AccessibleObject?
+override System.Windows.Forms.DataGridView.DataGridViewAccessibleObject.GetFocused() -> System.Windows.Forms.AccessibleObject?
+override System.Windows.Forms.DataGridView.DataGridViewAccessibleObject.GetSelected() -> System.Windows.Forms.AccessibleObject!
+override System.Windows.Forms.DataGridView.DataGridViewAccessibleObject.HitTest(int x, int y) -> System.Windows.Forms.AccessibleObject?
+override System.Windows.Forms.DataGridView.DataGridViewAccessibleObject.Navigate(System.Windows.Forms.AccessibleNavigation navigationDirection) -> System.Windows.Forms.AccessibleObject?
 ~override System.Windows.Forms.DataGridView.DataGridViewControlCollection.Remove(System.Windows.Forms.Control value) -> void
-~override System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.GetChild(int index) -> System.Windows.Forms.AccessibleObject
-~override System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.Name.get -> string
-~override System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.Navigate(System.Windows.Forms.AccessibleNavigation navigationDirection) -> System.Windows.Forms.AccessibleObject
-~override System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.Parent.get -> System.Windows.Forms.AccessibleObject
-~override System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.Value.get -> string
+override System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.GetChild(int index) -> System.Windows.Forms.AccessibleObject?
+override System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.Name.get -> string!
+override System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.Navigate(System.Windows.Forms.AccessibleNavigation navigationDirection) -> System.Windows.Forms.AccessibleObject?
+override System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.Parent.get -> System.Windows.Forms.AccessibleObject!
+override System.Windows.Forms.DataGridView.DataGridViewTopRowAccessibleObject.Value.get -> string!
 ~override System.Windows.Forms.DataGridView.Font.get -> System.Drawing.Font
 ~override System.Windows.Forms.DataGridView.Font.set -> void
 ~override System.Windows.Forms.DataGridView.GetAccessibilityObjectById(int objectId) -> System.Windows.Forms.AccessibleObject
@@ -11796,6 +11793,7 @@ override System.Windows.Forms.RadioButton.RadioButtonAccessibleObject.DefaultAct
 ~override System.Windows.Forms.RadioButton.ToString() -> string
 ~override System.Windows.Forms.RichTextBox.BackgroundImage.get -> System.Drawing.Image
 ~override System.Windows.Forms.RichTextBox.BackgroundImage.set -> void
+~override System.Windows.Forms.RichTextBox.CreateAccessibilityInstance() -> System.Windows.Forms.AccessibleObject
 ~override System.Windows.Forms.RichTextBox.CreateParams.get -> System.Windows.Forms.CreateParams
 ~override System.Windows.Forms.RichTextBox.Font.get -> System.Drawing.Font
 ~override System.Windows.Forms.RichTextBox.Font.set -> void
@@ -11916,6 +11914,8 @@ override System.Windows.Forms.ScrollBar.ToString() -> string!
 ~override System.Windows.Forms.TextBox.OnGotFocus(System.EventArgs e) -> void
 ~override System.Windows.Forms.TextBox.OnHandleCreated(System.EventArgs e) -> void
 ~override System.Windows.Forms.TextBox.OnHandleDestroyed(System.EventArgs e) -> void
+~override System.Windows.Forms.TextBox.OnKeyUp(System.Windows.Forms.KeyEventArgs e) -> void
+~override System.Windows.Forms.TextBox.OnMouseDown(System.Windows.Forms.MouseEventArgs e) -> void
 ~override System.Windows.Forms.TextBox.Text.get -> string
 ~override System.Windows.Forms.TextBox.Text.set -> void
 ~override System.Windows.Forms.TextBoxBase.BackgroundImage.get -> System.Drawing.Image

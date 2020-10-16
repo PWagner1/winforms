@@ -578,6 +578,11 @@ namespace System.Windows.Forms
             set { richTextBoxFlags[protectedErrorSection] = value ? 1 : 0; }
         }
 
+        private protected override void RaiseAccessibilityTextChangedEvent()
+        {
+            // Do not do anything because Win32 provides unmanaged Text pattern for RichTextBox
+        }
+
         /// <summary>
         ///  Returns the name of the action that will be performed if the user
         ///  Redo's their last Undone operation. If no operation can be redone,
@@ -2257,7 +2262,7 @@ namespace System.Windows.Forms
             return charFormat;
         }
 
-        Font GetCharFormatFont(bool selectionOnly)
+        private Font GetCharFormatFont(bool selectionOnly)
         {
             ForceHandleCreate();
 
@@ -3150,6 +3155,11 @@ namespace System.Windows.Forms
                 flags = GTL.DEFAULT
             };
 
+            if (flags.HasFlag(GT.USECRLF))
+            {
+                gtl.flags |= GTL.USECRLF;
+            }
+
             GETTEXTLENGTHEX* pGtl = &gtl;
             int expectedLength = PARAM.ToInt(User32.SendMessageW(Handle, (User32.WM)User32.EM.GETTEXTLENGTHEX, (IntPtr)pGtl));
             if (expectedLength == (int)HRESULT.E_INVALIDARG)
@@ -3173,6 +3183,24 @@ namespace System.Windows.Forms
             fixed (char* pText = text)
             {
                 int actualLength = PARAM.ToInt(User32.SendMessageW(Handle, (User32.WM)User32.EM.GETTEXTEX, (IntPtr)pGt, (IntPtr)pText));
+
+                // The default behaviour of EM_GETTEXTEX is to normalise line endings to '\r'
+                // (see: GT_DEFAULT, https://docs.microsoft.com/windows/win32/api/richedit/ns-richedit-gettextex#members),
+                // whereas previously we would normalise to '\n'. Unfortunately we can only ask for '\r\n' line endings via GT.USECRLF,
+                // but unable to ask for '\n'. Unless GT.USECRLF was set, convert '\r' with '\n' to retain the original behaviour.
+                if (!flags.HasFlag(GT.USECRLF))
+                {
+                    int index = 0;
+                    while (index < actualLength)
+                    {
+                        if (pText[index] == '\r')
+                        {
+                            pText[index] = '\n';
+                        }
+                        index++;
+                    }
+                }
+
                 result = new string(pText, 0, actualLength);
             }
 
@@ -3236,6 +3264,8 @@ namespace System.Windows.Forms
                 }
             }
         }
+
+        protected override AccessibleObject CreateAccessibilityInstance() => new ControlAccessibleObject(this);
 
         /// <summary>
         ///  Creates the IRichEditOleCallback compatible object for handling RichEdit callbacks. For more

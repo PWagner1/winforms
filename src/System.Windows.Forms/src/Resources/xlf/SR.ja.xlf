@@ -2214,7 +2214,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCellCheckedStateDescription">
         <source>{0} check box checked</source>
-        <target state="translated">{0} チェック ボックスがオンになっています</target>
+        <target state="translated">{0} のチェック ボックスがオンになっています</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCellUncheckedStateDescription">
@@ -10799,6 +10799,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="UpDownBaseUpButtonAccName">
         <source>Up</source>
         <target state="translated">上</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UpDownEditLocalizedControlTypeName">
+        <source>Edit</source>
+        <target state="translated">編集</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCompatibleTextRenderingDescr">

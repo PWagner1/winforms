@@ -127,10 +127,7 @@ namespace System.Windows.Forms
             get => _blinkRate == 0 ? ErrorBlinkStyle.NeverBlink : _blinkStyle;
             set
             {
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)ErrorBlinkStyle.BlinkIfDifferentError, (int)ErrorBlinkStyle.NeverBlink))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(ErrorBlinkStyle));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 // If the blinkRate == 0, then set blinkStyle = neverBlink
                 if (_blinkRate == 0)
@@ -788,6 +785,14 @@ namespace System.Windows.Forms
         public void SetError(Control control, string value)
         {
             EnsureControlItem(control).Error = value;
+
+            if (UiaCore.UiaClientsAreListening().IsTrue())
+            {
+                control.AccessibilityObject.RaiseAutomationNotification(
+                    Automation.AutomationNotificationKind.ActionAborted,
+                    Automation.AutomationNotificationProcessing.All,
+                    value);
+            }
         }
 
         /// <summary>
@@ -1429,10 +1434,7 @@ namespace System.Windows.Forms
                 get => _iconAlignment;
                 set
                 {
-                    if (!ClientUtils.IsEnumValid(value, (int)value, (int)ErrorIconAlignment.TopLeft, (int)ErrorIconAlignment.BottomRight))
-                    {
-                        throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(ErrorIconAlignment));
-                    }
+                    SourceGenerated.EnumValidator.Validate(value);
 
                     if (_iconAlignment == value)
                     {

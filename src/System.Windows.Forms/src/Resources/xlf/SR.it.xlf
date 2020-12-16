@@ -3709,6 +3709,11 @@ Per sostituire questa finestra di dialogo predefinita, gestire l'evento DataErro
         <target state="translated">Indica se l'utente può modificare le celle del controllo DataGridView.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridView_RowAddedNotification">
+        <source>Row {0} is added</source>
+        <target state="translated">La riga {0} è stata aggiunta</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridView_RowAlreadyBelongsToDataGridView">
         <source>Row provided already belongs to a DataGridView control.</source>
         <target state="translated">La riga specificata appartiene già a un controllo DataGridView.</target>
@@ -4725,7 +4730,7 @@ sono riportate in fondo al messaggio.
         <target state="translated">{0}
     Versione assembly: {1}
     Versione Win32: {2}
-    Base di codice: {3}
+    Codebase: {3}
 </target>
         <note />
       </trans-unit>
@@ -10407,8 +10412,8 @@ Traccia dello stack da cui si è verificata l'operazione non valida:
         <note />
       </trans-unit>
       <trans-unit id="TrayIcon_TextTooLong">
-        <source>Text length must be less than 64 characters long.</source>
-        <target state="translated">La lunghezza del testo deve essere inferiore ai 64 caratteri.</target>
+        <source>Text length must be less than 128 characters long.</source>
+        <target state="translated">La lunghezza del testo deve essere inferiore ai 128 caratteri.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeBackColorDescr">
@@ -10419,6 +10424,11 @@ Traccia dello stack da cui si è verificata l'operazione non valida:
       <trans-unit id="TreeNodeBeginEditFailed">
         <source>BeginEdit did not succeed because LabelEdit property is false.</source>
         <target state="translated">BeginEdit non riuscito. La proprietà LabelEdit è false.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeBoundToAnotherTreeView">
+        <source>The TreeNode is already bound to another TreeView. You must first remove it from its current location or clone it.</source>
+        <target state="translated">L'elemento TreeNode è già collegato a un altro elemento TreeView. È prima necessario rimuoverlo dalla posizione corrente o clonarlo.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeCheckedDescr">

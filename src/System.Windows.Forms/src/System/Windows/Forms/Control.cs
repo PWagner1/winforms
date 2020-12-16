@@ -626,10 +626,7 @@ namespace System.Windows.Forms
             set
             {
                 //valid values are -1 to 0x40
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)AccessibleRole.Default, (int)AccessibleRole.OutlineButton))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(AccessibleRole));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
                 Properties.SetInteger(s_accessibleRoleProperty, (int)value);
             }
         }
@@ -1018,10 +1015,7 @@ namespace System.Windows.Forms
                 if (BackgroundImageLayout != value)
                 {
                     // Valid values are 0x0 to 0x4
-                    if (!ClientUtils.IsEnumValid(value, (int)value, (int)ImageLayout.None, (int)ImageLayout.Zoom))
-                    {
-                        throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(ImageLayout));
-                    }
+                    SourceGenerated.EnumValidator.Validate(value);
 
                     // Check if the value is either center, strech or zoom;
                     if (value == ImageLayout.Center || value == ImageLayout.Zoom || value == ImageLayout.Stretch)
@@ -1479,7 +1473,7 @@ namespace System.Windows.Forms
                 if (s_needToLoadComCtl)
                 {
                     if ((Kernel32.GetModuleHandleW(Libraries.Comctl32) != IntPtr.Zero)
-                        || (Kernel32.LoadLibraryFromSystemPathIfAvailable(Libraries.Comctl32) != IntPtr.Zero))
+                     || (Kernel32.LoadComctl32(Application.StartupPath) != IntPtr.Zero))
                     {
                         s_needToLoadComCtl = false;
                     }
@@ -3124,7 +3118,7 @@ namespace System.Windows.Forms
         }
 
         // Helper function for Rtl
-        [Obsolete("This property has been deprecated. Please use RightToLeft instead. http://go.microsoft.com/fwlink/?linkid=14202")]
+        [Obsolete("This property has been deprecated. Please use RightToLeft instead. https://go.microsoft.com/fwlink/?linkid=14202")]
         protected internal bool RenderRightToLeft => true;
 
         /// <summary>
@@ -3238,10 +3232,7 @@ namespace System.Windows.Forms
             set
             {
                 //valid values are 0x0 to 0x2.
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)RightToLeft.No, (int)RightToLeft.Inherit))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(RightToLeft));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 RightToLeft oldValue = RightToLeft;
 
@@ -9931,7 +9922,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Scales to entire control and any child controls.
         /// </summary>
-        [Obsolete("This method has been deprecated. Use the Scale(SizeF ratio) method instead. http://go.microsoft.com/fwlink/?linkid=14202")]
+        [Obsolete("This method has been deprecated. Use the Scale(SizeF ratio) method instead. https://go.microsoft.com/fwlink/?linkid=14202")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void Scale(float ratio)
         {
@@ -9941,7 +9932,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Scales the entire control and any child controls.
         /// </summary>
-        [Obsolete("This method has been deprecated. Use the Scale(SizeF ratio) method instead. http://go.microsoft.com/fwlink/?linkid=14202")]
+        [Obsolete("This method has been deprecated. Use the Scale(SizeF ratio) method instead. https://go.microsoft.com/fwlink/?linkid=14202")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void Scale(float dx, float dy)
         {

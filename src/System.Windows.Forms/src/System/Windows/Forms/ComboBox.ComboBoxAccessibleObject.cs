@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using static System.Windows.Forms.ComboBox.ObjectCollection;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -160,20 +161,20 @@ namespace System.Windows.Forms
             /// <returns>Returns the element in the specified direction.</returns>
             internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
             {
-                if (direction == UiaCore.NavigateDirection.FirstChild)
+                if (!_owningComboBox.IsHandleCreated)
                 {
-                    return GetChildFragment(0);
-                }
-                else if (direction == UiaCore.NavigateDirection.LastChild)
-                {
-                    var childFragmentCount = GetChildFragmentCount();
-                    if (childFragmentCount > 0)
-                    {
-                        return GetChildFragment(childFragmentCount - 1);
-                    }
+                    return null;
                 }
 
-                return base.FragmentNavigate(direction);
+                switch (direction)
+                {
+                    case UiaCore.NavigateDirection.FirstChild:
+                        return GetFirstChild();
+                    case UiaCore.NavigateDirection.LastChild:
+                        return GetLastChild();
+                    default:
+                        return base.FragmentNavigate(direction);
+                }
             }
 
             internal override UiaCore.IRawElementProviderFragmentRoot FragmentRoot
@@ -182,74 +183,6 @@ namespace System.Windows.Forms
                 {
                     return this;
                 }
-            }
-
-            internal override UiaCore.IRawElementProviderSimple? GetOverrideProviderForHwnd(IntPtr hwnd)
-            {
-                if (hwnd == _owningComboBox._childEdit.Handle)
-                {
-                    return _owningComboBox.ChildEditAccessibleObject;
-                }
-                else if (
-                    hwnd == _owningComboBox._childListBox.Handle ||
-                    hwnd == _owningComboBox._dropDownHandle)
-                {
-                    return _owningComboBox.ChildListAccessibleObject;
-                }
-
-                return null;
-            }
-
-            /// <summary>
-            ///  Gets the accessible child corresponding to the specified index.
-            /// </summary>
-            /// <param name="index">The child index.</param>
-            /// <returns>The accessible child.</returns>
-            /// <remarks>
-            ///  GetChild method should be unchanged to not break the MSAA scenarios.
-            /// </remarks>
-            internal AccessibleObject? GetChildFragment(int index)
-            {
-                if (_owningComboBox.DropDownStyle == ComboBoxStyle.DropDownList)
-                {
-                    if (index == 0)
-                    {
-                        return _owningComboBox.ChildTextAccessibleObject;
-                    }
-
-                    index--;
-                }
-
-                if (index == 0 && _owningComboBox.DropDownStyle != ComboBoxStyle.Simple)
-                {
-                    return DropDownButtonUiaProvider;
-                }
-
-                return null;
-            }
-
-            /// <summary>
-            ///  Gets the number of children belonging to an accessible object.
-            /// </summary>
-            /// <returns>The number of children.</returns>
-            /// <remarks>
-            ///  GetChildCount method should be unchanged to not break the MSAA scenarios.
-            /// </remarks>
-            internal int GetChildFragmentCount()
-            {
-                int childFragmentCount = 0;
-
-                if (_owningComboBox.DropDownStyle == ComboBoxStyle.DropDownList)
-                {
-                    childFragmentCount++; // Text instead of edit for style is DropDownList but not DropDown.
-                }
-
-                if (_owningComboBox.DropDownStyle != ComboBoxStyle.Simple)
-                {
-                    childFragmentCount++; // DropDown button.
-                }
-
-                return childFragmentCount;
             }
 
             /// <summary>
@@ -262,7 +195,12 @@ namespace System.Windows.Forms
                 switch (propertyID)
                 {
                     case UiaCore.UIA.ControlTypePropertyId:
-                        return UiaCore.UIA.ComboBoxControlTypeId;
+                        // If we don't set a default role for the accessible object
+                        // it will be retrieved from Windows.
+                        // And we don't have a 100% guarantee it will be correct, hence set it ourselves.
+                        return _owningComboBox.AccessibleRole == AccessibleRole.Default
+                               ? UiaCore.UIA.ComboBoxControlTypeId
+                               : base.GetPropertyValue(propertyID);
                     case UiaCore.UIA.NamePropertyId:
                         return Name;
                     case UiaCore.UIA.HasKeyboardFocusPropertyId:
@@ -291,16 +229,7 @@ namespace System.Windows.Forms
                     return;
                 }
 
-                var selectedItem = _owningComboBox.SelectedItem;
-                if (selectedItem is null)
-                {
-                    return;
-                }
-
-                if (ItemAccessibleObjects[selectedItem] is ComboBoxItemAccessibleObject itemAccessibleObject)
-                {
-                    itemAccessibleObject.SetFocus();
-                }
+                GetSelectedComboBoxItemAccessibleObject()?.SetFocus();
             }
 
             internal void SetComboBoxItemSelection()
@@ -310,16 +239,7 @@ namespace System.Windows.Forms
                     return;
                 }
 
-                var selectedItem = _owningComboBox.SelectedItem;
-                if (selectedItem is null)
-                {
-                    return;
-                }
-
-                if (ItemAccessibleObjects[selectedItem] is ComboBoxItemAccessibleObject itemAccessibleObject)
-                {
-                    itemAccessibleObject.RaiseAutomationEvent(UiaCore.UIA.SelectionItem_ElementSelectedEventId);
-                }
+                GetSelectedComboBoxItemAccessibleObject()?.RaiseAutomationEvent(UiaCore.UIA.SelectionItem_ElementSelectedEventId);
             }
 
             internal override void SetFocus()
@@ -333,6 +253,42 @@ namespace System.Windows.Forms
 
                 RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
             }
+
+            private ComboBoxItemAccessibleObject? GetSelectedComboBoxItemAccessibleObject()
+            {
+                // We should use the SelectedIndex property instead of the SelectedItem to avoid the problem of getting
+                // the incorrect item when the list contains duplicate items https://github.com/dotnet/winforms/issues/3590
+                int selectedIndex = _owningComboBox.SelectedIndex;
+
+                if (selectedIndex < 0 || selectedIndex > _owningComboBox.Items.Count - 1)
+                {
+                    return null;
+                }
+
+                Entry selectedItem = _owningComboBox.Entries[selectedIndex];
+                return ItemAccessibleObjects.GetComboBoxItemAccessibleObject(selectedItem);
+            }
+
+            private AccessibleObject? GetFirstChild()
+            {
+                if (_owningComboBox.DroppedDown)
+                {
+                    return _owningComboBox.ChildListAccessibleObject;
+                }
+
+                return _owningComboBox.DropDownStyle switch
+                {
+                    ComboBoxStyle.DropDown => _owningComboBox.ChildEditAccessibleObject,
+                    ComboBoxStyle.DropDownList => _owningComboBox.ChildTextAccessibleObject,
+                    ComboBoxStyle.Simple => null,
+                    _ => null
+                };
+            }
+
+            private AccessibleObject? GetLastChild() =>
+                _owningComboBox.DropDownStyle == ComboBoxStyle.Simple
+                    ? _owningComboBox.ChildEditAccessibleObject
+                    : DropDownButtonUiaProvider;
         }
     }
 }

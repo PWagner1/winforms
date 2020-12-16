@@ -3709,6 +3709,11 @@ Aby zamienić to domyślne okno dialogowe, obsłuż zdarzenie DataError.</target
         <target state="translated">Wskazuje, czy użytkownik może edytować komórki formantu DataGridView.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridView_RowAddedNotification">
+        <source>Row {0} is added</source>
+        <target state="translated">Został dodany wiersz {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridView_RowAlreadyBelongsToDataGridView">
         <source>Row provided already belongs to a DataGridView control.</source>
         <target state="translated">Podany wiersz już należy do formantu DataGridView.</target>
@@ -10407,8 +10412,8 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
         <note />
       </trans-unit>
       <trans-unit id="TrayIcon_TextTooLong">
-        <source>Text length must be less than 64 characters long.</source>
-        <target state="translated">Długość tekstu musi być mniejsza niż 64 znaki.</target>
+        <source>Text length must be less than 128 characters long.</source>
+        <target state="translated">Długość tekstu musi być mniejsza niż 128 znaki.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeBackColorDescr">
@@ -10419,6 +10424,11 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
       <trans-unit id="TreeNodeBeginEditFailed">
         <source>BeginEdit did not succeed because LabelEdit property is false.</source>
         <target state="translated">Nie można wykonać elementu BeginEdit, ponieważ właściwość LabelEdit ma wartość false.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeBoundToAnotherTreeView">
+        <source>The TreeNode is already bound to another TreeView. You must first remove it from its current location or clone it.</source>
+        <target state="translated">Element TreeNode jest już powiązany z innym elementem TreeView. Należy go najpierw usunąć z jego bieżącej lokalizacji lub sklonować.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeCheckedDescr">

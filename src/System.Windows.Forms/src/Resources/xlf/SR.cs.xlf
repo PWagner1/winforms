@@ -3709,6 +3709,11 @@ Chcete-li nahradit toto výchozí dialogové okno, nastavte popisovač události
         <target state="translated">Označuje, zda uživatel může upravovat buňky ovládacího prvku DataGridView.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridView_RowAddedNotification">
+        <source>Row {0} is added</source>
+        <target state="translated">Řádek {0} se přidal.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridView_RowAlreadyBelongsToDataGridView">
         <source>Row provided already belongs to a DataGridView control.</source>
         <target state="translated">Zadaný řádek již patří do ovládacího prvku DataGridView.</target>
@@ -4725,7 +4730,7 @@ nikoli v tomto dialogovém okně.
         <target state="translated">{0}
     Verze sestavení: {1}
     Verze Win32: {2}
-    Základ kódu (CodeBase): {3}
+    Kódová báze (CodeBase): {3}
 </target>
         <note />
       </trans-unit>
@@ -10407,8 +10412,8 @@ Trasování zásobníku, kde došlo k neplatné operaci:
         <note />
       </trans-unit>
       <trans-unit id="TrayIcon_TextTooLong">
-        <source>Text length must be less than 64 characters long.</source>
-        <target state="translated">Délka textu musí být menší než 64 znaků.</target>
+        <source>Text length must be less than 128 characters long.</source>
+        <target state="translated">Délka textu musí být menší než 128 znaků.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeBackColorDescr">
@@ -10419,6 +10424,11 @@ Trasování zásobníku, kde došlo k neplatné operaci:
       <trans-unit id="TreeNodeBeginEditFailed">
         <source>BeginEdit did not succeed because LabelEdit property is false.</source>
         <target state="translated">Funkce BeginEdit se nezdařila, protože vlastnost LabelEdit má hodnotu False.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeBoundToAnotherTreeView">
+        <source>The TreeNode is already bound to another TreeView. You must first remove it from its current location or clone it.</source>
+        <target state="translated">Uzel TreeNode je už svázaný s jiným zobrazením TreeView. Nejdříve je nutné ho klonovat nebo odebrat z aktuálního umístění.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeCheckedDescr">

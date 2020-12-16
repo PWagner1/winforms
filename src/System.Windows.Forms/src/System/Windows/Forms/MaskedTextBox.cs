@@ -20,7 +20,7 @@ namespace System.Windows.Forms
     /// <summary>
     ///  MaskedTextBox control definition class.
     ///  Uses the services from the System.ComponentModel.MaskedTextBoxProvider class.
-    ///  See spec at http://dotnetclient/whidbey/Specs/MaskEdit.doc
+    ///  Search Microsoft SPO for "MaskEdit.doc" to see spec
     /// </summary>
     [DefaultEvent(nameof(MaskInputRejected))]
     [DefaultBindingProperty(nameof(Text))]
@@ -34,8 +34,8 @@ namespace System.Windows.Forms
         // class.  This means that the underlying Edit control won't enable Undo operations and the context
         // menu behavior will be a bit different (for instance Copy option is enabled when PasswordChar is set).
         // To provide Undo functionality and make the context menu behave like the Edit control, we would have
-        // to implement our own.  See http://msdn.microsoft.com/msdnmag/issues/1100/c/default.aspx for more info
-        // about how to do this. See postponed
+        // to implement our own.  For more info about how to do this, see:
+        // https://docs.microsoft.com/en-us/archive/msdn-magazine/2000/november/c-q-a-filetype-icon-detector-app-custom-context-menus-unreferenced-variables-and-string-conversions
 
         private const bool forward = true;
         private const bool backward = false;
@@ -413,10 +413,7 @@ namespace System.Windows.Forms
             set
             {
                 //valid values are 0x0 to 0x3
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)MaskFormat.ExcludePromptAndLiterals, (int)MaskFormat.IncludePromptAndLiterals))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(MaskFormat));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 if (value == MaskFormat.IncludePrompt)
                 {
@@ -532,10 +529,7 @@ namespace System.Windows.Forms
             set
             {
                 //valid values are 0x0 to 0x2
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)InsertKeyMode.Default, (int)InsertKeyMode.Overwrite))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(InsertKeyMode));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 if (insertMode != value)
                 {
@@ -1263,10 +1257,7 @@ namespace System.Windows.Forms
                 {
                     //verify that 'value' is a valid enum type...
                     //valid values are 0x0 to 0x2
-                    if (!ClientUtils.IsEnumValid(value, (int)value, (int)HorizontalAlignment.Left, (int)HorizontalAlignment.Center))
-                    {
-                        throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(HorizontalAlignment));
-                    }
+                    SourceGenerated.EnumValidator.Validate(value);
 
                     textAlign = value;
                     RecreateHandle();
@@ -1326,10 +1317,7 @@ namespace System.Windows.Forms
                 }
 
                 //valid values are 0x0 to 0x3
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)MaskFormat.ExcludePromptAndLiterals, (int)MaskFormat.IncludePromptAndLiterals))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(MaskFormat));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 // Changing the TextMaskFormat will likely change the 'output' text (Text getter value).  Cache old value to
                 // verify it against the new value and raise OnTextChange if needed.

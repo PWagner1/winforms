@@ -3709,6 +3709,11 @@ Para reemplazar este cuadro de diálogo predeterminado controle el evento DataEr
         <target state="translated">Indica si el usuario puede modificar las celdas del control DataGridView.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridView_RowAddedNotification">
+        <source>Row {0} is added</source>
+        <target state="translated">La fila {0} se ha agregado</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridView_RowAlreadyBelongsToDataGridView">
         <source>Row provided already belongs to a DataGridView control.</source>
         <target state="translated">La fila proporcionada ya pertenece a un control DataGridView.</target>
@@ -10407,8 +10412,8 @@ El seguimiento de la pila donde tuvo lugar la operación no válida fue:
         <note />
       </trans-unit>
       <trans-unit id="TrayIcon_TextTooLong">
-        <source>Text length must be less than 64 characters long.</source>
-        <target state="translated">La longitud del texto debe ser inferior a 64 caracteres.</target>
+        <source>Text length must be less than 128 characters long.</source>
+        <target state="translated">La longitud del texto debe ser inferior a 128 caracteres.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeBackColorDescr">
@@ -10419,6 +10424,11 @@ El seguimiento de la pila donde tuvo lugar la operación no válida fue:
       <trans-unit id="TreeNodeBeginEditFailed">
         <source>BeginEdit did not succeed because LabelEdit property is false.</source>
         <target state="translated">Error en BeginEdit debido a que la propiedad LabelEdit es False.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeBoundToAnotherTreeView">
+        <source>The TreeNode is already bound to another TreeView. You must first remove it from its current location or clone it.</source>
+        <target state="translated">El elemento TreeNode ya está enlazado a otro elemento TreeView. Debe quitarlo primero de la ubicación actual o clonarlo.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeCheckedDescr">

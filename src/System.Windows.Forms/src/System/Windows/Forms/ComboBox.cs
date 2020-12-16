@@ -6,6 +6,7 @@
 
 using System.Buffers;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -14,6 +15,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms.Layout;
+using static System.Windows.Forms.ComboBox.ObjectCollection;
 using static Interop;
 using static Interop.User32;
 
@@ -148,10 +150,7 @@ namespace System.Windows.Forms
             set
             {
                 //valid values are 0x0 to 0x3
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)AutoCompleteMode.None, (int)AutoCompleteMode.SuggestAppend))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(AutoCompleteMode));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
                 if (DropDownStyle == ComboBoxStyle.DropDownList &&
                     AutoCompleteSource != AutoCompleteSource.ListItems &&
                     value != AutoCompleteMode.None)
@@ -189,19 +188,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (!ClientUtils.IsEnumValid_NotSequential(value, (int)value,
-                                                    (int)AutoCompleteSource.None,
-                                                    (int)AutoCompleteSource.AllSystemSources,
-                                                    (int)AutoCompleteSource.AllUrl,
-                                                    (int)AutoCompleteSource.CustomSource,
-                                                    (int)AutoCompleteSource.FileSystem,
-                                                    (int)AutoCompleteSource.FileSystemDirectories,
-                                                    (int)AutoCompleteSource.HistoryList,
-                                                    (int)AutoCompleteSource.ListItems,
-                                                    (int)AutoCompleteSource.RecentlyUsedList))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(AutoCompleteSource));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 if (DropDownStyle == ComboBoxStyle.DropDownList &&
                     AutoCompleteMode != AutoCompleteMode.None &&
@@ -453,10 +440,7 @@ namespace System.Windows.Forms
                 if (DrawMode != value)
                 {
                     //valid values are 0x0 to 0x2.
-                    if (!ClientUtils.IsEnumValid(value, (int)value, (int)DrawMode.Normal, (int)DrawMode.OwnerDrawVariable))
-                    {
-                        throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(DrawMode));
-                    }
+                    SourceGenerated.EnumValidator.Validate(value);
                     ResetHeightCache();
                     Properties.SetInteger(PropDrawMode, (int)value);
                     RecreateHandle();
@@ -587,10 +571,7 @@ namespace System.Windows.Forms
             set
             {
                 //valid values are 0x0 to 0x3
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)FlatStyle.Flat, (int)FlatStyle.System))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(FlatStyle));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
                 _flatStyle = value;
                 Invalidate();
             }
@@ -1217,10 +1198,7 @@ namespace System.Windows.Forms
                 {
                     // verify that 'value' is a valid enum type...
                     //valid values are 0x0 to 0x2
-                    if (!ClientUtils.IsEnumValid(value, (int)value, (int)ComboBoxStyle.Simple, (int)ComboBoxStyle.DropDownList))
-                    {
-                        throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(ComboBoxStyle));
-                    }
+                    SourceGenerated.EnumValidator.Validate(value);
 
                     if (value == ComboBoxStyle.DropDownList &&
                         AutoCompleteSource != AutoCompleteSource.ListItems &&
@@ -1483,7 +1461,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Performs the work of adding the specified items to the combobox
         /// </summary>
-        [Obsolete("This method has been deprecated.  There is no replacement.  http://go.microsoft.com/fwlink/?linkid=14202")]
+        [Obsolete("This method has been deprecated.  There is no replacement.  https://go.microsoft.com/fwlink/?linkid=14202")]
         protected virtual void AddItemsCore(object[] value)
         {
             int count = value is null ? 0 : value.Length;
@@ -3084,7 +3062,7 @@ namespace System.Windows.Forms
             else if (savedItems != null)
             {
                 newItems = new object[savedItems.Count];
-                savedItems.CopyTo(newItems, 0);
+                savedItems.CopyTo(newItems, arrayIndex: 0);
             }
             BeginUpdate();
             try
@@ -3406,6 +3384,8 @@ namespace System.Windows.Forms
         {
             return SelectedIndex == -1 && base.ShouldSerializeText();
         }
+
+        private IReadOnlyList<Entry> Entries => Items.InnerList;
 
         /// <summary>
         ///  Provides some interesting info about this control in String form.

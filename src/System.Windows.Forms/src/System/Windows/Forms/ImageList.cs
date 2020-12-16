@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -53,8 +53,6 @@ namespace System.Windows.Forms
         private EventHandler _recreateHandler;
         private EventHandler _changeHandler;
 
-        private bool _inAddRange;
-
         /// <summary>
         ///  Creates a new ImageList Control with a default image size of 16x16
         ///  pixels
@@ -96,17 +94,7 @@ namespace System.Windows.Forms
             get => _colorDepth;
             set
             {
-                // ColorDepth is not conitguous - list the members instead.
-                if (!ClientUtils.IsEnumValid_NotSequential(value,
-                                                     (int)value,
-                                                    (int)ColorDepth.Depth4Bit,
-                                                    (int)ColorDepth.Depth8Bit,
-                                                    (int)ColorDepth.Depth16Bit,
-                                                    (int)ColorDepth.Depth24Bit,
-                                                    (int)ColorDepth.Depth32Bit))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(ColorDepth));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 if (_colorDepth == value)
                 {
@@ -140,17 +128,6 @@ namespace System.Windows.Forms
                 }
                 return _nativeImageList.Handle;
             }
-        }
-
-        internal IntPtr CreateUniqueHandle()
-        {
-            if (_nativeImageList is null)
-            {
-                CreateHandle();
-            }
-
-            using var iml = _nativeImageList.Duplicate();
-            return iml.TransferOwnership();
         }
 
         /// <summary>

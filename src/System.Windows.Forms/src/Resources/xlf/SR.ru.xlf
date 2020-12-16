@@ -3709,6 +3709,11 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">Указывает, может ли пользователь редактировать ячейки элемента управления DataGridView.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridView_RowAddedNotification">
+        <source>Row {0} is added</source>
+        <target state="translated">Добавлена строка {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridView_RowAlreadyBelongsToDataGridView">
         <source>Row provided already belongs to a DataGridView control.</source>
         <target state="translated">Указанная строка уже принадлежит к элементу управления DataGridView.</target>
@@ -4726,7 +4731,7 @@ just-in-time (JIT) debugging instead of this dialog box.
         <target state="translated">{0}
     Версия сборки: {1}
     Версия Win32: {2}
-    CodeBase: {3}
+    CodeBase (база кода): {3}
 </target>
         <note />
       </trans-unit>
@@ -8229,7 +8234,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="PropertyGridRemoveStaticTabs">
         <source>Static tabs cannot be removed from the PropertyGrid.</source>
-        <target state="translated">&lt;невозможно найти строку ресурса "PropertyGridRemoveStaticTabs"&gt;</target>
+        <target state="translated">невозможно найти строку ресурса "PropertyGridRemoveStaticTabs"</target>
         <note />
       </trans-unit>
       <trans-unit id="PropertyGridResetValue">
@@ -10408,8 +10413,8 @@ Stack trace where the illegal operation occurred was:
         <note />
       </trans-unit>
       <trans-unit id="TrayIcon_TextTooLong">
-        <source>Text length must be less than 64 characters long.</source>
-        <target state="translated">Длина текста должна быть меньше 64 символов.</target>
+        <source>Text length must be less than 128 characters long.</source>
+        <target state="translated">Длина текста должна быть меньше 128 символов.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeBackColorDescr">
@@ -10420,6 +10425,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="TreeNodeBeginEditFailed">
         <source>BeginEdit did not succeed because LabelEdit property is false.</source>
         <target state="translated">Операция BeginEdit не удалась, поскольку значение свойства LabelEdit равно false.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeBoundToAnotherTreeView">
+        <source>The TreeNode is already bound to another TreeView. You must first remove it from its current location or clone it.</source>
+        <target state="translated">TreeNode уже связан с другим TreeView. Сначала необходимо удалить его из текущего расположения или клонировать его.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeCheckedDescr">

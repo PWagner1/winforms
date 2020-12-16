@@ -30,16 +30,12 @@ namespace System.Windows.Forms
                         return RuntimeId;
                     case UiaCore.UIA.NamePropertyId:
                         return Name;
-                    case UiaCore.UIA.ControlTypePropertyId:
-                        return UiaCore.UIA.SpinnerControlTypeId;
                     case UiaCore.UIA.BoundingRectanglePropertyId:
                         return Bounds;
                     case UiaCore.UIA.LegacyIAccessibleStatePropertyId:
                         return State;
                     case UiaCore.UIA.LegacyIAccessibleRolePropertyId:
                         return Role;
-                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
-                        return false;
                     default:
                         return base.GetPropertyValue(propertyID);
                 }

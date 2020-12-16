@@ -3709,6 +3709,11 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">ユーザーが DataGridView コントロールのセルを編集することができるかどうかを示します。</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridView_RowAddedNotification">
+        <source>Row {0} is added</source>
+        <target state="translated">行 {0} が追加されました</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridView_RowAlreadyBelongsToDataGridView">
         <source>Row provided already belongs to a DataGridView control.</source>
         <target state="translated">指定された行は DataGridView コントロールに既に属しています。</target>
@@ -10407,8 +10412,8 @@ Stack trace where the illegal operation occurred was:
         <note />
       </trans-unit>
       <trans-unit id="TrayIcon_TextTooLong">
-        <source>Text length must be less than 64 characters long.</source>
-        <target state="translated">文字列の長さは 64 文字未満でなければなりません。</target>
+        <source>Text length must be less than 128 characters long.</source>
+        <target state="translated">文字列の長さは 128 文字未満でなければなりません。</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeBackColorDescr">
@@ -10419,6 +10424,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="TreeNodeBeginEditFailed">
         <source>BeginEdit did not succeed because LabelEdit property is false.</source>
         <target state="translated">LabelEdit のプロパティが false であるため、BeginEdit は成功しませんでした。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeBoundToAnotherTreeView">
+        <source>The TreeNode is already bound to another TreeView. You must first remove it from its current location or clone it.</source>
+        <target state="new">The TreeNode is already bound to another TreeView. You must first remove it from its current location or clone it.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeCheckedDescr">

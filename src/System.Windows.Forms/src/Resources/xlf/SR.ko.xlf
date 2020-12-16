@@ -3709,6 +3709,11 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">사용자가 DataGridView 컨트롤의 셀을 편집할 수 있는지 여부를 나타냅니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridView_RowAddedNotification">
+        <source>Row {0} is added</source>
+        <target state="translated">{0} 행이 추가됨</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridView_RowAlreadyBelongsToDataGridView">
         <source>Row provided already belongs to a DataGridView control.</source>
         <target state="translated">제공된 행이 이미 DataGridView 컨트롤에 속해 있습니다.</target>
@@ -10407,8 +10412,8 @@ Stack trace where the illegal operation occurred was:
         <note />
       </trans-unit>
       <trans-unit id="TrayIcon_TextTooLong">
-        <source>Text length must be less than 64 characters long.</source>
-        <target state="translated">텍스트 길이는 64자 미만이어야 합니다.</target>
+        <source>Text length must be less than 128 characters long.</source>
+        <target state="translated">텍스트 길이는 128자 미만이어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeBackColorDescr">
@@ -10419,6 +10424,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="TreeNodeBeginEditFailed">
         <source>BeginEdit did not succeed because LabelEdit property is false.</source>
         <target state="translated">LabelEdit 속성이 false이므로 BeginEdit이 실패했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeBoundToAnotherTreeView">
+        <source>The TreeNode is already bound to another TreeView. You must first remove it from its current location or clone it.</source>
+        <target state="translated">TreeNode가 이미 다른 TreeView에 바인딩되어 있습니다. 먼저 현재 위치에서 TreeNode를 제거하거나 복제해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeCheckedDescr">

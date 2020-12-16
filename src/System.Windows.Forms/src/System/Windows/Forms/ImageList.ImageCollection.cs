@@ -29,6 +29,9 @@ namespace System.Windows.Forms
             ///  issues by holding on to extra references.
             private int _lastAccessedIndex = -1;
 
+            // Indicates whether images are added in a batch.
+            private bool _isBatchAdd;
+
             /// <summary>
             ///  Returns the keys in the image list - images without keys return String.Empty.
             /// </summary>
@@ -195,7 +198,7 @@ namespace System.Windows.Forms
                         throw new ArgumentException(SR.ImageListBadImage, nameof(value));
                     }
 
-                    this[index] = (Image)value;
+                    this[index] = image;
                 }
             }
 
@@ -372,7 +375,7 @@ namespace System.Windows.Forms
                     _imageInfoCollection.Add(imageInfo);
                 }
 
-                if (!_owner._inAddRange)
+                if (!_isBatchAdd)
                 {
                     _owner.OnChangeHandle(EventArgs.Empty);
                 }
@@ -387,13 +390,13 @@ namespace System.Windows.Forms
                     throw new ArgumentNullException(nameof(images));
                 }
 
-                _owner._inAddRange = true;
+                _isBatchAdd = true;
                 foreach (Image image in images)
                 {
                     Add(image);
                 }
 
-                _owner._inAddRange = false;
+                _isBatchAdd = false;
                 _owner.OnChangeHandle(EventArgs.Empty);
             }
 
@@ -554,6 +557,7 @@ namespace System.Windows.Forms
                 if (value is Image image)
                 {
                     Remove(image);
+
                     _owner.OnChangeHandle(EventArgs.Empty);
                 }
             }
@@ -575,6 +579,7 @@ namespace System.Windows.Forms
                 if ((_imageInfoCollection != null) && (index >= 0 && index < _imageInfoCollection.Count))
                 {
                     _imageInfoCollection.RemoveAt(index);
+
                     _owner.OnChangeHandle(EventArgs.Empty);
                 }
             }

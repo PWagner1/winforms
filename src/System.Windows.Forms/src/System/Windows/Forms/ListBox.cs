@@ -231,10 +231,7 @@ namespace System.Windows.Forms
             get => borderStyle;
             set
             {
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)BorderStyle.None, (int)BorderStyle.Fixed3D))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(BorderStyle));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 if (value != borderStyle)
                 {
@@ -419,10 +416,7 @@ namespace System.Windows.Forms
             set
             {
                 //valid values are 0x0 to 0x2
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)DrawMode.Normal, (int)DrawMode.OwnerDrawVariable))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(DrawMode));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
                 if (drawMode != value)
                 {
                     if (MultiColumn && value == DrawMode.OwnerDrawVariable)
@@ -1044,10 +1038,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)SelectionMode.None, (int)SelectionMode.MultiExtended))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(SelectionMode));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 if (selectionMode != value)
                 {
@@ -1234,7 +1225,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Performs the work of adding the specified items to the Listbox
         /// </summary>
-        [Obsolete("This method has been deprecated.  There is no replacement.  http://go.microsoft.com/fwlink/?linkid=14202")]
+        [Obsolete("This method has been deprecated.  There is no replacement.  https://go.microsoft.com/fwlink/?linkid=14202")]
         protected virtual void AddItemsCore(object[] value)
         {
             int count = value is null ? 0 : value.Length;

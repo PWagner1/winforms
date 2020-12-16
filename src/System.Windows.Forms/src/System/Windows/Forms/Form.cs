@@ -405,7 +405,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatLayout))]
         [SRDescription(nameof(SR.FormAutoScaleDescr)),
-        Obsolete("This property has been deprecated. Use the AutoScaleMode property instead.  http://go.microsoft.com/fwlink/?linkid=14202")]
+        Obsolete("This property has been deprecated. Use the AutoScaleMode property instead.  https://go.microsoft.com/fwlink/?linkid=14202")]
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -551,10 +551,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)AutoSizeMode.GrowAndShrink, (int)AutoSizeMode.GrowOnly))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(AutoSizeMode));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 if (GetAutoSizeMode() != value)
                 {
@@ -676,10 +673,7 @@ namespace System.Windows.Forms
             get => (FormBorderStyle)formState[FormStateBorderStyle];
             set
             {
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)FormBorderStyle.None, (int)FormBorderStyle.SizableToolWindow))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(FormBorderStyle));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 formState[FormStateBorderStyle] = (int)value;
                 if (formState[FormStateSetClientSize] == 1 && !IsHandleCreated)
@@ -995,10 +989,7 @@ namespace System.Windows.Forms
             set
             {
                 //valid values are 0x0 to 0x7
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)DialogResult.None, (int)DialogResult.No))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(DialogResult));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 dialogResult = value;
             }
@@ -1997,10 +1988,7 @@ namespace System.Windows.Forms
                     //do some bounds checking here
                     //
                     //valid values are 0x0 to 0x2
-                    if (!ClientUtils.IsEnumValid(value, (int)value, (int)SizeGripStyle.Auto, (int)SizeGripStyle.Hide))
-                    {
-                        throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(SizeGripStyle));
-                    }
+                    SourceGenerated.EnumValidator.Validate(value);
 
                     formState[FormStateSizeGripStyle] = (int)value;
                     UpdateRenderSizeGrip();
@@ -2025,10 +2013,7 @@ namespace System.Windows.Forms
             set
             {
                 //valid values are 0x0 to 0x4
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)FormStartPosition.Manual, (int)FormStartPosition.CenterParent))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(FormStartPosition));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
                 formState[FormStateStartPos] = (int)value;
             }
         }
@@ -2330,10 +2315,7 @@ namespace System.Windows.Forms
             get => (FormWindowState)formState[FormStateWindowState];
             set
             {
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)FormWindowState.Normal, (int)FormWindowState.Maximized))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(FormWindowState));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 switch (value)
                 {
@@ -2779,7 +2761,7 @@ namespace System.Windows.Forms
         ///  This auto scales the form based on the AutoScaleBaseSize.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        [Obsolete("This method has been deprecated. Use the ApplyAutoScaling method instead.  http://go.microsoft.com/fwlink/?linkid=14202")]
+        [Obsolete("This method has been deprecated. Use the ApplyAutoScaling method instead.  https://go.microsoft.com/fwlink/?linkid=14202")]
         protected void ApplyAutoScaling()
         {
             Debug.WriteLineIf(CompModSwitches.RichLayout.TraceInfo, "ApplyAutoScaling... ");
@@ -3527,7 +3509,7 @@ namespace System.Windows.Forms
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        [Obsolete("This method has been deprecated. Use the AutoScaleDimensions property instead.  http://go.microsoft.com/fwlink/?linkid=14202")]
+        [Obsolete("This method has been deprecated. Use the AutoScaleDimensions property instead.  https://go.microsoft.com/fwlink/?linkid=14202")]
         public static SizeF GetAutoScaleSize(Font font)
         {
             float height = font.Height;

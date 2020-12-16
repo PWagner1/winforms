@@ -3709,6 +3709,11 @@ Bu varsayılan iletişim kutusunu değiştirmek için, lütfen DataError olayın
         <target state="translated">Kullanıcının DataGridView denetiminin hücrelerini düzenleyip düzenleyemeyeceğini gösterir.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridView_RowAddedNotification">
+        <source>Row {0} is added</source>
+        <target state="translated">{0}. satır eklendi</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridView_RowAlreadyBelongsToDataGridView">
         <source>Row provided already belongs to a DataGridView control.</source>
         <target state="translated">Sağlanan satır zaten bir DataGridView denetimine ait.</target>
@@ -10407,8 +10412,8 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <note />
       </trans-unit>
       <trans-unit id="TrayIcon_TextTooLong">
-        <source>Text length must be less than 64 characters long.</source>
-        <target state="translated">Metin uzunluğu 64 karakterden az olmalı.</target>
+        <source>Text length must be less than 128 characters long.</source>
+        <target state="translated">Metin uzunluğu 128 karakterden az olmalı.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeBackColorDescr">
@@ -10419,6 +10424,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       <trans-unit id="TreeNodeBeginEditFailed">
         <source>BeginEdit did not succeed because LabelEdit property is false.</source>
         <target state="translated">LabelEdit özelliği False olduğundan BeginEdit özelliği başarılı olmadı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeBoundToAnotherTreeView">
+        <source>The TreeNode is already bound to another TreeView. You must first remove it from its current location or clone it.</source>
+        <target state="translated">TreeNode zaten başka bir TreeView'a bağlı. Önce onu geçerli konumundan kaldırmalı ya da kopyalamalısınız.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeCheckedDescr">

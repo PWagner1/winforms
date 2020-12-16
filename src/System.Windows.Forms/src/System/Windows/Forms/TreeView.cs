@@ -258,10 +258,7 @@ namespace System.Windows.Forms
             {
                 if (borderStyle != value)
                 {
-                    if (!ClientUtils.IsEnumValid(value, (int)value, (int)BorderStyle.None, (int)BorderStyle.Fixed3D))
-                    {
-                        throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(BorderStyle));
-                    }
+                    SourceGenerated.EnumValidator.Validate(value);
 
                     borderStyle = value;
                     UpdateStyles();
@@ -662,7 +659,7 @@ namespace System.Windows.Forms
                                     value is null ? IntPtr.Zero : value.Handle);
                         if (StateImageList != null && StateImageList.Images.Count > 0 && internalStateImageList != null)
                         {
-                            SetStateImageList(internalStateImageList.CreateUniqueHandle());
+                            SetStateImageList(internalStateImageList.Handle);
                         }
                     }
                     UpdateCheckedState(root, true);
@@ -958,10 +955,7 @@ namespace System.Windows.Forms
             set
             {
                 //valid values are 0x0 to 0x2
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)TreeViewDrawMode.Normal, (int)TreeViewDrawMode.OwnerDrawAll))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(TreeViewDrawMode));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 if (drawMode != value)
                 {
@@ -1819,7 +1813,7 @@ namespace System.Windows.Forms
                 IntPtr handle = IntPtr.Zero;
                 if (internalStateImageList != null)
                 {
-                    handle = internalStateImageList.CreateUniqueHandle();
+                    handle = internalStateImageList.Handle;
                 }
                 SetStateImageList(handle);
             }
@@ -1859,7 +1853,7 @@ namespace System.Windows.Forms
                             internalStateImageList.ImageSize = (Size)ScaledStateImageSize;
                         }
 
-                        SetStateImageList(internalStateImageList.CreateUniqueHandle());
+                        SetStateImageList(internalStateImageList.Handle);
                     }
                 }
                 else //stateImageList is null || stateImageList.Images.Count = 0;
@@ -2050,7 +2044,7 @@ namespace System.Windows.Forms
                     images[i] = stateImageList.Images[i - 1];
                 }
                 newImageList.Images.AddRange(images);
-                User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, (IntPtr)TVSIL.STATE, newImageList.CreateUniqueHandle());
+                User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, (IntPtr)TVSIL.STATE, newImageList.Handle);
 
                 if (internalStateImageList != null)
                 {
@@ -2067,8 +2061,7 @@ namespace System.Windows.Forms
             IntPtr handleOld = User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, (IntPtr)TVSIL.STATE, handle);
             if ((handleOld != IntPtr.Zero) && (handleOld != handle))
             {
-                var result = ComCtl32.ImageList.Destroy(new HandleRef(this, handleOld));
-                Debug.Assert(result.IsTrue());
+                ComCtl32.ImageList.Destroy(new HandleRef(this, handleOld));
             }
         }
 
@@ -2079,8 +2072,7 @@ namespace System.Windows.Forms
             IntPtr handle = User32.SendMessageW(this, (User32.WM)TVM.GETIMAGELIST, (IntPtr)TVSIL.STATE);
             if (handle != IntPtr.Zero)
             {
-                var result = ComCtl32.ImageList.Destroy(new HandleRef(this, handle));
-                Debug.Assert(result.IsTrue());
+                ComCtl32.ImageList.Destroy(new HandleRef(this, handle));
                 if (reset)
                 {
                     User32.SendMessageW(this, (User32.WM)TVM.SETIMAGELIST, (IntPtr)TVSIL.STATE);
@@ -2621,7 +2613,7 @@ namespace System.Windows.Forms
                     // user's images.
                     if (internalStateImageList != null)
                     {
-                        SetStateImageList(internalStateImageList.CreateUniqueHandle());
+                        SetStateImageList(internalStateImageList.Handle);
                     }
                 }
             }

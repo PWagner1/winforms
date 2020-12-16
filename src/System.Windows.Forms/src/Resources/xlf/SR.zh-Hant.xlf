@@ -3709,6 +3709,11 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">表示使用者是否可編輯 DataGridView 控制項的儲存格。</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridView_RowAddedNotification">
+        <source>Row {0} is added</source>
+        <target state="translated">資料列 {0} 已新增</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridView_RowAlreadyBelongsToDataGridView">
         <source>Row provided already belongs to a DataGridView control.</source>
         <target state="translated">提供的資料列已經屬於 DataGridView 控制項。</target>
@@ -4725,7 +4730,7 @@ just-in-time (JIT) debugging instead of this dialog box.
         <target state="translated">{0}
     組件版本: {1}
     Win32 版本: {2}
-    程式碼庫: {3}
+    程式碼基底: {3}
 </target>
         <note />
       </trans-unit>
@@ -10407,8 +10412,8 @@ Stack trace where the illegal operation occurred was:
         <note />
       </trans-unit>
       <trans-unit id="TrayIcon_TextTooLong">
-        <source>Text length must be less than 64 characters long.</source>
-        <target state="translated">文字長度必須少於 64 個字元。</target>
+        <source>Text length must be less than 128 characters long.</source>
+        <target state="translated">文字長度必須少於 128 個字元。</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeBackColorDescr">
@@ -10419,6 +10424,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="TreeNodeBeginEditFailed">
         <source>BeginEdit did not succeed because LabelEdit property is false.</source>
         <target state="translated">因為 LabelEdit 屬性為 false，所以 BeginEdit 失敗。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeBoundToAnotherTreeView">
+        <source>The TreeNode is already bound to another TreeView. You must first remove it from its current location or clone it.</source>
+        <target state="translated">TreeNode 已繫結到另一個 TreeView。您必須先將其從目前的位置移除，或加以複製。</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeCheckedDescr">

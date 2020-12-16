@@ -90,7 +90,7 @@ namespace System.Windows.Forms
         private BitVector32 _pictureBoxState; // see PICTUREBOXSTATE_ consts above
 
         /// <summary>
-        ///  http://msdn.microsoft.com/en-us/library/93z9ee4x(v=VS.100).aspx
+        ///  https://docs.microsoft.com/dotnet/api/system.drawing.image.fromstream#System_Drawing_Image_FromStream_System_IO_Stream_
         ///  if we load an image from a stream, we must keep the stream open for the lifetime of the Image
         /// </summary>
         private StreamReader _localImageStreamReader;
@@ -134,10 +134,7 @@ namespace System.Windows.Forms
             get => _borderStyle;
             set
             {
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)BorderStyle.None, (int)BorderStyle.Fixed3D))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(BorderStyle));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 if (_borderStyle != value)
                 {
@@ -803,10 +800,7 @@ namespace System.Windows.Forms
             get => _sizeMode;
             set
             {
-                if (!ClientUtils.IsEnumValid(value, (int)value, (int)PictureBoxSizeMode.Normal, (int)PictureBoxSizeMode.Zoom))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(PictureBoxSizeMode));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 if (_sizeMode != value)
                 {

@@ -2,23 +2,21 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using System.Globalization;
 
 namespace System.Windows.Forms
 {
     [Designer("System.Windows.Forms.Design.ToolStripContainerDesigner, " + AssemblyRef.SystemDesign)]
     [SRDescription(nameof(SR.ToolStripContainerDesc))]
-    public class ToolStripContainer : ContainerControl
+    public partial class ToolStripContainer : ContainerControl
     {
-        private readonly ToolStripPanel topPanel;
-        private readonly ToolStripPanel bottomPanel;
-        private readonly ToolStripPanel leftPanel;
-        private readonly ToolStripPanel rightPanel;
-        private readonly ToolStripContentPanel contentPanel;
+        private readonly ToolStripPanel _topPanel;
+        private readonly ToolStripPanel _bottomPanel;
+        private readonly ToolStripPanel _leftPanel;
+        private readonly ToolStripPanel _rightPanel;
+        private readonly ToolStripContentPanel _contentPanel;
 
         public ToolStripContainer()
         {
@@ -28,27 +26,28 @@ namespace System.Windows.Forms
             try
             {
                 // undone - smart demand creation
-                topPanel = new ToolStripPanel(this);
-                bottomPanel = new ToolStripPanel(this);
-                leftPanel = new ToolStripPanel(this);
-                rightPanel = new ToolStripPanel(this);
-                contentPanel = new ToolStripContentPanel
+                _topPanel = new ToolStripPanel(this);
+                _bottomPanel = new ToolStripPanel(this);
+                _leftPanel = new ToolStripPanel(this);
+                _rightPanel = new ToolStripPanel(this);
+                _contentPanel = new ToolStripContentPanel
                 {
                     Dock = DockStyle.Fill
                 };
-                topPanel.Dock = DockStyle.Top;
-                bottomPanel.Dock = DockStyle.Bottom;
-                rightPanel.Dock = DockStyle.Right;
-                leftPanel.Dock = DockStyle.Left;
+                _topPanel.Dock = DockStyle.Top;
+                _bottomPanel.Dock = DockStyle.Bottom;
+                _rightPanel.Dock = DockStyle.Right;
+                _leftPanel.Dock = DockStyle.Left;
 
                 if (Controls is ToolStripContainerTypedControlCollection controlCollection)
                 {
-                    controlCollection.AddInternal(contentPanel);
-                    controlCollection.AddInternal(leftPanel);
-                    controlCollection.AddInternal(rightPanel);
-                    controlCollection.AddInternal(topPanel);
-                    controlCollection.AddInternal(bottomPanel);
+                    controlCollection.AddInternal(_contentPanel);
+                    controlCollection.AddInternal(_leftPanel);
+                    controlCollection.AddInternal(_rightPanel);
+                    controlCollection.AddInternal(_topPanel);
+                    controlCollection.AddInternal(_bottomPanel);
                 }
+
                 // else consider throw new exception
             }
             finally
@@ -83,6 +82,7 @@ namespace System.Windows.Forms
             get => base.AutoScrollMinSize;
             set => base.AutoScrollMinSize = value;
         }
+
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -95,7 +95,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public new event EventHandler BackColorChanged
+        public new event EventHandler? BackColorChanged
         {
             add => base.BackColorChanged += value;
             remove => base.BackColorChanged -= value;
@@ -104,7 +104,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public new Image BackgroundImage
+        public new Image? BackgroundImage
         {
             get => base.BackgroundImage;
             set => base.BackgroundImage = value;
@@ -113,7 +113,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public new event EventHandler BackgroundImageChanged
+        public new event EventHandler? BackgroundImageChanged
         {
             add => base.BackgroundImageChanged += value;
             remove => base.BackgroundImageChanged -= value;
@@ -131,7 +131,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public new event EventHandler BackgroundImageLayoutChanged
+        public new event EventHandler? BackgroundImageLayoutChanged
         {
             add => base.BackgroundImageLayoutChanged += value;
             remove => base.BackgroundImageLayoutChanged += value;
@@ -145,7 +145,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return bottomPanel;
+                return _bottomPanel;
             }
         }
 
@@ -172,7 +172,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return contentPanel;
+                return _contentPanel;
             }
         }
 
@@ -187,7 +187,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler CausesValidationChanged
+        public new event EventHandler? CausesValidationChanged
         {
             add => base.CausesValidationChanged += value;
             remove => base.CausesValidationChanged -= value;
@@ -196,7 +196,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public new ContextMenuStrip ContextMenuStrip
+        public new ContextMenuStrip? ContextMenuStrip
         {
             get => base.ContextMenuStrip;
             set => base.ContextMenuStrip = value;
@@ -204,7 +204,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler ContextMenuStripChanged
+        public new event EventHandler? ContextMenuStripChanged
         {
             add => base.ContextMenuStripChanged += value;
             remove => base.ContextMenuStripChanged -= value;
@@ -213,6 +213,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [AllowNull]
         public override Cursor Cursor
         {
             get => base.Cursor;
@@ -222,7 +223,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public new event EventHandler CursorChanged
+        public new event EventHandler? CursorChanged
         {
             add => base.CursorChanged += value;
             remove => base.CursorChanged -= value;
@@ -248,7 +249,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public new event EventHandler ForeColorChanged
+        public new event EventHandler? ForeColorChanged
         {
             add => base.ForeColorChanged += value;
             remove => base.ForeColorChanged -= value;
@@ -262,7 +263,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return leftPanel;
+                return _leftPanel;
             }
         }
 
@@ -289,7 +290,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return rightPanel;
+                return _rightPanel;
             }
         }
 
@@ -308,6 +309,8 @@ namespace System.Windows.Forms
             }
         }
 
+        internal override bool SupportsUiaProviders => true;
+
         [SRCategory(nameof(SR.CatAppearance))]
         [SRDescription(nameof(SR.ToolStripContainerTopToolStripPanelDescr))]
         [Localizable(false)]
@@ -316,7 +319,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return topPanel;
+                return _topPanel;
             }
         }
 
@@ -337,7 +340,7 @@ namespace System.Windows.Forms
 
         /// <summary>
         ///  Controls Collection...
-        ///  This is overriden so that the Controls.Add ( ) is not Code Gened...
+        ///  This is overriden so that the Controls.Add ( ) is not Code Gen'd...
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -345,6 +348,9 @@ namespace System.Windows.Forms
         {
             get => base.Controls;
         }
+
+        protected override AccessibleObject CreateAccessibilityInstance()
+            => new ToolStripContainerAccessibleObject(this);
 
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected override ControlCollection CreateControlsInstance()
@@ -376,6 +382,7 @@ namespace System.Windows.Forms
             {
                 c.SuspendLayout();
             }
+
             base.OnSizeChanged(e);
             foreach (Control c in Controls)
             {
@@ -393,78 +400,13 @@ namespace System.Windows.Forms
                     c.CreateControl(true);
                 }
             }
+
             base.RecreateHandleCore();
         }
 
         internal override bool AllowsKeyboardToolTip()
         {
             return false;
-        }
-
-        internal class ToolStripContainerTypedControlCollection : ReadOnlyControlCollection
-        {
-            readonly ToolStripContainer owner;
-            readonly Type contentPanelType = typeof(ToolStripContentPanel);
-            readonly Type panelType = typeof(ToolStripPanel);
-
-            public ToolStripContainerTypedControlCollection(Control c, bool isReadOnly)
-                : base(c, isReadOnly)
-            {
-                owner = c as ToolStripContainer;
-            }
-
-            public override void Add(Control value)
-            {
-                if (value is null)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-                if (IsReadOnly)
-                {
-                    throw new NotSupportedException(SR.ToolStripContainerUseContentPanel);
-                }
-
-                Type controlType = value.GetType();
-                if (!contentPanelType.IsAssignableFrom(controlType) && !panelType.IsAssignableFrom(controlType))
-                {
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, string.Format(SR.TypedControlCollectionShouldBeOfTypes, contentPanelType.Name, panelType.Name)), value.GetType().Name);
-                }
-                base.Add(value);
-            }
-            public override void Remove(Control value)
-            {
-                if (value is ToolStripPanel || value is ToolStripContentPanel)
-                {
-                    if (!owner.DesignMode)
-                    {
-                        if (IsReadOnly)
-                        {
-                            throw new NotSupportedException(SR.ReadonlyControlsCollection);
-                        }
-                    }
-                }
-                base.Remove(value);
-            }
-
-            internal override void SetChildIndexInternal(Control child, int newIndex)
-            {
-                if (child is ToolStripPanel || child is ToolStripContentPanel)
-                {
-                    if (!owner.DesignMode)
-                    {
-                        if (IsReadOnly)
-                        {
-                            throw new NotSupportedException(SR.ReadonlyControlsCollection);
-                        }
-                    }
-                    else
-                    {
-                        // just no-op it at DT.
-                        return;
-                    }
-                }
-                base.SetChildIndexInternal(child, newIndex);
-            }
         }
     }
 }

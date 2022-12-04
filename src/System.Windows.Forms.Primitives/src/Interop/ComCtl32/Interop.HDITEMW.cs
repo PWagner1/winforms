@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Runtime.InteropServices;
 
 internal static partial class Interop
@@ -12,7 +11,7 @@ internal static partial class Interop
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         public unsafe struct HDITEMW
         {
-            public HDI mask;
+            public HDI_MASK mask;
             public int cxy;
             public char* /* LPWSTR */ pszText;
             public IntPtr /* HBITMAP */ hbm;

@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Drawing;
@@ -14,7 +12,7 @@ namespace System.Windows.Forms.ButtonInternal
 {
     internal abstract partial class ButtonBaseAdapter
     {
-        internal class LayoutOptions
+        internal partial class LayoutOptions
         {
             private static readonly int s_combineCheck = BitVector32.CreateMask();
             private static readonly int s_combineImageText = BitVector32.CreateMask(s_combineCheck);
@@ -31,8 +29,8 @@ namespace System.Windows.Forms.ButtonInternal
             public int PaddingSize { get; set; }
             public bool MaxFocus { get; set; }
             public bool FocusOddEvenFixup { get; set; }
-            public Font Font { get; set; }
-            public string Text { get; set; }
+            public Font Font { get; set; } = null!;
+            public string? Text { get; set; }
             public Size ImageSize { get; set; }
             public int CheckSize { get; set; }
             public int CheckPaddingSize { get; set; }
@@ -114,14 +112,6 @@ namespace System.Windows.Forms.ButtonInternal
 
             public Padding Padding { get; set; }
 
-            private enum Composition
-            {
-                NoneCombined = 0x00,
-                CheckCombined = 0x01,
-                TextImageCombined = 0x02,
-                AllCombined = 0x03
-            }
-
             /// <summary>
             ///  Uses <see cref="CheckAlign"/>, <see cref="ImageAlign"/>, and <see cref="TextAlign"/> to compose
             ///  <paramref name="checkSize"/>, <paramref name="imageSize"/>, and <paramref name="textSize"/> into
@@ -133,8 +123,7 @@ namespace System.Windows.Forms.ButtonInternal
                 Composition vComposition = GetVerticalComposition();
                 return new Size(
                     xCompose(hComposition, checkSize.Width, imageSize.Width, textSize.Width),
-                    xCompose(vComposition, checkSize.Height, imageSize.Height, textSize.Height)
-                );
+                    xCompose(vComposition, checkSize.Height, imageSize.Height, textSize.Height));
 
                 static int xCompose(Composition composition, int checkSize, int imageSize, int textSize)
                 {
@@ -165,8 +154,7 @@ namespace System.Windows.Forms.ButtonInternal
                 Composition vComposition = GetVerticalComposition();
                 return new Size(
                     xDecompose(hComposition, checkSize.Width, imageSize.Width, proposedSize.Width),
-                    xDecompose(vComposition, checkSize.Height, imageSize.Height, proposedSize.Height)
-                );
+                    xDecompose(vComposition, checkSize.Height, imageSize.Height, proposedSize.Height));
 
                 static int xDecompose(Composition composition, int checkSize, int imageSize, int proposedSize)
                 {
@@ -189,7 +177,7 @@ namespace System.Windows.Forms.ButtonInternal
 
             private Composition GetHorizontalComposition()
             {
-                BitVector32 action = new BitVector32();
+                BitVector32 action = default(BitVector32);
 
                 // Checks reserve space horizontally if possible, so only AnyLeft/AnyRight prevents combination.
                 action[s_combineCheck] =
@@ -219,7 +207,7 @@ namespace System.Windows.Forms.ButtonInternal
                 Size textImageInsetSize = new Size(TextImageInset * 2, TextImageInset * 2);
                 Size requiredImageSize = (ImageSize != Size.Empty) ? ImageSize + textImageInsetSize : Size.Empty;
 
-                // Pack Text into remaning space
+                // Pack Text into remaining space
                 proposedSize -= textImageInsetSize;
                 proposedSize = Decompose(checkSize, requiredImageSize, proposedSize);
 
@@ -230,7 +218,7 @@ namespace System.Windows.Forms.ButtonInternal
                     // When Button.AutoSizeMode is set to GrowOnly TableLayoutPanel expects buttons not to
                     // automatically wrap on word break. If there's enough room for the text to word-wrap then it
                     // will happen but the layout would not be adjusted to allow text wrapping. If someone has a
-                    // carriage return in the text we'll honor that for preferred size, but we wont wrap based
+                    // carriage return in the text we'll honor that for preferred size, but we won't wrap based
                     // on constraints.
                     try
                     {
@@ -252,7 +240,7 @@ namespace System.Windows.Forms.ButtonInternal
 
             private Composition GetVerticalComposition()
             {
-                BitVector32 action = new BitVector32();
+                BitVector32 action = default(BitVector32);
 
                 // Checks reserve space horizontally if possible, so only Top/Bottom prevents combination.
                 action[s_combineCheck] = CheckAlign == ContentAlignment.MiddleCenter || !LayoutUtils.IsVerticalAlignment(CheckAlign);
@@ -310,6 +298,7 @@ namespace System.Windows.Forms.ButtonInternal
                         layout.Focus.Y++;
                         layout.Focus.Height--;
                     }
+
                     if (layout.Focus.Width % 2 == 0)
                     {
                         layout.Focus.X++;
@@ -333,6 +322,7 @@ namespace System.Windows.Forms.ButtonInternal
                             return TextImageRelation.ImageBeforeText;
                     }
                 }
+
                 return relation;
             }
 
@@ -460,7 +450,8 @@ namespace System.Windows.Forms.ButtonInternal
             // Maps an image align to the set of TextImageRelations that represent the same edge.
             // For example, imageAlign = TopLeft maps to TextImageRelations ImageAboveText (top)
             // and ImageBeforeText (left).
-            private static readonly TextImageRelation[] _imageAlignToRelation = new TextImageRelation[] {
+            private static readonly TextImageRelation[] _imageAlignToRelation = new TextImageRelation[]
+            {
                 /* TopLeft = */       TextImageRelation.ImageAboveText | TextImageRelation.ImageBeforeText,
                 /* TopCenter = */     TextImageRelation.ImageAboveText,
                 /* TopRight = */      TextImageRelation.ImageAboveText | TextImageRelation.TextBeforeImage,
@@ -512,7 +503,7 @@ namespace System.Windows.Forms.ButtonInternal
                 }
                 else
                 {
-                    // Rearrage text/image to prevent overlay.  Pack text into maxBounds - space reserved for image.
+                    // Rearrange text/image to prevent overlay.  Pack text into maxBounds - space reserved for image.
                     Size maxTextSize = LayoutUtils.SubAlignedRegion(maxBounds.Size, ImageSize, textImageRelation);
                     Size textSize = GetTextSize(maxTextSize);
                     Rectangle maxCombinedBounds = maxBounds;
@@ -589,6 +580,7 @@ namespace System.Windows.Forms.ButtonInternal
                         layout.Field.Y);
                     layout.TextBounds.Height = textBottom - layout.TextBounds.Y;
                 }
+
                 if (textImageRelation == TextImageRelation.TextAboveImage || textImageRelation == TextImageRelation.ImageAboveText)
                 {
                     // Adjust the horizontal position of textBounds so that the text doesn't fall off the boundary of the button
@@ -598,6 +590,7 @@ namespace System.Windows.Forms.ButtonInternal
                         layout.Field.X);
                     layout.TextBounds.Width = textRight - layout.TextBounds.X;
                 }
+
                 if (textImageRelation == TextImageRelation.ImageBeforeText && layout.ImageBounds.Size.Width != 0)
                 {
                     // Squeezes imageBounds.Width so that text is visible
@@ -606,6 +599,7 @@ namespace System.Windows.Forms.ButtonInternal
                         Math.Min(maxBounds.Width - layout.TextBounds.Width, layout.ImageBounds.Width));
                     layout.TextBounds.X = layout.ImageBounds.X + layout.ImageBounds.Width;
                 }
+
                 if (textImageRelation == TextImageRelation.ImageAboveText && layout.ImageBounds.Size.Height != 0)
                 {
                     // Squeezes imageBounds.Height so that the text is visible

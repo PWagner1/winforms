@@ -2,16 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using Moq;
 using Xunit;
+using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Tests
 {
-    using Size = System.Drawing.Size;
-
     [Collection("Sequential")] // workaround for WebBrowser control corrupting memory when run on multiple UI threads (instantiated via GUID)
     public class WebBrowserBaseTests
     {
@@ -236,7 +234,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsFact]
-        public void WebBrowserBase_CanSelect_GetInPlaceActvie_ReturnsExpected()
+        public void WebBrowserBase_CanSelect_GetInPlaceActive_ReturnsExpected()
         {
             using var parent = new Control();
             using var control = new SubWebBrowserBase("8856f961-340a-11d0-a96b-00c04fd705a2")
@@ -654,6 +652,7 @@ namespace System.Windows.Forms.Tests
             Assert.NotNull(siteBase);
             Assert.NotSame(siteBase, control.CreateWebBrowserSiteBase());
         }
+
         public static IEnumerable<object[]> DrawToBitmap_TestData()
         {
             yield return new object[] { new Rectangle(0, 0, 1, 1) };
@@ -724,7 +723,7 @@ namespace System.Windows.Forms.Tests
                 Height = 20
             };
             using var bitmap = new Bitmap(10, 10);
-            Assert.Throws<ArgumentException>(null, () => control.DrawToBitmap(bitmap, new Rectangle(x, y, width, height)));
+            Assert.Throws<ArgumentException>(() => control.DrawToBitmap(bitmap, new Rectangle(x, y, width, height)));
         }
 
         [WinFormsTheory]
@@ -738,7 +737,7 @@ namespace System.Windows.Forms.Tests
                 Height = 20
             };
             using var bitmap = new Bitmap(10, 10);
-            Assert.Throws<ArgumentException>(null, () => control.DrawToBitmap(bitmap, new Rectangle(1, 2, 3, 4)));
+            Assert.Throws<ArgumentException>(() => control.DrawToBitmap(bitmap, new Rectangle(1, 2, 3, 4)));
         }
 
         [WinFormsTheory]
@@ -752,7 +751,7 @@ namespace System.Windows.Forms.Tests
                 Height = height
             };
             using var bitmap = new Bitmap(10, 10);
-            Assert.Throws<ArgumentException>(null, () => control.DrawToBitmap(bitmap, new Rectangle(1, 2, 3, 4)));
+            Assert.Throws<ArgumentException>(() => control.DrawToBitmap(bitmap, new Rectangle(1, 2, 3, 4)));
         }
 
         [WinFormsFact]
@@ -836,6 +835,7 @@ namespace System.Windows.Forms.Tests
                 callCount++;
                 return result;
             }
+
             using var parent = new CustomProcessControl
             {
                 ProcessDialogKeyAction = action,

@@ -110,7 +110,7 @@ namespace System.Windows.Forms
         ///   </para>
         /// </remarks>
         public TaskDialogIcon(Bitmap image)
-            : this(BitmapToIcon(image ?? throw new ArgumentNullException(nameof(image))), true)
+            : this(BitmapToIcon(image.OrThrowIfNull()), true)
         {
         }
 
@@ -128,7 +128,7 @@ namespace System.Windows.Forms
         ///   </para>
         /// </remarks>
         public TaskDialogIcon(Icon icon)
-            : this(icon ?? throw new ArgumentNullException(nameof(icon)), false)
+            : this(icon.OrThrowIfNull(), false)
         {
         }
 
@@ -182,25 +182,25 @@ namespace System.Windows.Forms
 
         internal TaskDialogStandardIcon StandardIcon => _standardIcon ?? throw new InvalidOperationException();
 
-        internal bool IsStandardIcon => _standardIcon != null;
+        internal bool IsStandardIcon => _standardIcon is not null;
 
-        internal bool IsHandleIcon => _iconHandle != null;
+        internal bool IsHandleIcon => _iconHandle is not null;
 
         private static Icon BitmapToIcon(Bitmap bitmap)
         {
-            IntPtr handle = IntPtr.Zero;
+            HICON handle = HICON.Null;
             try
             {
-                handle = bitmap.GetHicon();
+                handle = (HICON)bitmap.GetHicon();
                 var icon = Icon.FromHandle(handle);
 
                 return (Icon)icon.Clone();
             }
             finally
             {
-                if (handle != IntPtr.Zero)
+                if (!handle.IsNull)
                 {
-                    Interop.User32.DestroyIcon(handle);
+                    PInvoke.DestroyIcon(handle);
                 }
             }
         }

@@ -6,7 +6,6 @@ using System.Collections;
 using System.Configuration;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Windows.Forms.Design;
 
 namespace System.ComponentModel.Design
@@ -17,7 +16,7 @@ namespace System.ComponentModel.Design
     public partial class ComponentDesigner : ITreeDesigner, IDesignerFilter, IComponentInitializer
     {
         private InheritanceAttribute _inheritanceAttribute;
-        private Hashtable _inheritedProps;
+        private Dictionary<string, InheritedPropertyDescriptor> _inheritedProps;
         private DesignerVerbCollection _verbs;
         private DesignerActionListCollection _actionLists;
         private ShadowPropertyCollection _shadowProperties;
@@ -31,7 +30,7 @@ namespace System.ComponentModel.Design
         public virtual DesignerActionListCollection ActionLists => _actionLists ??= new DesignerActionListCollection();
 
         /// <summary>
-        ///  Retrieves a list of associated components. These are components that should be incluced in a cut or copy
+        ///  Retrieves a list of associated components. These are components that should be included in a cut or copy
         ///  operation on this component.
         /// </summary>
         public virtual ICollection AssociatedComponents => Array.Empty<IComponent>();
@@ -46,7 +45,7 @@ namespace System.ComponentModel.Design
             get
             {
                 InheritanceAttribute inheritanceAttribute = InheritanceAttribute;
-                return inheritanceAttribute != null && !inheritanceAttribute.Equals(InheritanceAttribute.NotInherited);
+                return inheritanceAttribute is not null && !inheritanceAttribute.Equals(InheritanceAttribute.NotInherited);
             }
         }
 
@@ -103,7 +102,7 @@ namespace System.ComponentModel.Design
         ///  The defaultValues property contains a name/value dictionary of default values that should be applied to
         ///  properties. This dictionary may be null if no default values are specified.
         ///
-        ///  You may use the defaultValues dictionary to apply recommended defaults to proeprties but you should not
+        ///  You may use the defaultValues dictionary to apply recommended defaults to properties but you should not
         ///  modify component properties beyond what is stored in the dictionary, because this is an existing component
         ///  that may already have properties set on it.
         ///
@@ -153,14 +152,14 @@ namespace System.ComponentModel.Design
             get
             {
                 ICollection comps = AssociatedComponents;
-                if (comps != null && comps.Count > 0 && TryGetService(out IDesignerHost host))
+                if (comps is not null && comps.Count > 0 && TryGetService(out IDesignerHost host))
                 {
                     IDesigner[] designers = new IDesigner[comps.Count];
                     int idx = 0;
                     foreach (IComponent comp in comps.OfType<IComponent>())
                     {
                         designers[idx] = host.GetDesigner(comp);
-                        if (designers[idx] != null)
+                        if (designers[idx] is not null)
                         {
                             idx++;
                         }
@@ -187,16 +186,17 @@ namespace System.ComponentModel.Design
             get
             {
                 IComponent parent = ParentComponent;
-                if (parent != null && TryGetService(out IDesignerHost host))
+                if (parent is not null && TryGetService(out IDesignerHost host))
                 {
                     return host.GetDesigner(parent);
                 }
+
                 return null;
             }
         }
 
         /// <summary>
-        ///  Disposes of the resources (other than memory) used by the <see cref='System.ComponentModel.Design.ComponentDesigner' />.
+        ///  Disposes of the resources (other than memory) used by the <see cref="ComponentDesigner"/>.
         /// </summary>
         public void Dispose()
         {
@@ -236,7 +236,7 @@ namespace System.ComponentModel.Design
                     PropertyDescriptor defaultPropEvent = null;
                     bool eventChanged = false;
 
-                    if (defaultEvent != null)
+                    if (defaultEvent is not null)
                     {
                         defaultPropEvent = ebs.GetEventProperty(defaultEvent);
                     }
@@ -249,7 +249,7 @@ namespace System.ComponentModel.Design
 
                     try
                     {
-                        if (host != null && t is null)
+                        if (host is not null && t is null)
                         {
                             t = host.CreateTransaction(string.Format(SR.ComponentDesignerAddEvent, defaultEvent.Name));
                         }
@@ -265,20 +265,20 @@ namespace System.ComponentModel.Design
                     if (handler is null)
                     {
                         // Skip invalid properties.
-                        if (result != null)
+                        if (result is not null)
                         {
                             continue;
                         }
 
                         eventChanged = true;
-                        handler = ebs.CreateUniqueMethodName((IComponent)comp, defaultEvent);
+                        handler = ebs.CreateUniqueMethodName(comp, defaultEvent);
                     }
                     else
                     {
                         // ensure the handler is still there
                         eventChanged = true;
                         ICollection methods = ebs.GetCompatibleMethods(defaultEvent);
-                        if (methods != null)
+                        if (methods is not null)
                         {
                             foreach (string compatibleMethod in methods.OfType<string>())
                             {
@@ -316,7 +316,7 @@ namespace System.ComponentModel.Design
             }
 
             // Now show the event code.
-            if (thisHandler != null && thisDefaultEvent != null)
+            if (thisHandler is not null && thisDefaultEvent is not null)
             {
                 ebs.ShowCode(Component, thisDefaultEvent);
             }
@@ -327,7 +327,7 @@ namespace System.ComponentModel.Design
             get
             {
                 Debug.Assert(
-                    Component != null,
+                    Component is not null,
                     "this.component needs to be set before this method is valid.");
 
                 return TryGetService(out IDesignerHost host) && Component == host.RootComponent;
@@ -335,7 +335,7 @@ namespace System.ComponentModel.Design
         }
 
         /// <summary>
-        ///  Initializes a new instance of the <see cref='System.ComponentModel.Design.ComponentDesigner' /> class using the specified component.
+        ///  Initializes a new instance of the <see cref="ComponentDesigner"/> class using the specified component.
         /// </summary>
         public virtual void Initialize(IComponent component)
         {
@@ -365,9 +365,9 @@ namespace System.ComponentModel.Design
 
         private void InitializeInheritedProperties()
         {
-            Hashtable props = new Hashtable();
+            Dictionary<string, InheritedPropertyDescriptor> props = new();
             InheritanceAttribute inheritanceAttribute = InheritanceAttribute;
-            bool readOnlyInherit = inheritanceAttribute != null && inheritanceAttribute.Equals(InheritanceAttribute.InheritedReadOnly);
+            bool readOnlyInherit = inheritanceAttribute is not null && inheritanceAttribute.Equals(InheritanceAttribute.InheritedReadOnly);
 
             if (!readOnlyInherit)
             {
@@ -383,7 +383,7 @@ namespace System.ComponentModel.Design
                     PropertyDescriptor prop = values[i];
 
                     // Skip some properties
-                    if (object.Equals(prop.Attributes[typeof(DesignOnlyAttribute)], DesignOnlyAttribute.Yes))
+                    if (Equals(prop.Attributes[typeof(DesignOnlyAttribute)], DesignOnlyAttribute.Yes))
                     {
                         continue;
                     }
@@ -393,13 +393,11 @@ namespace System.ComponentModel.Design
                         continue;
                     }
 
-                    PropertyDescriptor inheritedProp = (PropertyDescriptor)props[prop.Name];
-
-                    if (inheritedProp is null)
+                    if (!props.ContainsKey(prop.Name))
                     {
                         // This ia a publicly inherited component.  We replace all component properties with inherited
                         // versions that reset the default property values to those that are currently on the component.
-                        props[prop.Name] = new InheritedPropertyDescriptor(prop, Component);
+                        props.Add(prop.Name, new(prop, Component));
                     }
                 }
             }
@@ -415,7 +413,7 @@ namespace System.ComponentModel.Design
             => toInvoke?.InheritanceAttribute;
 
         /// <summary>
-        ///  Disposes of the resources (other than memory) used by the <see cref='System.ComponentModel.Design.ComponentDesigner' />.
+        ///  Disposes of the resources (other than memory) used by the <see cref="ComponentDesigner"/>.
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {
@@ -460,11 +458,11 @@ namespace System.ComponentModel.Design
                 {
                     IComponent rootComponent = GetService<IDesignerHost>()?.RootComponent;
 
-                    if (Component is IPersistComponentSettings persistableComponent && rootComponent != null)
+                    if (Component is IPersistComponentSettings persistableComponent && rootComponent is not null)
                     {
                         if (string.IsNullOrEmpty(persistableComponent.SettingsKey))
                         {
-                            if (rootComponent != null && rootComponent != persistableComponent)
+                            if (rootComponent is not null && rootComponent != persistableComponent)
                             {
                                 ShadowProperties[SettingsKeyName] = string.Format(CultureInfo.CurrentCulture, "{0}.{1}", rootComponent.Site.Name, Component.Site.Name);
                             }
@@ -473,6 +471,7 @@ namespace System.ComponentModel.Design
                                 ShadowProperties[SettingsKeyName] = Component.Site.Name;
                             }
                         }
+
                         persistableComponent.SettingsKey = ShadowProperties[SettingsKeyName] as string;
                         return persistableComponent.SettingsKey;
                     }
@@ -518,14 +517,15 @@ namespace System.ComponentModel.Design
         /// </summary>
         protected virtual object GetService(Type serviceType)
         {
-            if (Component != null)
+            if (Component is not null)
             {
                 ISite site = Component.Site;
-                if (site != null)
+                if (site is not null)
                 {
                     return site.GetService(serviceType);
                 }
             }
+
             return null;
         }
 
@@ -535,7 +535,7 @@ namespace System.ComponentModel.Design
         internal bool TryGetService<T>(out T service) where T : class
         {
             service = GetService<T>();
-            return service != null;
+            return service is not null;
         }
 
         /// <summary>
@@ -545,11 +545,11 @@ namespace System.ComponentModel.Design
         public virtual void OnSetComponentDefaults()
         {
             ISite site = Component?.Site;
-            if (site != null)
+            if (site is not null)
             {
                 IComponent component = Component;
                 PropertyDescriptor pd = TypeDescriptor.GetDefaultProperty(component);
-                if (pd != null && pd.PropertyType.Equals(typeof(string)))
+                if (pd is not null && pd.PropertyType.Equals(typeof(string)))
                 {
                     string current = (string)pd.GetValue(component);
                     if (current is null || current.Length == 0)
@@ -587,7 +587,7 @@ namespace System.ComponentModel.Design
             }
 
             InheritanceAttribute inheritanceAttribute = InheritanceAttribute;
-            if (inheritanceAttribute != null && !inheritanceAttribute.Equals(InheritanceAttribute.NotInherited))
+            if (inheritanceAttribute is not null && !inheritanceAttribute.Equals(InheritanceAttribute.NotInherited))
             {
                 attributes[typeof(InheritanceAttribute)] = InheritanceAttribute;
             }
@@ -616,7 +616,7 @@ namespace System.ComponentModel.Design
             for (int i = 0; i < values.Length; i++)
             {
                 EventDescriptor evt = values[i];
-                if (evt != null)
+                if (evt is not null)
                 {
                     events[evt.Name] = TypeDescriptor.CreateEvent(evt.ComponentType, evt, ReadOnlyAttribute.Yes);
                 }
@@ -654,17 +654,15 @@ namespace System.ComponentModel.Design
             }
 
             // otherwise apply our inherited properties to the actual property list.
-            foreach (DictionaryEntry de in _inheritedProps)
+            foreach (KeyValuePair<string, InheritedPropertyDescriptor> de in _inheritedProps)
             {
-                if (de.Value is InheritedPropertyDescriptor inheritedPropDesc)
+                // replace the property descriptor it was created with with the new one in case we're shadowing
+                PropertyDescriptor newInnerProp = (PropertyDescriptor)properties[de.Key];
+                if (newInnerProp is not null)
                 {
-                    // replace the property descriptor it was created with with the new one in case we're shadowing
-                    PropertyDescriptor newInnerProp = (PropertyDescriptor)properties[de.Key];
-                    if (newInnerProp != null)
-                    {
-                        inheritedPropDesc.PropertyDescriptor = newInnerProp;
-                        properties[de.Key] = inheritedPropDesc;
-                    }
+                    InheritedPropertyDescriptor inheritedPropDesc = de.Value;
+                    inheritedPropDesc.PropertyDescriptor = newInnerProp;
+                    properties[de.Key] = inheritedPropDesc;
                 }
             }
         }
@@ -692,7 +690,7 @@ namespace System.ComponentModel.Design
         protected virtual void PreFilterProperties(IDictionary properties)
         {
             if (Component is IPersistComponentSettings
-                && properties != null
+                && properties is not null
                 && properties[SettingsKeyName] is PropertyDescriptor prop)
             {
                 properties[SettingsKeyName] = TypeDescriptor.CreateProperty(
@@ -703,14 +701,14 @@ namespace System.ComponentModel.Design
         }
 
         /// <summary>
-        ///  Notifies the <see cref='System.ComponentModel.Design.IComponentChangeService' /> that this component has been changed.
+        ///  Notifies the <see cref="IComponentChangeService"/> that this component has been changed.
         ///  You only need to call this when you are affecting component properties directly and not through the MemberDescriptor's accessors.
         /// </summary>
         protected void RaiseComponentChanged(MemberDescriptor member, object oldValue, object newValue)
             => GetService<IComponentChangeService>()?.OnComponentChanged(Component, member, oldValue, newValue);
 
         /// <summary>
-        ///  Notifies the <see cref='System.ComponentModel.Design.IComponentChangeService' /> that this component is
+        ///  Notifies the <see cref="IComponentChangeService"/> that this component is
         ///  about to be changed. You only need to call this when you are affecting component properties directly and
         ///  not through the MemberDescriptor's accessors.
         /// </summary>

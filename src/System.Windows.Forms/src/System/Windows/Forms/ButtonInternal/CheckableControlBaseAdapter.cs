@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Diagnostics;
 using System.Drawing;
 
@@ -15,18 +13,19 @@ namespace System.Windows.Forms.ButtonInternal
     internal abstract class CheckableControlBaseAdapter : ButtonBaseAdapter
     {
         private const int StandardCheckSize = 13;
-        private ButtonBaseAdapter _buttonAdapter;
+        private ButtonBaseAdapter? _buttonAdapter;
 
-        internal CheckableControlBaseAdapter(ButtonBase control) : base(control) { }
+        internal CheckableControlBaseAdapter(ButtonBase control)
+            : base(control)
+        {
+        }
 
         protected ButtonBaseAdapter ButtonAdapter
         {
             get
             {
-                if (_buttonAdapter is null)
-                {
-                    _buttonAdapter = CreateButtonAdapter();
-                }
+                _buttonAdapter ??= CreateButtonAdapter();
+
                 return _buttonAdapter;
             }
         }
@@ -38,9 +37,9 @@ namespace System.Windows.Forms.ButtonInternal
                 return ButtonAdapter.GetPreferredSizeCore(proposedSize);
             }
 
-            LayoutOptions options = default;
+            LayoutOptions? options = default;
             using (var screen = GdiCache.GetScreenHdc())
-            using (PaintEventArgs pe = new PaintEventArgs(screen, new Rectangle()))
+            using (PaintEventArgs pe = new PaintEventArgs(screen, default(Rectangle)))
             {
                 options = Layout(pe);
             }
@@ -86,7 +85,7 @@ namespace System.Windows.Forms.ButtonInternal
             return GetDpiScaleRatio(Control);
         }
 
-        internal static double GetDpiScaleRatio(Control control)
+        internal static double GetDpiScaleRatio(Control? control)
         {
             if (DpiHelper.IsPerMonitorV2Awareness
                 && control is not null && control.IsHandleCreated)

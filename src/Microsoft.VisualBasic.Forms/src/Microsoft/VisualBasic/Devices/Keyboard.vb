@@ -1,4 +1,4 @@
-' Licensed to the .NET Foundation under one or more agreements.
+﻿' Licensed to the .NET Foundation under one or more agreements.
 ' The .NET Foundation licenses this file to you under the MIT license.
 ' See the LICENSE file in the project root for more information.
 
@@ -32,9 +32,9 @@ Namespace Microsoft.VisualBasic.Devices
         ''' <param name="wait">Wait for messages to be processed before returning.</param>
         Public Sub SendKeys(keys As String, wait As Boolean)
             If wait Then
-                Windows.Forms.SendKeys.SendWait(keys)
+                System.Windows.Forms.SendKeys.SendWait(keys)
             Else
-                Windows.Forms.SendKeys.Send(keys)
+                System.Windows.Forms.SendKeys.Send(keys)
             End If
         End Sub
 

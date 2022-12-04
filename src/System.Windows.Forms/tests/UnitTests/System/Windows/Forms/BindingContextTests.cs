@@ -3,9 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
 using Moq;
 using Xunit;
@@ -539,7 +537,7 @@ namespace System.Windows.Forms.Tests
             using var source = new BindingSource();
             var dataSource = new DataSource();
             context.Add(dataSource, source.CurrencyManager);
-            Assert.Throws<ArgumentException>(null, () => context[dataSource, "Property"]);
+            Assert.Throws<ArgumentException>(() => context[dataSource, "Property"]);
         }
 
         [Theory]
@@ -567,7 +565,7 @@ namespace System.Windows.Forms.Tests
         {
             var context = new SubBindingContext();
             var dataSource = new ParentDataSource();
-            Assert.Throws<ArgumentException>(null, () => context[dataSource, dataMember]);
+            Assert.Throws<ArgumentException>(() => context[dataSource, dataMember]);
         }
 
         [Fact]

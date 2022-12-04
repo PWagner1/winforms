@@ -1,5 +1,21 @@
 ﻿<Project>
 
+  <PropertyGroup>
+    <_DotnetApiDocsPackageName>Microsoft.Private.Intellisense</_DotnetApiDocsPackageName>
+    <!-- Using ToLower below to unlock Linux build, even if it's unsupported. -->
+    <_DotnetApiDocsFilesRoot>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', '$(_DotnetApiDocsPackageName.ToLower())', '$(MicrosoftPrivateIntellisenseVersion)', 'IntellisenseFiles', 'windowsdesktop', '1033'))</_DotnetApiDocsFilesRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageDownload Include="Microsoft.Private.Intellisense" Version="[$(MicrosoftPrivateIntellisenseVersion)]" />
+  </ItemGroup>
+
+  <!--
+    ============================================================
+                      GetPackageContent
+    Selects all artifacts that we package for customers
+    ============================================================
+    -->
   <Target Name="GetPackageContent"
           DependsOnTargets="SatelliteDllsProjectOutputGroup"
           Returns="@(PackageFile)">
@@ -10,27 +26,28 @@
       <IncludeResourcesInPackage>true</IncludeResourcesInPackage>
     </PropertyGroup>
 
+    <!-- Analyzers and source generators -->
+    <PropertyGroup Condition="'$(IsAnalyzerProject)' == 'true'">
+      <_AnalyzerTargetLanguage>$(AssemblyName.Substring($(AssemblyName.LastIndexOf('.'))))</_AnalyzerTargetLanguage>
+      <AnalyzerTargetLanguage Condition="$(_AnalyzerTargetLanguage.Contains('.CSharp', StringComparison.OrdinalIgnoreCase))">/cs</AnalyzerTargetLanguage>
+      <AnalyzerTargetLanguage Condition="$(_AnalyzerTargetLanguage.Contains('.VisualBasic', StringComparison.OrdinalIgnoreCase))">/vb</AnalyzerTargetLanguage>
+    </PropertyGroup>
+
     <PropertyGroup Condition="'$(PackagePath)' == ''">
       <PackagePath>lib/$(TargetFramework)</PackagePath>
       <PackagePath Condition="'$(IsFacadeAssembly)' == 'true'">lib/$(TargetFramework);$(RefPackagePath)</PackagePath>
+      <!-- Note that we are packaging analyzers not for consumption, but for transport purposes into dotnet/windowsdesktop -->
+      <PackagePath Condition="'$(IsAnalyzerProject)' == 'true'">sdk/analyzers/dotnet$(AnalyzerTargetLanguage)</PackagePath>
     </PropertyGroup>
 
     <PropertyGroup>
-      <!-- Also in global.json -->
-      <DotNetApiDocsNet50>0.0.0.3</DotNetApiDocsNet50>
+      <!-- The intellisense provided by the Docs system -->
+      <IntellisenseXmlFileSource>$([MSBuild]::NormalizePath('$(_DotnetApiDocsFilesRoot)', '$(AssemblyName).xml'))</IntellisenseXmlFileSource>
 
-      <!-- 
-        The xml file should ALWAYS come from the dotnet-api-docs artifact.
-        This blob lives in Azure storage at https://netcorenativeassets.blob.core.windows.net/resource-packages/external/windows/dotnet-api-docs_net5.0/
-        Instructions for updating these artifacts are at https://github.com/dotnet/winforms/blob/master/docs/intellisense.md
-      -->
-      <IntellisenseXmlDir>$(CommonLibrary_NativeInstallDir)\bin\dotnet-api-docs_net5.0\$(DotNetApiDocsNet50)\_intellisense\net-5.0\</IntellisenseXmlDir>
-      <IntellisenseXmlFileSource>$(IntellisenseXmlDir)$(AssemblyName).xml</IntellisenseXmlFileSource>
-
-      <!-- Set the xml destination (for a later step that copies files from the dotnet-api-docs to local build artifacts) -->
+      <!-- Set the xml destination (for a later step that copies files from the $(_DotnetApiDocsPackageName) package to local build artifacts) -->
       <IntellisenseXmlDest Condition="'$(ProduceReferenceAssembly)' == 'true' And '$(PackageAsRefAndLib)' != 'true'" >$([System.IO.Path]::ChangeExtension('$(TargetRefPath)', '.xml'))</IntellisenseXmlDest>
       <IntellisenseXmlDest Condition="'$(PackageAsRefAndLib)' == 'true'" >$([System.IO.Path]::ChangeExtension('$(TargetPath)', '.xml'))</IntellisenseXmlDest>
-      <IntellisenseXmlDestDir Condition="'$(IntellisenseXmlDest)' != ''">$([System.IO.Path]::GetDirectoryName('$(IntellisenseXml)'))</IntellisenseXmlDestDir>
+      <IntellisenseXmlDestDir Condition="'$(IntellisenseXmlDest)' != ''">$([System.IO.Path]::GetDirectoryName('$(IntellisenseXmlDest)'))</IntellisenseXmlDestDir>
 
     </PropertyGroup>
 
@@ -39,8 +56,8 @@
       This means we build a real assembly that has no associated official intellisense docs.
       Contact the intellisense team for guidance.
     -->
-    <Error  Condition="!Exists('$(IntellisenseXmlFileSource)') and '$(IsFacadeAssembly)' != 'true'" 
-            Text="$(AssemblyName).xml not found in dotnet-api-docs package. Contact the intellisense team about adding the docs for this assembly."
+    <Error  Condition="!Exists('$(IntellisenseXmlFileSource)') and '$(IsFacadeAssembly)' != 'true' and '$(IsAnalyzerProject)' != 'true'" 
+            Text="$(AssemblyName).xml was not found in $(_DotnetApiDocsPackageName) package. Contact the intellisense team about adding the docs for this assembly."
     />
 
     <ItemGroup>

@@ -8,6 +8,8 @@
 #include <atlbase.h>
 using namespace ATL;
 
+#define COR_E_NOTSUPPORTED 0x80131515
+
 TEST const WCHAR* WINAPI Test_IAccessibleExConvertReturnedElement(IUnknown* pUnknown)
 {
     return RunTest([&](std::wstringstream& output)
@@ -54,8 +56,8 @@ TEST const WCHAR* WINAPI Test_IAccessibleExGetIAccessiblePair(IUnknown* pUnknown
         long idChild = 1;
         CComPtr<IAccessible> result;
         hr = pAccessibleEx->GetIAccessiblePair(&result, &idChild);
-        assertEqualHr(E_POINTER, hr);
-        assertNull(result.p);
+        assertEqualHr(S_OK, hr);
+        assertNotNull(result.p);
         assertEqualInt(0, idChild);
 
         // Negative tests.
@@ -68,8 +70,9 @@ TEST const WCHAR* WINAPI Test_IAccessibleExGetIAccessiblePair(IUnknown* pUnknown
 #endif
         assertEqualInt(1, idChild);
 
+        result = NULL;
         hr = pAccessibleEx->GetIAccessiblePair(&result, NULL);
-        assertEqualHr(E_POINTER, hr);
+        assertEqualHr(E_INVALIDARG, hr);
         assertNull(result.p);
 
         hr = pAccessibleEx->GetIAccessiblePair(NULL, NULL);
@@ -95,13 +98,12 @@ TEST const WCHAR* WINAPI Test_IAccessibleExGetRuntimeId(IUnknown* pUnknown, int*
 
         SAFEARRAY *result = (SAFEARRAY*)(long)0xdeadbeef;
         hr = pAccessibleEx->GetRuntimeId(&result);
-        assertEqualHr(S_OK, hr);
-        assertNull(result);
+        assertEqualHr(COR_E_NOTSUPPORTED, hr);
         SafeArrayDestroy(result);
 
         // Negative tests.
         hr = pAccessibleEx->GetRuntimeId(NULL);
-        assertEqualHr(S_OK, hr);
+        assertEqualHr(COR_E_NOTSUPPORTED, hr);
 
         return S_OK;
     });
@@ -353,13 +355,12 @@ TEST const WCHAR* WINAPI Test_IRawElementProviderFragmentGetRuntimeId(IUnknown* 
 
         SAFEARRAY *result = (SAFEARRAY*)(long)0xdeadbeef;
         hr = pRawElementProviderFragment->GetRuntimeId(&result);
-        assertEqualHr(S_OK, hr);
-        assertNull(result);
+        assertEqualHr(COR_E_NOTSUPPORTED, hr);
         SafeArrayDestroy(result);
 
         // Negative tests.
         hr = pRawElementProviderFragment->GetRuntimeId(NULL);
-        assertEqualHr(S_OK, hr);
+        assertEqualHr(COR_E_NOTSUPPORTED, hr);
 
         return S_OK;
     });

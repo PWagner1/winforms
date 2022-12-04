@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.CodeDom;
-using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.ComponentModel.Design.Serialization;
@@ -20,30 +19,28 @@ namespace System.Windows.Forms.Design
     internal class ControlCodeDomSerializer : CodeDomSerializer
     {
         /// <summary>
-        ///  Deserilizes the given CodeDom object into a real object.  This
+        ///  Deserializes the given CodeDom object into a real object.  This
         ///  will use the serialization manager to create objects and resolve
         ///  data types.  The root of the object graph is returned.
         /// </summary>
         public override object Deserialize(IDesignerSerializationManager manager, object codeObject)
         {
-            if (manager is null || codeObject is null)
-            {
-                throw new ArgumentNullException(manager is null ? "manager" : "codeObject");
-            }
+            ArgumentNullException.ThrowIfNull(manager);
+            ArgumentNullException.ThrowIfNull(codeObject);
 
             //Attempt to suspend all components within the icontainer
             IContainer container = (IContainer)manager.GetService(typeof(IContainer));
-            ArrayList suspendedComponents = null;
+            List<Control> suspendedComponents = null;
 
-            if (container != null)
+            if (container is not null)
             {
-                suspendedComponents = new ArrayList(container.Components.Count);
+                suspendedComponents = new(container.Components.Count);
 
                 foreach (IComponent comp in container.Components)
                 {
                     Control control = comp as Control;
 
-                    if (control != null)
+                    if (control is not null)
                     {
                         control.SuspendLayout();
 
@@ -72,7 +69,7 @@ namespace System.Windows.Forms.Design
             finally
             {
                 //resume all suspended comps we found earlier
-                if (suspendedComponents != null)
+                if (suspendedComponents is not null)
                 {
                     foreach (Control c in suspendedComponents)
                     {
@@ -88,7 +85,7 @@ namespace System.Windows.Forms.Design
             return objectGraphData;
         }
 
-        private bool HasAutoSizedChildren(Control parent)
+        private static bool HasAutoSizedChildren(Control parent)
         {
             foreach (Control child in parent.Controls)
             {
@@ -101,7 +98,7 @@ namespace System.Windows.Forms.Design
             return false;
         }
 
-        private bool HasMixedInheritedChildren(Control parent)
+        private static bool HasMixedInheritedChildren(Control parent)
         {
             bool inheritedChildren = false;
             bool nonInheritedChildren = false;
@@ -110,7 +107,7 @@ namespace System.Windows.Forms.Design
             {
                 InheritanceAttribute ia = (InheritanceAttribute)TypeDescriptor.GetAttributes(c)[typeof(InheritanceAttribute)];
 
-                if (ia != null && ia.InheritanceLevel != InheritanceLevel.NotInherited)
+                if (ia is not null && ia.InheritanceLevel != InheritanceLevel.NotInherited)
                 {
                     inheritedChildren = true;
                 }
@@ -137,12 +134,12 @@ namespace System.Windows.Forms.Design
 
             foreach (Control c in parent.Controls)
             {
-                if (c.Site != null && c.Site.DesignMode)
+                if (c.Site is not null && c.Site.DesignMode)
                 {
-                    // We only emit Size/Location information for controls that are sited and not inherrited readonly.
+                    // We only emit Size/Location information for controls that are sited and not inherited readonly.
                     InheritanceAttribute ia = (InheritanceAttribute)TypeDescriptor.GetAttributes(c)[typeof(InheritanceAttribute)];
 
-                    if (ia != null && ia.InheritanceLevel != InheritanceLevel.InheritedReadOnly)
+                    if (ia is not null && ia.InheritanceLevel != InheritanceLevel.InheritedReadOnly)
                     {
                         return true;
                     }
@@ -157,10 +154,8 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public override object Serialize(IDesignerSerializationManager manager, object value)
         {
-            if (manager is null || value is null)
-            {
-                throw new ArgumentNullException(manager is null ? "manager" : "value");
-            }
+            ArgumentNullException.ThrowIfNull(manager);
+            ArgumentNullException.ThrowIfNull(value);
 
             // Find our base class's serializer.
             CodeDomSerializer serializer = (CodeDomSerializer)manager.GetSerializer(typeof(Component), typeof(CodeDomSerializer));
@@ -177,7 +172,7 @@ namespace System.Windows.Forms.Design
             InheritanceAttribute inheritanceAttribute = (InheritanceAttribute)TypeDescriptor.GetAttributes(value)[typeof(InheritanceAttribute)];
             InheritanceLevel inheritanceLevel = InheritanceLevel.NotInherited;
 
-            if (inheritanceAttribute != null)
+            if (inheritanceAttribute is not null)
             {
                 inheritanceLevel = inheritanceAttribute.InheritanceLevel;
             }
@@ -193,11 +188,11 @@ namespace System.Windows.Forms.Design
                 // control.
                 IDesignerHost host = (IDesignerHost)manager.GetService(typeof(IDesignerHost));
 
-                if (host != null)
+                if (host is not null)
                 {
                     PropertyDescriptor prop = TypeDescriptor.GetProperties(host.RootComponent)["Localizable"];
 
-                    if (prop != null && prop.PropertyType == typeof(bool) && ((bool)prop.GetValue(host.RootComponent)))
+                    if (prop is not null && prop.PropertyType == typeof(bool) && ((bool)prop.GetValue(host.RootComponent)))
                     {
                         SerializeControlHierarchy(manager, host, value);
                     }
@@ -205,19 +200,19 @@ namespace System.Windows.Forms.Design
 
                 CodeStatementCollection csCollection = retVal as CodeStatementCollection;
 
-                if (csCollection != null)
+                if (csCollection is not null)
                 {
                     Control control = (Control)value;
 
                     // Serialize a suspend / resume pair.  We always serialize this
                     // for the root component
-                    if ((host != null && control == host.RootComponent) || HasSitedNonReadonlyChildren(control))
+                    if ((host is not null && control == host.RootComponent) || HasSitedNonReadonlyChildren(control))
                     {
                         SerializeSuspendLayout(manager, csCollection, value);
                         SerializeResumeLayout(manager, csCollection, value);
                         ControlDesigner controlDesigner = host.GetDesigner(control) as ControlDesigner;
 
-                        if (HasAutoSizedChildren(control) || (controlDesigner != null && controlDesigner.SerializePerformLayout))
+                        if (HasAutoSizedChildren(control) || (controlDesigner is not null && controlDesigner.SerializePerformLayout))
                         {
                             SerializePerformLayout(manager, csCollection, value);
                         }
@@ -242,7 +237,7 @@ namespace System.Windows.Forms.Design
         {
             Control control = value as Control;
 
-            if (control != null)
+            if (control is not null)
             {
                 // Object name
                 string name;
@@ -272,7 +267,7 @@ namespace System.Windows.Forms.Design
                         string componentName = manager.GetName(component);
                         string componentTypeName = mthelperSvc is null ? component.GetType().AssemblyQualifiedName : mthelperSvc.GetAssemblyQualifiedName(component.GetType());
 
-                        if (componentName != null)
+                        if (componentName is not null)
                         {
                             SerializeResourceInvariant(manager, ">>" + componentName + ".Name", componentName);
                             SerializeResourceInvariant(manager, ">>" + componentName + ".Type", componentTypeName);
@@ -299,7 +294,7 @@ namespace System.Windows.Forms.Design
                 // Parent
                 Control parent = control.Parent;
 
-                if (parent != null && parent.Site != null)
+                if (parent is not null && parent.Site is not null)
                 {
                     string parentName;
 
@@ -312,7 +307,7 @@ namespace System.Windows.Forms.Design
                         parentName = manager.GetName(parent);
                     }
 
-                    if (parentName != null)
+                    if (parentName is not null)
                     {
                         SerializeResourceInvariant(manager, ">>" + name + ".Parent", parentName);
                     }
@@ -367,14 +362,14 @@ namespace System.Windows.Forms.Design
                 paramTypes = ToTargetTypes(control, paramTypes);
                 MethodInfo mi = TypeDescriptor.GetReflectionType(control).GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, null, paramTypes, null);
 
-                if (mi != null)
+                if (mi is not null)
                 {
                     CodeExpression field = SerializeToExpression(manager, control);
                     CodeMethodReferenceExpression method = new CodeMethodReferenceExpression(field, methodName);
                     CodeMethodInvokeExpression methodInvoke = new CodeMethodInvokeExpression();
                     methodInvoke.Method = method;
 
-                    if (parameters != null)
+                    if (parameters is not null)
                     {
                         methodInvoke.Parameters.AddRange(parameters);
                     }

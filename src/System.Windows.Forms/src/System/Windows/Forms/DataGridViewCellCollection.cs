@@ -11,60 +11,33 @@ using System.Diagnostics;
 namespace System.Windows.Forms
 {
     /// <summary>
-    ///  Represents a collection of <see cref='DataGridViewCell'/> objects in the <see cref='DataGridView'/>
+    ///  Represents a collection of <see cref="DataGridViewCell"/> objects in the <see cref="DataGridView"/>
     ///  control.
     /// </summary>
     [ListBindable(false)]
     public class DataGridViewCellCollection : BaseCollection, IList
     {
         private CollectionChangeEventHandler _onCollectionChanged;
-        private readonly ArrayList _items = new ArrayList();
+        private readonly List<DataGridViewCell> _items = new();
         private readonly DataGridViewRow _owner;
 
-        int IList.Add(object value)
-        {
-            return Add((DataGridViewCell)value);
-        }
+        int IList.Add(object value) => Add((DataGridViewCell)value);
 
-        void IList.Clear()
-        {
-            Clear();
-        }
+        void IList.Clear() => Clear();
 
-        bool IList.Contains(object value)
-        {
-            return _items.Contains(value);
-        }
+        bool IList.Contains(object value) => ((IList)_items).Contains(value);
 
-        int IList.IndexOf(object value)
-        {
-            return _items.IndexOf(value);
-        }
+        int IList.IndexOf(object value) => ((IList)_items).IndexOf(value);
 
-        void IList.Insert(int index, object value)
-        {
-            Insert(index, (DataGridViewCell)value);
-        }
+        void IList.Insert(int index, object value) => Insert(index, (DataGridViewCell)value);
 
-        void IList.Remove(object value)
-        {
-            Remove((DataGridViewCell)value);
-        }
+        void IList.Remove(object value) => Remove((DataGridViewCell)value);
 
-        void IList.RemoveAt(int index)
-        {
-            RemoveAt(index);
-        }
+        void IList.RemoveAt(int index) => RemoveAt(index);
 
-        bool IList.IsFixedSize
-        {
-            get { return false; }
-        }
+        bool IList.IsFixedSize => ((IList)_items).IsFixedSize;
 
-        bool IList.IsReadOnly
-        {
-            get { return false; }
-        }
+        bool IList.IsReadOnly => ((IList)_items).IsReadOnly;
 
         object IList.this[int index]
         {
@@ -72,34 +45,19 @@ namespace System.Windows.Forms
             set { this[index] = (DataGridViewCell)value; }
         }
 
-        void ICollection.CopyTo(Array array, int index)
-        {
-            _items.CopyTo(array, index);
-        }
+        void ICollection.CopyTo(Array array, int index) => ((ICollection)_items).CopyTo(array, index);
 
-        int ICollection.Count
-        {
-            get { return _items.Count; }
-        }
+        int ICollection.Count => _items.Count;
 
-        bool ICollection.IsSynchronized
-        {
-            get { return false; }
-        }
+        bool ICollection.IsSynchronized => ((ICollection)_items).IsSynchronized;
 
-        object ICollection.SyncRoot
-        {
-            get { return this; }
-        }
+        object ICollection.SyncRoot => ((ICollection)_items).SyncRoot;
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _items.GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
 
         public DataGridViewCellCollection(DataGridViewRow dataGridViewRow)
         {
-            Debug.Assert(dataGridViewRow != null);
+            Debug.Assert(dataGridViewRow is not null);
             _owner = dataGridViewRow;
         }
 
@@ -107,7 +65,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return _items;
+                return ArrayList.Adapter(_items);
             }
         }
 
@@ -118,33 +76,29 @@ namespace System.Windows.Forms
         {
             get
             {
-                return (DataGridViewCell)_items[index];
+                return _items[index];
             }
             set
             {
-                DataGridViewCell dataGridViewCell = value;
-                if (dataGridViewCell is null)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-                if (dataGridViewCell.DataGridView != null)
+                DataGridViewCell dataGridViewCell = value.OrThrowIfNull();
+
+                if (dataGridViewCell.DataGridView is not null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewCellCollection_CellAlreadyBelongsToDataGridView);
                 }
-                if (dataGridViewCell.OwningRow != null)
+
+                if (dataGridViewCell.OwningRow is not null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewCellCollection_CellAlreadyBelongsToDataGridViewRow);
                 }
-                if (_owner.DataGridView != null)
-                {
-                    _owner.DataGridView.OnReplacingCell(_owner, index);
-                }
 
-                DataGridViewCell oldDataGridViewCell = (DataGridViewCell)_items[index];
+                _owner.DataGridView?.OnReplacingCell(_owner, index);
+
+                DataGridViewCell oldDataGridViewCell = _items[index];
                 _items[index] = dataGridViewCell;
                 dataGridViewCell.OwningRow = _owner;
                 dataGridViewCell.State = oldDataGridViewCell.State;
-                if (_owner.DataGridView != null)
+                if (_owner.DataGridView is not null)
                 {
                     dataGridViewCell.DataGridView = _owner.DataGridView;
                     dataGridViewCell.OwningColumn = _owner.DataGridView.Columns[index];
@@ -158,6 +112,7 @@ namespace System.Windows.Forms
                 {
                     oldDataGridViewCell.ReadOnlyInternal = false;
                 }
+
                 if (oldDataGridViewCell.Selected)
                 {
                     oldDataGridViewCell.SelectedInternal = false;
@@ -173,27 +128,31 @@ namespace System.Windows.Forms
             get
             {
                 DataGridViewColumn dataGridViewColumn = null;
-                if (_owner.DataGridView != null)
+                if (_owner.DataGridView is not null)
                 {
                     dataGridViewColumn = _owner.DataGridView.Columns[columnName];
                 }
+
                 if (dataGridViewColumn is null)
                 {
                     throw new ArgumentException(string.Format(SR.DataGridViewColumnCollection_ColumnNotFound, columnName), nameof(columnName));
                 }
-                return (DataGridViewCell)_items[dataGridViewColumn.Index];
+
+                return _items[dataGridViewColumn.Index];
             }
             set
             {
                 DataGridViewColumn dataGridViewColumn = null;
-                if (_owner.DataGridView != null)
+                if (_owner.DataGridView is not null)
                 {
                     dataGridViewColumn = _owner.DataGridView.Columns[columnName];
                 }
+
                 if (dataGridViewColumn is null)
                 {
                     throw new ArgumentException(string.Format(SR.DataGridViewColumnCollection_ColumnNotFound, columnName), nameof(columnName));
                 }
+
                 this[dataGridViewColumn.Index] = value;
             }
         }
@@ -205,15 +164,16 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Adds a <see cref='DataGridViewCell'/> to this collection.
+        ///  Adds a <see cref="DataGridViewCell"/> to this collection.
         /// </summary>
         public virtual int Add(DataGridViewCell dataGridViewCell)
         {
-            if (_owner.DataGridView != null)
+            if (_owner.DataGridView is not null)
             {
                 throw new InvalidOperationException(SR.DataGridViewCellCollection_OwningRowAlreadyBelongsToDataGridView);
             }
-            if (dataGridViewCell.OwningRow != null)
+
+            if (dataGridViewCell.OwningRow is not null)
             {
                 throw new InvalidOperationException(SR.DataGridViewCellCollection_CellAlreadyBelongsToDataGridViewRow);
             }
@@ -224,13 +184,15 @@ namespace System.Windows.Forms
         internal int AddInternal(DataGridViewCell dataGridViewCell)
         {
             Debug.Assert(!dataGridViewCell.Selected);
-            int index = _items.Add(dataGridViewCell);
+
+            int index = ((IList)_items).Add(dataGridViewCell);
             dataGridViewCell.OwningRow = _owner;
             DataGridView dataGridView = _owner.DataGridView;
-            if (dataGridView != null && dataGridView.Columns.Count > index)
+            if (dataGridView is not null && dataGridView.Columns.Count > index)
             {
                 dataGridViewCell.OwningColumn = dataGridView.Columns[index];
             }
+
             OnCollectionChanged(new CollectionChangeEventArgs(CollectionChangeAction.Add, dataGridViewCell));
             return index;
         }
@@ -238,14 +200,13 @@ namespace System.Windows.Forms
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual void AddRange(params DataGridViewCell[] dataGridViewCells)
         {
-            if (dataGridViewCells is null)
-            {
-                throw new ArgumentNullException(nameof(dataGridViewCells));
-            }
-            if (_owner.DataGridView != null)
+            ArgumentNullException.ThrowIfNull(dataGridViewCells);
+
+            if (_owner.DataGridView is not null)
             {
                 throw new InvalidOperationException(SR.DataGridViewCellCollection_OwningRowAlreadyBelongsToDataGridView);
             }
+
             foreach (DataGridViewCell dataGridViewCell in dataGridViewCells)
             {
                 if (dataGridViewCell is null)
@@ -253,7 +214,7 @@ namespace System.Windows.Forms
                     throw new InvalidOperationException(SR.DataGridViewCellCollection_AtLeastOneCellIsNull);
                 }
 
-                if (dataGridViewCell.OwningRow != null)
+                if (dataGridViewCell.OwningRow is not null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewCellCollection_CellAlreadyBelongsToDataGridViewRow);
                 }
@@ -278,19 +239,22 @@ namespace System.Windows.Forms
                 dataGridViewCell.OwningRow = _owner;
                 Debug.Assert(!dataGridViewCell.Selected);
             }
+
             OnCollectionChanged(new CollectionChangeEventArgs(CollectionChangeAction.Refresh, null));
         }
 
         public virtual void Clear()
         {
-            if (_owner.DataGridView != null)
+            if (_owner.DataGridView is not null)
             {
                 throw new InvalidOperationException(SR.DataGridViewCellCollection_OwningRowAlreadyBelongsToDataGridView);
             }
+
             foreach (DataGridViewCell dataGridViewCell in _items)
             {
                 dataGridViewCell.OwningRow = null;
             }
+
             _items.Clear();
             OnCollectionChanged(new CollectionChangeEventArgs(CollectionChangeAction.Refresh, null));
         }
@@ -316,14 +280,16 @@ namespace System.Windows.Forms
 
         public virtual void Insert(int index, DataGridViewCell dataGridViewCell)
         {
-            if (_owner.DataGridView != null)
+            if (_owner.DataGridView is not null)
             {
                 throw new InvalidOperationException(SR.DataGridViewCellCollection_OwningRowAlreadyBelongsToDataGridView);
             }
-            if (dataGridViewCell.OwningRow != null)
+
+            if (dataGridViewCell.OwningRow is not null)
             {
                 throw new InvalidOperationException(SR.DataGridViewCellCollection_CellAlreadyBelongsToDataGridViewRow);
             }
+
             Debug.Assert(!dataGridViewCell.ReadOnly);
             Debug.Assert(!dataGridViewCell.Selected);
             _items.Insert(index, dataGridViewCell);
@@ -337,10 +303,11 @@ namespace System.Windows.Forms
             _items.Insert(index, dataGridViewCell);
             dataGridViewCell.OwningRow = _owner;
             DataGridView dataGridView = _owner.DataGridView;
-            if (dataGridView != null && dataGridView.Columns.Count > index)
+            if (dataGridView is not null && dataGridView.Columns.Count > index)
             {
                 dataGridViewCell.OwningColumn = dataGridView.Columns[index];
             }
+
             OnCollectionChanged(new CollectionChangeEventArgs(CollectionChangeAction.Add, dataGridViewCell));
         }
 
@@ -351,10 +318,11 @@ namespace System.Windows.Forms
 
         public virtual void Remove(DataGridViewCell cell)
         {
-            if (_owner.DataGridView != null)
+            if (_owner.DataGridView is not null)
             {
                 throw new InvalidOperationException(SR.DataGridViewCellCollection_OwningRowAlreadyBelongsToDataGridView);
             }
+
             int cellIndex = -1;
             int itemsCount = _items.Count;
             for (int i = 0; i < itemsCount; ++i)
@@ -365,6 +333,7 @@ namespace System.Windows.Forms
                     break;
                 }
             }
+
             if (cellIndex == -1)
             {
                 throw new ArgumentException(SR.DataGridViewCellCollection_CellNotFound);
@@ -377,16 +346,17 @@ namespace System.Windows.Forms
 
         public virtual void RemoveAt(int index)
         {
-            if (_owner.DataGridView != null)
+            if (_owner.DataGridView is not null)
             {
                 throw new InvalidOperationException(SR.DataGridViewCellCollection_OwningRowAlreadyBelongsToDataGridView);
             }
+
             RemoveAtInternal(index);
         }
 
         internal void RemoveAtInternal(int index)
         {
-            DataGridViewCell dataGridViewCell = (DataGridViewCell)_items[index];
+            DataGridViewCell dataGridViewCell = _items[index];
             _items.RemoveAt(index);
             dataGridViewCell.DataGridView = null;
             dataGridViewCell.OwningRow = null;
@@ -394,10 +364,12 @@ namespace System.Windows.Forms
             {
                 dataGridViewCell.ReadOnlyInternal = false;
             }
+
             if (dataGridViewCell.Selected)
             {
                 dataGridViewCell.SelectedInternal = false;
             }
+
             OnCollectionChanged(new CollectionChangeEventArgs(CollectionChangeAction.Remove, dataGridViewCell));
         }
     }

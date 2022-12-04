@@ -5,9 +5,7 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Drawing.Design;
-using System.IO;
 using System.Reflection;
-using static Interop;
 
 namespace System.Windows.Forms.Design
 {
@@ -17,13 +15,11 @@ namespace System.Windows.Forms.Design
     [CLSCompliant(false)]
     public class ImageListImageEditor : ImageEditor
     {
-        // VSWhidbey 95227: Metafile types are not supported in the ImageListImageEditor and should
-        // not be displayed as an option.
-        internal static Type[] s_imageExtenders = new Type[] { typeof(BitmapEditor)/*, gpr typeof(Icon), typeof(MetafileEditor)*/};
+        // Metafile types are not supported in the ImageListImageEditor and should not be displayed as an option.
+        internal static Type[] s_imageExtenders = new Type[] { typeof(BitmapEditor) };
         private OpenFileDialog _fileDialog;
 
-        // VSWhidbey 95227: accessor needed into the static field so that derived classes
-        // can implement a different list of supported image types.
+        // Derived classes can implement a different list of supported image types.
         protected override Type[] GetImageExtenders() => s_imageExtenders;
 
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
@@ -34,56 +30,59 @@ namespace System.Windows.Forms.Design
             }
 
             var images = new ArrayList();
-            var edSvc = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
-            if (edSvc is null)
+            if (!provider.TryGetService(out IWindowsFormsEditorService editorService))
             {
                 return images;
             }
 
             if (_fileDialog is null)
             {
-                _fileDialog = new OpenFileDialog();
-                _fileDialog.Multiselect = true;
-                string filter = CreateFilterEntry(this);
-                Type[] imageExtenders = GetImageExtenders();
-                for (int i = 0; i < imageExtenders.Length; i++)
+                _fileDialog = new OpenFileDialog
                 {
-                    var myClass = this.GetType();
-                    var editor = (ImageEditor)Activator.CreateInstance(imageExtenders[i],
-                                                                       BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.CreateInstance,
-                                                                       null, null, null);
+                    Multiselect = true
+                };
+
+                string filter = CreateFilterEntry(this);
+                foreach (Type extender in GetImageExtenders())
+                {
+                    var myClass = GetType();
+                    var editor = (ImageEditor)Activator.CreateInstance(
+                        extender,
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.CreateInstance,
+                        binder: null,
+                        args: null,
+                        culture: null);
+
                     var editorClass = editor.GetType();
 
-                    if (!myClass.Equals(editorClass) && editor != null && myClass.IsInstanceOfType(editor))
+                    if (!myClass.Equals(editorClass) && editor is not null && myClass.IsInstanceOfType(editor))
                     {
-                        filter += "|" + CreateFilterEntry(editor);
+                        filter += $"|{CreateFilterEntry(editor)}";
                     }
                 }
+
                 _fileDialog.Filter = filter;
             }
 
-            IntPtr hwndFocus = User32.GetFocus();
+            HWND hwndFocus = PInvoke.GetFocus();
             try
             {
                 if (_fileDialog.ShowDialog() == DialogResult.OK)
                 {
                     foreach (string name in _fileDialog.FileNames)
                     {
-                        ImageListImage image;
-                        using (FileStream file = new FileStream(name, FileMode.Open, FileAccess.Read, FileShare.Read))
-                        {
-                            image = LoadImageFromStream(file, name.EndsWith(".ico"));
-                            image.Name = Path.GetFileName(name);
-                            images.Add(image);
-                        }
+                        using FileStream file = new FileStream(name, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        ImageListImage image = LoadImageFromStream(file, name.EndsWith(".ico"));
+                        image.Name = Path.GetFileName(name);
+                        images.Add(image);
                     }
                 }
             }
             finally
             {
-                if (hwndFocus != IntPtr.Zero)
+                if (!hwndFocus.IsNull)
                 {
-                    User32.SetFocus(hwndFocus);
+                    PInvoke.SetFocus(hwndFocus);
                 }
             }
 
@@ -97,10 +96,9 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public override bool GetPaintValueSupported(ITypeDescriptorContext context) => true;
 
-        private ImageListImage LoadImageFromStream(Stream stream, bool imageIsIcon)
+        private static ImageListImage LoadImageFromStream(Stream stream, bool imageIsIcon)
         {
-            // Copy the original stream to a buffer, then wrap a
-            // memory stream around it.  This way we can avoid locking the file
+            // Copy the original stream to a buffer, then wrap a memory stream around it to avoid locking the file.
             byte[] buffer = new byte[stream.Length];
             stream.Read(buffer, 0, (int)stream.Length);
 
@@ -115,13 +113,12 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public override void PaintValue(PaintValueEventArgs e)
         {
-            if (e.Value is ImageListImage)
+            if (e.Value is ImageListImage image)
             {
-                e = new PaintValueEventArgs(e.Context, ((ImageListImage)e.Value).Image, e.Graphics, e.Bounds);
+                e = new PaintValueEventArgs(e.Context, image.Image, e.Graphics, e.Bounds);
             }
 
             base.PaintValue(e);
         }
     }
 }
-

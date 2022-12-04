@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Drawing;
 using static Interop;
 
@@ -17,6 +15,9 @@ namespace System.Windows.Forms
         internal class ComboBoxChildDropDownButtonUiaProvider : AccessibleObject
         {
             private const int COMBOBOX_DROPDOWN_BUTTON_ACC_ITEM_INDEX = 2;
+            // Made up constant from MSAA proxy. When MSAA proxy is used as an accessibility provider, the similar Runtime ID
+            // is returned (for consistency purpose).
+            private const int GeneratedRuntimeId = 61453;
             private readonly ComboBox _owner;
 
             /// <summary>
@@ -33,18 +34,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Gets or sets the accessible Name of ComboBox's child DropDown button. ("Open" or "Close" depending on stat of the DropDown)
             /// </summary>
-            public override string Name
-            {
-                get
-                {
-                    return get_accNameInternal(COMBOBOX_DROPDOWN_BUTTON_ACC_ITEM_INDEX);
-                }
-                set
-                {
-                    var systemIAccessible = GetSystemIAccessibleInternal();
-                    systemIAccessible?.set_accName(COMBOBOX_DROPDOWN_BUTTON_ACC_ITEM_INDEX, value);
-                }
-            }
+            public override string Name => _owner.DroppedDown ? SR.ComboboxDropDownButtonCloseName : SR.ComboboxDropDownButtonOpenName;
 
             /// <summary>
             ///  Gets the DropDown button bounds.
@@ -53,20 +43,20 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    int left = 0;
-                    int top = 0;
-                    int width = 0;
-                    int height = 0;
-                    var systemIAccessible = GetSystemIAccessibleInternal();
-                    systemIAccessible?.accLocation(out left, out top, out width, out height, COMBOBOX_DROPDOWN_BUTTON_ACC_ITEM_INDEX);
-                    return new Rectangle(left, top, width, height);
+                    if (GetSystemIAccessibleInternal() is not Accessibility.IAccessible systemIAccessible)
+                    {
+                        return Rectangle.Empty;
+                    }
+
+                    systemIAccessible.accLocation(out int left, out int top, out int width, out int height, COMBOBOX_DROPDOWN_BUTTON_ACC_ITEM_INDEX);
+                    return new(left, top, width, height);
                 }
             }
 
             /// <summary>
             ///  Gets the DropDown button default action.
             /// </summary>
-            public override string DefaultAction
+            public override string? DefaultAction
             {
                 get
                 {
@@ -80,7 +70,7 @@ namespace System.Windows.Forms
             /// </summary>
             /// <param name="direction">Indicates the direction in which to navigate.</param>
             /// <returns>Returns the element in the specified direction.</returns>
-            internal override UiaCore.IRawElementProviderFragment FragmentNavigate(UiaCore.NavigateDirection direction)
+            internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
             {
                 if (!_owner.IsHandleCreated)
                 {
@@ -125,41 +115,20 @@ namespace System.Windows.Forms
             /// </summary>
             /// <param name="propertyID">The accessible property ID.</param>
             /// <returns>The accessible property value.</returns>
-            internal override object GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                switch (propertyID)
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+                propertyID switch
                 {
-                    case UiaCore.UIA.RuntimeIdPropertyId:
-                        return RuntimeId;
-                    case UiaCore.UIA.BoundingRectanglePropertyId:
-                        return BoundingRectangle;
-                    case UiaCore.UIA.ControlTypePropertyId:
-                        return UiaCore.UIA.ButtonControlTypeId;
-                    case UiaCore.UIA.NamePropertyId:
-                        return Name;
-                    case UiaCore.UIA.AccessKeyPropertyId:
-                        return KeyboardShortcut;
-                    case UiaCore.UIA.HasKeyboardFocusPropertyId:
-                        return _owner.Focused;
-                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
-                        return (State & AccessibleStates.Focusable) == AccessibleStates.Focusable;
-                    case UiaCore.UIA.IsEnabledPropertyId:
-                        return _owner.Enabled;
-                    case UiaCore.UIA.HelpTextPropertyId:
-                        return Help ?? string.Empty;
-                    case UiaCore.UIA.IsPasswordPropertyId:
-                        return false;
-                    case UiaCore.UIA.IsOffscreenPropertyId:
-                        return (State & AccessibleStates.Offscreen) == AccessibleStates.Offscreen;
-                    default:
-                        return base.GetPropertyValue(propertyID);
-                }
-            }
+                    UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.ButtonControlTypeId,
+                    UiaCore.UIA.HasKeyboardFocusPropertyId => _owner.Focused,
+                    UiaCore.UIA.IsEnabledPropertyId => _owner.Enabled,
+                    UiaCore.UIA.IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
+                    _ => base.GetPropertyValue(propertyID)
+                };
 
             /// <summary>
             ///  Gets the help text.
             /// </summary>
-            public override string Help
+            public override string? Help
             {
                 get
                 {
@@ -171,7 +140,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Gets the keyboard shortcut.
             /// </summary>
-            public override string KeyboardShortcut
+            public override string? KeyboardShortcut
             {
                 get
                 {
@@ -205,7 +174,7 @@ namespace System.Windows.Forms
                 {
                     var systemIAccessible = GetSystemIAccessibleInternal();
                     var accRole = systemIAccessible?.get_accRole(COMBOBOX_DROPDOWN_BUTTON_ACC_ITEM_INDEX);
-                    return accRole != null
+                    return accRole is not null
                         ? (AccessibleRole)accRole
                         : AccessibleRole.None;
                 }
@@ -215,22 +184,14 @@ namespace System.Windows.Forms
             ///  Gets the runtime ID.
             /// </summary>
             internal override int[] RuntimeId
-            {
-                get
+                => new int[]
                 {
-                    var runtimeId = new int[5];
-                    runtimeId[0] = RuntimeIDFirstItem;
-                    runtimeId[1] = (int)(long)_owner.InternalHandle;
-                    runtimeId[2] = _owner.GetHashCode();
-
-                    // Made up constant from MSAA proxy. When MSAA proxy is used as an accessibility provider,
-                    // the similar Runtime ID is returned (for consistency purpose)
-                    const int generatedRuntimeId = 61453;
-                    runtimeId[3] = generatedRuntimeId;
-                    runtimeId[4] = COMBOBOX_DROPDOWN_BUTTON_ACC_ITEM_INDEX;
-                    return runtimeId;
-                }
-            }
+                    RuntimeIDFirstItem,
+                    PARAM.ToInt(_owner.InternalHandle),
+                    _owner.GetHashCode(),
+                    GeneratedRuntimeId,
+                    COMBOBOX_DROPDOWN_BUTTON_ACC_ITEM_INDEX
+                };
 
             /// <summary>
             ///  Gets the accessible state.
@@ -241,7 +202,7 @@ namespace System.Windows.Forms
                 {
                     var systemIAccessible = GetSystemIAccessibleInternal();
                     var accState = systemIAccessible?.get_accState(COMBOBOX_DROPDOWN_BUTTON_ACC_ITEM_INDEX);
-                    return accState != null
+                    return accState is not null
                         ? (AccessibleStates)accState
                         : AccessibleStates.None;
                 }

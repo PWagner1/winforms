@@ -6,7 +6,7 @@ Follow the prerequisites listed at [Developer Guide](developer-guide.md).
 
 ## Building
 
-### Building from command line
+### Building from command line (Preferred)
 
 * Run `.\build.cmd` from the repository root. This builds the `Winforms.sln` using the default config (Debug|Any CPU).
 * To specify a build configuration, add `-configuration` followed by the config such as `.\build -configuration Release`.
@@ -15,9 +15,10 @@ Note that this does **not** build using your machine-wide installed version of t
 
 ### Building from Visual Studio
 
-1. Run `.\restore.cmd` from the repository root.
-1. Run `.\start-vs.cmd` from the repository root. This will prepend the repo-local .NET SDK to the path, and open `Winforms.sln` in Visual Studio.
-1. You should now be able to build as you normally would.
+1. .NET 6.0 and above branches need VisualStudio 2022 to build.
+2. Run `.\restore.cmd` from the repository root.
+3. Run `.\start-vs.cmd` from the repository root. This will prepend the repo-local .NET SDK to the path, and open `Winforms.sln` in Visual Studio.
+4. You should now be able to build as you normally would.
 
 ### Building from Visual Studio Code
 
@@ -29,7 +30,7 @@ Note that this does **not** build using your machine-wide installed version of t
 
 * All build outputs are generated under the `artifacts` folder.
 * Binaries are under `artifacts\bin`.
-  * For example, `System.Windows.Forms.dll` can be found under `artifacts\bin\System.Windows.Forms\Debug\netcoreapp5.0`.
+  * For example, `System.Windows.Forms.dll` can be found under `artifacts\bin\System.Windows.Forms\Debug\net6.0`.
 * Logs are found under `artifacts\log`.
 * Packages are found under `artifacts\packages`.
 
@@ -46,7 +47,7 @@ Note that this does **not** build using your machine-wide installed version of t
     winforms> pushd .\src\System.Windows.Forms\tests\AccessibilityTests
     winforms\src\System.Windows.Forms\tests\AccessibilityTests> dotnet run
     ```
-3. (Alternatively) Navigate to `.\artifacts\bin\AccessibilityTests\Debug\netcoreapp5.0` and run the app manually.
+3. (Alternatively) Navigate to `.\artifacts\bin\AccessibilityTests\Debug\net6.0` and run the app manually.
 
 ## Troubleshooting build errors
 
@@ -60,6 +61,13 @@ Note that this does **not** build using your machine-wide installed version of t
 ## Creating a package
 
 To create the Microsoft.Private.Winforms package, run `.\build -pack`
+
+## Localization
+
+If you need to add a new localization string or update an existing one, follow these steps:
+
+- Modify `Resource\SR.resx` file adding or updating necessary strings in the project that contains the said strings. (It is often faster/easier to open SR.resx in an XML editor).
+- Regenerate the localization files by rebuilding the solution/project from Visual Studio, or by executing `.\build.cmd` command. You can also build just the modified project by running  `dotnet build` from the project's root.
 
 [comment]: <> (URI Links)
 

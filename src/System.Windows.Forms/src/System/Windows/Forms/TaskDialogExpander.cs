@@ -2,9 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.ComponentModel;
-using static Interop;
-
 namespace System.Windows.Forms
 {
     /// <summary>
@@ -79,7 +76,7 @@ namespace System.Windows.Forms
             {
                 DenyIfBoundAndNotCreated();
 
-                if (BoundPage != null)
+                if (BoundPage is not null)
                 {
                     // If we are bound but waiting for initialization (e.g. immediately after
                     // starting a navigation), we buffer the change until we apply the
@@ -91,7 +88,7 @@ namespace System.Windows.Forms
                     else
                     {
                         BoundPage.BoundDialog!.UpdateTextElement(
-                            ComCtl32.TDE.EXPANDED_INFORMATION, value);
+                            TASKDIALOG_ELEMENTS.TDE_EXPANDED_INFORMATION, value);
                     }
                 }
 
@@ -211,19 +208,20 @@ namespace System.Windows.Forms
             OnExpandedChanged(EventArgs.Empty);
         }
 
-        private protected override ComCtl32.TDF BindCore()
+        private protected override TASKDIALOG_FLAGS BindCore()
         {
-            ComCtl32.TDF flags = base.BindCore();
+            TASKDIALOG_FLAGS flags = base.BindCore();
 
             _updateTextOnInitialization = false;
 
             if (_expanded)
             {
-                flags |= ComCtl32.TDF.EXPANDED_BY_DEFAULT;
+                flags |= TASKDIALOG_FLAGS.TDF_EXPANDED_BY_DEFAULT;
             }
+
             if (_expanderPosition == TaskDialogExpanderPosition.AfterFootnote)
             {
-                flags |= ComCtl32.TDF.EXPAND_FOOTER_AREA;
+                flags |= TASKDIALOG_FLAGS.TDF_EXPAND_FOOTER_AREA;
             }
 
             return flags;

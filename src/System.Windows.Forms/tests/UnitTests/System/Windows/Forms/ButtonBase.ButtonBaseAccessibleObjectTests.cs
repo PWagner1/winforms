@@ -2,8 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
 using static Interop;
 
@@ -98,7 +97,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(FlatStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(FlatStyle))]
         public void ButtonBase_CreateAccessibilityInstance_InvokeWithDefaultRole_ReturnsExpected_ForAllFlatStyles_IfControlIsCreated(FlatStyle flatStyle)
         {
             using var control = new SubButtonBase()
@@ -112,7 +111,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(FlatStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(FlatStyle))]
         public void ButtonBase_CreateAccessibilityInstance_InvokeWithDefaultRole_ReturnsNone_ForAllFlatStyles_IfControlIsNotCreated(FlatStyle flatStyle)
         {
             using var control = new SubButtonBase()
@@ -236,6 +235,37 @@ namespace System.Windows.Forms.Tests
             Assert.False(buttonBase.IsHandleCreated);
         }
 
+        [WinFormsFact]
+        public void ButtonBaseAccessibleObject_GetPropertyValue_AutomationId_ReturnsExpected()
+        {
+            using SubButtonBase ownerControl = new() { Name = "test name" };
+            string expected = ownerControl.Name;
+            object actual = ownerControl.AccessibilityObject.GetPropertyValue(UiaCore.UIA.AutomationIdPropertyId);
+
+            Assert.Equal(expected, actual);
+            Assert.False(ownerControl.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ButtonBaseAccessibleObject_TextChanged_AutomationPropertyChanged_Raised()
+        {
+            const string newText = "New text";
+            using var control = new ButtonWithCustomAccessibleObject(
+                (propertyId, value) => propertyId == UiaCore.UIA.NamePropertyId && ReferenceEquals(value, newText))
+            {
+                Text = "Text"
+            };
+
+            var accessibilityObject = control.AccessibilityObject as ControlAccessibleObjectWithNotificationCounter;
+            Assert.NotNull(accessibilityObject);
+            Assert.True(control.IsAccessibilityObjectCreated);
+            Assert.Equal(0, accessibilityObject.RaiseAutomationNotificationCallCount);
+
+            control.Text = newText;
+
+            Assert.Equal(1, accessibilityObject.RaiseAutomationNotificationCallCount);
+        }
+
         private class SubButtonBase : ButtonBase
         {
             public Action PerformClickAction { get; set; }
@@ -245,6 +275,40 @@ namespace System.Windows.Forms.Tests
             public new void OnMouseDown(MouseEventArgs e) => base.OnMouseDown(e);
 
             public void PerformClick() => PerformClickAction();
+        }
+
+        private class ButtonWithCustomAccessibleObject : ButtonBase
+        {
+            private readonly Func<UiaCore.UIA, object, bool> _checkRaisedEvent;
+
+            public ButtonWithCustomAccessibleObject(Func<UiaCore.UIA, object, bool> checkRaisedEvent)
+            {
+                _checkRaisedEvent = checkRaisedEvent;
+            }
+
+            protected override AccessibleObject CreateAccessibilityInstance() => new ControlAccessibleObjectWithNotificationCounter(this, _checkRaisedEvent);
+        }
+
+        private class ControlAccessibleObjectWithNotificationCounter : Control.ControlAccessibleObject
+        {
+            private readonly Func<UiaCore.UIA, object, bool> _checkRaisedEvent;
+
+            public ControlAccessibleObjectWithNotificationCounter(Control ownerControl, Func<UiaCore.UIA, object, bool> checkRaisedEvent) : base(ownerControl)
+            {
+                _checkRaisedEvent = checkRaisedEvent;
+            }
+            
+            internal int RaiseAutomationNotificationCallCount { get; private set; }
+
+            internal override bool RaiseAutomationPropertyChangedEvent(UiaCore.UIA propertyId, object oldValue, object newValue)
+            {
+                if (_checkRaisedEvent(propertyId, newValue))
+                {
+                    RaiseAutomationNotificationCallCount++;
+                }
+
+                return base.RaiseAutomationPropertyChangedEvent(propertyId, oldValue, newValue);
+            }
         }
     }
 }

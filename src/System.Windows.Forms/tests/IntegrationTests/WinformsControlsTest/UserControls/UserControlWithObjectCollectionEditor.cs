@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Drawing.Design;
@@ -36,7 +34,7 @@ namespace WinformsControlsTest.UserControls
     {
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-            if (destinationType != null && destinationType.IsAssignableFrom(typeof(string)) && value != null && value is IList<int> list)
+            if (destinationType is not null && destinationType.IsAssignableFrom(typeof(string)) && value is not null && value is IList<int> list)
             {
                 var result = new StringBuilder("");
                 for (int i = 0; i < list.Count; i++)
@@ -45,8 +43,10 @@ namespace WinformsControlsTest.UserControls
                     {
                         result.Append(", ");
                     }
+
                     result.Append(list[i]);
                 }
+
                 return result.ToString();
             }
 

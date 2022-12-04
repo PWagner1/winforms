@@ -5,14 +5,13 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using static Interop;
 
 namespace System.Windows.Forms
 {
     /// <summary>
-    ///  Helper to scope getting a <see cref="Gdi32.HDC"/> from a <see cref="IDeviceContext"/> object. Releases
-    ///  the <see cref="Gdi32.HDC"/> when disposed, unlocking the parent <see cref="IDeviceContext"/> object.
+    ///  Helper to scope getting a <see cref="HDC"/> from a <see cref="IDeviceContext"/> object. Releases
+    ///  the <see cref="HDC"/> when disposed, unlocking the parent <see cref="IDeviceContext"/> object.
     ///
     ///  Also saves and restores the state of the HDC.
     /// </summary>
@@ -27,32 +26,35 @@ namespace System.Windows.Forms
 #endif
     {
         public IDeviceContext DeviceContext { get; }
-        public Gdi32.HDC HDC { get; }
+        public HDC HDC { get; }
 
         private readonly int _savedHdcState;
 
         /// <summary>
-        ///  Gets the <see cref="Gdi32.HDC"/> from the the given <paramref name="deviceContext"/>.
+        ///  Gets the <see cref="HDC"/> from the given <paramref name="deviceContext"/>.
         /// </summary>
         /// <remarks>
-        ///  When a <see cref="Graphics"/> object is created from a <see cref="Gdi32.HDC"/> the clipping region and
-        ///  the viewport origin are applied (<see cref="Gdi32.GetViewportExtEx(Gdi32.HDC, out Size)"/>). The clipping
-        ///  region isn't reflected in <see cref="Graphics.Clip"/>, which is combined with the HDC HRegion.
-        ///
-        ///  The Graphics object saves and restores DC state when performing operations that would modify the DC to
-        ///  maintain the DC in its original or returned state after <see cref="Graphics.ReleaseHdc()"/>.
+        ///  <para>
+        ///   When a <see cref="Graphics"/> object is created from a <see cref="HDC"/> the clipping region and
+        ///   the viewport origin are applied (<see cref="PInvoke.GetViewportExtEx(HDC, SIZE*)"/>). The clipping
+        ///   region isn't reflected in <see cref="Graphics.Clip"/>, which is combined with the HDC HRegion.
+        ///  </para>
+        ///  <para>
+        ///   The Graphics object saves and restores DC state when performing operations that would modify the DC to
+        ///   maintain the DC in its original or returned state after <see cref="Graphics.ReleaseHdc()"/>.
+        ///  </para>
         /// </remarks>
         /// <param name="applyGraphicsState">
         ///  Applies the origin transform and clipping region of the <paramref name="deviceContext"/> if it is an
         ///  object of type <see cref="Graphics"/>. Otherwise this is a no-op.
         /// </param>
         /// <param name="saveHdcState">
-        ///  When true, saves and restores the <see cref="Gdi32.HDC"/> state.
+        ///  When true, saves and restores the <see cref="HDC"/> state.
         /// </param>
         public DeviceContextHdcScope(
             IDeviceContext deviceContext,
             bool applyGraphicsState = true,
-            bool saveHdcState = false) : this (
+            bool saveHdcState = false) : this(
                 deviceContext,
                 applyGraphicsState ? ApplyGraphicsProperties.All : ApplyGraphicsProperties.None,
                 saveHdcState)
@@ -63,7 +65,9 @@ namespace System.Windows.Forms
         ///  Prefer to use <see cref="DeviceContextHdcScope(IDeviceContext, bool, bool)"/>.
         /// </summary>
         /// <remarks>
-        ///  Ideally we'd not bifurcate what properties we apply unless we're absolutely sure we only want one.
+        ///  <para>
+        ///   Ideally we'd not bifurcate what properties we apply unless we're absolutely sure we only want one.
+        ///  </para>
         /// </remarks>
         public unsafe DeviceContextHdcScope(
             IDeviceContext deviceContext,
@@ -75,7 +79,9 @@ namespace System.Windows.Forms
                 // As we're throwing in the constructor, `this` will never be passed back and as such .Dispose()
                 // can't be called. We don't have anything to release at this point so there is no point in having
                 // the finalizer run.
+#if DEBUG
                 DisposalTracking.SuppressFinalize(this!);
+#endif
                 throw new ArgumentNullException(nameof(deviceContext));
             }
 
@@ -127,15 +133,16 @@ namespace System.Windows.Forms
                     {
                         throw new InvalidOperationException();
                     }
+
                     DeviceContext = graphics;
                 }
             }
 
             if (!needToApplyProperties || graphics is null)
             {
-                HDC = HDC.IsNull ? (Gdi32.HDC)DeviceContext.GetHdc() : HDC;
+                HDC = HDC.IsNull ? (HDC)DeviceContext.GetHdc() : HDC;
                 ValidateHDC();
-                _savedHdcState = saveHdcState ? Gdi32.SaveDC(HDC) : 0;
+                _savedHdcState = saveHdcState ? PInvoke.SaveDC(HDC) : 0;
                 return;
             }
 
@@ -145,61 +152,67 @@ namespace System.Windows.Forms
             bool applyTransform = applyGraphicsState.HasFlag(ApplyGraphicsProperties.TranslateTransform);
             bool applyClipping = applyGraphicsState.HasFlag(ApplyGraphicsProperties.Clipping);
 
-            // This API is very expensive and cannot be called after GetHdc()
-            object[]? data = applyTransform || applyClipping ? (object[])graphics.GetContextInfo() : null;
-
-            using Region? clipRegion = (Region?)data?[0];
-            using Matrix? worldTransform = (Matrix?)data?[1];
-
-            // elements (XFORM) = [eM11, eM12, eM21, eM22, eDx, eDy], eDx/eDy specify the translation offset.
-            float[]? elements = applyTransform ? worldTransform?.Elements : null;
-            int dx = elements is not null ? (int)elements[4] : 0;
-            int dy = elements is not null ? (int)elements[5] : 0;
-            applyTransform = applyTransform && elements is not null && (dx != 0 || dy != 0);
-
-            using var graphicsRegion = applyClipping ? new Gdi32.RegionScope(clipRegion!, graphics) : default;
-            applyClipping = applyClipping && !graphicsRegion!.Region.IsNull;
-
-            HDC = (Gdi32.HDC)graphics.GetHdc();
-
-            if (saveHdcState || applyClipping || applyTransform)
-            {
-                _savedHdcState = Gdi32.SaveDC(HDC);
-            }
-
+            Region? clipRegion = null;
+            PointF offset = default;
             if (applyClipping)
             {
-                // If the Graphics object was created from a native DC the actual clipping region is the intersection
-                // beteween the original DC clip region and the GDI+ one - for display Graphics it is the same as
-                // Graphics.VisibleClipBounds.
+                graphics.GetContextInfo(out offset, out clipRegion);
+            }
+            else if (applyTransform)
+            {
+                graphics.GetContextInfo(out offset);
+            }
 
-                RegionType type;
+            using (clipRegion)
+            {
+                applyTransform = applyTransform && !offset.IsEmpty;
+                applyClipping = clipRegion is not null;
 
-                using var dcRegion = new Gdi32.RegionScope(HDC);
-                if (!dcRegion.IsNull)
+                using var graphicsRegion = applyClipping ? new PInvoke.RegionScope(clipRegion!, graphics) : default;
+                applyClipping = applyClipping && !graphicsRegion!.Region.IsNull;
+
+                HDC = (HDC)graphics.GetHdc();
+
+                if (saveHdcState || applyClipping || applyTransform)
                 {
-                    type = Gdi32.CombineRgn(graphicsRegion!, dcRegion, graphicsRegion!, Gdi32.RGN.AND);
+                    _savedHdcState = PInvoke.SaveDC(HDC);
+                }
+
+                if (applyClipping)
+                {
+                    // If the Graphics object was created from a native DC the actual clipping region is the intersection
+                    // between the original DC clip region and the GDI+ one - for display Graphics it is the same as
+                    // Graphics.VisibleClipBounds.
+
+                    RegionType type;
+
+                    using PInvoke.RegionScope dcRegion = new(HDC);
+                    if (!dcRegion.IsNull)
+                    {
+                        type = (RegionType)PInvoke.CombineRgn(graphicsRegion!, dcRegion, graphicsRegion!, RGN_COMBINE_MODE.RGN_AND);
+                        if (type == RegionType.ERROR)
+                        {
+                            throw new Win32Exception();
+                        }
+                    }
+
+                    type = (RegionType)PInvoke.SelectClipRgn(HDC, graphicsRegion!);
                     if (type == RegionType.ERROR)
                     {
                         throw new Win32Exception();
                     }
                 }
 
-                type = Gdi32.SelectClipRgn(HDC, graphicsRegion!);
-                if (type == RegionType.ERROR)
+                if (applyTransform)
                 {
-                    throw new Win32Exception();
+                    PInvoke.OffsetViewportOrgEx(HDC, (int)offset.X, (int)offset.Y, lppt: null);
                 }
-            }
-
-            if (applyTransform)
-            {
-                Gdi32.OffsetViewportOrgEx(HDC, dx, dy, null);
             }
         }
 
-        public static implicit operator Gdi32.HDC(in DeviceContextHdcScope scope) => scope.HDC;
-        public static explicit operator IntPtr(in DeviceContextHdcScope scope) => scope.HDC.Handle;
+        public static implicit operator HDC(in DeviceContextHdcScope scope) => scope.HDC;
+        public static implicit operator nint(in DeviceContextHdcScope scope) => scope.HDC;
+        public static explicit operator WPARAM(in DeviceContextHdcScope scope) => (WPARAM)scope.HDC;
 
         [Conditional("DEBUG")]
         private void ValidateHDC()
@@ -207,20 +220,24 @@ namespace System.Windows.Forms
             if (HDC.IsNull)
             {
                 // We don't want the disposal tracking to fire as it will take down unrelated tests.
+#if DEBUG
                 DisposalTracking.SuppressFinalize(this!);
+#endif
                 throw new InvalidOperationException("Null HDC");
             }
 
-            var type = Gdi32.GetObjectType(HDC);
+            OBJ_TYPE type = (OBJ_TYPE)PInvoke.GetObjectType(HDC);
             switch (type)
             {
-                case Gdi32.OBJ.DC:
-                case Gdi32.OBJ.MEMDC:
-                case Gdi32.OBJ.METADC:
-                case Gdi32.OBJ.ENHMETADC:
+                case OBJ_TYPE.OBJ_DC:
+                case OBJ_TYPE.OBJ_MEMDC:
+                case OBJ_TYPE.OBJ_METADC:
+                case OBJ_TYPE.OBJ_ENHMETADC:
                     break;
                 default:
+#if DEBUG
                     DisposalTracking.SuppressFinalize(this!);
+#endif
                     throw new InvalidOperationException($"Invalid handle ({type})");
             }
         }
@@ -229,16 +246,18 @@ namespace System.Windows.Forms
         {
             if (_savedHdcState != 0)
             {
-                Gdi32.RestoreDC(HDC, _savedHdcState);
+                PInvoke.RestoreDC(HDC, _savedHdcState);
             }
 
             // Note that Graphics keeps track of the HDC it passes back, so we don't need to pass it back in
-            if (!(DeviceContext is IGraphicsHdcProvider))
+            if (DeviceContext is not IGraphicsHdcProvider)
             {
                 DeviceContext?.ReleaseHdc();
             }
 
+#if DEBUG
             DisposalTracking.SuppressFinalize(this!);
+#endif
         }
     }
 }

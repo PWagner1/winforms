@@ -2,11 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using static Interop;
 using static Interop.ComCtl32;
 
@@ -17,15 +14,15 @@ namespace System.Windows.Forms
     /// </summary>
     public sealed class ListViewInsertionMark
     {
-        private readonly ListView listView;
+        private readonly ListView _listView;
 
-        private int index;
-        private Color color = Color.Empty;
-        private bool appearsAfterItem;
+        private int _index;
+        private Color _color = Color.Empty;
+        private bool _appearsAfterItem;
 
         internal ListViewInsertionMark(ListView listView)
         {
-            this.listView = listView;
+            _listView = listView;
         }
 
         /// <summary>
@@ -37,15 +34,15 @@ namespace System.Windows.Forms
         {
             get
             {
-                return appearsAfterItem;
+                return _appearsAfterItem;
             }
             set
             {
-                if (appearsAfterItem != value)
+                if (_appearsAfterItem != value)
                 {
-                    appearsAfterItem = value;
+                    _appearsAfterItem = value;
 
-                    if (listView.IsHandleCreated)
+                    if (_listView.IsHandleCreated)
                     {
                         UpdateListView();
                     }
@@ -60,8 +57,8 @@ namespace System.Windows.Forms
         {
             get
             {
-                var rect = new RECT();
-                User32.SendMessageW(listView, (User32.WM)LVM.GETINSERTMARKRECT, IntPtr.Zero, ref rect);
+                var rect = default(RECT);
+                PInvoke.SendMessage(_listView, (User32.WM)PInvoke.LVM_GETINSERTMARKRECT, (WPARAM)0, ref rect);
                 return Rectangle.FromLTRB(rect.left, rect.top, rect.right, rect.bottom);
             }
         }
@@ -73,20 +70,21 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (color.IsEmpty)
+                if (_color.IsEmpty)
                 {
-                    color = new COLORREF((uint)User32.SendMessageW(listView, (User32.WM)LVM.GETINSERTMARKCOLOR));
+                    _color = new COLORREF((uint)PInvoke.SendMessage(_listView, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
                 }
-                return color;
+
+                return _color;
             }
             set
             {
-                if (color != value)
+                if (_color != value)
                 {
-                    color = value;
-                    if (listView.IsHandleCreated)
+                    _color = value;
+                    if (_listView.IsHandleCreated)
                     {
-                        User32.SendMessageW(listView, (User32.WM)LVM.SETINSERTMARKCOLOR, IntPtr.Zero, PARAM.FromColor(color));
+                        PInvoke.SendMessage(_listView, (User32.WM)PInvoke.LVM_SETINSERTMARKCOLOR, 0, _color.ToWin32());
                     }
                 }
             }
@@ -99,14 +97,14 @@ namespace System.Windows.Forms
         {
             get
             {
-                return index;
+                return _index;
             }
             set
             {
-                if (index != value)
+                if (_index != value)
                 {
-                    index = value;
-                    if (listView.IsHandleCreated)
+                    _index = value;
+                    if (_listView.IsHandleCreated)
                     {
                         UpdateListView();
                     }
@@ -115,8 +113,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Performs a hit-test at the specified insertion point
-        ///  and returns the closest item.
+        ///  Performs a hit-test at the specified insertion point and returns the closest item.
         /// </summary>
         public unsafe int NearestIndex(Point pt)
         {
@@ -124,25 +121,27 @@ namespace System.Windows.Forms
             {
                 cbSize = (uint)sizeof(LVINSERTMARK)
             };
-            User32.SendMessageW(listView, (User32.WM)LVM.INSERTMARKHITTEST, (IntPtr)(&pt), ref lvInsertMark);
+
+            PInvoke.SendMessage(_listView, (User32.WM)PInvoke.LVM_INSERTMARKHITTEST, (WPARAM)(&pt), ref lvInsertMark);
 
             return lvInsertMark.iItem;
         }
 
         internal unsafe void UpdateListView()
         {
-            Debug.Assert(listView.IsHandleCreated, "ApplySavedState Precondition: List-view handle must be created");
+            Debug.Assert(_listView.IsHandleCreated, "ApplySavedState Precondition: List-view handle must be created");
             var lvInsertMark = new LVINSERTMARK
             {
                 cbSize = (uint)sizeof(LVINSERTMARK),
-                dwFlags = appearsAfterItem ? LVIM.AFTER : LVIM.BEFORE,
-                iItem = index
+                dwFlags = _appearsAfterItem ? LVIM.AFTER : LVIM.BEFORE,
+                iItem = _index
             };
-            User32.SendMessageW(listView, (User32.WM)LVM.SETINSERTMARK, IntPtr.Zero, ref lvInsertMark);
 
-            if (!color.IsEmpty)
+            PInvoke.SendMessage(_listView, (User32.WM)PInvoke.LVM_SETINSERTMARK, 0, ref lvInsertMark);
+
+            if (!_color.IsEmpty)
             {
-                User32.SendMessageW(listView, (User32.WM)LVM.SETINSERTMARKCOLOR, IntPtr.Zero, PARAM.FromColor(color));
+                PInvoke.SendMessage(_listView, (User32.WM)PInvoke.LVM_SETINSERTMARKCOLOR, 0, _color.ToWin32());
             }
         }
     }

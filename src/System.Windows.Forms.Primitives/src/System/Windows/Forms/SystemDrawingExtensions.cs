@@ -13,8 +13,8 @@ namespace System.Windows.Forms
 {
     internal static class SystemDrawingExtensions
     {
-        internal static Gdi32.HBITMAP GetHBITMAP(this Bitmap bitmap) => (Gdi32.HBITMAP)bitmap.GetHbitmap();
-        internal static Gdi32.HFONT ToHFONT(this Font font) => (Gdi32.HFONT)font.ToHfont();
+        internal static HBITMAP GetHBITMAP(this Bitmap bitmap) => (HBITMAP)bitmap.GetHbitmap();
+        internal static HFONT ToHFONT(this Font font) => (HFONT)font.ToHfont();
 
         /// <summary>
         ///  Similar to <see cref="Graphics.GetNearestColor(Color)"/>, but this retains the original color if the color
@@ -57,7 +57,7 @@ namespace System.Windows.Forms
         ///  Draws lines with the <paramref name="pen"/> using points defined in <paramref name="lines"/>.
         /// </summary>
         /// <param name="lines">
-        ///  MUST be a mulitple of 4. Each group of 4 represents x1, y1, x2, y2.
+        ///  MUST be a multiple of 4. Each group of 4 represents x1, y1, x2, y2.
         /// </param>
         internal static void DrawLines(this Graphics graphics, Pen pen, ReadOnlySpan<int> lines)
         {

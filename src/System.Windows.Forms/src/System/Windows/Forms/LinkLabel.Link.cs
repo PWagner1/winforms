@@ -2,9 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 
@@ -13,12 +12,13 @@ namespace System.Windows.Forms
     public partial class LinkLabel
     {
         [TypeConverter(typeof(LinkConverter))]
-        public class Link
+        public partial class Link
         {
             private int _start;
             private bool _enabled = true;
             internal int _length;
-            private string _name;
+            private string? _name;
+            private LinkAccessibleObject? _accessibleObject;
 
             public Link()
             {
@@ -30,7 +30,7 @@ namespace System.Windows.Forms
                 _length = length;
             }
 
-            public Link(int start, int length, object linkData)
+            public Link(int start, int length, object? linkData)
             {
                 _start = start;
                 _length = length;
@@ -42,10 +42,13 @@ namespace System.Windows.Forms
                 Owner = owner;
             }
 
+            internal LinkAccessibleObject? AccessibleObject
+                => _accessibleObject ??= Owner is not null ? new(this, Owner) : null;
+
             /// <summary>
             ///  Description for accessibility
             /// </summary>
-            public string Description { get; set; }
+            public string? Description { get; set; }
 
             [DefaultValue(true)]
             public bool Enabled
@@ -60,7 +63,7 @@ namespace System.Windows.Forms
                         if ((int)(State & (LinkState.Hover | LinkState.Active)) != 0)
                         {
                             State &= ~(LinkState.Hover | LinkState.Active);
-                            if (Owner != null)
+                            if (Owner is not null)
                             {
                                 Owner.OverrideCursor = null;
                             }
@@ -77,7 +80,7 @@ namespace System.Windows.Forms
                 {
                     if (_length == -1)
                     {
-                        if (Owner != null && !string.IsNullOrEmpty(Owner.Text))
+                        if (Owner is not null && !string.IsNullOrEmpty(Owner.Text))
                         {
                             StringInfo stringInfo = new StringInfo(Owner.Text);
                             return stringInfo.LengthInTextElements - Start;
@@ -95,7 +98,7 @@ namespace System.Windows.Forms
                     if (_length != value)
                     {
                         _length = value;
-                        if (Owner != null)
+                        if (Owner is not null)
                         {
                             Owner.InvalidateTextLayout();
                             Owner.Invalidate();
@@ -105,12 +108,12 @@ namespace System.Windows.Forms
             }
 
             [DefaultValue(null)]
-            public object LinkData { get; set; }
+            public object? LinkData { get; set; }
 
             /// <summary>
             ///  The LinkLabel object that owns this link.
             /// </summary>
-            internal LinkLabel Owner { get; set; }
+            internal LinkLabel? Owner { get; set; }
 
             internal LinkState State { get; set; } = LinkState.Normal;
 
@@ -120,6 +123,7 @@ namespace System.Windows.Forms
             [DefaultValue("")]
             [SRCategory(nameof(SR.CatAppearance))]
             [SRDescription(nameof(SR.TreeNodeNodeNameDescr))]
+            [AllowNull]
             public string Name
             {
                 get => _name ?? string.Empty;
@@ -135,7 +139,7 @@ namespace System.Windows.Forms
                     {
                         _start = value;
 
-                        if (Owner != null)
+                        if (Owner is not null)
                         {
                             Owner._links.Sort(LinkLabel.s_linkComparer);
                             Owner.InvalidateTextLayout();
@@ -151,7 +155,7 @@ namespace System.Windows.Forms
             [SRDescription(nameof(SR.ControlTagDescr))]
             [DefaultValue(null)]
             [TypeConverter(typeof(StringConverter))]
-            public object Tag { get; set; }
+            public object? Tag { get; set; }
 
             [DefaultValue(false)]
             public bool Visited
@@ -175,7 +179,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            internal Region VisualRegion { get; set; }
+            internal Region? VisualRegion { get; set; }
         }
     }
 }

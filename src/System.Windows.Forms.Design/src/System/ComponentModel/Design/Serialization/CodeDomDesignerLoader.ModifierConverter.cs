@@ -42,7 +42,7 @@ namespace System.ComponentModel.Design.Serialization
                 => GetConverter(context).ConvertTo(context, culture, value, destinationType);
 
             /// <summary>
-            /// <para>Re-creates an <see cref='System.Object'/> given a set of property values for the
+            /// <para>Re-creates an <see cref="object"/> given a set of property values for the
             ///  object.</para>
             /// </summary>
             public override object CreateInstance(ITypeDescriptorContext context, IDictionary propertyValues)
@@ -52,31 +52,28 @@ namespace System.ComponentModel.Design.Serialization
             ///  Returns the type converter for the member attributes enum.  We search the context
             ///  for a code dom provider that can provide us more information.
             /// </summary>
-            private TypeConverter GetConverter(ITypeDescriptorContext context)
+            private static TypeConverter GetConverter(ITypeDescriptorContext context)
             {
                 TypeConverter modifierConverter = null;
 
-                if (context != null)
+                if (context is not null)
                 {
                     CodeDomProvider provider = (CodeDomProvider)context.GetService(typeof(CodeDomProvider));
 
-                    if (provider != null)
+                    if (provider is not null)
                     {
                         modifierConverter = provider.GetConverter(typeof(MemberAttributes));
                     }
                 }
 
-                if (modifierConverter is null)
-                {
-                    modifierConverter = TypeDescriptor.GetConverter(typeof(MemberAttributes));
-                }
+                modifierConverter ??= TypeDescriptor.GetConverter(typeof(MemberAttributes));
 
                 return modifierConverter;
             }
 
             /// <summary>
             ///  <para>Gets a value indicating whether changing a value on this object requires a
-            ///  call to <see cref='System.ComponentModel.TypeConverter.CreateInstance(IDictionary)'/> to create a new value,
+            ///  call to <see cref="TypeConverter.CreateInstance(IDictionary)"/> to create a new value,
             ///  using the specified context.</para>
             /// </summary>
             public override bool GetCreateInstanceSupported(ITypeDescriptorContext context)
@@ -107,7 +104,7 @@ namespace System.ComponentModel.Design.Serialization
                 // We restrict the set of standard values to those within the access mask.
                 StandardValuesCollection values = GetConverter(context).GetStandardValues(context);
 
-                if (values != null && values.Count > 0)
+                if (values is not null && values.Count > 0)
                 {
                     bool needMassage = false;
 
@@ -122,7 +119,7 @@ namespace System.ComponentModel.Design.Serialization
 
                     if (needMassage)
                     {
-                        ArrayList list = new ArrayList(values.Count);
+                        List<MemberAttributes> list = new(values.Count);
 
                         foreach (MemberAttributes value in values)
                         {
@@ -141,7 +138,7 @@ namespace System.ComponentModel.Design.Serialization
 
             /// <summary>
             ///  <para>Gets a value indicating whether the collection of standard values returned from
-            ///  <see cref='System.ComponentModel.TypeConverter.GetStandardValues()'/> is an exclusive
+            ///  <see cref="TypeConverter.GetStandardValues()"/> is an exclusive
             ///  list of possible values, using the specified context.</para>
             /// </summary>
             public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
@@ -165,5 +162,3 @@ namespace System.ComponentModel.Design.Serialization
         }
     }
 }
-
-

@@ -17,6 +17,17 @@ namespace System.Windows.Forms
             {
             }
 
+            /// <summary>
+            ///  Returns the index of a column, taking into account DisplayIndex properties
+            ///  and the invisibility of other columns
+            /// </summary>
+            private int VisibleIndex
+                => Owner?.DataGridView is not null && Owner.OwningColumn is not null
+                    ? Owner.DataGridView.RowHeadersVisible
+                        ? Owner.DataGridView.Columns.GetVisibleIndex(Owner.OwningColumn) + 1
+                        : Owner.DataGridView.Columns.GetVisibleIndex(Owner.OwningColumn)
+                    : -1;
+
             public override Rectangle Bounds => Owner is null
                 ? throw new InvalidOperationException(SR.DataGridViewCellAccessibleObject_OwnerNotSet)
                 : (Owner.DataGridView?.IsHandleCreated == true) ? GetAccessibleObjectBounds(Parent) : Rectangle.Empty;
@@ -30,13 +41,13 @@ namespace System.Windows.Forms
                         throw new InvalidOperationException(SR.DataGridViewCellAccessibleObject_OwnerNotSet);
                     }
 
-                    if (Owner.OwningColumn != null)
+                    if (Owner.OwningColumn is not null)
                     {
                         if (Owner.OwningColumn.SortMode == DataGridViewColumnSortMode.Automatic)
                         {
                             return SR.DataGridView_AccColumnHeaderCellDefaultAction;
                         }
-                        else if (Owner.DataGridView != null && (
+                        else if (Owner.DataGridView is not null && (
                                 Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.FullColumnSelect ||
                                 Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.ColumnHeaderSelect))
                         {
@@ -77,7 +88,7 @@ namespace System.Windows.Forms
                         resultState |= AccessibleStates.Offscreen;
                     }
 
-                    if (Owner.DataGridView != null && Owner.OwningColumn != null && Owner.OwningColumn.Selected)
+                    if (Owner.DataGridView is not null && Owner.OwningColumn is not null && Owner.OwningColumn.Selected)
                     {
                         if (Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.FullColumnSelect ||
                         Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.ColumnHeaderSelect)
@@ -147,13 +158,6 @@ namespace System.Windows.Forms
                         return Owner.DataGridView.RightToLeft == RightToLeft.No ? NavigateBackward() : NavigateForward();
                     case AccessibleNavigation.Previous:
                         return NavigateBackward();
-                    case AccessibleNavigation.FirstChild:
-                        // return the top left header cell accessible object
-                        return Parent?.GetChild(0);
-                    case AccessibleNavigation.LastChild:
-                        // return the last column header cell in the top row header accessible object
-                        AccessibleObject? topRowHeaderAccessibleObject = Parent;
-                        return topRowHeaderAccessibleObject?.GetChild(topRowHeaderAccessibleObject.GetChildCount() - 1);
                     default:
                         return null;
                 }
@@ -161,7 +165,7 @@ namespace System.Windows.Forms
 
             private AccessibleObject? NavigateBackward()
             {
-                Debug.Assert(Owner != null);
+                Debug.Assert(Owner is not null);
 
                 // This method is called after _owner and its properties are validated
                 if (Owner.OwningColumn is null || Owner.DataGridView is null)
@@ -176,19 +180,14 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-                    int previousVisibleColumnIndex = Owner.DataGridView.Columns.GetPreviousColumn(Owner.OwningColumn,
-                                                                                                  DataGridViewElementStates.Visible,
-                                                                                                  DataGridViewElementStates.None).Index;
-                    int actualDisplayIndex = Owner.DataGridView.Columns.ColumnIndexToActualDisplayIndex(previousVisibleColumnIndex,
-                                                                                                  DataGridViewElementStates.Visible);
-
-                    return Owner.DataGridView.RowHeadersVisible ? Parent?.GetChild(actualDisplayIndex + 1) : Parent?.GetChild(actualDisplayIndex);
+                    // Subtract 1 because the top header row accessible object has the top left header cell accessible object at the beginning
+                    return Parent?.GetChild(VisibleIndex - 1);
                 }
             }
 
             private AccessibleObject? NavigateForward()
             {
-                Debug.Assert(Owner != null);
+                Debug.Assert(Owner is not null);
 
                 // This method is called after _owner and its properties are validated
                 if (Owner.OwningColumn is null ||
@@ -199,15 +198,9 @@ namespace System.Windows.Forms
                     return null;
                 }
 
-                int nextVisibleColumnIndex = Owner.DataGridView.Columns.GetNextColumn(Owner.OwningColumn,
-                                                                                      DataGridViewElementStates.Visible,
-                                                                                      DataGridViewElementStates.None).Index;
-
-                int actualDisplayIndex = Owner.DataGridView.Columns.ColumnIndexToActualDisplayIndex(nextVisibleColumnIndex,
-                                                                                      DataGridViewElementStates.Visible);
-
                 // Add 1 because the top header row accessible object has the top left header cell accessible object at the beginning
-                return Owner.DataGridView.RowHeadersVisible ? Parent?.GetChild(actualDisplayIndex + 1) : Parent?.GetChild(actualDisplayIndex);
+                int visibleIndex = VisibleIndex;
+                return visibleIndex < 0 ? null : Parent?.GetChild(visibleIndex + 1);
             }
 
             public override void Select(AccessibleSelection flags)
@@ -233,7 +226,7 @@ namespace System.Windows.Forms
                     dataGridView.Focus();
                 }
 
-                if (dataGridViewCell.OwningColumn != null &&
+                if (dataGridViewCell.OwningColumn is not null &&
                     (dataGridView.SelectionMode == DataGridViewSelectionMode.FullColumnSelect ||
                      dataGridView.SelectionMode == DataGridViewSelectionMode.ColumnHeaderSelect))
                 {
@@ -277,14 +270,11 @@ namespace System.Windows.Forms
             internal override object? GetPropertyValue(UiaCore.UIA propertyId)
                 => propertyId switch
                 {
-                    UiaCore.UIA.NamePropertyId => Name,
                     UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.HeaderControlTypeId,
+                    UiaCore.UIA.HasKeyboardFocusPropertyId => false,
                     UiaCore.UIA.IsEnabledPropertyId => Owner?.DataGridView?.Enabled ?? false,
-                    UiaCore.UIA.HelpTextPropertyId => Help ?? string.Empty,
                     UiaCore.UIA.IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
-                    var x when x == UiaCore.UIA.HasKeyboardFocusPropertyId || x == UiaCore.UIA.IsPasswordPropertyId => false,
-                    UiaCore.UIA.IsOffscreenPropertyId => (State & AccessibleStates.Offscreen) == AccessibleStates.Offscreen,
-                    UiaCore.UIA.AccessKeyPropertyId => string.Empty,
+                    UiaCore.UIA.IsPasswordPropertyId => false,
                     _ => base.GetPropertyValue(propertyId)
                 };
 

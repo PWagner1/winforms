@@ -2,45 +2,50 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Drawing;
-using static Interop;
 
 namespace System.Windows.Forms
 {
     /// <summary>
     ///  A non selectable ToolStrip item
     /// </summary>
-    internal class ToolStripScrollButton : ToolStripControlHost
+    internal partial class ToolStripScrollButton : ToolStripControlHost
     {
-        private readonly bool up = true;
+        private readonly bool _up = true;
+
+        private static readonly Size defaultBitmapSize = new(16, 16);
 
         [ThreadStatic]
-        private static Bitmap upScrollImage;
+        private static Bitmap? t_upScrollImage;
 
         [ThreadStatic]
-        private static Bitmap downScrollImage;
+        private static Bitmap? t_downScrollImage;
 
         const int AUTOSCROLL_UPDATE = 50;
         private static readonly int AUTOSCROLL_PAUSE = SystemInformation.DoubleClickTime;
 
-        private Timer mouseDownTimer;
+        private Timer? _mouseDownTimer;
 
-        public ToolStripScrollButton(bool up) : base(CreateControlInstance(up))
+        public ToolStripScrollButton(bool up)
+            : base(CreateControlInstance(up))
         {
-            this.up = up;
+            if (Control is StickyLabel stickyLabel)
+            {
+                stickyLabel.OwnerScrollButton = this;
+            }
+
+            _up = up;
         }
 
+        protected override AccessibleObject CreateAccessibilityInstance()
+           => Control.AccessibilityObject;
+
         private static Control CreateControlInstance(bool up)
-        {
-            StickyLabel label = new StickyLabel
+            => new StickyLabel(up)
             {
                 ImageAlign = ContentAlignment.MiddleCenter,
                 Image = (up) ? UpImage : DownImage
             };
-            return label;
-        }
 
         /// <summary>
         ///  Deriving classes can override this to configure a default size for their control.
@@ -53,6 +58,7 @@ namespace System.Windows.Forms
                 return Padding.Empty;
             }
         }
+
         protected override Padding DefaultPadding
         {
             get
@@ -65,31 +71,22 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (downScrollImage is null)
-                {
-                    downScrollImage = DpiHelper.GetBitmapFromIcon(typeof(ToolStripScrollButton), "ScrollButtonDown");
-                }
-                return downScrollImage;
+                t_downScrollImage ??= DpiHelper.GetScaledBitmapFromIcon(typeof(ToolStripScrollButton), "ScrollButtonDown", defaultBitmapSize);
+
+                return t_downScrollImage;
             }
         }
 
         internal StickyLabel Label
-        {
-            get
-            {
-                return Control as StickyLabel;
-            }
-        }
+            => (StickyLabel)Control;
 
         private static Image UpImage
         {
             get
             {
-                if (upScrollImage is null)
-                {
-                    upScrollImage = DpiHelper.GetBitmapFromIcon(typeof(ToolStripScrollButton), "ScrollButtonUp");
-                }
-                return upScrollImage;
+                t_upScrollImage ??= DpiHelper.GetScaledBitmapFromIcon(typeof(ToolStripScrollButton), "ScrollButtonUp", defaultBitmapSize);
+
+                return t_upScrollImage;
             }
         }
 
@@ -97,11 +94,9 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (mouseDownTimer is null)
-                {
-                    mouseDownTimer = new Timer();
-                }
-                return mouseDownTimer;
+                _mouseDownTimer ??= new Timer();
+
+                return _mouseDownTimer;
             }
         }
 
@@ -109,15 +104,17 @@ namespace System.Windows.Forms
         {
             if (disposing)
             {
-                if (mouseDownTimer != null)
+                if (_mouseDownTimer is not null)
                 {
-                    mouseDownTimer.Enabled = false;
-                    mouseDownTimer.Dispose();
-                    mouseDownTimer = null;
+                    _mouseDownTimer.Enabled = false;
+                    _mouseDownTimer.Dispose();
+                    _mouseDownTimer = null;
                 }
             }
+
             base.Dispose(disposing);
         }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             UnsubscribeAll();
@@ -140,32 +137,33 @@ namespace System.Windows.Forms
         {
             UnsubscribeAll();
         }
+
         private void UnsubscribeAll()
         {
             MouseDownTimer.Enabled = false;
             MouseDownTimer.Tick -= new EventHandler(OnInitialAutoScrollMouseDown);
-            MouseDownTimer.Tick -= new EventHandler(OnAutoScrollAccellerate);
+            MouseDownTimer.Tick -= new EventHandler(OnAutoScrollAccelerate);
         }
 
-        private void OnAutoScrollAccellerate(object sender, EventArgs e)
+        private void OnAutoScrollAccelerate(object? sender, EventArgs e)
         {
             Scroll();
         }
 
-        private void OnInitialAutoScrollMouseDown(object sender, EventArgs e)
+        private void OnInitialAutoScrollMouseDown(object? sender, EventArgs e)
         {
             MouseDownTimer.Tick -= new EventHandler(OnInitialAutoScrollMouseDown);
 
             Scroll();
             MouseDownTimer.Interval = AUTOSCROLL_UPDATE;
-            MouseDownTimer.Tick += new EventHandler(OnAutoScrollAccellerate);
+            MouseDownTimer.Tick += new EventHandler(OnAutoScrollAccelerate);
         }
 
         public override Size GetPreferredSize(Size constrainingSize)
         {
             Size preferredSize = Size.Empty;
-            preferredSize.Height = (Label.Image != null) ? Label.Image.Height + 4 : 0;
-            preferredSize.Width = (ParentInternal != null) ? ParentInternal.Width - 2 : preferredSize.Width; // Two for border
+            preferredSize.Height = (Label.Image is not null) ? Label.Image.Height + 4 : 0;
+            preferredSize.Width = (ParentInternal is not null) ? ParentInternal.Width - 2 : preferredSize.Width; // Two for border
             return preferredSize;
         }
 
@@ -173,39 +171,7 @@ namespace System.Windows.Forms
         {
             if (ParentInternal is ToolStripDropDownMenu parent && Label.Enabled)
             {
-                parent.ScrollInternal(up);
-            }
-        }
-
-        internal class StickyLabel : Label
-        {
-            public StickyLabel()
-            {
-            }
-
-            public bool FreezeLocationChange
-            {
-                get => false;
-            }
-
-            protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
-            {
-                if (((specified & BoundsSpecified.Location) != 0) && FreezeLocationChange)
-                {
-                    return;
-                }
-                base.SetBoundsCore(x, y, width, height, specified);
-            }
-
-            protected override void WndProc(ref Message m)
-            {
-                if (m.Msg >= (int)User32.WM.KEYFIRST && m.Msg <= (int)User32.WM.KEYLAST)
-                {
-                    DefWndProc(ref m);
-                    return;
-                }
-
-                base.WndProc(ref m);
+                parent.ScrollInternal(_up);
             }
         }
     }

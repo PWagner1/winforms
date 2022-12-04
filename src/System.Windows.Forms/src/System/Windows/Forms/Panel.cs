@@ -2,9 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms.Layout;
@@ -13,19 +12,19 @@ using static Interop;
 namespace System.Windows.Forms
 {
     /// <summary>
-    ///  Represents a <see cref='Panel'/> control.
+    ///  Represents a <see cref="Panel"/> control.
     /// </summary>
     [DefaultProperty(nameof(BorderStyle))]
     [DefaultEvent(nameof(Paint))]
     [Docking(DockingBehavior.Ask)]
     [Designer("System.Windows.Forms.Design.PanelDesigner, " + AssemblyRef.SystemDesign)]
     [SRDescription(nameof(SR.DescriptionPanel))]
-    public class Panel : ScrollableControl
+    public partial class Panel : ScrollableControl
     {
         private BorderStyle _borderStyle = BorderStyle.None;
 
         /// <summary>
-        ///  Initializes a new instance of the <see cref='Panel'/> class.
+        ///  Initializes a new instance of the <see cref="Panel"/> class.
         /// </summary>
         public Panel() : base()
         {
@@ -52,7 +51,7 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.ControlOnAutoSizeChangedDescr))]
         [Browsable(true)]
         [EditorBrowsable(EditorBrowsableState.Always)]
-        public new event EventHandler AutoSizeChanged
+        public new event EventHandler? AutoSizeChanged
         {
             add => base.AutoSizeChanged += value;
             remove => base.AutoSizeChanged -= value;
@@ -76,7 +75,7 @@ namespace System.Windows.Forms
                 if (GetAutoSizeMode() != value)
                 {
                     SetAutoSizeMode(value);
-                    if (ParentInternal != null)
+                    if (ParentInternal is not null)
                     {
                         // DefaultLayout does not keep anchor information until it needs to. When
                         // AutoSize became a common property, we could no longer blindly call into
@@ -85,6 +84,7 @@ namespace System.Windows.Forms
                         {
                             ParentInternal.LayoutEngine.InitLayout(this, BoundsSpecified.Size);
                         }
+
                         LayoutTransaction.DoLayout(ParentInternal, this, PropertyNames.AutoSize);
                     }
                 }
@@ -123,19 +123,20 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.Style &= ~(int)User32.WS.BORDER;
-                cp.ExStyle |= (int)User32.WS_EX.CONTROLPARENT;
-                cp.ExStyle &= ~(int)User32.WS_EX.CLIENTEDGE;
+                cp.Style &= ~(int)WINDOW_STYLE.WS_BORDER;
+                cp.ExStyle |= (int)WINDOW_EX_STYLE.WS_EX_CONTROLPARENT;
+                cp.ExStyle &= ~(int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
 
                 switch (_borderStyle)
                 {
                     case BorderStyle.Fixed3D:
-                        cp.ExStyle |= (int)User32.WS_EX.CLIENTEDGE;
+                        cp.ExStyle |= (int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
                         break;
                     case BorderStyle.FixedSingle:
-                        cp.Style |= (int)User32.WS.BORDER;
+                        cp.Style |= (int)WINDOW_STYLE.WS_BORDER;
                         break;
                 }
+
                 return cp;
             }
         }
@@ -158,7 +159,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event KeyEventHandler KeyUp
+        public new event KeyEventHandler? KeyUp
         {
             add => base.KeyUp += value;
             remove => base.KeyUp -= value;
@@ -166,7 +167,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event KeyEventHandler KeyDown
+        public new event KeyEventHandler? KeyDown
         {
             add => base.KeyDown += value;
             remove => base.KeyDown -= value;
@@ -174,11 +175,13 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event KeyPressEventHandler KeyPress
+        public new event KeyPressEventHandler? KeyPress
         {
             add => base.KeyPress += value;
             remove => base.KeyPress -= value;
         }
+
+        internal override bool SupportsUiaProviders => true;
 
         [DefaultValue(false)]
         public new bool TabStop
@@ -190,6 +193,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [Bindable(false)]
+        [AllowNull]
         public override string Text
         {
             get => base.Text;
@@ -198,7 +202,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler TextChanged
+        public new event EventHandler? TextChanged
         {
             add => base.TextChanged += value;
             remove => base.TextChanged -= value;
@@ -220,7 +224,7 @@ namespace System.Windows.Forms
             base.OnResize(eventargs);
         }
 
-        private protected override void PrintToMetaFileRecursive(Gdi32.HDC hDC, IntPtr lParam, Rectangle bounds)
+        private protected override void PrintToMetaFileRecursive(HDC hDC, IntPtr lParam, Rectangle bounds)
         {
             base.PrintToMetaFileRecursive(hDC, lParam, bounds);
 
@@ -234,8 +238,17 @@ namespace System.Windows.Forms
         /// </summary>
         public override string ToString()
         {
-            string s = base.ToString();
-            return s + ", BorderStyle: " + typeof(BorderStyle).ToString() + "." + _borderStyle.ToString();
+            return $"{base.ToString()}, BorderStyle: {typeof(BorderStyle)}.{_borderStyle}";
         }
+
+        /// <summary>
+        ///  Creates a new AccessibleObject for this <see cref="Panel"/> instance.
+        ///  The AccessibleObject instance returned by this method supports ControlType UIA property.
+        /// </summary>
+        /// <returns>
+        ///  <see cref="AccessibleObject"/> for this <see cref="Panel"/> instance.
+        /// </returns>
+        protected override AccessibleObject CreateAccessibilityInstance()
+           => new PanelAccessibleObject(this);
     }
 }

@@ -1,10 +1,8 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using System.Diagnostics.CodeAnalysis;
-using static Interop;
-using static Interop.Shell32;
 
 namespace System.Windows.Forms
 {
@@ -56,12 +54,7 @@ namespace System.Windows.Forms
             return $"{base.ToString()} Path: {Path} KnownFolderGuid: {KnownFolderGuid}";
         }
 
-        /// <remarks>
-        ///  This can throw in a multitude of ways if the path or Guid doesn't correspond
-        ///  to an actual filesystem directory.
-        ///  The caller is responsible for handling these situations.
-        /// </remarks>
-        internal IShellItem? GetNativePath()
+        internal unsafe IShellItem* GetNativePath()
         {
             string filePathString;
             if (!string.IsNullOrEmpty(_path))
@@ -70,14 +63,18 @@ namespace System.Windows.Forms
             }
             else
             {
-                int result = SHGetKnownFolderPath(ref _knownFolderGuid, 0, IntPtr.Zero, out filePathString);
-                if (result == 0)
+                fixed (char* path = filePathString)
+                fixed (Guid* reference = &_knownFolderGuid)
                 {
-                    return null;
+                    int result = PInvoke.SHGetKnownFolderPath(reference, 0, HANDLE.Null, (PWSTR*)path);
+                    if (result == 0)
+                    {
+                        return null;
+                    }
                 }
             }
 
-            return GetShellItemForPath(filePathString);
+            return PInvoke.SHCreateShellItem(filePathString);
         }
     }
 }

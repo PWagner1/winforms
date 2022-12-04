@@ -2,10 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
 
 namespace WinformsControlsTest
@@ -23,7 +21,6 @@ namespace WinformsControlsTest
             var random = new Random();
             int i = random.Next(100, 300);
 
-            Debug.WriteLine(listView1.TileSize);
             listView1.TileSize = new Size(200, 50);
             listView1.Items[0].ImageIndex = 0;
             listView1.Items[1].ImageIndex = 1;
@@ -71,13 +68,6 @@ namespace WinformsControlsTest
             listView2.SelectedIndexChanged += listView2_SelectedIndexChanged;
             listView2.Click += listView2_Click;
 
-            ListViewGroup listViewGroup1 = new("ListViewGroup", HorizontalAlignment.Left)
-            {
-                Header = "ListViewGroup",
-                Name = "listViewGroup1"
-            };
-            listView2.Groups.AddRange(new ListViewGroup[] { listViewGroup1 });
-
             // Create three items and three sets of subitems for each item.
             ListViewItem item1 = new("item1", 0)
             {
@@ -91,7 +81,7 @@ namespace WinformsControlsTest
             item2.SubItems.Add("4");
             item2.SubItems.Add("5");
             item2.SubItems.Add("6");
-            ListViewItem item3 = new("item3", 0)
+            ListViewItem item3 = new("item3")
             {
                 // Place a check mark next to the item.
                 Checked = true
@@ -123,8 +113,8 @@ namespace WinformsControlsTest
             listView2.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
 
             // Create two ImageList objects.
-            ImageList imageListSmall = new();
-            ImageList imageListLarge = new();
+            ImageList imageListSmall = new(components);
+            ImageList imageListLarge = new(components);
 
             // Initialize the ImageList objects with bitmaps.
             imageListSmall.Images.Add(Bitmap.FromFile("Images\\SmallA.bmp"));
@@ -139,10 +129,6 @@ namespace WinformsControlsTest
             // Add the ListView to the control collection.
             Controls.Add(listView2);
             listView2.Dock = DockStyle.Bottom;
-
-            // Change a ListViewGroup's header.
-            listView2.Groups[0].HeaderAlignment = HorizontalAlignment.Center;
-            listView2.Groups[0].Header = "NewText";
         }
 
         private void AddCollapsibleGroupToListView()
@@ -156,7 +142,7 @@ namespace WinformsControlsTest
             listView1.Groups.Add(lvgroup1);
             listView1.Items.Add(new ListViewItem
             {
-                Text = "Item",
+                Text = "Item4",
                 Group = lvgroup1
             });
 
@@ -169,7 +155,7 @@ namespace WinformsControlsTest
             listView1.Groups.Add(lvgroup2);
             listView1.Items.Add(new ListViewItem
             {
-                Text = "Item",
+                Text = "Item5",
                 Group = lvgroup2
             });
 
@@ -184,6 +170,7 @@ namespace WinformsControlsTest
         private void AddGroupTasks()
         {
             listView1.Groups[0].TaskLink = "Task";
+            listView1.Groups[0].Subtitle = "Subtitle";
             listView1.GroupTaskLinkClick += listView1_GroupTaskLinkClick;
 
             var lvgroup1 = new ListViewGroup
@@ -195,7 +182,7 @@ namespace WinformsControlsTest
             listView1.Groups.Add(lvgroup1);
             listView1.Items.Add(new ListViewItem
             {
-                Text = "Item",
+                Text = "Item6",
                 Group = lvgroup1
             });
         }

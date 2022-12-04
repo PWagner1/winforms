@@ -2,8 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using static Interop;
 
@@ -52,6 +51,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Gets or sets the accessible Name of ComboBox's child text element.
             /// </summary>
+            [AllowNull]
             public override string Name
             {
                 get
@@ -69,7 +69,7 @@ namespace System.Windows.Forms
             /// </summary>
             /// <param name="direction">Indicates the direction in which to navigate.</param>
             /// <returns>Returns the element in the specified direction.</returns>
-            internal override UiaCore.IRawElementProviderFragment FragmentNavigate(UiaCore.NavigateDirection direction)
+            internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
             {
                 if (!_owner.IsHandleCreated)
                 {
@@ -109,53 +109,29 @@ namespace System.Windows.Forms
             /// </summary>
             /// <param name="propertyID">The accessible property ID.</param>
             /// <returns>The accessible property value.</returns>
-            internal override object GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                switch (propertyID)
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+                propertyID switch
                 {
-                    case UiaCore.UIA.RuntimeIdPropertyId:
-                        return RuntimeId;
-                    case UiaCore.UIA.BoundingRectanglePropertyId:
-                        return Bounds;
-                    case UiaCore.UIA.ControlTypePropertyId:
-                        return UiaCore.UIA.TextControlTypeId;
-                    case UiaCore.UIA.NamePropertyId:
-                        return Name;
-                    case UiaCore.UIA.AccessKeyPropertyId:
-                        return string.Empty;
-                    case UiaCore.UIA.HasKeyboardFocusPropertyId:
-                        return _owner.Focused;
-                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
-                        return (State & AccessibleStates.Focusable) == AccessibleStates.Focusable;
-                    case UiaCore.UIA.IsEnabledPropertyId:
-                        return _owner.Enabled;
-                    case UiaCore.UIA.HelpTextPropertyId:
-                        return Help ?? string.Empty;
-                    case UiaCore.UIA.IsPasswordPropertyId:
-                    case UiaCore.UIA.IsOffscreenPropertyId:
-                        return false;
-                    default:
-                        return base.GetPropertyValue(propertyID);
-                }
-            }
+                    UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.TextControlTypeId,
+                    UiaCore.UIA.HasKeyboardFocusPropertyId => _owner.Focused,
+                    UiaCore.UIA.IsEnabledPropertyId => _owner.Enabled,
+                    UiaCore.UIA.IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
+                    UiaCore.UIA.IsOffscreenPropertyId => false,
+                    _ => base.GetPropertyValue(propertyID)
+                };
 
             /// <summary>
             ///  Gets the runtime ID.
             /// </summary>
             internal override int[] RuntimeId
-            {
-                get
+                => new int[]
                 {
-                    var runtimeId = new int[5];
-                    runtimeId[0] = RuntimeIDFirstItem;
-                    runtimeId[1] = (int)(long)_owner.InternalHandle;
-                    runtimeId[2] = _owner.GetHashCode();
-                    runtimeId[3] = GetHashCode();
-                    runtimeId[4] = GetChildId();
-
-                    return runtimeId;
-                }
-            }
+                    RuntimeIDFirstItem,
+                    PARAM.ToInt(_owner.InternalHandle),
+                    _owner.GetHashCode(),
+                    GetHashCode(),
+                    GetChildId()
+                };
 
             /// <summary>
             ///  Gets the accessible state.

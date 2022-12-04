@@ -1,11 +1,13 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Reflection;
 using Microsoft.Win32;
+using Windows.Win32;
+using Windows.Win32.Foundation;
 using Xunit;
+using static Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_ACTION;
 using static Interop.User32;
 
 namespace System
@@ -14,9 +16,11 @@ namespace System
     {
         private static IntPtr GetHWnd()
         {
-            // locate the hwnd used by SystemEvents in this domain
-            FieldInfo windowClassNameField = typeof(SystemEvents).GetField("s_className", BindingFlags.Static | BindingFlags.NonPublic) ??  // runtime
-                                             typeof(SystemEvents).GetField("className", BindingFlags.Static | BindingFlags.NonPublic);      // desktop
+            // Locate the hwnd used by SystemEvents in this domain.
+            FieldInfo windowClassNameField =
+                typeof(SystemEvents).GetField("s_className", BindingFlags.Static | BindingFlags.NonPublic)   // runtime
+                ?? typeof(SystemEvents).GetField("className", BindingFlags.Static | BindingFlags.NonPublic); // desktop
+
             Assert.NotNull(windowClassNameField);
             string windowClassName = windowClassNameField.GetValue(null) as string;
             Assert.NotNull(windowClassName);
@@ -27,14 +31,14 @@ namespace System
 
         public static void SendMessageOnUserPreferenceChanged(UserPreferenceCategory category)
         {
-            IntPtr window = GetHWnd();
+            HWND window = (HWND)GetHWnd();
 
             WM msg;
-            IntPtr wParam;
+            WPARAM wParam;
             if (category == UserPreferenceCategory.Color)
             {
                 msg = WM.SYSCOLORCHANGE;
-                wParam = IntPtr.Zero;
+                wParam = 0;
             }
             else
             {
@@ -42,39 +46,39 @@ namespace System
 
                 if (category == UserPreferenceCategory.Accessibility)
                 {
-                    wParam = (IntPtr)SPI.SETHIGHCONTRAST;
+                    wParam = (int)SPI_SETHIGHCONTRAST;
                 }
                 else if (category == UserPreferenceCategory.Desktop)
                 {
-                    wParam = (IntPtr)SPI.SETDESKWALLPAPER;
+                    wParam = (int)SPI_SETDESKWALLPAPER;
                 }
                 else if (category == UserPreferenceCategory.Icon)
                 {
-                    wParam = (IntPtr)SPI.ICONHORIZONTALSPACING;
+                    wParam = (int)SPI_ICONHORIZONTALSPACING;
                 }
                 else if (category == UserPreferenceCategory.Mouse)
                 {
-                    wParam = (IntPtr)SPI.SETDOUBLECLICKTIME;
+                    wParam = (int)SPI_SETDOUBLECLICKTIME;
                 }
                 else if (category == UserPreferenceCategory.Keyboard)
                 {
-                    wParam = (IntPtr)SPI.SETKEYBOARDDELAY;
+                    wParam = (int)SPI_SETKEYBOARDDELAY;
                 }
                 else if (category == UserPreferenceCategory.Menu)
                 {
-                    wParam = (IntPtr)SPI.SETMENUDROPALIGNMENT;
+                    wParam = (int)SPI_SETMENUDROPALIGNMENT;
                 }
                 else if (category == UserPreferenceCategory.Power)
                 {
-                    wParam = (IntPtr)SPI.SETLOWPOWERACTIVE;
+                    wParam = (int)SPI_SETLOWPOWERACTIVE;
                 }
                 else if (category == UserPreferenceCategory.Screensaver)
                 {
-                    wParam = (IntPtr)SPI.SETMENUDROPALIGNMENT;
+                    wParam = (int)SPI_SETMENUDROPALIGNMENT;
                 }
                 else if (category == UserPreferenceCategory.Window)
                 {
-                    wParam = (IntPtr)SPI.SETMENUDROPALIGNMENT;
+                    wParam = (int)SPI_SETMENUDROPALIGNMENT;
                 }
                 else
                 {
@@ -83,7 +87,7 @@ namespace System
             }
 
             // Call with reflect to immediately send the message.
-            SendMessageW(window, msg | WM.REFLECT, wParam, IntPtr.Zero);
+            PInvoke.SendMessage(window, msg | WM.REFLECT, wParam);
         }
     }
 }

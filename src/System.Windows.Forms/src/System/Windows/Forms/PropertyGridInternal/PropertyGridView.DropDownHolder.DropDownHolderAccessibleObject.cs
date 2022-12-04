@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using static System.Windows.Forms.PropertyGridInternal.PropertyDescriptorGridEntry;
 using static Interop;
 
 namespace System.Windows.Forms.PropertyGridInternal
@@ -21,38 +22,37 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                 internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
                 {
-                    switch (direction)
+                    if (!ExistsInAccessibleTree)
                     {
-                        case UiaCore.NavigateDirection.Parent:
-                            return ExistsInAccessibleTree
-                                ? _owningDropDownHolder.gridView?.SelectedGridEntry?.AccessibilityObject
-                                : null;
-                        case UiaCore.NavigateDirection.NextSibling:
-                            return ExistsInAccessibleTree
-                                ? _owningDropDownHolder.gridView?.EditAccessibleObject
-                                : null;
-                        case UiaCore.NavigateDirection.PreviousSibling:
-                            return null;
+                        return null;
                     }
 
-                    return base.FragmentNavigate(direction);
+                    PropertyGridView? gridView = _owningDropDownHolder._gridView;
+                    GridEntry? selectedEntry = gridView?.SelectedGridEntry;
+                    if (selectedEntry?.AccessibilityObject is not PropertyDescriptorGridEntryAccessibleObject parent)
+                    {
+                        return null;
+                    }
+
+                    return direction switch
+                    {
+                        UiaCore.NavigateDirection.Parent => parent,
+                        UiaCore.NavigateDirection.NextSibling => parent.GetNextChild(this),
+                        UiaCore.NavigateDirection.PreviousSibling => parent.GetPreviousChild(this),
+                        UiaCore.NavigateDirection.FirstChild or UiaCore.NavigateDirection.LastChild
+                            when selectedEntry.Enumerable && _owningDropDownHolder.Component == gridView!.DropDownListBox
+                            => gridView.DropDownListBoxAccessibleObject,
+                        _ => base.FragmentNavigate(direction),
+                    };
                 }
 
                 internal override UiaCore.IRawElementProviderFragmentRoot? FragmentRoot =>
-                    _owningDropDownHolder.gridView?.OwnerGrid?.AccessibilityObject;
+                    _owningDropDownHolder._gridView?.AccessibilityObject;
 
-                internal override object? GetPropertyValue(UiaCore.UIA propertyID)
-                {
-                    if (propertyID == UiaCore.UIA.NamePropertyId)
-                    {
-                        return SR.PropertyGridViewDropDownControlHolderAccessibleName;
-                    }
+                public override string? Name => SR.PropertyGridViewDropDownControlHolderAccessibleName;
 
-                    return base.GetPropertyValue(propertyID);
-                }
-
-                private bool ExistsInAccessibleTree =>
-                    _owningDropDownHolder.IsHandleCreated && _owningDropDownHolder.Visible;
+                private bool ExistsInAccessibleTree
+                    => _owningDropDownHolder.IsHandleCreated && _owningDropDownHolder.Visible;
             }
         }
     }

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection;
 using Xunit;
@@ -15,7 +14,7 @@ namespace System.Windows.Forms.Tests
         public static IEnumerable<object[]> Cursors_TestData()
         {
             // Identity function to avoid constant casting
-            Func<Cursor> I(Func<Cursor> factory) => factory;
+            static Func<Cursor> I(Func<Cursor> factory) => factory;
 
             yield return new object[] { I(() => Cursors.AppStarting) };
             yield return new object[] { I(() => Cursors.Arrow) };

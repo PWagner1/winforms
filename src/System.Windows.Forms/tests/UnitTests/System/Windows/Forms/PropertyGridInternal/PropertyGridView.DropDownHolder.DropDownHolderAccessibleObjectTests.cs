@@ -39,15 +39,12 @@ namespace System.Windows.Forms.PropertyGridInternal.Tests
         [WinFormsFact]
         public void DropDownHolder_AccessibilityObject_ReturnsExpected()
         {
-            using PropertyGrid propertyGrid = new PropertyGrid();
+            using PropertyGrid propertyGrid = new();
             PropertyGridView propertyGridView = propertyGrid.TestAccessor().GridView;
-
-            using PropertyGridView.DropDownHolder ownerControl = new PropertyGridView.DropDownHolder(propertyGridView);
+            using PropertyGridView.DropDownHolder ownerControl = new(propertyGridView);
             Control.ControlAccessibleObject accessibilityObject = ownerControl.AccessibilityObject as Control.ControlAccessibleObject;
 
-            Assert.NotNull(accessibilityObject.Owner);
             Assert.Equal(ownerControl, accessibilityObject.Owner);
-
             Assert.Equal(SR.PropertyGridViewDropDownControlHolderAccessibleName,
                 accessibilityObject.GetPropertyValue(UiaCore.UIA.NamePropertyId));
 
@@ -56,19 +53,14 @@ namespace System.Windows.Forms.PropertyGridInternal.Tests
 
             PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(PropertyGrid))[0];
             PropertyDescriptorGridEntry gridEntry = new PropertyDescriptorGridEntry(propertyGrid, null, property, false);
-            propertyGridView.TestAccessor().Dynamic.selectedGridEntry = gridEntry;
+            propertyGridView.TestAccessor().Dynamic._selectedGridEntry = gridEntry;
 
             ownerControl.Visible = true;
 
             selectedGridEntryAccessibleObject = gridEntry.AccessibilityObject;
             Assert.Equal(selectedGridEntryAccessibleObject, accessibilityObject.FragmentNavigate(UiaCore.NavigateDirection.Parent));
 
-            AccessibleObject editAccessibleObject = propertyGridView.EditAccessibleObject;
-            Assert.Equal(editAccessibleObject, accessibilityObject.FragmentNavigate(UiaCore.NavigateDirection.NextSibling));
-
-            Assert.Null(accessibilityObject.FragmentNavigate(UiaCore.NavigateDirection.PreviousSibling));
-
-            Assert.Equal(propertyGrid.AccessibilityObject, accessibilityObject.FragmentRoot);
+            Assert.Equal(propertyGridView.AccessibilityObject, accessibilityObject.FragmentRoot);
         }
 
         [WinFormsFact]

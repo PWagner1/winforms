@@ -5,8 +5,8 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Text;
 using Microsoft.Win32;
+using Windows.Win32.UI.TextServices;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -29,7 +29,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Returns the culture of the current input language.
         /// </summary>
-        public CultureInfo Culture => new CultureInfo((int)_handle & 0xFFFF);
+        public CultureInfo Culture => new CultureInfo(PARAM.ToInt(_handle) & 0xFFFF);
 
         /// <summary>
         ///  Gets or sets the input language for the current thread.
@@ -40,18 +40,16 @@ namespace System.Windows.Forms
             get
             {
                 Application.OleRequired();
-                return new InputLanguage(User32.GetKeyboardLayout(0));
+                return new InputLanguage(PInvoke.GetKeyboardLayout(0));
             }
             set
             {
                 // OleInitialize needs to be called before we can call ActivateKeyboardLayout.
                 Application.OleRequired();
-                if (value is null)
-                {
-                    value = DefaultInputLanguage;
-                }
-                IntPtr handleOld = User32.ActivateKeyboardLayout(value.Handle, 0);
-                if (handleOld == IntPtr.Zero)
+                value ??= DefaultInputLanguage;
+
+                HKL handleOld = PInvoke.ActivateKeyboardLayout(new HKL(value.Handle), 0);
+                if (handleOld == default)
                 {
                     throw new ArgumentException(SR.ErrorBadInputLanguage, nameof(value));
                 }
@@ -65,8 +63,8 @@ namespace System.Windows.Forms
         {
             get
             {
-                IntPtr handle = IntPtr.Zero;
-                User32.SystemParametersInfoW(User32.SPI.GETDEFAULTINPUTLANG, ref handle);
+                nint handle = 0;
+                PInvoke.SystemParametersInfo(SYSTEM_PARAMETERS_INFO_ACTION.SPI_GETDEFAULTINPUTLANG, ref handle);
                 return new InputLanguage(handle);
             }
         }
@@ -79,17 +77,14 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Returns a list of all installed input languages.
         /// </summary>
-        public unsafe static InputLanguageCollection InstalledInputLanguages
+        public static unsafe InputLanguageCollection InstalledInputLanguages
         {
             get
             {
-                int size = User32.GetKeyboardLayoutList(0, null);
+                int size = PInvoke.GetKeyboardLayoutList(0, null);
 
-                var handles = new IntPtr[size];
-                fixed (IntPtr *pHandles = handles)
-                {
-                    User32.GetKeyboardLayoutList(size, pHandles);
-                }
+                var handles = new HKL[size];
+                PInvoke.GetKeyboardLayoutList(handles);
 
                 InputLanguage[] ils = new InputLanguage[size];
                 for (int i = 0; i < size; i++)
@@ -168,7 +163,7 @@ namespace System.Windows.Forms
                 // Look for a substitution
                 RegistryKey? substitutions = Registry.CurrentUser.OpenSubKey("Keyboard Layout\\Substitutes");
                 string[]? encodings = null;
-                if (substitutions != null)
+                if (substitutions is not null)
                 {
                     encodings = substitutions.GetValueNames();
 
@@ -196,7 +191,7 @@ namespace System.Windows.Forms
                 }
 
                 using RegistryKey? layouts = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts");
-                if (layouts != null)
+                if (layouts is not null)
                 {
                     encodings = layouts.GetSubKeyNames();
 
@@ -217,12 +212,9 @@ namespace System.Windows.Forms
 
                             // Default back to our legacy codepath and obtain the name
                             // directly through the registry value
-                            if (layoutName is null)
-                            {
-                                layoutName = (string?)key.GetValue("Layout Text");
-                            }
+                            layoutName ??= (string?)key.GetValue("Layout Text");
 
-                            if (layoutName != null)
+                            if (layoutName is not null)
                             {
                                 return layoutName;
                             }
@@ -257,12 +249,9 @@ namespace System.Windows.Forms
 
                                 // Default back to our legacy codepath and obtain the name
                                 // directly through the registry value
-                                if (layoutName is null)
-                                {
-                                    layoutName = (string?)key.GetValue("Layout Text");
-                                }
+                                layoutName ??= (string?)key.GetValue("Layout Text");
 
-                                if (layoutName != null)
+                                if (layoutName is not null)
                                 {
                                     return layoutName;
                                 }
@@ -282,13 +271,20 @@ namespace System.Windows.Forms
         /// </summary>
         private static string? GetLocalizedKeyboardLayoutName(string? layoutDisplayName)
         {
-            if (layoutDisplayName != null)
+            if (layoutDisplayName is not null)
             {
-                var sb = new StringBuilder(512);
-                HRESULT res = Shlwapi.SHLoadIndirectString(layoutDisplayName, sb, (uint)sb.Capacity, IntPtr.Zero);
-                if (res == HRESULT.S_OK)
+                unsafe
                 {
-                    return sb.ToString();
+                    var ppvReserved = (void*)IntPtr.Zero;
+                    Span<char> buffer = stackalloc char[512];
+                    fixed (char* pBuffer = buffer)
+                    {
+                        HRESULT res = PInvoke.SHLoadIndirectString(layoutDisplayName, pBuffer, (uint)buffer.Length, ref ppvReserved);
+                        if (res == HRESULT.S_OK)
+                        {
+                            return buffer.SliceAtFirstNull().ToString();
+                        }
+                    }
                 }
             }
 
@@ -300,7 +296,7 @@ namespace System.Windows.Forms
         /// </summary>
         internal static InputLanguageChangedEventArgs CreateInputLanguageChangedEventArgs(Message m)
         {
-            return new InputLanguageChangedEventArgs(new InputLanguage(m.LParam), unchecked((byte)(long)m.WParam));
+            return new InputLanguageChangedEventArgs(new InputLanguage(m.LParamInternal), (byte)(nint)m.WParamInternal);
         }
 
         /// <summary>
@@ -308,10 +304,10 @@ namespace System.Windows.Forms
         /// </summary>
         internal static InputLanguageChangingEventArgs CreateInputLanguageChangingEventArgs(Message m)
         {
-            var inputLanguage = new InputLanguage(m.LParam);
+            var inputLanguage = new InputLanguage(m.LParamInternal);
 
             // NOTE: by default we should allow any locale switch
-            bool localeSupportedBySystem = m.WParam != IntPtr.Zero;
+            bool localeSupportedBySystem = m.WParamInternal != 0u;
             return new InputLanguageChangingEventArgs(inputLanguage, localeSupportedBySystem);
         }
 
@@ -326,10 +322,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static InputLanguage? FromCulture(CultureInfo culture)
         {
-            if (culture is null)
-            {
-                throw new ArgumentNullException(nameof(culture));
-            }
+            ArgumentNullException.ThrowIfNull(culture);
 
             // KeyboardLayoutId is the LCID for built-in cultures, but it
             // is the CU-preferred keyboard language for custom cultures.
@@ -353,7 +346,7 @@ namespace System.Windows.Forms
 
         private static string PadWithZeroes(string input, int length)
         {
-            return "0000000000000000".Substring(0, length - input.Length) + input;
+            return string.Concat("0000000000000000".AsSpan(0, length - input.Length), input);
         }
     }
 }

@@ -210,7 +210,7 @@ Namespace Microsoft.VisualBasic.Logging
                 ' Test the file name. This will throw if the name is invalid.
                 Path.GetFullPath(value)
 
-                If String.Compare(value, _baseFileName, StringComparison.OrdinalIgnoreCase) <> 0 Then
+                If Not String.Equals(value, _baseFileName, StringComparison.OrdinalIgnoreCase) Then
                     CloseCurrentStream()
                     _baseFileName = value
                 End If
@@ -381,7 +381,7 @@ Namespace Microsoft.VisualBasic.Logging
 
                 ' If we're using custom location and the value is changing we need to
                 ' close the stream
-                If Me.Location = LogFileLocation.Custom And String.Compare(tempPath, _customLocation, StringComparison.OrdinalIgnoreCase) <> 0 Then
+                If Me.Location = LogFileLocation.Custom And Not String.Equals(tempPath, _customLocation, StringComparison.OrdinalIgnoreCase) Then
                     CloseCurrentStream()
                 End If
 
@@ -584,9 +584,7 @@ Namespace Microsoft.VisualBasic.Logging
         ''' Flushes the underlying stream
         ''' </summary>
         Public Overrides Sub Flush()
-            If _stream IsNot Nothing Then
-                _stream.Flush()
-            End If
+            _stream?.Flush()
         End Sub
 
         ''' <summary>
@@ -894,9 +892,7 @@ Namespace Microsoft.VisualBasic.Logging
                         Return Reader.CurrentEncoding
                     End If
                 Finally
-                    If Reader IsNot Nothing Then
-                        Reader.Close()
-                    End If
+                    Reader?.Close()
                 End Try
             End If
 
@@ -933,7 +929,7 @@ Namespace Microsoft.VisualBasic.Logging
         ''' Validates that the value being passed as an LogFileLocation enum is a legal value
         ''' </summary>
         ''' <param name="value"></param>
-        Private Sub ValidateLogFileLocationEnumValue(value As LogFileLocation, paramName As String)
+        Private Shared Sub ValidateLogFileLocationEnumValue(value As LogFileLocation, paramName As String)
             If value < LogFileLocation.TempDirectory OrElse value > LogFileLocation.Custom Then
                 Throw New InvalidEnumArgumentException(paramName, DirectCast(value, Integer), GetType(LogFileLocation))
             End If
@@ -943,7 +939,7 @@ Namespace Microsoft.VisualBasic.Logging
         ''' Validates that the value being passed as an DiskSpaceExhaustedOption enum is a legal value
         ''' </summary>
         ''' <param name="value"></param>
-        Private Sub ValidateDiskSpaceExhaustedOptionEnumValue(value As DiskSpaceExhaustedOption, paramName As String)
+        Private Shared Sub ValidateDiskSpaceExhaustedOptionEnumValue(value As DiskSpaceExhaustedOption, paramName As String)
             If value < DiskSpaceExhaustedOption.ThrowException OrElse value > DiskSpaceExhaustedOption.DiscardMessages Then
                 Throw New InvalidEnumArgumentException(paramName, DirectCast(value, Integer), GetType(DiskSpaceExhaustedOption))
             End If
@@ -953,7 +949,7 @@ Namespace Microsoft.VisualBasic.Logging
         ''' Validates that the value being passed as an LogFileCreationScheduleOption enum is a legal value
         ''' </summary>
         ''' <param name="value"></param>
-        Private Sub ValidateLogFileCreationScheduleOptionEnumValue(value As LogFileCreationScheduleOption, paramName As String)
+        Private Shared Sub ValidateLogFileCreationScheduleOptionEnumValue(value As LogFileCreationScheduleOption, paramName As String)
             If value < LogFileCreationScheduleOption.None OrElse value > LogFileCreationScheduleOption.Weekly Then
                 Throw New InvalidEnumArgumentException(paramName, DirectCast(value, Integer), GetType(LogFileCreationScheduleOption))
             End If
@@ -1131,7 +1127,7 @@ Namespace Microsoft.VisualBasic.Logging
         ''' Wraps a StreamWriter and keeps a reference count. This enables multiple
         ''' FileLogTraceListeners on multiple threads to access the same file.
         ''' </summary>
-        Friend Class ReferencedStream
+        Friend NotInheritable Class ReferencedStream
             Implements IDisposable
 
             ''' <summary>
@@ -1226,9 +1222,7 @@ Namespace Microsoft.VisualBasic.Logging
             Private Overloads Sub Dispose(disposing As Boolean)
                 If disposing Then
                     If Not _disposed Then
-                        If _stream IsNot Nothing Then
-                            _stream.Close()
-                        End If
+                        _stream?.Close()
                         _disposed = True
                     End If
                 End If

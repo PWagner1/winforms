@@ -10,7 +10,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Drawing.Drawing2D;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms.Design.Behavior;
 using Microsoft.Win32;
@@ -32,9 +31,9 @@ namespace System.Windows.Forms.Design
         private Point whiteSpace = Point.Empty; // space to leave between components.
         private Size grabHandle = Size.Empty; // Size of the grab handles.
 
-        private ArrayList controls; // List of items in the tray in the order of their layout.
+        private List<Control> controls; // List of items in the tray in the order of their layout.
         private SelectionUIHandler dragHandler; // the thing responsible for handling mouse drags
-        private ISelectionUIService selectionUISvc; // selectiuon UI; we use this a lot
+        private ISelectionUIService selectionUISvc; // selection UI; we use this a lot
         private IToolboxService toolboxService; // cached for drag/drop
 
         /// <summary>
@@ -57,9 +56,9 @@ namespace System.Windows.Forms.Design
         private Rectangle mouseDragWorkspace = Rectangle.Empty; // a temp work rectangle we cache for perf
         private ToolboxItem mouseDragTool; // the tool that's being dragged; only for drag/drop
         private Point mouseDropLocation = InvalidPoint; // where the tool was dropped
-        private bool showLargeIcons;// Show Large icons or not.
+        private bool showLargeIcons; // Show Large icons or not.
         private bool autoArrange; // allows for auto arranging icons.
-        private Point autoScrollPosBeforeDragging = Point.Empty;//Used to return the correct scroll pos. after a drag
+        private Point autoScrollPosBeforeDragging = Point.Empty; //Used to return the correct scroll pos. after a drag
 
         // Component Tray Context menu items...
         private readonly MenuCommand menucmdArrangeIcons;
@@ -67,7 +66,7 @@ namespace System.Windows.Forms.Design
         private readonly MenuCommand menucmdLargeIcons;
         private bool fResetAmbient;
         private bool fSelectionChanged;
-        private ComponentTrayGlyphManager glyphManager;//used to manage any glyphs added to the tray
+        private ComponentTrayGlyphManager glyphManager; //used to manage any glyphs added to the tray
 
         // Empty class for build time dependancy
 
@@ -84,18 +83,15 @@ namespace System.Windows.Forms.Design
             AllowDrop = true;
             Text = "ComponentTray"; // makes debugging easier
             SetStyle(ControlStyles.ResizeRedraw | ControlStyles.OptimizedDoubleBuffer, true);
-            controls = new ArrayList();
+            controls = new();
             IDesignerHost host = (IDesignerHost)GetService(typeof(IDesignerHost));
             IExtenderProviderService es = (IExtenderProviderService)GetService(typeof(IExtenderProviderService));
-            Debug.Assert(es != null, "Component tray wants an extender provider service, but there isn't one.");
-            if (es != null)
-            {
-                es.AddExtenderProvider(this);
-            }
+            Debug.Assert(es is not null, "Component tray wants an extender provider service, but there isn't one.");
+            es?.AddExtenderProvider(this);
 
             if (GetService(typeof(IEventHandlerService)) is null)
             {
-                if (host != null)
+                if (host is not null)
                 {
                     eventHandlerService = new EventHandlerService(this);
                     host.AddService(typeof(IEventHandlerService), eventHandlerService);
@@ -103,7 +99,7 @@ namespace System.Windows.Forms.Design
             }
 
             IMenuCommandService mcs = MenuService;
-            if (mcs != null)
+            if (mcs is not null)
             {
                 Debug.Assert(menucmdArrangeIcons is null, "Non-Null Menu Command for ArrangeIcons");
                 Debug.Assert(menucmdLineupIcons is null, "Non-Null Menu Command for LineupIcons");
@@ -119,7 +115,7 @@ namespace System.Windows.Forms.Design
             }
 
             IComponentChangeService componentChangeService = (IComponentChangeService)GetService(typeof(IComponentChangeService));
-            if (componentChangeService != null)
+            if (componentChangeService is not null)
             {
                 componentChangeService.ComponentRemoved += new ComponentEventHandler(OnComponentRemoved);
             }
@@ -131,6 +127,7 @@ namespace System.Windows.Forms.Design
                 {
                     styleColor = (Color)uiService.Styles["ArtboardBackground"];
                 }
+
                 //Can't use 'as' here since Color is a value type
                 else if (uiService.Styles["VsColorDesignerTray"] is Color)
                 {
@@ -161,7 +158,7 @@ namespace System.Windows.Forms.Design
             }
 
             ISelectionService selSvc = (ISelectionService)GetService(typeof(ISelectionService));
-            if (selSvc != null)
+            if (selSvc is not null)
             {
                 selSvc.SelectionChanged += new EventHandler(OnSelectionChanged);
             }
@@ -193,7 +190,7 @@ namespace System.Windows.Forms.Design
             if (e.ComponentChanged is IComponent component)
             {
                 TrayControl control = TrayControl.FromComponent(component);
-                if (control != null)
+                if (control is not null)
                 {
                     bool shouldDisplay = CanDisplayComponent(component);
                     if (shouldDisplay != control.Visible || !shouldDisplay)
@@ -221,7 +218,7 @@ namespace System.Windows.Forms.Design
 
         private void ResetTrayControls()
         {
-            ControlCollection children = (ControlCollection)Controls;
+            ControlCollection children = Controls;
             if (children is null)
             {
                 return;
@@ -250,7 +247,7 @@ namespace System.Windows.Forms.Design
                 if (selObj is IComponent component)
                 {
                     Control c = TrayControl.FromComponent(component);
-                    if (c != null)
+                    if (c is not null)
                     {
                         Debug.WriteLineIf(CompModSwitches.MSAA.TraceInfo, "MSAA: SelectionAdd, traycontrol = " + c.ToString());
                         User32.NotifyWinEvent((uint)AccessibleEvents.SelectionAdd, new HandleRef(c, c.Handle), User32.OBJID.CLIENT, 0);
@@ -261,12 +258,13 @@ namespace System.Windows.Forms.Design
             if (primary is IComponent comp)
             {
                 Control c = TrayControl.FromComponent(comp);
-                if (c != null && IsHandleCreated)
+                if (c is not null && IsHandleCreated)
                 {
                     ScrollControlIntoView(c);
                     User32.NotifyWinEvent((uint)AccessibleEvents.Focus, new HandleRef(c, c.Handle), User32.OBJID.CLIENT, 0);
                 }
-                if (glyphManager != null)
+
+                if (glyphManager is not null)
                 {
                     glyphManager.SelectionGlyphs.Clear();
                     IDesignerHost host = (IDesignerHost)GetService(typeof(IDesignerHost));
@@ -275,7 +273,7 @@ namespace System.Windows.Forms.Design
                         if (selObj is IComponent selectedComponent && !(host.GetDesigner(selectedComponent) is ControlDesigner))
                         { // don't want to do it for controls that are also in the tray
                             GlyphCollection glyphs = glyphManager.GetGlyphsForComponent(selectedComponent);
-                            if (glyphs != null && glyphs.Count > 0)
+                            if (glyphs is not null && glyphs.Count > 0)
                             {
                                 SelectionGlyphs.AddRange(glyphs);
                             }
@@ -298,17 +296,11 @@ namespace System.Windows.Forms.Design
             {
                 t = host.CreateTransaction(SR.TrayShowLargeIcons);
                 PropertyDescriptor trayIconProp = TypeDescriptor.GetProperties(mainDesigner.Component)["TrayLargeIcon"];
-                if (trayIconProp != null)
-                {
-                    trayIconProp.SetValue(mainDesigner.Component, !ShowLargeIcons);
-                }
+                trayIconProp?.SetValue(mainDesigner.Component, !ShowLargeIcons);
             }
             finally
             {
-                if (t != null)
-                {
-                    t.Commit();
-                }
+                t?.Commit();
             }
         }
 
@@ -323,10 +315,7 @@ namespace System.Windows.Forms.Design
             }
             finally
             {
-                if (t != null)
-                {
-                    t.Commit();
-                }
+                t?.Commit();
             }
         }
 
@@ -362,7 +351,7 @@ namespace System.Windows.Forms.Design
 
             //Reset the autoscroll position before auto arranging.
             //This way, when OnLayout gets fired after this, we won't
-            //have to move every component again.  Note that sync'ing
+            //have to move every component again.  Note that syncing
             //the selection will automatically select & scroll into view
             //the right components
             AutoScrollPosition = new Point(0, 0);
@@ -377,6 +366,7 @@ namespace System.Windows.Forms.Design
                     {
                         continue;
                     }
+
                     // If we're auto arranging, always move the control.  If not, move the control only if it was never given a position.  This auto arranges it until the user messes with it, or until its position is saved into the resx. (if one control is no longer positioned, move all the other one as  we don't want them to go under one another)
                     if (autoArrange)
                     {
@@ -387,12 +377,11 @@ namespace System.Windows.Forms.Design
                         PositionInNextAutoSlot(ctl as TrayControl, prevCtl, false);
                         positionedGlobal = false;
                     }
+
                     prevCtl = ctl;
                 }
-                if (selectionUISvc != null)
-                {
-                    selectionUISvc.SyncSelection();
-                }
+
+                selectionUISvc?.SyncSelection();
             }
             finally
             {
@@ -410,17 +399,11 @@ namespace System.Windows.Forms.Design
                 t = host.CreateTransaction(SR.TrayAutoArrange);
 
                 PropertyDescriptor trayAAProp = TypeDescriptor.GetProperties(mainDesigner.Component)["TrayAutoArrange"];
-                if (trayAAProp != null)
-                {
-                    trayAAProp.SetValue(mainDesigner.Component, !AutoArrange);
-                }
+                trayAAProp?.SetValue(mainDesigner.Component, !AutoArrange);
             }
             finally
             {
-                if (t != null)
-                {
-                    t.Commit();
-                }
+                t?.Commit();
             }
         }
 
@@ -443,7 +426,7 @@ namespace System.Windows.Forms.Design
         }
 
         /// <summary>
-        ///  Gets the number of compnents contained within this tray.
+        ///  Gets the number of components contained within this tray.
         /// </summary>
         public int ComponentCount
         {
@@ -454,7 +437,7 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (glyphManager != null)
+                if (glyphManager is not null)
                 {
                     return glyphManager.SelectionGlyphs;
                 }
@@ -486,7 +469,7 @@ namespace System.Windows.Forms.Design
 
         bool IExtenderProvider.CanExtend(object extendee)
         {
-            return (extendee is IComponent comp) && (TrayControl.FromComponent(comp) != null);
+            return (extendee is IComponent comp) && (TrayControl.FromComponent(comp) is not null);
         }
 
         IComponent IOleDragClient.Component
@@ -521,12 +504,13 @@ namespace System.Windows.Forms.Design
                 IDesignerHost host = (IDesignerHost)GetService(typeof(IDesignerHost));
                 try
                 {
-                    if (host != null && host.Container != null)
+                    if (host is not null && host.Container is not null)
                     {
-                        if (host.Container.Components[name] != null)
+                        if (host.Container.Components[name] is not null)
                         {
                             name = null;
                         }
+
                         host.Container.Add(component, name);
                         return true;
                     }
@@ -535,6 +519,7 @@ namespace System.Windows.Forms.Design
                 {
                 }
             }
+
             Debug.Fail("Don't know how to add component!");
             return false;
         }
@@ -549,6 +534,7 @@ namespace System.Windows.Forms.Design
             {
                 return TrayControl.FromComponent(comp);
             }
+
             Debug.Fail("component is not IComponent");
             return null;
         }
@@ -559,6 +545,7 @@ namespace System.Windows.Forms.Design
             {
                 return false;
             }
+
             bool result = DragHandler.BeginDrag(components, rules, initialX, initialY);
             if (result)
             {
@@ -567,15 +554,14 @@ namespace System.Windows.Forms.Design
                     return false;
                 }
             }
+
             return result;
         }
 
         internal virtual OleDragDropHandler GetOleDragHandler()
         {
-            if (oleDragDropHandler is null)
-            {
-                oleDragDropHandler = new TrayOleDragDropHandler(DragHandler, serviceProvider, this);
-            }
+            oleDragDropHandler ??= new TrayOleDragDropHandler(DragHandler, serviceProvider, this);
+
             return oleDragDropHandler;
         }
 
@@ -583,10 +569,8 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (dragHandler is null)
-                {
-                    dragHandler = new TraySelectionUIHandler(this);
-                }
+                dragHandler ??= new TraySelectionUIHandler(this);
+
                 return dragHandler;
             }
         }
@@ -603,11 +587,12 @@ namespace System.Windows.Forms.Design
                 foreach (IComponent comp in components)
                 {
                     TrayControl tc = TrayControl.FromComponent(comp);
-                    if (tc != null)
+                    if (tc is not null)
                     {
                         SetTrayLocation(comp, new Point(tc.Location.X - autoScrollPosBeforeDragging.X, tc.Location.Y - autoScrollPosBeforeDragging.Y));
                     }
                 }
+
                 AutoScrollPosition = new Point(-autoScrollPosBeforeDragging.X, -autoScrollPosBeforeDragging.Y);
             }
         }
@@ -623,6 +608,7 @@ namespace System.Windows.Forms.Design
             {
                 return RectangleToScreen(ClientRectangle);
             }
+
             return Rectangle.Empty;
         }
 
@@ -637,33 +623,33 @@ namespace System.Windows.Forms.Design
             }
         }
 
-        bool ISelectionUIHandler.QueryBeginDrag(object[] components, SelectionRules rules, int initialX, int initialY) => DragHandler.QueryBeginDrag(components, rules, initialX, initialY);
+        bool ISelectionUIHandler.QueryBeginDrag(object[] components, SelectionRules rules, int initialX, int initialY)
+            => DragHandler.QueryBeginDrag(components, rules, initialX, initialY);
 
-        void ISelectionUIHandler.ShowContextMenu(IComponent component)
-        {
-            Point cur = Control.MousePosition;
-            OnContextMenu(cur.X, cur.Y, true);
-        }
+        void ISelectionUIHandler.ShowContextMenu(IComponent component) => OnContextMenu(MousePosition);
 
-        private void OnContextMenu(int x, int y, bool useSelection)
+        private void OnContextMenu(Point location)
         {
-            if (!TabOrderActive)
+            if (TabOrderActive)
+            {
+                return;
+            }
+
+            Capture = false;
+            IMenuCommandService mcs = MenuService;
+            if (mcs is not null)
             {
                 Capture = false;
-                IMenuCommandService mcs = MenuService;
-                if (mcs != null)
+                Cursor.Clip = Rectangle.Empty;
+                ISelectionService selectionService = (ISelectionService)GetService(typeof(ISelectionService));
+                if (selectionService is not null
+                    && !(selectionService.SelectionCount == 1 && selectionService.PrimarySelection == mainDesigner.Component))
                 {
-                    Capture = false;
-                    Cursor.Clip = Rectangle.Empty;
-                    ISelectionService s = (ISelectionService)GetService(typeof(ISelectionService));
-                    if (useSelection && s != null && !(1 == s.SelectionCount && s.PrimarySelection == mainDesigner.Component))
-                    {
-                        mcs.ShowContextMenu(MenuCommands.TraySelectionMenu, x, y);
-                    }
-                    else
-                    {
-                        mcs.ShowContextMenu(MenuCommands.ComponentTrayMenu, x, y);
-                    }
+                    mcs.ShowContextMenu(MenuCommands.TraySelectionMenu, location.X, location.Y);
+                }
+                else
+                {
+                    mcs.ShowContextMenu(MenuCommands.ComponentTrayMenu, location.X, location.Y);
                 }
             }
         }
@@ -687,6 +673,7 @@ namespace System.Windows.Forms.Design
             {
                 return;
             }
+
             // And designate us as the selection UI handler for the control.
             if (selectionUISvc is null)
             {
@@ -698,6 +685,7 @@ namespace System.Windows.Forms.Design
                     selectionUISvc = new SelectionUIService(host);
                     host.AddService(typeof(ISelectionUIService), selectionUISvc);
                 }
+
                 grabHandle = selectionUISvc.GetAdornmentDimensions(AdornmentType.GrabHandle);
             }
 
@@ -718,29 +706,26 @@ namespace System.Windows.Forms.Design
                 // 6. This causes all sorts of badness
                 // Fix is to refresh.
                 TypeDescriptor.Refresh(component);
-                if (host != null && !host.Loading)
+                if (host is not null && !host.Loading)
                 {
                     PositionControl(trayctl);
                 }
-                if (selectionUISvc != null)
-                {
-                    selectionUISvc.AssignSelectionUIHandler(component, this);
-                }
+
+                selectionUISvc?.AssignSelectionUIHandler(component, this);
+
                 InheritanceAttribute attr = trayctl.InheritanceAttribute;
                 if (attr.InheritanceLevel != InheritanceLevel.NotInherited)
                 {
                     InheritanceUI iui = InheritanceUI;
-                    if (iui != null)
-                    {
-                        iui.AddInheritedControl(trayctl, attr.InheritanceLevel);
-                    }
+                    iui?.AddInheritedControl(trayctl, attr.InheritanceLevel);
                 }
             }
             finally
             {
                 ResumeLayout();
             }
-            if (host != null && !host.Loading)
+
+            if (host is not null && !host.Loading)
             {
                 ScrollControlIntoView(trayctl);
             }
@@ -750,7 +735,7 @@ namespace System.Windows.Forms.Design
         protected virtual bool CanCreateComponentFromTool(ToolboxItem tool)
         {
             IDesignerHost host = (IDesignerHost)GetService(typeof(IDesignerHost));
-            Debug.Assert(host != null, "Service object could not provide us with a designer host.");
+            Debug.Assert(host is not null, "Service object could not provide us with a designer host.");
             // Disallow controls to be added to the component tray.
             Type compType = host.GetType(tool.TypeName);
             if (compType is null)
@@ -762,6 +747,7 @@ namespace System.Windows.Forms.Design
             {
                 return true;
             }
+
             Type designerType = GetDesignerType(compType, typeof(IDesigner));
             return !(typeof(ControlDesigner).IsAssignableFrom(designerType));
         }
@@ -776,11 +762,11 @@ namespace System.Windows.Forms.Design
                 if (attributes[i] is DesignerAttribute da)
                 {
                     Type attributeBaseType = Type.GetType(da.DesignerBaseTypeName);
-                    if (attributeBaseType != null && attributeBaseType == designerBaseType)
+                    if (attributeBaseType is not null && attributeBaseType == designerBaseType)
                     {
                         bool foundService = false;
                         ITypeResolutionService tr = (ITypeResolutionService)GetService(typeof(ITypeResolutionService));
-                        if (tr != null)
+                        if (tr is not null)
                         {
                             foundService = true;
                             designerType = tr.GetType(da.DesignerTypeName);
@@ -791,13 +777,14 @@ namespace System.Windows.Forms.Design
                             designerType = Type.GetType(da.DesignerTypeName);
                         }
 
-                        if (designerType != null)
+                        if (designerType is not null)
                         {
                             break;
                         }
                     }
                 }
             }
+
             return designerType;
         }
 
@@ -819,6 +806,7 @@ namespace System.Windows.Forms.Design
             {
                 return;
             }
+
             // We invoke the drag drop handler for this.  This implementation is shared between all designers that create components.
             GetOleDragHandler().CreateTool(tool, null, 0, 0, 0, 0, false, false);
         }
@@ -829,7 +817,7 @@ namespace System.Windows.Forms.Design
         protected void DisplayError(Exception e)
         {
             IUIService uis = (IUIService)GetService(typeof(IUIService));
-            if (uis != null)
+            if (uis is not null)
             {
                 uis.ShowError(e);
             }
@@ -840,6 +828,7 @@ namespace System.Windows.Forms.Design
                 {
                     message = e.ToString();
                 }
+
                 RTLAwareMessageBox.Show(null, message, null, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button1, 0);
             }
         }
@@ -849,19 +838,16 @@ namespace System.Windows.Forms.Design
         /// </summary>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && controls != null)
+            if (disposing && controls is not null)
             {
                 IExtenderProviderService es = (IExtenderProviderService)GetService(typeof(IExtenderProviderService));
-                Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (es != null), "IExtenderProviderService not found");
-                if (es != null)
-                {
-                    es.RemoveExtenderProvider(this);
-                }
+                Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (es is not null), "IExtenderProviderService not found");
+                es?.RemoveExtenderProvider(this);
 
                 IDesignerHost host = (IDesignerHost)GetService(typeof(IDesignerHost));
-                if (eventHandlerService != null)
+                if (eventHandlerService is not null)
                 {
-                    if (host != null)
+                    if (host is not null)
                     {
                         host.RemoveService(typeof(IEventHandlerService));
                         eventHandlerService = null;
@@ -869,7 +855,7 @@ namespace System.Windows.Forms.Design
                 }
 
                 IComponentChangeService componentChangeService = (IComponentChangeService)GetService(typeof(IComponentChangeService));
-                if (componentChangeService != null)
+                if (componentChangeService is not null)
                 {
                     componentChangeService.ComponentRemoved -= new ComponentEventHandler(OnComponentRemoved);
                 }
@@ -878,11 +864,11 @@ namespace System.Windows.Forms.Design
                 SystemEvents.InstalledFontsChanged -= new EventHandler(OnSystemSettingChanged);
                 SystemEvents.UserPreferenceChanged -= new UserPreferenceChangedEventHandler(OnUserPreferenceChanged);
                 IMenuCommandService mcs = MenuService;
-                if (mcs != null)
+                if (mcs is not null)
                 {
-                    Debug.Assert(menucmdArrangeIcons != null, "Null Menu Command for ArrangeIcons");
-                    Debug.Assert(menucmdLineupIcons != null, "Null Menu Command for LineupIcons");
-                    Debug.Assert(menucmdLargeIcons != null, "Null Menu Command for LargeIcons");
+                    Debug.Assert(menucmdArrangeIcons is not null, "Null Menu Command for ArrangeIcons");
+                    Debug.Assert(menucmdLineupIcons is not null, "Null Menu Command for LineupIcons");
+                    Debug.Assert(menucmdLargeIcons is not null, "Null Menu Command for LargeIcons");
                     mcs.RemoveCommand(menucmdArrangeIcons);
                     mcs.RemoveCommand(menucmdLineupIcons);
                     mcs.RemoveCommand(menucmdLargeIcons);
@@ -890,7 +876,7 @@ namespace System.Windows.Forms.Design
 
                 selectionUISvc = null;
 
-                if (inheritanceUI != null)
+                if (inheritanceUI is not null)
                 {
                     inheritanceUI.Dispose();
                     inheritanceUI = null;
@@ -900,12 +886,13 @@ namespace System.Windows.Forms.Design
                 controls.Clear();
                 controls = null;
 
-                if (glyphManager != null)
+                if (glyphManager is not null)
                 {
                     glyphManager.Dispose();
                     glyphManager = null;
                 }
             }
+
             base.Dispose(disposing);
         }
 
@@ -927,16 +914,19 @@ namespace System.Windows.Forms.Design
                     {
                         return ((TrayControl)controls[targetIndex]).Component;
                     }
+
                     // Reached the end of the road.
                     return null;
                 }
             }
+
             // If we got here then the component isn't in our list.  Prime the caller with either the first or the last.
             if (controls.Count > 0)
             {
                 int targetIndex = (forward ? 0 : controls.Count - 1);
                 return ((TrayControl)controls[targetIndex]).Component;
             }
+
             return null;
         }
 
@@ -953,7 +943,7 @@ namespace System.Windows.Forms.Design
         public Point GetLocation(IComponent receiver)
         {
             PropertyDescriptor loc = TypeDescriptor.GetProperties(receiver.GetType())["Location"];
-            if (loc != null)
+            if (loc is not null)
             {
                 // In this case the component already had a Location property, and what the caller wants is the underlying components Location, not the tray location. Why? Because we now use TrayLocation.
                 return (Point)(loc.GetValue(receiver));
@@ -980,29 +970,31 @@ namespace System.Windows.Forms.Design
             if (c is null)
             {
                 Debug.Fail("Anything we're extending should have a component view.");
-                return new Point();
+                return default(Point);
             }
+
             Point loc = c.Location;
             Point autoScrollLoc = AutoScrollPosition;
             return new Point(loc.X - autoScrollLoc.X, loc.Y - autoScrollLoc.Y);
         }
 
         /// <summary>
-        ///  Gets the requsted service type.
+        ///  Gets the requested service type.
         /// </summary>
         protected override object GetService(Type serviceType)
         {
             object service = null;
-            Debug.Assert(serviceProvider != null, "Trying to access services too late or too early.");
-            if (serviceProvider != null)
+            Debug.Assert(serviceProvider is not null, "Trying to access services too late or too early.");
+            if (serviceProvider is not null)
             {
                 service = serviceProvider.GetService(serviceType);
             }
+
             return service;
         }
 
         /// <summary>
-        ///  Returns true if the given componenent is being shown on the tray.
+        ///  Returns true if the given component is being shown on the tray.
         /// </summary>
         public bool IsTrayComponent(IComponent comp)
         {
@@ -1010,6 +1002,7 @@ namespace System.Windows.Forms.Design
             {
                 return false;
             }
+
             foreach (Control control in Controls)
             {
                 if (control is TrayControl tc && tc.Component == comp)
@@ -1017,27 +1010,26 @@ namespace System.Windows.Forms.Design
                     return true;
                 }
             }
+
             return false;
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             //give our glyphs first chance at this
-            if (glyphManager != null && glyphManager.OnMouseDoubleClick(e))
+            if (glyphManager is not null && glyphManager.OnMouseDoubleClick(e))
             {
                 //handled by a glyph - so don't send to the comp tray
                 return;
             }
+
             base.OnDoubleClick(e);
             if (!TabOrderActive)
             {
                 OnLostCapture();
                 IEventBindingService eps = (IEventBindingService)GetService(typeof(IEventBindingService));
-                Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (eps != null), "IEventBindingService not found");
-                if (eps != null)
-                {
-                    eps.ShowCode();
-                }
+                Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (eps is not null), "IEventBindingService not found");
+                eps?.ShowCode();
             }
         }
 
@@ -1060,11 +1052,11 @@ namespace System.Windows.Forms.Design
             // This will be used once during PositionComponent to place the component at the drop point. It is automatically set to null afterwards, so further components appear after the first one dropped.
             mouseDropLocation = PointToClient(new Point(de.X, de.Y));
             autoScrollPosBeforeDragging = AutoScrollPosition; // save the scroll position
-            if (mouseDragTool != null)
+            if (mouseDragTool is not null)
             {
                 ToolboxItem tool = mouseDragTool;
                 mouseDragTool = null;
-                Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (GetService(typeof(IDesignerHost)) != null), "IDesignerHost not found");
+                Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (GetService(typeof(IDesignerHost)) is not null), "IDesignerHost not found");
                 try
                 {
                     IDesignerHost host = (IDesignerHost)GetService(typeof(IDesignerHost));
@@ -1086,12 +1078,14 @@ namespace System.Windows.Forms.Design
                         throw;
                     }
                 }
+
                 de.Effect = DragDropEffects.Copy;
             }
             else
             {
                 GetOleDragHandler().DoOleDragDrop(de);
             }
+
             mouseDropLocation = InvalidPoint;
             ResumeLayout();
         }
@@ -1104,21 +1098,20 @@ namespace System.Windows.Forms.Design
             if (!TabOrderActive)
             {
                 SuspendLayout();
-                if (toolboxService is null)
-                {
-                    toolboxService = (IToolboxService)GetService(typeof(IToolboxService));
-                }
+                toolboxService ??= (IToolboxService)GetService(typeof(IToolboxService));
+
                 OleDragDropHandler dragDropHandler = GetOleDragHandler();
-                object[] dragComps = dragDropHandler.GetDraggingObjects(de);
+                object[] dragComps = OleDragDropHandler.GetDraggingObjects(de);
                 // Only assume the items came from the ToolBox if dragComps is null
-                if (toolboxService != null && dragComps is null)
+                if (toolboxService is not null && dragComps is null)
                 {
                     mouseDragTool = toolboxService.DeserializeToolboxItem(de.Data, (IDesignerHost)GetService(typeof(IDesignerHost)));
                 }
-                if (mouseDragTool != null)
+
+                if (mouseDragTool is not null)
                 {
-                    Debug.Assert(0 != (int)(de.AllowedEffect & (DragDropEffects.Move | DragDropEffects.Copy)), "DragDropEffect.Move | .Copy isn't allowed?");
-                    if ((int)(de.AllowedEffect & DragDropEffects.Move) != 0)
+                    Debug.Assert(0 != (de.AllowedEffect & (DragDropEffects.Move | DragDropEffects.Copy)), "DragDropEffect.Move | .Copy isn't allowed?");
+                    if ((de.AllowedEffect & DragDropEffects.Move) != 0)
                     {
                         de.Effect = DragDropEffects.Move;
                     }
@@ -1149,9 +1142,9 @@ namespace System.Windows.Forms.Design
         /// </summary>
         protected override void OnDragOver(DragEventArgs de)
         {
-            if (mouseDragTool != null)
+            if (mouseDragTool is not null)
             {
-                Debug.Assert(0 != (int)(de.AllowedEffect & DragDropEffects.Copy), "DragDropEffect.Move isn't allowed?");
+                Debug.Assert(0 != (de.AllowedEffect & DragDropEffects.Copy), "DragDropEffect.Move isn't allowed?");
                 de.Effect = DragDropEffects.Copy;
             }
             else
@@ -1186,6 +1179,7 @@ namespace System.Windows.Forms.Design
                     DrawRubber(mouseDragStart, mouseDragEnd);
                     mouseDragEnd = InvalidPoint;
                 }
+
                 mouseDragStart = InvalidPoint;
             }
         }
@@ -1207,7 +1201,7 @@ namespace System.Windows.Forms.Design
         protected override void OnMouseDown(MouseEventArgs e)
         {
             //give our glyphs first chance at this
-            if (glyphManager != null && glyphManager.OnMouseDown(e))
+            if (glyphManager is not null && glyphManager.OnMouseDown(e))
             {
                 //handled by a glyph - so don't send to the comp tray
                 return;
@@ -1216,15 +1210,13 @@ namespace System.Windows.Forms.Design
             base.OnMouseDown(e);
             if (!TabOrderActive)
             {
-                if (toolboxService is null)
-                {
-                    toolboxService = (IToolboxService)GetService(typeof(IToolboxService));
-                }
+                toolboxService ??= (IToolboxService)GetService(typeof(IToolboxService));
+
                 FocusDesigner();
-                if (e.Button == MouseButtons.Left && toolboxService != null)
+                if (e.Button == MouseButtons.Left && toolboxService is not null)
                 {
                     ToolboxItem tool = toolboxService.GetSelectedToolboxItem((IDesignerHost)GetService(typeof(IDesignerHost)));
-                    if (tool != null)
+                    if (tool is not null)
                     {
                         // mouseDropLocation is checked in PositionControl, which should get called as a result of adding a new component.  This allows us to set the position without flickering, while still providing support for auto layout if the control was double clicked or added through extensibility.
                         mouseDropLocation = new Point(e.X, e.Y);
@@ -1241,12 +1233,13 @@ namespace System.Windows.Forms.Design
                                 throw;
                             }
                         }
+
                         mouseDropLocation = InvalidPoint;
                         return;
                     }
                 }
 
-                // If it is the left button, start a rubber band drag to laso controls.
+                // If it is the left button, start a rubber band drag to lasso controls.
                 if (e.Button == MouseButtons.Left)
                 {
                     mouseDragStart = new Point(e.X, e.Y);
@@ -1258,11 +1251,8 @@ namespace System.Windows.Forms.Design
                     try
                     {
                         ISelectionService ss = (ISelectionService)GetService(typeof(ISelectionService));
-                        Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (ss != null), "ISelectionService not found");
-                        if (ss != null)
-                        {
-                            ss.SetSelectedComponents(new object[] { mainDesigner.Component });
-                        }
+                        Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (ss is not null), "ISelectionService not found");
+                        ss?.SetSelectedComponents(new object[] { mainDesigner.Component });
                     }
                     catch (Exception ex)
                     {
@@ -1283,11 +1273,12 @@ namespace System.Windows.Forms.Design
         protected override void OnMouseMove(MouseEventArgs e)
         {
             //give our glyphs first chance at this
-            if (glyphManager != null && glyphManager.OnMouseMove(e))
+            if (glyphManager is not null && glyphManager.OnMouseMove(e))
             {
                 //handled by a glyph - so don't send to the comp tray
                 return;
             }
+
             base.OnMouseMove(e);
 
             // If we are dragging, then draw our little rubber band.
@@ -1301,6 +1292,7 @@ namespace System.Windows.Forms.Design
                 {
                     mouseDragEnd = new Point(0, 0);
                 }
+
                 mouseDragEnd.X = e.X;
                 mouseDragEnd.Y = e.Y;
                 DrawRubber(mouseDragStart, mouseDragEnd);
@@ -1314,7 +1306,7 @@ namespace System.Windows.Forms.Design
         protected override void OnMouseUp(MouseEventArgs e)
         {
             //give our glyphs first chance at this
-            if (glyphManager != null && glyphManager.OnMouseUp(e))
+            if (glyphManager is not null && glyphManager.OnMouseUp(e))
             {
                 //handled by a glyph - so don't send to the comp tray
                 return;
@@ -1322,7 +1314,7 @@ namespace System.Windows.Forms.Design
 
             if (mouseDragStart != InvalidPoint && e.Button == MouseButtons.Left)
             {
-                object[] comps;
+                IComponent[] comps;
                 Capture = false;
                 Cursor.Clip = Rectangle.Empty;
                 if (mouseDragEnd != InvalidPoint)
@@ -1340,21 +1332,19 @@ namespace System.Windows.Forms.Design
                 }
                 else
                 {
-                    comps = Array.Empty<object>();
+                    comps = Array.Empty<IComponent>();
                 }
 
                 if (comps.Length == 0)
                 {
-                    comps = new object[] { mainDesigner.Component };
+                    comps = new IComponent[] { mainDesigner.Component };
                 }
+
                 try
                 {
                     ISelectionService ss = (ISelectionService)GetService(typeof(ISelectionService));
-                    Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (ss != null), "ISelectionService not found");
-                    if (ss != null)
-                    {
-                        ss.SetSelectedComponents(comps);
-                    }
+                    Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (ss is not null), "ISelectionService not found");
+                    ss?.SetSelectedComponents(comps);
                 }
                 catch (Exception ex)
                 {
@@ -1364,14 +1354,16 @@ namespace System.Windows.Forms.Design
                         throw;
                     }
                 }
+
                 mouseDragStart = InvalidPoint;
             }
+
             base.OnMouseUp(e);
         }
 
-        private object[] GetComponentsInRect(Rectangle rect)
+        private IComponent[] GetComponentsInRect(Rectangle rect)
         {
-            ArrayList list = new ArrayList();
+            List<IComponent> list = new();
             int controlCount = Controls.Count;
             for (int i = 0; i < controlCount; i++)
             {
@@ -1382,6 +1374,7 @@ namespace System.Windows.Forms.Design
                     list.Add(tc.Component);
                 }
             }
+
             return list.ToArray();
         }
 
@@ -1392,13 +1385,14 @@ namespace System.Windows.Forms.Design
                 fResetAmbient = false;
                 fSelectionChanged = false;
                 IUIService uiService = (IUIService)GetService(typeof(IUIService));
-                if (uiService != null)
+                if (uiService is not null)
                 {
                     Color styleColor;
                     if (uiService.Styles["ArtboardBackground"] is Color)
                     {
                         styleColor = (Color)uiService.Styles["ArtboardBackground"];
                     }
+
                     //Can't use 'as' here since Color is a value type
                     else if (uiService.Styles["VsColorDesignerTray"] is Color)
                     {
@@ -1428,9 +1422,9 @@ namespace System.Windows.Forms.Design
             base.OnPaint(pe);
             Graphics gr = pe.Graphics;
             // Now, if we have a selection, paint it
-            if (selectedObjects != null)
+            if (selectedObjects is not null)
             {
-                bool first = true;//indicates the first iteration of our foreach loop
+                bool first = true; //indicates the first iteration of our foreach loop
                 HatchBrush selectionBorderBrush;
                 if (SystemInformation.HighContrast)
                 {
@@ -1446,7 +1440,7 @@ namespace System.Windows.Forms.Design
                     foreach (object o in selectedObjects)
                     {
                         Control c = ((IOleDragClient)this).GetControlForComponent(o);
-                        if (c != null && c.Visible)
+                        if (c is not null && c.Visible)
                         {
                             Rectangle innerRect = c.Bounds;
                             if (SystemInformation.HighContrast)
@@ -1454,6 +1448,7 @@ namespace System.Windows.Forms.Design
                                 c.ForeColor = SystemColors.HighlightText;
                                 c.BackColor = SystemColors.Highlight;
                             }
+
                             NoResizeHandleGlyph glyph = new NoResizeHandleGlyph(innerRect, SelectionRules.None, first, null);
                             gr.FillRectangle(selectionBorderBrush, DesignerUtils.GetBoundsForNoResizeSelectionType(innerRect, SelectionBorderGlyphType.Top));
                             gr.FillRectangle(selectionBorderBrush, DesignerUtils.GetBoundsForNoResizeSelectionType(innerRect, SelectionBorderGlyphType.Bottom));
@@ -1462,22 +1457,18 @@ namespace System.Windows.Forms.Design
                             // Need to draw this one last
                             DesignerUtils.DrawNoResizeHandle(gr, glyph.Bounds, first, glyph);
                         }
+
                         first = false;
                     }
                 }
                 finally
                 {
-                    if (selectionBorderBrush != null)
-                    {
-                        selectionBorderBrush.Dispose();
-                    }
+                    selectionBorderBrush?.Dispose();
                 }
             }
+
             //paint any glyphs
-            if (glyphManager != null)
-            {
-                glyphManager.OnPaintGlyphs(pe);
-            }
+            glyphManager?.OnPaintGlyphs(pe);
         }
 
         /// <summary>
@@ -1486,10 +1477,8 @@ namespace System.Windows.Forms.Design
         /// </summary>
         protected virtual void OnSetCursor()
         {
-            if (toolboxService is null)
-            {
-                toolboxService = (IToolboxService)GetService(typeof(IToolboxService));
-            }
+            toolboxService ??= (IToolboxService)GetService(typeof(IToolboxService));
+
             if (toolboxService is null || !toolboxService.SetCursor())
             {
                 Cursor.Current = Cursors.Default;
@@ -1502,23 +1491,17 @@ namespace System.Windows.Forms.Design
         public virtual void RemoveComponent(IComponent component)
         {
             TrayControl c = TrayControl.FromComponent(component);
-            if (c != null)
+            if (c is not null)
             {
                 try
                 {
                     InheritanceAttribute attr = c.InheritanceAttribute;
-                    if (attr.InheritanceLevel != InheritanceLevel.NotInherited && inheritanceUI != null)
+                    if (attr.InheritanceLevel != InheritanceLevel.NotInherited && inheritanceUI is not null)
                     {
                         inheritanceUI.RemoveInheritedControl(c);
                     }
-                    if (controls != null)
-                    {
-                        int index = controls.IndexOf(c);
-                        if (index != -1)
-                        {
-                            controls.RemoveAt(index);
-                        }
-                    }
+
+                    controls?.Remove(c);
                 }
                 finally
                 {
@@ -1535,7 +1518,7 @@ namespace System.Windows.Forms.Design
         {
             // This really should only be called when we are loading.
             IDesignerHost host = (IDesignerHost)GetService(typeof(IDesignerHost));
-            if (host != null && host.Loading)
+            if (host is not null && host.Loading)
             {
                 // If we are loading, and we get called here, that's because we have provided the extended Location property. In this case we are loading an old project, and what we are really setting is the tray location.
                 SetTrayLocation(receiver, location);
@@ -1544,7 +1527,7 @@ namespace System.Windows.Forms.Design
             {
                 // we are not loading
                 PropertyDescriptor loc = TypeDescriptor.GetProperties(receiver.GetType())["Location"];
-                if (loc != null)
+                if (loc is not null)
                 {
                     // so if the component already had the Location property, what the caller wants is really the underlying component's Location property.
                     loc.SetValue(receiver, location);
@@ -1569,6 +1552,7 @@ namespace System.Windows.Forms.Design
                 Debug.Fail("Anything we're extending should have a component view.");
                 return;
             }
+
             if (c.Parent == this)
             {
                 Point autoScrollLoc = AutoScrollPosition;
@@ -1593,7 +1577,8 @@ namespace System.Windows.Forms.Design
             switch ((User32.WM)m.Msg)
             {
                 case User32.WM.CANCELMODE:
-                    // When we get cancelmode (i.e. you tabbed away to another window) then we want to cancel any pending drag operation!
+                    // When we get cancelmode (i.e. you tabbed away to another window) then we want to cancel
+                    // any pending drag operation.
                     OnLostCapture();
                     break;
                 case User32.WM.SETCURSOR:
@@ -1601,49 +1586,52 @@ namespace System.Windows.Forms.Design
                     return;
                 case User32.WM.HSCROLL:
                 case User32.WM.VSCROLL:
-                    // When we scroll, we reposition a control without causing a property change event.  Therefore, we must tell the selection UI service to sync itself.
+                    // When we scroll, we reposition a control without causing a property change event.
+                    // Therefore, we must tell the selection UI service to sync itself.
                     base.WndProc(ref m);
-                    if (selectionUISvc != null)
-                    {
-                        selectionUISvc.SyncSelection();
-                    }
+                    selectionUISvc?.SyncSelection();
+
                     return;
                 case User32.WM.STYLECHANGED:
                     // When the scroll bars first appear, we need to invalidate so we properly paint our grid.
                     Invalidate();
                     break;
                 case User32.WM.CONTEXTMENU:
-                    // Pop a context menu for the composition designer.
-                    int x = PARAM.SignedLOWORD(m.LParam);
-                    int y = PARAM.SignedHIWORD(m.LParam);
-                    if (x == -1 && y == -1)
                     {
-                        // for shift-F10
-                        Point mouse = Control.MousePosition;
-                        x = mouse.X;
-                        y = mouse.Y;
+                        // Pop a context menu for the composition designer.
+                        Point location = PARAM.ToPoint(m.LParamInternal);
+                        if (location.X == -1 && location.Y == -1)
+                        {
+                            // For shift-F10.
+                            location = MousePosition;
+                        }
+
+                        OnContextMenu(location);
+                        break;
                     }
-                    OnContextMenu(x, y, true);
-                    break;
+
                 case User32.WM.NCHITTEST:
-                    if (glyphManager != null)
                     {
-                        // Get a hit test on any glyphs that we are managing this way - we know where to route appropriate  messages
-                        Point pt = new Point((short)PARAM.LOWORD(m.LParam), (short)PARAM.HIWORD(m.LParam));
-                        var pt1 = new Point();
-                        User32.MapWindowPoints(IntPtr.Zero, Handle, ref pt1, 1);
-                        pt.Offset(pt1.X, pt1.Y);
-                        glyphManager.GetHitTest(pt);
+                        if (glyphManager is not null)
+                        {
+                            // Get a hit test on any glyphs that we are managing this way.
+                            // We know where to route appropriate messages.
+                            Point location = PARAM.ToPoint(m.LParamInternal);
+                            location.Offset(PointToClient(default));
+                            glyphManager.GetHitTest(location);
+                        }
+
+                        base.WndProc(ref m);
+                        break;
                     }
-                    base.WndProc(ref m);
-                    break;
+
                 default:
                     base.WndProc(ref m);
                     break;
             }
         }
 
-        internal TrayControl GetTrayControlFromComponent(IComponent comp)
+        internal static TrayControl GetTrayControlFromComponent(IComponent comp)
         {
             return TrayControl.FromComponent(comp);
         }
@@ -1656,15 +1644,17 @@ namespace System.Windows.Forms.Design
                 {
                     queriedTabOrder = true;
                     IMenuCommandService mcs = MenuService;
-                    if (mcs != null)
+                    if (mcs is not null)
                     {
-                        tabOrderCommand = mcs.FindCommand(MenuCommands.TabOrder);
+                        tabOrderCommand = mcs.FindCommand(StandardCommands.TabOrder);
                     }
                 }
-                if (tabOrderCommand != null)
+
+                if (tabOrderCommand is not null)
                 {
                     return tabOrderCommand.Checked;
                 }
+
                 return false;
             }
         }
@@ -1673,10 +1663,8 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (inheritanceUI is null)
-                {
-                    inheritanceUI = new InheritanceUI();
-                }
+                inheritanceUI ??= new InheritanceUI();
+
                 return inheritanceUI;
             }
         }
@@ -1685,10 +1673,8 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (menuCommandService is null)
-                {
-                    menuCommandService = (IMenuCommandService)GetService(typeof(IMenuCommandService));
-                }
+                menuCommandService ??= (IMenuCommandService)GetService(typeof(IMenuCommandService));
+
                 return menuCommandService;
             }
         }
@@ -1696,7 +1682,7 @@ namespace System.Windows.Forms.Design
         internal void FocusDesigner()
         {
             IDesignerHost host = (IDesignerHost)GetService(typeof(IDesignerHost));
-            if (host != null && host.RootComponent != null)
+            if (host is not null && host.RootComponent is not null)
             {
                 if (host.GetDesigner(host.RootComponent) is IRootDesigner rd)
                 {
@@ -1725,7 +1711,7 @@ namespace System.Windows.Forms.Design
             }
         }
 
-        internal void UpdatePastePositions(ArrayList components)
+        internal void UpdatePastePositions(List<Control> components)
         {
             foreach (TrayControl c in components)
             {
@@ -1739,14 +1725,16 @@ namespace System.Windows.Forms.Design
                     Control prevCtl = null;
                     if (controls.Count > 1)
                     {
-                        prevCtl = (Control)controls[controls.Count - 1];
+                        prevCtl = controls[controls.Count - 1];
                     }
+
                     PositionInNextAutoSlot(c, prevCtl, true);
                 }
                 else
                 {
                     PositionControl(c);
                 }
+
                 c.BringToFront();
             }
         }
@@ -1773,9 +1761,10 @@ namespace System.Windows.Forms.Design
                         Debug.Assert(index >= 1, "Got the wrong index, how could that be?");
                         if (index >= 1)
                         {
-                            prevCtl = (Control)controls[index - 1];
+                            prevCtl = controls[index - 1];
                         }
                     }
+
                     PositionInNextAutoSlot(c, prevCtl, true);
                 }
             }
@@ -1794,9 +1783,10 @@ namespace System.Windows.Forms.Design
                         Debug.Assert(index >= 1, "Got the wrong index, how could that be?");
                         if (index >= 1)
                         {
-                            prevCtl = (Control)controls[index - 1];
+                            prevCtl = controls[index - 1];
                         }
                     }
+
                     PositionInNextAutoSlot(c, prevCtl, true);
                 }
             }
@@ -1804,11 +1794,9 @@ namespace System.Windows.Forms.Design
 
         internal void RearrangeInAutoSlots(Control c, Point pos)
         {
-#if DEBUG
-            int index = controls.IndexOf(c);
-            Debug.Assert(index != -1, "Add control to the list of controls before autoarranging.!!!");
+            Debug.Assert(controls.IndexOf(c) != -1, "Add control to the list of controls before autoarranging.!!!");
             Debug.Assert(Visible == c.Visible, "TrayControl for " + ((TrayControl)c).Component + " should not be positioned");
-#endif
+
             TrayControl tc = (TrayControl)c;
             tc.Positioned = true;
             tc.Location = pos;
@@ -1819,7 +1807,7 @@ namespace System.Windows.Forms.Design
             Debug.Assert(c.Visible, "TrayControl for " + c.Component + " should not be positioned");
             if (whiteSpace.IsEmpty)
             {
-                Debug.Assert(selectionUISvc != null, "No SelectionUIService available for tray.");
+                Debug.Assert(selectionUISvc is not null, "No SelectionUIService available for tray.");
                 whiteSpace = new Point(selectionUISvc.GetAdornmentDimensions(AdornmentType.GrabHandle));
                 whiteSpace.X = whiteSpace.X * 2 + 3;
                 whiteSpace.Y = whiteSpace.Y * 2 + 3;
@@ -1835,9 +1823,9 @@ namespace System.Windows.Forms.Design
                     if (dirtyDesigner)
                     {
                         IComponent comp = c.Component;
-                        Debug.Assert(comp != null, "Component for the TrayControl is null");
+                        Debug.Assert(comp is not null, "Component for the TrayControl is null");
                         PropertyDescriptor ctlLocation = TypeDescriptor.GetProperties(comp)["TrayLocation"];
-                        if (ctlLocation != null)
+                        if (ctlLocation is not null)
                         {
                             Point autoScrollLoc = AutoScrollPosition;
                             newLoc = new Point(newLoc.X - autoScrollLoc.X, newLoc.Y - autoScrollLoc.Y);
@@ -1848,12 +1836,13 @@ namespace System.Windows.Forms.Design
                     {
                         c.Location = newLoc;
                     }
+
                     return true;
                 }
             }
             else
             {
-                // Calcuate the next location for this control.
+                // Calculate the next location for this control.
                 Rectangle bounds = prevCtl.Bounds;
                 Point newLoc = new Point(bounds.X + bounds.Width + whiteSpace.X, bounds.Y);
 
@@ -1869,9 +1858,9 @@ namespace System.Windows.Forms.Design
                     if (dirtyDesigner)
                     {
                         IComponent comp = c.Component;
-                        Debug.Assert(comp != null, "Component for the TrayControl is null");
+                        Debug.Assert(comp is not null, "Component for the TrayControl is null");
                         PropertyDescriptor ctlLocation = TypeDescriptor.GetProperties(comp)["TrayLocation"];
-                        if (ctlLocation != null)
+                        if (ctlLocation is not null)
                         {
                             Point autoScrollLoc = AutoScrollPosition;
                             newLoc = new Point(newLoc.X - autoScrollLoc.X, newLoc.Y - autoScrollLoc.Y);
@@ -1882,9 +1871,11 @@ namespace System.Windows.Forms.Design
                     {
                         c.Location = newLoc;
                     }
+
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -1921,8 +1912,8 @@ namespace System.Windows.Forms.Design
                 UpdateIconInfo();
 
                 IComponentChangeService cs = (IComponentChangeService)tray.GetService(typeof(IComponentChangeService));
-                Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (cs != null), "IComponentChangeService not found");
-                if (cs != null)
+                Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (cs is not null), "IComponentChangeService not found");
+                if (cs is not null)
                 {
                     cs.ComponentRename += new ComponentRenameEventHandler(OnComponentRename);
                 }
@@ -1930,29 +1921,24 @@ namespace System.Windows.Forms.Design
                 ISite site = component.Site;
                 string name = null;
 
-                if (site != null)
+                if (site is not null)
                 {
                     name = site.Name;
                     IDictionaryService ds = (IDictionaryService)site.GetService(typeof(IDictionaryService));
-                    Debug.Assert(ds != null, "ComponentTray relies on IDictionaryService, which is not available.");
-                    if (ds != null)
-                    {
-                        ds.SetValue(GetType(), this);
-                    }
+                    Debug.Assert(ds is not null, "ComponentTray relies on IDictionaryService, which is not available.");
+                    ds?.SetValue(GetType(), this);
                 }
 
-                if (name is null)
-                {
-                    // We always want name to have something in it, so we default to the class name.  This way the design instance contains something semi-intuitive if we don't have a site.
-                    name = component.GetType().Name;
-                }
+                // We always want name to have something in it, so we default to the class name.  This way the design instance contains something semi-intuitive if we don't have a site.
+                name ??= component.GetType().Name;
+
                 Text = name;
                 _inheritanceAttribute = (InheritanceAttribute)TypeDescriptor.GetAttributes(component)[typeof(InheritanceAttribute)];
                 TabStop = false;
             }
 
             /// <summary>
-            ///  Retrieves the compnent this control is representing.
+            ///  Retrieves the component this control is representing.
             /// </summary>
             public IComponent Component
             {
@@ -2006,16 +1992,10 @@ namespace System.Windows.Forms.Design
 
                 finally
                 {
-                    if (gr != null)
-                    {
-                        gr.Dispose();
-                    }
+                    gr?.Dispose();
                 }
 
-                if (_tray.glyphManager != null)
-                {
-                    _tray.glyphManager.UpdateLocation(this);
-                }
+                _tray.glyphManager?.UpdateLocation(this);
             }
 
             protected override AccessibleObject CreateAccessibilityInstance() => new TrayControlAccessibleObject(this, _tray);
@@ -2028,23 +2008,21 @@ namespace System.Windows.Forms.Design
                 if (disposing)
                 {
                     ISite site = _component.Site;
-                    if (site != null)
+                    if (site is not null)
                     {
                         IComponentChangeService cs = (IComponentChangeService)site.GetService(typeof(IComponentChangeService));
-                        Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (cs != null), "IComponentChangeService not found");
-                        if (cs != null)
+                        Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (cs is not null), "IComponentChangeService not found");
+                        if (cs is not null)
                         {
                             cs.ComponentRename -= new ComponentRenameEventHandler(OnComponentRename);
                         }
 
                         IDictionaryService ds = (IDictionaryService)site.GetService(typeof(IDictionaryService));
-                        Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (ds != null), "IDictionaryService not found");
-                        if (ds != null)
-                        {
-                            ds.SetValue(typeof(TrayControl), null);
-                        }
+                        Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (ds is not null), "IDictionaryService not found");
+                        ds?.SetValue(typeof(TrayControl), null);
                     }
                 }
+
                 base.Dispose(disposing);
             }
 
@@ -2060,20 +2038,21 @@ namespace System.Windows.Forms.Design
                 }
 
                 ISite site = component.Site;
-                if (site != null)
+                if (site is not null)
                 {
                     IDictionaryService ds = (IDictionaryService)site.GetService(typeof(IDictionaryService));
-                    Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (ds != null), "IDictionaryService not found");
-                    if (ds != null)
+                    Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (ds is not null), "IDictionaryService not found");
+                    if (ds is not null)
                     {
                         c = (TrayControl)ds.GetValue(typeof(TrayControl));
                     }
                 }
+
                 return c;
             }
 
             /// <summary>
-            ///  Delegate that is called in response to a name change.  Here we update our own stashed version of the name, recalcuate our size and repaint.
+            ///  Delegate that is called in response to a name change.  Here we update our own stashed version of the name, recalculate our size and repaint.
             /// </summary>
             private void OnComponentRename(object sender, ComponentRenameEventArgs e)
             {
@@ -2102,8 +2081,8 @@ namespace System.Windows.Forms.Design
                 if (!_tray.TabOrderActive)
                 {
                     IDesignerHost host = (IDesignerHost)_tray.GetService(typeof(IDesignerHost));
-                    Debug.Assert(host != null, "Component tray does not have access to designer host.");
-                    if (host != null)
+                    Debug.Assert(host is not null, "Component tray does not have access to designer host.");
+                    if (host is not null)
                     {
                         _mouseDragLast = InvalidPoint;
                         Capture = false;
@@ -2132,22 +2111,22 @@ namespace System.Windows.Forms.Design
                     if (_ctrlSelect)
                     {
                         ISelectionService sel = (ISelectionService)_tray.GetService(typeof(ISelectionService));
-                        if (sel != null)
-                        {
-                            sel.SetSelectedComponents(new object[] { Component }, SelectionTypes.Primary);
-                        }
+                        sel?.SetSelectedComponents(new object[] { Component }, SelectionTypes.Primary);
+
                         _ctrlSelect = false;
                     }
+
                     return;
                 }
+
                 _mouseDragMoved = false;
                 _ctrlSelect = false;
                 Capture = false;
                 OnSetCursor();
 
                 // And now finish the drag.
-                Debug.Assert(_tray.selectionUISvc != null, "We shouldn't be able to begin a drag without this");
-                if (_tray.selectionUISvc != null && _tray.selectionUISvc.Dragging)
+                Debug.Assert(_tray.selectionUISvc is not null, "We shouldn't be able to begin a drag without this");
+                if (_tray.selectionUISvc is not null && _tray.selectionUISvc.Dragging)
                 {
                     _tray.selectionUISvc.EndDrag(cancel);
                 }
@@ -2168,16 +2147,13 @@ namespace System.Windows.Forms.Design
                         Capture = true;
                         _mouseDragLast = PointToScreen(new Point(me.X, me.Y));
                         // If the CTRL key isn't down, select this component, otherwise, we wait until the mouse up. Make sure the component is selected
-                        _ctrlSelect = User32.GetKeyState((int)Keys.ControlKey) != 0;
+                        _ctrlSelect = PInvoke.GetKeyState((int)Keys.ControlKey) != 0;
                         if (!_ctrlSelect)
                         {
                             ISelectionService sel = (ISelectionService)_tray.GetService(typeof(ISelectionService));
                             // Make sure the component is selected
-                            Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (sel != null), "ISelectionService not found");
-                            if (sel != null)
-                            {
-                                sel.SetSelectedComponents(new object[] { Component }, SelectionTypes.Primary);
-                            }
+                            Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (sel is not null), "ISelectionService not found");
+                            sel?.SetSelectedComponents(new object[] { Component }, SelectionTypes.Primary);
                         }
                     }
                 }
@@ -2220,13 +2196,10 @@ namespace System.Windows.Forms.Design
                 {
                     // Make sure the component is selected
                     ISelectionService sel = (ISelectionService)_tray.GetService(typeof(ISelectionService));
-                    if (sel != null)
-                    {
-                        sel.SetSelectedComponents(new object[] { Component }, SelectionTypes.Primary);
-                    }
+                    sel?.SetSelectedComponents(new object[] { Component }, SelectionTypes.Primary);
 
                     // Notify the selection service that all the components are in the "mouse down" mode.
-                    if (_tray.selectionUISvc != null && _tray.selectionUISvc.BeginDrag(SelectionRules.Visible | SelectionRules.Moveable, _mouseDragLast.X, _mouseDragLast.Y))
+                    if (_tray.selectionUISvc is not null && _tray.selectionUISvc.BeginDrag(SelectionRules.Visible | SelectionRules.Moveable, _mouseDragLast.X, _mouseDragLast.Y))
                     {
                         OnSetCursor();
                     }
@@ -2250,23 +2223,24 @@ namespace System.Windows.Forms.Design
             /// <summary>
             ///  Called when we are to display our context menu for this component.
             /// </summary>
-            private void OnContextMenu(int x, int y)
+            private void OnContextMenu(Point location)
             {
                 if (!_tray.TabOrderActive)
                 {
                     Capture = false;
                     // Ensure that this component is selected.
                     ISelectionService s = (ISelectionService)_tray.GetService(typeof(ISelectionService));
-                    if (s != null && !s.GetComponentSelected(_component))
+                    if (s is not null && !s.GetComponentSelected(_component))
                     {
                         s.SetSelectedComponents(new object[] { _component }, SelectionTypes.Replace);
                     }
+
                     IMenuCommandService mcs = _tray.MenuService;
-                    if (mcs != null)
+                    if (mcs is not null)
                     {
                         Capture = false;
                         Cursor.Clip = Rectangle.Empty;
-                        mcs.ShowContextMenu(MenuCommands.TraySelectionMenu, x, y);
+                        mcs.ShowContextMenu(MenuCommands.TraySelectionMenu, location.X, location.Y);
                     }
                 }
             }
@@ -2281,6 +2255,7 @@ namespace System.Windows.Forms.Design
                     _fRecompute = false;
                     UpdateIconInfo();
                 }
+
                 base.OnPaint(e);
                 Rectangle rc = ClientRectangle;
                 rc.X += WhiteSpace + _borderWidth;
@@ -2294,7 +2269,7 @@ namespace System.Windows.Forms.Design
                     format.Alignment = StringAlignment.Center;
                     if (_tray.ShowLargeIcons)
                     {
-                        if (null != _toolboxBitmap)
+                        if (_toolboxBitmap is not null)
                         {
                             int x = rc.X + (rc.Width - _cxIcon) / 2;
                             int y = rc.Y + WhiteSpace;
@@ -2307,11 +2282,12 @@ namespace System.Windows.Forms.Design
                     }
                     else
                     {
-                        if (null != _toolboxBitmap)
+                        if (_toolboxBitmap is not null)
                         {
                             int y = rc.Y + (rc.Height - _cyIcon) / 2;
                             e.Graphics.DrawImage(_toolboxBitmap, new Rectangle(rc.X, y, _cxIcon, _cyIcon));
                         }
+
                         rc.X += (_cxIcon + _borderWidth);
                         rc.Width -= _cxIcon;
                         rc.Y += 3;
@@ -2321,23 +2297,18 @@ namespace System.Windows.Forms.Design
 
                 finally
                 {
-                    if (format != null)
-                    {
-                        format.Dispose();
-                    }
-                    if (foreBrush != null)
-                    {
-                        foreBrush.Dispose();
-                    }
+                    format?.Dispose();
+
+                    foreBrush?.Dispose();
                 }
 
                 // If this component is being inherited, paint it as such
                 if (!InheritanceAttribute.NotInherited.Equals(_inheritanceAttribute))
                 {
                     InheritanceUI iui = _tray.InheritanceUI;
-                    if (iui != null)
+                    if (iui is not null)
                     {
-                        e.Graphics.DrawImage(iui.InheritanceGlyph, 0, 0);
+                        e.Graphics.DrawImage(InheritanceUI.InheritanceGlyph, 0, 0);
                     }
                 }
             }
@@ -2356,10 +2327,7 @@ namespace System.Windows.Forms.Design
             /// </summary>
             protected override void OnLocationChanged(EventArgs e)
             {
-                if (_tray.glyphManager != null)
-                {
-                    _tray.glyphManager.UpdateLocation(this);
-                }
+                _tray.glyphManager?.UpdateLocation(this);
             }
 
             /// <summary>
@@ -2393,7 +2361,7 @@ namespace System.Windows.Forms.Design
                     return;
                 }
 
-                if (prop != null && ((bool)prop.GetValue(_component)) == true)
+                if (prop is not null && ((bool)prop.GetValue(_component)))
                 {
                     Cursor.Current = Cursors.Default;
                     return;
@@ -2428,6 +2396,7 @@ namespace System.Windows.Forms.Design
                 {
                     base.SetBoundsCore(x, y, width, height, specified);
                 }
+
                 Rectangle bounds = Bounds;
                 Size parentGridSize = _tray.ParentGridSize;
                 if (Math.Abs(bounds.X - x) > parentGridSize.Width || Math.Abs(bounds.Y - y) > parentGridSize.Height)
@@ -2451,7 +2420,7 @@ namespace System.Windows.Forms.Design
             internal void UpdateIconInfo()
             {
                 ToolboxBitmapAttribute attr = (ToolboxBitmapAttribute)TypeDescriptor.GetAttributes(_component)[typeof(ToolboxBitmapAttribute)];
-                if (attr != null)
+                if (attr is not null)
                 {
                     _toolboxBitmap = attr.GetImage(_component, _tray.ShowLargeIcons);
                 }
@@ -2468,6 +2437,7 @@ namespace System.Windows.Forms.Design
                     _cxIcon = sz.Width;
                     _cyIcon = sz.Height;
                 }
+
                 AdjustSize();
             }
 
@@ -2480,8 +2450,8 @@ namespace System.Windows.Forms.Design
                 PropertyDescriptor defaultPropEvent = null;
                 bool eventChanged = false;
                 IEventBindingService eps = (IEventBindingService)GetService(typeof(IEventBindingService));
-                Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (eps != null), "IEventBindingService not found");
-                if (eps != null)
+                Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (eps is not null), "IEventBindingService not found");
+                if (eps is not null)
                 {
                     defaultPropEvent = eps.GetEventProperty(defaultEvent);
                 }
@@ -2489,10 +2459,8 @@ namespace System.Windows.Forms.Design
                 // If we couldn't find a property for this event, or if the property is read only, then abort and just show the code.
                 if (defaultPropEvent is null || defaultPropEvent.IsReadOnly)
                 {
-                    if (eps != null)
-                    {
-                        eps.ShowCode();
-                    }
+                    eps?.ShowCode();
+
                     return;
                 }
 
@@ -2504,28 +2472,28 @@ namespace System.Windows.Forms.Design
                     eventChanged = true;
                     handler = eps.CreateUniqueMethodName(component, defaultEvent);
                 }
+
                 IDesignerHost host = (IDesignerHost)GetService(typeof(IDesignerHost));
                 DesignerTransaction trans = null;
 
                 try
                 {
-                    if (host != null)
+                    if (host is not null)
                     {
                         trans = host.CreateTransaction(string.Format(SR.WindowsFormsAddEvent, defaultEvent.Name));
                     }
+
                     // Save the new value... BEFORE navigating to it!
-                    if (eventChanged && defaultPropEvent != null)
+                    if (eventChanged && defaultPropEvent is not null)
                     {
                         defaultPropEvent.SetValue(component, handler);
                     }
+
                     eps.ShowCode(component, defaultEvent);
                 }
                 finally
                 {
-                    if (trans != null)
-                    {
-                        trans.Commit();
-                    }
+                    trans?.Commit();
                 }
             }
 
@@ -2541,29 +2509,33 @@ namespace System.Windows.Forms.Design
                         OnSetCursor();
                         break;
                     case User32.WM.CONTEXTMENU:
-                        // We must handle this ourselves.  Control only allows regular Windows Forms context menus, which doesn't do us much good.  Also, control's button up processing calls DefwndProc first, which causes a right mouse up to be routed as a WM_CONTEXTMENU.  If we don't respond to it here, this message will be bubbled up to our parent, which would pop up a container context menu instead of our own.
-                        int x = PARAM.SignedLOWORD(m.LParam);
-                        int y = PARAM.SignedHIWORD(m.LParam);
-                        if (x == -1 && y == -1)
+                        // We must handle this ourselves.  Control only allows regular Windows Forms context menus, which
+                        // doesn't do us much good.  Also, control's button up processing calls DefwndProc first, which
+                        // causes a right mouse up to be routed as a WM_CONTEXTMENU.  If we don't respond to it here,
+                        // this message will be bubbled up to our parent, which would pop up a container context menu
+                        // instead of our own.
+
+                        Point location = PARAM.ToPoint(m.LParamInternal);
+                        if (location.X == -1 && location.Y == -1)
                         {
                             // for shift-F10
-                            Point mouse = Control.MousePosition;
-                            x = mouse.X;
-                            y = mouse.Y;
+                            location = MousePosition;
                         }
-                        OnContextMenu(x, y);
+
+                        OnContextMenu(location);
                         break;
                     case User32.WM.NCHITTEST:
-                        if (_tray.glyphManager != null)
+                        if (_tray.glyphManager is not null)
                         {
                             // Make sure tha we send our glyphs hit test messages over the TrayControls too
-                            Point pt = new Point((short)PARAM.LOWORD(m.LParam), (short)PARAM.HIWORD(m.LParam));
-                            var pt1 = new Point();
-                            User32.MapWindowPoints(IntPtr.Zero, Handle, ref pt1, 1);
+                            Point pt = PARAM.ToPoint(m.LParamInternal);
+                            var pt1 = default(Point);
+                            pt1 = PointToClient(pt1);
                             pt.Offset(pt1.X, pt1.Y);
-                            pt.Offset(Location.X, Location.Y);//offset the loc of the traycontrol -so now we're in comptray coords
+                            pt.Offset(Location.X, Location.Y); //offset the loc of the traycontrol -so now we're in comptray coords
                             _tray.glyphManager.GetHitTest(pt);
                         }
+
                         base.WndProc(ref m);
                         break;
                     default:
@@ -2574,7 +2546,7 @@ namespace System.Windows.Forms.Design
 
             private class TrayControlAccessibleObject : ControlAccessibleObject
             {
-                readonly ComponentTray _tray;
+                private readonly ComponentTray _tray;
                 public TrayControlAccessibleObject(TrayControl owner, ComponentTray tray) : base(owner)
                 {
                     _tray = tray;
@@ -2591,17 +2563,19 @@ namespace System.Windows.Forms.Design
                     {
                         AccessibleStates state = base.State;
                         ISelectionService s = (ISelectionService)_tray.GetService(typeof(ISelectionService));
-                        if (s != null)
+                        if (s is not null)
                         {
                             if (s.GetComponentSelected(Component))
                             {
                                 state |= AccessibleStates.Selected;
                             }
+
                             if (s.PrimarySelection == Component)
                             {
                                 state |= AccessibleStates.Focused;
                             }
                         }
+
                         return state;
                     }
                 }
@@ -2634,11 +2608,11 @@ namespace System.Windows.Forms.Design
             }
 
             /// <summary>
-            ///  Clears teh adorner of glyphs.
+            ///  Clears the adorner of glyphs.
             /// </summary>
             public void Dispose()
             {
-                if (_traySelectionAdorner != null)
+                if (_traySelectionAdorner is not null)
                 {
                     _traySelectionAdorner.Glyphs.Clear();
                     _traySelectionAdorner = null;
@@ -2651,17 +2625,18 @@ namespace System.Windows.Forms.Design
             public GlyphCollection GetGlyphsForComponent(IComponent comp)
             {
                 GlyphCollection glyphs = new GlyphCollection();
-                if (_behaviorSvc != null && comp != null)
+                if (_behaviorSvc is not null && comp is not null)
                 {
-                    if (_behaviorSvc.DesignerActionUI != null)
+                    if (_behaviorSvc.DesignerActionUI is not null)
                     {
                         Glyph g = _behaviorSvc.DesignerActionUI.GetDesignerActionGlyph(comp);
-                        if (g != null)
+                        if (g is not null)
                         {
                             glyphs.Add(g);
                         }
                     }
                 }
+
                 return glyphs;
             }
 
@@ -2673,61 +2648,66 @@ namespace System.Windows.Forms.Design
                 for (int i = 0; i < _traySelectionAdorner.Glyphs.Count; i++)
                 {
                     Cursor hitTestCursor = _traySelectionAdorner.Glyphs[i].GetHitTest(p);
-                    if (hitTestCursor != null)
+                    if (hitTestCursor is not null)
                     {
                         _hitTestedGlyph = _traySelectionAdorner.Glyphs[i];
                         return hitTestCursor;
                     }
                 }
+
                 _hitTestedGlyph = null;
                 return null;
             }
 
             /// <summary>
-            ///  Called when the tray receives this mouse message.  Here,  we'll give our glyphs the first chance to repsond to the message before the tray even sees it.
+            ///  Called when the tray receives this mouse message.  Here,  we'll give our glyphs the first chance to respond to the message before the tray even sees it.
             /// </summary>
             public bool OnMouseDoubleClick(MouseEventArgs e)
             {
-                if (_hitTestedGlyph != null && _hitTestedGlyph.Behavior != null)
+                if (_hitTestedGlyph is not null && _hitTestedGlyph.Behavior is not null)
                 {
                     return _hitTestedGlyph.Behavior.OnMouseDoubleClick(_hitTestedGlyph, e.Button, new Point(e.X, e.Y));
                 }
+
                 return false;
             }
 
             /// <summary>
-            ///  Called when the tray receives this mouse message.  Here,  we'll give our glyphs the first chance to repsond to the message before the tray even sees it.
+            ///  Called when the tray receives this mouse message.  Here,  we'll give our glyphs the first chance to respond to the message before the tray even sees it.
             /// </summary>
             public bool OnMouseDown(MouseEventArgs e)
             {
-                if (_hitTestedGlyph != null && _hitTestedGlyph.Behavior != null)
+                if (_hitTestedGlyph is not null && _hitTestedGlyph.Behavior is not null)
                 {
                     return _hitTestedGlyph.Behavior.OnMouseDown(_hitTestedGlyph, e.Button, new Point(e.X, e.Y));
                 }
+
                 return false;
             }
 
             /// <summary>
-            ///  Called when the tray receives this mouse message.  Here,  we'll give our glyphs the first chance to repsond to the message before the tray even sees it.
+            ///  Called when the tray receives this mouse message.  Here,  we'll give our glyphs the first chance to respond to the message before the tray even sees it.
             /// </summary>
             public bool OnMouseMove(MouseEventArgs e)
             {
-                if (_hitTestedGlyph != null && _hitTestedGlyph.Behavior != null)
+                if (_hitTestedGlyph is not null && _hitTestedGlyph.Behavior is not null)
                 {
                     return _hitTestedGlyph.Behavior.OnMouseMove(_hitTestedGlyph, e.Button, new Point(e.X, e.Y));
                 }
+
                 return false;
             }
 
             /// <summary>
-            ///  Called when the tray receives this mouse message.  Here,  we'll give our glyphs the first chance to repsond to the message before the tray even sees it.
+            ///  Called when the tray receives this mouse message.  Here,  we'll give our glyphs the first chance to respond to the message before the tray even sees it.
             /// </summary>
             public bool OnMouseUp(MouseEventArgs e)
             {
-                if (_hitTestedGlyph != null && _hitTestedGlyph.Behavior != null)
+                if (_hitTestedGlyph is not null && _hitTestedGlyph.Behavior is not null)
                 {
                     return _hitTestedGlyph.Behavior.OnMouseUp(_hitTestedGlyph, e.Button);
                 }
+
                 return false;
             }
 
@@ -2759,29 +2739,32 @@ namespace System.Windows.Forms.Design
             }
         }
 
-        internal class AutoArrangeComparer : IComparer
+        internal class AutoArrangeComparer : IComparer<Control>
         {
-            int IComparer.Compare(object o1, object o2)
+            int IComparer<Control>.Compare(Control o1, Control o2)
             {
-                Debug.Assert(o1 != null && o2 != null, "Null objects sent for comparison!!!");
-                Point tcLoc1 = ((Control)o1).Location;
-                Point tcLoc2 = ((Control)o2).Location;
-                int height = ((Control)o1).Height / 2;
+                Debug.Assert(o1 is not null && o2 is not null, "Null objects sent for comparison!!!");
+                Point tcLoc1 = o1.Location;
+                Point tcLoc2 = o2.Location;
+                int height = o1.Height / 2;
                 // If they are at the same location, they are equal.
                 if (tcLoc1.X == tcLoc2.X && tcLoc1.Y == tcLoc2.Y)
                 {
                     return 0;
                 }
+
                 // Is the first control lower than the 2nd...
                 if (tcLoc1.Y + height <= tcLoc2.Y)
                 {
                     return -1;
                 }
+
                 // Is the 2nd control lower than the first...
                 if (tcLoc2.Y + height <= tcLoc1.Y)
                 {
                     return 1;
                 }
+
                 // Which control is left of the other...
                 return ((tcLoc1.X <= tcLoc2.X) ? -1 : 1);
             }
@@ -2798,7 +2781,7 @@ namespace System.Windows.Forms.Design
             public TraySelectionUIHandler(ComponentTray tray)
             {
                 _tray = tray;
-                _snapSize = new Size();
+                _snapSize = default(Size);
             }
 
             /// <summary>
@@ -2894,18 +2877,18 @@ namespace System.Windows.Forms.Design
             protected override bool CanDropDataObject(IDataObject dataObj)
             {
                 ICollection comps = null;
-                if (dataObj != null)
+                if (dataObj is not null)
                 {
                     if (dataObj is ComponentDataObjectWrapper cdow)
                     {
-                        ComponentDataObject cdo = (ComponentDataObject)cdow.InnerData;
+                        ComponentDataObject cdo = cdow.InnerData;
                         comps = cdo.Components;
                     }
                     else
                     {
                         try
                         {
-                            object serializationData = dataObj.GetData(OleDragDropHandler.DataFormat, true);
+                            object serializationData = dataObj.GetData(DataFormat, true);
                             if (serializationData is null)
                             {
                                 return false;
@@ -2916,6 +2899,7 @@ namespace System.Windows.Forms.Design
                             {
                                 return false;
                             }
+
                             comps = ds.Deserialize(serializationData);
                         }
                         catch (Exception e)
@@ -2924,12 +2908,13 @@ namespace System.Windows.Forms.Design
                             {
                                 throw;
                             }
+
                             // we return false on any exception
                         }
                     }
                 }
 
-                if (comps != null && comps.Count > 0)
+                if (comps is not null && comps.Count > 0)
                 {
                     foreach (object comp in comps)
                     {
@@ -2937,13 +2922,16 @@ namespace System.Windows.Forms.Design
                         {
                             continue;
                         }
+
                         if (comp is Control || !(comp is IComponent))
                         {
                             return false;
                         }
                     }
+
                     return true;
                 }
+
                 return false;
             }
         }

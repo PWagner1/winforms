@@ -2,12 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.InteropServices;
-using static Interop;
 
 namespace System.Windows.Forms.ButtonInternal
 {
@@ -16,16 +12,19 @@ namespace System.Windows.Forms.ButtonInternal
         protected const int FlatCheckSize = 11;
 
         [ThreadStatic]
-        private static Bitmap t_checkImageChecked = null;
+        private static Bitmap? t_checkImageChecked;
         [ThreadStatic]
-        private static Color t_checkImageCheckedBackColor = Color.Empty;
+        private static Color t_checkImageCheckedBackColor;
 
         [ThreadStatic]
-        private static Bitmap t_checkImageIndeterminate = null;
+        private static Bitmap? t_checkImageIndeterminate;
         [ThreadStatic]
-        private static Color t_checkImageIndeterminateBackColor = Color.Empty;
+        private static Color t_checkImageIndeterminateBackColor;
 
-        internal CheckBoxBaseAdapter(ButtonBase control) : base(control) { }
+        internal CheckBoxBaseAdapter(ButtonBase control)
+            : base(control)
+        {
+        }
 
         protected new CheckBox Control
         {
@@ -57,9 +56,9 @@ namespace System.Windows.Forms.ButtonInternal
                 bounds.Height--;
             }
 
-            using (var hdc = new DeviceContextHdcScope(e))
+            using (DeviceContextHdcScope hdc = new(e))
             {
-                using var hpen = new Gdi32.CreatePenScope(checkBorder);
+                using PInvoke.CreatePenScope hpen = new(checkBorder);
                 hdc.DrawRectangle(bounds, hpen);
 
                 // Now subtract, since the rest of the code is like Everett.
@@ -68,6 +67,7 @@ namespace System.Windows.Forms.ButtonInternal
                     bounds.Width--;
                     bounds.Height--;
                 }
+
                 bounds.Inflate(-1, -1);
             }
 
@@ -79,8 +79,8 @@ namespace System.Windows.Forms.ButtonInternal
             }
             else
             {
-                using var hdc = new DeviceContextHdcScope(e);
-                using var hbrush = new Gdi32.CreateBrushScope(checkBackground);
+                using DeviceContextHdcScope hdc = new(e);
+                using PInvoke.CreateBrushScope hbrush = new(checkBackground);
 
                 // Even though we are using GDI here as opposed to GDI+ in Everett, we still need to add 1.
                 bounds.Width++;
@@ -120,10 +120,10 @@ namespace System.Windows.Forms.ButtonInternal
                 color = checkBackground;
             }
 
-            using var hbrush = new Gdi32.CreateBrushScope(color);
+            using PInvoke.CreateBrushScope hbrush = new(color);
 
             RECT rect = bounds;
-            User32.FillRect(hdc, ref rect, hbrush);
+            PInvoke.FillRect(hdc, rect, hbrush);
         }
 
         protected void DrawCheckBackground(
@@ -223,11 +223,11 @@ namespace System.Windows.Forms.ButtonInternal
             return DrawPopupBorder(hdc, r, colors);
         }
 
-        internal static Rectangle DrawPopupBorder(Gdi32.HDC hdc, Rectangle r, ColorData colors)
+        internal static Rectangle DrawPopupBorder(HDC hdc, Rectangle r, ColorData colors)
         {
-            using var high = new Gdi32.CreatePenScope(colors.Highlight);
-            using var shadow = new Gdi32.CreatePenScope(colors.ButtonShadow);
-            using var face = new Gdi32.CreatePenScope(colors.ButtonFace);
+            using PInvoke.CreatePenScope high = new(colors.Highlight);
+            using PInvoke.CreatePenScope shadow = new(colors.ButtonShadow);
+            using PInvoke.CreatePenScope face = new(colors.ButtonFace);
 
             hdc.DrawLine(high, r.Right - 1, r.Top, r.Right - 1, r.Bottom);
             hdc.DrawLine(high, r.Left, r.Bottom - 1, r.Right, r.Bottom - 1);
@@ -280,7 +280,7 @@ namespace System.Windows.Forms.ButtonInternal
                         e,
                         new Point(layout.CheckBounds.Left, layout.CheckBounds.Top),
                         CheckBoxRenderer.ConvertFromButtonState(style, true, Control.MouseIsOver),
-                        Control.HandleInternal);
+                        Control.HWNDInternal);
                 }
                 else
                 {
@@ -295,7 +295,7 @@ namespace System.Windows.Forms.ButtonInternal
                         e,
                         new Point(layout.CheckBounds.Left, layout.CheckBounds.Top),
                         CheckBoxRenderer.ConvertFromButtonState(style, false, Control.MouseIsOver),
-                        Control.HandleInternal);
+                        Control.HWNDInternal);
                 }
                 else
                 {
@@ -306,7 +306,7 @@ namespace System.Windows.Forms.ButtonInternal
 
         #endregion
 
-        private static Bitmap GetCheckBoxImage(Color checkColor, Rectangle fullSize, ref Color cacheCheckColor, ref Bitmap cacheCheckImage)
+        private static Bitmap GetCheckBoxImage(Color checkColor, Rectangle fullSize, ref Color cacheCheckColor, ref Bitmap? cacheCheckImage)
         {
             if (cacheCheckImage is not null &&
                 cacheCheckColor.Equals(checkColor) &&
@@ -326,11 +326,11 @@ namespace System.Windows.Forms.ButtonInternal
             {
                 offscreen.Clear(Color.Transparent);
                 using var hdc = new DeviceContextHdcScope(offscreen, applyGraphicsState: false);
-                User32.DrawFrameControl(
+                PInvoke.DrawFrameControl(
                     hdc,
                     ref rcCheck,
-                    User32.DFC.MENU,
-                    User32.DFCS.MENUCHECK);
+                    DFC_TYPE.DFC_MENU,
+                    DFCS_STATE.DFCS_MENUCHECK);
             }
 
             bitmap.MakeTransparent();

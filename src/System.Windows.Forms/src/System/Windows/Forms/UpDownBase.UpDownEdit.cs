@@ -2,9 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
-using System.Drawing;
+using System.Diagnostics.CodeAnalysis;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -16,26 +14,26 @@ namespace System.Windows.Forms
             private readonly UpDownBase _parent;
             private bool _doubleClickFired;
 
-            internal UpDownEdit(UpDownBase parent) : base()
+            internal UpDownEdit(UpDownBase parent)
             {
                 SetStyle(ControlStyles.FixedHeight | ControlStyles.FixedWidth, true);
-                SetStyle(ControlStyles.Selectable, false);
 
                 _parent = parent;
             }
 
+            [AllowNull]
             public override string Text
             {
                 get => base.Text;
                 set
                 {
-                    bool valueChanged = (value != base.Text);
-                    if (valueChanged)
+                    if (IsAccessibilityObjectCreated && value != base.Text)
                     {
                         AccessibilityObject.RaiseAutomationNotification(Automation.AutomationNotificationKind.ActionCompleted,
                             Automation.AutomationNotificationProcessing.CurrentThenMostRecent, SR.UpDownEditLocalizedControlTypeName);
                         AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextChangedEventId);
                     }
+
                     base.Text = value;
                 }
             }
@@ -51,17 +49,23 @@ namespace System.Windows.Forms
                 }
 
                 _parent.OnMouseDown(_parent.TranslateMouseEvent(this, e));
+
+                if (IsHandleCreated && IsAccessibilityObjectCreated)
+                {
+                    // As there is no corresponding windows notification
+                    // about text selection changed for TextBox assuming
+                    // that any mouse down on textbox leads to change of
+                    // the caret position and thereby change the selection.
+                    AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+                }
             }
 
             protected override void OnMouseUp(MouseEventArgs e)
             {
-                Point pt = new Point(e.X, e.Y);
-                pt = PointToScreen(pt);
-
                 MouseEventArgs me = _parent.TranslateMouseEvent(this, e);
                 if (e.Button == MouseButtons.Left)
                 {
-                    if (!_parent.ValidationCancelled && User32.WindowFromPoint(pt) == Handle)
+                    if (!_parent.ValidationCancelled && PInvoke.WindowFromPoint(PointToScreen(e.Location)) == HWND)
                     {
                         if (!_doubleClickFired)
                         {
@@ -75,6 +79,7 @@ namespace System.Windows.Forms
                             _parent.OnMouseDoubleClick(me);
                         }
                     }
+
                     _doubleClickFired = false;
                 }
 
@@ -84,7 +89,7 @@ namespace System.Windows.Forms
             internal override void WmContextMenu(ref Message m)
             {
                 // Want to make the SourceControl to be the UpDownBase, not the Edit.
-                if (ContextMenuStrip != null)
+                if (ContextMenuStrip is not null)
                 {
                     WmContextMenu(ref m, _parent);
                 }
@@ -95,17 +100,27 @@ namespace System.Windows.Forms
             }
 
             /// <summary>
-            ///  Raises the <see cref='Control.KeyUp'/> event.
+            ///  Raises the <see cref="Control.KeyUp"/> event.
             /// </summary>
             protected override void OnKeyUp(KeyEventArgs e)
             {
                 _parent.OnKeyUp(e);
+
+                if (IsHandleCreated && IsAccessibilityObjectCreated && ContainsNavigationKeyCode(e.KeyCode))
+                {
+                    AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+                }
             }
 
             protected override void OnGotFocus(EventArgs e)
             {
                 _parent.SetActiveControl(this);
                 _parent.InvokeGotFocus(_parent, e);
+
+                if (IsAccessibilityObjectCreated)
+                {
+                    AccessibilityObject.SetFocus();
+                }
             }
 
             protected override void OnLostFocus(EventArgs e)

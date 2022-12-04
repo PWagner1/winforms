@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Drawing;
 using static Interop;
 
@@ -36,15 +34,15 @@ namespace System.Windows.Forms.Design.Behavior
             }
 
             /// <summary>
-            ///  The key here is to set the appropriate TransparetWindow style.
+            ///  The key here is to set the appropriate TransparentWindow style.
             /// </summary>
             protected override CreateParams CreateParams
             {
                 get
                 {
                     CreateParams cp = base.CreateParams;
-                    cp.Style &= ~(int)(User32.WS.CLIPCHILDREN | User32.WS.CLIPSIBLINGS);
-                    cp.ExStyle |= (int)User32.WS_EX.TRANSPARENT;
+                    cp.Style &= ~(int)(WINDOW_STYLE.WS_CLIPCHILDREN | WINDOW_STYLE.WS_CLIPSIBLINGS);
+                    cp.ExStyle |= (int)WINDOW_EX_STYLE.WS_EX_TRANSPARENT;
                     return cp;
                 }
             }
@@ -69,7 +67,7 @@ namespace System.Windows.Forms.Design.Behavior
                 s_adornerWindowList.Remove(this);
 
                 // Unregister the mouse hook once all adorner windows have been disposed.
-                if (s_adornerWindowList.Count == 0 && s_mouseHook != null)
+                if (s_adornerWindowList.Count == 0 && s_mouseHook is not null)
                 {
                     s_mouseHook.Dispose();
                     s_mouseHook = null;
@@ -83,7 +81,7 @@ namespace System.Windows.Forms.Design.Behavior
             /// </summary>
             protected override void Dispose(bool disposing)
             {
-                if (disposing && DesignerFrame != null)
+                if (disposing && DesignerFrame is not null)
                 {
                     DesignerFrame = null;
                 }
@@ -103,7 +101,7 @@ namespace System.Windows.Forms.Design.Behavior
             ///  Returns true if the DesignerFrame is created and not being disposed.
             /// </summary>
             internal bool DesignerFrameValid
-                => DesignerFrame != null && !DesignerFrame.IsDisposed && DesignerFrame.IsHandleCreated;
+                => DesignerFrame is not null && !DesignerFrame.IsDisposed && DesignerFrame.IsHandleCreated;
 
             public IEnumerable<Adorner> Adorners { get; private set; }
 
@@ -217,15 +215,15 @@ namespace System.Windows.Forms.Design.Behavior
             {
                 ProcessingDrag = true;
 
-                // determine if this is a local drag, if it is, do normal processing otherwise, force a
+                // Determine if this is a local drag, if it is, do normal processing otherwise, force a
                 // PropagateHitTest.  We need to force this because the OLE D&D service suspends mouse messages
                 // when the drag is not local so the mouse hook never sees them.
                 if (!IsLocalDrag(e))
                 {
                     _behaviorService._validDragArgs = e;
-                    User32.GetCursorPos(out Point pt);
-                    User32.MapWindowPoints(IntPtr.Zero, Handle, ref pt, 1);
-                    _behaviorService.PropagateHitTest(pt);
+                    PInvoke.GetCursorPos(out Point point);
+                    point = PointToClient(point);
+                    _behaviorService.PropagateHitTest(point);
                 }
 
                 _behaviorService.OnDragEnter(null, e);
@@ -259,9 +257,9 @@ namespace System.Windows.Forms.Design.Behavior
                 if (!IsLocalDrag(e))
                 {
                     _behaviorService._validDragArgs = e;
-                    User32.GetCursorPos(out Point pt);
-                    User32.MapWindowPoints(IntPtr.Zero, Handle, ref pt, 1);
-                    _behaviorService.PropagateHitTest(pt);
+                    PInvoke.GetCursorPos(out Point point);
+                    point = PointToClient(point);
+                    _behaviorService.PropagateHitTest(point);
                 }
 
                 _behaviorService.OnDragOver(e);
@@ -281,7 +279,7 @@ namespace System.Windows.Forms.Design.Behavior
 
             /// <summary>
             ///  Called by ControlDesigner when it receives a DragEnter message - we'll let listen to all Mouse
-            ///  Messages so we can send drag notifcations.
+            ///  Messages so we can send drag notifications.
             /// </summary>
             internal void StartDragNotification() => ProcessingDrag = true;
 
@@ -290,7 +288,7 @@ namespace System.Windows.Forms.Design.Behavior
             ///  for appropriate actions.  Note that Paint and HitTest messages are correctly parsed and translated
             ///  to AdornerWindow coords.
             /// </summary>
-            protected override void WndProc(ref Message m)
+            protected override unsafe void WndProc(ref Message m)
             {
                 //special test hooks
                 if (m.Msg == (int)WM_GETALLSNAPLINES)
@@ -307,13 +305,13 @@ namespace System.Windows.Forms.Design.Behavior
                     case User32.WM.PAINT:
                         {
                             // Stash off the region we have to update.
-                            using var hrgn = new Gdi32.RegionScope(0, 0, 0, 0);
-                            User32.GetUpdateRgn(m.HWnd, hrgn, BOOL.TRUE);
+                            using PInvoke.RegionScope hrgn = new(0, 0, 0, 0);
+                            PInvoke.GetUpdateRgn(m.HWND, hrgn, true);
 
                             // The region we have to update in terms of the smallest rectangle that completely encloses
                             // the update region of the window gives us the clip rectangle.
-                            RECT clip = new RECT();
-                            User32.GetUpdateRect(m.HWnd, ref clip, BOOL.TRUE);
+                            RECT clip = default;
+                            PInvoke.GetUpdateRect(m.HWND, &clip, true);
                             Rectangle paintRect = clip;
 
                             using Region region = hrgn.CreateGdiPlusRegion();
@@ -323,7 +321,7 @@ namespace System.Windows.Forms.Design.Behavior
 
                             // Now do our own painting.
                             using Graphics g = Graphics.FromHwnd(m.HWnd);
-                            using PaintEventArgs pevent = new PaintEventArgs(g, paintRect);
+                            using PaintEventArgs pevent = new(g, paintRect);
                             g.Clip = region;
                             _behaviorService.PropagatePaint(pevent);
 
@@ -331,21 +329,21 @@ namespace System.Windows.Forms.Design.Behavior
                         }
 
                     case User32.WM.NCHITTEST:
-                        Point pt = new Point(
-                            (short)PARAM.LOWORD(m.LParam),
-                            (short)PARAM.HIWORD(m.LParam));
-                        var pt1 = new Point();
-                        User32.MapWindowPoints(IntPtr.Zero, Handle, ref pt1, 1);
+                        Point pt = PARAM.ToPoint(m.LParamInternal);
+
+                        var pt1 = default(Point);
+                        pt1 = PointToClient(pt1);
                         pt.Offset(pt1.X, pt1.Y);
 
                         if (_behaviorService.PropagateHitTest(pt) && !ProcessingDrag)
                         {
-                            m.Result = (IntPtr)User32.HT.TRANSPARENT;
+                            m.ResultInternal = (LRESULT)(int)User32.HT.TRANSPARENT;
                         }
                         else
                         {
-                            m.Result = (IntPtr)User32.HT.CLIENT;
+                            m.ResultInternal = (LRESULT)(int)User32.HT.CLIENT;
                         }
+
                         break;
 
                     case User32.WM.CAPTURECHANGED:
@@ -374,6 +372,7 @@ namespace System.Windows.Forms.Design.Behavior
                         {
                             return false;
                         }
+
                         break;
 
                     case User32.WM.RBUTTONDOWN:
@@ -381,6 +380,7 @@ namespace System.Windows.Forms.Design.Behavior
                         {
                             return false;
                         }
+
                         break;
 
                     case User32.WM.MOUSEMOVE:
@@ -388,6 +388,7 @@ namespace System.Windows.Forms.Design.Behavior
                         {
                             return false;
                         }
+
                         break;
 
                     case User32.WM.LBUTTONUP:
@@ -395,6 +396,7 @@ namespace System.Windows.Forms.Design.Behavior
                         {
                             return false;
                         }
+
                         break;
 
                     case User32.WM.RBUTTONUP:
@@ -402,6 +404,7 @@ namespace System.Windows.Forms.Design.Behavior
                         {
                             return false;
                         }
+
                         break;
 
                     case User32.WM.MOUSEHOVER:
@@ -409,6 +412,7 @@ namespace System.Windows.Forms.Design.Behavior
                         {
                             return false;
                         }
+
                         break;
 
                     case User32.WM.LBUTTONDBLCLK:
@@ -416,6 +420,7 @@ namespace System.Windows.Forms.Design.Behavior
                         {
                             return false;
                         }
+
                         break;
 
                     case User32.WM.RBUTTONDBLCLK:
@@ -423,6 +428,7 @@ namespace System.Windows.Forms.Design.Behavior
                         {
                             return false;
                         }
+
                         break;
                 }
 

@@ -39,6 +39,9 @@ namespace WinformsControlsTest
             this.column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.column3 = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.column4 = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.column5 = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.column6 = new System.Windows.Forms.DataGridViewImageColumn();
+            this.column7 = new System.Windows.Forms.DataGridViewButtonColumn();
             this.currentDPILabel1 = new WinformsControlsTest.CurrentDPILabel();
             this.changeFontButton = new System.Windows.Forms.Button();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
@@ -62,8 +65,11 @@ namespace WinformsControlsTest
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.column1,
             this.column2,
+            this.column5,
             this.column3,
-            this.column4});
+            this.column4,
+            this.column6,
+            this.column7 });
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Info;
             dataGridViewCellStyle3.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
@@ -76,7 +82,7 @@ namespace WinformsControlsTest
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.Size = new System.Drawing.Size(492, 150);
+            this.dataGridView1.Size = new System.Drawing.Size(692, 150);
             this.dataGridView1.TabIndex = 0;
             // 
             // column1
@@ -98,6 +104,26 @@ namespace WinformsControlsTest
             // 
             this.column4.HeaderText = "Column4";
             this.column4.Name = "column4";
+            this.column4.Items.AddRange(new[] {"First", "Second"});
+            this.column4.AutoComplete = true;
+            // 
+            // column5
+            // 
+            this.column5.HeaderText = "Hidden Column";
+            this.column5.Name = "column5";
+            this.column5.Visible = false;
+            // 
+            // column6
+            // 
+            this.column6.HeaderText = "Column6";
+            this.column6.Name = "column6";
+            // 
+            // column7
+            // 
+            this.column7.HeaderText = "Column7";
+            this.column7.Name = "column7";
+            this.column7.Text = "Button";
+            this.column7.UseColumnTextForButtonValue = true;
             // 
             // currentDPILabel1
             // 
@@ -173,7 +199,7 @@ namespace WinformsControlsTest
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.ClientSize = new System.Drawing.Size(492, 272);
+            this.ClientSize = new System.Drawing.Size(692, 272);
             this.Controls.Add(this.resetFontButton);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.numericUpDown1);
@@ -197,6 +223,9 @@ namespace WinformsControlsTest
         private System.Windows.Forms.DataGridViewTextBoxColumn column2;
         private System.Windows.Forms.DataGridViewCheckBoxColumn column3;
         private System.Windows.Forms.DataGridViewComboBoxColumn column4;
+        private System.Windows.Forms.DataGridViewComboBoxColumn column5;
+        private System.Windows.Forms.DataGridViewImageColumn column6;
+        private System.Windows.Forms.DataGridViewButtonColumn column7;
         private WinformsControlsTest.CurrentDPILabel currentDPILabel1;
         private System.Windows.Forms.Button changeFontButton;
         private System.Windows.Forms.NumericUpDown numericUpDown1;

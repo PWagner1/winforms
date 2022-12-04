@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using Xunit;
 using static Interop;
 
@@ -105,6 +104,72 @@ namespace System.Windows.Forms.Tests
 
             Assert.Equal(expectedItem, nextItem);
             Assert.True(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [InlineData(ComboBoxStyle.DropDown)]
+        [InlineData(ComboBoxStyle.Simple)]
+        public void ComboBoxChildEditUiaProvider_SupportsTextPattern(ComboBoxStyle comboBoxStyle)
+        {
+            using ComboBox comboBox = new ComboBox
+            {
+                DropDownStyle = comboBoxStyle
+            };
+
+            comboBox.CreateControl();
+            AccessibleObject accessibleObject = comboBox.ChildEditAccessibleObject;
+
+            Assert.True((bool)accessibleObject.GetPropertyValue(UiaCore.UIA.IsTextPatternAvailablePropertyId));
+        }
+
+        [WinFormsTheory]
+        [InlineData(ComboBoxStyle.DropDown)]
+        [InlineData(ComboBoxStyle.Simple)]
+        public void ComboBoxChildEditUiaProvider_SupportsTextPattern2(ComboBoxStyle comboBoxStyle)
+        {
+            using ComboBox comboBox = new ComboBox
+            {
+                DropDownStyle = comboBoxStyle
+            };
+
+            comboBox.CreateControl();
+            AccessibleObject accessibleObject = comboBox.ChildEditAccessibleObject;
+
+            Assert.True((bool)accessibleObject.GetPropertyValue(UiaCore.UIA.IsTextPattern2AvailablePropertyId));
+        }
+
+        [WinFormsTheory]
+        [InlineData(ComboBoxStyle.DropDown)]
+        [InlineData(ComboBoxStyle.Simple)]
+        public void ComboBoxChildEditUiaProvider_SupportsValuePattern(ComboBoxStyle comboBoxStyle)
+        {
+            using ComboBox comboBox = new ComboBox
+            {
+                DropDownStyle = comboBoxStyle
+            };
+
+            comboBox.CreateControl();
+            AccessibleObject accessibleObject = comboBox.ChildEditAccessibleObject;
+
+            Assert.True((bool)accessibleObject.GetPropertyValue(UiaCore.UIA.IsValuePatternAvailablePropertyId));
+        }
+
+        [WinFormsFact]
+        public void ComboBoxChildEditUiaProvider_GetPropertyValue_ReturnsExpected()
+        {
+            using ComboBox comboBox = new ComboBox();
+            comboBox.CreateControl();
+            AccessibleObject accessibleObject = comboBox.ChildEditAccessibleObject;
+
+            Assert.Equal(SR.ComboBoxEditDefaultAccessibleName, accessibleObject.GetPropertyValue(UiaCore.UIA.NamePropertyId).ToString());
+            Assert.Equal(SR.ComboBoxEditDefaultAccessibleName, accessibleObject.GetPropertyValue(UiaCore.UIA.LegacyIAccessibleNamePropertyId).ToString());
+            Assert.Null(accessibleObject.GetPropertyValue(UiaCore.UIA.ValueValuePropertyId));
+
+            comboBox.AccessibleName = "Combo AO name";
+
+            Assert.Equal(comboBox.AccessibleName, accessibleObject.GetPropertyValue(UiaCore.UIA.NamePropertyId).ToString());
+            Assert.Equal(comboBox.AccessibleName, accessibleObject.GetPropertyValue(UiaCore.UIA.LegacyIAccessibleNamePropertyId).ToString());
+            Assert.Null(accessibleObject.GetPropertyValue(UiaCore.UIA.ValueValuePropertyId));
         }
     }
 }

@@ -52,7 +52,7 @@ namespace System.Windows.Forms
                         throw new InvalidOperationException(SR.DataGridViewCellAccessibleObject_OwnerNotSet);
                     }
 
-                    if (Owner.DataGridView != null &&
+                    if (Owner.DataGridView is not null &&
                         (Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.FullRowSelect ||
                          Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.RowHeaderSelect))
                     {
@@ -100,11 +100,11 @@ namespace System.Windows.Forms
                         resultState |= AccessibleStates.Offscreen;
                     }
 
-                    if (Owner.DataGridView != null &&
+                    if (Owner.DataGridView is not null &&
                         (Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.FullRowSelect ||
                          Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.RowHeaderSelect))
                     {
-                        if (Owner.OwningRow != null && Owner.OwningRow.Selected)
+                        if (Owner.OwningRow is not null && Owner.OwningRow.Selected)
                         {
                             resultState |= AccessibleStates.Selected;
                         }
@@ -124,7 +124,7 @@ namespace System.Windows.Forms
                 }
 
                 if (Owner.DataGridView?.IsHandleCreated == true &&
-                    Owner.OwningRow != null &&
+                    Owner.OwningRow is not null &&
                     (Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.FullRowSelect ||
                      Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.RowHeaderSelect))
                 {
@@ -226,7 +226,7 @@ namespace System.Windows.Forms
                     dataGridView.Focus();
                 }
 
-                if (dataGridViewCell.OwningRow != null &&
+                if (dataGridViewCell.OwningRow is not null &&
                     (dataGridView.SelectionMode == DataGridViewSelectionMode.FullRowSelect ||
                      dataGridView.SelectionMode == DataGridViewSelectionMode.RowHeaderSelect))
                 {
@@ -259,7 +259,7 @@ namespace System.Windows.Forms
                 {
                     UiaCore.NavigateDirection.Parent => Owner.OwningRow.AccessibilityObject,
                     UiaCore.NavigateDirection.NextSibling =>
-                            (Owner.DataGridView != null && Owner.DataGridView.Columns.GetColumnCount(DataGridViewElementStates.Visible) > 0)
+                            (Owner.DataGridView is not null && Owner.DataGridView.Columns.GetColumnCount(DataGridViewElementStates.Visible) > 0)
                                 ? Owner.OwningRow.AccessibilityObject.GetChild(1) // go to the next sibling
                                 : null,
                     _ => null,
@@ -273,15 +273,10 @@ namespace System.Windows.Forms
             internal override object? GetPropertyValue(UiaCore.UIA propertyId)
                 => propertyId switch
                 {
-                    UiaCore.UIA.NamePropertyId => Name,
                     UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.HeaderControlTypeId,
-                    UiaCore.UIA.IsEnabledPropertyId => Owner?.DataGridView?.Enabled ?? false,
-                    UiaCore.UIA.HelpTextPropertyId => Help ?? string.Empty,
-                    UiaCore.UIA.IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
                     UiaCore.UIA.HasKeyboardFocusPropertyId => false,
-                    UiaCore.UIA.IsPasswordPropertyId => false,
-                    UiaCore.UIA.IsOffscreenPropertyId => (State & AccessibleStates.Offscreen) == AccessibleStates.Offscreen,
-                    UiaCore.UIA.AccessKeyPropertyId => string.Empty,
+                    UiaCore.UIA.IsEnabledPropertyId => Owner?.DataGridView?.Enabled ?? false,
+                    UiaCore.UIA.IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
                     _ => base.GetPropertyValue(propertyId),
                 };
 

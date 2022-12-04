@@ -1,4 +1,4 @@
-' Licensed to the .NET Foundation under one or more agreements.
+﻿' Licensed to the .NET Foundation under one or more agreements.
 ' The .NET Foundation licenses this file to you under the MIT license.
 ' See the LICENSE file in the project root for more information.
 
@@ -56,7 +56,7 @@ Namespace Microsoft.VisualBasic.Devices
                     Return
                 End Try
                 SyncLock _syncObject 'we don't want our event firing before we've finished setting up the infrastructure.  Also, need to assure there are no races in here so we don't hook up the OS listener twice, etc.
-                    If _networkAvailabilityEventHandlers Is Nothing Then _networkAvailabilityEventHandlers = New ArrayList
+                    If _networkAvailabilityEventHandlers Is Nothing Then _networkAvailabilityEventHandlers = New List(Of NetworkAvailableEventHandler)
                     _networkAvailabilityEventHandlers.Add(handler)
 
                     'Only setup the event Marshalling infrastructure once
@@ -688,7 +688,7 @@ Namespace Microsoft.VisualBasic.Devices
         ''' </summary>
         ''' <param name="address">The remote file address</param>
         ''' <returns>A Uri if successful, otherwise it throws an exception</returns>
-        Private Function GetUri(address As String) As Uri
+        Private Shared Function GetUri(address As String) As Uri
             Try
                 Return New Uri(address)
             Catch ex As UriFormatException
@@ -703,7 +703,7 @@ Namespace Microsoft.VisualBasic.Devices
         ''' <param name="userName">The name of the user</param>
         ''' <param name="password">The password of the user</param>
         ''' <returns>A NetworkCredentials</returns>
-        Private Function GetNetworkCredentials(userName As String, password As String) As ICredentials
+        Private Shared Function GetNetworkCredentials(userName As String, password As String) As ICredentials
 
             ' Make sure all nulls are empty strings
             If userName Is Nothing Then
@@ -745,7 +745,7 @@ Namespace Microsoft.VisualBasic.Devices
         ' Object for syncing
         Private ReadOnly _syncObject As New Object()
 
-        Private _networkAvailabilityEventHandlers As ArrayList 'Holds the listeners to our NetworkAvailability changed event
+        Private _networkAvailabilityEventHandlers As List(Of NetworkAvailableEventHandler) 'Holds the listeners to our NetworkAvailability changed event
 
         Private _synchronizationContext As SynchronizationContext
         Private _networkAvailabilityChangedCallback As SendOrPostCallback 'Used for marshalling the network address changed event to the foreground thread
@@ -755,7 +755,7 @@ Namespace Microsoft.VisualBasic.Devices
     ''' Temporary class used to provide WebClient with a timeout property.
     ''' </summary>
     ''' <remarks>This class will be deleted when Timeout is added to WebClient</remarks>
-    Friend Class WebClientExtended
+    Friend NotInheritable Class WebClientExtended
         Inherits WebClient
 
         ''' <summary>

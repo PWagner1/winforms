@@ -2,13 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
+using System.Collections;
 
 namespace System.ComponentModel
 {
-    using System;
-    using System.Collections;
-
     /// <summary>
     ///  This is a hashtable that stores object keys as weak references.
     ///  It monitors memory usage and will periodically scavenge the
@@ -45,7 +42,7 @@ namespace System.ComponentModel
         ///  Override of Item that wraps a weak reference around the
         ///  key and performs a scavenge.
         /// </summary>
-        public void SetWeak(object key, object value)
+        public void SetWeak(object key, object? value)
         {
             ScavengeKeys();
             this[new EqualityWeakReference(key)] = value;
@@ -94,21 +91,18 @@ namespace System.ComponentModel
                 // Perform a scavenge through our keys, looking
                 // for dead references.
                 //
-                ArrayList cleanupList = null;
+                ArrayList? cleanupList = null;
                 foreach (object o in Keys)
                 {
                     if (o is WeakReference wr && !wr.IsAlive)
                     {
-                        if (cleanupList is null)
-                        {
-                            cleanupList = new ArrayList();
-                        }
+                        cleanupList ??= new ArrayList();
 
                         cleanupList.Add(wr);
                     }
                 }
 
-                if (cleanupList != null)
+                if (cleanupList is not null)
                 {
                     foreach (object o in cleanupList)
                     {
@@ -123,13 +117,14 @@ namespace System.ComponentModel
 
         private class WeakKeyComparer : IEqualityComparer
         {
-            bool IEqualityComparer.Equals(object x, object y)
+            bool IEqualityComparer.Equals(object? x, object? y)
             {
                 if (x is null)
                 {
                     return y is null;
                 }
-                if (y != null && x.GetHashCode() == y.GetHashCode())
+
+                if (y is not null && x.GetHashCode() == y.GetHashCode())
                 {
                     if (x is WeakReference wX)
                     {
@@ -137,6 +132,7 @@ namespace System.ComponentModel
                         {
                             return false;
                         }
+
                         x = wX.Target;
                     }
 
@@ -146,6 +142,7 @@ namespace System.ComponentModel
                         {
                             return false;
                         }
+
                         y = wY.Target;
                     }
 
@@ -177,7 +174,7 @@ namespace System.ComponentModel
                 _hashCode = o.GetHashCode();
             }
 
-            public override bool Equals(object o)
+            public override bool Equals(object? o)
             {
                 if (o is null)
                 {

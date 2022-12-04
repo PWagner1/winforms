@@ -20,7 +20,7 @@ namespace System.Windows.Forms.Design
         /// <summary>
         ///  The bitmap we use to show inheritance.
         /// </summary>
-        public Bitmap InheritanceGlyph
+        public static Bitmap InheritanceGlyph
         {
             get
             {
@@ -33,6 +33,7 @@ namespace System.Windows.Forms.Design
                         DpiHelper.ScaleBitmapLogicalToDevice(ref s_inheritanceGlyph);
                     }
                 }
+
                 return s_inheritanceGlyph;
             }
         }
@@ -40,7 +41,7 @@ namespace System.Windows.Forms.Design
         /// <summary>
         ///  The rectangle surrounding the glyph.
         /// </summary>
-        public Rectangle InheritanceGlyphRectangle
+        public static Rectangle InheritanceGlyphRectangle
         {
             get
             {
@@ -49,6 +50,7 @@ namespace System.Windows.Forms.Design
                     Size size = InheritanceGlyph.Size;
                     s_inheritanceGlyphRect = new Rectangle(0, 0, size.Width, size.Height);
                 }
+
                 return s_inheritanceGlyphRect;
             }
         }
@@ -58,13 +60,10 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public void AddInheritedControl(Control c, InheritanceLevel level)
         {
-            if (_tooltip is null)
-            {
-                _tooltip = new ToolTip
+            _tooltip ??= new ToolTip
                 {
                     ShowAlways = true
                 };
-            }
 
             Debug.Assert(level != InheritanceLevel.NotInherited, "This should only be called for inherited components.");
             string text;
@@ -91,10 +90,7 @@ namespace System.Windows.Forms.Design
 
         public void Dispose()
         {
-            if (_tooltip != null)
-            {
-                _tooltip.Dispose();
-            }
+            _tooltip?.Dispose();
         }
 
         /// <summary>
@@ -102,7 +98,7 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public void RemoveInheritedControl(Control c)
         {
-            if (_tooltip != null && _tooltip.GetToolTip(c).Length > 0)
+            if (_tooltip is not null && _tooltip.GetToolTip(c).Length > 0)
             {
                 _tooltip.SetToolTip(c, null);
                 // Also, set all of its non-sited children

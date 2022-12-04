@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -10,10 +9,13 @@ namespace WinformsControlsTest
 {
     public partial class DataGridViewTest : Form
     {
-        private static readonly Font[] s_fonts = new Font[] { new Font("Tahoma", 12F, FontStyle.Regular),
-                                                              new Font("Consolas", 14F, FontStyle.Italic),
-                                                              new Font("Arial", 9F, FontStyle.Bold),
-                                                              new Font("Microsoft Sans Serif", 11F, FontStyle.Regular)};
+        private static readonly Font[] s_fonts = new[]
+        {
+            new Font("Tahoma", 12F, FontStyle.Regular),
+            new Font("Consolas", 14F, FontStyle.Italic),
+            new Font("Arial", 9F, FontStyle.Bold),
+            new Font("Microsoft Sans Serif", 11F, FontStyle.Regular)
+        };
         private int _cellFontIndex;
         private int _columnHeaderFontIndex;
         private int _rowHeaderFontIndex;
@@ -22,13 +24,19 @@ namespace WinformsControlsTest
         {
             InitializeComponent();
 
+            dataGridView1.Rows.Add(new DataGridViewRow() { Visible = false });
             dataGridView1.Rows.Add("DefaultCellStyle", dataGridView1.DefaultCellStyle.Font.ToString());
             dataGridView1.Rows.Add("ColumnHeadersDefaultCellStyle", dataGridView1.ColumnHeadersDefaultCellStyle.Font.ToString());
             dataGridView1.Rows.Add("RowHeadersDefaultCellStyle", dataGridView1.RowHeadersDefaultCellStyle.Font.ToString());
+            column6.Image = Image.FromFile("Images\\SmallA.bmp");
 
-            for (int i = 0; i < dataGridView1.Rows.Count; i++)
+            int i = 1;
+            foreach (DataGridViewRow row in dataGridView1.Rows)
             {
-                dataGridView1.Rows[i].HeaderCell.Value = $"Row {i + 1}";
+                if (row.Visible)
+                {
+                    row.HeaderCell.Value = $"Row {i++}";
+                }
             }
         }
 

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
@@ -144,10 +143,12 @@ namespace System.Windows.Forms.Design
             // listViewCannedMasks
             //
             resources.ApplyResources(_listViewCannedMasks, "listViewCannedMasks");
-            _listViewCannedMasks.Columns.AddRange(new ColumnHeader[] {
+            _listViewCannedMasks.Columns.AddRange(new ColumnHeader[]
+            {
             _maskDescriptionHeader,
             _dataFormatHeader,
-            _validatingTypeHeader});
+            _validatingTypeHeader
+            });
             _listViewCannedMasks.FullRowSelect = true;
             _listViewCannedMasks.HideSelection = false;
             _listViewCannedMasks.Margin = new Padding(0, 3, 0, 3);
@@ -301,7 +302,7 @@ namespace System.Windows.Forms.Design
 
         /// <summary>
         /// Adds the default mask descriptors to the mask description list.
-        /// We need to add the deafult descriptors explicitly because the DiscoverMaskDescriptors method only adds
+        /// We need to add the default descriptors explicitly because the DiscoverMaskDescriptors method only adds
         /// public descriptors and these are internal.
         /// </summary>
         private void AddDefaultMaskDescriptors(CultureInfo culture)
@@ -325,11 +326,11 @@ namespace System.Windows.Forms.Design
         /// </summary>
         private bool ContainsMaskDescriptor(MaskDescriptor maskDescriptor)
         {
-            Debug.Assert(maskDescriptor != null, "Null mask descriptor.");
+            Debug.Assert(maskDescriptor is not null, "Null mask descriptor.");
 
             foreach (MaskDescriptor descriptor in _maskDescriptors)
             {
-                Debug.Assert(descriptor != null, "Null mask descriptor in the collection.");
+                Debug.Assert(descriptor is not null, "Null mask descriptor in the collection.");
 
                 if (maskDescriptor.Equals(descriptor) || maskDescriptor.Name.Trim() == descriptor.Name.Trim())
                 {
@@ -442,6 +443,7 @@ namespace System.Windows.Forms.Design
             int maskDexIndex = GetMaskDescriptorIndex(maskDex);
             SetSelectedMaskDescriptor(maskDexIndex);
         }
+
         private void SetSelectedMaskDescriptor(int maskDexIndex)
         {
             if (maskDexIndex < 0 || _listViewCannedMasks.Items.Count <= maskDexIndex)
@@ -482,7 +484,7 @@ namespace System.Windows.Forms.Design
             // Since we need to pre-process each item before inserting it in the ListView, it is better to remove all items
             // from it first and then add the sorted ones back (no replace).  Stop redrawing while we change the list.
 
-            User32.SendMessageW(_listViewCannedMasks, User32.WM.SETREDRAW, PARAM.FromBool(false));
+            PInvoke.SendMessage(_listViewCannedMasks, User32.WM.SETREDRAW, (WPARAM)(BOOL)false);
 
             try
             {
@@ -492,7 +494,7 @@ namespace System.Windows.Forms.Design
 
                 foreach (MaskDescriptor maskDescriptor in _maskDescriptors)
                 {
-                    string validatingType = maskDescriptor.ValidatingType != null ? maskDescriptor.ValidatingType.Name : nullEntry;
+                    string validatingType = maskDescriptor.ValidatingType is not null ? maskDescriptor.ValidatingType.Name : nullEntry;
 
                     // Make sure the sample displays literals.
                     MaskedTextProvider mtp = new MaskedTextProvider(maskDescriptor.Mask, maskDescriptor.Culture);
@@ -508,7 +510,7 @@ namespace System.Windows.Forms.Design
                 _maskDescriptors.Add(_customMaskDescriptor);
                 _listViewCannedMasks.Items.Add(new ListViewItem(new string[] { _customMaskDescriptor.Name, "", nullEntry }));
 
-                if (selectedMaskDex != null)
+                if (selectedMaskDex is not null)
                 {
                     SetSelectedMaskDescriptor(selectedMaskDex);
                 }
@@ -516,7 +518,7 @@ namespace System.Windows.Forms.Design
             finally
             {
                 // Resume redraw.
-                User32.SendMessageW(_listViewCannedMasks, User32.WM.SETREDRAW, PARAM.FromBool(true));
+                PInvoke.SendMessage(_listViewCannedMasks, User32.WM.SETREDRAW, (WPARAM)(BOOL)true);
                 _listViewCannedMasks.Invalidate();
             }
         }
@@ -528,6 +530,7 @@ namespace System.Windows.Forms.Design
         {
             InsertMaskDescriptor(index, maskDescriptor, true);
         }
+
         private void InsertMaskDescriptor(int index, MaskDescriptor maskDescriptor, bool validateDescriptor)
         {
             string errorMessage;
@@ -583,7 +586,7 @@ namespace System.Windows.Forms.Design
         /// </summary>
         private void listViewCannedMasks_Enter(object sender, EventArgs e)
         {
-            if (_listViewCannedMasks.FocusedItem != null || _listViewCannedMasks.Items.Count <= 0)
+            if (_listViewCannedMasks.FocusedItem is not null || _listViewCannedMasks.Items.Count <= 0)
             {
                 return;
             }
@@ -603,7 +606,7 @@ namespace System.Windows.Forms.Design
             }
 
             int selectedIndex = _listViewCannedMasks.SelectedIndices[0];
-            MaskDescriptor maskDescriptor = (MaskDescriptor)_maskDescriptors[selectedIndex];
+            MaskDescriptor maskDescriptor = _maskDescriptors[selectedIndex];
 
             // If one of the canned mask descriptors chosen, update test control.
             if (maskDescriptor != _customMaskDescriptor)
@@ -630,7 +633,7 @@ namespace System.Windows.Forms.Design
             _errorProvider.SetError(_maskedTextBox, MaskedTextBoxDesigner.GetMaskInputRejectedErrorMessage(e));
         }
 
-        private string HelpTopic
+        private static string HelpTopic
         {
             get
             {
@@ -639,13 +642,13 @@ namespace System.Windows.Forms.Design
         }
 
         /// <summary>
-        ///    <para>
-        ///   Called when the help button is clicked.
-        ///    </para>
+        ///  <para>
+        ///  Called when the help button is clicked.
+        ///  </para>
         /// </summary>
         private void ShowHelp()
         {
-            if (_helpService != null)
+            if (_helpService is not null)
             {
                 _helpService.ShowHelpFromKeyword(HelpTopic);
             }

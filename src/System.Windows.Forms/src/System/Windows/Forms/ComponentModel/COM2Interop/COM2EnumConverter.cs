@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
 using System.Globalization;
 
@@ -11,131 +9,55 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 {
     internal class Com2EnumConverter : TypeConverter
     {
-        internal readonly Com2Enum com2Enum;
-        private StandardValuesCollection values;
+        internal readonly Com2Enum _com2Enum;
+        private StandardValuesCollection? _values;
 
-        public Com2EnumConverter(Com2Enum enumObj)
+        public Com2EnumConverter(Com2Enum enumObj) => _com2Enum = enumObj;
+
+        public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
+            => sourceType == typeof(string) ? true : base.CanConvertFrom(context, sourceType);
+
+        public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destType)
+            => base.CanConvertTo(context, destType) ? true : destType is not null && destType.IsEnum;
+
+        public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
+            => value is string valueAsString ? _com2Enum.FromString(valueAsString) : base.ConvertFrom(context, culture, value);
+
+        public override object? ConvertTo(ITypeDescriptorContext? context, CultureInfo? culture, object? value, Type destinationType)
         {
-            com2Enum = enumObj;
+            ArgumentNullException.ThrowIfNull(destinationType);
+
+            if (destinationType == typeof(string) && value is not null)
+            {
+                return _com2Enum.ToString(value) ?? string.Empty;
+            }
+
+            return value is not null && destinationType.IsEnum
+                ? Enum.ToObject(destinationType, value)
+                : base.ConvertTo(context, culture, value, destinationType);
         }
 
-        /// <summary>
-        ///  Determines if this converter can convert an object in the given source
-        ///  type to the native type of the converter.
-        /// </summary>
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+        public override StandardValuesCollection? GetStandardValues(ITypeDescriptorContext? context)
         {
-            if (sourceType == typeof(string))
+            if (_values is null)
             {
-                return true;
-            }
-            return base.CanConvertFrom(context, sourceType);
-        }
-
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destType)
-        {
-            if (base.CanConvertTo(context, destType))
-            {
-                return true;
-            }
-            return destType.IsEnum;
-        }
-
-        /// <summary>
-        ///  Converts the given object to the converter's native type.
-        /// </summary>
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-        {
-            if (value is string)
-            {
-                return com2Enum.FromString((string)value);
-            }
-            return base.ConvertFrom(context, culture, value);
-        }
-
-        /// <summary>
-        ///  Converts the given object to another type.  The most common types to convert
-        ///  are to and from a string object.  The default implementation will make a call
-        ///  to ToString on the object if the object is valid and if the destination
-        ///  type is string.  If this cannot convert to the destination type, this will
-        ///  throw a NotSupportedException.
-        /// </summary>
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-        {
-            if (destinationType is null)
-            {
-                throw new ArgumentNullException(nameof(destinationType));
-            }
-
-            if (destinationType == typeof(string))
-            {
-                if (value is not null)
-                {
-                    string str = com2Enum.ToString(value);
-                    return (str ?? "");
-                }
-            }
-
-            if (destinationType.IsEnum)
-            {
-                return Enum.ToObject(destinationType, value);
-            }
-            return base.ConvertTo(context, culture, value, destinationType);
-        }
-
-        /// <summary>
-        ///  Retrieves a collection containing a set of standard values
-        ///  for the data type this validator is designed for.  This
-        ///  will return null if the data type does not support a
-        ///  standard set of values.
-        /// </summary>
-        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
-        {
-            if (values is null)
-            {
-                object[] objValues = com2Enum.Values;
+                object[] objValues = _com2Enum.Values;
                 if (objValues is not null)
                 {
-                    values = new StandardValuesCollection(objValues);
+                    _values = new StandardValuesCollection(objValues);
                 }
             }
-            return values;
+
+            return _values;
         }
 
-        /// <summary>
-        ///  Determines if the list of standard values returned from
-        ///  GetStandardValues is an exclusive list.  If the list
-        ///  is exclusive, then no other values are valid, such as
-        ///  in an enum data type.  If the list is not exclusive,
-        ///  then there are other valid values besides the list of
-        ///  standard values GetStandardValues provides.
-        /// </summary>
-        public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
-        {
-            return com2Enum.IsStrictEnum;
-        }
+        public override bool GetStandardValuesExclusive(ITypeDescriptorContext? context) => false;
 
-        /// <summary>
-        ///  Determines if this object supports a standard set of values
-        ///  that can be picked from a list.
-        /// </summary>
-        public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
-        {
-            return true;
-        }
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext? context) => true;
 
-        /// <summary>
-        ///  Determines if the given object value is valid for this type.
-        /// </summary>
-        public override bool IsValid(ITypeDescriptorContext context, object value)
-        {
-            string strValue = com2Enum.ToString(value);
-            return strValue is not null && strValue.Length > 0;
-        }
+        public override bool IsValid(ITypeDescriptorContext? context, object? value)
+            => !string.IsNullOrEmpty(_com2Enum.ToString(value));
 
-        public void RefreshValues()
-        {
-            values = null;
-        }
+        public void RefreshValues() => _values = null;
     }
 }

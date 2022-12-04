@@ -5,12 +5,14 @@
 #nullable disable
 
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.Text;
 
 namespace System.Windows.Forms
 {
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     [ToolboxBitmap(typeof(DataGridViewLinkColumn), "DataGridViewLinkColumn")]
     public class DataGridViewLinkColumn : DataGridViewColumn
     {
@@ -32,6 +34,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
+
                 return ((DataGridViewLinkCell)CellTemplate).ActiveLinkColor;
             }
             set
@@ -39,7 +42,7 @@ namespace System.Windows.Forms
                 if (!ActiveLinkColor.Equals(value))
                 {
                     ((DataGridViewLinkCell)CellTemplate).ActiveLinkColorInternal = value;
-                    if (DataGridView != null)
+                    if (DataGridView is not null)
                     {
                         DataGridViewRowCollection dataGridViewRows = DataGridView.Rows;
                         int rowCount = dataGridViewRows.Count;
@@ -51,6 +54,7 @@ namespace System.Windows.Forms
                                 dataGridViewCell.ActiveLinkColorInternal = value;
                             }
                         }
+
                         DataGridView.InvalidateColumn(Index);
                     }
                 }
@@ -74,10 +78,11 @@ namespace System.Windows.Forms
             get => base.CellTemplate;
             set
             {
-                if (value != null && !(value is DataGridViewLinkCell))
+                if (value is not null && !(value is DataGridViewLinkCell))
                 {
                     throw new InvalidCastException(string.Format(SR.DataGridViewTypeColumn_WrongCellTemplateType, "System.Windows.Forms.DataGridViewLinkCell"));
                 }
+
                 base.CellTemplate = value;
             }
         }
@@ -93,6 +98,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
+
                 return ((DataGridViewLinkCell)CellTemplate).LinkBehavior;
             }
             set
@@ -100,7 +106,7 @@ namespace System.Windows.Forms
                 if (!LinkBehavior.Equals(value))
                 {
                     ((DataGridViewLinkCell)CellTemplate).LinkBehavior = value;
-                    if (DataGridView != null)
+                    if (DataGridView is not null)
                     {
                         DataGridViewRowCollection dataGridViewRows = DataGridView.Rows;
                         int rowCount = dataGridViewRows.Count;
@@ -112,6 +118,7 @@ namespace System.Windows.Forms
                                 dataGridViewCell.LinkBehaviorInternal = value;
                             }
                         }
+
                         DataGridView.InvalidateColumn(Index);
                     }
                 }
@@ -128,6 +135,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
+
                 return ((DataGridViewLinkCell)CellTemplate).LinkColor;
             }
             set
@@ -135,7 +143,7 @@ namespace System.Windows.Forms
                 if (!LinkColor.Equals(value))
                 {
                     ((DataGridViewLinkCell)CellTemplate).LinkColorInternal = value;
-                    if (DataGridView != null)
+                    if (DataGridView is not null)
                     {
                         DataGridViewRowCollection dataGridViewRows = DataGridView.Rows;
                         int rowCount = dataGridViewRows.Count;
@@ -147,6 +155,7 @@ namespace System.Windows.Forms
                                 dataGridViewCell.LinkColorInternal = value;
                             }
                         }
+
                         DataGridView.InvalidateColumn(Index);
                     }
                 }
@@ -177,7 +186,7 @@ namespace System.Windows.Forms
                 if (!string.Equals(value, _text, StringComparison.Ordinal))
                 {
                     _text = value;
-                    if (DataGridView != null)
+                    if (DataGridView is not null)
                     {
                         if (UseColumnTextForLinkValue)
                         {
@@ -196,6 +205,7 @@ namespace System.Windows.Forms
                                     return;
                                 }
                             }
+
                             DataGridView.InvalidateColumn(Index);
                         }
                     }
@@ -214,6 +224,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
+
                 return ((DataGridViewLinkCell)CellTemplate).TrackVisitedState;
             }
             set
@@ -221,7 +232,7 @@ namespace System.Windows.Forms
                 if (TrackVisitedState != value)
                 {
                     ((DataGridViewLinkCell)CellTemplate).TrackVisitedStateInternal = value;
-                    if (DataGridView != null)
+                    if (DataGridView is not null)
                     {
                         DataGridViewRowCollection dataGridViewRows = DataGridView.Rows;
                         int rowCount = dataGridViewRows.Count;
@@ -233,6 +244,7 @@ namespace System.Windows.Forms
                                 dataGridViewCell.TrackVisitedStateInternal = value;
                             }
                         }
+
                         DataGridView.InvalidateColumn(Index);
                     }
                 }
@@ -250,6 +262,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
+
                 return ((DataGridViewLinkCell)CellTemplate).UseColumnTextForLinkValue;
             }
             set
@@ -257,7 +270,7 @@ namespace System.Windows.Forms
                 if (UseColumnTextForLinkValue != value)
                 {
                     ((DataGridViewLinkCell)CellTemplate).UseColumnTextForLinkValueInternal = value;
-                    if (DataGridView != null)
+                    if (DataGridView is not null)
                     {
                         DataGridViewRowCollection dataGridViewRows = DataGridView.Rows;
                         int rowCount = dataGridViewRows.Count;
@@ -269,6 +282,7 @@ namespace System.Windows.Forms
                                 dataGridViewCell.UseColumnTextForLinkValueInternal = value;
                             }
                         }
+
                         DataGridView.OnColumnCommonChange(Index);
                     }
                 }
@@ -285,6 +299,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
+
                 return ((DataGridViewLinkCell)CellTemplate).VisitedLinkColor;
             }
             set
@@ -292,7 +307,7 @@ namespace System.Windows.Forms
                 if (!VisitedLinkColor.Equals(value))
                 {
                     ((DataGridViewLinkCell)CellTemplate).VisitedLinkColorInternal = value;
-                    if (DataGridView != null)
+                    if (DataGridView is not null)
                     {
                         DataGridViewRowCollection dataGridViewRows = DataGridView.Rows;
                         int rowCount = dataGridViewRows.Count;
@@ -304,6 +319,7 @@ namespace System.Windows.Forms
                                 dataGridViewCell.VisitedLinkColorInternal = value;
                             }
                         }
+
                         DataGridView.InvalidateColumn(Index);
                     }
                 }
@@ -335,11 +351,13 @@ namespace System.Windows.Forms
 
                 dataGridViewColumn = (DataGridViewLinkColumn)System.Activator.CreateInstance(thisType);
             }
-            if (dataGridViewColumn != null)
+
+            if (dataGridViewColumn is not null)
             {
                 base.CloneInternal(dataGridViewColumn);
                 dataGridViewColumn.Text = _text;
             }
+
             return dataGridViewColumn;
         }
 

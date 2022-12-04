@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
 using System.Globalization;
 
@@ -46,7 +44,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Converts the given value object to a 32-bit signed integer object.
         /// </summary>
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
         {
             if (value is string stringValue && string.Compare(stringValue, SR.toStringNone, true, culture) == 0)
             {
@@ -63,12 +61,9 @@ namespace System.Windows.Forms
         ///  type is string.  If this cannot convert to the destination type, this will
         ///  throw a NotSupportedException.
         /// </summary>
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        public override object? ConvertTo(ITypeDescriptorContext? context, CultureInfo? culture, object? value, Type destinationType)
         {
-            if (destinationType is null)
-            {
-                throw new ArgumentNullException(nameof(destinationType));
-            }
+            ArgumentNullException.ThrowIfNull(destinationType);
 
             if (destinationType == typeof(string) && value is int index && index == ImageList.Indexer.DefaultIndex)
             {
@@ -91,15 +86,15 @@ namespace System.Windows.Forms
         ///  If no image list is found, this collection will contain a single object with a value of -1.
         ///  This returns <see langword="null" /> if the data type doesn't support a standard set of values.
         /// </returns>
-        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext? context)
         {
-            if (context != null && context.Instance != null)
+            if (context is not null && context.Instance is not null)
             {
-                object instance = context.Instance;
+                object? instance = context.Instance;
 
-                PropertyDescriptor imageListProp = ImageListUtils.GetImageListProperty(context.PropertyDescriptor, ref instance);
+                PropertyDescriptor? imageListProp = ImageListUtils.GetImageListProperty(context.PropertyDescriptor, ref instance);
 
-                while (instance != null && imageListProp is null)
+                while (instance is not null && imageListProp is null)
                 {
                     PropertyDescriptorCollection props = TypeDescriptor.GetProperties(instance);
 
@@ -116,8 +111,8 @@ namespace System.Windows.Forms
                     {
                         // We didn't find the image list in this component.  See if the
                         // component has a "parent" property.  If so, walk the tree...
-                        PropertyDescriptor parentProp = props[ParentImageListProperty];
-                        if (parentProp != null)
+                        PropertyDescriptor? parentProp = props[ParentImageListProperty];
+                        if (parentProp is not null)
                         {
                             instance = parentProp.GetValue(instance);
                         }
@@ -129,11 +124,11 @@ namespace System.Windows.Forms
                     }
                 }
 
-                if (imageListProp != null)
+                if (imageListProp is not null)
                 {
-                    ImageList imageList = (ImageList)imageListProp.GetValue(instance);
+                    ImageList? imageList = (ImageList?)imageListProp.GetValue(instance);
 
-                    if (imageList != null)
+                    if (imageList is not null)
                     {
                         // Create array to contain standard values
                         object[] values;
@@ -177,7 +172,7 @@ namespace System.Windows.Forms
         ///  then there are other valid values besides the list of
         ///  standard values GetStandardValues provides.
         /// </summary>
-        public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
+        public override bool GetStandardValuesExclusive(ITypeDescriptorContext? context)
         {
             return false;
         }
@@ -186,7 +181,7 @@ namespace System.Windows.Forms
         ///  Determines if this object supports a standard set of values
         ///  that can be picked from a list.
         /// </summary>
-        public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext? context)
         {
             return true;
         }

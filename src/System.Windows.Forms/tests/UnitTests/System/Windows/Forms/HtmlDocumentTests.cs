@@ -2,15 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
-using WinForms.Common.Tests;
-using static Interop;
 using static Interop.Mshtml;
 
 namespace System.Windows.Forms.Tests
@@ -413,6 +409,10 @@ namespace System.Windows.Forms.Tests
             HtmlDocument document = await GetDocument(control, Html);
             IHTMLDocument2 iHTMLDocument2 = (IHTMLDocument2)document.DomDocument;
 
+            // Cleanup!
+            // WebBrowser is notorious for not cleaning after itself - clean all cookies before we set new ones
+            document.ExecCommand("ClearAuthenticationCache", false, null);
+
             document.Cookie = value;
             Assert.Equal(expected, document.Cookie);
             Assert.Equal(expected, iHTMLDocument2.GetCookie());
@@ -485,7 +485,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public async Task HtmlDocument_Domain_Set_ThrowsCOMException(string value)
         {
             using var parent = new Control();
@@ -607,7 +607,7 @@ namespace System.Windows.Forms.Tests
 
             const string Html = "<html></html>";
             HtmlDocument document = await GetDocument(control, Html);
-            Assert.Throws<ArgumentException>(null, () => document.Encoding = value);
+            Assert.Throws<ArgumentException>(() => document.Encoding = value);
         }
 
         [WinFormsFact]
@@ -624,7 +624,8 @@ namespace System.Windows.Forms.Tests
             Assert.False(document.Focused);
         }
 
-        [WinFormsFact]
+        [ActiveIssue("https://github.com/dotnet/winforms/issues/4906")]
+        [WinFormsFact(Skip = "Flaky tests, see: https://github.com/dotnet/winforms/issues/4906")]
         public async Task HtmlDocument_Focused_GetFocused_ReturnsExpected()
         {
             using var parent = new Control();
@@ -641,7 +642,7 @@ namespace System.Windows.Forms.Tests
 
             // Have to do it again.
             iHTMLDocument4.Focus();
-            Assert.False(document.Focused);
+            Assert.True(document.Focused);
         }
 
         [WinFormsFact]
@@ -1086,7 +1087,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public async Task HtmlDocument_Title_GetCustomValueSet_ReturnsExpected(string title, string expected)
         {
             using var parent = new Control();
@@ -1103,7 +1104,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public async Task HtmlDocument_Title_Set_GetReturnsExpected(string value, string expected)
         {
             using var parent = new Control();
@@ -1146,6 +1147,7 @@ namespace System.Windows.Forms.Tests
             HtmlDocument document = control.Document;
             Assert.Equal(new Uri(file.Path), document.Url);
         }
+
         [WinFormsFact]
         public async Task HtmlDocument_VisitedLinkColor_Get_ReturnsExpected()
         {
@@ -1351,6 +1353,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(EventArgs.Empty, e);
                 callCount++;
             }
+
             document.AttachEventHandler(eventName, handler);
             Assert.Equal(0, callCount);
 
@@ -1427,7 +1430,7 @@ namespace System.Windows.Forms.Tests
 
             const string Html = "<html></html>";
             HtmlDocument document = await GetDocument(control, Html);
-            Assert.Throws<ArgumentException>(null, () => document.CreateElement(null));
+            Assert.Throws<ArgumentException>(() => document.CreateElement(null));
         }
 
         [WinFormsTheory]
@@ -1549,7 +1552,8 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<COMException>(() => document.ExecCommand(command, showUI, value));
         }
 
-        [WinFormsFact]
+        [ActiveIssue("https://github.com/dotnet/winforms/issues/4906")]
+        [WinFormsFact(Skip = "Flaky tests, see: https://github.com/dotnet/winforms/issues/4906")]
         public async Task HtmlDocument_Focus_Invoke_Success()
         {
             using var parent = new Control();
@@ -1561,11 +1565,11 @@ namespace System.Windows.Forms.Tests
             const string Html = "<html></html>";
             HtmlDocument document = await GetDocument(control, Html);
             document.Focus();
-            Assert.False(document.Focused);
+            Assert.True(document.Focused);
 
             // Call again.
             document.Focus();
-            Assert.False(document.Focused);
+            Assert.True(document.Focused);
         }
 
         [WinFormsFact]
@@ -1597,7 +1601,7 @@ namespace System.Windows.Forms.Tests
 
             const string Html = "<html></html>";
             HtmlDocument document = await GetDocument(control, Html);
-            Assert.Throws<ArgumentException>(null, () => document.GetElementById(null));
+            Assert.Throws<ArgumentException>(() => document.GetElementById(null));
         }
 
         [WinFormsFact]
@@ -1653,7 +1657,7 @@ namespace System.Windows.Forms.Tests
 
             const string Html = "<html></html>";
             HtmlDocument document = await GetDocument(control, Html);
-            Assert.Throws<ArgumentException>(null, () => document.GetElementsByTagName(null));
+            Assert.Throws<ArgumentException>(() => document.GetElementsByTagName(null));
         }
 
         [WinFormsFact]
@@ -1774,7 +1778,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public async Task HtmlDocument_OpenNew_Invoke_Success(bool replaceInHistory)
         {
             using var parent = new Control();
@@ -1791,7 +1795,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal("about:blank", newDocument.Url.OriginalString);
         }
 
-#pragma warning disable CS1718 // Disable "Comparison made to same variable" warning.
+#pragma warning disable CS1718, CSIsNull001, CSIsNull002 // Disable "Comparison made to same variable" warning.
         [WinFormsFact]
         public async Task HtmlDocument_OperatorEquals_Invoke_ReturnsExpected()
         {
@@ -1831,7 +1835,7 @@ namespace System.Windows.Forms.Tests
             Assert.True(document != (HtmlDocument)null);
             Assert.False((HtmlDocument)null != (HtmlDocument)null);
         }
-#pragma warning restore CS1718
+#pragma warning restore CS1718, CSIsNull001, CSIsNull002
 
         [WinFormsFact]
         public async Task HtmlDocument_Click_InvokeEvent_Success()
@@ -2143,7 +2147,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, callCount);
         }
 
-        private async static Task<HtmlDocument> GetDocument(WebBrowser control, string html)
+        private static async Task<HtmlDocument> GetDocument(WebBrowser control, string html)
         {
             var source = new TaskCompletionSource<bool>();
             control.DocumentCompleted += (sender, e) => source.SetResult(true);

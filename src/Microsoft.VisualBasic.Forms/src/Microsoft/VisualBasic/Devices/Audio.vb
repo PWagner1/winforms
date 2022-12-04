@@ -1,4 +1,4 @@
-' Licensed to the .NET Foundation under one or more agreements.
+﻿' Licensed to the .NET Foundation under one or more agreements.
 ' The .NET Foundation licenses this file to you under the MIT license.
 ' See the LICENSE file in the project root for more information.
 
@@ -118,9 +118,7 @@ Namespace Microsoft.VisualBasic
                 Debug.Assert([Enum].IsDefined(GetType(AudioPlayMode), mode), "Enum value is out of range")
 
                 ' Stopping the sound ensures it's safe to dispose it. This could happen when we change the value of m_Sound below
-                If _sound IsNot Nothing Then
-                    _sound.Stop()
-                End If
+                _sound?.Stop()
 
                 _sound = sound
 
@@ -142,7 +140,7 @@ Namespace Microsoft.VisualBasic
             ''' </summary>
             ''' <param name="location">The filename being tested</param>
             ''' <returns>A full name and path of the file</returns>
-            Private Function ValidateFilename(location As String) As String
+            Private Shared Function ValidateFilename(location As String) As String
                 If String.IsNullOrEmpty(location) Then
                     Throw GetArgumentNullException("location")
                 End If
@@ -154,7 +152,7 @@ Namespace Microsoft.VisualBasic
             ''' Validates that the value being passed as an AudioPlayMode enum is a legal value
             ''' </summary>
             ''' <param name="value"></param>
-            Private Sub ValidateAudioPlayModeEnum(value As AudioPlayMode, paramName As String)
+            Private Shared Sub ValidateAudioPlayModeEnum(value As AudioPlayMode, paramName As String)
                 If value < AudioPlayMode.WaitToComplete OrElse value > AudioPlayMode.BackgroundLoop Then
                     Throw New ComponentModel.InvalidEnumArgumentException(paramName, DirectCast(value, Integer), GetType(AudioPlayMode))
                 End If

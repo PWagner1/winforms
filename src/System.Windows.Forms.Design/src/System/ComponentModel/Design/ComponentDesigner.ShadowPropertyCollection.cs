@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections;
-
 namespace System.ComponentModel.Design
 {
     public partial class ComponentDesigner
@@ -14,8 +12,8 @@ namespace System.ComponentModel.Design
         protected sealed class ShadowPropertyCollection
         {
             private readonly ComponentDesigner _designer;
-            private Hashtable _properties;
-            private Hashtable _descriptors;
+            private Dictionary<string, object> _properties;
+            private Dictionary<string, PropertyDescriptor> _descriptors;
 
             internal ShadowPropertyCollection(ComponentDesigner designer) => _designer = designer;
 
@@ -27,15 +25,12 @@ namespace System.ComponentModel.Design
             {
                 get
                 {
-                    if (propertyName is null)
-                    {
-                        throw new ArgumentNullException(nameof(propertyName));
-                    }
+                    ArgumentNullException.ThrowIfNull(propertyName);
 
                     // First, check to see if the name is in the given properties table
-                    if (_properties != null && _properties.ContainsKey(propertyName))
+                    if (_properties is not null && _properties.TryGetValue(propertyName, out object existing))
                     {
-                        return _properties[propertyName];
+                        return existing;
                     }
 
                     // Next, check to see if the name is in the descriptors table.  If it isn't, we will search the
@@ -46,7 +41,7 @@ namespace System.ComponentModel.Design
                 }
                 set
                 {
-                    _properties ??= new Hashtable();
+                    _properties ??= new();
                     _properties[propertyName] = value;
                 }
             }
@@ -54,23 +49,21 @@ namespace System.ComponentModel.Design
             /// <summary>
             ///  Returns true if this shadow properties object contains the given property name.
             /// </summary>
-            public bool Contains(string propertyName) => _properties != null && _properties.ContainsKey(propertyName);
+            public bool Contains(string propertyName) => _properties is not null && _properties.ContainsKey(propertyName);
 
             /// <summary>
             ///  Returns the underlying property descriptor for this property on the component
             /// </summary>
             private PropertyDescriptor GetShadowedPropertyDescriptor(string propertyName)
             {
-                _descriptors ??= new Hashtable();
+                _descriptors ??= new();
 
-                PropertyDescriptor property = (PropertyDescriptor)_descriptors[propertyName];
-                if (property is null)
+                if (_descriptors.TryGetValue(propertyName, out PropertyDescriptor property))
                 {
-                    property = TypeDescriptor.GetProperties(_designer.Component.GetType())[propertyName];
-                    //_descriptors[propertyName] = property ?? throw new ArgumentException(SR.GetResourceString(SR.DesignerPropNotFound, propertyName));
+                    return property;
                 }
 
-                return property;
+                return TypeDescriptor.GetProperties(_designer.Component.GetType())[propertyName];
             }
 
             /// <summary>
@@ -79,10 +72,7 @@ namespace System.ComponentModel.Design
             /// </summary>
             internal bool ShouldSerializeValue(string propertyName, object defaultValue)
             {
-                if (propertyName is null)
-                {
-                    throw new ArgumentNullException(nameof(propertyName));
-                }
+                ArgumentNullException.ThrowIfNull(propertyName);
 
                 return Contains(propertyName)
                     ? !Equals(this[propertyName], defaultValue)

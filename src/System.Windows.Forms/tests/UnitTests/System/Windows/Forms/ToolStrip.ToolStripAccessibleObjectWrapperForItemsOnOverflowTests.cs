@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.Reflection;
 using Xunit;
 using static System.Windows.Forms.ToolStripItem;
@@ -17,7 +16,8 @@ namespace System.Windows.Forms.Tests
         {
             using ToolStripButton toolStripItem = new ToolStripButton();
 
-            Type type = typeof(ToolStrip).GetNestedType("ToolStripAccessibleObjectWrapperForItemsOnOverflow", BindingFlags.Instance | BindingFlags.NonPublic);
+            Type type = typeof(ToolStrip)
+                .GetNestedType("ToolStripAccessibleObjectWrapperForItemsOnOverflow", BindingFlags.Instance | BindingFlags.NonPublic);
             ToolStripItemAccessibleObject accessibleObject = (ToolStripItemAccessibleObject)Activator.CreateInstance(type, toolStripItem);
 
             Assert.Equal(toolStripItem, accessibleObject.Owner);

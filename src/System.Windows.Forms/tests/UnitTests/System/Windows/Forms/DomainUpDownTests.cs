@@ -2,19 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    using static Interop;
-    using Point = System.Drawing.Point;
-    using Size = System.Drawing.Size;
-
     public class DomainUpDownTests : IClassFixture<ThreadExceptionFixture>
     {
         [WinFormsFact]
@@ -59,6 +53,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(new Size(116, Control.DefaultFont.Height + 3), control.ClientSize);
                 Assert.Equal(new Size(20, control.PreferredHeight), control.PreferredSize);
             }
+
             Assert.Null(control.Container);
             Assert.False(control.ContainsFocus);
             Assert.Null(control.ContextMenuStrip);
@@ -153,16 +148,17 @@ namespace System.Windows.Forms.Tests
             Assert.Null(createParams.Caption);
             Assert.Null(createParams.ClassName);
 
-            Assert.Equal(User32.CS.DBLCLKS, (User32.CS)createParams.ClassStyle);
-            Assert.Equal(User32.WS.MAXIMIZEBOX | User32.WS.CLIPCHILDREN | User32.WS.CLIPSIBLINGS | User32.WS.VISIBLE | User32.WS.CHILD, (User32.WS)createParams.Style);
+            Assert.Equal(WNDCLASS_STYLES.CS_DBLCLKS, (WNDCLASS_STYLES)createParams.ClassStyle);
+            Assert.Equal(WINDOW_STYLE.WS_MAXIMIZEBOX | WINDOW_STYLE.WS_CLIPCHILDREN | WINDOW_STYLE.WS_CLIPSIBLINGS
+                | WINDOW_STYLE.WS_VISIBLE | WINDOW_STYLE.WS_CHILD, (WINDOW_STYLE)createParams.Style);
 
             if (Application.UseVisualStyles)
             {
-                Assert.Equal(User32.WS_EX.CONTROLPARENT, (User32.WS_EX)createParams.ExStyle);
+                Assert.Equal(WINDOW_EX_STYLE.WS_EX_CONTROLPARENT, (WINDOW_EX_STYLE)createParams.ExStyle);
             }
             else
             {
-                Assert.Equal(User32.WS_EX.CLIENTEDGE | User32.WS_EX.CONTROLPARENT, (User32.WS_EX)createParams.ExStyle);
+                Assert.Equal(WINDOW_EX_STYLE.WS_EX_CLIENTEDGE | WINDOW_EX_STYLE.WS_EX_CONTROLPARENT, (WINDOW_EX_STYLE)createParams.ExStyle);
             }
 
             Assert.Equal(control.PreferredHeight, createParams.Height);
@@ -176,7 +172,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetPaddingNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetPaddingNormalizedTheoryData))]
         public void DomainUpDown_Padding_Set_GetReturnsExpected(Padding value, Padding expected)
         {
             using var control = new DomainUpDown
@@ -193,7 +189,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetPaddingNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetPaddingNormalizedTheoryData))]
         public void DomainUpDown_Padding_SetWithHandle_GetReturnsExpected(Padding value, Padding expected)
         {
             using var control = new DomainUpDown();
@@ -901,7 +897,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DomainUpDown_Wrap_Set_GetReturnsExpected(bool value)
         {
             using var control = new DomainUpDown
@@ -923,7 +919,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DomainUpDown_Wrap_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var control = new DomainUpDown();
@@ -1195,10 +1191,10 @@ namespace System.Windows.Forms.Tests
             control.OnSelectedItemChanged(source, eventArgs);
             Assert.Equal(1, callCount);
 
-           // Remove handler.
-           control.SelectedItemChanged -= handler;
-           control.OnSelectedItemChanged(source, eventArgs);
-           Assert.Equal(1, callCount);
+            // Remove handler.
+            control.SelectedItemChanged -= handler;
+            control.OnSelectedItemChanged(source, eventArgs);
+            Assert.Equal(1, callCount);
         }
 
         [WinFormsTheory]
@@ -1219,10 +1215,10 @@ namespace System.Windows.Forms.Tests
             control.OnSelectedItemChanged(source, eventArgs);
             Assert.Equal(1, callCount);
 
-           // Remove handler.
-           control.SelectedItemChanged -= handler;
-           control.OnSelectedItemChanged(source, eventArgs);
-           Assert.Equal(1, callCount);
+            // Remove handler.
+            control.SelectedItemChanged -= handler;
+            control.OnSelectedItemChanged(source, eventArgs);
+            Assert.Equal(1, callCount);
         }
 
         public static IEnumerable<object[]> UpButton_TestData()

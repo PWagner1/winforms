@@ -8,7 +8,7 @@ internal partial class Interop
 {
     internal partial class ComCtl32
     {
-        [DllImport(Libraries.Comctl32, ExactSpelling = true)]
+        [DllImport(Libraries.Comctl32)]
         public static extern void InitCommonControls();
     }
 }

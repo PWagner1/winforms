@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -37,8 +36,8 @@ namespace System.Windows.Forms.Automation
         /// </remark>
         public UiaTextRange(IRawElementProviderSimple enclosingElement, UiaTextProvider provider, int start, int end)
         {
-            _enclosingElement = enclosingElement ?? throw new ArgumentNullException(nameof(enclosingElement));
-            _provider = provider ?? throw new ArgumentNullException(nameof(provider));
+            _enclosingElement = enclosingElement.OrThrowIfNull();
+            _provider = provider.OrThrowIfNull();
 
             if (start > 0)
             {
@@ -126,17 +125,17 @@ namespace System.Windows.Forms.Automation
         ITextRangeProvider ITextRangeProvider.Clone() => new UiaTextRange(_enclosingElement, _provider, Start, End);
 
         /// <remarks>
-        ///  Ranges come from the same element. Only need to compare endpoints.
+        ///  <para>Ranges come from the same element. Only need to compare endpoints.</para>
         /// </remarks>
         BOOL ITextRangeProvider.Compare(ITextRangeProvider range)
-            => (range is UiaTextRange editRange && editRange.Start == Start && editRange.End == End).ToBOOL();
+            => range is UiaTextRange editRange && editRange.Start == Start && editRange.End == End;
 
         int ITextRangeProvider.CompareEndpoints(
             TextPatternRangeEndpoint endpoint,
             ITextRangeProvider targetRange,
             TextPatternRangeEndpoint targetEndpoint)
         {
-            if (!(targetRange is UiaTextRange editRange))
+            if (targetRange is not UiaTextRange editRange)
             {
                 return -1;
             }
@@ -157,6 +156,7 @@ namespace System.Windows.Forms.Automation
                     {
                         End = MoveEndpointForward(End, TextUnit.Character, 1, out int moved);
                     }
+
                     break;
 
                 case TextUnit.Word:
@@ -179,6 +179,7 @@ namespace System.Windows.Forms.Automation
                             End++;
                         }
                     }
+
                     break;
 
                 case TextUnit.Line:
@@ -207,6 +208,7 @@ namespace System.Windows.Forms.Automation
                             MoveTo(0, _provider.TextLength);
                         }
                     }
+
                     break;
 
                 case TextUnit.Paragraph:
@@ -229,6 +231,7 @@ namespace System.Windows.Forms.Automation
                             End++;
                         }
                     }
+
                     break;
 
                 case TextUnit.Format:
@@ -260,10 +263,10 @@ namespace System.Windows.Forms.Automation
 
             ValidateEndpoints();
             ReadOnlySpan<char> rangeText = new ReadOnlySpan<char>(_provider.Text.ToCharArray(), Start, Length);
-            StringComparison comparisonType = ignoreCase.IsTrue() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            StringComparison comparisonType = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
             // Do a case-sensitive search for the text inside the range.
-            int index = backwards.IsTrue() ? rangeText.LastIndexOf(text, comparisonType) : rangeText.IndexOf(text, comparisonType);
+            int index = backwards ? rangeText.LastIndexOf(text, comparisonType) : rangeText.IndexOf(text, comparisonType);
 
             // If the text was found then create a new range covering the found text.
             return index >= 0 ? new UiaTextRange(_enclosingElement, _provider, Start + index, Start + index + text.Length) : null;
@@ -273,11 +276,27 @@ namespace System.Windows.Forms.Automation
 
         double[] ITextRangeProvider.GetBoundingRectangles()
         {
-            // if this is an end of line
-            if (Start == _provider.TextLength)
+            if (_enclosingElement.GetPropertyValue(UIA.BoundingRectanglePropertyId) is not Rectangle ownerBounds)
             {
-                Point endlinePoint;
-                User32.GetCaretPos(out endlinePoint);
+                return Array.Empty<double>();
+            }
+
+            // We accumulate rectangles onto a list.
+            List<Rectangle> rectangles = new List<Rectangle>();
+            string text = _provider.Text;
+
+            if (text.Length == 0)
+            {
+                rectangles.Add(ownerBounds);
+                return UiaTextProvider.RectListToDoubleArray(rectangles);
+            }
+
+            // If this is an end of a line.
+            if (Start == _provider.TextLength
+                || (_provider.IsMultiline && End < _provider.TextLength
+                    && End - Start == 1 && text[End] == '\n'))
+            {
+                PInvoke.GetCaretPos(out Point endlinePoint);
                 endlinePoint = _provider.PointToScreen(endlinePoint);
                 Rectangle endlineRectangle = new Rectangle(endlinePoint.X, endlinePoint.Y + 2, UiaTextProvider.EndOfLineWidth, Math.Abs(_provider.Logfont.lfHeight) + 1);
                 return new double[] { endlineRectangle.X, endlineRectangle.Y, endlineRectangle.Width, endlineRectangle.Height };
@@ -290,14 +309,7 @@ namespace System.Windows.Forms.Automation
                 return Array.Empty<double>();
             }
 
-            string text = _provider.Text;
             ValidateEndpoints();
-            Rectangle ownerBounds = Drawing.Rectangle.Empty;
-
-            if (_enclosingElement.GetPropertyValue(UIA.BoundingRectanglePropertyId) is object boundsPropertyValue)
-            {
-                ownerBounds = (Rectangle)boundsPropertyValue;
-            }
 
             // Get the mapping from client coordinates to screen coordinates.
             Point mapClientToScreen = new Point(ownerBounds.X, ownerBounds.Y);
@@ -305,16 +317,11 @@ namespace System.Windows.Forms.Automation
             // Clip the rectangles to the edit control's formatting rectangle.
             Rectangle clippingRectangle = _provider.BoundingRectangle;
 
-            // We accumulate rectangles onto a list.
-            List<Rectangle> rectangles;
-
             if (_provider.IsMultiline)
             {
-                rectangles = GetMultilineBoundingRectangles(text, mapClientToScreen, clippingRectangle);
-                return _provider.RectListToDoubleArray(rectangles);
+                rectangles = GetMultilineBoundingRectangles(clippingRectangle);
+                return UiaTextProvider.RectListToDoubleArray(rectangles);
             }
-
-            rectangles = new List<Rectangle>();
 
             // Figure out the rectangle for this one line.
             Point startPoint = _provider.GetPositionFromChar(Start);
@@ -330,7 +337,7 @@ namespace System.Windows.Forms.Automation
                 rectangles.Add(rectangle);
             }
 
-            return _provider.RectListToDoubleArray(rectangles);
+            return UiaTextProvider.RectListToDoubleArray(rectangles);
         }
 
         IRawElementProviderSimple ITextRangeProvider.GetEnclosingElement() => _enclosingElement;
@@ -489,7 +496,7 @@ namespace System.Windows.Forms.Automation
         {
             if (_provider.IsMultiline)
             {
-                int newFirstLine = alignToTop.IsTrue()
+                int newFirstLine = alignToTop
                     ? _provider.GetLineFromCharIndex(Start)
                     : Math.Max(0, _provider.GetLineFromCharIndex(End) - _provider.LinesPerPage + 1);
 
@@ -587,11 +594,8 @@ namespace System.Windows.Forms.Automation
         /// <summary>
         ///  Helper function to accumulate a list of bounding rectangles for a potentially mult-line range.
         /// </summary>
-        private List<Rectangle> GetMultilineBoundingRectangles(string text, Point mapClientToScreen, Rectangle clippingRectangle)
+        private List<Rectangle> GetMultilineBoundingRectangles(Rectangle clippingRectangle)
         {
-            // Remember the line height.
-            int height = Math.Abs(_provider.Logfont.lfHeight);
-
             // Get the starting and ending lines for the range.
             int start = Start;
             int end = End;
@@ -612,46 +616,142 @@ namespace System.Windows.Forms.Automation
             if (lastVisibleLine < endLine)
             {
                 endLine = lastVisibleLine;
-                end = _provider.GetLineIndex(endLine) - 1;
+                end = _provider.GetLineIndex(endLine + 1); // Index of the next line is the end caret position of the previous line.
             }
 
+            // Remember the line height.
+            int lineHeight = Math.Abs(_provider.Logfont.lfHeight);
+
+            string text = _provider.Text;
             // Adding a rectangle for each line.
             List<Rectangle> rects = new List<Rectangle>();
-            int nextLineIndex = _provider.GetLineIndex(startLine);
 
-            for (int i = startLine; i <= endLine; i++)
+            for (int lineIndex = startLine; lineIndex <= endLine; lineIndex++)
             {
-                // Determine the starting coordinate on this line.
-                Point startPoint = _provider.GetPositionFromChar(i == startLine ? start : nextLineIndex);
+                // Get the left text position in the line.
+                int lineStartIndex = lineIndex == startLine ? start : _provider.GetLineIndex(lineIndex);
+                Point lineStartPoint = _provider.GetPositionFromChar(lineStartIndex);
 
-                // Determine the ending coordinate on this line.
-                Point endPoint;
+                // Get the right text position in the line.
+                int lineEndIndex = lineIndex == endLine
+                    // Just take the end of the range for the last line.
+                    // `end` is a caret position after the last character in the range,
+                    // so subtract 1 to get the last character index.
+                    ? end - 1
+                    // Or get the first index of the next line and take the previous character.
+                    // This is a workaround to get the last index of the line,
+                    // because Windows doesn't provide API for it.
+                    : _provider.GetLineIndex(lineIndex + 1) - 1;
 
-                if (i == endLine)
+                Point lineEndPoint = _provider.GetPositionFromCharForUpperRightCorner(lineEndIndex, text);
+
+                if (!_provider.IsReadingRTL)
                 {
-                    endPoint = _provider.GetPositionFromCharForUpperRightCorner(end - 1, text);
-                }
-                else
-                {
-                    nextLineIndex = _provider.GetLineIndex(i + 1);
-                    endPoint = _provider.GetPositionFromChar(nextLineIndex - 1);
+                    // Don't need additional calculations for LeftToRight edit field.
+                    AddLineRectangle(lineStartPoint, lineEndPoint);
+                    continue;
                 }
 
-                // Add a bounding rectangle for this line if it is nonempty.
-                // Add 2 to Y and 1 to Height to get a correct size of a rectangle around a range
-                Rectangle rect = new Rectangle(startPoint.X, startPoint.Y + 2, endPoint.X - startPoint.X, height + 1);
-                rect.Intersect(clippingRectangle);
-                if (rect.Width > 0 && rect.Height > 0)
+                // Windows provides incorrect coordinates in several cases
+                // for RightToLeft edit fields. So adjust it.
+
+                // This value can be negative for a RTL edit field, because Windows
+                // may provide incorrect start and end point for some broken lines.
+                int lineTextLength = lineEndIndex - lineStartIndex + 1;
+
+                // If the line is empty (just contains transition to the next line),
+                // we need to offset the start point on end of line width (equals 2 px)
+                // to show its rectangle in RTL mode. For LTR mode
+                // `GetPositionFromCharForUpperRightCorner` do it for us.
+                // Also, we have to check the line text length, because Windows may provide
+                // incorrect endpoints for RTL TextBox, in this case we will catch an exception.
+                if (lineTextLength > 0
+                    && (text.Substring(lineStartIndex, lineTextLength) == Environment.NewLine
+                        // Or if the range takes more space, than owning control rectangle.
+                        // One of the case is when there is a RTL line divided by space (not '\n').
+                        || lineEndPoint.X > clippingRectangle.Right))
                 {
-                    rect.Offset(mapClientToScreen.X, mapClientToScreen.Y);
-                    rects.Add(rect);
+                    lineStartPoint.X -= UiaTextProvider.EndOfLineWidth;
+                    AddLineRectangle(lineStartPoint, lineEndPoint);
+
+                    continue;
                 }
+
+                // If Windows provided incorrect coordinates for endpoints in RTL mode.
+                if (lineEndPoint.X <= lineStartPoint.X && lineTextLength > 0)
+                {
+                    if (string.IsNullOrWhiteSpace(text.Substring(lineStartIndex, lineTextLength)))
+                    {
+                        // If the line contains whitespaces only, they are in RTL order,
+                        // so just swap start and end points, taken from Windows.
+                        (lineStartPoint, lineEndPoint) = (lineEndPoint, lineStartPoint);
+                        AddLineRectangle(lineStartPoint, lineEndPoint);
+
+                        continue;
+                    }
+
+                    // TextBox in RTL mode may have incorrect character display order,
+                    // in this case the caret "jumps" between characters in the line
+                    // instead of direct moving through them. In this case Windows provides
+                    // incorrect characters indexes and their positions in the line.
+                    // This is a bug or the native control, because the caret "jums"
+                    // when selecting and the selected text is torn. Moreover, the caret position
+                    // is incorrect for some whitespaces, thereby Windows provides incorrect text range endpoints.
+                    // There are 2 ways to get rectangles:
+                    //    1) Go through all characters in the line and get min and max positions.
+                    //       (Used now)
+                    //    2) Take the owning control rectangle width for the line text range.
+                    //       (Fast and simple)
+                    //       lineStartPoint.X = clippingRectangle.Left;
+                    //       lineEndPoint.X = clippingRectangle.Right;
+
+                    // Use the "end" point as min, because it is less than the "start" point for this case.
+                    int minX = lineEndPoint.X;
+                    int maxX = minX;
+
+                    // Go through all characters in the line and get min and max positions.
+                    for (int i = lineStartIndex; i <= lineEndIndex; i++)
+                    {
+                        Point pt = _provider.GetPositionFromChar(i);
+                        if (pt.X < minX)
+                        {
+                            minX = pt.X;
+                            continue;
+                        }
+
+                        pt = _provider.GetPositionFromCharForUpperRightCorner(i, text);
+                        if (pt.X > maxX)
+                        {
+                            maxX = pt.X;
+                        }
+                    }
+
+                    lineStartPoint.X = minX;
+                    lineEndPoint.X = maxX;
+                }
+
+                AddLineRectangle(lineStartPoint, lineEndPoint);
             }
 
             return rects;
+
+            void AddLineRectangle(Point startPoint, Point endPoint)
+            {
+                // Add a bounding rectangle for a line, if it's nonempty.
+                // Increase Y by 2 to Y to get a correct size of the rectangle around a text range.
+                // Adding 2px constant to Y doesn't affect rectangles in a high DPI mode,
+                // because it just moves the rectangle down a TextBox border, that is 1 px in all DPI modes.
+                Rectangle rect = new(startPoint.X, startPoint.Y + 2, endPoint.X - startPoint.X, lineHeight);
+                rect.Intersect(clippingRectangle);
+                if (rect.Width > 0 && rect.Height > 0)
+                {
+                    rect = _provider.RectangleToScreen(rect);
+                    rects.Add(rect);
+                }
+            }
         }
 
-        private HorizontalTextAlignment GetHorizontalTextAlignment(ES editStyle)
+        private static HorizontalTextAlignment GetHorizontalTextAlignment(ES editStyle)
         {
             if (editStyle.HasFlag(ES.CENTER))
             {
@@ -666,26 +766,26 @@ namespace System.Windows.Forms.Automation
             return HorizontalTextAlignment.Left;
         }
 
-        private CapStyle GetCapStyle(ES editStyle) => editStyle.HasFlag(ES.UPPERCASE) ? CapStyle.AllCap : CapStyle.None;
+        private static CapStyle GetCapStyle(ES editStyle) => editStyle.HasFlag(ES.UPPERCASE) ? CapStyle.AllCap : CapStyle.None;
 
         private bool GetReadOnly() => _provider.IsReadOnly;
 
-        private static COLORREF GetBackgroundColor() => GetSysColor(COLOR.WINDOW);
+        private static COLORREF GetBackgroundColor() => (COLORREF)PInvoke.GetSysColor(SYS_COLOR_INDEX.COLOR_WINDOW);
 
         private static string GetFontName(LOGFONTW logfont) => logfont.FaceName.ToString();
 
-        private double GetFontSize(LOGFONTW logfont)
+        private static double GetFontSize(LOGFONTW logfont)
         {
             // Note: this assumes integral point sizes. violating this assumption would confuse the user
             // because they set something to 7 point but reports that it is, say 7.2 point, due to the rounding.
             using var dc = User32.GetDcScope.ScreenDC;
-            int lpy = Gdi32.GetDeviceCaps(dc, Gdi32.DeviceCapability.LOGPIXELSY);
+            int lpy = PInvoke.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSY);
             return Math.Round((double)(-logfont.lfHeight) * 72 / lpy);
         }
 
-        private static Gdi32.FW GetFontWeight(LOGFONTW logfont) => logfont.lfWeight;
+        private static FW GetFontWeight(LOGFONTW logfont) => (FW)logfont.lfWeight;
 
-        private static COLORREF GetForegroundColor() => GetSysColor(COLOR.WINDOWTEXT);
+        private static COLORREF GetForegroundColor() => (COLORREF)PInvoke.GetSysColor(SYS_COLOR_INDEX.COLOR_WINDOWTEXT);
 
         private static bool GetItalic(LOGFONTW logfont) => logfont.lfItalic != 0;
 
@@ -708,10 +808,11 @@ namespace System.Windows.Forms.Automation
                         ValidateEndpoints();
 
                         moved = Math.Min(count, limit - index);
-                        index = index + moved;
+                        index += moved;
 
                         index = index > limit ? limit : index;
                     }
+
                     break;
 
                 case TextUnit.Word:
@@ -732,6 +833,7 @@ namespace System.Windows.Forms.Automation
                             moved++;
                         }
                     }
+
                     break;
 
                 case TextUnit.Line:
@@ -758,6 +860,7 @@ namespace System.Windows.Forms.Automation
                             moved = 1;
                         }
                     }
+
                     break;
 
                 case TextUnit.Paragraph:
@@ -780,6 +883,7 @@ namespace System.Windows.Forms.Automation
                             moved++;
                         }
                     }
+
                     break;
 
                 case TextUnit.Format:
@@ -797,6 +901,7 @@ namespace System.Windows.Forms.Automation
                         moved = index < limit ? 1 : 0;
                         index = limit;
                     }
+
                     break;
 
                 default:
@@ -818,9 +923,10 @@ namespace System.Windows.Forms.Automation
                         ValidateEndpoints();
                         int oneBasedIndex = index + 1;
                         moved = Math.Max(count, -oneBasedIndex);
-                        index = index + moved;
+                        index += moved;
                         index = index < 0 ? 0 : index;
                     }
+
                     break;
 
                 case TextUnit.Word:
@@ -838,6 +944,7 @@ namespace System.Windows.Forms.Automation
                             }
                         }
                     }
+
                     break;
 
                 case TextUnit.Line:
@@ -888,6 +995,7 @@ namespace System.Windows.Forms.Automation
                             index = _provider.GetLineIndex(line + actualCount) - LineSeparator.Length;
                         }
                     }
+
                     break;
 
                 case TextUnit.Paragraph:
@@ -907,6 +1015,7 @@ namespace System.Windows.Forms.Automation
                             }
                         }
                     }
+
                     break;
 
                 case TextUnit.Format:
@@ -922,6 +1031,7 @@ namespace System.Windows.Forms.Automation
                         moved = index > 0 ? -1 : 0;
                         index = 0;
                     }
+
                     break;
 
                 default:

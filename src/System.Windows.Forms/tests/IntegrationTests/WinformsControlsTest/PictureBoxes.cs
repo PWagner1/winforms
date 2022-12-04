@@ -2,14 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace WinformsControlsTest
@@ -60,7 +53,7 @@ namespace WinformsControlsTest
                 MessageBox.Show("Image loading cancelled");
             }
 
-            if (e.Error != null)
+            if (e.Error is not null)
             {
                 MessageBox.Show(e.Error.Message, $"{e.Error.GetType().FullName} occurred");
             }

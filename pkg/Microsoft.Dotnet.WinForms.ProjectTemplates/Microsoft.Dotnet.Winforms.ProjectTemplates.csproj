@@ -1,12 +1,9 @@
 ﻿<Project InitialTargets="BuildPackage">
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
   <PropertyGroup>
-    <TargetFrameworkName>net</TargetFrameworkName>
-    <TargetFrameworkVersion>5.0</TargetFrameworkVersion>
-    <TargetFramework>$(TargetFrameworkName)$(TargetFrameworkVersion)</TargetFramework>
     <EnableDefaultItems>false</EnableDefaultItems>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    
+    <UsingToolTemplateLocalizer>true</UsingToolTemplateLocalizer>
     <!-- Suppress some nuget warnings that are breaking our build until https://github.com/dotnet/arcade/issues/4337 is resolved -->
     <NoWarn>$(NoWarn);NU5131;NU5128</NoWarn>
 
@@ -41,14 +38,14 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- Supress creation of contentFiles directory -->
+    <!-- Suppress creation of contentFiles directory -->
     <ContentTargetFolders>.\</ContentTargetFolders>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PackageTargetRuntime)' == ''">
     <Content Include="content\**\*" />
     <Content Update="@(Content)">
-      <!-- Supress creation of content directory -->
+      <!-- Suppress creation of content directory -->
       <PackagePath>.\</PackagePath>
       <SkipPackageFileCheck>true</SkipPackageFileCheck>
     </Content>

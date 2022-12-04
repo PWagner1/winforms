@@ -3,8 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -26,10 +26,9 @@ namespace System.Windows.Forms
         private int _value;
         private readonly ScrollOrientation _scrollOrientation;
         private int _wheelDelta;
-        private bool _scaleScrollBarForDpiChange = true;
 
         /// <summary>
-        ///  Initializes a new instance of the <see cref='ScrollBar'/> class.
+        ///  Initializes a new instance of the <see cref="ScrollBar"/> class.
         /// </summary>
         public ScrollBar() : base()
         {
@@ -122,8 +121,8 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = ComCtl32.WindowClasses.WC_SCROLLBAR;
-                cp.Style &= ~(int)User32.WS.BORDER;
+                cp.ClassName = PInvoke.WC_SCROLLBAR;
+                cp.Style &= ~(int)WINDOW_STYLE.WS_BORDER;
                 return cp;
             }
         }
@@ -135,7 +134,11 @@ namespace System.Windows.Forms
         protected override void RescaleConstantsForDpi(int deviceDpiOld, int deviceDpiNew)
         {
             base.RescaleConstantsForDpi(deviceDpiOld, deviceDpiNew);
-            Scale((float)deviceDpiNew / deviceDpiOld);
+
+            if (ScaleScrollBarForDpiChange)
+            {
+                Scale((float)deviceDpiNew / deviceDpiOld);
+            }
         }
 
         /// <summary>
@@ -159,6 +162,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
+        [AllowNull]
         public override Font Font
         {
             get => base.Font;
@@ -190,7 +194,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Gets or sets a value to be added or subtracted to the <see cref='Value'/>
+        ///  Gets or sets a value to be added or subtracted to the <see cref="Value"/>
         ///  property when the scroll box is moved a large distance.
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
@@ -240,6 +244,7 @@ namespace System.Windows.Forms
                     {
                         _minimum = value;
                     }
+
                     if (value < _value)
                     {
                         Value = value;
@@ -269,6 +274,7 @@ namespace System.Windows.Forms
                     {
                         _maximum = value;
                     }
+
                     if (value > _value)
                     {
                         _value = value;
@@ -281,7 +287,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Gets or sets the value to be added or subtracted to the <see cref='Value'/>
+        ///  Gets or sets the value to be added or subtracted to the <see cref="Value"/>
         ///  property when the scroll box is moved a small distance.
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
@@ -311,6 +317,8 @@ namespace System.Windows.Forms
             }
         }
 
+        internal override bool SupportsUiaProviders => true;
+
         [DefaultValue(false)]
         public new bool TabStop
         {
@@ -322,6 +330,7 @@ namespace System.Windows.Forms
         [EditorBrowsable(EditorBrowsableState.Never)]
         [Bindable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [AllowNull]
         public override string Text
         {
             get => base.Text;
@@ -371,11 +380,7 @@ namespace System.Windows.Forms
         [Browsable(true)]
         [EditorBrowsable(EditorBrowsableState.Always)]
         [SRDescription(nameof(SR.ControlDpiChangeScale))]
-        public bool ScaleScrollBarForDpiChange
-        {
-            get => _scaleScrollBarForDpiChange;
-            set => _scaleScrollBarForDpiChange = value;
-        }
+        public bool ScaleScrollBarForDpiChange { get; set; } = true;
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -453,9 +458,9 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Occurs when the <see cref='Value'/> property has
-        ///  changed, either by a <see cref='OnScroll'/> event
-        ///  or programatically.
+        ///  Occurs when the <see cref="Value"/> property has
+        ///  changed, either by a <see cref="OnScroll"/> event
+        ///  or programmatically.
         /// </summary>
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.valueChangedEventDescr))]
@@ -488,7 +493,7 @@ namespace System.Windows.Forms
             return base.GetScaledBounds(bounds, factor, specified);
         }
 
-        internal override Gdi32.HBRUSH InitializeDCForWmCtlColor(Gdi32.HDC dc, User32.WM msg) => default;
+        internal override HBRUSH InitializeDCForWmCtlColor(HDC dc, User32.WM msg) => default;
 
         protected override void OnEnabledChanged(EventArgs e)
         {
@@ -510,7 +515,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Raises the <see cref='ValueChanged'/> event.
+        ///  Raises the <see cref="ValueChanged"/> event.
         /// </summary>
         protected virtual void OnScroll(ScrollEventArgs se)
             => ((ScrollEventHandler?)Events[s_scrollEvent])?.Invoke(this, se);
@@ -524,7 +529,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (e != null)
+            if (e is not null)
             {
                 _wheelDelta += e.Delta;
 
@@ -560,11 +565,12 @@ namespace System.Windows.Forms
             // The base implementation should be called before the implementation above,
             // but changing the order in Whidbey would be too much of a breaking change
             // for this particular class.
-            base.OnMouseWheel(e);
+            // Because the code has been like that since long time, we assume that e is not null.
+            base.OnMouseWheel(e!);
         }
 
         /// <summary>
-        ///  Raises the <see cref='ValueChanged'/> event.
+        ///  Raises the <see cref="ValueChanged"/> event.
         /// </summary>
         protected virtual void OnValueChanged(EventArgs e)
             => ((EventHandler?)Events[s_valueChangedEvent])?.Invoke(this, e);
@@ -585,42 +591,43 @@ namespace System.Windows.Forms
             return s + ", Minimum: " + Minimum + ", Maximum: " + Maximum + ", Value: " + Value;
         }
 
-        protected void UpdateScrollInfo()
+        protected unsafe void UpdateScrollInfo()
         {
-            if (IsHandleCreated && Enabled)
+            if (!IsHandleCreated || !Enabled)
             {
-                var si = new User32.SCROLLINFO
-                {
-                    cbSize = (uint)Marshal.SizeOf<User32.SCROLLINFO>(),
-                    fMask = User32.SIF.ALL,
-                    nMin = _minimum,
-                    nMax = _maximum,
-                    nPage = (uint)LargeChange
-                };
-
-                if (RightToLeft == RightToLeft.Yes)
-                {
-                    // Reflect the scrollbar position horizontally on an Rtl system
-                    si.nPos = ReflectPosition(_value);
-                }
-                else
-                {
-                    si.nPos = _value;
-                }
-
-                si.nTrackPos = 0;
-
-                User32.SetScrollInfo(this, User32.SB.CTL, ref si, BOOL.TRUE);
+                return;
             }
+
+            SCROLLINFO si = new()
+            {
+                cbSize = (uint)sizeof(SCROLLINFO),
+                fMask = SCROLLINFO_MASK.SIF_ALL,
+                nMin = _minimum,
+                nMax = _maximum,
+                nPage = (uint)LargeChange
+            };
+
+            if (RightToLeft == RightToLeft.Yes)
+            {
+                // Reflect the scrollbar position horizontally on an Rtl system
+                si.nPos = ReflectPosition(_value);
+            }
+            else
+            {
+                si.nPos = _value;
+            }
+
+            si.nTrackPos = 0;
+            PInvoke.SetScrollInfo(this, SCROLLBAR_CONSTANTS.SB_CTL, ref si, true);
         }
 
         private void WmReflectScroll(ref Message m)
         {
-            ScrollEventType type = (ScrollEventType)PARAM.LOWORD(m.WParam);
+            ScrollEventType type = (ScrollEventType)m.WParamInternal.LOWORD;
             DoScroll(type);
         }
 
-        private void DoScroll(ScrollEventType type)
+        private unsafe void DoScroll(ScrollEventType type)
         {
             // For Rtl systems we need to swap increment and decrement
             if (RightToLeft == RightToLeft.Yes)
@@ -687,12 +694,13 @@ namespace System.Windows.Forms
 
                 case ScrollEventType.ThumbPosition:
                 case ScrollEventType.ThumbTrack:
-                    var si = new User32.SCROLLINFO
+                    SCROLLINFO si = new()
                     {
-                        cbSize = (uint)Marshal.SizeOf<User32.SCROLLINFO>(),
-                        fMask = User32.SIF.TRACKPOS
+                        cbSize = (uint)sizeof(SCROLLINFO),
+                        fMask = SCROLLINFO_MASK.SIF_TRACKPOS
                     };
-                    User32.GetScrollInfo(this, User32.SB.CTL, ref si);
+
+                    PInvoke.GetScrollInfo(this, SCROLLBAR_CONSTANTS.SB_CTL, ref si);
 
                     if (RightToLeft == RightToLeft.Yes)
                     {
@@ -725,12 +733,13 @@ namespace System.Windows.Forms
 
                 case User32.WM.SIZE:
                     // Fixes the scrollbar focus rect
-                    if (User32.GetFocus() == Handle)
+                    if (PInvoke.GetFocus() == HWND)
                     {
                         DefWndProc(ref m);
-                        User32.SendMessageW(this, User32.WM.KILLFOCUS);
-                        User32.SendMessageW(this, User32.WM.SETFOCUS);
+                        PInvoke.SendMessage(this, User32.WM.KILLFOCUS);
+                        PInvoke.SendMessage(this, User32.WM.SETFOCUS);
                     }
+
                     break;
 
                 default:
@@ -740,11 +749,11 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Creates a new AccessibleObject for this <see cref='ScrollBar'/> instance.
+        ///  Creates a new AccessibleObject for this <see cref="ScrollBar"/> instance.
         ///  The AccessibleObject instance returned by this method supports ControlType UIA property.
         /// </summary>
         /// <returns>
-        ///  AccessibleObject for this <see cref='ScrollBar'/> instance.
+        ///  AccessibleObject for this <see cref="ScrollBar"/> instance.
         /// </returns>
         protected override AccessibleObject CreateAccessibilityInstance()
             => new ScrollBarAccessibleObject(this);

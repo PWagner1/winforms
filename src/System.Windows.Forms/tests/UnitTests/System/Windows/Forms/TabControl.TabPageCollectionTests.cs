@@ -3,19 +3,16 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
 using Moq;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
 using static Interop;
+using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Tests
 {
-    using Size = System.Drawing.Size;
-
     public class TabControlTabPageCollectionTests : IClassFixture<ThreadExceptionFixture>
     {
         public static IEnumerable<object[]> Add_TestData()
@@ -50,6 +47,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
@@ -175,6 +173,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, owner.Handle);
             int parentInvalidatedCallCount = 0;
@@ -337,6 +336,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, value1.Handle);
             int invalidatedCallCount1 = 0;
@@ -480,6 +480,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, value1.Handle);
             int invalidatedCallCount1 = 0;
@@ -766,34 +767,34 @@ namespace System.Windows.Forms.Tests
             collection.Add(page1);
             collection.Add(page2);
             collection.Add(page3);
-            Assert.Equal((IntPtr)3, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(3, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
 
             char* buffer = stackalloc char[256];
             ComCtl32.TCITEMW item = default;
             item.cchTextMax = int.MaxValue;
             item.pszText = buffer;
-            item.dwStateMask = (ComCtl32.TCIS)uint.MaxValue;
-            item.mask = (ComCtl32.TCIF)uint.MaxValue;
+            item.dwStateMask = (TAB_CONTROL_ITEM_STATE)uint.MaxValue;
+            item.mask = (TCITEMHEADERA_MASK)uint.MaxValue;
 
             // Get item 0.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)0, ref item));
-            Assert.Equal(ComCtl32.TCIS.BUTTONPRESSED, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 0, ref item));
+            Assert.Equal(TAB_CONTROL_ITEM_STATE.TCIS_BUTTONPRESSED, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
             Assert.Equal(-1, item.iImage);
 
             // Get item 1.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)1, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 1, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Equal(expectedText, new string(item.pszText));
             Assert.Equal(1, item.iImage);
 
             // Get item 2.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)2, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 2, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
@@ -834,34 +835,34 @@ namespace System.Windows.Forms.Tests
             collection.Add(page1);
             collection.Add(page2);
             collection.Add(page3);
-            Assert.Equal((IntPtr)3, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(3, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
 
             char* buffer = stackalloc char[256];
             ComCtl32.TCITEMW item = default;
             item.cchTextMax = int.MaxValue;
             item.pszText = buffer;
-            item.dwStateMask = (ComCtl32.TCIS)uint.MaxValue;
-            item.mask = (ComCtl32.TCIF)uint.MaxValue;
+            item.dwStateMask = (TAB_CONTROL_ITEM_STATE)uint.MaxValue;
+            item.mask = (TCITEMHEADERA_MASK)uint.MaxValue;
 
             // Get item 0.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)0, ref item));
-            Assert.Equal(ComCtl32.TCIS.BUTTONPRESSED, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 0, ref item));
+            Assert.Equal(TAB_CONTROL_ITEM_STATE.TCIS_BUTTONPRESSED, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
             Assert.Equal(-1, item.iImage);
 
             // Get item 1.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)1, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 1, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Equal(expectedText, new string(item.pszText));
             Assert.Equal(1, item.iImage);
 
             // Get item 2.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)2, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 2, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
@@ -877,7 +878,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TabPageCollection_Add_InvokeString_Success(string text, string expectedText)
         {
             using var owner = new TabControl();
@@ -976,6 +977,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
@@ -1075,7 +1077,7 @@ namespace System.Windows.Forms.Tests
             using var owner = new TabControl();
             var collection = new TabControl.TabPageCollection(owner);
             IList iList = collection;
-            Assert.Throws<ArgumentException>(null, () => iList.Add(value));
+            Assert.Throws<ArgumentException>(() => iList.Add(value));
         }
 
         [WinFormsFact]
@@ -1332,6 +1334,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("Parent", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             int controlRemovedCallCount = 0;
             owner.ControlRemoved += (sender, e) => controlRemovedCallCount++;
@@ -1451,7 +1454,8 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(child3, e.AffectedControl);
                 Assert.Equal("Parent", e.AffectedProperty);
                 parentLayoutCallCount++;
-            };
+            }
+
             owner.Layout += parentHandler;
 
             try
@@ -1511,7 +1515,7 @@ namespace System.Windows.Forms.Tests
 
             Assert.NotEqual(IntPtr.Zero, owner.Handle);
             collection.Clear();
-            Assert.Equal((IntPtr)0, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(0, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
         }
 
         [WinFormsFact]
@@ -1614,7 +1618,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void TabPageCollection_ContainsKey_InvokeEmpty_ReturnsExpected(string key)
         {
             using var owner = new TabControl();
@@ -1909,7 +1913,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void TabPageCollection_IndexOfKey_InvokeEmpty_ReturnsExpected(string key)
         {
             using var owner = new TabControl();
@@ -1947,14 +1951,15 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
             {
                 // Add first.
                 collection.Insert(0, value1);
-                Assert.Empty(collection);
-                Assert.Empty(owner.TabPages);
+                Assert.Same(value1, Assert.Single(collection));
+                Assert.Same(value1, Assert.Single(owner.TabPages));
                 Assert.Same(value1, Assert.Single(owner.Controls));
                 Assert.Same(owner, value1.Parent);
                 Assert.False(value1.Visible);
@@ -1972,8 +1977,8 @@ namespace System.Windows.Forms.Tests
 
                 // Add another.
                 collection.Insert(0, value2);
-                Assert.Empty(collection);
-                Assert.Empty(owner.TabPages);
+                Assert.Equal(new TabPage[] { value2, value1 }, collection.Cast<TabPage>());
+                Assert.Equal(new TabPage[] { value2, value1 }, owner.TabPages.Cast<TabPage>());
                 Assert.Equal(new Control[] { value2, value1 }, owner.Controls.Cast<Control>());
                 Assert.Same(owner, value1.Parent);
                 Assert.False(value1.Visible);
@@ -2003,8 +2008,8 @@ namespace System.Windows.Forms.Tests
 
                 // Add again.
                 collection.Insert(2, value1);
-                Assert.Empty(collection);
-                Assert.Empty(owner.TabPages);
+                Assert.Equal(new TabPage[] { value2, value1, value1 }, collection.Cast<TabPage>());
+                Assert.Equal(new TabPage[] { value2, value1, value1 }, owner.TabPages.Cast<TabPage>());
                 Assert.Equal(new Control[] { value2, value1 }, owner.Controls.Cast<Control>());
                 Assert.Same(owner, value1.Parent);
                 Assert.False(value1.Visible);
@@ -2067,6 +2072,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, owner.Handle);
             int parentInvalidatedCallCount = 0;
@@ -2235,6 +2241,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, value1.Handle);
             int invalidatedCallCount1 = 0;
@@ -2255,8 +2262,8 @@ namespace System.Windows.Forms.Tests
             {
                 // Add first.
                 collection.Insert(0, value1);
-                Assert.Empty(collection);
-                Assert.Empty(owner.TabPages);
+                Assert.Same(value1, Assert.Single(collection));
+                Assert.Same(value1, Assert.Single(owner.TabPages));
                 Assert.Same(value1, Assert.Single(owner.Controls));
                 Assert.Same(owner, value1.Parent);
                 Assert.False(value1.Visible);
@@ -2277,8 +2284,8 @@ namespace System.Windows.Forms.Tests
 
                 // Add another.
                 collection.Insert(0, value2);
-                Assert.Empty(collection);
-                Assert.Empty(owner.TabPages);
+                Assert.Equal(new TabPage[] { value2, value1 }, collection.Cast<TabPage>());
+                Assert.Equal(new TabPage[] { value2, value1 }, owner.TabPages.Cast<TabPage>());
                 Assert.Equal(new Control[] { value2, value1 }, owner.Controls.Cast<Control>());
                 Assert.Same(owner, value1.Parent);
                 Assert.False(value1.Visible);
@@ -2314,8 +2321,8 @@ namespace System.Windows.Forms.Tests
 
                 // Add again.
                 collection.Insert(2, value1);
-                Assert.Empty(collection);
-                Assert.Empty(owner.TabPages);
+                Assert.Equal(new TabPage[] { value2, value1, value1 }, collection.Cast<TabPage>());
+                Assert.Equal(new TabPage[] { value2, value1, value1 }, owner.TabPages.Cast<TabPage>());
                 Assert.Equal(new Control[] { value2, value1 }, owner.Controls.Cast<Control>());
                 Assert.Same(owner, value1.Parent);
                 Assert.False(value1.Visible);
@@ -2384,6 +2391,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, value1.Handle);
             int invalidatedCallCount1 = 0;
@@ -2657,7 +2665,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TabPageCollection_Insert_InvokeIntString_Success(string text, string expectedText)
         {
             using var owner = new TabControl();
@@ -2755,34 +2763,34 @@ namespace System.Windows.Forms.Tests
             collection.Insert(0, page3);
             collection.Insert(0, page2);
             collection.Insert(0, page1);
-            Assert.Equal((IntPtr)3, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(3, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
 
             char* buffer = stackalloc char[256];
             ComCtl32.TCITEMW item = default;
             item.cchTextMax = int.MaxValue;
             item.pszText = buffer;
-            item.dwStateMask = (ComCtl32.TCIS)uint.MaxValue;
-            item.mask = (ComCtl32.TCIF)uint.MaxValue;
+            item.dwStateMask = (TAB_CONTROL_ITEM_STATE)uint.MaxValue;
+            item.mask = (TCITEMHEADERA_MASK)uint.MaxValue;
 
             // Get item 0.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)0, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 0, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
             Assert.Equal(-1, item.iImage);
 
             // Get item 1.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)1, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 1, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Equal(expectedText, new string(item.pszText));
             Assert.Equal(1, item.iImage);
 
             // Get item 2.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)2, ref item));
-            Assert.Equal(ComCtl32.TCIS.BUTTONPRESSED, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 2, ref item));
+            Assert.Equal(TAB_CONTROL_ITEM_STATE.TCIS_BUTTONPRESSED, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
@@ -2823,34 +2831,34 @@ namespace System.Windows.Forms.Tests
             collection.Insert(0, page3);
             collection.Insert(0, page2);
             collection.Insert(0, page1);
-            Assert.Equal((IntPtr)3, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(3, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
 
             char* buffer = stackalloc char[256];
             ComCtl32.TCITEMW item = default;
             item.cchTextMax = int.MaxValue;
             item.pszText = buffer;
-            item.dwStateMask = (ComCtl32.TCIS)uint.MaxValue;
-            item.mask = (ComCtl32.TCIF)uint.MaxValue;
+            item.dwStateMask = (TAB_CONTROL_ITEM_STATE)uint.MaxValue;
+            item.mask = (TCITEMHEADERA_MASK)uint.MaxValue;
 
             // Get item 0.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)0, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 0, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
             Assert.Equal(-1, item.iImage);
 
             // Get item 1.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)1, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 1, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Equal(expectedText, new string(item.pszText));
             Assert.Equal(1, item.iImage);
 
             // Get item 2.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)2, ref item));
-            Assert.Equal(ComCtl32.TCIS.BUTTONPRESSED, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 2, ref item));
+            Assert.Equal(TAB_CONTROL_ITEM_STATE.TCIS_BUTTONPRESSED, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
@@ -2903,8 +2911,7 @@ namespace System.Windows.Forms.Tests
             using var owner = new TabControl();
             var collection = new TabControl.TabPageCollection(owner);
             using var value = new TabPage();
-            collection.Insert(index, value);
-            Assert.Empty(collection);
+            Assert.Throws<ArgumentOutOfRangeException>(() => collection.Insert(index, value));
         }
 
         [WinFormsTheory]
@@ -2917,8 +2924,7 @@ namespace System.Windows.Forms.Tests
             Assert.NotEqual(IntPtr.Zero, owner.Handle);
 
             using var value = new TabPage();
-            collection.Insert(index, value);
-            Assert.Same(value, Assert.Single(collection));
+            Assert.Throws<ArgumentOutOfRangeException>(() => collection.Insert(index, value));
         }
 
         [WinFormsTheory]
@@ -2987,14 +2993,15 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
             {
                 // Add first.
                 iList.Insert(0, value1);
-                Assert.Empty(collection);
-                Assert.Empty(owner.TabPages);
+                Assert.Same(value1, Assert.Single(collection));
+                Assert.Same(value1, Assert.Single(owner.TabPages));
                 Assert.Same(value1, Assert.Single(owner.Controls));
                 Assert.Same(owner, value1.Parent);
                 Assert.False(value1.Visible);
@@ -3012,8 +3019,8 @@ namespace System.Windows.Forms.Tests
 
                 // Add another.
                 iList.Insert(0, value2);
-                Assert.Empty(collection);
-                Assert.Empty(owner.TabPages);
+                Assert.Equal(new TabPage[] { value2, value1 }, collection.Cast<TabPage>());
+                Assert.Equal(new TabPage[] { value2, value1 }, owner.TabPages.Cast<TabPage>());
                 Assert.Equal(new Control[] { value2, value1 }, owner.Controls.Cast<Control>());
                 Assert.Same(owner, value1.Parent);
                 Assert.False(value1.Visible);
@@ -3043,8 +3050,8 @@ namespace System.Windows.Forms.Tests
 
                 // Add again.
                 iList.Insert(2, value1);
-                Assert.Empty(collection);
-                Assert.Empty(owner.TabPages);
+                Assert.Equal(new TabPage[] { value2, value1, value1 }, collection.Cast<TabPage>());
+                Assert.Equal(new TabPage[] { value2, value1, value1 }, owner.TabPages.Cast<TabPage>());
                 Assert.Equal(new Control[] { value2, value1 }, owner.Controls.Cast<Control>());
                 Assert.Same(owner, value1.Parent);
                 Assert.False(value1.Visible);
@@ -3095,7 +3102,7 @@ namespace System.Windows.Forms.Tests
             using var owner = new TabControl();
             var collection = new TabControl.TabPageCollection(owner);
             IList iList = collection;
-            Assert.Throws<ArgumentException>(null, () => iList.Insert(0, value));
+            Assert.Throws<ArgumentException>(() => iList.Insert(0, value));
         }
 
         [WinFormsFact]
@@ -3131,8 +3138,7 @@ namespace System.Windows.Forms.Tests
             var collection = new TabControl.TabPageCollection(owner);
             IList iList = collection;
             using var value = new TabPage();
-            iList.Insert(index, value);
-            Assert.Empty(collection);
+            Assert.Throws<ArgumentOutOfRangeException>(() => iList.Insert(index, value));
         }
 
         [WinFormsTheory]
@@ -3146,8 +3152,7 @@ namespace System.Windows.Forms.Tests
             Assert.NotEqual(IntPtr.Zero, owner.Handle);
 
             using var value = new TabPage();
-            iList.Insert(index, value);
-            Assert.Same(value, Assert.Single(collection));
+            Assert.Throws<ArgumentOutOfRangeException>(() => iList.Insert(index, value));
         }
 
         [WinFormsTheory]
@@ -3250,7 +3255,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void TabPageCollection_Item_GetStringEmpty_ReturnsNull(string key)
         {
             using var owner = new TabControl();
@@ -3418,7 +3423,7 @@ namespace System.Windows.Forms.Tests
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
-        public void TabPageCollection_Item_SetValidIndexDesigModeWithHandle_ReturnsExpected(int index)
+        public void TabPageCollection_Item_SetValidIndexDesignModeWithHandle_ReturnsExpected(int index)
         {
             var mockSite = new Mock<ISite>(MockBehavior.Strict);
             mockSite
@@ -3491,34 +3496,34 @@ namespace System.Windows.Forms.Tests
                 ImageIndex = 1
             };
             collection[1] = value;
-            Assert.Equal((IntPtr)3, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(3, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
 
             char* buffer = stackalloc char[256];
             ComCtl32.TCITEMW item = default;
             item.cchTextMax = int.MaxValue;
             item.pszText = buffer;
-            item.dwStateMask = (ComCtl32.TCIS)uint.MaxValue;
-            item.mask = (ComCtl32.TCIF)uint.MaxValue;
+            item.dwStateMask = (TAB_CONTROL_ITEM_STATE)uint.MaxValue;
+            item.mask = (TCITEMHEADERA_MASK)uint.MaxValue;
 
             // Get item 0.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)0, ref item));
-            Assert.Equal(ComCtl32.TCIS.BUTTONPRESSED, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 0, ref item));
+            Assert.Equal(TAB_CONTROL_ITEM_STATE.TCIS_BUTTONPRESSED, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
             Assert.Equal(-1, item.iImage);
 
             // Get item 1.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)1, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 1, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Equal(expectedText, new string(item.pszText));
             Assert.Equal(1, item.iImage);
 
             // Get item 2.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)2, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 2, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
@@ -3561,34 +3566,34 @@ namespace System.Windows.Forms.Tests
                 ImageIndex = 1
             };
             collection[1] = value;
-            Assert.Equal((IntPtr)3, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(3, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
 
             char* buffer = stackalloc char[256];
             ComCtl32.TCITEMW item = default;
             item.cchTextMax = int.MaxValue;
             item.pszText = buffer;
-            item.dwStateMask = (ComCtl32.TCIS)uint.MaxValue;
-            item.mask = (ComCtl32.TCIF)uint.MaxValue;
+            item.dwStateMask = (TAB_CONTROL_ITEM_STATE)uint.MaxValue;
+            item.mask = (TCITEMHEADERA_MASK)uint.MaxValue;
 
             // Get item 0.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)0, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 0, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
             Assert.Equal(-1, item.iImage);
 
             // Get item 1.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)1, ref item));
-            Assert.Equal(ComCtl32.TCIS.BUTTONPRESSED, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 1, ref item));
+            Assert.Equal(TAB_CONTROL_ITEM_STATE.TCIS_BUTTONPRESSED, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Equal(expectedText, new string(item.pszText));
             Assert.Equal(1, item.iImage);
 
             // Get item 2.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)2, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 2, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
@@ -3805,7 +3810,7 @@ namespace System.Windows.Forms.Tests
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
-        public void TabPageCollection_IListItem_SetValidIndexDesigModeWithHandle_ReturnsExpected(int index)
+        public void TabPageCollection_IListItem_SetValidIndexDesignModeWithHandle_ReturnsExpected(int index)
         {
             var mockSite = new Mock<ISite>(MockBehavior.Strict);
             mockSite
@@ -3872,7 +3877,7 @@ namespace System.Windows.Forms.Tests
             var collection = new TabControl.TabPageCollection(owner);
             IList iList = collection;
             iList.Add(page);
-            Assert.Throws<ArgumentException>(null, () => iList[0] = value);
+            Assert.Throws<ArgumentException>(() => iList[0] = value);
         }
 
         [WinFormsTheory]
@@ -3928,6 +3933,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
@@ -4026,6 +4032,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, value1.Handle);
             int invalidatedCallCount1 = 0;
@@ -4153,6 +4160,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, owner.Handle);
             int parentInvalidatedCallCount = 0;
@@ -4267,6 +4275,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, value1.Handle);
             int invalidatedCallCount1 = 0;
@@ -4510,26 +4519,26 @@ namespace System.Windows.Forms.Tests
 
             Assert.NotEqual(IntPtr.Zero, owner.Handle);
             collection.Remove(page2);
-            Assert.Equal((IntPtr)2, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(2, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
 
             char* buffer = stackalloc char[256];
             ComCtl32.TCITEMW item = default;
             item.cchTextMax = int.MaxValue;
             item.pszText = buffer;
-            item.dwStateMask = (ComCtl32.TCIS)uint.MaxValue;
-            item.mask = (ComCtl32.TCIF)uint.MaxValue;
+            item.dwStateMask = (TAB_CONTROL_ITEM_STATE)uint.MaxValue;
+            item.mask = (TCITEMHEADERA_MASK)uint.MaxValue;
 
             // Get item 0.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)0, ref item));
-            Assert.Equal(ComCtl32.TCIS.BUTTONPRESSED, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 0, ref item));
+            Assert.Equal(TAB_CONTROL_ITEM_STATE.TCIS_BUTTONPRESSED, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
             Assert.Equal(-1, item.iImage);
 
             // Get item 2.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)1, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 1, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
@@ -4568,26 +4577,26 @@ namespace System.Windows.Forms.Tests
 
             Assert.NotEqual(IntPtr.Zero, owner.Handle);
             collection.Remove(page2);
-            Assert.Equal((IntPtr)2, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(2, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
 
             char* buffer = stackalloc char[256];
             ComCtl32.TCITEMW item = default;
             item.cchTextMax = int.MaxValue;
             item.pszText = buffer;
-            item.dwStateMask = (ComCtl32.TCIS)uint.MaxValue;
-            item.mask = (ComCtl32.TCIF)uint.MaxValue;
+            item.dwStateMask = (TAB_CONTROL_ITEM_STATE)uint.MaxValue;
+            item.mask = (TCITEMHEADERA_MASK)uint.MaxValue;
 
             // Get item 0.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)0, ref item));
-            Assert.Equal(ComCtl32.TCIS.BUTTONPRESSED, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 0, ref item));
+            Assert.Equal(TAB_CONTROL_ITEM_STATE.TCIS_BUTTONPRESSED, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
             Assert.Equal(-1, item.iImage);
 
             // Get item 1.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(owner.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)1, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(owner, (User32.WM)PInvoke.TCM_GETITEMW, 1, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
@@ -4628,6 +4637,7 @@ namespace System.Windows.Forms.Tests
                 events.Add(e);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
@@ -4736,6 +4746,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("Parent", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
@@ -4825,6 +4836,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("Parent", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
@@ -4893,6 +4905,63 @@ namespace System.Windows.Forms.Tests
             // Call again.
             collection.RemoveByKey(key);
             Assert.Equal(new TabPage[] { child1, child2, child3 }, collection.Cast<TabPage>());
+        }
+
+        [WinFormsFact]
+        public void TabPageCollection_Insert_By_Index()
+        {
+            using var TabControl = new TabControl();
+
+            using var page1 = new TabPage();
+            using var page2 = new TabPage();
+            using var page3 = new TabPage();
+
+            page1.Text = "First works";
+            TabControl.TabPages.Add(page1);
+
+            page2.Text = "Second works";
+            TabControl.TabPages.Insert(1, page2);
+            Assert.Equal(2, TabControl.TabPages.Count);
+            Assert.Equal(page2, TabControl.TabPages[1]);
+            Assert.Equal(page2, TabControl.Controls[1]);
+
+            page3.Text = "Third works";
+            TabControl.TabPages.Insert(1, page3);
+            Assert.Equal(3, TabControl.TabPages.Count);
+            Assert.Equal(page3, TabControl.TabPages[1]);
+            Assert.Equal(page3, TabControl.Controls[1]);
+            Assert.Equal(page2, TabControl.TabPages[2]);
+            Assert.Equal(page2, TabControl.Controls[2]);
+        }
+
+        [WinFormsFact]
+        public void TabPageCollection_Insert_First_item()
+        {
+            using var TabControl = new TabControl();
+
+            using var page1 = new TabPage();
+            using var page2 = new TabPage();
+            using var page3 = new TabPage();
+
+            page1.Text = "First works";
+            TabControl.TabPages.Insert(0, page1);
+            Assert.Equal(1, TabControl.TabPages.Count);
+            Assert.Equal(page1, TabControl.TabPages[0]);
+            Assert.Equal(page1, TabControl.Controls[0]);
+
+            page2.Text = "Second works";
+            TabControl.TabPages.Insert(1, page2);
+            Assert.Equal(2, TabControl.TabPages.Count);
+            Assert.Equal(page2, TabControl.TabPages[1]);
+            Assert.Equal(page2, TabControl.Controls[1]);
+
+            page3.Text = "Third works";
+            TabControl.TabPages.Insert(1, page3);
+            Assert.Equal(3, TabControl.TabPages.Count);
+            Assert.Equal(page3, TabControl.TabPages[1]);
+            Assert.Equal(page3, TabControl.Controls[1]);
+            Assert.Equal(page2, TabControl.TabPages[2]);
+            Assert.Equal(page2, TabControl.Controls[2]);
         }
 
         private class NullGetItemsTabControl : TabControl

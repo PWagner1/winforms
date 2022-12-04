@@ -4,9 +4,7 @@
 
 #nullable disable
 
-using System.Collections;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing.Design;
 
 namespace System.Windows.Forms
@@ -22,14 +20,14 @@ namespace System.Windows.Forms
     [SRDescription(nameof(SR.DescriptionHelpProvider))]
     public class HelpProvider : Component, IExtenderProvider
     {
-        private readonly Hashtable _helpStrings = new Hashtable();
-        private readonly Hashtable _showHelp = new Hashtable();
-        private readonly Hashtable _boundControls = new Hashtable();
-        private readonly Hashtable _keywords = new Hashtable();
-        private readonly Hashtable _navigators = new Hashtable();
+        private readonly Dictionary<Control, string> _helpStrings = new();
+        private readonly Dictionary<Control, bool> _showHelp = new();
+        private readonly List<Control> _boundControls = new();
+        private readonly Dictionary<Control, string> _keywords = new();
+        private readonly Dictionary<Control, HelpNavigator> _navigators = new();
 
         /// <summary>
-        ///  Initializes a new instance of the <see cref='HelpProvider'/> class.
+        ///  Initializes a new instance of the <see cref="HelpProvider"/> class.
         /// </summary>
         public HelpProvider()
         {
@@ -37,7 +35,7 @@ namespace System.Windows.Forms
 
         /// <summary>
         ///  Gets or sets a string indicating the name of the Help file associated with this
-        /// <see cref='HelpProvider'/> object.
+        /// <see cref="HelpProvider"/> object.
         /// </summary>
         [Localizable(true)]
         [DefaultValue(null)]
@@ -67,12 +65,8 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.HelpProviderHelpKeywordDescr))]
         public virtual string GetHelpKeyword(Control ctl)
         {
-            if (ctl is null)
-            {
-                throw new ArgumentNullException(nameof(ctl));
-            }
-
-            return (string)_keywords[ctl];
+            ArgumentNullException.ThrowIfNull(ctl);
+            return _keywords.TryGetValue(ctl, out string value) ? value : null;
         }
 
         /// <summary>
@@ -83,13 +77,8 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.HelpProviderNavigatorDescr))]
         public virtual HelpNavigator GetHelpNavigator(Control ctl)
         {
-            if (ctl is null)
-            {
-                throw new ArgumentNullException(nameof(ctl));
-            }
-
-            object nav = _navigators[ctl];
-            return nav is null ? HelpNavigator.AssociateIndex : (HelpNavigator)nav;
+            ArgumentNullException.ThrowIfNull(ctl);
+            return _navigators.TryGetValue(ctl, out HelpNavigator value) ? value : HelpNavigator.AssociateIndex;
         }
 
         /// <summary>
@@ -100,12 +89,8 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.HelpProviderHelpStringDescr))]
         public virtual string GetHelpString(Control ctl)
         {
-            if (ctl is null)
-            {
-                throw new ArgumentNullException(nameof(ctl));
-            }
-
-            return (string)_helpStrings[ctl];
+            ArgumentNullException.ThrowIfNull(ctl);
+            return _helpStrings.TryGetValue(ctl, out string value) ? value : null;
         }
 
         /// <summary>
@@ -115,13 +100,8 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.HelpProviderShowHelpDescr))]
         public virtual bool GetShowHelp(Control ctl)
         {
-            if (ctl is null)
-            {
-                throw new ArgumentNullException(nameof(ctl));
-            }
-
-            object b = _showHelp[ctl];
-            return b is null ? false : (bool)b;
+            ArgumentNullException.ThrowIfNull(ctl);
+            return _showHelp.TryGetValue(ctl, out bool value) ? value : false;
         }
 
         /// <summary>
@@ -141,16 +121,16 @@ namespace System.Windows.Forms
 
             if (Control.MouseButtons != MouseButtons.None && !string.IsNullOrEmpty(helpString))
             {
-                Debug.WriteLineIf(Help.WindowsFormsHelpTrace.TraceVerbose, "HelpProvider:: Mouse down w/ helpstring");
+                Help.WindowsFormsHelpTrace.TraceVerbose("HelpProvider:: Mouse down w/ helpstring");
                 Help.ShowPopup(ctl, helpString, hevent.MousePos);
                 hevent.Handled = true;
                 return;
             }
 
             // If we have a help file, and help keyword we try F1 help next
-            if (HelpNamespace != null)
+            if (HelpNamespace is not null)
             {
-                Debug.WriteLineIf(Help.WindowsFormsHelpTrace.TraceVerbose, "HelpProvider:: F1 help");
+                Help.WindowsFormsHelpTrace.TraceVerbose("HelpProvider:: F1 help");
                 if (!string.IsNullOrEmpty(keyword))
                 {
                     Help.ShowHelp(ctl, HelpNamespace, navigator, keyword);
@@ -167,7 +147,7 @@ namespace System.Windows.Forms
             // So at this point we don't have a help keyword, so try to display the whats this help
             if (!string.IsNullOrEmpty(helpString))
             {
-                Debug.WriteLineIf(Help.WindowsFormsHelpTrace.TraceVerbose, "HelpProvider:: back to helpstring");
+                Help.WindowsFormsHelpTrace.TraceVerbose("HelpProvider:: back to helpstring");
                 Help.ShowPopup(ctl, helpString, hevent.MousePos);
                 hevent.Handled = true;
             }
@@ -189,10 +169,7 @@ namespace System.Windows.Forms
         /// </summary>
         public virtual void SetHelpString(Control ctl, string helpString)
         {
-            if (ctl is null)
-            {
-                throw new ArgumentNullException(nameof(ctl));
-            }
+            ArgumentNullException.ThrowIfNull(ctl);
 
             _helpStrings[ctl] = helpString;
             if (!string.IsNullOrEmpty(helpString))
@@ -208,10 +185,7 @@ namespace System.Windows.Forms
         /// </summary>
         public virtual void SetHelpKeyword(Control ctl, string keyword)
         {
-            if (ctl is null)
-            {
-                throw new ArgumentNullException(nameof(ctl));
-            }
+            ArgumentNullException.ThrowIfNull(ctl);
 
             _keywords[ctl] = keyword;
             if (!string.IsNullOrEmpty(keyword))
@@ -227,10 +201,8 @@ namespace System.Windows.Forms
         /// </summary>
         public virtual void SetHelpNavigator(Control ctl, HelpNavigator navigator)
         {
-            if (ctl is null)
-            {
-                throw new ArgumentNullException(nameof(ctl));
-            }
+            ArgumentNullException.ThrowIfNull(ctl);
+
             SourceGenerated.EnumValidator.Validate(navigator, nameof(navigator));
 
             _navigators[ctl] = navigator;
@@ -243,10 +215,7 @@ namespace System.Windows.Forms
         /// </summary>
         public virtual void SetShowHelp(Control ctl, bool value)
         {
-            if (ctl is null)
-            {
-                throw new ArgumentNullException(nameof(ctl));
-            }
+            ArgumentNullException.ThrowIfNull(ctl);
 
             _showHelp[ctl] = value;
             UpdateEventBinding(ctl);
@@ -257,10 +226,7 @@ namespace System.Windows.Forms
         /// </summary>
         internal bool ShouldSerializeShowHelp(Control ctl)
         {
-            if (ctl is null)
-            {
-                throw new ArgumentNullException(nameof(ctl));
-            }
+            ArgumentNullException.ThrowIfNull(ctl);
 
             return _showHelp.ContainsKey(ctl);
         }
@@ -270,10 +236,7 @@ namespace System.Windows.Forms
         /// </summary>
         public virtual void ResetShowHelp(Control ctl)
         {
-            if (ctl is null)
-            {
-                throw new ArgumentNullException(nameof(ctl));
-            }
+            ArgumentNullException.ThrowIfNull(ctl);
 
             _showHelp.Remove(ctl);
         }
@@ -283,13 +246,15 @@ namespace System.Windows.Forms
         /// </summary>
         private void UpdateEventBinding(Control ctl)
         {
-            if (GetShowHelp(ctl) && !_boundControls.ContainsKey(ctl))
+            bool showHelp = GetShowHelp(ctl);
+            bool isBound = _boundControls.Contains(ctl);
+            if (showHelp && !isBound)
             {
                 ctl.HelpRequested += new HelpEventHandler(OnControlHelp);
                 ctl.QueryAccessibilityHelp += new QueryAccessibilityHelpEventHandler(OnQueryAccessibilityHelp);
-                _boundControls[ctl] = ctl;
+                _boundControls.Add(ctl);
             }
-            else if (!GetShowHelp(ctl) && _boundControls.ContainsKey(ctl))
+            else if (!showHelp && isBound)
             {
                 ctl.HelpRequested -= new HelpEventHandler(OnControlHelp);
                 ctl.QueryAccessibilityHelp -= new QueryAccessibilityHelpEventHandler(OnQueryAccessibilityHelp);
@@ -300,6 +265,6 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Returns a string representation for this control.
         /// </summary>
-        public override string ToString() => base.ToString() + ", HelpNamespace: " + HelpNamespace;
+        public override string ToString() => $"{base.ToString()}, HelpNamespace: {HelpNamespace}";
     }
 }

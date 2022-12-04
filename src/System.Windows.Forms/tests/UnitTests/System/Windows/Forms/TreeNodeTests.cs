@@ -2,14 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.Serialization;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
-using static Interop;
 using static Interop.ComCtl32;
 using static Interop.User32;
 
@@ -57,7 +54,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_Ctor_String(string text, string expectedText)
         {
             var node = new TreeNode(text);
@@ -266,7 +263,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
         public void TreeNode_BackColor_Set_GetReturnsExpected(Color value)
         {
             var node = new TreeNode
@@ -281,7 +278,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
         public void TreeNode_BackColor_SetWithTreeView_GetReturnsExpected(Color value)
         {
             using var control = new TreeView();
@@ -360,7 +357,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
         public void TreeNode_BackColor_SetWithCustomOldValueWithTreeView_GetReturnsExpected(Color value)
         {
             using var control = new TreeView();
@@ -557,7 +554,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TreeNode_Checked_Set_GetReturnsExpected(bool value)
         {
             var node = new TreeNode
@@ -673,16 +670,16 @@ namespace System.Windows.Forms.Tests
             node.Checked = @checked;
             var item = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.STATE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_STATE,
                 stateMask = TVIS.STATEIMAGEMASK,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, IntPtr.Zero, ref item));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref item));
             Assert.Equal((TVIS)expectedValue, item.state);
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TreeNode_Checked_SetWithTreeViewDisposed_GetReturnsExpected(bool value)
         {
             using var control = new TreeView();
@@ -707,7 +704,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
         public void TreeNode_ForeColor_Set_GetReturnsExpected(Color value)
         {
             var node = new TreeNode
@@ -722,7 +719,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
         public void TreeNode_ForeColor_SetWithTreeView_GetReturnsExpected(Color value)
         {
             using var control = new TreeView();
@@ -801,7 +798,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
         public void TreeNode_ForeColor_SetWithCustomOldValueWithTreeView_GetReturnsExpected(Color value)
         {
             using var control = new TreeView();
@@ -941,11 +938,11 @@ namespace System.Windows.Forms.Tests
 
             var item = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.STATE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_STATE,
                 stateMask = TVIS.STATEIMAGEMASK,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, IntPtr.Zero, ref item));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref item));
             Assert.Equal((TVIS)expectedValue, item.state);
         }
 
@@ -962,6 +959,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(handle, node.Handle);
             Assert.False(control.IsHandleCreated);
         }
+
         public static IEnumerable<object[]> TreeNode_ImageIndex_TestData()
         {
             // { image index, expected index without image, expected index with image }
@@ -1214,10 +1212,10 @@ namespace System.Windows.Forms.Tests
             node.ImageIndex = value;
             var item = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.IMAGE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_IMAGE,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref item));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref item));
             Assert.Equal(expected, item.iImage);
         }
 
@@ -1241,10 +1239,10 @@ namespace System.Windows.Forms.Tests
             node.ImageIndex = value;
             var item = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.IMAGE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_IMAGE,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref item));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref item));
             Assert.Equal(expected, item.iImage);
         }
 
@@ -1272,10 +1270,10 @@ namespace System.Windows.Forms.Tests
             node.ImageIndex = value;
             var item = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.IMAGE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_IMAGE,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref item));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref item));
             Assert.Equal(expected, item.iImage);
         }
 
@@ -1324,7 +1322,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_ImageKey_SetWithoutTreeView_GetReturnsExpected(string value, string expected)
         {
             var node = new TreeNode
@@ -1361,7 +1359,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_ImageKey_SetWithTreeView_GetReturnsExpected(string value, string expected)
         {
             using var control = new TreeView();
@@ -1381,7 +1379,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_ImageKey_SetWithTreeViewWithEmptyList_GetReturnsExpected(string value, string expected)
         {
             using var imageList = new ImageList();
@@ -1438,7 +1436,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_ImageKey_SetWithTreeViewWithHandle_GetReturnsExpected(string value, string expected)
         {
             using var control = new TreeView();
@@ -1487,10 +1485,10 @@ namespace System.Windows.Forms.Tests
             node.ImageKey = value;
             var column = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.IMAGE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_IMAGE,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref column));
             Assert.Equal(0, column.iImage);
         }
 
@@ -1517,10 +1515,10 @@ namespace System.Windows.Forms.Tests
             node.ImageKey = value;
             var column = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.IMAGE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_IMAGE,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref column));
             Assert.Equal(expected, column.iImage);
         }
 
@@ -1549,15 +1547,15 @@ namespace System.Windows.Forms.Tests
             node.ImageKey = value;
             var column = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.IMAGE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_IMAGE,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref column));
             Assert.Equal(expected, column.iImage);
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_ImageKey_SetWithTreeViewDisposed_GetReturnsExpected(string value, string expected)
         {
             using var control = new TreeView();
@@ -2104,7 +2102,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_Name_Set_GetReturnsExpected(string value, string expected)
         {
             var node = new TreeNode
@@ -2308,7 +2306,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsFact]
-        public void TreeView_NextVisibleNode_GetWithParentWithTreeViewWithHanlde_ReturnsExpected()
+        public void TreeView_NextVisibleNode_GetWithParentWithTreeViewWithHandle_ReturnsExpected()
         {
             using var control = new TreeView();
             var parent = new TreeNode();
@@ -2395,9 +2393,9 @@ namespace System.Windows.Forms.Tests
 
             protected override void WndProc(ref Message m)
             {
-                if (MakeCustom && m.Msg == (int)TVM.GETNEXTITEM)
+                if (MakeCustom && m.Msg == (int)PInvoke.TVM_GETNEXTITEM)
                 {
-                    Assert.Equal((IntPtr)TVGN.NEXTVISIBLE, m.WParam);
+                    Assert.Equal((IntPtr)PInvoke.TVGN_NEXTVISIBLE, m.WParam);
                     Assert.NotEqual(IntPtr.Zero, m.LParam);
                     m.Result = GetNextItemResult;
                     return;
@@ -2701,7 +2699,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsFact]
-        public void TreeView_PrevVisibleNode_GetWithParentWithTreeViewWithHanlde_ReturnsExpected()
+        public void TreeView_PrevVisibleNode_GetWithParentWithTreeViewWithHandle_ReturnsExpected()
         {
             using var control = new TreeView();
             var parent = new TreeNode();
@@ -2788,9 +2786,9 @@ namespace System.Windows.Forms.Tests
 
             protected override void WndProc(ref Message m)
             {
-                if (MakeCustom && m.Msg == (int)TVM.GETNEXTITEM)
+                if (MakeCustom && m.Msg == (int)PInvoke.TVM_GETNEXTITEM)
                 {
-                    Assert.Equal((IntPtr)TVGN.PREVIOUSVISIBLE, m.WParam);
+                    Assert.Equal((IntPtr)PInvoke.TVGN_PREVIOUSVISIBLE, m.WParam);
                     Assert.NotEqual(IntPtr.Zero, m.LParam);
                     m.Result = GetPreviousItemResult;
                     return;
@@ -2801,7 +2799,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetFontTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetFontTheoryData))]
         public void TreeNode_NodeFont_Set_GetReturnsExpected(Font value)
         {
             var node = new TreeNode
@@ -2816,7 +2814,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetFontTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetFontTheoryData))]
         public void TreeNode_NodeFont_SetWithTreeView_GetReturnsExpected(Font value)
         {
             using var control = new TreeView();
@@ -2871,7 +2869,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetFontTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetFontTheoryData))]
         public void TreeNode_NodeFont_SetWithCustomOldValue_GetReturnsExpected(Font value)
         {
             using var oldValue = new Font("Arial", 1);
@@ -2889,7 +2887,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetFontTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetFontTheoryData))]
         public void TreeNode_NodeFont_SetWithCustomOldValueWithTreeView_GetReturnsExpected(Font value)
         {
             using var control = new TreeView();
@@ -3196,10 +3194,10 @@ namespace System.Windows.Forms.Tests
             node.SelectedImageIndex = value;
             var item = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.IMAGE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_IMAGE,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref item));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref item));
             Assert.Equal(expected, item.iSelectedImage);
         }
 
@@ -3225,10 +3223,10 @@ namespace System.Windows.Forms.Tests
             node.SelectedImageIndex = value;
             var item = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.SELECTEDIMAGE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_SELECTEDIMAGE,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref item));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref item));
             Assert.Equal(expected, item.iSelectedImage);
         }
 
@@ -3256,10 +3254,10 @@ namespace System.Windows.Forms.Tests
             node.SelectedImageIndex = value;
             var item = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.SELECTEDIMAGE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_SELECTEDIMAGE,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref item));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref item));
             Assert.Equal(expected, item.iSelectedImage);
         }
 
@@ -3308,7 +3306,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_SelectedImageKey_SetWithoutTreeView_GetReturnsExpected(string value, string expected)
         {
             var node = new TreeNode
@@ -3345,7 +3343,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_SelectedImageKey_SetWithTreeView_GetReturnsExpected(string value, string expected)
         {
             using var control = new TreeView();
@@ -3365,7 +3363,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_SelectedImageKey_SetWithTreeViewWithEmptyList_GetReturnsExpected(string value, string expected)
         {
             using var imageList = new ImageList();
@@ -3422,7 +3420,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_SelectedImageKey_SetWithTreeViewWithHandle_GetReturnsExpected(string value, string expected)
         {
             using var control = new TreeView();
@@ -3471,10 +3469,10 @@ namespace System.Windows.Forms.Tests
             node.SelectedImageKey = value;
             var column = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.SELECTEDIMAGE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_SELECTEDIMAGE,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref column));
             Assert.Equal(0, column.iSelectedImage);
         }
 
@@ -3501,10 +3499,10 @@ namespace System.Windows.Forms.Tests
             node.SelectedImageKey = value;
             var column = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.SELECTEDIMAGE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_SELECTEDIMAGE,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref column));
             Assert.Equal(expected, column.iSelectedImage);
         }
 
@@ -3533,15 +3531,15 @@ namespace System.Windows.Forms.Tests
             node.SelectedImageKey = value;
             var column = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.SELECTEDIMAGE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_SELECTEDIMAGE,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref column));
             Assert.Equal(expected, column.iSelectedImage);
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_SelectedImageKey_SetWithTreeViewDisposed_GetReturnsExpected(string value, string expected)
         {
             using var control = new TreeView();
@@ -3860,11 +3858,11 @@ namespace System.Windows.Forms.Tests
             node.StateImageIndex = value;
             var item = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.STATE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_STATE,
                 stateMask = TVIS.STATEIMAGEMASK,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref item));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref item));
             Assert.Equal((TVIS)expected, item.state);
         }
 
@@ -3890,11 +3888,11 @@ namespace System.Windows.Forms.Tests
             node.StateImageIndex = value;
             var item = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.STATE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_STATE,
                 stateMask = TVIS.STATEIMAGEMASK,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref item));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref item));
             Assert.Equal((TVIS)expected, item.state);
         }
 
@@ -3922,11 +3920,11 @@ namespace System.Windows.Forms.Tests
             node.StateImageIndex = value;
             var item = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.STATE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_STATE,
                 stateMask = TVIS.STATEIMAGEMASK,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref item));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref item));
             Assert.Equal((TVIS)expected, item.state);
         }
 
@@ -4004,7 +4002,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_StateImageKey_SetWithoutTreeView_GetReturnsExpected(string value, string expected)
         {
             var node = new TreeNode
@@ -4223,11 +4221,11 @@ namespace System.Windows.Forms.Tests
             node.StateImageKey = value;
             var column = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.STATE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_STATE,
                 stateMask = TVIS.STATEIMAGEMASK,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref column));
             Assert.Equal((TVIS)0, column.state);
         }
 
@@ -4261,11 +4259,11 @@ namespace System.Windows.Forms.Tests
             node.StateImageKey = value;
             var column = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.STATE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_STATE,
                 stateMask = TVIS.STATEIMAGEMASK,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref column));
             Assert.Equal((TVIS)expected, column.state);
         }
 
@@ -4301,11 +4299,11 @@ namespace System.Windows.Forms.Tests
             node.StateImageKey = value;
             var column = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.STATE,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_STATE,
                 stateMask = TVIS.STATEIMAGEMASK,
                 hItem = node.Handle
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref column));
             Assert.Equal((TVIS)expected, column.state);
         }
 
@@ -4346,7 +4344,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void TreeNode_Tag_Set_GetReturnsExpected(string value)
         {
             var node = new TreeNode
@@ -4361,7 +4359,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeNode_Text_Set_GetReturnsExpected(string value, string expected)
         {
             var node = new TreeNode
@@ -4458,12 +4456,12 @@ namespace System.Windows.Forms.Tests
             node.Text = value;
             var item = new TVITEMW
             {
-                mask = TVIF.HANDLE | TVIF.TEXT,
+                mask = TVITEM_MASK.TVIF_HANDLE | TVITEM_MASK.TVIF_TEXT,
                 hItem = node.Handle,
                 cchTextMax = 256,
                 pszText = (IntPtr)textBuffer
             };
-            Assert.Equal((IntPtr)1, SendMessageW(control.Handle, (WM)TVM.GETITEMW, (IntPtr)0, ref item));
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (WM)PInvoke.TVM_GETITEMW, 0, ref item));
             Assert.Equal(expected, new string((char*)item.pszText));
         }
 
@@ -4491,7 +4489,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void TreeNode_ToolTipText_Set_GetReturnsExpected(string value)
         {
             var node = new TreeNode
@@ -4609,13 +4607,42 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
+        [WinFormsFact]
+        public void TreeNode_InvokeGetSelfAndChildNodes_ReturnsExpected()
+        {
+            TreeNode rootNode = new TreeNode();
+            TreeNode subNodeLevel1 = new TreeNode();
+            TreeNode subNodeLevel2 = new TreeNode();
+            TreeNode subNodeLevel3 = new TreeNode();
+            subNodeLevel2.Nodes.Add(subNodeLevel3);
+            subNodeLevel1.Nodes.Add(subNodeLevel2);
+            rootNode.Nodes.Add(subNodeLevel1);
+            List<TreeNode> nodes = rootNode.GetSelfAndChildNodes();
+            Assert.Equal(4, nodes.Count);
+            Assert.Contains(rootNode, nodes);
+            Assert.Contains(subNodeLevel1, nodes);
+            Assert.Contains(subNodeLevel2, nodes);
+            Assert.Contains(subNodeLevel3, nodes);
+        }
+
+        [WinFormsFact]
+        public void TreeNode_InvokeAdd_WithoutTree_DoesNotAddNodeToTrackList()
+        {
+            TreeNode treeNode = new TreeNode();
+            TreeNode treeSubNode = new TreeNode();
+            treeNode.Nodes.Add(treeSubNode);
+
+            Assert.False((bool)KeyboardToolTipStateMachine.Instance.TestAccessor().Dynamic.IsToolTracked(treeNode));
+            Assert.False((bool)KeyboardToolTipStateMachine.Instance.TestAccessor().Dynamic.IsToolTracked(treeSubNode));
+        }
+
         private class InvalidSetItemTreeView : TreeView
         {
             public bool MakeInvalid { get; set; }
 
             protected override void WndProc(ref Message m)
             {
-                if (MakeInvalid && m.Msg == (int)TVM.SETITEMW)
+                if (MakeInvalid && m.Msg == (int)PInvoke.TVM_SETITEMW)
                 {
                     m.Result = IntPtr.Zero;
                     return;
@@ -4629,9 +4656,9 @@ namespace System.Windows.Forms.Tests
         {
             public TVIS GetItemStateResult { get; set; }
 
-            protected unsafe override void WndProc(ref Message m)
+            protected override unsafe void WndProc(ref Message m)
             {
-                if (m.Msg == (int)TVM.GETITEMW)
+                if (m.Msg == (int)PInvoke.TVM_GETITEMW)
                 {
                     TVITEMW* pItem = (TVITEMW*)m.LParam;
                     pItem->state = GetItemStateResult;
@@ -4650,9 +4677,9 @@ namespace System.Windows.Forms.Tests
 
             public TVIS GetItemStateResult { get; set; }
 
-            protected unsafe override void WndProc(ref Message m)
+            protected override unsafe void WndProc(ref Message m)
             {
-                if (MakeInvalid && m.Msg == (int)TVM.GETITEMW)
+                if (MakeInvalid && m.Msg == (int)PInvoke.TVM_GETITEMW)
                 {
                     TVITEMW* pItem = (TVITEMW*)m.LParam;
                     pItem->state = GetItemStateResult;
@@ -4669,9 +4696,9 @@ namespace System.Windows.Forms.Tests
         {
             public RECT GetItemRectResult { get; set; }
 
-            protected unsafe override void WndProc(ref Message m)
+            protected override unsafe void WndProc(ref Message m)
             {
-                if (m.Msg == (int)TVM.GETITEMRECT)
+                if (m.Msg == (int)PInvoke.TVM_GETITEMRECT)
                 {
                     RECT* pRect = (RECT*)m.LParam;
                     *pRect = GetItemRectResult;
@@ -4688,9 +4715,9 @@ namespace System.Windows.Forms.Tests
         {
             public bool MakeInvalid { get; set; }
 
-            protected unsafe override void WndProc(ref Message m)
+            protected override unsafe void WndProc(ref Message m)
             {
-                if (MakeInvalid && m.Msg == (int)TVM.GETITEMRECT)
+                if (MakeInvalid && m.Msg == (int)PInvoke.TVM_GETITEMRECT)
                 {
                     RECT* pRect = (RECT*)m.LParam;
                     *pRect = new RECT(1, 2, 3, 4);

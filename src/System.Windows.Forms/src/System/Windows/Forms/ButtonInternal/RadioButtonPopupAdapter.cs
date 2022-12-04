@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Drawing;
 
 namespace System.Windows.Forms.ButtonInternal
@@ -34,7 +32,7 @@ namespace System.Windows.Forms.ButtonInternal
                     colors.ButtonShadow,
                     colors.Options.HighContrast ? colors.ButtonFace : colors.Highlight);
 
-                DrawCheckOnly(e, layout, colors.WindowText, colors.Highlight, true);
+                DrawCheckOnly(e, layout, colors.WindowText, true);
 
                 AdjustFocusRectangle(layout);
                 PaintField(e, layout, colors, colors.WindowText, true);
@@ -59,7 +57,7 @@ namespace System.Windows.Forms.ButtonInternal
 
                 Color checkBackgroundColor = colors.Options.HighContrast ? colors.ButtonFace : colors.Highlight;
                 DrawCheckBackground3DLite(e, layout.CheckBounds, checkBackgroundColor, colors, true);
-                DrawCheckOnly(e, layout, colors.WindowText, colors.Highlight, true);
+                DrawCheckOnly(e, layout, colors.WindowText, true);
 
                 AdjustFocusRectangle(layout);
                 PaintField(e, layout, colors, colors.WindowText, true);
@@ -83,7 +81,7 @@ namespace System.Windows.Forms.ButtonInternal
                 PaintImage(e, layout);
 
                 DrawCheckBackground3DLite(e, layout.CheckBounds, colors.Highlight, colors, true);
-                DrawCheckOnly(e, layout, colors.ButtonShadow, colors.Highlight, true);
+                DrawCheckOnly(e, layout, colors.ButtonShadow, true);
 
                 AdjustFocusRectangle(layout);
                 PaintField(e, layout, colors, colors.WindowText, true);

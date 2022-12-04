@@ -7,13 +7,12 @@ using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using static Interop;
 
 namespace System.Windows.Forms.Design.Behavior
 {
     /// <summary>
-    ///  The ResizeBehavior is pushed onto the BehaviorStack in response to a positively hit tested SelectionGlyph.  The ResizeBehavior simply tracks the MouseMove messages and updates the bounds of the relatd control based on the new mouse location and the resize Rules.
+    ///  The ResizeBehavior is pushed onto the BehaviorStack in response to a positively hit tested SelectionGlyph.  The ResizeBehavior simply tracks the MouseMove messages and updates the bounds of the related control based on the new mouse location and the resize Rules.
     /// </summary>
     internal class ResizeBehavior : Behavior
     {
@@ -22,7 +21,7 @@ namespace System.Windows.Forms.Design.Behavior
             public object resizeControl;
             public Rectangle resizeBounds;
             public SelectionRules resizeRules;
-        };
+        }
 
         private ResizeComponent[] _resizeComponents;
         private readonly IServiceProvider _serviceProvider;
@@ -70,10 +69,8 @@ namespace System.Windows.Forms.Design.Behavior
         {
             get
             {
-                if (_behaviorService is null)
-                {
-                    _behaviorService = (BehaviorService)_serviceProvider.GetService(typeof(BehaviorService));
-                }
+                _behaviorService ??= (BehaviorService)_serviceProvider.GetService(typeof(BehaviorService));
+
                 return _behaviorService;
             }
         }
@@ -159,12 +156,12 @@ namespace System.Windows.Forms.Design.Behavior
         /// </summary>
         private SnapLine[] GenerateSnapLines(SelectionRules rules, Point loc)
         {
-            ArrayList lines = new ArrayList(2);
+            List<SnapLine> lines = new(2);
             //the four margins and edges of our control
             if ((rules & SelectionRules.BottomSizeable) != 0)
             {
                 lines.Add(new SnapLine(SnapLineType.Bottom, loc.Y - 1));
-                if (_primaryControl != null)
+                if (_primaryControl is not null)
                 {
                     lines.Add(new SnapLine(SnapLineType.Horizontal, loc.Y + _primaryControl.Margin.Bottom, SnapLine.MarginBottom, SnapLinePriority.Always));
                 }
@@ -172,7 +169,7 @@ namespace System.Windows.Forms.Design.Behavior
             else if ((rules & SelectionRules.TopSizeable) != 0)
             {
                 lines.Add(new SnapLine(SnapLineType.Top, loc.Y));
-                if (_primaryControl != null)
+                if (_primaryControl is not null)
                 {
                     lines.Add(new SnapLine(SnapLineType.Horizontal, loc.Y - _primaryControl.Margin.Top, SnapLine.MarginTop, SnapLinePriority.Always));
                 }
@@ -181,7 +178,7 @@ namespace System.Windows.Forms.Design.Behavior
             if ((rules & SelectionRules.RightSizeable) != 0)
             {
                 lines.Add(new SnapLine(SnapLineType.Right, loc.X - 1));
-                if (_primaryControl != null)
+                if (_primaryControl is not null)
                 {
                     lines.Add(new SnapLine(SnapLineType.Vertical, loc.X + _primaryControl.Margin.Right, SnapLine.MarginRight, SnapLinePriority.Always));
                 }
@@ -189,16 +186,13 @@ namespace System.Windows.Forms.Design.Behavior
             else if ((rules & SelectionRules.LeftSizeable) != 0)
             {
                 lines.Add(new SnapLine(SnapLineType.Left, loc.X));
-                if (_primaryControl != null)
+                if (_primaryControl is not null)
                 {
                     lines.Add(new SnapLine(SnapLineType.Vertical, loc.X - _primaryControl.Margin.Left, SnapLine.MarginLeft, SnapLinePriority.Always));
                 }
             }
 
-            SnapLine[] l = new SnapLine[lines.Count];
-            lines.CopyTo(l);
-
-            return l;
+            return lines.ToArray();
         }
 
         /// <summary>
@@ -207,15 +201,16 @@ namespace System.Windows.Forms.Design.Behavior
         private void InitiateResize()
         {
             bool useSnapLines = BehaviorService.UseSnapLines;
-            ArrayList components = new ArrayList();
+            List<IComponent> components = new();
             //check to see if the current designer participate with SnapLines cache the control bounds
             for (int i = 0; i < _resizeComponents.Length; i++)
             {
                 _resizeComponents[i].resizeBounds = ((Control)(_resizeComponents[i].resizeControl)).Bounds;
                 if (useSnapLines)
                 {
-                    components.Add(_resizeComponents[i].resizeControl);
+                    components.Add((Control)_resizeComponents[i].resizeControl);
                 }
+
                 if (_serviceProvider.GetService(typeof(IDesignerHost)) is IDesignerHost designerHost)
                 {
                     if (designerHost.GetDesigner(_resizeComponents[i].resizeControl as Component) is ControlDesigner designer)
@@ -234,7 +229,7 @@ namespace System.Windows.Forms.Design.Behavior
             BehaviorService.EnableAllAdorners(false);
             //build up our resize transaction
             IDesignerHost host = (IDesignerHost)_serviceProvider.GetService(typeof(IDesignerHost));
-            if (host != null)
+            if (host is not null)
             {
                 string locString;
                 if (_resizeComponents.Length == 1)
@@ -244,12 +239,14 @@ namespace System.Windows.Forms.Design.Behavior
                     {
                         name = _resizeComponents[0].resizeControl.GetType().Name;
                     }
+
                     locString = string.Format(SR.BehaviorServiceResizeControl, name);
                 }
                 else
                 {
                     locString = string.Format(SR.BehaviorServiceResizeControls, _resizeComponents.Length);
                 }
+
                 _resizeTransaction = host.CreateTransaction(locString);
             }
 
@@ -262,13 +259,13 @@ namespace System.Windows.Forms.Design.Behavior
             else if (_resizeComponents.Length > 0)
             {
                 //try to get the parents grid and snap settings
-                if (_resizeComponents[0].resizeControl is Control control && control.Parent != null)
+                if (_resizeComponents[0].resizeControl is Control control && control.Parent is not null)
                 {
                     PropertyDescriptor snapProp = TypeDescriptor.GetProperties(control.Parent)["SnapToGrid"];
-                    if (snapProp != null && (bool)snapProp.GetValue(control.Parent))
+                    if (snapProp is not null && (bool)snapProp.GetValue(control.Parent))
                     {
                         PropertyDescriptor gridProp = TypeDescriptor.GetProperties(control.Parent)["GridSize"];
-                        if (gridProp != null)
+                        if (gridProp is not null)
                         {
                             //cache of the gridsize and the location of the parent on the adornerwindow
                             _parentGridSize = (Size)gridProp.GetValue(control.Parent);
@@ -279,6 +276,7 @@ namespace System.Windows.Forms.Design.Behavior
                     }
                 }
             }
+
             _captureLost = false;
         }
 
@@ -293,6 +291,7 @@ namespace System.Windows.Forms.Design.Behavior
                 //pass any other mouse click along - unless we've already started our resize in which case we'll ignore it
                 return _pushedBehavior;
             }
+
             //start with no selection rules and try to obtain this info from the glyph
             _targetResizeRules = SelectionRules.None;
             if (g is SelectionGlyphBase sgb)
@@ -325,13 +324,14 @@ namespace System.Windows.Forms.Design.Behavior
                 {
                     //don't drag locked controls
                     PropertyDescriptor prop = TypeDescriptor.GetProperties(o)["Locked"];
-                    if (prop != null)
+                    if (prop is not null)
                     {
                         if ((bool)prop.GetValue(o))
                         {
                             continue;
                         }
                     }
+
                     components.Add(o);
                 }
             }
@@ -362,8 +362,8 @@ namespace System.Windows.Forms.Design.Behavior
             if (_pushedBehavior)
             {
                 _pushedBehavior = false;
-                Debug.Assert(BehaviorService != null, "We should have a behavior service.");
-                if (BehaviorService != null)
+                Debug.Assert(BehaviorService is not null, "We should have a behavior service.");
+                if (BehaviorService is not null)
                 {
                     if (_dragging)
                     {
@@ -383,16 +383,19 @@ namespace System.Windows.Forms.Design.Behavior
                                         newRegion.Exclude(Rectangle.Inflate(borderRect, -BorderSize, -BorderSize));
                                         BehaviorService.Invalidate(newRegion);
                                     }
+
                                     graphics.ResetClip();
                                 }
                             }
                         }
+
                         //re-enable all glyphs in all adorners
                         BehaviorService.EnableAllAdorners(true);
                     }
+
                     BehaviorService.PopBehavior(this);
 
-                    if (_lastResizeRegion != null)
+                    if (_lastResizeRegion is not null)
                     {
                         BehaviorService.Invalidate(_lastResizeRegion); //might be the same, might not.
                         _lastResizeRegion.Dispose();
@@ -403,7 +406,7 @@ namespace System.Windows.Forms.Design.Behavior
 
             Debug.Assert(!_dragging, "How can we be dragging without pushing a behavior?");
             // If we still have a transaction, roll it back.
-            if (_resizeTransaction != null)
+            if (_resizeTransaction is not null)
             {
                 DesignerTransaction t = _resizeTransaction;
                 _resizeTransaction = null;
@@ -417,13 +420,13 @@ namespace System.Windows.Forms.Design.Behavior
         internal static int AdjustPixelsForIntegralHeight(Control control, int pixelsMoved)
         {
             PropertyDescriptor propIntegralHeight = TypeDescriptor.GetProperties(control)["IntegralHeight"];
-            if (propIntegralHeight != null)
+            if (propIntegralHeight is not null)
             {
                 object value = propIntegralHeight.GetValue(control);
-                if (value is bool && (bool)value == true)
+                if (value is bool && (bool)value)
                 {
                     PropertyDescriptor propItemHeight = TypeDescriptor.GetProperties(control)["ItemHeight"];
-                    if (propItemHeight != null)
+                    if (propItemHeight is not null)
                     {
                         if (pixelsMoved >= 0)
                         {
@@ -437,6 +440,7 @@ namespace System.Windows.Forms.Design.Behavior
                     }
                 }
             }
+
             //if the control does not have the IntegralHeight property, then the pixels moved are fine
             return pixelsMoved;
         }
@@ -452,7 +456,7 @@ namespace System.Windows.Forms.Design.Behavior
             }
 
             bool altKeyPressed = Control.ModifierKeys == Keys.Alt;
-            if (altKeyPressed && _dragManager != null)
+            if (altKeyPressed && _dragManager is not null)
             {
                 //erase any snaplines (if we had any)
                 _dragManager.EraseSnapLines();
@@ -463,11 +467,11 @@ namespace System.Windows.Forms.Design.Behavior
                 return true;
             }
 
-            // When DesignerWindowPane has scrollbars and we resize, shrinking the the DesignerWindowPane makes it look like the mouse has moved to the BS.  To compensate for that we keep track of the mouse's previous position in screen coordinates, and use that to compare if the mouse has really moved.
+            // When DesignerWindowPane has scrollbars and we resize, shrinking the DesignerWindowPane makes it look like the mouse has moved to the BS.  To compensate for that we keep track of the mouse's previous position in screen coordinates, and use that to compare if the mouse has really moved.
             if (_lastMouseAbs != Point.Empty)
             {
                 var mouseLocAbs = new Point(mouseLoc.X, mouseLoc.Y);
-                User32.ClientToScreen(new HandleRef(this, _behaviorService.AdornerWindowControl.Handle), ref mouseLocAbs);
+                PInvoke.ClientToScreen(_behaviorService.AdornerWindowControl, ref mouseLocAbs);
                 if (mouseLocAbs.X == _lastMouseAbs.X && mouseLocAbs.Y == _lastMouseAbs.Y)
                 {
                     return true;
@@ -491,6 +495,7 @@ namespace System.Windows.Forms.Design.Behavior
             {
                 return false;
             }
+
             // we do these separately so as not to disturb the cached sizes for values we're not actually changing.  For example, if a control is docked top and we modify the height, the width shouldn't be modified.
             PropertyDescriptor propWidth = null;
             PropertyDescriptor propHeight = null;
@@ -506,22 +511,22 @@ namespace System.Windows.Forms.Design.Behavior
                 propLeft = TypeDescriptor.GetProperties(_resizeComponents[0].resizeControl)["Left"];
 
                 // validate each of the property descriptors.
-                if (propWidth != null && !typeof(int).IsAssignableFrom(propWidth.PropertyType))
+                if (propWidth is not null && !typeof(int).IsAssignableFrom(propWidth.PropertyType))
                 {
                     propWidth = null;
                 }
 
-                if (propHeight != null && !typeof(int).IsAssignableFrom(propHeight.PropertyType))
+                if (propHeight is not null && !typeof(int).IsAssignableFrom(propHeight.PropertyType))
                 {
                     propHeight = null;
                 }
 
-                if (propTop != null && !typeof(int).IsAssignableFrom(propTop.PropertyType))
+                if (propTop is not null && !typeof(int).IsAssignableFrom(propTop.PropertyType))
                 {
                     propTop = null;
                 }
 
-                if (propLeft != null && !typeof(int).IsAssignableFrom(propLeft.PropertyType))
+                if (propLeft is not null && !typeof(int).IsAssignableFrom(propLeft.PropertyType))
                 {
                     propLeft = null;
                 }
@@ -530,10 +535,10 @@ namespace System.Windows.Forms.Design.Behavior
             Control targetControl = _resizeComponents[0].resizeControl as Control;
             _lastMouseLoc = mouseLoc;
             _lastMouseAbs = new Point(mouseLoc.X, mouseLoc.Y);
-            User32.ClientToScreen(new HandleRef(this, _behaviorService.AdornerWindowControl.Handle), ref _lastMouseAbs);
+            PInvoke.ClientToScreen(_behaviorService.AdornerWindowControl, ref _lastMouseAbs);
             int minHeight = Math.Max(targetControl.MinimumSize.Height, MINSIZE);
             int minWidth = Math.Max(targetControl.MinimumSize.Width, MINSIZE);
-            if (_dragManager != null)
+            if (_dragManager is not null)
             {
                 bool shouldSnap = true;
                 bool shouldSnapHorizontally = true;
@@ -551,10 +556,10 @@ namespace System.Windows.Forms.Design.Behavior
 
                 //if the targetControl has IntegralHeight turned on, then don't snap if the control can be resized vertically
                 PropertyDescriptor propIntegralHeight = TypeDescriptor.GetProperties(targetControl)["IntegralHeight"];
-                if (propIntegralHeight != null)
+                if (propIntegralHeight is not null)
                 {
                     object value = propIntegralHeight.GetValue(targetControl);
-                    if (value is bool && (bool)value == true)
+                    if (value is bool && (bool)value)
                     {
                         shouldSnapHorizontally = false;
                     }
@@ -572,7 +577,7 @@ namespace System.Windows.Forms.Design.Behavior
                 }
                 else
                 {
-                    _dragManager.OnMouseMove(new Rectangle(-100, -100, 0, 0));/*just an invalid rect - so we won't snap*///);
+                    _dragManager.OnMouseMove(new Rectangle(-100, -100, 0, 0)); /*just an invalid rect - so we won't snap*///);
                 }
 
                 // If there's a line to snap to, the offset will come back non-zero. In that case we should adjust the mouse position with the offset such that the size calculation below takes that offset into account. If there's no line, then the offset is 0, and there's no harm in adding the offset.
@@ -583,7 +588,7 @@ namespace System.Windows.Forms.Design.Behavior
             // IF WE ARE SNAPPING TO A CONTROL, then we also need to adjust for the offset between the initialPoint (where the MouseDown happened) and the edge of the control otherwise we would be those pixels off when resizing the control. Remember that snaplines are based on the targetControl, so we need to use the targetControl to figure out the offset.
             Rectangle controlBounds = new Rectangle(_resizeComponents[0].resizeBounds.X, _resizeComponents[0].resizeBounds.Y,
                                                       _resizeComponents[0].resizeBounds.Width, _resizeComponents[0].resizeBounds.Height);
-            if ((_didSnap) && (targetControl.Parent != null))
+            if ((_didSnap) && (targetControl.Parent is not null))
             {
                 controlBounds.Location = _behaviorService.MapAdornerWindowPoint(targetControl.Parent.Handle, controlBounds.Location);
                 if (targetControl.Parent.IsMirrored)
@@ -595,26 +600,27 @@ namespace System.Windows.Forms.Design.Behavior
             Rectangle newBorderRect = Rectangle.Empty;
             Rectangle targetBorderRect = Rectangle.Empty;
             bool drawSnapline = true;
-            Color backColor = targetControl.Parent != null ? targetControl.Parent.BackColor : Color.Empty;
+            Color backColor = targetControl.Parent is not null ? targetControl.Parent.BackColor : Color.Empty;
             for (int i = 0; i < _resizeComponents.Length; i++)
             {
                 Control control = _resizeComponents[i].resizeControl as Control;
                 Rectangle bounds = control.Bounds;
                 Rectangle oldBounds = bounds;
-                // We need to compute the offset beased on the original cached Bounds ... ListBox doesnt allow drag on the top boundary if this is not done when it is "IntegralHeight"
+                // We need to compute the offset based on the original cached Bounds ... ListBox doesnt allow drag on the top boundary if this is not done when it is "IntegralHeight"
                 Rectangle baseBounds = _resizeComponents[i].resizeBounds;
                 Rectangle oldBorderRect = BehaviorService.ControlRectInAdornerWindow(control);
                 bool needToUpdate = true;
                 // The ResizeBehavior can easily get into a situation where we are fighting with a layout engine. E.g., We resize control to 50px, LayoutEngine lays out and finds 50px was too small and resized back to 100px.  This is what should happen, but it looks bad in the designer.  To avoid the flicker we temporarily turn off painting while we do the resize.
-                User32.SendMessageW(control, User32.WM.SETREDRAW, PARAM.FromBool(false));
+                PInvoke.SendMessage(control, User32.WM.SETREDRAW, (WPARAM)(BOOL)false);
                 try
                 {
                     bool fRTL = false;
                     // If the container is mirrored the control origin is in upper-right, so we need to adjust our math for that. Remember that mouse coords have origin in upper left.
-                    if (control.Parent != null && control.Parent.IsMirrored)
+                    if (control.Parent is not null && control.Parent.IsMirrored)
                     {
                         fRTL = true;
                     }
+
                     // figure out which ones we're actually changing so we don't blow away the controls cached sizing state.  This is important if things are docked we don't want to destroy their "pre-dock" size.
                     BoundsSpecified specified = BoundsSpecified.None;
                     // When we check if we should change height, width, location,  we first have to check if the targetControl allows resizing, and then if the control we are currently resizing allows it as well.
@@ -669,6 +675,7 @@ namespace System.Windows.Forms.Design.Behavior
                         {
                             xOffset = !fRTL ? controlBounds.Right : controlBounds.Left;
                         }
+
                         bounds.Width = Math.Max(minWidth, baseBounds.Width + (!fRTL ? (mouseLoc.X - xOffset) : (xOffset - mouseLoc.X)));
                     }
 
@@ -702,25 +709,25 @@ namespace System.Windows.Forms.Design.Behavior
                     // 1. Create a form and add 2 buttons. Make sure that they are snapped to the left edge. Now grab the left edge of button 1, and start resizing to the left, past the snapline you will initially get, and then back to the right. What you would expect is to get the left edge snapline again. But without the specified check you wouldn't. This is because the bounds.<foo> != resizeBounds[i].<foo> checks would fail, since the new size would now be the original size. We could probably live with that, except that we draw the snapline below, since we correctly identified one. We could hack it so that we didn't draw the snapline, but that would confuse the user even more.
                     // 2. Create a form and add a single button. Place it at 100,100. Now start resizing it to the left and then back to the right. Note that with the original check (see diff), you would never be able to resize it back to position 100,100. You would get to 99,100 and then to 101,100.
                     if (((specified & BoundsSpecified.Width) == BoundsSpecified.Width) &&
-                        _dragging && _initialResize && propWidth != null)
+                        _dragging && _initialResize && propWidth is not null)
                     {
                         propWidth.SetValue(_resizeComponents[i].resizeControl, bounds.Width);
                     }
 
                     if (((specified & BoundsSpecified.Height) == BoundsSpecified.Height) &&
-                        _dragging && _initialResize && propHeight != null)
+                        _dragging && _initialResize && propHeight is not null)
                     {
                         propHeight.SetValue(_resizeComponents[i].resizeControl, bounds.Height);
                     }
 
                     if (((specified & BoundsSpecified.X) == BoundsSpecified.X) &&
-                        _dragging && _initialResize && propLeft != null)
+                        _dragging && _initialResize && propLeft is not null)
                     {
                         propLeft.SetValue(_resizeComponents[i].resizeControl, bounds.X);
                     }
 
                     if (((specified & BoundsSpecified.Y) == BoundsSpecified.Y) &&
-                        _dragging && _initialResize && propTop != null)
+                        _dragging && _initialResize && propTop is not null)
                     {
                         propTop.SetValue(_resizeComponents[i].resizeControl, bounds.Y);
                     }
@@ -742,6 +749,7 @@ namespace System.Windows.Forms.Design.Behavior
                         {
                             needToUpdate = false;
                         }
+
                         // We would expect the bounds now to be what we set it to above, but this might not be the case. If the control is hosted with e.g. a FLP, then setting the bounds above actually might force a re-layout, and the control will get moved to another spot. In this case, we don't really want to draw a snapline. Even if we snapped to a snapline, if the control got moved, the snapline would be in the wrong place.
                         if (control.Bounds != bounds)
                         {
@@ -749,20 +757,20 @@ namespace System.Windows.Forms.Design.Behavior
                         }
                     }
 
-                    if (control == _primaryControl && _statusCommandUI != null)
+                    if (control == _primaryControl && _statusCommandUI is not null)
                     {
-                        _statusCommandUI.SetStatusInformation(control as Component);
+                        _statusCommandUI.SetStatusInformation(control);
                     }
                 }
                 finally
                 {
                     // While we were resizing we discarded painting messages to reduce flicker.  We now turn painting back on and manually refresh the controls.
-                    User32.SendMessageW(control, User32.WM.SETREDRAW, PARAM.FromBool(true));
+                    PInvoke.SendMessage(control, User32.WM.SETREDRAW, (WPARAM)(BOOL)true);
                     //update the control
                     if (needToUpdate)
                     {
                         Control parent = control.Parent;
-                        if (parent != null)
+                        if (parent is not null)
                         {
                             control.Invalidate(/* invalidateChildren = */ true);
                             parent.Invalidate(oldBounds, /* invalidateChildren = */ true);
@@ -795,7 +803,7 @@ namespace System.Windows.Forms.Design.Behavior
                             {
                                 using (Graphics graphics = BehaviorService.AdornerWindowGraphics)
                                 {
-                                    if (_lastResizeRegion != null)
+                                    if (_lastResizeRegion is not null)
                                     {
                                         if (!_lastResizeRegion.Equals(newRegion, graphics))
                                         {
@@ -805,19 +813,18 @@ namespace System.Windows.Forms.Design.Behavior
                                             _lastResizeRegion = null;
                                         }
                                     }
+
                                     DesignerUtils.DrawResizeBorder(graphics, newRegion, backColor);
                                 }
-                                if (_lastResizeRegion is null)
-                                {
-                                    _lastResizeRegion = newRegion.Clone(); //we will need to dispose it later.
-                                }
+
+                                _lastResizeRegion ??= newRegion.Clone(); //we will need to dispose it later.
                             }
                         }
                     }
                 }
             }
 
-            if ((drawSnapline) && (!altKeyPressed) && (_dragManager != null))
+            if ((drawSnapline) && (!altKeyPressed) && (_dragManager is not null))
             {
                 _dragManager.RenderSnapLinesInternal(targetBorderRect);
             }
@@ -835,7 +842,7 @@ namespace System.Windows.Forms.Design.Behavior
             {
                 if (_dragging)
                 {
-                    if (_dragManager != null)
+                    if (_dragManager is not null)
                     {
                         _dragManager.OnMouseUp();
                         _dragManager = null;
@@ -843,7 +850,7 @@ namespace System.Windows.Forms.Design.Behavior
                         _didSnap = false;
                     }
 
-                    if (_resizeComponents != null && _resizeComponents.Length > 0)
+                    if (_resizeComponents is not null && _resizeComponents.Length > 0)
                     {
                         // we do these separately so as not to disturb the cached sizes for values we're not actually changing.  For example, if a control is docked top and we modify the height, the width shouldn't be modified.
                         PropertyDescriptor propWidth = TypeDescriptor.GetProperties(_resizeComponents[0].resizeControl)["Width"];
@@ -852,33 +859,35 @@ namespace System.Windows.Forms.Design.Behavior
                         PropertyDescriptor propLeft = TypeDescriptor.GetProperties(_resizeComponents[0].resizeControl)["Left"];
                         for (int i = 0; i < _resizeComponents.Length; i++)
                         {
-                            if (propWidth != null && ((Control)_resizeComponents[i].resizeControl).Width != _resizeComponents[i].resizeBounds.Width)
+                            if (propWidth is not null && ((Control)_resizeComponents[i].resizeControl).Width != _resizeComponents[i].resizeBounds.Width)
                             {
                                 propWidth.SetValue(_resizeComponents[i].resizeControl, ((Control)_resizeComponents[i].resizeControl).Width);
                             }
-                            if (propHeight != null && ((Control)_resizeComponents[i].resizeControl).Height != _resizeComponents[i].resizeBounds.Height)
+
+                            if (propHeight is not null && ((Control)_resizeComponents[i].resizeControl).Height != _resizeComponents[i].resizeBounds.Height)
                             {
                                 propHeight.SetValue(_resizeComponents[i].resizeControl, ((Control)_resizeComponents[i].resizeControl).Height);
                             }
 
-                            if (propTop != null && ((Control)_resizeComponents[i].resizeControl).Top != _resizeComponents[i].resizeBounds.Y)
+                            if (propTop is not null && ((Control)_resizeComponents[i].resizeControl).Top != _resizeComponents[i].resizeBounds.Y)
                             {
                                 propTop.SetValue(_resizeComponents[i].resizeControl, ((Control)_resizeComponents[i].resizeControl).Top);
                             }
-                            if (propLeft != null && ((Control)_resizeComponents[i].resizeControl).Left != _resizeComponents[i].resizeBounds.X)
+
+                            if (propLeft is not null && ((Control)_resizeComponents[i].resizeControl).Left != _resizeComponents[i].resizeBounds.X)
                             {
                                 propLeft.SetValue(_resizeComponents[i].resizeControl, ((Control)_resizeComponents[i].resizeControl).Left);
                             }
 
-                            if (_resizeComponents[i].resizeControl == _primaryControl && _statusCommandUI != null)
+                            if (_resizeComponents[i].resizeControl == _primaryControl && _statusCommandUI is not null)
                             {
-                                _statusCommandUI.SetStatusInformation(_primaryControl as Component);
+                                _statusCommandUI.SetStatusInformation(_primaryControl);
                             }
                         }
                     }
                 }
 
-                if (_resizeTransaction != null)
+                if (_resizeTransaction is not null)
                 {
                     DesignerTransaction t = _resizeTransaction;
                     _resizeTransaction = null;
@@ -893,6 +902,7 @@ namespace System.Windows.Forms.Design.Behavior
                 // This pops us off the stack, re-enables adorners and clears the "dragging" flag.
                 OnLoseCapture(g, EventArgs.Empty);
             }
+
             return false;
         }
     }

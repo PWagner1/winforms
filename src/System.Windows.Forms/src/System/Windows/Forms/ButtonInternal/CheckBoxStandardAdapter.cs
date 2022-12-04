@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Drawing;
 using System.Windows.Forms.Layout;
 
@@ -11,7 +9,10 @@ namespace System.Windows.Forms.ButtonInternal
 {
     internal sealed class CheckBoxStandardAdapter : CheckBoxBaseAdapter
     {
-        internal CheckBoxStandardAdapter(ButtonBase control) : base(control) { }
+        internal CheckBoxStandardAdapter(ButtonBase control)
+            : base(control)
+        {
+        }
 
         internal override void PaintUp(PaintEventArgs e, CheckState state)
         {
@@ -29,6 +30,7 @@ namespace System.Windows.Forms.ButtonInternal
                 {
                     layout.TextBounds.Offset(-1, -1);
                 }
+
                 layout.ImageBounds.Offset(-1, -1);
 
                 AdjustFocusRectangle(layout);
@@ -41,6 +43,7 @@ namespace System.Windows.Forms.ButtonInternal
                     {
                         focusRectFixup = 1 - focusRectFixup;
                     }
+
                     layout.Focus.Offset(-(focusRectFixup + 1), -2);
                     layout.Focus.Width = layout.TextBounds.Width + layout.ImageBounds.Width - 1;
                     layout.Focus.Intersect(layout.TextBounds);
@@ -91,9 +94,9 @@ namespace System.Windows.Forms.ButtonInternal
             }
             else
             {
-                LayoutOptions options = default;
+                LayoutOptions? options = default;
                 using (var screen = GdiCache.GetScreenHdc())
-                using (PaintEventArgs pe = new PaintEventArgs(screen, new Rectangle()))
+                using (PaintEventArgs pe = new PaintEventArgs(screen, default(Rectangle)))
                 {
                     options = Layout(pe);
                 }
@@ -132,7 +135,7 @@ namespace System.Windows.Forms.ButtonInternal
                         GetState(),
                         true,
                         Control.MouseIsOver),
-                    Control.HandleInternal).Width;
+                    Control.HWNDInternal).Width;
             }
             else
             {

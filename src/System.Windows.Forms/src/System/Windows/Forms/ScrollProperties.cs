@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
-using System.Runtime.InteropServices;
-using static Interop;
 
 namespace System.Windows.Forms
 {
@@ -46,7 +44,7 @@ namespace System.Windows.Forms
             get => _enabled;
             set
             {
-                if (_parent != null && _parent.AutoScroll)
+                if (_parent is not null && _parent.AutoScroll)
                 {
                     return;
                 }
@@ -54,20 +52,19 @@ namespace System.Windows.Forms
                 if (value != _enabled)
                 {
                     _enabled = value;
-                    if (_parent != null)
+                    if (_parent is not null)
                     {
-                        User32.EnableScrollBar(
+                        PInvoke.EnableScrollBar(
                             _parent,
                             Orientation,
-                            value ? User32.ESB.ENABLE_BOTH : User32.ESB.DISABLE_BOTH
-                        );
+                            value ? ENABLE_SCROLL_BAR_ARROWS.ESB_ENABLE_BOTH : ENABLE_SCROLL_BAR_ARROWS.ESB_DISABLE_BOTH);
                     }
                 }
             }
         }
 
         /// <summary>
-        ///  Gets or sets a value to be added or subtracted to the <see cref='LargeChange'/>
+        ///  Gets or sets a value to be added or subtracted to the <see cref="LargeChange"/>
         ///  property when the scroll box is moved a large distance.
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
@@ -112,7 +109,7 @@ namespace System.Windows.Forms
             get => _maximum;
             set
             {
-                if (_parent != null && _parent.AutoScroll)
+                if (_parent is not null && _parent.AutoScroll)
                 {
                     return;
                 }
@@ -123,6 +120,7 @@ namespace System.Windows.Forms
                     {
                         _minimum = value;
                     }
+
                     if (value < _value)
                     {
                         Value = value;
@@ -147,7 +145,7 @@ namespace System.Windows.Forms
             get => _minimum;
             set
             {
-                if (_parent != null && _parent.AutoScroll)
+                if (_parent is not null && _parent.AutoScroll)
                 {
                     return;
                 }
@@ -163,6 +161,7 @@ namespace System.Windows.Forms
                     {
                         _maximum = value;
                     }
+
                     if (value > _value)
                     {
                         _value = value;
@@ -176,14 +175,14 @@ namespace System.Windows.Forms
 
         private protected abstract int GetPageSize(ScrollableControl parent);
 
-        private protected abstract User32.SB Orientation { get; }
+        private protected abstract SCROLLBAR_CONSTANTS Orientation { get; }
 
         private protected abstract int GetHorizontalDisplayPosition(ScrollableControl parent);
 
         private protected abstract int GetVerticalDisplayPosition(ScrollableControl parent);
 
         /// <summary>
-        ///  Gets or sets the value to be added or subtracted to the <see cref='ScrollBar.Value'/>
+        ///  Gets or sets the value to be added or subtracted to the <see cref="ScrollBar.Value"/>
         ///  property when the scroll box is moved a small distance.
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
@@ -252,7 +251,7 @@ namespace System.Windows.Forms
             get => _visible;
             set
             {
-                if (_parent != null && _parent.AutoScroll)
+                if (_parent is not null && _parent.AutoScroll)
                 {
                     return;
                 }
@@ -267,21 +266,22 @@ namespace System.Windows.Forms
             }
         }
 
-        internal void UpdateScrollInfo()
+        internal unsafe void UpdateScrollInfo()
         {
-            if (_parent != null && _parent.IsHandleCreated && _visible)
+            if (_parent is not null && _parent.IsHandleCreated && _visible)
             {
-                var si = new User32.SCROLLINFO
+                SCROLLINFO si = new()
                 {
-                    cbSize = (uint)Marshal.SizeOf<User32.SCROLLINFO>(),
-                    fMask = User32.SIF.ALL,
+                    cbSize = (uint)sizeof(SCROLLINFO),
+                    fMask = SCROLLINFO_MASK.SIF_ALL,
                     nMin = _minimum,
                     nMax = _maximum,
                     nPage = _parent.AutoScroll ? (uint)GetPageSize(_parent) : (uint)LargeChange,
                     nPos = _value,
                     nTrackPos = 0
                 };
-                User32.SetScrollInfo(_parent, Orientation, ref si, BOOL.TRUE);
+
+                PInvoke.SetScrollInfo(_parent, Orientation, ref si, true);
             }
         }
 

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using Xunit;
 using static System.Windows.Forms.UpDownBase;
 using static System.Windows.Forms.UpDownBase.UpDownButtons;
@@ -78,6 +77,141 @@ namespace System.Windows.Forms.Tests
 
             Assert.Equal(expected, actual);
             Assert.False(upDownBase.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void UpDownButtonsAccessibleObject_GetPropertyValue_Name_ReturnsExpected()
+        {
+            const string name = "Test name";
+            using SubUpDownBase upDownBase = new();
+            UpDownButtons upDownButtons = upDownBase.UpDownButtonsInternal;
+            upDownButtons.AccessibleName = name;
+
+            object actual = upDownButtons.AccessibilityObject.GetPropertyValue(UiaCore.UIA.NamePropertyId);
+
+            Assert.Equal(name, actual);
+            Assert.False(upDownBase.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void UpDownButtonsAccessibleObject_GetPropertyValue_RuntimeId_ReturnsExpected()
+        {
+            using SubUpDownBase upDownBase = new();
+            UpDownButtons upDownButtons = upDownBase.UpDownButtonsInternal;
+
+            object actual = upDownButtons.AccessibilityObject.GetPropertyValue(UiaCore.UIA.RuntimeIdPropertyId);
+
+            Assert.Equal(upDownButtons.AccessibilityObject.RuntimeId, actual);
+            Assert.False(upDownBase.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void UpDownButtonsAccessibleObject_GetPropertyValue_BoundingRectangle_ReturnsExpected()
+        {
+            using SubUpDownBase upDownBase = new();
+            UpDownButtons upDownButtons = upDownBase.UpDownButtonsInternal;
+            object actual = upDownButtons.AccessibilityObject.GetPropertyValue(UiaCore.UIA.BoundingRectanglePropertyId);
+
+            Assert.Equal(upDownButtons.AccessibilityObject.BoundingRectangle, actual);
+            Assert.False(upDownBase.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [InlineData(false, ((int)UiaCore.UIA.IsExpandCollapsePatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsGridItemPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsGridPatternAvailablePropertyId))]
+        [InlineData(true, ((int)UiaCore.UIA.IsLegacyIAccessiblePatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsMultipleViewPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsScrollItemPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsScrollPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsSelectionItemPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsSelectionPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsTableItemPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsTablePatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsTextPattern2AvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsTextPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsTogglePatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsValuePatternAvailablePropertyId))]
+        public void UpDownButtonsAccessibleObject_GetPropertyValue_Pattern_ReturnsExpected(bool expected, int propertyId)
+        {
+            using TrackBar trackBar = new();
+            using SubUpDownBase upDownBase = new();
+            UpDownButtons upDownButtons = upDownBase.UpDownButtonsInternal;
+            UpDownButtonsAccessibleObject accessibleObject = (UpDownButtonsAccessibleObject)upDownButtons.AccessibilityObject;
+
+            Assert.Equal(expected, accessibleObject.GetPropertyValue((UiaCore.UIA)propertyId) ?? false);
+            Assert.False(upDownBase.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [InlineData((int)UiaCore.UIA.LegacyIAccessibleRolePropertyId, AccessibleRole.SpinButton)]
+        [InlineData((int)UiaCore.UIA.LegacyIAccessibleStatePropertyId, AccessibleStates.None)]
+        [InlineData((int)UiaCore.UIA.ValueValuePropertyId, null)]
+        public void UpDownButtonsAccessibleObject_GetPropertyValue_ReturnsExpected(int property, object expected)
+        {
+            using TrackBar trackBar = new();
+            using SubUpDownBase upDownBase = new();
+            UpDownButtons upDownButtons = upDownBase.UpDownButtonsInternal;
+            UpDownButtonsAccessibleObject accessibleObject = (UpDownButtonsAccessibleObject)upDownButtons.AccessibilityObject;
+            object actual = accessibleObject.GetPropertyValue((UiaCore.UIA)property);
+
+            Assert.Equal(expected, actual);
+            Assert.False(upDownBase.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void UpDownButtonsAccessibleObject_FragmentNavigate_Parent_ReturnsNull()
+        {
+            using UpDownBase upDownBase = new SubUpDownBase();
+            using UpDownButtons upDownButtons = new UpDownButtons(upDownBase);
+            UpDownButtonsAccessibleObject accessibleObject = new UpDownButtonsAccessibleObject(upDownButtons);
+
+            Assert.Null(accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.Parent));
+            Assert.False(upDownBase.IsHandleCreated);
+            Assert.False(upDownButtons.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void UpDownButtonsAccessibleObject_FragmentNavigate_Sibling_ReturnsNull()
+        {
+            using UpDownBase upDownBase = new SubUpDownBase();
+            using UpDownButtons upDownButtons = new UpDownButtons(upDownBase);
+            UpDownButtonsAccessibleObject accessibleObject = new UpDownButtonsAccessibleObject(upDownButtons);
+
+            Assert.Null(accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.NextSibling));
+            Assert.Null(accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.PreviousSibling));
+            Assert.False(upDownBase.IsHandleCreated);
+            Assert.False(upDownButtons.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void UpDownButtonsAccessibleObject_FragmentNavigate_Child_ReturnsExpected_InNumericUpDown()
+        {
+            using NumericUpDown numericUpDown = new();
+            UpDownButtonsAccessibleObject accessibleObject = (UpDownButtonsAccessibleObject)numericUpDown.UpDownButtonsInternal.AccessibilityObject;
+
+            // UpButton has 0 childId, DownButton has 1 childId
+            AccessibleObject upButton = accessibleObject.GetChild(0);
+            AccessibleObject downButton = accessibleObject.GetChild(1);
+
+            Assert.Equal(upButton, accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.FirstChild));
+            Assert.Equal(downButton, accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.LastChild));
+            Assert.False(numericUpDown.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void UpDownButtonsAccessibleObject_FragmentNavigate_Child_ReturnsExpected_InDomainUpDown()
+        {
+            using DomainUpDown domainUpDown = new();
+            UpDownButtonsAccessibleObject accessibleObject = (UpDownButtonsAccessibleObject)domainUpDown.UpDownButtonsInternal.AccessibilityObject;
+
+            // UpButton has 0 childId, DownButton has 1 childId
+            AccessibleObject upButton = accessibleObject.GetChild(0);
+            AccessibleObject downButton = accessibleObject.GetChild(1);
+
+            Assert.Equal(upButton, accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.FirstChild));
+            Assert.Equal(downButton, accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.LastChild));
+            Assert.False(domainUpDown.IsHandleCreated);
         }
 
         private class SubUpDownBase : UpDownBase

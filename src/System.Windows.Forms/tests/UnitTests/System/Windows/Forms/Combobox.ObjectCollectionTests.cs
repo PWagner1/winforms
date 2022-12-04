@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using System.Collections.Generic;
 using System.Windows.Forms.IntegrationTests.Common;
 using Xunit;
 using static System.Windows.Forms.ComboBox;
@@ -115,7 +114,7 @@ namespace System.Windows.Forms.Tests
 
             ObjectCollection comboBoxObjectCollection = new ObjectCollection(comboBox);
 
-            Assert.Throws<ArgumentException>(null, () => comboBoxObjectCollection.Add("a"));
+            Assert.Throws<ArgumentException>(() => comboBoxObjectCollection.Add("a"));
             Assert.Equal(createControl, comboBox.IsHandleCreated);
         }
 
@@ -394,7 +393,7 @@ namespace System.Windows.Forms.Tests
 
             ObjectCollection comboBoxObjectCollection = new ObjectCollection(comboBox);
 
-            Assert.Throws<ArgumentException>(null, () => comboBoxObjectCollection.AddRange(new string[] { "a", "b" }));
+            Assert.Throws<ArgumentException>(() => comboBoxObjectCollection.AddRange(new string[] { "a", "b" }));
             Assert.Equal(createControl, comboBox.IsHandleCreated);
         }
 
@@ -462,7 +461,7 @@ namespace System.Windows.Forms.Tests
 
             ObjectCollection comboBoxObjectCollection = new ObjectCollection(comboBox);
 
-            Assert.Throws<ArgumentException>(null, () => comboBoxObjectCollection.Clear());
+            Assert.Throws<ArgumentException>(() => comboBoxObjectCollection.Clear());
             Assert.Equal(createControl, comboBox.IsHandleCreated);
         }
 
@@ -816,7 +815,7 @@ namespace System.Windows.Forms.Tests
 
             ObjectCollection comboBoxObjectCollection = new ObjectCollection(comboBox);
 
-            Assert.Throws<ArgumentException>(null, () => comboBoxObjectCollection.Insert(3, 1));
+            Assert.Throws<ArgumentException>(() => comboBoxObjectCollection.Insert(3, 1));
             Assert.Equal(createControl, comboBox.IsHandleCreated);
         }
 
@@ -915,7 +914,7 @@ namespace System.Windows.Forms.Tests
 
             ObjectCollection comboBoxObjectCollection = new ObjectCollection(comboBox);
 
-            Assert.Throws<ArgumentException>(null, () => comboBoxObjectCollection.RemoveAt(0));
+            Assert.Throws<ArgumentException>(() => comboBoxObjectCollection.RemoveAt(0));
             Assert.Equal(createControl, comboBox.IsHandleCreated);
         }
 
@@ -1052,7 +1051,7 @@ namespace System.Windows.Forms.Tests
             comboBoxObjectCollection.Add("a");
             comboBox.DataSource = new string[] { "b" };
 
-            Assert.Throws<ArgumentException>(null, () => comboBoxObjectCollection.Remove("a"));
+            Assert.Throws<ArgumentException>(() => comboBoxObjectCollection.Remove("a"));
             Assert.Equal(createControl, comboBox.IsHandleCreated);
         }
 
@@ -1338,7 +1337,7 @@ namespace System.Windows.Forms.Tests
             comboBoxObjectCollection.Add("a");
             comboBox.DataSource = new string[] { "b" };
 
-            Assert.Throws<ArgumentException>(null, () => comboBoxObjectCollection[0] = 1);
+            Assert.Throws<ArgumentException>(() => comboBoxObjectCollection[0] = 1);
             Assert.Equal(createControl, comboBox.IsHandleCreated);
         }
 
@@ -1409,6 +1408,45 @@ namespace System.Windows.Forms.Tests
             }
 
             Assert.Equal(createControl, comboBox.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ComboBox_Item_RemoveAt_DoesNotCreateAccessibilityObject()
+        {
+            using ComboBox comboBox = new();
+
+            comboBox.Items.Add("item1");
+            comboBox.Items.Add("item2");
+            comboBox.Items.Remove(1);
+
+            Assert.False(comboBox.IsAccessibilityObjectCreated);
+            Assert.False(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ComboBox_Item_Insert_DoesNotCreateAccessibilityObject()
+        {
+            using ComboBox comboBox = new();
+
+            comboBox.Items.Add("item1");
+            comboBox.Items.Add("item2");
+            comboBox.Items.Insert(1, "Item3");
+
+            Assert.False(comboBox.IsAccessibilityObjectCreated);
+            Assert.False(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ComboBox_Item_Clear_DoesNotCreateAccessibilityObject()
+        {
+            using ComboBox comboBox = new();
+
+            comboBox.Items.Add("item1");
+            comboBox.Items.Add("item2");
+            comboBox.Items.Clear();
+
+            Assert.False(comboBox.IsAccessibilityObjectCreated);
+            Assert.False(comboBox.IsHandleCreated);
         }
 
         private ComboBox.ComboBoxAccessibleObject GetComboBoxAccessibleObject(ComboBox comboBox)

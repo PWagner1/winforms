@@ -3,17 +3,14 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
+using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Tests
 {
-    using Size = System.Drawing.Size;
-
     [Collection("Sequential")] // ImageList doesn't appear to behave well under stress in multi-threaded env
     public class ImageCollectionTests : IClassFixture<ThreadExceptionFixture>
     {
@@ -46,7 +43,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ColorDepth))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ColorDepth))]
         public void ImageCollection_Item_GetInt_InvokeWithoutHandle_ReturnsExpected(ColorDepth depth)
         {
             using var list = new ImageList
@@ -94,7 +91,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ColorDepth))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ColorDepth))]
         public void ImageCollection_Item_GetInt_InvokeWithHandle_ReturnsExpected(ColorDepth depth)
         {
             using var list = new ImageList
@@ -341,7 +338,7 @@ namespace System.Windows.Forms.Tests
             ImageList.ImageCollection collection = list.Images;
 
             using var value = new Metafile("bitmaps/telescope_01.wmf");
-            Assert.Throws<ArgumentException>(null, () => collection[0] = value);
+            Assert.Throws<ArgumentException>(() => collection[0] = value);
         }
 
         [WinFormsTheory]
@@ -397,7 +394,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void ImageCollection_Item_GetStringEmpty_ReturnsNull(string key)
         {
             using var list = new ImageList();
@@ -808,9 +805,9 @@ namespace System.Windows.Forms.Tests
             ImageList.ImageCollection collection = list.Images;
 
             using var value = new Metafile("bitmaps/telescope_01.wmf");
-            Assert.Throws<ArgumentException>(null, () => collection.Add(value));
-            Assert.Throws<ArgumentException>(null, () => collection.Add(value, Color.Transparent));
-            Assert.Throws<ArgumentException>(null, () => collection.Add("Key", value));
+            Assert.Throws<ArgumentException>(() => collection.Add(value));
+            Assert.Throws<ArgumentException>(() => collection.Add(value, Color.Transparent));
+            Assert.Throws<ArgumentException>(() => collection.Add("Key", value));
         }
 
         [WinFormsTheory]
@@ -885,7 +882,7 @@ namespace System.Windows.Forms.Tests
             ImageList.ImageCollection collection = list.Images;
 
             using var value = new Metafile("bitmaps/telescope_01.wmf");
-            Assert.Throws<ArgumentException>(null, () => collection.AddRange(new Image[] { value }));
+            Assert.Throws<ArgumentException>(() => collection.AddRange(new Image[] { value }));
         }
 
         public static IEnumerable<object[]> AddStrip_TestData()
@@ -1100,7 +1097,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void ImageCollection_ContainsKey_InvokeEmpty_ReturnsExpected(string key)
         {
             using var list = new ImageList();
@@ -1256,7 +1253,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void ImageCollection_IndexOfKey_InvokeEmpty_ReturnsExpected(string key)
         {
             using var list = new ImageList();
@@ -1725,7 +1722,7 @@ namespace System.Windows.Forms.Tests
             IList collection = list.Images;
 
             using var value = new Metafile("bitmaps/telescope_01.wmf");
-            Assert.Throws<ArgumentException>(null, () => collection[0] = value);
+            Assert.Throws<ArgumentException>(() => collection[0] = value);
         }
 
         public static IEnumerable<object[]> IListContains_Image_TestData()

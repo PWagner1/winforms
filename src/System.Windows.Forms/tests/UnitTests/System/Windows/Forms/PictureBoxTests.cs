@@ -2,22 +2,20 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using Moq;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
+using Point = System.Drawing.Point;
+using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Tests
 {
-    using Point = System.Drawing.Point;
-    using Size = System.Drawing.Size;
-
     public class PictureBoxTests : IClassFixture<ThreadExceptionFixture>
     {
         private const string PathImageLocation = "bitmaps/nature24bits.jpg";
-        private const string UrlImageLocation = "https://github.com/dotnet/corefx-testdata/raw/master/System.Drawing.Common.TestData/bitmaps/nature24bits.jpg";
+        private const string UrlImageLocation = "https://github.com/dotnet/runtime-assets/raw/master/src/System.Drawing.Common.TestData/bitmaps/nature24bits.jpg";
 
         [WinFormsFact]
         public void PictureBox_Ctor_Default()
@@ -141,7 +139,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(BorderStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(BorderStyle))]
         public void PictureBox_BorderStyle_Set_GetReturnsExpected(BorderStyle value)
         {
             using var pictureBox = new PictureBox
@@ -156,7 +154,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(BorderStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(BorderStyle))]
         public void PictureBox_BorderStyle_SetWithHandle_GetReturnsExpected(BorderStyle value)
         {
             using var pictureBox = new PictureBox();
@@ -171,7 +169,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(BorderStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(BorderStyle))]
         public void PictureBox_BorderStyle_SetInvalid_ThrowsInvalidEnumArgumentException(BorderStyle value)
         {
             using var pictureBox = new PictureBox();
@@ -179,7 +177,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void PictureBox_CausesValidation_Set_GetReturnsExpected(bool value)
         {
             using var control = new PictureBox
@@ -236,7 +234,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void PictureBox_Enabled_Set_GetReturnsExpected(bool value)
         {
             using var control = new Control
@@ -255,7 +253,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void PictureBox_Enabled_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var control = new Control();
@@ -312,7 +310,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void PictureBox_ErrorImage_Set_GetReturnsExpected(Image value)
         {
             using var pictureBox = new PictureBox
@@ -329,7 +327,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void PictureBox_ErrorImage_SetWithNonNullOldValue_GetReturnsExpected(Image value)
         {
             using var pictureBox = new PictureBox
@@ -348,7 +346,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void PictureBox_ErrorImage_SetWithHandle_GetReturnsExpected(Image value)
         {
             using var pictureBox = new PictureBox();
@@ -365,7 +363,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void PictureBox_ErrorImage_SetWithNonNullOldValueWithHandle_GetReturnsExpected(Image value)
         {
             using var pictureBox = new PictureBox
@@ -419,7 +417,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetForeColorTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetForeColorTheoryData))]
         public void PictureBox_ForeColor_Set_GetReturnsExpected(Color value, Color expected)
         {
             using var control = new PictureBox
@@ -469,7 +467,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetFontTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetFontTheoryData))]
         public void PictureBox_Font_Set_GetReturnsExpected(Font value)
         {
             using var control = new SubPictureBox
@@ -530,7 +528,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void PictureBox_Image_Set_GetReturnsExpected(Image value)
         {
             using var pictureBox = new PictureBox
@@ -545,7 +543,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void PictureBox_Image_SetWithNonNullOldValue_GetReturnsExpected(Image value)
         {
             using var pictureBox = new PictureBox
@@ -562,7 +560,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void PictureBox_Image_SetWithHandle_GetReturnsExpected(Image value)
         {
             using var pictureBox = new PictureBox();
@@ -577,7 +575,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void PictureBox_Image_SetWithNonNullOldValueWithHandle_GetReturnsExpected(Image value)
         {
             using var pictureBox = new PictureBox
@@ -629,7 +627,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void PictureBox_ImageLocation_Set_GetReturnsExpected(string value)
         {
             using var pictureBox = new PictureBox
@@ -646,7 +644,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         [InlineData("bitmaps/nature24bits.jpg")]
         [InlineData("  ")]
         public void PictureBox_ImageLocation_SetWithImage_GetReturnsExpected(string value)
@@ -667,7 +665,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void PictureBox_ImageLocation_SetWithHandle_GetReturnsExpected(string value)
         {
             using var pictureBox = new PictureBox();
@@ -759,7 +757,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
         public void PictureBox_ImageLocation_SetNullOrEmptyWithWaitOnLoadTrue_GetReturnsExpected(string value)
         {
             using var pictureBox = new PictureBox
@@ -842,7 +840,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
         public void PictureBox_ImageLocation_SetNullOrEmptyWithError_ResetsImage(string value)
         {
             var mockSite = new Mock<ISite>(MockBehavior.Strict);
@@ -871,7 +869,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         [InlineData("  ")]
         [InlineData("bitmaps/nature24bits.jpg")]
         public void PictureBox_ImageLocation_SetInitializing_GetReturnsExpected(string value)
@@ -992,7 +990,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImeMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImeMode))]
         public void PictureBox_ImeMode_SetInvalid_ThrowsInvalidEnumArgumentException(ImeMode value)
         {
             using var control = new PictureBox();
@@ -1000,7 +998,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void PictureBox_InitialImage_Set_GetReturnsExpected(Image value)
         {
             using var pictureBox = new PictureBox
@@ -1017,7 +1015,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void PictureBox_InitialImage_SetWithNonNullOldValue_GetReturnsExpected(Image value)
         {
             using var pictureBox = new PictureBox
@@ -1036,7 +1034,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void PictureBox_InitialImage_SetWithHandle_GetReturnsExpected(Image value)
         {
             using var pictureBox = new PictureBox();
@@ -1053,7 +1051,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void PictureBox_InitialImage_SetWithNonNullOldValueWithHandle_GetReturnsExpected(Image value)
         {
             using var pictureBox = new PictureBox
@@ -1205,12 +1203,12 @@ namespace System.Windows.Forms.Tests
         public void PictureBox_Parent_SetSame_ThrowsArgumentException()
         {
             using var control = new PictureBox();
-            Assert.Throws<ArgumentException>(null, () => control.Parent = control);
+            Assert.Throws<ArgumentException>(() => control.Parent = control);
             Assert.Null(control.Parent);
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetRightToLeftTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetRightToLeftTheoryData))]
         public void PictureBox_RightToLeft_Set_GetReturnsExpected(RightToLeft value, RightToLeft expected)
         {
             using var control = new PictureBox
@@ -1262,7 +1260,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(RightToLeft))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(RightToLeft))]
         public void PictureBox_RightToLeft_SetInvalid_ThrowsInvalidEnumArgumentException(RightToLeft value)
         {
             using var control = new PictureBox();
@@ -1377,7 +1375,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(PictureBoxSizeMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(PictureBoxSizeMode))]
         public void PictureBox_SizeMode_SetInvalid_ThrowsInvalidEnumArgumentException(PictureBoxSizeMode value)
         {
             using var pictureBox = new PictureBox();
@@ -1449,7 +1447,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void PictureBox_TabStop_Set_GetReturnsExpected(bool value)
         {
             using var control = new PictureBox
@@ -1471,7 +1469,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void PictureBox_TabStop_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var control = new PictureBox();
@@ -1544,7 +1542,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void PictureBox_Text_Set_GetReturnsExpected(string value, string expected)
         {
             using var control = new PictureBox
@@ -1561,7 +1559,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void PictureBox_Text_SetWithHandle_GetReturnsExpected(string value, string expected)
         {
             using var control = new PictureBox();
@@ -1625,7 +1623,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void PictureBox_Visible_Set_GetReturnsExpected(bool value)
         {
             using var control = new PictureBox
@@ -1644,7 +1642,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void PictureBox_Visible_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var control = new PictureBox();
@@ -1701,7 +1699,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void PictureBox_WaitOnLoad_Set_GetReturnsExpected(bool value)
         {
             using var pictureBox = new PictureBox
@@ -1748,7 +1746,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
         public void PictureBox_BeginInit_EndInitNullOrEmptyImageWaitOnLoadTrue_DoesNotSetImage(string imageLocation)
         {
             using var pictureBox = new PictureBox
@@ -1787,7 +1785,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         [InlineData("bitmaps/nature24bits.jpg")]
         [InlineData("  ")]
         public void PictureBox_EndInit_InvokeMultipleTimes_Nop(string imageLocation)
@@ -1810,7 +1808,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         [InlineData("bitmaps/nature24bits.jpg")]
         [InlineData("  ")]
         public void PictureBox_EndInit_InvokeMultipleTimesWaitOnLoad_DoesNotLoadImage(string imageLocation)
@@ -2050,7 +2048,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
         public void PictureBox_Load_UrlNullOrEmptyWithError_ResetsImage(string value)
         {
             var mockSite = new Mock<ISite>(MockBehavior.Strict);
@@ -2098,7 +2096,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
         public void PictureBox_Load_InvokeWithoutImageLocation_ThrowsInvalidOperationException(string imageLocation)
         {
             using var pictureBox = new PictureBox
@@ -2110,7 +2108,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
         public void PictureBox_LoadAsync_InvokeWithoutImageLocation_ThrowsInvalidOperationException(string imageLocation)
         {
             using var pictureBox = new PictureBox
@@ -2122,7 +2120,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void PictureBox_OnEnabledChanged_Invoke_CallsEnabledChanged(EventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2146,7 +2144,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void PictureBox_OnEnter_Invoke_CallsEnter(EventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2170,7 +2168,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void PictureBox_OnHandleCreated_Invoke_CallsHandleCreated(EventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2198,7 +2196,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void PictureBox_OnHandleCreated_InvokeWithHandle_CallsHandleCreated(EventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2229,7 +2227,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void PictureBox_OnHandleDestroyed_Invoke_CallsHandleDestroyed(EventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2257,7 +2255,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void PictureBox_OnHandleDestroyed_InvokeWithHandle_CallsHandleDestroyed(EventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2287,7 +2285,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetKeyEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetKeyEventArgsTheoryData))]
         public void PictureBox_OnKeyDown_Invoke_CallsKeyDown(KeyEventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2311,7 +2309,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetKeyPressEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetKeyPressEventArgsTheoryData))]
         public void PictureBox_OnKeyPress_Invoke_CallsKeyPress(KeyPressEventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2335,7 +2333,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetKeyEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetKeyEventArgsTheoryData))]
         public void PictureBox_OnKeyUp_Invoke_CallsKeyUp(KeyEventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2359,7 +2357,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void PictureBox_OnLeave_Invoke_CallsLeave(EventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2443,7 +2441,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetPaintEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetPaintEventArgsTheoryData))]
         public void PictureBox_OnPaint_Invoke_CallsPaint(PaintEventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2468,7 +2466,7 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> OnPaint_Image_TestData()
         {
-            foreach (object[] testData in CommonTestHelper.GetPaintEventArgsTheoryData())
+            foreach (object[] testData in CommonTestHelperEx.GetPaintEventArgsTheoryData())
             {
                 foreach (PictureBoxSizeMode sizeMode in Enum.GetValues(typeof(PictureBoxSizeMode)))
                 {
@@ -2513,7 +2511,7 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> OnPaint_NullOrEmptyImageLocation_TestData()
         {
-            foreach (object[] testData in CommonTestHelper.GetPaintEventArgsTheoryData())
+            foreach (object[] testData in CommonTestHelperEx.GetPaintEventArgsTheoryData())
             {
                 yield return new object[] { string.Empty, testData[0] };
                 yield return new object[] { null, testData[0] };
@@ -2539,7 +2537,7 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> OnPaint_InvalidImageLocation_TestData()
         {
-            foreach (object[] testData in CommonTestHelper.GetPaintEventArgsTheoryData())
+            foreach (object[] testData in CommonTestHelperEx.GetPaintEventArgsTheoryData())
             {
                 foreach (PictureBoxSizeMode sizeMode in Enum.GetValues(typeof(PictureBoxSizeMode)))
                 {
@@ -2568,7 +2566,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetPaintEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetPaintEventArgsTheoryData))]
         public void PictureBox_OnPaint_InvokeWithImage_CallsPaint(PaintEventArgs eventArgs)
         {
             using var control = new SubPictureBox
@@ -2595,7 +2593,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void PictureBox_OnParentChanged_Invoke_CallsParentChanged(EventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2619,7 +2617,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void PictureBox_OnResize_Invoke_CallsResize(EventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2769,7 +2767,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void PictureBox_OnSizeModeChanged_Invoke_CallsSizeModeChanged(EventArgs eventArgs)
         {
             using var control = new SubPictureBox();
@@ -2793,7 +2791,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void PictureBox_OnVisibleChanged_Invoke_CallsVisibleChanged(EventArgs eventArgs)
         {
             using var control = new SubPictureBox();

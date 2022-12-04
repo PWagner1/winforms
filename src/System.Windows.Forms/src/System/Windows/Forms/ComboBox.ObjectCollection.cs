@@ -5,7 +5,6 @@
 #nullable disable
 
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -19,29 +18,43 @@ namespace System.Windows.Forms
         public partial class ObjectCollection : IList, IComparer<Entry>
         {
             private readonly ComboBox _owner;
-            private readonly ComboBoxAccessibleObject _ownerComboBoxAccessibleObject;
+            private ComboBoxAccessibleObject _ownerComboBoxAccessibleObject;
             private List<Entry> _innerList;
 
             public ObjectCollection(ComboBox owner)
             {
                 _owner = owner;
+            }
 
-                if (_owner.AccessibilityObject is null)
+            private ComboBoxAccessibleObject OwnerComboBoxAccessibleObject
+            {
+                get
                 {
-                    throw new ArgumentException(nameof(owner));
-                }
+                    if (!_owner.IsAccessibilityObjectCreated)
+                    {
+                        return null;
+                    }
 
-                _ownerComboBoxAccessibleObject = (ComboBoxAccessibleObject)_owner.AccessibilityObject;
+                    if (_ownerComboBoxAccessibleObject is not null)
+                    {
+                        return _ownerComboBoxAccessibleObject;
+                    }
+
+                    if (_owner.AccessibilityObject is ComboBoxAccessibleObject accessibleObject)
+                    {
+                        _ownerComboBoxAccessibleObject = accessibleObject;
+                    }
+
+                    return _ownerComboBoxAccessibleObject;
+                }
             }
 
             internal List<Entry> InnerList
             {
                 get
                 {
-                    if (_innerList is null)
-                    {
-                        _innerList = new List<Entry>();
-                    }
+                    _innerList ??= new List<Entry>();
+
                     return _innerList;
                 }
             }
@@ -100,15 +113,14 @@ namespace System.Windows.Forms
                 {
                     _owner.SetAutoComplete(false, false);
                 }
+
                 return index;
             }
 
             private int AddInternal(object item)
             {
-                if (item is null)
-                {
-                    throw new ArgumentNullException(nameof(item));
-                }
+                ArgumentNullException.ThrowIfNull(item);
+
                 int index = -1;
                 if (!_owner._sorted)
                 {
@@ -126,6 +138,7 @@ namespace System.Windows.Forms
                     Debug.Assert(index >= 0 && index <= Count, "Wrong index for insert");
                     InnerList.Insert(index, entry);
                 }
+
                 bool successful = false;
 
                 try
@@ -145,13 +158,14 @@ namespace System.Windows.Forms
                             _owner.NativeAdd(item);
                         }
                     }
+
                     successful = true;
                 }
                 finally
                 {
                     if (!successful)
                     {
-                        _ownerComboBoxAccessibleObject.ItemAccessibleObjects.Remove(InnerList[index]);
+                        OwnerComboBoxAccessibleObject?.ItemAccessibleObjects.Remove(InnerList[index]);
                         Remove(item);
                     }
                 }
@@ -180,10 +194,8 @@ namespace System.Windows.Forms
 
             internal void AddRangeInternal(IList items)
             {
-                if (items is null)
-                {
-                    throw new ArgumentNullException(nameof(items));
-                }
+                ArgumentNullException.ThrowIfNull(items);
+
                 foreach (object item in items)
                 {
                     // adding items one-by-one for performance (especially for sorted combobox)
@@ -191,6 +203,7 @@ namespace System.Windows.Forms
                     // AddInternal is based on BinarySearch and ensures n*log(n) complexity
                     AddInternal(item);
                 }
+
                 if (_owner.AutoCompleteSource == AutoCompleteSource.ListItems)
                 {
                     _owner.SetAutoComplete(false, false);
@@ -237,8 +250,7 @@ namespace System.Windows.Forms
                 }
 
                 InnerList.Clear();
-
-                _ownerComboBoxAccessibleObject.ItemAccessibleObjects.Clear();
+                OwnerComboBoxAccessibleObject?.ResetListItemAccessibleObjects();
 
                 _owner._selectedIndex = -1;
                 if (_owner.AutoCompleteSource == AutoCompleteSource.ListItems)
@@ -257,10 +269,7 @@ namespace System.Windows.Forms
             /// </summary>
             public void CopyTo(object[] destination, int arrayIndex)
             {
-                if (destination is null)
-                {
-                    throw new ArgumentNullException(nameof(destination));
-                }
+                ArgumentNullException.ThrowIfNull(destination);
 
                 int count = InnerList.Count;
 
@@ -277,10 +286,7 @@ namespace System.Windows.Forms
 
             void ICollection.CopyTo(Array destination, int index)
             {
-                if (destination is null)
-                {
-                    throw new ArgumentNullException(nameof(destination));
-                }
+                ArgumentNullException.ThrowIfNull(destination);
 
                 int count = InnerList.Count;
 
@@ -313,10 +319,7 @@ namespace System.Windows.Forms
             {
                 _owner.CheckNoDataSource();
 
-                if (item is null)
-                {
-                    throw new ArgumentNullException(nameof(item));
-                }
+                ArgumentNullException.ThrowIfNull(item);
 
                 if (index < 0 || index > Count)
                 {
@@ -353,7 +356,7 @@ namespace System.Windows.Forms
                             }
                             else
                             {
-                                _ownerComboBoxAccessibleObject.ItemAccessibleObjects.Remove(InnerList[index]);
+                                OwnerComboBoxAccessibleObject?.RemoveListItemAccessibleObjectAt(index);
                                 InnerList.RemoveAt(index);
                             }
                         }
@@ -378,13 +381,22 @@ namespace System.Windows.Forms
                     _owner.NativeRemoveAt(index);
                 }
 
-                _ownerComboBoxAccessibleObject.ItemAccessibleObjects.Remove(InnerList[index]);
+                OwnerComboBoxAccessibleObject?.RemoveListItemAccessibleObjectAt(index);
                 InnerList.RemoveAt(index);
 
-                if (!_owner.IsHandleCreated && index < _owner._selectedIndex)
+                if (!_owner.IsHandleCreated)
                 {
-                    _owner._selectedIndex--;
+                    if (index < _owner._selectedIndex)
+                    {
+                        _owner._selectedIndex--;
+                    }
+                    else if (index == _owner._selectedIndex)
+                    {
+                        _owner._selectedIndex = -1;
+                        _owner.UpdateText();
+                    }
                 }
+
                 if (_owner.AutoCompleteSource == AutoCompleteSource.ListItems)
                 {
                     _owner.SetAutoComplete(false, false);
@@ -412,7 +424,7 @@ namespace System.Windows.Forms
                     throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
                 }
 
-                InnerList[index].Item = value ?? throw new ArgumentNullException(nameof(value));
+                InnerList[index].Item = value.OrThrowIfNull();
 
                 // If the native control has been created, and the display text of the new list item object
                 // is different to the current text in the native list item, recreate the native list item...
@@ -429,6 +441,7 @@ namespace System.Windows.Forms
                             _owner.SelectedIndex = index;
                             _owner.UpdateText();
                         }
+
                         if (_owner.AutoCompleteSource == AutoCompleteSource.ListItems)
                         {
                             _owner.SetAutoComplete(false, false);

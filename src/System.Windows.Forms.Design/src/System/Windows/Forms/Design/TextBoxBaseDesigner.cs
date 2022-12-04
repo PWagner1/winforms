@@ -2,14 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Windows.Forms.Design.Behavior;
+
 namespace System.Windows.Forms.Design
 {
-    using System;
-    using System.Collections;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.Windows.Forms.Design.Behavior;
-
     /// <summary>
     /// Provides a designer that can design components
     /// that extend TextBoxBase.
@@ -31,11 +30,11 @@ namespace System.Windows.Forms.Design
             {
                 ArrayList snapLines = base.SnapLines as ArrayList;
 
-                int baseline = DesignerUtils.GetTextBaseline(Control, System.Drawing.ContentAlignment.TopLeft);
+                int baseline = DesignerUtils.GetTextBaseline(Control, Drawing.ContentAlignment.TopLeft);
 
                 BorderStyle borderStyle = BorderStyle.Fixed3D;
                 PropertyDescriptor prop = TypeDescriptor.GetProperties(Component)["BorderStyle"];
-                if (prop != null)
+                if (prop is not null)
                 {
                     borderStyle = (BorderStyle)prop.GetValue(Component);
                 }
@@ -101,7 +100,7 @@ namespace System.Windows.Forms.Design
             base.InitializeNewComponent(defaultValues);
 
             PropertyDescriptor textProp = TypeDescriptor.GetProperties(Component)["Text"];
-            if (textProp != null && textProp.PropertyType == typeof(string) && !textProp.IsReadOnly && textProp.IsBrowsable)
+            if (textProp is not null && textProp.PropertyType == typeof(string) && !textProp.IsReadOnly && textProp.IsBrowsable)
             {
                 textProp.SetValue(Component, "");
             }
@@ -115,7 +114,8 @@ namespace System.Windows.Forms.Design
 
             // Handle shadowed properties
             //
-            string[] shadowProps = new string[] {
+            string[] shadowProps = new string[]
+            {
                 "Text",
             };
 
@@ -124,7 +124,7 @@ namespace System.Windows.Forms.Design
             for (int i = 0; i < shadowProps.Length; i++)
             {
                 prop = (PropertyDescriptor)properties[shadowProps[i]];
-                if (prop != null)
+                if (prop is not null)
                 {
                     properties[shadowProps[i]] = TypeDescriptor.CreateProperty(typeof(TextBoxBaseDesigner), prop, empty);
                 }
@@ -146,16 +146,16 @@ namespace System.Windows.Forms.Design
                 rules |= SelectionRules.AllSizeable;
 
                 PropertyDescriptor prop = TypeDescriptor.GetProperties(component)["Multiline"];
-                if (prop != null)
+                if (prop is not null)
                 {
-                    Object value = prop.GetValue(component);
+                    object value = prop.GetValue(component);
                     if (value is bool && (bool)value == false)
                     {
                         PropertyDescriptor propAuto = TypeDescriptor.GetProperties(component)["AutoSize"];
-                        if (propAuto != null)
+                        if (propAuto is not null)
                         {
-                            Object auto = propAuto.GetValue(component);
-                            if (auto is bool && (bool)auto == true)
+                            object auto = propAuto.GetValue(component);
+                            if (auto is bool && (bool)auto)
                             {
                                 rules &= ~(SelectionRules.TopSizeable | SelectionRules.BottomSizeable);
                             }

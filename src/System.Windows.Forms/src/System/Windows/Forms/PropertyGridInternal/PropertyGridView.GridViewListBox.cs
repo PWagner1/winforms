@@ -2,25 +2,20 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using static Interop;
-
 namespace System.Windows.Forms.PropertyGridInternal
 {
     internal partial class PropertyGridView
     {
         internal class GridViewListBox : ListBox
         {
-            internal bool fInSetSelectedIndex;
+            private bool _inSetSelectedIndex;
             private readonly PropertyGridView _owningPropertyGridView;
 
             public GridViewListBox(PropertyGridView gridView)
             {
-                if (gridView is null)
-                {
-                    throw new ArgumentNullException(nameof(gridView));
-                }
+                ArgumentNullException.ThrowIfNull(gridView);
 
-                base.IntegralHeight = false;
+                IntegralHeight = false;
                 _owningPropertyGridView = gridView;
                 base.BackColor = gridView.BackColor;
             }
@@ -30,8 +25,8 @@ namespace System.Windows.Forms.PropertyGridInternal
                 get
                 {
                     CreateParams cp = base.CreateParams;
-                    cp.Style &= ~(int)User32.WS.BORDER;
-                    cp.ExStyle &= ~(int)User32.WS_EX.CLIENTEDGE;
+                    cp.Style &= ~(int)WINDOW_STYLE.WS_BORDER;
+                    cp.ExStyle &= ~(int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
                     return cp;
                 }
             }
@@ -53,20 +48,15 @@ namespace System.Windows.Forms.PropertyGridInternal
             /// </summary>
             /// <returns>The accessibility object instance.</returns>
             protected override AccessibleObject CreateAccessibilityInstance()
-            {
-                return new GridViewListBoxAccessibleObject(this);
-            }
+                => new GridViewListBoxAccessibleObject(this);
 
-            public virtual bool InSetSelectedIndex()
-            {
-                return fInSetSelectedIndex;
-            }
+            public virtual bool InSetSelectedIndex() => _inSetSelectedIndex;
 
             protected override void OnSelectedIndexChanged(EventArgs e)
             {
-                fInSetSelectedIndex = true;
+                _inSetSelectedIndex = true;
                 base.OnSelectedIndexChanged(e);
-                fInSetSelectedIndex = false;
+                _inSetSelectedIndex = false;
             }
         }
     }

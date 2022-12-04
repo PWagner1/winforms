@@ -1,11 +1,10 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
 using static Interop;
 
@@ -518,7 +517,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void FontDialog_ShowColor_Set_GetReturnsExpected(bool value)
         {
             using var dialog = new FontDialog
@@ -695,15 +694,15 @@ namespace System.Windows.Forms.Tests
 
         private class CustomClass : Control
         {
-            protected unsafe override void WndProc(ref Message m)
+            protected override unsafe void WndProc(ref Message m)
             {
                 if (m.Msg == (int)User32.WM.CHOOSEFONT_GETLOGFONT)
                 {
-                    using var font = new Font("Arial", 8.25f);
-                    User32.LOGFONTW* pLogfont = (User32.LOGFONTW*)m.LParam;
-                    object lf = new User32.LOGFONTW();
+                    using Font font = new("Arial", 8.25f);
+                    LOGFONTW* pLogfont = (LOGFONTW*)m.LParam;
+                    object lf = new LOGFONTW();
                     font.ToLogFont(lf);
-                    *pLogfont = (User32.LOGFONTW)lf;
+                    *pLogfont = (LOGFONTW)lf;
                 }
 
                 base.WndProc(ref m);
@@ -711,7 +710,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void FontDialog_HookProc_Invoke_InvalidCommandHWnd(bool showColor)
         {
             using var dialog = new SubFontDialog
@@ -720,11 +719,11 @@ namespace System.Windows.Forms.Tests
             };
             int applyCallCount = 0;
             dialog.Apply += (sender, e) => applyCallCount++;
-            Assert.Throws<ArgumentException>(null, () => dialog.HookProc(IntPtr.Zero, (int)User32.WM.COMMAND, (IntPtr)0x402, IntPtr.Zero));
+            Assert.Throws<ArgumentException>(() => dialog.HookProc(IntPtr.Zero, (int)User32.WM.COMMAND, (IntPtr)0x402, IntPtr.Zero));
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void FontDialog_OnApply_Invoke_CallsApply(EventArgs eventArgs)
         {
             using var dialog = new SubFontDialog();

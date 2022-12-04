@@ -11,7 +11,7 @@ namespace System.Windows.Forms.Design
     internal class FormatStringDialog : Form
     {
         // we need the context for the HELP service provider
-        private ITypeDescriptorContext _context;
+        private readonly ITypeDescriptorContext _context;
         private Button _cancelButton;
         private Button _okButton;
         private FormatControl _formatControl1;
@@ -24,7 +24,7 @@ namespace System.Windows.Forms.Design
             _context = context;
             InitializeComponent();
 
-            // Set right to left property according to SR.GetString(SR.RTL) value.
+            // Set right to left property according to SR.RTL value.
             string rtlString = SR.RTL;
 
             if (rtlString.Equals("RTL_False"))
@@ -100,7 +100,7 @@ namespace System.Windows.Forms.Design
         {
             int result = ctl.Width;
 
-            while (ctl != null)
+            while (ctl is not null)
             {
                 result += ctl.Left;
                 ctl = ctl.Parent;
@@ -112,8 +112,8 @@ namespace System.Windows.Forms.Design
         private void FormatStringDialog_Load(object sender, EventArgs e)
         {
             // make a reasonable guess what user control should be shown
-            string formatString = _dgvCellStyle != null ? _dgvCellStyle.Format : _listControl.FormatString;
-            object nullValue = _dgvCellStyle != null ? _dgvCellStyle.NullValue : null;
+            string formatString = _dgvCellStyle is not null ? _dgvCellStyle.Format : _listControl.FormatString;
+            object nullValue = _dgvCellStyle?.NullValue;
             string formatType = string.Empty;
 
             if (!string.IsNullOrEmpty(formatString))
@@ -123,13 +123,13 @@ namespace System.Windows.Forms.Design
 
             // the null value text box should be enabled only when editing DataGridViewCellStyle
             // when we are editing ListControl, it should be disabled
-            if (_dgvCellStyle != null)
+            if (_dgvCellStyle is not null)
             {
                 _formatControl1.NullValueTextBoxEnabled = true;
             }
             else
             {
-                Debug.Assert(_listControl != null, "we check this everywhere, but it does not hurt to check it again");
+                Debug.Assert(_listControl is not null, "we check this everywhere, but it does not hurt to check it again");
                 _formatControl1.NullValueTextBoxEnabled = false;
             }
 
@@ -138,7 +138,7 @@ namespace System.Windows.Forms.Design
             // push the information from FormatString/FormatInfo/NullValue into the FormattingUserControl
             FormatControl.FormatTypeClass formatTypeItem = _formatControl1.FormatTypeItem;
 
-            if (formatTypeItem != null)
+            if (formatTypeItem is not null)
             {
                 // parsing the FormatString uses the CultureInfo. So push the CultureInfo before push the FormatString.
                 formatTypeItem.PushFormatStringIntoFormatType(formatString);
@@ -149,10 +149,10 @@ namespace System.Windows.Forms.Design
                 _formatControl1.FormatType = SR.BindingFormattingDialogFormatTypeNoFormatting;
             }
 
-            _formatControl1.NullValue = nullValue != null ? nullValue.ToString() : "";
+            _formatControl1.NullValue = nullValue is not null ? nullValue.ToString() : "";
         }
 
-        public void End()
+        public static void End()
         {
             // clear the tree nodes collection
         }
@@ -183,7 +183,7 @@ namespace System.Windows.Forms.Design
             _cancelButton.Size = new Drawing.Size(87, 23);
             _cancelButton.TabIndex = 2;
             _cancelButton.Text = SR.DataGridView_Cancel;
-            _cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            _cancelButton.DialogResult = DialogResult.Cancel;
             _cancelButton.Click += new EventHandler(cancelButton_Click);
             //
             // okButton
@@ -193,12 +193,12 @@ namespace System.Windows.Forms.Design
             _okButton.Size = new Drawing.Size(87, 23);
             _okButton.TabIndex = 1;
             _okButton.Text = SR.DataGridView_OK;
-            _okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
+            _okButton.DialogResult = DialogResult.OK;
             _okButton.Click += new EventHandler(okButton_Click);
             //
             // Form1
             //
-            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            AutoScaleMode = AutoScaleMode.Font;
             AutoScaleDimensions = new Drawing.SizeF(6, 13);
             ClientSize = new Drawing.Size(396, 295);
             AutoSize = true;
@@ -264,7 +264,7 @@ namespace System.Windows.Forms.Design
                 return;
             }
 
-            if (_dgvCellStyle != null)
+            if (_dgvCellStyle is not null)
             {
                 _dgvCellStyle.Format = formatTypeItem.FormatString;
                 _dgvCellStyle.NullValue = _formatControl1.NullValue;

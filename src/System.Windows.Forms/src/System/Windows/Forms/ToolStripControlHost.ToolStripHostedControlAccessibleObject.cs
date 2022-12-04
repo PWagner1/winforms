@@ -33,9 +33,9 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (_toolStripHostedControl != null // Hosted control should not be null.
-                        && _toolStripControlHost != null // ToolStripControlHost is a container for ToolStripControl.
-                        && _toolStripControlHost.Owner != null) // Owner is the ToolStrip.
+                    if (_toolStripHostedControl is not null // Hosted control should not be null.
+                        && _toolStripControlHost is not null // ToolStripControlHost is a container for ToolStripControl.
+                        && _toolStripControlHost.Owner is not null) // Owner is the ToolStrip.
                     {
                         return _toolStripControlHost.Owner.AccessibilityObject;
                     }
@@ -46,8 +46,8 @@ namespace System.Windows.Forms
 
             internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
             {
-                if (_toolStripHostedControl != null &&
-                    _toolStripControlHost != null)
+                if (_toolStripHostedControl is not null &&
+                    _toolStripControlHost is not null)
                 {
                     switch (direction)
                     {
@@ -61,18 +61,13 @@ namespace System.Windows.Forms
                 return base.FragmentNavigate(direction);
             }
 
-            internal override object? GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                switch (propertyID)
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+                propertyID switch
                 {
-                    case UiaCore.UIA.HasKeyboardFocusPropertyId:
-                        return (State & AccessibleStates.Focused) == AccessibleStates.Focused;
-                    case UiaCore.UIA.IsOffscreenPropertyId:
-                        return GetIsOffscreenPropertyValue(_toolStripControlHost?.Placement, Bounds);
-                }
-
-                return base.GetPropertyValue(propertyID);
-            }
+                    UiaCore.UIA.HasKeyboardFocusPropertyId => (State & AccessibleStates.Focused) == AccessibleStates.Focused,
+                    UiaCore.UIA.IsOffscreenPropertyId => GetIsOffscreenPropertyValue(_toolStripControlHost?.Placement, Bounds),
+                    _ => base.GetPropertyValue(propertyID)
+                };
 
             internal override bool IsPatternSupported(UiaCore.UIA patternId)
             {

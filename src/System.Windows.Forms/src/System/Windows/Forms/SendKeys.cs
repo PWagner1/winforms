@@ -2,14 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Security;
-using System.Threading;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -17,7 +14,7 @@ namespace System.Windows.Forms
     /// <summary>
     ///  Provides methods for sending keystrokes to an application.
     /// </summary>
-    public class SendKeys
+    public partial class SendKeys
     {
         // It is unclear what significance the value 10 has, but it seems to make sense to make this a constant rather
         // than have 10 sprinkled throughout the code. It appears to be a sentinel value of some sort - indicating an
@@ -83,24 +80,16 @@ namespace System.Windows.Forms
         private const int AltKeyPressed = 0x0400;
 
         private static bool s_stopHook;
-        private static IntPtr s_hhook;
-        private static User32.HOOKPROC s_hook;
+        private static HHOOK s_hhook;
 
         /// <summary>
         ///  Vector of events that we have yet to post to the journaling hook.
         /// </summary>
-        private static Queue<SKEvent> s_events;
+        private static readonly Queue<SKEvent> s_events = new Queue<SKEvent>();
 
         private static object s_lock = new object();
         private static bool s_startNewChar;
         private static readonly SKWindow s_messageWindow;
-
-        private enum SendMethodTypes
-        {
-            Default = 1,
-            JournalHook = 2,
-            SendInput = 3
-        }
 
         private static SendMethodTypes? s_sendMethod;
         private static bool? s_hookSupported;
@@ -132,7 +121,6 @@ namespace System.Windows.Forms
         /// </summary>
         private static void AddEvent(SKEvent skevent)
         {
-            s_events ??= new Queue<SKEvent>();
             s_events.Enqueue(skevent);
         }
 
@@ -142,12 +130,12 @@ namespace System.Windows.Forms
         private static bool AddSimpleKey(
             char character,
             int repeat,
-            IntPtr hwnd,
+            HWND hwnd,
             (int HaveShift, int HaveCtrl, int HaveAlt) haveKeys,
             bool startNewChar,
             int cGrp)
         {
-            int vk = User32.VkKeyScanW(character);
+            int vk = PInvoke.VkKeyScan(character);
 
             if (vk != -1)
             {
@@ -173,11 +161,11 @@ namespace System.Windows.Forms
                 }
 
                 AddMsgsForVK(vk & 0xff, repeat, haveKeys.HaveAlt > 0 && haveKeys.HaveCtrl == 0, hwnd);
-                CancelMods(haveKeys, UnknownGrouping, hwnd);
+                CancelMods(ref haveKeys, UnknownGrouping, hwnd);
             }
             else
             {
-                uint oemVal = User32.OemKeyScan((ushort)(0xFF & character));
+                uint oemVal = PInvoke.OemKeyScan((ushort)(0xFF & character));
                 for (int i = 0; i < repeat; i++)
                 {
                     AddEvent(new SKEvent(User32.WM.CHAR, character, (oemVal & 0xFFFF), hwnd));
@@ -195,7 +183,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Given the vk, add the appropriate messages for it.
         /// </summary>
-        private static void AddMsgsForVK(int vk, int repeat, bool altnoctrldown, IntPtr hwnd)
+        private static void AddMsgsForVK(int vk, int repeat, bool altnoctrldown, HWND hwnd)
         {
             for (int i = 0; i < repeat; i++)
             {
@@ -208,7 +196,7 @@ namespace System.Windows.Forms
         ///  Called whenever there is a closing parenthesis, or the end of a character. This generates events for the
         ///  end of a modifier.
         /// </summary>
-        private static void CancelMods((int HaveShift, int HaveCtrl, int HaveAlt) haveKeys, int level, IntPtr hwnd)
+        private static void CancelMods(ref (int HaveShift, int HaveCtrl, int HaveAlt) haveKeys, int level, HWND hwnd)
         {
             if (haveKeys.HaveShift == level)
             {
@@ -232,41 +220,40 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Install the hook.
         /// </summary>
-        private static void InstallHook()
+        private static unsafe void InstallHook()
         {
-            if (s_hhook == IntPtr.Zero)
+            if (s_hhook.IsNull)
             {
-                s_hook = new User32.HOOKPROC(new SendKeysHookProc().Callback);
                 s_stopHook = false;
-                s_hhook = User32.SetWindowsHookExW(
-                    User32.WH.JOURNALPLAYBACK,
-                    s_hook,
-                    Kernel32.GetModuleHandleW(null),
+                s_hhook = PInvoke.SetWindowsHookEx(
+                    WINDOWS_HOOK_ID.WH_JOURNALPLAYBACK,
+                    &SendKeysHookProc.Callback,
+                    PInvoke.GetModuleHandle((PCWSTR)null),
                     0);
 
-                if (s_hhook == IntPtr.Zero)
+                if (s_hhook.IsNull)
                 {
                     throw new SecurityException(SR.SendKeysHookFailed);
                 }
             }
         }
 
-        private static void TestHook()
+        private static unsafe void TestHook()
         {
             s_hookSupported = false;
             try
             {
-                var hookProc = new User32.HOOKPROC(EmptyHookCallback);
-                IntPtr hookHandle = User32.SetWindowsHookExW(
-                    User32.WH.JOURNALPLAYBACK,
-                    hookProc,
-                    Kernel32.GetModuleHandleW(null),
+                HHOOK hookHandle = PInvoke.SetWindowsHookEx(
+                    WINDOWS_HOOK_ID.WH_JOURNALPLAYBACK,
+                    &EmptyHookCallback,
+                    PInvoke.GetModuleHandle((PCWSTR)null),
                     0);
-                s_hookSupported = (hookHandle != IntPtr.Zero);
 
-                if (hookHandle != IntPtr.Zero)
+                s_hookSupported = !hookHandle.IsNull;
+
+                if (!hookHandle.IsNull)
                 {
-                    User32.UnhookWindowsHookEx(hookHandle);
+                    PInvoke.UnhookWindowsHookEx(hookHandle);
                 }
             }
             catch
@@ -275,7 +262,10 @@ namespace System.Windows.Forms
             }
         }
 
-        private static IntPtr EmptyHookCallback(User32.HC nCode, IntPtr wparam, IntPtr lparam) => IntPtr.Zero;
+#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#pragma warning restore CS3016
+        private static unsafe LRESULT EmptyHookCallback(int nCode, WPARAM wparam, LPARAM lparam) => (LRESULT)0;
 
         private static void LoadSendMethodFromConfig()
         {
@@ -286,7 +276,7 @@ namespace System.Windows.Forms
                 try
                 {
                     // Read SendKeys value from config file, not case sensitive.
-                    string value = Configuration.ConfigurationManager.AppSettings.Get("SendKeys");
+                    string? value = Configuration.ConfigurationManager.AppSettings.Get("SendKeys");
 
                     if (string.IsNullOrEmpty(value))
                     {
@@ -311,36 +301,34 @@ namespace System.Windows.Forms
         /// </summary>
         private static void JournalCancel()
         {
-            if (s_hhook != IntPtr.Zero)
+            if (!s_hhook.IsNull)
             {
                 s_stopHook = false;
-                if (s_events != null)
-                {
-                    s_events.Clear();
-                }
-                s_hhook = IntPtr.Zero;
+                s_events.Clear();
+
+                s_hhook = default;
             }
         }
 
-        private unsafe static void GetKeyboardState(Span<byte> keystate)
+        private static unsafe void GetKeyboardState(Span<byte> keystate)
         {
             if (keystate.Length < 256)
                 throw new InvalidOperationException();
 
             fixed (byte* b = keystate)
             {
-                User32.GetKeyboardState(b);
+                PInvoke.GetKeyboardState(b);
             }
         }
 
-        private unsafe static void SetKeyboardState(ReadOnlySpan<byte> keystate)
+        private static unsafe void SetKeyboardState(ReadOnlySpan<byte> keystate)
         {
             if (keystate.Length < 256)
                 throw new InvalidOperationException();
 
             fixed (byte* b = keystate)
             {
-                User32.SetKeyboardState(b);
+                PInvoke.SetKeyboardState(b);
             }
         }
 
@@ -375,10 +363,10 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  This event is raised from Application when each window thread termiantes. It gives us a chance to
+        ///  This event is raised from Application when each window thread terminates. It gives us a chance to
         ///  uninstall our journal hook if we had one installed.
         /// </summary>
-        private static void OnThreadExit(object sender, EventArgs e)
+        private static void OnThreadExit(object? sender, EventArgs e)
         {
             try
             {
@@ -392,7 +380,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Parse the string the user has given us, and generate the appropriate events for the journaling hook.
         /// </summary>
-        private static void ParseKeys(string keys, IntPtr hwnd)
+        private static void ParseKeys(string keys, HWND hwnd)
         {
             int i = 0;
 
@@ -435,6 +423,7 @@ namespace System.Windows.Forms
                             {
                                 final++;
                             }
+
                             if (final < keysLen)
                             {
                                 // Found the special case, so skip the first '}' in the string. The remainder of the
@@ -479,7 +468,8 @@ namespace System.Windows.Forms
                                 {
                                     j++;
                                 }
-                                repeat = int.Parse(keys.Substring(digit, j - digit), CultureInfo.InvariantCulture);
+
+                                repeat = int.Parse(keys.AsSpan(digit, j - digit), CultureInfo.InvariantCulture);
                             }
                         }
 
@@ -487,6 +477,7 @@ namespace System.Windows.Forms
                         {
                             throw new ArgumentException(SR.SendKeysKeywordDelimError);
                         }
+
                         if (keys[j] != '}')
                         {
                             throw new ArgumentException(SR.InvalidSendKeysRepeat);
@@ -518,7 +509,7 @@ namespace System.Windows.Forms
                             }
 
                             AddMsgsForVK(vk, repeat, haveKeys.HaveAlt > 0 && haveKeys.HaveCtrl == 0, hwnd);
-                            CancelMods(haveKeys, UnknownGrouping, hwnd);
+                            CancelMods(ref haveKeys, UnknownGrouping, hwnd);
                         }
                         else if (keyName.Length == 1)
                         {
@@ -603,7 +594,7 @@ namespace System.Windows.Forms
                             throw new ArgumentException(string.Format(SR.InvalidSendKeysString, keys));
                         }
 
-                        CancelMods(haveKeys, cGrp, hwnd);
+                        CancelMods(ref haveKeys, cGrp, hwnd);
                         cGrp--;
                         if (cGrp == 0)
                         {
@@ -631,13 +622,13 @@ namespace System.Windows.Forms
                 throw new ArgumentException(SR.SendKeysGroupDelimError);
             }
 
-            CancelMods(haveKeys, UnknownGrouping, hwnd);
+            CancelMods(ref haveKeys, UnknownGrouping, hwnd);
         }
 
         /// <summary>
         ///  Uses User32 SendInput to send keystrokes.
         /// </summary>
-        private unsafe static void SendInput(ReadOnlySpan<byte> oldKeyboardState, SKEvent[] previousEvents)
+        private static unsafe void SendInput(ReadOnlySpan<byte> oldKeyboardState, SKEvent[]? previousEvents)
         {
             // Should be a no-op most of the time
             AddCancelModifiersForPreviousEvents(previousEvents);
@@ -676,7 +667,7 @@ namespace System.Windows.Forms
             lock (s_lock)
             {
                 // Block keyboard and mouse input events from reaching applications.
-                BOOL blockInputSuccess = User32.BlockInput(BOOL.TRUE);
+                bool blockInputSuccess = PInvoke.BlockInput(true);
 
                 try
                 {
@@ -685,7 +676,7 @@ namespace System.Windows.Forms
 
                     for (int i = 0; i < eventsTotal; i++)
                     {
-                        SKEvent skEvent = (SKEvent)s_events.Dequeue();
+                        SKEvent skEvent = s_events.Dequeue();
 
                         currentInput[0].inputUnion.ki.dwFlags = 0;
 
@@ -741,9 +732,9 @@ namespace System.Windows.Forms
                     SetKeyboardState(oldKeyboardState);
 
                     // Unblock input if it was previously blocked.
-                    if (blockInputSuccess.IsTrue())
+                    if (blockInputSuccess)
                     {
-                        User32.BlockInput(BOOL.FALSE);
+                        PInvoke.BlockInput(false);
                     }
                 }
             }
@@ -761,7 +752,7 @@ namespace System.Windows.Forms
         ///  of the keyboard modifiers (alt, ctrl, shift). We must send a KeyUp for those, JournalHook doesn't
         ///  permanently set the state so it's ok.
         /// </summary>
-        private static void AddCancelModifiersForPreviousEvents(SKEvent[] previousEvents)
+        private static void AddCancelModifiersForPreviousEvents(SKEvent[]? previousEvents)
         {
             if (previousEvents is null)
             {
@@ -804,15 +795,15 @@ namespace System.Windows.Forms
 
             if (shift)
             {
-                AddEvent(new SKEvent(User32.WM.KEYUP, (int)Keys.ShiftKey, false, IntPtr.Zero));
+                AddEvent(new SKEvent(User32.WM.KEYUP, (int)Keys.ShiftKey, false, default));
             }
             else if (ctrl)
             {
-                AddEvent(new SKEvent(User32.WM.KEYUP, (int)Keys.ControlKey, false, IntPtr.Zero));
+                AddEvent(new SKEvent(User32.WM.KEYUP, (int)Keys.ControlKey, false, default));
             }
             else if (alt)
             {
-                AddEvent(new SKEvent(User32.WM.SYSKEYUP, (int)Keys.Menu, false, IntPtr.Zero));
+                AddEvent(new SKEvent(User32.WM.SYSKEYUP, (int)Keys.Menu, false, default));
             }
         }
 
@@ -912,7 +903,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void Send(string keys) => Send(keys, null, false);
 
-        private static void Send(string keys, Control control, bool wait)
+        private static void Send(string keys, Control? control, bool wait)
         {
             if (string.IsNullOrEmpty(keys))
             {
@@ -926,17 +917,17 @@ namespace System.Windows.Forms
             }
 
             // For SendInput only, see AddCancelModifiersForPreviousEvents for details.
-            SKEvent[] previousEvents = null;
-            if ((s_events != null) && (s_events.Count != 0))
+            SKEvent[]? previousEvents = null;
+            if (s_events.Count != 0)
             {
                 previousEvents = s_events.ToArray();
             }
 
             // Generate the list of events that we're going to fire off with the hook.
-            ParseKeys(keys, (control != null) ? control.Handle : IntPtr.Zero);
+            ParseKeys(keys, (control is not null) ? (HWND)control.Handle : default);
 
             // If there weren't any events posted as a result, we're done!
-            if (s_events is null)
+            if (s_events.Count == 0)
             {
                 return;
             }
@@ -946,7 +937,7 @@ namespace System.Windows.Forms
             Span<byte> oldState = stackalloc byte[256];
             GetKeyboardState(oldState);
 
-            if (s_sendMethod.Value != SendMethodTypes.SendInput)
+            if (s_sendMethod!.Value != SendMethodTypes.SendInput)
             {
                 if (!s_hookSupported.HasValue && s_sendMethod.Value == SendMethodTypes.Default)
                 {
@@ -956,7 +947,7 @@ namespace System.Windows.Forms
                     TestHook();
                 }
 
-                if (s_sendMethod.Value == SendMethodTypes.JournalHook || s_hookSupported.Value)
+                if (s_sendMethod.Value == SendMethodTypes.JournalHook || s_hookSupported!.Value)
                 {
                     ClearKeyboardState();
                     InstallHook();
@@ -965,7 +956,7 @@ namespace System.Windows.Forms
             }
 
             if (s_sendMethod.Value == SendMethodTypes.SendInput ||
-                (s_sendMethod.Value == SendMethodTypes.Default && !s_hookSupported.Value))
+                (s_sendMethod.Value == SendMethodTypes.Default && !s_hookSupported!.Value))
             {
                 // Either SendInput is configured or JournalHooks failed by default, call SendInput
                 SendInput(oldState, previousEvents);
@@ -986,10 +977,10 @@ namespace System.Windows.Forms
         ///  Sends the given keys to the active application, and then waits for the messages to be processed.
         /// </summary>
         /// <remarks>
-        ///  WARNING: this method will never work if control != null, because while Windows journaling *looks* like it
+        ///  WARNING: this method will never work if control is not null, because while Windows journaling *looks* like it
         ///  can be directed to a specific HWND, it can't.
         /// </remarks>
-        private static void SendWait(string keys, Control control)
+        private static void SendWait(string keys, Control? control)
         {
             Send(keys, control, true);
         }
@@ -1000,7 +991,7 @@ namespace System.Windows.Forms
         public static void Flush()
         {
             Application.DoEvents();
-            while (s_events != null && s_events.Count > 0)
+            while (s_events.Count > 0)
             {
                 Application.DoEvents();
             }
@@ -1011,150 +1002,13 @@ namespace System.Windows.Forms
         /// </summary>
         private static void UninstallJournalingHook()
         {
-            if (s_hhook != IntPtr.Zero)
+            if (!s_hhook.IsNull)
             {
                 s_stopHook = false;
-                s_events?.Clear();
+                s_events.Clear();
 
-                User32.UnhookWindowsHookEx(s_hhook);
-                s_hhook = IntPtr.Zero;
-            }
-        }
-
-        /// <summary>
-        ///  SendKeys creates a window to monitor WM_CANCELJOURNAL messages.
-        /// </summary>
-        private class SKWindow : Control
-        {
-            public SKWindow()
-            {
-                SetState(States.TopLevel, true);
-                SetExtendedState(ExtendedStates.InterestedInUserPreferenceChanged, false);
-                SetBounds(-1, -1, 0, 0);
-                Visible = false;
-            }
-
-            protected override void WndProc(ref Message m)
-            {
-                if (m.Msg == (int)User32.WM.CANCELJOURNAL)
-                {
-                    try
-                    {
-                        JournalCancel();
-                    }
-                    catch
-                    {
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        ///  Helps us hold information about the various events we're going to journal.
-        /// </summary>
-        private readonly struct SKEvent
-        {
-            public readonly User32.WM WM;
-            public readonly uint ParamL;
-            public readonly uint ParamH;
-            public readonly IntPtr HWND;
-
-            public SKEvent(User32.WM wm, uint paramL, bool paramH, IntPtr hwnd)
-            {
-                WM = wm;
-                ParamL = paramL;
-                ParamH = paramH ? 1u : 0;
-                HWND = hwnd;
-            }
-
-            public SKEvent(User32.WM wm, uint paramL, uint paramH, IntPtr hwnd)
-            {
-                WM = wm;
-                ParamL = paramL;
-                ParamH = paramH;
-                HWND = hwnd;
-            }
-        }
-
-        /// <summary>
-        ///  Holds a keyword and the associated VK_ for it.
-        /// </summary>
-        private readonly struct KeywordVk
-        {
-            public readonly string Keyword;
-            public readonly int VK;
-
-            public KeywordVk(string keyword, Keys key)
-            {
-                Keyword = keyword;
-                VK = (int)key;
-            }
-        }
-
-        /// <summary>
-        ///  This class is our callback for the journaling hook we install.
-        /// </summary>
-        private class SendKeysHookProc
-        {
-            // There appears to be a timing issue where setting and removing and then setting these hooks via
-            // SetWindowsHookEx / UnhookWindowsHookEx can cause messages to be left in the queue and sent after the
-            // re-hookup happens. This puts us in a bad state as we get an HC_SKIP before an HC_GETNEXT. So in that
-            // case, we just ignore the HC_SKIP calls until we get an HC_GETNEXT. We also sleep a bit in the Unhook.
-
-            private bool _gotNextEvent;
-
-            public unsafe virtual IntPtr Callback(User32.HC nCode, IntPtr wparam, IntPtr lparam)
-            {
-                User32.EVENTMSG* eventmsg = (User32.EVENTMSG*)lparam;
-
-                if (User32.GetAsyncKeyState((int)Keys.Pause) != 0)
-                {
-                    s_stopHook = true;
-                }
-
-                switch (nCode)
-                {
-                    case User32.HC.SKIP:
-                        if (_gotNextEvent)
-                        {
-                            if (s_events != null && s_events.Count > 0)
-                            {
-                                s_events.Dequeue();
-                            }
-                            s_stopHook = s_events is null || s_events.Count == 0;
-                            break;
-                        }
-
-                        break;
-                    case User32.HC.GETNEXT:
-                        _gotNextEvent = true;
-
-                        Debug.Assert(
-                            s_events != null && s_events.Count > 0 && !s_stopHook,
-                            "HC_GETNEXT when queue is empty!");
-
-                        SKEvent evt = (SKEvent)s_events.Peek();
-                        eventmsg->message = evt.WM;
-                        eventmsg->paramL = evt.ParamL;
-                        eventmsg->paramH = evt.ParamH;
-                        eventmsg->hwnd = evt.HWND;
-                        eventmsg->time = Kernel32.GetTickCount();
-                        break;
-                    default:
-                        if (nCode < 0)
-                        {
-                            User32.CallNextHookEx(s_hhook, nCode, wparam, lparam);
-                        }
-
-                        break;
-                }
-
-                if (s_stopHook)
-                {
-                    UninstallJournalingHook();
-                    _gotNextEvent = false;
-                }
-                return IntPtr.Zero;
+                PInvoke.UnhookWindowsHookEx(s_hhook);
+                s_hhook = default;
             }
         }
     }

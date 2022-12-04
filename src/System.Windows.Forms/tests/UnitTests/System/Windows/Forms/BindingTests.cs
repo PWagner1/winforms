@@ -2,10 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.Globalization;
 using System.Security;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
 
 namespace System.Windows.Forms.Tests
@@ -210,8 +209,8 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ControlUpdateMode))]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ControlUpdateMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ControlUpdateMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ControlUpdateMode))]
         public void Binding_ControlUpdateMode_Set_GetReturnsExpected(ControlUpdateMode value)
         {
             var binding = new Binding("propertyName", new object(), "dataMember")
@@ -226,8 +225,8 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataSourceUpdateMode))]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(DataSourceUpdateMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataSourceUpdateMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(DataSourceUpdateMode))]
         public void Binding_DataSourceUpdateMode_Set_GetReturnsExpected(DataSourceUpdateMode value)
         {
             var binding = new Binding("propertyName", new object(), "dataMember")
@@ -263,7 +262,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void Binding_FormatString_Set_GetReturnsExpected(string value, string expected)
         {
             var binding = new Binding("propertyName", new object(), "dataMember")
@@ -278,7 +277,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Binding_FormattingEnabled_Set_GetReturnsExpected(bool value)
         {
             var binding = new Binding("propertyName", new object(), "dataMember")
@@ -397,10 +396,11 @@ namespace System.Windows.Forms.Tests
 
             binding.BindingComplete += handler;
             Assert.Throws(exception.GetType(), () => binding.OnBindingComplete(eventArgs));
-            if (eventArgs != null)
+            if (eventArgs is not null)
             {
                 Assert.False(eventArgs.Cancel);
             }
+
             Assert.Equal(1, callCount);
         }
 
@@ -428,10 +428,11 @@ namespace System.Windows.Forms.Tests
 
             binding.BindingComplete += handler;
             binding.OnBindingComplete(eventArgs);
-            if (eventArgs != null)
+            if (eventArgs is not null)
             {
                 Assert.True(eventArgs.Cancel);
             }
+
             Assert.Equal(1, callCount);
         }
 
@@ -477,20 +478,22 @@ namespace System.Windows.Forms.Tests
             };
 
             binding.Format += handler;
-            if (eventArgs != null)
+            if (eventArgs is not null)
             {
                 eventArgs.Value = oldValue;
             }
+
             binding.OnFormat(eventArgs);
             Assert.Equal(expectedValue, eventArgs?.Value);
             Assert.Equal(1, callCount);
 
             // Should not call if the handler is removed.
             binding.Format -= handler;
-            if (eventArgs != null)
+            if (eventArgs is not null)
             {
                 eventArgs.Value = oldValue;
             }
+
             binding.OnFormat(eventArgs);
             Assert.Equal(expectedValue, eventArgs?.Value);
             Assert.Equal(1, callCount);
@@ -520,20 +523,22 @@ namespace System.Windows.Forms.Tests
             };
 
             binding.Parse += handler;
-            if (eventArgs != null)
+            if (eventArgs is not null)
             {
                 eventArgs.Value = oldValue;
             }
+
             binding.OnParse(eventArgs);
             Assert.Equal(expectedValue, eventArgs?.Value);
             Assert.Equal(1, callCount);
 
             // Should not call if the handler is removed.
             binding.Parse -= handler;
-            if (eventArgs != null)
+            if (eventArgs is not null)
             {
                 eventArgs.Value = oldValue;
             }
+
             binding.OnParse(eventArgs);
             Assert.Equal(expectedValue, eventArgs?.Value);
             Assert.Equal(1, callCount);

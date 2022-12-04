@@ -3,11 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.IO;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Windows.Forms;
@@ -43,6 +42,7 @@ namespace System.Drawing.Design
                     s_iconWidth = DpiHelper.LogicalToDeviceUnitsX(ICON_DIMENSION);
                     s_iconHeight = DpiHelper.LogicalToDeviceUnitsY(ICON_DIMENSION);
                 }
+
                 s_isScalingInitialized = true;
             }
         }
@@ -80,11 +80,7 @@ namespace System.Drawing.Design
             get
             {
                 AssemblyName[] names = (AssemblyName[])Properties["DependentAssemblies"];
-                if (names != null)
-                {
-                    return (AssemblyName[])names.Clone();
-                }
-                return null;
+                return names is not null ? (AssemblyName[])names.Clone() : null;
             }
             set
             {
@@ -125,7 +121,7 @@ namespace System.Drawing.Design
         }
 
         /// <summary>
-        ///  Gets or sets the company name for this <see cref='System.Drawing.Design.ToolboxItem'/>.
+        ///  Gets or sets the company name for this <see cref="ToolboxItem"/>.
         ///  This defaults to the companyname attribute retrieved from type.Assembly, if set.
         /// </summary>
         public string Company
@@ -168,7 +164,7 @@ namespace System.Drawing.Design
         }
 
         /// <summary>
-        ///  Gets or sets the display name for this <see cref='System.Drawing.Design.ToolboxItem'/>.
+        ///  Gets or sets the display name for this <see cref="ToolboxItem"/>.
         /// </summary>
         public string DisplayName
         {
@@ -232,16 +228,13 @@ namespace System.Drawing.Design
         ///  names and the values are property values.  This dictionary becomes read-only
         ///  after the toolbox item has been locked.
         ///  Values in the properties dictionary are validated through ValidateProperty
-        ///  and default values are obtained from GetDefalutProperty.
+        ///  and default values are obtained from GetDefaultProperty.
         /// </summary>
         public IDictionary Properties
         {
             get
             {
-                if (_properties is null)
-                {
-                    _properties = new LockableDictionary(this, 8 /* # of properties we have */);
-                }
+                _properties ??= new LockableDictionary(this, 8 /* # of properties we have */);
 
                 return _properties;
             }
@@ -319,10 +312,11 @@ namespace System.Drawing.Design
         {
             OnComponentsCreating(new ToolboxComponentsCreatingEventArgs(host));
             IComponent[] comps = CreateComponentsCore(host, new Hashtable());
-            if (comps != null && comps.Length > 0)
+            if (comps is not null && comps.Length > 0)
             {
                 OnComponentsCreated(new ToolboxComponentsCreatedEventArgs(comps));
             }
+
             return comps;
         }
 
@@ -335,10 +329,11 @@ namespace System.Drawing.Design
         {
             OnComponentsCreating(new ToolboxComponentsCreatingEventArgs(host));
             IComponent[] comps = CreateComponentsCore(host, defaultValues);
-            if (comps != null && comps.Length > 0)
+            if (comps is not null && comps.Length > 0)
             {
                 OnComponentsCreated(new ToolboxComponentsCreatedEventArgs(comps));
             }
+
             return comps;
         }
 
@@ -348,24 +343,21 @@ namespace System.Drawing.Design
         /// </summary>
         protected virtual IComponent[] CreateComponentsCore(IDesignerHost host)
         {
-            ArrayList comps = new ArrayList();
-
+            List<IComponent> comps = new();
             Type createType = GetType(host, AssemblyName, TypeName, true);
-            if (createType != null)
+            if (createType is not null)
             {
-                if (host != null)
+                if (host is not null)
                 {
                     comps.Add(host.CreateComponent(createType));
                 }
                 else if (typeof(IComponent).IsAssignableFrom(createType))
                 {
-                    comps.Add(TypeDescriptor.CreateInstance(null, createType, null, null));
+                    comps.Add((IComponent)TypeDescriptor.CreateInstance(provider: null, createType, argTypes: null, args: null));
                 }
             }
 
-            IComponent[] temp = new IComponent[comps.Count];
-            comps.CopyTo(temp, 0);
-            return temp;
+            return comps.ToArray();
         }
 
         /// <summary>
@@ -376,7 +368,7 @@ namespace System.Drawing.Design
         {
             IComponent[] components = CreateComponentsCore(host);
 
-            if (host != null && components != null)
+            if (host is not null && components is not null)
             {
                 for (int i = 0; i < components.Length; i++)
                 {
@@ -410,7 +402,7 @@ namespace System.Drawing.Design
         {
             // Do this in a couple of passes -- first pass, try to pull
             // out our dictionary of property names.  We need to do this
-            // for backwards compatibilty because if we throw everything
+            // for backwards compatibility because if we throw everything
             // into the property dictionary we'll duplicate stuff people
             // have serialized by hand.
 
@@ -424,19 +416,17 @@ namespace System.Drawing.Design
                 }
             }
 
-            if (propertyNames is null)
+            // For backwards compat, here are the default property
+            // names we use
+            propertyNames ??= new string[]
             {
-                // For backwards compat, here are the default property
-                // names we use
-                propertyNames = new string[] {
                     "AssemblyName",
                     "Bitmap",
                     "DisplayName",
                     "Filter",
                     "IsTransient",
                     "TypeName"
-                };
-            }
+            };
 
             foreach (SerializationEntry entry in info)
             {
@@ -487,7 +477,7 @@ namespace System.Drawing.Design
         private static bool AreAssemblyNamesEqual(AssemblyName name1, AssemblyName name2)
         {
             return name1 == name2 ||
-                   (name1 != null && name2 != null && name1.FullName == name2.FullName);
+                   (name1 is not null && name2 is not null && name1.FullName == name2.FullName);
         }
 
         public override int GetHashCode() => HashCode.Combine(TypeName, DisplayName);
@@ -510,29 +500,21 @@ namespace System.Drawing.Design
 
                 case "DisplayName":
                 case "TypeName":
-                    if (value is null)
-                    {
-                        value = string.Empty;
-                    }
+                    value ??= string.Empty;
 
                     break;
 
                 case "Filter":
-                    if (value is null)
-                    {
-                        value = Array.Empty<ToolboxItemFilterAttribute>();
-                    }
+                    value ??= Array.Empty<ToolboxItemFilterAttribute>();
 
                     break;
 
                 case "IsTransient":
-                    if (value is null)
-                    {
-                        value = false;
-                    }
+                    value ??= false;
 
                     break;
             }
+
             return value;
         }
 
@@ -552,26 +534,24 @@ namespace System.Drawing.Design
         ///  locate the type.  If reference is true, the given assembly name will be added
         ///  to the designer host's set of references.
         /// </summary>
+        [UnconditionalSuppressMessage("SingleFile", "IL3002", Justification = "Single-file case is handled")]
         protected virtual Type GetType(IDesignerHost host, AssemblyName assemblyName, string typeName, bool reference)
         {
             ITypeResolutionService ts = null;
             Type type = null;
 
-            if (typeName is null)
-            {
-                throw new ArgumentNullException(nameof(typeName));
-            }
+            ArgumentNullException.ThrowIfNull(typeName);
 
-            if (host != null)
+            if (host is not null)
             {
                 ts = host.GetService(typeof(ITypeResolutionService)) as ITypeResolutionService;
             }
 
-            if (ts != null)
+            if (ts is not null)
             {
                 if (reference)
                 {
-                    if (assemblyName != null)
+                    if (assemblyName is not null)
                     {
                         ts.ReferenceAssembly(assemblyName);
                         type = ts.GetType(typeName);
@@ -581,11 +561,9 @@ namespace System.Drawing.Design
                         // Just try loading the type.  If we succeed, then use this as the
                         // reference.
                         type = ts.GetType(typeName);
-                        if (type is null)
-                        {
-                            type = Type.GetType(typeName);
-                        }
-                        if (type != null)
+                        type ??= Type.GetType(typeName);
+
+                        if (type is not null)
                         {
                             ts.ReferenceAssembly(type.Assembly.GetName());
                         }
@@ -593,26 +571,23 @@ namespace System.Drawing.Design
                 }
                 else
                 {
-                    if (assemblyName != null)
+                    if (assemblyName is not null)
                     {
                         Assembly a = ts.GetAssembly(assemblyName);
-                        if (a != null)
+                        if (a is not null)
                         {
                             type = a.GetType(typeName);
                         }
                     }
 
-                    if (type is null)
-                    {
-                        type = ts.GetType(typeName);
-                    }
+                    type ??= ts.GetType(typeName);
                 }
             }
             else
             {
                 if (!string.IsNullOrEmpty(typeName))
                 {
-                    if (assemblyName != null)
+                    if (assemblyName is not null)
                     {
                         Assembly a = null;
                         try
@@ -629,6 +604,7 @@ namespace System.Drawing.Design
                         {
                         }
 
+#pragma warning disable SYSLIB0044 // Type or member is obsolete. Ref https://github.com/dotnet/winforms/issues/7308
                         if (a is null && !string.IsNullOrEmpty(assemblyName.CodeBase))
                         {
                             try
@@ -645,17 +621,15 @@ namespace System.Drawing.Design
                             {
                             }
                         }
+#pragma warning restore SYSLIB0044 // Type or member is obsolete
 
-                        if (a != null)
+                        if (a is not null)
                         {
                             type = a.GetType(typeName);
                         }
                     }
 
-                    if (type is null)
-                    {
-                        type = Type.GetType(typeName, false);
-                    }
+                    type ??= Type.GetType(typeName, false);
                 }
             }
 
@@ -669,23 +643,24 @@ namespace System.Drawing.Design
         {
             CheckUnlocked();
 
-            if (type != null)
+            if (type is not null)
             {
                 TypeName = type.FullName;
                 AssemblyName assemblyName = type.Assembly.GetName(true);
 
                 Dictionary<string, AssemblyName> parents = new Dictionary<string, AssemblyName>();
                 Type parentType = type;
-                while (parentType != null)
+                while (parentType is not null)
                 {
-                    AssemblyName policiedname = parentType.Assembly.GetName(true);
+                    AssemblyName policiedName = parentType.Assembly.GetName(true);
 
-                    AssemblyName aname = GetNonRetargetedAssemblyName(type, policiedname);
+                    AssemblyName aname = GetNonRetargetedAssemblyName(type, policiedName);
 
-                    if (aname != null && !parents.ContainsKey(aname.FullName))
+                    if (aname is not null && !parents.ContainsKey(aname.FullName))
                     {
                         parents[aname.FullName] = aname;
                     }
+
                     parentType = parentType.BaseType;
                 }
 
@@ -706,9 +681,9 @@ namespace System.Drawing.Design
                 if (!type.Assembly.ReflectionOnly)
                 {
                     object[] companyattrs = type.Assembly.GetCustomAttributes(typeof(AssemblyCompanyAttribute), true);
-                    if (companyattrs != null && companyattrs.Length > 0)
+                    if (companyattrs is not null && companyattrs.Length > 0)
                     {
-                        if (companyattrs[0] is AssemblyCompanyAttribute company && company.Company != null)
+                        if (companyattrs[0] is AssemblyCompanyAttribute company && company.Company is not null)
                         {
                             Company = company.Company;
                         }
@@ -716,16 +691,16 @@ namespace System.Drawing.Design
 
                     //set the description based off the description attribute of the given type.
                     DescriptionAttribute descattr = (DescriptionAttribute)TypeDescriptor.GetAttributes(type)[typeof(DescriptionAttribute)];
-                    if (descattr != null)
+                    if (descattr is not null)
                     {
                         Description = descattr.Description;
                     }
 
                     ToolboxBitmapAttribute attr = (ToolboxBitmapAttribute)TypeDescriptor.GetAttributes(type)[typeof(ToolboxBitmapAttribute)];
-                    if (attr != null)
+                    if (attr is not null)
                     {
                         Bitmap itemBitmap = attr.GetImage(type, false) as Bitmap;
-                        if (itemBitmap != null)
+                        if (itemBitmap is not null)
                         {
                             // Original bitmap is used when adding the item to the Visual Studio toolbox
                             // if running on a machine with HDPI scaling enabled.
@@ -735,11 +710,12 @@ namespace System.Drawing.Design
                                 itemBitmap = new Bitmap(itemBitmap, new Size(s_iconWidth, s_iconHeight));
                             }
                         }
+
                         Bitmap = itemBitmap;
                     }
 
                     bool filterContainsType = false;
-                    ArrayList array = new ArrayList();
+                    List<ToolboxItemFilterAttribute> filterItems = new();
                     foreach (Attribute a in TypeDescriptor.GetAttributes(type))
                     {
                         if (a is ToolboxItemFilterAttribute ta)
@@ -748,23 +724,24 @@ namespace System.Drawing.Design
                             {
                                 filterContainsType = true;
                             }
-                            array.Add(ta);
+
+                            filterItems.Add(ta);
                         }
                     }
 
                     if (!filterContainsType)
                     {
-                        array.Add(new ToolboxItemFilterAttribute(TypeName));
+                        filterItems.Add(new ToolboxItemFilterAttribute(TypeName));
                     }
 
-                    Filter = (ToolboxItemFilterAttribute[])array.ToArray(typeof(ToolboxItemFilterAttribute));
+                    Filter = filterItems.ToArray();
                 }
             }
         }
 
-        private AssemblyName GetNonRetargetedAssemblyName(Type type, AssemblyName policiedAssemblyName)
+        private static AssemblyName GetNonRetargetedAssemblyName(Type type, AssemblyName policiedAssemblyName)
         {
-            Debug.Assert(type != null);
+            Debug.Assert(type is not null);
             if (policiedAssemblyName is null)
             {
                 return null;
@@ -838,17 +815,19 @@ namespace System.Drawing.Design
             }
 
             info.AddValue(nameof(Locked), Locked);
-            ArrayList propertyNames = new ArrayList(Properties.Count);
+            List<string> propertyNames = new(Properties.Count);
             foreach (DictionaryEntry de in Properties)
             {
-                propertyNames.Add(de.Key);
+                propertyNames.Add((string)de.Key);
                 info.AddValue((string)de.Key, de.Value);
             }
-            info.AddValue("PropertyNames", (string[])propertyNames.ToArray(typeof(string)));
+
+            info.AddValue("PropertyNames", propertyNames.ToArray());
         }
+
         /// <summary>
         ///  Raises the OnComponentsCreated event. This
-        ///  will be called when this <see cref='System.Drawing.Design.ToolboxItem'/> creates a component.
+        ///  will be called when this <see cref="ToolboxItem"/> creates a component.
         /// </summary>
         protected virtual void OnComponentsCreated(ToolboxComponentsCreatedEventArgs args)
         {
@@ -857,7 +836,7 @@ namespace System.Drawing.Design
 
         /// <summary>
         ///  Raises the OnCreateComponentsInvoked event. This
-        ///  will be called before this <see cref='System.Drawing.Design.ToolboxItem'/> creates a component.
+        ///  will be called before this <see cref="ToolboxItem"/> creates a component.
         /// </summary>
         protected virtual void OnComponentsCreating(ToolboxComponentsCreatingEventArgs args)
         {
@@ -872,25 +851,20 @@ namespace System.Drawing.Design
         /// </summary>
         protected void ValidatePropertyType(string propertyName, object value, Type expectedType, bool allowNull)
         {
-            if (value is null)
+            if (!allowNull)
             {
-                if (!allowNull)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
+                ArgumentNullException.ThrowIfNull(value);
             }
-            else
+
+            if (value is not null && !expectedType.IsInstanceOfType(value))
             {
-                if (!expectedType.IsInstanceOfType(value))
-                {
-                    throw new ArgumentException(string.Format(SR.ToolboxItemInvalidPropertyType, propertyName, expectedType.FullName), nameof(value));
-                }
+                throw new ArgumentException(string.Format(SR.ToolboxItemInvalidPropertyType, propertyName, expectedType.FullName), nameof(value));
             }
         }
 
         /// <summary>
         ///  This is called whenever a value is set in the property dictionary.  It gives you a chance
-        ///  to change the value of an object before comitting it, our reject it by throwing an
+        ///  to change the value of an object before committing it, our reject it by throwing an
         ///  exception.
         /// </summary>
         protected virtual object ValidatePropertyValue(string propertyName, object value)
@@ -914,10 +888,7 @@ namespace System.Drawing.Design
                 case "DisplayName":
                 case "TypeName":
                     ValidatePropertyType(propertyName, value, typeof(string), true);
-                    if (value is null)
-                    {
-                        value = string.Empty;
-                    }
+                    value ??= string.Empty;
 
                     break;
 
@@ -927,7 +898,7 @@ namespace System.Drawing.Design
                     int filterCount = 0;
                     ICollection col = (ICollection)value;
 
-                    if (col != null)
+                    if (col is not null)
                     {
                         foreach (object f in col)
                         {
@@ -940,7 +911,7 @@ namespace System.Drawing.Design
 
                     ToolboxItemFilterAttribute[] filter = new ToolboxItemFilterAttribute[filterCount];
 
-                    if (col != null)
+                    if (col is not null)
                     {
                         filterCount = 0;
                         foreach (object f in col)
@@ -963,6 +934,7 @@ namespace System.Drawing.Design
                     ValidatePropertyType(propertyName, value, typeof(bool), false);
                     break;
             }
+
             return value;
         }
 
@@ -1027,19 +999,13 @@ namespace System.Drawing.Design
                 base.Clear();
             }
 
-            private string GetPropertyName(object key)
+            private static string GetPropertyName(object key)
             {
-                if (key is null)
-                {
-                    throw new ArgumentNullException(nameof(key));
-                }
+                ArgumentNullException.ThrowIfNull(key);
 
-                if (!(key is string propertyName) || propertyName.Length == 0)
-                {
-                    throw new ArgumentException(SR.ToolboxItemInvalidKey, nameof(key));
-                }
-
-                return propertyName;
+                return !(key is string propertyName) || propertyName.Length == 0
+                    ? throw new ArgumentException(SR.ToolboxItemInvalidKey, nameof(key))
+                    : propertyName;
             }
 
             public override void Remove(object key)
@@ -1050,4 +1016,3 @@ namespace System.Drawing.Design
         }
     }
 }
-

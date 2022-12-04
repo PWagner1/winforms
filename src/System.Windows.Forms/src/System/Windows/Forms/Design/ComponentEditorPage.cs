@@ -2,25 +2,21 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using System.Runtime.InteropServices;
-using static Interop;
 
 namespace System.Windows.Forms.Design
 {
     /// <summary>
-    ///  Provides a base implementation for a <see cref='ComponentEditorPage'/>.
+    ///  Provides a base implementation for a <see cref="ComponentEditorPage"/>.
     /// </summary>
     public abstract class ComponentEditorPage : Panel
     {
-        private Icon _icon;
+        private Icon? _icon;
 
         /// <summary>
-        ///  Initializes a new instance of the <see cref='ComponentEditorPage'/> class.
+        ///  Initializes a new instance of the <see cref="ComponentEditorPage"/> class.
         /// </summary>
         public ComponentEditorPage() : base()
         {
@@ -41,7 +37,7 @@ namespace System.Windows.Forms.Design
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler AutoSizeChanged
+        public new event EventHandler? AutoSizeChanged
         {
             add => base.AutoSizeChanged += value;
             remove => base.AutoSizeChanged -= value;
@@ -50,12 +46,12 @@ namespace System.Windows.Forms.Design
         /// <summary>
         ///  Gets or sets the page site
         /// </summary>
-        protected IComponentEditorPageSite PageSite { get; set; }
+        protected IComponentEditorPageSite? PageSite { get; set; }
 
         /// <summary>
         ///  Gets or sets the component to edit
         /// </summary>
-        protected IComponent Component { get; set; }
+        protected IComponent? Component { get; set; }
 
         /// <summary>
         ///  Indicates whether the page is being activated for the first time
@@ -85,7 +81,7 @@ namespace System.Windows.Forms.Design
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.Style &= ~(int)(User32.WS.BORDER | User32.WS.OVERLAPPED | User32.WS.DLGFRAME);
+                cp.Style &= ~(int)(WINDOW_STYLE.WS_BORDER | WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_DLGFRAME);
                 return cp;
             }
         }
@@ -93,9 +89,10 @@ namespace System.Windows.Forms.Design
         /// <summary>
         ///  Gets or sets the icon for this page
         /// </summary>
+        [AllowNull]
         public Icon Icon
         {
-            get =>_icon ??= new Icon(typeof(ComponentEditorPage), "ComponentEditorPage");
+            get => _icon ??= new Icon(typeof(ComponentEditorPage), "ComponentEditorPage");
             set => _icon = value;
         }
 
@@ -161,7 +158,7 @@ namespace System.Windows.Forms.Design
         /// <summary>
         ///  Gets the component that is to be edited
         /// </summary>
-        protected IComponent GetSelectedComponent() => Component;
+        protected IComponent? GetSelectedComponent() => Component;
 
         /// <summary>
         ///  Processes messages that could be handled by the page
@@ -189,7 +186,7 @@ namespace System.Windows.Forms.Design
         public virtual void OnApplyComplete() => ReloadComponent();
 
         /// <summary>
-        ///  Called when the current component may have changed elsewhere and needs to be reloded into the UI
+        ///  Called when the current component may have changed elsewhere and needs to be reloaded into the UI
         /// </summary>
         protected virtual void ReloadComponent()
         {
@@ -209,7 +206,7 @@ namespace System.Windows.Forms.Design
         /// </summary>
         protected virtual void SetDirty()
         {
-            if (!IsLoading() && PageSite != null)
+            if (!IsLoading() && PageSite is not null)
             {
                 PageSite.SetDirty();
             }
@@ -218,7 +215,7 @@ namespace System.Windows.Forms.Design
         /// <summary>
         ///  Sets the component to be edited
         /// </summary>
-        public virtual void SetComponent(IComponent component)
+        public virtual void SetComponent(IComponent? component)
         {
             Component = component;
             LoadRequired = true;
@@ -227,7 +224,7 @@ namespace System.Windows.Forms.Design
         /// <summary>
         ///  Sets the site for this page.
         /// </summary>
-        public virtual void SetSite(IComponentEditorPageSite site)
+        public virtual void SetSite(IComponentEditorPageSite? site)
         {
             PageSite = site;
             site?.GetControl()?.Controls.Add(this);

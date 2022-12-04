@@ -4,10 +4,9 @@
 
 #nullable enable
 
-using System.Runtime.InteropServices;
-using System.Linq;
-using static Interop;
 using System.Drawing;
+using System.Runtime.InteropServices;
+using static Interop;
 
 namespace System.Windows.Forms.Metafiles
 {
@@ -31,7 +30,16 @@ namespace System.Windows.Forms.Metafiles
         public uint cpts;
         private POINTS _apts;
 
-        public ReadOnlySpan<POINTS> points => TrailingArray<POINTS>.GetBuffer(ref _apts, cpts);
+        public unsafe ReadOnlySpan<POINTS> points
+        {
+            get
+            {
+                fixed (POINTS* p = &_apts)
+                {
+                    return new(p, checked((int)cpts));
+                }
+            }
+        }
 
         public override string ToString() => $"[EMR{emr.iType}] Bounds: {rclBounds} Points: {string.Join(' ', points.ToArray())}";
 

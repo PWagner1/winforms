@@ -2,9 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using Windows.Win32.System.Com.StructuredStorage;
 
 internal partial class Interop
 {
@@ -16,7 +16,7 @@ internal partial class Interop
         public unsafe interface IRichEditOleCallback
         {
             [PreserveSig]
-            HRESULT GetNewStorage(out Ole32.IStorage ret);
+            HRESULT GetNewStorage(out IStorage* storage);
 
             [PreserveSig]
             HRESULT GetInPlaceContext(IntPtr lplpFrame, IntPtr lplpDoc, IntPtr lpFrameInfo);

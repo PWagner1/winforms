@@ -22,11 +22,12 @@ namespace System.Windows.Forms.Design
         private object GetProperty(string propertyName)
         {
             PropertyDescriptor getProperty = TypeDescriptor.GetProperties(_toolStripDropDown)[propertyName];
-            Debug.Assert(getProperty != null, "Could not find given property in control.");
-            if (getProperty != null)
+            Debug.Assert(getProperty is not null, "Could not find given property in control.");
+            if (getProperty is not null)
             {
                 return getProperty.GetValue(_toolStripDropDown);
             }
+
             return null;
         }
 
@@ -34,11 +35,8 @@ namespace System.Windows.Forms.Design
         private void ChangeProperty(string propertyName, object value)
         {
             PropertyDescriptor changingProperty = TypeDescriptor.GetProperties(_toolStripDropDown)[propertyName];
-            Debug.Assert(changingProperty != null, "Could not find given property in control.");
-            if (changingProperty != null)
-            {
-                changingProperty.SetValue(_toolStripDropDown, value);
-            }
+            Debug.Assert(changingProperty is not null, "Could not find given property in control.");
+            changingProperty?.SetValue(_toolStripDropDown, value);
         }
 
         /// <summary>
@@ -63,7 +61,7 @@ namespace System.Windows.Forms.Design
             {
                 if (value != ShowImageMargin)
                 {
-                    ChangeProperty(nameof(ShowImageMargin), (object)value);
+                    ChangeProperty(nameof(ShowImageMargin), value);
                 }
             }
         }
@@ -75,7 +73,7 @@ namespace System.Windows.Forms.Design
             {
                 if (value != ShowCheckMargin)
                 {
-                    ChangeProperty(nameof(ShowCheckMargin), (object)value);
+                    ChangeProperty(nameof(ShowCheckMargin), value);
                 }
             }
         }
@@ -87,7 +85,7 @@ namespace System.Windows.Forms.Design
             {
                 if (value != RenderMode)
                 {
-                    ChangeProperty(nameof(RenderMode), (object)value);
+                    ChangeProperty(nameof(RenderMode), value);
                 }
             }
         }
@@ -106,6 +104,7 @@ namespace System.Windows.Forms.Design
                 items.Add(new DesignerActionPropertyItem("ShowImageMargin", SR.ContextMenuStripActionList_ShowImageMargin, SR.ToolStripActionList_Layout, SR.ContextMenuStripActionList_ShowImageMarginDesc));
                 items.Add(new DesignerActionPropertyItem("ShowCheckMargin", SR.ContextMenuStripActionList_ShowCheckMargin, SR.ToolStripActionList_Layout, SR.ContextMenuStripActionList_ShowCheckMarginDesc));
             }
+
             return items;
         }
     }

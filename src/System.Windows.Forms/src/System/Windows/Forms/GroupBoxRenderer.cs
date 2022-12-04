@@ -2,12 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Windows.Forms.VisualStyles;
-using static Interop;
 
 namespace System.Windows.Forms
 {
@@ -18,7 +16,7 @@ namespace System.Windows.Forms
     {
         // Make this per-thread, so that different threads can safely use these methods.
         [ThreadStatic]
-        private static VisualStyleRenderer t_visualStyleRenderer = null;
+        private static VisualStyleRenderer? t_visualStyleRenderer;
         private static readonly VisualStyleElement s_groupBoxElement = VisualStyleElement.Button.GroupBox.Normal;
         private const int TextOffset = 8;
         private const int BoxHeaderWidth = 7;    // The groupbox frame shows 7 pixels before the caption.
@@ -79,7 +77,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Renders a GroupBox control. Uses the text color specified by the theme.
         /// </summary>
-        public static void DrawGroupBox(Graphics g, Rectangle bounds, string groupBoxText, Font font, GroupBoxState state)
+        public static void DrawGroupBox(Graphics g, Rectangle bounds, string? groupBoxText, Font? font, GroupBoxState state)
             => DrawGroupBox(g, bounds, groupBoxText, font, TextFormatFlags.Top | TextFormatFlags.Left, state);
 
         /// <summary>
@@ -88,8 +86,8 @@ namespace System.Windows.Forms
         public static void DrawGroupBox(
             Graphics g,
             Rectangle bounds,
-            string groupBoxText,
-            Font font,
+            string? groupBoxText,
+            Font? font,
             Color textColor,
             GroupBoxState state)
             => DrawGroupBox(g, bounds, groupBoxText, font, textColor, TextFormatFlags.Top | TextFormatFlags.Left, state);
@@ -100,8 +98,8 @@ namespace System.Windows.Forms
         public static void DrawGroupBox(
             Graphics g,
             Rectangle bounds,
-            string groupBoxText,
-            Font font,
+            string? groupBoxText,
+            Font? font,
             TextFormatFlags flags,
             GroupBoxState state)
             => DrawGroupBox((IDeviceContext)g, bounds, groupBoxText, font, flags, state);
@@ -109,8 +107,8 @@ namespace System.Windows.Forms
         internal static void DrawGroupBox(
             IDeviceContext deviceContext,
             Rectangle bounds,
-            string groupBoxText,
-            Font font,
+            string? groupBoxText,
+            Font? font,
             TextFormatFlags flags,
             GroupBoxState state)
         {
@@ -130,8 +128,8 @@ namespace System.Windows.Forms
         public static void DrawGroupBox(
             Graphics g,
             Rectangle bounds,
-            string groupBoxText,
-            Font font,
+            string? groupBoxText,
+            Font? font,
             Color textColor,
             TextFormatFlags flags,
             GroupBoxState state)
@@ -140,8 +138,8 @@ namespace System.Windows.Forms
         internal static void DrawGroupBox(
             IDeviceContext deviceContext,
             Rectangle bounds,
-            string groupBoxText,
-            Font font,
+            string? groupBoxText,
+            Font? font,
             Color textColor,
             TextFormatFlags flags,
             GroupBoxState state)
@@ -171,8 +169,8 @@ namespace System.Windows.Forms
         private static void DrawThemedGroupBoxWithText(
             IDeviceContext deviceContext,
             Rectangle bounds,
-            string groupBoxText,
-            Font font,
+            string? groupBoxText,
+            Font? font,
             Color textColor,
             TextFormatFlags flags,
             GroupBoxState state)
@@ -208,8 +206,11 @@ namespace System.Windows.Forms
 
             // Calculate area for background box
             Rectangle boxBounds = bounds;
-            boxBounds.Y += font.Height / 2;
-            boxBounds.Height -= font.Height / 2;
+            if (font is not null)
+            {
+                boxBounds.Y += font.Height / 2;
+                boxBounds.Height -= font.Height / 2;
+            }
 
             // Break box into three segments, that don't overlap the text area
             Rectangle clipLeft = boxBounds;
@@ -230,6 +231,7 @@ namespace System.Windows.Forms
                 clipRight.X = clipMiddle.Right;
                 clipRight.Width = boxBounds.Right - clipRight.X;
             }
+
             clipMiddle.Y = textBounds.Bottom;
             clipMiddle.Height -= (textBounds.Bottom - boxBounds.Top);
 
@@ -273,8 +275,8 @@ namespace System.Windows.Forms
         private static void DrawUnthemedGroupBoxWithText(
             IDeviceContext deviceContext,
             Rectangle bounds,
-            string groupBoxText,
-            Font font,
+            string? groupBoxText,
+            Font? font,
             Color textColor,
             TextFormatFlags flags)
         {
@@ -309,7 +311,11 @@ namespace System.Windows.Forms
                 textBounds.Inflate(2, 0);
             }
 
-            int boxTop = bounds.Top + font.Height / 2;
+            int boxTop = bounds.Top;
+            if (font is not null)
+            {
+                boxTop += font.Height / 2;
+            }
 
             using var hdc = new DeviceContextHdcScope(deviceContext);
 
@@ -322,7 +328,7 @@ namespace System.Windows.Forms
                 bounds.Width - 2, boxTop - 1, bounds.Width - 2, bounds.Height - 2                   // Right
             };
 
-            using var hpenDark = new Gdi32.CreatePenScope(SystemColors.ControlDark);
+            using PInvoke.CreatePenScope hpenDark = new(SystemColors.ControlDark);
             hdc.DrawLines(hpenDark, darkLines);
 
             ReadOnlySpan<int> lightLines = stackalloc int[]
@@ -334,7 +340,7 @@ namespace System.Windows.Forms
                 bounds.Width - 1, boxTop, bounds.Width - 1, bounds.Height - 1                       // Right
             };
 
-            using var hpenLight = new Gdi32.CreatePenScope(SystemColors.ControlLight);
+            using PInvoke.CreatePenScope hpenLight = new(SystemColors.ControlLight);
             hdc.DrawLines(hpenLight, lightLines);
         }
 
@@ -351,6 +357,7 @@ namespace System.Windows.Forms
             }
         }
 
+        [MemberNotNull(nameof(t_visualStyleRenderer))]
         private static void InitializeRenderer(int state)
         {
             int part = s_groupBoxElement.Part;

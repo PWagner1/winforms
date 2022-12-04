@@ -1,16 +1,12 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.ComponentModel;
-using Xunit;
-using WinForms.Common.Tests;
+using System.Data;
 using System.Drawing;
-using System.Windows.Forms.Metafiles;
-using System.Numerics;
-using static System.Windows.Forms.Metafiles.DataHelpers;
-using static Interop;
+using System.Windows.Forms.TestUtilities;
+using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
@@ -119,7 +115,8 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(control, e.AffectedControl);
                 Assert.Equal("ColumnHeadersHeight", e.AffectedProperty);
                 parentLayoutCallCount++;
-            };
+            }
+
             parent.Layout += parentHandler;
 
             try
@@ -172,7 +169,10 @@ namespace System.Windows.Forms.Tests
             }
         }
 
+        [ActiveIssue("https://github.com/dotnet/winforms/issues/6597")]
         [WinFormsTheory]
+        [SkipOnArchitecture(TestArchitectures.X64,
+            "Flaky tests, see: https://github.com/dotnet/winforms/issues/6597")]
         [MemberData(nameof(ColumnHeadersHeight_SetWithHandle_TestData))]
         public void DataGridView_ColumnHeadersHeight_SetWithHandle_GetReturnsExpected(DataGridViewColumnHeadersHeightSizeMode columnHeadersWidthSizeMode, bool columnHeadersVisible, bool autoSize, int value, int expectedValue, int expectedInvalidatedCallCount)
         {
@@ -239,7 +239,10 @@ namespace System.Windows.Forms.Tests
             }
         }
 
+        [ActiveIssue("https://github.com/dotnet/winforms/issues/6597")]
         [WinFormsTheory]
+        [SkipOnArchitecture(TestArchitectures.X64,
+            "Flaky tests, see: https://github.com/dotnet/winforms/issues/6597")]
         [MemberData(nameof(ColumnHeadersHeight_SetWithParentWithHandle_TestData))]
         public void DataGridView_ColumnHeadersHeight_SetWithParentWithHandle_GetReturnsExpected(DataGridViewColumnHeadersHeightSizeMode columnHeadersWidthSizeMode, bool columnHeadersVisible, bool autoSize, int value, int expectedValue, int expectedInvalidatedCallCount, int expectedLayoutCallCount, int expectedParentLayoutCallCount)
         {
@@ -267,7 +270,8 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(control, e.AffectedControl);
                 Assert.Equal("ColumnHeadersHeight", e.AffectedProperty);
                 parentLayoutCallCount++;
-            };
+            }
+
             parent.Layout += parentHandler;
 
             try
@@ -339,7 +343,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewColumnHeadersHeightSizeMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewColumnHeadersHeightSizeMode))]
         public void DataGridView_ColumnHeadersHeight_SetWithHandlerDisposed_DoesNotCallColumnHeadersHeightChanged(DataGridViewColumnHeadersHeightSizeMode columnHeadersWidthSizeMode)
         {
             using var control = new DataGridView
@@ -427,7 +431,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewColumnHeadersHeightSizeMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewColumnHeadersHeightSizeMode))]
         public void DataGridView_ColumnHeadersHeight_SetWithHandlerInColumnDisposing_DoesNotCallColumnHeadersHeightChanged(DataGridViewColumnHeadersHeightSizeMode columnHeadersWidthSizeMode)
         {
             using var control = new DataGridView
@@ -526,7 +530,10 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { false, DataGridViewColumnHeadersHeightSizeMode.EnableResizing, DefaultColumnHeadersHeight, 0 };
         }
 
+        [ActiveIssue("https://github.com/dotnet/winforms/issues/6597")]
         [WinFormsTheory]
+        [SkipOnArchitecture(TestArchitectures.X64,
+            "Flaky tests, see: https://github.com/dotnet/winforms/issues/6597")]
         [MemberData(nameof(ColumnHeadersHeightSizeMode_SetWithHandle_TestData))]
         public void DataGridView_ColumnHeadersHeightSizeMode_SetWithHandle_GetReturnsExpected(bool columnHeadersVisible, DataGridViewColumnHeadersHeightSizeMode value, int expectedColumnHeadersHeight, int expectedInvalidatedCallCount)
         {
@@ -560,7 +567,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
+        [ActiveIssue("https://github.com/dotnet/winforms/issues/6597")]
         [WinFormsTheory]
+        [SkipOnArchitecture(TestArchitectures.X64,
+            "Flaky tests, see: https://github.com/dotnet/winforms/issues/6597")]
         [InlineData(DataGridViewColumnHeadersHeightSizeMode.DisableResizing, DataGridViewColumnHeadersHeightSizeMode.AutoSize)]
         [InlineData(DataGridViewColumnHeadersHeightSizeMode.EnableResizing, DataGridViewColumnHeadersHeightSizeMode.AutoSize)]
         public void DataGridView_ColumnHeadersHeightSizeMode_SetNonResizeThenResize_RestoresOldValue(DataGridViewColumnHeadersHeightSizeMode originalColumnHeadersHeightSizeMode, DataGridViewColumnHeadersHeightSizeMode value)
@@ -772,7 +782,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(DataGridViewColumnHeadersHeightSizeMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(DataGridViewColumnHeadersHeightSizeMode))]
         public void DataGridView_ColumnHeadersHeightSizeMode_SetInvalidValue_ThrowsInvalidEnumArgumentException(DataGridViewColumnHeadersHeightSizeMode value)
         {
             using var control = new DataGridView();
@@ -940,7 +950,7 @@ namespace System.Windows.Forms.Tests
         public void DataGridView_Parent_SetSame_ThrowsArgumentException()
         {
             using var control = new DataGridView();
-            Assert.Throws<ArgumentException>(null, () => control.Parent = control);
+            Assert.Throws<ArgumentException>(() => control.Parent = control);
             Assert.Null(control.Parent);
         }
 
@@ -1041,7 +1051,8 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(control, e.AffectedControl);
                 Assert.Equal("RowHeadersWidth", e.AffectedProperty);
                 parentLayoutCallCount++;
-            };
+            }
+
             parent.Layout += parentHandler;
 
             try
@@ -1097,7 +1108,8 @@ namespace System.Windows.Forms.Tests
             }
         }
 
-        [WinFormsTheory]
+        [ActiveIssue("https://github.com/dotnet/winforms/issues/6739")]
+        [WinFormsTheory(Skip = "Flaky tests, see: https://github.com/dotnet/winforms/issues/6739")]
         [MemberData(nameof(RowHeadersWidth_SetWithHandle_TestData))]
         public void DataGridView_RowHeadersWidth_SetWithHandle_GetReturnsExpected(DataGridViewRowHeadersWidthSizeMode rowHeadersWidthSizeMode, bool rowHeadersVisible, bool autoSize, int value, int expectedValue, int expectedInvalidatedCallCount)
         {
@@ -1109,7 +1121,12 @@ namespace System.Windows.Forms.Tests
             };
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             int invalidatedCallCount = 0;
-            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            control.Invalidated += (sender, e) =>
+            {
+                Assert.True(++invalidatedCallCount <= expectedInvalidatedCallCount,
+                    $"Extra ({invalidatedCallCount}) invalidate, must be <= {expectedInvalidatedCallCount}.");
+            };
+
             int styleChangedCallCount = 0;
             control.StyleChanged += (sender, e) => styleChangedCallCount++;
             int createdCallCount = 0;
@@ -1167,7 +1184,8 @@ namespace System.Windows.Forms.Tests
             }
         }
 
-        [WinFormsTheory]
+        [ActiveIssue("https://github.com/dotnet/winforms/issues/6597")]
+        [WinFormsTheory(Skip = "Flaky tests, see: https://github.com/dotnet/winforms/issues/6597")]
         [MemberData(nameof(RowHeadersWidth_SetWithParentWithHandle_TestData))]
         public void DataGridView_RowHeadersWidth_SetWithParentWithHandle_GetReturnsExpected(DataGridViewRowHeadersWidthSizeMode rowHeadersWidthSizeMode, bool rowHeadersVisible, bool autoSize, int value, int expectedValue, int expectedInvalidatedCallCount, int expectedLayoutCallCount, int expectedParentLayoutCallCount)
         {
@@ -1195,7 +1213,8 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(control, e.AffectedControl);
                 Assert.Equal("RowHeadersWidth", e.AffectedProperty);
                 parentLayoutCallCount++;
-            };
+            }
+
             parent.Layout += parentHandler;
 
             try
@@ -1269,7 +1288,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewRowHeadersWidthSizeMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewRowHeadersWidthSizeMode))]
         public void DataGridView_RowHeadersWidth_SetWithHandlerDisposed_DoesNotCallRowHeadersWidthChanged(DataGridViewRowHeadersWidthSizeMode rowHeadersWidthSizeMode)
         {
             using var control = new DataGridView
@@ -1359,7 +1378,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewRowHeadersWidthSizeMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewRowHeadersWidthSizeMode))]
         public void DataGridView_RowHeadersWidth_SetWithHandlerInColumnDisposing_DoesNotCallRowHeadersWidthChanged(DataGridViewRowHeadersWidthSizeMode rowHeadersWidthSizeMode)
         {
             using var control = new DataGridView
@@ -1462,7 +1481,10 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { false, DataGridViewRowHeadersWidthSizeMode.EnableResizing, DefaultRowHeadersWidth, 0 };
         }
 
+        [ActiveIssue("https://github.com/dotnet/winforms/issues/6597")]
         [WinFormsTheory]
+        [SkipOnArchitecture(TestArchitectures.X64,
+            "Flaky tests, see: https://github.com/dotnet/winforms/issues/6597")]
         [MemberData(nameof(RowHeadersWidthSizeMode_SetWithHandle_TestData))]
         public void DataGridView_RowHeadersWidthSizeMode_SetWithHandle_GetReturnsExpected(bool rowHeadersVisible, DataGridViewRowHeadersWidthSizeMode value, int expectedRowHeadersWidth, int expectedInvalidatedCallCount)
         {
@@ -1496,7 +1518,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
+        [ActiveIssue("https://github.com/dotnet/winforms/issues/6597")]
         [WinFormsTheory]
+        [SkipOnArchitecture(TestArchitectures.X64,
+            "Flaky tests, see: https://github.com/dotnet/winforms/issues/6597")]
         [InlineData(DataGridViewRowHeadersWidthSizeMode.DisableResizing, DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders)]
         [InlineData(DataGridViewRowHeadersWidthSizeMode.DisableResizing, DataGridViewRowHeadersWidthSizeMode.AutoSizeToDisplayedHeaders)]
         [InlineData(DataGridViewRowHeadersWidthSizeMode.DisableResizing, DataGridViewRowHeadersWidthSizeMode.AutoSizeToFirstHeader)]
@@ -1720,7 +1745,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(DataGridViewRowHeadersWidthSizeMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(DataGridViewRowHeadersWidthSizeMode))]
         public void DataGridView_RowHeadersWidthSizeMode_SetInvalidValue_ThrowsInvalidEnumArgumentException(DataGridViewRowHeadersWidthSizeMode value)
         {
             using var control = new DataGridView();
@@ -1788,7 +1813,7 @@ namespace System.Windows.Forms.Tests
         [InlineData(true, false, 0)]
         [InlineData(false, true, 0)]
         [InlineData(false, false, 0)]
-        public void DataGridView_TopLeftHeaderCell_SetWithHadle_GetReturnsExpected(bool rowHeadersVisible, bool columnHeadersVisible, int expectedInvalidatedCallCount)
+        public void DataGridView_TopLeftHeaderCell_SetWithHandle_GetReturnsExpected(bool rowHeadersVisible, bool columnHeadersVisible, int expectedInvalidatedCallCount)
         {
             using var cell1 = new DataGridViewHeaderCell();
             using var control = new DataGridView
@@ -1952,6 +1977,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
+        [ActiveIssue("https://github.com/dotnet/winforms/issues/6926")]
         [WinFormsTheory]
         [MemberData(nameof(OnColumnHeadersHeightChanged_TestData))]
         public void DataGridView_OnColumnHeadersHeightChanged_InvokeWithHandle_CallsColumnHeadersHeightChanged(DataGridViewColumnHeadersHeightSizeMode columnHeadersWidthSizeMode, bool columnHeadersVisible, EventArgs eventArgs)
@@ -1962,8 +1988,11 @@ namespace System.Windows.Forms.Tests
                 ColumnHeadersVisible = columnHeadersVisible
             };
             Assert.NotEqual(IntPtr.Zero, control.Handle);
-            int invalidatedCallCount = 0;
-            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            control.Invalidated += (sender, e) =>
+            {
+                throw new Xunit.Sdk.XunitException("Invalidated event occurred.");
+            };
+
             int styleChangedCallCount = 0;
             control.StyleChanged += (sender, e) => styleChangedCallCount++;
             int createdCallCount = 0;
@@ -1981,7 +2010,6 @@ namespace System.Windows.Forms.Tests
             control.OnColumnHeadersHeightChanged(eventArgs);
             Assert.Equal(1, callCount);
             Assert.True(control.IsHandleCreated);
-            Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
             Assert.Equal(0, createdCallCount);
 
@@ -1990,7 +2018,6 @@ namespace System.Windows.Forms.Tests
             control.OnColumnHeadersHeightChanged(eventArgs);
             Assert.Equal(1, callCount);
             Assert.True(control.IsHandleCreated);
-            Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
             Assert.Equal(0, createdCallCount);
         }
@@ -2429,7 +2456,8 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [WinFormsTheory]
+        [ActiveIssue("https://github.com/dotnet/winforms/issues/6597")]
+        [WinFormsTheory(Skip = "Flaky tests, see: https://github.com/dotnet/winforms/issues/6597")]
         [MemberData(nameof(OnRowHeadersWidthChanged_TestData))]
         public void DataGridView_OnRowHeadersWidthChanged_InvokeWithHandle_CallsRowHeadersWidthChanged(DataGridViewRowHeadersWidthSizeMode rowHeadersWidthSizeMode, bool rowHeadersVisible, EventArgs eventArgs)
         {
@@ -2799,6 +2827,92 @@ namespace System.Windows.Forms.Tests
         {
             using var control = new SubDataGridView();
             Assert.Throws<NullReferenceException>(() => control.OnRowHeadersWidthSizeModeChanged(null));
+        }
+
+        [WinFormsFact]
+        public void DataGridView_UpdatesItsItems_AfterDataSourceDisposing()
+        {
+            using DataGridView control = new DataGridView();
+            int rowsCount = 5;
+            BindingSource bindingSource = GetTestBindingSource(rowsCount);
+            BindingContext context = new BindingContext();
+            context.Add(bindingSource, bindingSource.CurrencyManager);
+            control.BindingContext = context;
+            control.DataSource = bindingSource;
+
+            // The TestBindingSource table contains 2 columns
+            Assert.Equal(2, control.Columns.Count);
+            // The TestBindingSource table contains some rows + 1 new DGV row (because AllowUserToAddRows is true)
+            Assert.Equal(rowsCount + 1, control.Rows.Count);
+
+            bindingSource.Dispose();
+
+            // The DataGridView updates its Rows and Columns collections after its DataSource is disposed
+            Assert.Empty(control.Columns);
+            Assert.Empty(control.Rows);
+        }
+
+        [WinFormsFact]
+        public void DataGridView_DataSource_IsNull_AfterDisposing()
+        {
+            using DataGridView control = new DataGridView();
+            BindingSource bindingSource = GetTestBindingSource(5);
+            control.DataSource = bindingSource;
+
+            Assert.Equal(bindingSource, control.DataSource);
+
+            bindingSource.Dispose();
+
+            Assert.Null(control.DataSource);
+        }
+
+        [WinFormsFact]
+        public void DataGridView_DataSource_IsActual_AfterOldOneIsDisposed()
+        {
+            using DataGridView control = new DataGridView();
+            int rowsCount1 = 3;
+            BindingSource bindingSource1 = GetTestBindingSource(rowsCount1);
+            int rowsCount2 = 5;
+            BindingSource bindingSource2 = GetTestBindingSource(rowsCount2);
+            BindingContext context = new BindingContext();
+            context.Add(bindingSource1, bindingSource1.CurrencyManager);
+            control.BindingContext = context;
+            control.DataSource = bindingSource1;
+
+            Assert.Equal(bindingSource1, control.DataSource);
+            Assert.Equal(2, control.Columns.Count);
+            Assert.Equal(rowsCount1 + 1, control.Rows.Count); // + 1 is the new DGV row
+
+            control.DataSource = bindingSource2;
+
+            Assert.Equal(bindingSource2, control.DataSource);
+            Assert.Equal(2, control.Columns.Count);
+            Assert.Equal(rowsCount2 + 1, control.Rows.Count); // + 1 is the new DGV row
+
+            bindingSource1.Dispose();
+
+            // bindingSource2 is actual for the DataGridView so it will contain correct Rows and Columns counts
+            // even after bindingSource1 is disposed. This test checks that Disposed events unsubscribed correctly
+            Assert.Equal(bindingSource2, control.DataSource);
+            Assert.Equal(2, control.Columns.Count);
+            Assert.Equal(rowsCount2 + 1, control.Rows.Count); // + 1 is the new DGV row
+        }
+
+        private BindingSource GetTestBindingSource(int rowsCount)
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Name");
+            dt.Columns.Add("Age");
+
+            for (int i = 0; i < rowsCount; i++)
+            {
+                DataRow dr = dt.NewRow();
+                dr[0] = $"User{i}";
+                dr[1] = i * 3;
+                dt.Rows.Add(dr);
+            }
+
+            return new() { DataSource = dt };
         }
 
         private class SubDataGridViewCell : DataGridViewCell

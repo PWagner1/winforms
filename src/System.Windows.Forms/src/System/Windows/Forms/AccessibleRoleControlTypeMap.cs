@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using static Interop.UiaCore;
 
 namespace System.Windows.Forms
@@ -75,7 +74,7 @@ namespace System.Windows.Forms
             { AccessibleRole.StatusBar, UIA.StatusBarControlTypeId },
             { AccessibleRole.Table, UIA.TableControlTypeId },
             { AccessibleRole.Text, UIA.EditControlTypeId },
-            { AccessibleRole.TitleBar, UIA.TitleBarControlTypeId},
+            { AccessibleRole.TitleBar, UIA.TitleBarControlTypeId },
             { AccessibleRole.ToolBar, UIA.ToolBarControlTypeId },
             { AccessibleRole.ToolTip, UIA.ToolTipControlTypeId },
             { AccessibleRole.WhiteSpace, UIA.PaneControlTypeId },

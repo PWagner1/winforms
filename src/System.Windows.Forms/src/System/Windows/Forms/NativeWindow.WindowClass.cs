@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -20,64 +18,64 @@ namespace System.Windows.Forms
         /// </summary>
         private class WindowClass
         {
-            internal static WindowClass s_cache;
+            internal static WindowClass? s_cache;
 
-            internal WindowClass _next;
-            internal string _className;
-            internal string _windowClassName;
-            internal NativeWindow _targetWindow;
+            internal WindowClass? _next;
+            internal string? _className;
+            internal string? _windowClassName;
+            internal NativeWindow? _targetWindow;
 
-            private readonly User32.CS _classStyle;
+            private readonly WNDCLASS_STYLES _classStyle;
             private IntPtr _defaultWindProc;
 
             // This needs to be a field so the GC doesn't collect the managed callback
-            private User32.WNDPROC _windProc;
+            private WNDPROC? _windProc;
 
             // There is only ever one AppDomain
             private static readonly string s_currentAppDomainHash = Convert.ToString(AppDomain.CurrentDomain.GetHashCode(), 16);
 
-            private static readonly object s_wcInternalSyncObject = new object();
+            private static readonly object s_wcInternalSyncObject = new();
 
-            internal WindowClass(string className, User32.CS classStyle)
+            internal WindowClass(string? className, WNDCLASS_STYLES classStyle)
             {
                 _className = className;
                 _classStyle = classStyle;
                 RegisterClass();
             }
 
-            public IntPtr Callback(IntPtr hWnd, User32.WM msg, IntPtr wparam, IntPtr lparam)
+            public LRESULT Callback(HWND hWnd, User32.WM msg, WPARAM wparam, LPARAM lparam)
             {
                 Debug.Assert(hWnd != IntPtr.Zero, "Windows called us with an HWND of 0");
 
                 // Set the window procedure to the default window procedure
-                User32.SetWindowLong(hWnd, User32.GWL.WNDPROC, _defaultWindProc);
-                _targetWindow.AssignHandle(hWnd);
-                return _targetWindow.Callback(hWnd, msg, wparam, lparam);
+                PInvoke.SetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_WNDPROC, _defaultWindProc);
+                _targetWindow!.AssignHandle(hWnd);
+                return _targetWindow!.Callback(hWnd, msg, wparam, lparam);
             }
 
             /// <summary>
             ///  Retrieves a WindowClass object for use.  This will create a new
-            ///  object if there is no such class/style available, or retrun a
+            ///  object if there is no such class/style available, or return a
             ///  cached object if one exists.
             /// </summary>
-            internal static WindowClass Create(string className, User32.CS classStyle)
+            internal static WindowClass Create(string? className, WNDCLASS_STYLES classStyle)
             {
                 lock (s_wcInternalSyncObject)
                 {
-                    WindowClass wc = s_cache;
+                    WindowClass? wc = s_cache;
                     if (className is null)
                     {
                         // If we weren't given a class name, look for a window
                         // that has the exact class style.
-                        while (wc != null
-                            && (wc._className != null || wc._classStyle != classStyle))
+                        while (wc is not null
+                            && (wc._className is not null || wc._classStyle != classStyle))
                         {
                             wc = wc._next;
                         }
                     }
                     else
                     {
-                        while (wc != null && !className.Equals(wc._className))
+                        while (wc is not null && !className.Equals(wc._className))
                         {
                             wc = wc._next;
                         }
@@ -85,7 +83,7 @@ namespace System.Windows.Forms
 
                     if (wc is null)
                     {
-                        // Didn't find an existing class, create one and attatch it to
+                        // Didn't find an existing class, create one and attach it to
                         // the end of the linked list.
                         wc = new WindowClass(className, classStyle)
                         {
@@ -101,7 +99,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Fabricates a full class name from a partial.
             /// </summary>
-            private string GetFullClassName(string className)
+            private static string GetFullClassName(string className)
             {
                 StringBuilder b = new StringBuilder(50);
                 b.Append(Application.WindowsFormsVersion);
@@ -132,9 +130,9 @@ namespace System.Windows.Forms
             /// </summary>
             private unsafe void RegisterClass()
             {
-                User32.WNDCLASS windowClass = new User32.WNDCLASS();
+                WNDCLASSW windowClass = default(WNDCLASSW);
 
-                string localClassName = _className;
+                string? localClassName = _className;
 
                 if (localClassName is null)
                 {
@@ -142,34 +140,38 @@ namespace System.Windows.Forms
                     // creates a little bit if flicker.  This happens even though we are overriding wm_erasebackgnd.
                     // Make this hollow to avoid all flicker.
 
-                    windowClass.hbrBackground = (Gdi32.HBRUSH)Gdi32.GetStockObject(Gdi32.StockObject.NULL_BRUSH);
-                    windowClass.style = _classStyle;
+                    windowClass.hbrBackground = (HBRUSH)PInvoke.GetStockObject(GET_STOCK_OBJECT_FLAGS.NULL_BRUSH);
+                    windowClass.style = (WNDCLASS_STYLES)_classStyle;
 
                     _defaultWindProc = DefaultWindowProc;
-                    localClassName = "Window." + Convert.ToString((int)_classStyle, 16);
+                    localClassName = $"Window.{Convert.ToString((int)_classStyle, 16)}";
                 }
                 else
                 {
                     // A system defined Window class was specified, get its info.
-                    if (User32.GetClassInfoW(NativeMethods.NullHandleRef, _className, ref windowClass).IsFalse())
+                    fixed (char* n = localClassName)
                     {
-                        throw new Win32Exception(Marshal.GetLastWin32Error(), SR.InvalidWndClsName);
+                        if (!PInvoke.GetClassInfo((HINSTANCE)0, n, &windowClass))
+                        {
+                            throw new Win32Exception(Marshal.GetLastWin32Error(), SR.InvalidWndClsName);
+                        }
                     }
 
                     localClassName = _className;
-                    _defaultWindProc = windowClass.lpfnWndProc;
+                    _defaultWindProc = (nint)windowClass.lpfnWndProc;
                 }
 
-                _windowClassName = GetFullClassName(localClassName);
-                _windProc = new User32.WNDPROC(Callback);
-                windowClass.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_windProc);
-                windowClass.hInstance = Kernel32.GetModuleHandleW(null);
+                _windowClassName = GetFullClassName(localClassName!);
+                _windProc = new WNDPROC(Callback);
+                nint callback = Marshal.GetFunctionPointerForDelegate(_windProc);
+                windowClass.lpfnWndProc = (delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT>)callback;
+                windowClass.hInstance = PInvoke.GetModuleHandle((PCWSTR)null);
 
                 fixed (char* c = _windowClassName)
                 {
                     windowClass.lpszClassName = c;
 
-                    if (User32.RegisterClassW(ref windowClass) == 0)
+                    if (PInvoke.RegisterClass(&windowClass) == 0)
                     {
                         _windProc = null;
                         throw new Win32Exception();

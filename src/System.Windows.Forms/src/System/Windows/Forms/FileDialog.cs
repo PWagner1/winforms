@@ -2,14 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
+using System.Diagnostics.CodeAnalysis;
+using System.Drawing.Design;
 using System.Runtime.InteropServices;
-using System.Threading;
+using Windows.Win32.UI.Controls.Dialogs;
+using static Windows.Win32.UI.Controls.Dialogs.OPEN_FILENAME_FLAGS;
+using static Windows.Win32.UI.Shell.FILEOPENDIALOGOPTIONS;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -22,26 +22,25 @@ namespace System.Windows.Forms
     public abstract partial class FileDialog : CommonDialog
     {
         private const int FileBufferSize = 8192;
+        private static readonly char[] s_wildcards = new char[] { '*', '?' };
 
-        protected static readonly object EventFileOk = new object(); // Don't rename (public API)
+        protected static readonly object EventFileOk = new(); // Don't rename (public API)
 
-        private const int AddExtensionOption = unchecked(unchecked((int)0x80000000));
+        private protected OPEN_FILENAME_FLAGS _fileNameFlags;
+        private protected FILEOPENDIALOGOPTIONS _dialogOptions;
 
-        private protected int _options;
-
-        private string _title;
-        private string _initialDir;
-        private string _defaultExt;
-        private string[] _fileNames;
-        private string _filter;
+        private string? _title;
+        private string? _initialDirectory;
+        private string? _defaultExtension;
+        private string[]? _fileNames;
+        private string? _filter;
         private bool _ignoreSecondFileOkNotification;
         private int _okNotificationCount;
-        private UnicodeCharBuffer _charBuffer;
-        private IntPtr _dialogHWnd;
+        private char[]? _charBuffer;
+        private HWND _dialogHWnd;
 
         /// <summary>
-        ///  In an inherited class, initializes a new instance of the <see cref='FileDialog'/>
-        ///  class.
+        ///  In an inherited class, initializes a new instance of the <see cref="FileDialog"/> class.
         /// </summary>
         internal FileDialog()
         {
@@ -55,10 +54,19 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatBehavior))]
         [DefaultValue(true)]
         [SRDescription(nameof(SR.FDaddExtensionDescr))]
-        public bool AddExtension
+        public bool AddExtension { get; set; }
+
+        /// <summary>
+        ///  Gets or sets a value indicating whether the dialog box adds the file being opened
+        ///  or saved to the recent list.
+        /// </summary>
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(true)]
+        [SRDescription(nameof(SR.FileDialogAddToRecentDescr))]
+        public bool AddToRecent
         {
-            get => GetOption(AddExtensionOption);
-            set => SetOption(AddExtensionOption, value);
+            get => !GetOption(OFN_DONTADDTORECENT);
+            set => SetOption(OFN_DONTADDTORECENT, !value);
         }
 
         /// <summary>
@@ -70,8 +78,8 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.FDcheckFileExistsDescr))]
         public virtual bool CheckFileExists
         {
-            get => GetOption((int)Comdlg32.OFN.FILEMUSTEXIST);
-            set => SetOption((int)Comdlg32.OFN.FILEMUSTEXIST, value);
+            get => GetOption(OFN_FILEMUSTEXIST);
+            set => SetOption(OFN_FILEMUSTEXIST, value);
         }
 
         /// <summary>
@@ -83,22 +91,22 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.FDcheckPathExistsDescr))]
         public bool CheckPathExists
         {
-            get => GetOption((int)Comdlg32.OFN.PATHMUSTEXIST);
-            set => SetOption((int)Comdlg32.OFN.PATHMUSTEXIST, value);
+            get => GetOption(OFN_PATHMUSTEXIST);
+            set => SetOption(OFN_PATHMUSTEXIST, value);
         }
 
         /// <summary>
-        /// <para>
-        /// Gets or sets the GUID to associate with this dialog state. Typically, state such
-        /// as the last visited folder and the position and size of the dialog is persisted
-        /// based on the name of the executable file. By specifying a GUID, an application can
-        /// have different persisted states for different versions of the dialog within the
-        /// same application (for example, an import dialog and an open dialog).
-        /// </para>
-        /// <para>
-        /// This functionality is not available if an application is not using visual styles
-        /// or if <see cref="FileDialog.AutoUpgradeEnabled"/> is set to <see langword="false"/>.
-        /// </para>
+        ///  <para>
+        ///   Gets or sets the GUID to associate with this dialog state. Typically, state such
+        ///   as the last visited folder and the position and size of the dialog is persisted
+        ///   based on the name of the executable file. By specifying a GUID, an application can
+        ///   have different persisted states for different versions of the dialog within the
+        ///   same application (for example, an import dialog and an open dialog).
+        ///  </para>
+        ///  <para>
+        ///   This functionality is not available if an application is not using visual styles
+        ///   or if <see cref="AutoUpgradeEnabled"/> is set to <see langword="false"/>.
+        ///  </para>
         /// </summary>
         [Localizable(false)]
         [Browsable(false)]
@@ -111,24 +119,26 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatBehavior))]
         [DefaultValue("")]
         [SRDescription(nameof(SR.FDdefaultExtDescr))]
+        [AllowNull]
         public string DefaultExt
         {
-            get => _defaultExt ?? string.Empty;
+            get => _defaultExtension ?? string.Empty;
             set
             {
-                if (value != null)
+                string? defaultExt = value;
+                if (defaultExt is not null)
                 {
-                    if (value.StartsWith("."))
+                    if (defaultExt.StartsWith('.'))
                     {
-                        value = value.Substring(1);
+                        defaultExt = defaultExt[1..];
                     }
-                    else if (value.Length == 0)
+                    else if (defaultExt.Length == 0)
                     {
-                        value = null;
+                        defaultExt = null;
                     }
                 }
 
-                _defaultExt = value;
+                _defaultExtension = defaultExt;
             }
         }
 
@@ -142,11 +152,11 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.FDdereferenceLinksDescr))]
         public bool DereferenceLinks
         {
-            get => !GetOption((int)Comdlg32.OFN.NODEREFERENCELINKS);
-            set => SetOption((int)Comdlg32.OFN.NODEREFERENCELINKS, !value);
+            get => !GetOption(OFN_NODEREFERENCELINKS);
+            set => SetOption(OFN_NODEREFERENCELINKS, !value);
         }
 
-        private protected string DialogCaption => User32.GetWindowText(new HandleRef(this, _dialogHWnd));
+        private protected string DialogCaption => User32.GetWindowText(_dialogHWnd);
 
         /// <summary>
         ///  Gets or sets a string containing the file name selected in the file dialog box.
@@ -154,18 +164,11 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatData))]
         [DefaultValue("")]
         [SRDescription(nameof(SR.FDfileNameDescr))]
+        [AllowNull]
         public string FileName
         {
-            get
-            {
-                if (_fileNames is null || string.IsNullOrEmpty(_fileNames[0]))
-                {
-                    return string.Empty;
-                }
-
-                return _fileNames[0];
-            }
-            set => _fileNames = value != null ? new string[] { value } : null;
+            get => _fileNames is null ? string.Empty : _fileNames[0];
+            set => _fileNames = value is not null ? new string[] { value } : null;
         }
 
         /// <summary>
@@ -174,9 +177,10 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [SRDescription(nameof(SR.FDFileNamesDescr))]
+        [AllowNull]
         public string[] FileNames
         {
-            get => _fileNames != null ? (string[])_fileNames.Clone() : Array.Empty<string>();
+            get => _fileNames is not null ? (string[])_fileNames.Clone() : Array.Empty<string>();
         }
 
         /// <summary>
@@ -187,28 +191,31 @@ namespace System.Windows.Forms
         [DefaultValue("")]
         [Localizable(true)]
         [SRDescription(nameof(SR.FDfilterDescr))]
+        [AllowNull]
         public string Filter
         {
             get => _filter ?? string.Empty;
             set
             {
-                if (value != _filter)
+                if (value == _filter)
                 {
-                    if (!string.IsNullOrEmpty(value))
-                    {
-                        string[] formats = value.Split('|');
-                        if (formats is null || formats.Length % 2 != 0)
-                        {
-                            throw new ArgumentException(SR.FileDialogInvalidFilter, nameof(value));
-                        }
-                    }
-                    else
-                    {
-                        value = null;
-                    }
-
-                    _filter = value;
+                    return;
                 }
+
+                if (!string.IsNullOrEmpty(value))
+                {
+                    string[] formats = value.Split('|');
+                    if (formats is null || formats.Length % 2 != 0)
+                    {
+                        throw new ArgumentException(SR.FileDialogInvalidFilter, nameof(value));
+                    }
+                }
+                else
+                {
+                    value = null!;
+                }
+
+                _filter = value;
             }
         }
 
@@ -221,17 +228,17 @@ namespace System.Windows.Forms
         {
             get
             {
-                string filter = _filter;
+                string? filter = _filter;
                 List<string> extensions = new List<string>();
 
                 // First extension is the default one. It's not expected that DefaultExt
                 // is not in the filters list, but this is legal.
-                if (_defaultExt != null)
+                if (_defaultExtension is not null)
                 {
-                    extensions.Add(_defaultExt);
+                    extensions.Add(_defaultExtension);
                 }
 
-                if (filter != null)
+                if (filter is not null)
                 {
                     string[] tokens = filter.Split('|');
 
@@ -248,7 +255,7 @@ namespace System.Windows.Forms
                             int i = SupportMultiDottedExtensions ? ext.IndexOf('.') : ext.LastIndexOf('.');
                             if (i >= 0)
                             {
-                                extensions.Add(ext.Substring(i + 1, ext.Length - (i + 1)));
+                                extensions.Add(ext[(i + 1)..]);
                             }
                         }
                     }
@@ -271,31 +278,28 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatData))]
         [DefaultValue("")]
+        [Editor("System.Windows.Forms.Design.InitialDirectoryEditor, System.Windows.Forms.Design, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", typeof(UITypeEditor))]
         [SRDescription(nameof(SR.FDinitialDirDescr))]
+        [AllowNull]
         public string InitialDirectory
         {
-            get => _initialDir ?? string.Empty;
-            set => _initialDir = value;
+            get => _initialDirectory ?? string.Empty;
+            set => _initialDirectory = value;
         }
 
         /// <summary>
         ///  Gets the Win32 instance handle for the application.
         /// </summary>
-        protected virtual IntPtr Instance => Kernel32.GetModuleHandleW(null);
+        protected virtual nint Instance => PInvoke.GetModuleHandle((PCWSTR)null);
 
         /// <summary>
-        ///  Gets the Win32 common Open File Dialog OFN_* option flags.
+        ///  Gets the Win32 common Open File Dialog OFN_* and FOS_* option flags.
         /// </summary>
-        protected int Options
-        {
-            get
-            {
-                return _options & (int)(Comdlg32.OFN.READONLY | Comdlg32.OFN.HIDEREADONLY |
-                                  Comdlg32.OFN.NOCHANGEDIR | Comdlg32.OFN.SHOWHELP | Comdlg32.OFN.NOVALIDATE |
-                                  Comdlg32.OFN.ALLOWMULTISELECT | Comdlg32.OFN.PATHMUSTEXIST |
-                                  Comdlg32.OFN.NODEREFERENCELINKS);
-            }
-        }
+        protected int Options =>
+            (int)(_fileNameFlags & (OFN_READONLY | OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_SHOWHELP | OFN_NOVALIDATE | OFN_ALLOWMULTISELECT
+              | OFN_PATHMUSTEXIST | OFN_NODEREFERENCELINKS | OFN_DONTADDTORECENT | OFN_NOREADONLYRETURN
+              | OFN_NOTESTFILECREATE | OFN_FORCESHOWHIDDEN)) | (int)(_dialogOptions & (FOS_OKBUTTONNEEDSINTERACTION | FOS_HIDEPINNEDPLACES
+              | FOS_DEFAULTNOMINIMODE | FOS_FORCEPREVIEWPANEON));
 
         /// <summary>
         ///  Gets or sets a value indicating whether the dialog box restores the current
@@ -306,8 +310,8 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.FDrestoreDirectoryDescr))]
         public bool RestoreDirectory
         {
-            get => GetOption((int)Comdlg32.OFN.NOCHANGEDIR);
-            set => SetOption((int)Comdlg32.OFN.NOCHANGEDIR, value);
+            get => GetOption(OFN_NOCHANGEDIR);
+            set => SetOption(OFN_NOCHANGEDIR, value);
         }
 
         /// <summary>
@@ -319,8 +323,20 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.FDshowHelpDescr))]
         public bool ShowHelp
         {
-            get => GetOption((int)Comdlg32.OFN.SHOWHELP);
-            set => SetOption((int)Comdlg32.OFN.SHOWHELP, value);
+            get => GetOption(OFN_SHOWHELP);
+            set => SetOption(OFN_SHOWHELP, value);
+        }
+
+        /// <summary>
+        ///  Gets or sets a value indicating whether the dialog box displays hidden and system files.
+        /// </summary>
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.FileDialogShowHiddenFilesDescr))]
+        public bool ShowHiddenFiles
+        {
+            get => GetOption(OFN_FORCESHOWHIDDEN);
+            set => SetOption(OFN_FORCESHOWHIDDEN, value);
         }
 
         /// <summary>
@@ -338,6 +354,7 @@ namespace System.Windows.Forms
         [DefaultValue("")]
         [Localizable(true)]
         [SRDescription(nameof(SR.FDtitleDescr))]
+        [AllowNull]
         public string Title
         {
             get => _title ?? string.Empty;
@@ -345,24 +362,19 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Gets or sets a value indicating whether the dialog box accepts only valid
-        ///  Win32 file names.
+        ///  Gets or sets a value indicating whether the dialog box accepts only valid Win32 file names.
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
         [DefaultValue(true)]
         [SRDescription(nameof(SR.FDvalidateNamesDescr))]
         public bool ValidateNames
         {
-            get => !GetOption((int)Comdlg32.OFN.NOVALIDATE);
-            set => SetOption((int)Comdlg32.OFN.NOVALIDATE, !value);
+            get => !GetOption(OFN_NOVALIDATE);
+            set => SetOption(OFN_NOVALIDATE, !value);
         }
 
         /// <summary>
-        ///  Occurs when the user clicks on the Open or Save button on a file dialog
-        ///  box.
-        /// <remarks>
-        ///  For information about handling events, see <see topic='cpconEventsOverview'/>.
-        /// </remarks>
+        ///  Occurs when the user clicks on the Open or Save button on a file dialog box.
         /// </summary>
         [SRDescription(nameof(SR.FDfileOkDescr))]
         public event CancelEventHandler FileOk
@@ -374,52 +386,48 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Processes the CDN_FILEOK notification.
         /// </summary>
-        private bool DoFileOk(IntPtr lpOFN)
+        private unsafe bool DoFileOk(OPENFILENAME* lpOFN)
         {
-            NativeMethods.OPENFILENAME_I ofn = Marshal.PtrToStructure<NativeMethods.OPENFILENAME_I>(lpOFN);
-            int saveOptions = _options;
+            OPEN_FILENAME_FLAGS saveOptions = _fileNameFlags;
             int saveFilterIndex = FilterIndex;
-            string[] saveFileNames = _fileNames;
+            string[]? saveFileNames = _fileNames;
             bool ok = false;
             try
             {
-                _options = _options & ~(int)Comdlg32.OFN.READONLY |
-                          ofn.Flags & (int)Comdlg32.OFN.READONLY;
-                FilterIndex = ofn.nFilterIndex;
-                _charBuffer.PutCoTaskMem(ofn.lpstrFile);
+                _fileNameFlags = _fileNameFlags & ~OFN_READONLY | lpOFN->Flags & OFN_READONLY;
+                FilterIndex = (int)lpOFN->nFilterIndex;
 
                 Thread.MemoryBarrier();
 
-                if ((_options & (int)Comdlg32.OFN.ALLOWMULTISELECT) == 0)
+                _fileNames = _fileNameFlags.HasFlag(OFN_ALLOWMULTISELECT)
+                    ? GetMultiselectFiles(new((char*)lpOFN->lpstrFile, (int)lpOFN->nMaxFile))
+                    : new string[] { lpOFN->lpstrFile.ToString() };
+
+                if (!ProcessFileNames(_fileNames))
                 {
-                    _fileNames = new string[] { _charBuffer.GetString() };
+                    return ok;
+                }
+
+                CancelEventArgs ceevent = new CancelEventArgs();
+                if (NativeWindow.WndProcShouldBeDebuggable)
+                {
+                    OnFileOk(ceevent);
+                    ok = !ceevent.Cancel;
                 }
                 else
                 {
-                    _fileNames = GetMultiselectFiles(_charBuffer);
-                }
-
-                if (ProcessFileNames())
-                {
-                    CancelEventArgs ceevent = new CancelEventArgs();
-                    if (NativeWindow.WndProcShouldBeDebuggable)
+                    try
                     {
                         OnFileOk(ceevent);
                         ok = !ceevent.Cancel;
                     }
-                    else
+                    catch (Exception e)
                     {
-                        try
-                        {
-                            OnFileOk(ceevent);
-                            ok = !ceevent.Cancel;
-                        }
-                        catch (Exception e)
-                        {
-                            Application.OnThreadException(e);
-                        }
+                        Application.OnThreadException(e);
                     }
                 }
+
+                return ok;
             }
             finally
             {
@@ -428,15 +436,13 @@ namespace System.Windows.Forms
                     Thread.MemoryBarrier();
                     _fileNames = saveFileNames;
 
-                    _options = saveOptions;
+                    _fileNameFlags = saveOptions;
                     FilterIndex = saveFilterIndex;
                 }
             }
-
-            return ok;
         }
 
-        private protected static bool FileExists(string fileName)
+        private protected static bool FileExists(string? fileName)
         {
             try
             {
@@ -451,31 +457,26 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Extracts the filename(s) returned by the file dialog.
         /// </summary>
-        private string[] GetMultiselectFiles(UnicodeCharBuffer charBuffer)
+        private static string[] GetMultiselectFiles(ReadOnlySpan<char> fileBuffer)
         {
-            string directory = charBuffer.GetString();
-            string fileName = charBuffer.GetString();
-            if (fileName.Length == 0)
+            var directory = fileBuffer.SliceAtFirstNull();
+            var fileNames = fileBuffer[directory.Length..];
+            if (fileNames.Length == 0)
             {
-                return new string[] { directory };
+                return new string[] { directory.ToString() };
             }
 
-            if (directory[directory.Length - 1] != '\\')
-            {
-                directory += "\\";
-            }
             List<string> names = new List<string>();
-            do
+            var fileName = fileNames.SliceAtFirstNull();
+            while (fileName.Length > 0)
             {
-                if (fileName[0] != '\\' && (fileName.Length <= 3 ||
-                                            fileName[1] != ':' || fileName[2] != '\\'))
-                {
-                    fileName = directory + fileName;
-                }
+                names.Add(Path.IsPathFullyQualified(fileName)
+                    ? fileName.ToString()
+                    : Path.Join(directory, fileName));
 
-                names.Add(fileName);
-                fileName = charBuffer.GetString();
-            } while (fileName.Length > 0);
+                fileNames = fileNames[fileName.Length..];
+                fileName = fileNames.SliceAtFirstNull();
+            }
 
             return names.ToArray();
         }
@@ -483,104 +484,100 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Returns the state of the given option flag.
         /// </summary>
-        private protected bool GetOption(int option) => (_options & option) != 0;
+        private protected bool GetOption(OPEN_FILENAME_FLAGS option) => (_fileNameFlags & option) != 0;
 
         /// <summary>
         ///  Defines the common dialog box hook procedure that is overridden to add
         ///  specific functionality to the file dialog box.
         /// </summary>
-        protected unsafe override IntPtr HookProc(IntPtr hWnd, int msg, IntPtr wparam, IntPtr lparam)
+        protected override unsafe IntPtr HookProc(IntPtr hWnd, int msg, IntPtr wparam, IntPtr lparam)
         {
-            if (msg == (int)User32.WM.NOTIFY)
+            if (msg != (int)User32.WM.NOTIFY)
             {
-                _dialogHWnd = User32.GetParent(hWnd);
-                try
-                {
-                    Comdlg32.OFNOTIFYW* notify = (Comdlg32.OFNOTIFYW*)lparam;
+                return IntPtr.Zero;
+            }
 
-                    switch (notify->hdr.code)
-                    {
-                        case -601: /* CDN_INITDONE */
-                            MoveToScreenCenter(_dialogHWnd);
-                            break;
-                        case -602: /* CDN_SELCHANGE */
-                            NativeMethods.OPENFILENAME_I ofn = Marshal.PtrToStructure<NativeMethods.OPENFILENAME_I>(notify->lpOFN);
-                            // Get the buffer size required to store the selected file names.
-                            int sizeNeeded = (int)User32.SendMessageW(new HandleRef(this, _dialogHWnd), (User32.WM)1124 /*CDM_GETSPEC*/, IntPtr.Zero, IntPtr.Zero);
-                            if (sizeNeeded > ofn.nMaxFile)
-                            {
-                                // A bigger buffer is required.
-                                try
-                                {
-                                    int newBufferSize = sizeNeeded + (FileBufferSize / 4);
-                                    // Allocate new buffer
-                                    var charBufferTmp = new UnicodeCharBuffer(newBufferSize);
-                                    IntPtr newBuffer = charBufferTmp.AllocCoTaskMem();
-                                    // Free old buffer
-                                    Marshal.FreeCoTaskMem(ofn.lpstrFile);
-                                    // Substitute buffer
-                                    ofn.lpstrFile = newBuffer;
-                                    ofn.nMaxFile = newBufferSize;
-                                    _charBuffer = charBufferTmp;
-                                    Marshal.StructureToPtr(ofn, notify->lpOFN, true);
-                                }
-                                catch
-                                {
-                                    // intentionaly not throwing here.
-                                }
-                            }
-                            _ignoreSecondFileOkNotification = false;
-                            break;
-                        case -604: /* CDN_SHAREVIOLATION */
-                            // When the selected file is locked for writing,
-                            // we get this notification followed by *two* CDN_FILEOK notifications.
-                            _ignoreSecondFileOkNotification = true;  // We want to ignore the second CDN_FILEOK
-                            _okNotificationCount = 0;                // to avoid a second prompt by PromptFileOverwrite.
-                            break;
-                        case -606: /* CDN_FILEOK */
-                            if (_ignoreSecondFileOkNotification)
-                            {
-                                // We got a CDN_SHAREVIOLATION notification and want to ignore the second CDN_FILEOK notification
-                                if (_okNotificationCount == 0)
-                                {
-                                    // This one is the first and is all right.
-                                    _okNotificationCount = 1;
-                                }
-                                else
-                                {
-                                    // This is the second CDN_FILEOK, so we want to ignore it.
-                                    _ignoreSecondFileOkNotification = false;
-                                    User32.SetWindowLong(hWnd, 0, NativeMethods.InvalidIntPtr);
-                                    return NativeMethods.InvalidIntPtr;
-                                }
-                            }
-                            if (!DoFileOk(notify->lpOFN))
-                            {
-                                User32.SetWindowLong(hWnd, 0, NativeMethods.InvalidIntPtr);
-                                return NativeMethods.InvalidIntPtr;
-                            }
-                            break;
-                    }
-                }
-                catch
-                {
-                    if (_dialogHWnd != IntPtr.Zero)
-                    {
-                        User32.EndDialog(new HandleRef(this, _dialogHWnd), IntPtr.Zero);
-                    }
+            _dialogHWnd = PInvoke.GetParent((HWND)hWnd);
+            try
+            {
+                OFNOTIFY* notify = (OFNOTIFY*)lparam;
 
-                    throw;
+                switch (notify->hdr.code)
+                {
+                    case PInvoke.CDN_INITDONE:
+                        MoveToScreenCenter(_dialogHWnd);
+                        break;
+                    case PInvoke.CDN_SELCHANGE:
+                        // Get the buffer size required to store the selected file names.
+                        int sizeNeeded = (int)PInvoke.SendMessage(_dialogHWnd, (User32.WM)PInvoke.CDM_GETSPEC);
+                        if (sizeNeeded > notify->lpOFN->nMaxFile)
+                        {
+                            // A bigger buffer is required.
+                            int newBufferSize = sizeNeeded + (FileBufferSize / 4);
+
+                            // Allocate new buffer
+                            _charBuffer = GC.AllocateArray<char>(newBufferSize, pinned: true);
+
+                            fixed (char* buffer = _charBuffer)
+                            {
+                                // Substitute buffer
+                                notify->lpOFN->lpstrFile = buffer;
+                                notify->lpOFN->nMaxFile = (uint)newBufferSize;
+                            }
+                        }
+
+                        _ignoreSecondFileOkNotification = false;
+                        break;
+                    case PInvoke.CDN_SHAREVIOLATION:
+                        // When the selected file is locked for writing,
+                        // we get this notification followed by *two* CDN_FILEOK notifications.
+                        _ignoreSecondFileOkNotification = true;  // We want to ignore the second CDN_FILEOK
+                        _okNotificationCount = 0;                // to avoid a second prompt by PromptFileOverwrite.
+                        break;
+                    case PInvoke.CDN_FILEOK:
+                        if (_ignoreSecondFileOkNotification)
+                        {
+                            // We got a CDN_SHAREVIOLATION notification and want to ignore the second CDN_FILEOK notification
+                            if (_okNotificationCount == 0)
+                            {
+                                // This one is the first and is all right.
+                                _okNotificationCount = 1;
+                            }
+                            else
+                            {
+                                // This is the second CDN_FILEOK, so we want to ignore it.
+                                _ignoreSecondFileOkNotification = false;
+                                PInvoke.SetWindowLong((HWND)hWnd, 0, -1);
+                                return -1;
+                            }
+                        }
+
+                        if (!DoFileOk(notify->lpOFN))
+                        {
+                            PInvoke.SetWindowLong((HWND)hWnd, 0, -1);
+                            return -1;
+                        }
+
+                        break;
                 }
+            }
+            catch
+            {
+                if (!_dialogHWnd.IsNull)
+                {
+                    PInvoke.EndDialog(_dialogHWnd, 0);
+                }
+
+                throw;
             }
 
             return IntPtr.Zero;
         }
 
         /// <summary>
-        ///  Converts the given filter string to the format required in an OPENFILENAME_I
-        ///  structure.
+        ///  Converts the given filter string to the format required in an OPENFILENAME structure.
         /// </summary>
-        private static string MakeFilterString(string s, bool dereferenceLinks)
+        private static string? MakeFilterString(string? s, bool dereferenceLinks)
         {
             if (string.IsNullOrEmpty(s))
             {
@@ -610,61 +607,60 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Raises the <see cref='FileOk'/> event.
+        ///  Raises the <see cref="FileOk"/> event.
         /// </summary>
         protected void OnFileOk(CancelEventArgs e)
         {
-            CancelEventHandler handler = (CancelEventHandler)Events[EventFileOk];
+            CancelEventHandler? handler = (CancelEventHandler?)Events[EventFileOk];
             handler?.Invoke(this, e);
         }
 
         /// <summary>
-        ///  Processes the filenames entered in the dialog according to the settings
-        ///  of the "addExtension", "checkFileExists", "createPrompt", and
-        ///  "overwritePrompt" properties.
+        ///  Processes the filenames entered in the dialog according to the settings of the <see cref="AddExtension"/>,
+        ///  <see cref="CheckFileExists"/>, and <see cref="ValidateNames"/> properties.
         /// </summary>
-        private bool ProcessFileNames()
+        private bool ProcessFileNames(string[] fileNames)
         {
-            if ((_options & (int)Comdlg32.OFN.NOVALIDATE) == 0)
+            if (!ValidateNames)
             {
-                string[] extensions = FilterExtensions;
-                for (int i = 0; i < _fileNames.Length; i++)
+                return true;
+            }
+
+            string[] extensions = FilterExtensions;
+            for (int i = 0; i < fileNames.Length; i++)
+            {
+                string fileName = fileNames[i];
+                if (AddExtension && !Path.HasExtension(fileName))
                 {
-                    string fileName = _fileNames[i];
-                    if ((_options & AddExtensionOption) != 0 && !Path.HasExtension(fileName))
-                    {
-                        bool fileMustExist = (_options & (int)Comdlg32.OFN.FILEMUSTEXIST) != 0;
+                    bool fileMustExist = CheckFileExists;
 
-                        for (int j = 0; j < extensions.Length; j++)
+                    for (int j = 0; j < extensions.Length; j++)
+                    {
+                        var currentExtension = Path.GetExtension(fileName.AsSpan());
+
+                        Debug.Assert(!extensions[j].StartsWith('.'),
+                            "FileDialog.FilterExtensions should not return things starting with '.'");
+                        Debug.Assert(currentExtension.Length == 0 || currentExtension[0] == '.',
+                            "File.GetExtension should return something that starts with '.'");
+
+                        // We don't want to append the extension if it contains wild cards
+                        string s = extensions[j].IndexOfAny(s_wildcards) == -1
+                            ? $"{fileName[..^currentExtension.Length]}.{extensions[j]}"
+                            : fileName[..^currentExtension.Length];
+
+                        if (!fileMustExist || FileExists(s))
                         {
-                            string currentExtension = Path.GetExtension(fileName);
-
-                            Debug.Assert(!extensions[j].StartsWith("."),
-                                         "FileDialog.FilterExtensions should not return things starting with '.'");
-                            Debug.Assert(currentExtension.Length == 0 || currentExtension.StartsWith("."),
-                                         "File.GetExtension should return something that starts with '.'");
-
-                            string s = fileName.Substring(0, fileName.Length - currentExtension.Length);
-
-                            // we don't want to append the extension if it contains wild cards
-                            if (extensions[j].IndexOfAny(new char[] { '*', '?' }) == -1)
-                            {
-                                s += "." + extensions[j];
-                            }
-
-                            if (!fileMustExist || FileExists(s))
-                            {
-                                fileName = s;
-                                break;
-                            }
+                            fileName = s;
+                            break;
                         }
+                    }
 
-                        _fileNames[i] = fileName;
-                    }
-                    if (!PromptUserIfAppropriate(fileName))
-                    {
-                        return false;
-                    }
+                    fileNames[i] = fileName;
+                }
+
+                if (!PromptUserIfAppropriate(fileName))
+                {
+                    return false;
                 }
             }
 
@@ -672,48 +668,41 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Prompts the user with a <see cref='MessageBox'/> with the
-        ///  given parameters. It also ensures that the focus is set back on the window that
-        ///  had the focus to begin with (before we displayed the MessageBox).
+        ///  Prompts the user with a <see cref="MessageBox"/> with the given parameters. It also ensures that the
+        ///  focus is set back on the window that had the focus to begin with (before we displayed the MessageBox).
         /// </summary>
-        private protected bool MessageBoxWithFocusRestore(string message, string caption,
-                MessageBoxButtons buttons, MessageBoxIcon icon)
+        private protected static bool MessageBoxWithFocusRestore(
+            string message,
+            string caption,
+            MessageBoxButtons buttons,
+            MessageBoxIcon icon)
         {
-            IntPtr focusHandle = User32.GetFocus();
+            HWND focusHandle = PInvoke.GetFocus();
             try
             {
-                return RTLAwareMessageBox.Show(null, message, caption, buttons, icon,
-                        MessageBoxDefaultButton.Button1, 0) == DialogResult.Yes;
+                return RTLAwareMessageBox.Show(null, message, caption, buttons, icon, MessageBoxDefaultButton.Button1, 0)
+                    == DialogResult.Yes;
             }
             finally
             {
-                User32.SetFocus(focusHandle);
+                PInvoke.SetFocus(focusHandle);
             }
         }
 
         /// <summary>
-        ///  Prompts the user with a <see cref='MessageBox'/> when a
-        ///  file does not exist.
-        /// </summary>
-        private void PromptFileNotFound(string fileName)
-        {
-            MessageBoxWithFocusRestore(string.Format(SR.FileDialogFileNotFound, fileName), DialogCaption,
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        }
-
-        /// <summary>
-        /// If it's necessary to throw up a "This file exists, are you sure?" kind of MessageBox,
-        /// here's where we do it. Return value is whether or not the user hit "okay".
+        ///  If it's necessary to throw up a "This file exists, are you sure?" kind of MessageBox,
+        ///  here's where we do it. Return value is whether or not the user hit "okay".
         /// </summary>
         private protected virtual bool PromptUserIfAppropriate(string fileName)
         {
-            if ((_options & (int)Comdlg32.OFN.FILEMUSTEXIST) != 0)
+            if (_fileNameFlags.HasFlag(OFN_FILEMUSTEXIST) && !FileExists(fileName))
             {
-                if (!FileExists(fileName))
-                {
-                    PromptFileNotFound(fileName);
-                    return false;
-                }
+                MessageBoxWithFocusRestore(
+                    string.Format(SR.FileDialogFileNotFound, fileName),
+                    DialogCaption,
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return false;
             }
 
             return true;
@@ -724,10 +713,12 @@ namespace System.Windows.Forms
         /// </summary>
         public override void Reset()
         {
-            _options = (int)(Comdlg32.OFN.HIDEREADONLY | Comdlg32.OFN.PATHMUSTEXIST) | AddExtensionOption;
+            _fileNameFlags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+            _dialogOptions = default;
+            AddExtension = true;
             _title = null;
-            _initialDir = null;
-            _defaultExt = null;
+            _initialDirectory = null;
+            _defaultExtension = null;
             _fileNames = null;
             _filter = null;
             FilterIndex = 1;
@@ -739,89 +730,90 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Implements running of a file dialog.
         /// </summary>
+#pragma warning disable CA1725 // Parameter names should match base declaration - shipped and documented with this casing
         protected override bool RunDialog(IntPtr hWndOwner)
+#pragma warning restore CA1725
         {
             if (Control.CheckForIllegalCrossThreadCalls && Application.OleRequired() != ApartmentState.STA)
             {
                 throw new ThreadStateException(string.Format(SR.DebuggingExceptionOnly, SR.ThreadMustBeSTA));
             }
 
-            // If running the Vista dialog fails (e.g. on Server Core), we fall back to the
-            // legacy dialog.
-            if (UseVistaDialogInternal && TryRunDialogVista(hWndOwner, out bool returnValue))
+            // If running the Vista dialog fails (e.g. on Server Core), we fall back to the legacy dialog.
+            if (UseVistaDialogInternal && TryRunDialogVista((HWND)hWndOwner, out bool returnValue))
             {
                 return returnValue;
             }
 
-            return RunDialogOld(hWndOwner);
+            return RunDialogOld((HWND)hWndOwner);
         }
 
-        private bool RunDialogOld(IntPtr hWndOwner)
+        private unsafe bool RunDialogOld(HWND owner)
         {
-            var hookProcPtr = new NativeMethods.WndProc(HookProc);
-            var ofn = new NativeMethods.OPENFILENAME_I();
-            try
-            {
-                _charBuffer = new UnicodeCharBuffer(FileBufferSize);
-                if (_fileNames != null)
-                {
-                    _charBuffer.PutString(_fileNames[0]);
-                }
-                ofn.lStructSize = Marshal.SizeOf<NativeMethods.OPENFILENAME_I>();
-                ofn.hwndOwner = hWndOwner;
-                ofn.hInstance = Instance;
-                ofn.lpstrFilter = MakeFilterString(_filter, DereferenceLinks);
-                ofn.nFilterIndex = FilterIndex;
-                ofn.lpstrFile = _charBuffer.AllocCoTaskMem();
-                ofn.nMaxFile = FileBufferSize;
-                ofn.lpstrInitialDir = _initialDir;
-                ofn.lpstrTitle = _title;
-                ofn.Flags = Options | (int)(Comdlg32.OFN.EXPLORER | Comdlg32.OFN.ENABLEHOOK | Comdlg32.OFN.ENABLESIZING);
-                ofn.lpfnHook = hookProcPtr;
-                ofn.FlagsEx = (int)Comdlg32.OFN_EX.NONE;
-                if (_defaultExt != null && AddExtension)
-                {
-                    ofn.lpstrDefExt = _defaultExt;
-                }
+            WNDPROC hookProc = HookProcInternal;
+            _charBuffer = GC.AllocateArray<char>(FileBufferSize, pinned: true);
+            FileName.CopyTo(_charBuffer);
 
-                return RunFileDialog(ofn);
-            }
-            finally
+            string? filterString = MakeFilterString(_filter, DereferenceLinks);
+
+            fixed (char* buffer = _charBuffer)
+            fixed (char* filter = filterString)
+            fixed (char* initialDirectory = _initialDirectory)
+            fixed (char* title = _title)
+            fixed (char* extension = _defaultExtension)
             {
-                _charBuffer = null;
-                if (ofn.lpstrFile != IntPtr.Zero)
+                OPENFILENAME ofn = new()
                 {
-                    Marshal.FreeCoTaskMem(ofn.lpstrFile);
+                    lStructSize = (uint)sizeof(OPENFILENAME),
+                    hwndOwner = owner,
+                    hInstance = (HINSTANCE)Instance,
+                    lpstrFilter = filter,
+                    nFilterIndex = (uint)FilterIndex,
+                    lpstrFile = buffer,
+                    nMaxFile = (uint)_charBuffer.Length,
+                    lpstrInitialDir = initialDirectory,
+                    lpstrTitle = title,
+                    Flags = (OPEN_FILENAME_FLAGS)Options | OFN_EXPLORER | OFN_ENABLEHOOK | OFN_ENABLESIZING,
+                    FlagsEx = OPEN_FILENAME_FLAGS_EX.OFN_EX_NONE,
+                    lpstrDefExt = AddExtension ? extension : null,
+                    lpfnHook = (void*)Marshal.GetFunctionPointerForDelegate(hookProc)
+                };
+
+                try
+                {
+                    return RunFileDialog(&ofn);
+                }
+                finally
+                {
+                    _charBuffer = null;
+                    GC.KeepAlive(hookProc);
                 }
             }
         }
 
         /// <summary>
-        ///  Implements the actual call to GetOPENFILENAME_I or GetSaveFileName.
+        ///  Implements the actual call to GetOpenFileName or GetSaveFileName.
         /// </summary>
-        private protected abstract bool RunFileDialog(NativeMethods.OPENFILENAME_I ofn);
+        private protected abstract unsafe bool RunFileDialog(OPENFILENAME* ofn);
 
         /// <summary>
         ///  Sets the given option to the given boolean value.
         /// </summary>
-        private protected void SetOption(int option, bool value)
+        private protected void SetOption(OPEN_FILENAME_FLAGS option, bool value)
         {
             if (value)
             {
-                _options |= option;
+                _fileNameFlags |= option;
             }
             else
             {
-                _options &= ~option;
+                _fileNameFlags &= ~option;
             }
         }
 
         /// <summary>
         ///  Provides a string version of this Object.
         /// </summary>
-        public override string ToString()
-        {
-            return $"{base.ToString()}: Title: {Title}, FileName: {FileName}";
-        }
+        public override string ToString() => $"{base.ToString()}: Title: {Title}, FileName: {FileName}";
     }
 }

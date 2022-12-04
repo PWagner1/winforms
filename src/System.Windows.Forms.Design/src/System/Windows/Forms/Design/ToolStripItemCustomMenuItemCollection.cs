@@ -1,11 +1,10 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 
 namespace System.Windows.Forms.Design
@@ -83,6 +82,7 @@ namespace System.Windows.Forms.Design
                     item.DropDown.Font = (Font)uis.Styles["DialogFont"];
                 }
             }
+
             return item;
         }
 
@@ -130,7 +130,7 @@ namespace System.Windows.Forms.Design
                 {
                     checkedToolStripMenuItem = CreateBooleanItem("C&hecked", "Checked");
                     showShortcutKeysToolStripMenuItem = CreateBooleanItem("ShowShortcut&Keys", "ShowShortcutKeys");
-                    AddRange(new System.Windows.Forms.ToolStripItem[] { checkedToolStripMenuItem, showShortcutKeysToolStripMenuItem });
+                    AddRange(new ToolStripItem[] { checkedToolStripMenuItem, showShortcutKeysToolStripMenuItem });
                 }
                 else
                 {
@@ -178,9 +178,11 @@ namespace System.Windows.Forms.Design
                             displayStyleToolStripMenuItem.DropDown.ForeColor = panelTextColor;
                         }
                     }
-                    AddRange(new System.Windows.Forms.ToolStripItem[] { alignmentToolStripMenuItem, displayStyleToolStripMenuItem, });
+
+                    AddRange(new ToolStripItem[] { alignmentToolStripMenuItem, displayStyleToolStripMenuItem, });
                 }
-                toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+
+                toolStripSeparator1 = new ToolStripSeparator();
                 Add(toolStripSeparator1);
             }
 
@@ -195,12 +197,12 @@ namespace System.Windows.Forms.Design
                 DropDown = ToolStripDesignerUtils.GetNewItemDropDown(ParentTool, currentItem, new EventHandler(AddNewItemClick), false, serviceProvider, true)
             };
 
-            AddRange(new System.Windows.Forms.ToolStripItem[] { convertToolStripMenuItem, insertToolStripMenuItem });
+            AddRange(new ToolStripItem[] { convertToolStripMenuItem, insertToolStripMenuItem });
 
             if (currentItem is ToolStripDropDownItem)
             {
                 IDesignerHost _designerHost = (IDesignerHost)serviceProvider.GetService(typeof(IDesignerHost));
-                if (_designerHost != null)
+                if (_designerHost is not null)
                 {
                     if (_designerHost.GetDesigner(currentItem) is ToolStripItemDesigner itemDesigner)
                     {
@@ -220,16 +222,13 @@ namespace System.Windows.Forms.Design
 
         private void OnEditItemsMenuItemClick(object sender, EventArgs e)
         {
-            if (verbManager != null)
-            {
-                verbManager.EditItemsVerb.Invoke();
-            }
+            verbManager?.EditItemsVerb.Invoke();
         }
 
         private void OnImageToolStripMenuItemClick(object sender, EventArgs e)
         {
             IDesignerHost _designerHost = (IDesignerHost)serviceProvider.GetService(typeof(IDesignerHost));
-            if (_designerHost != null)
+            if (_designerHost is not null)
             {
                 if (_designerHost.GetDesigner(currentItem) is ToolStripItemDesigner itemDesigner)
                 {
@@ -250,12 +249,12 @@ namespace System.Windows.Forms.Design
         private void OnBooleanValueChanged(object sender, EventArgs e)
         {
             ToolStripItem item = sender as ToolStripItem;
-            Debug.Assert(item != null, "Why is item null?");
-            if (item != null)
+            Debug.Assert(item is not null, "Why is item null?");
+            if (item is not null)
             {
                 string propertyName = item.Tag as string;
-                Debug.Assert(propertyName != null, "Why is propertyName null?");
-                if (propertyName != null)
+                Debug.Assert(propertyName is not null, "Why is propertyName null?");
+                if (propertyName is not null)
                 {
                     bool currentValue = (bool)GetProperty(propertyName);
                     ChangeProperty(propertyName, !currentValue);
@@ -266,12 +265,12 @@ namespace System.Windows.Forms.Design
         private void OnEnumValueChanged(object sender, EventArgs e)
         {
             ToolStripItem item = sender as ToolStripItem;
-            Debug.Assert(item != null, "Why is item null?");
-            if (item != null)
+            Debug.Assert(item is not null, "Why is item null?");
+            if (item is not null)
             {
                 EnumValueDescription desc = item.Tag as EnumValueDescription;
-                Debug.Assert(desc != null, "Why is desc null?");
-                if (desc != null && !string.IsNullOrEmpty(desc.PropertyName))
+                Debug.Assert(desc is not null, "Why is desc null?");
+                if (desc is not null && !string.IsNullOrEmpty(desc.PropertyName))
                 {
                     ChangeProperty(desc.PropertyName, desc.Value);
                 }
@@ -347,9 +346,9 @@ namespace System.Windows.Forms.Design
             }
         }
 
-        private void TryCancelTransaction(ref DesignerTransaction transaction)
+        private static void TryCancelTransaction(ref DesignerTransaction transaction)
         {
-            if (transaction != null)
+            if (transaction is not null)
             {
                 try
                 {
@@ -368,9 +367,9 @@ namespace System.Windows.Forms.Design
         private void InsertIntoDropDown(ToolStripDropDown parent, Type t)
         {
             IDesignerHost designerHost = (IDesignerHost)serviceProvider.GetService(typeof(IDesignerHost));
-            Debug.Assert(designerHost != null, "Why didn't we get a designer host?");
+            Debug.Assert(designerHost is not null, "Why didn't we get a designer host?");
             int dummyIndex = parent.Items.IndexOf(currentItem);
-            if (parent != null)
+            if (parent is not null)
             {
                 if (parent.OwnerItem is ToolStripDropDownItem ownerItem)
                 {
@@ -393,17 +392,14 @@ namespace System.Windows.Forms.Design
                 }
 
                 parent.Items.Insert(dummyIndex, (ToolStripItem)component);
-                // set the selection to our new item.. since we destroyed Original component.. we have to ask SelectionServive from new Component
+                // set the selection to our new item.. since we destroyed Original component.. we have to ask SelectionService from new Component
                 ISelectionService selSvc = (ISelectionService)serviceProvider.GetService(typeof(ISelectionService));
-                if (selSvc != null)
-                {
-                    selSvc.SetSelectedComponents(new object[] { component }, SelectionTypes.Replace);
-                }
+                selSvc?.SetSelectedComponents(new object[] { component }, SelectionTypes.Replace);
             }
             catch (Exception ex)
             {
                 // We need to cancel the ToolStripDesigner's nested MenuItemTransaction; otherwise, we can't cancel our Transaction and the Designer will be left in an unusable state
-                if ((parent != null) && (parent.OwnerItem != null) && (parent.OwnerItem.Owner != null))
+                if ((parent is not null) && (parent.OwnerItem is not null) && (parent.OwnerItem.Owner is not null))
                 {
                     if (designerHost.GetDesigner(parent.OwnerItem.Owner) is ToolStripDesigner toolStripDesigner)
                     {
@@ -421,11 +417,7 @@ namespace System.Windows.Forms.Design
             }
             finally
             {
-                if (newItemTransaction != null)
-                {
-                    newItemTransaction.Commit();
-                    newItemTransaction = null;
-                }
+                newItemTransaction?.Commit();
             }
         }
 
@@ -435,7 +427,7 @@ namespace System.Windows.Forms.Design
         private void InsertIntoMainMenu(MenuStrip parent, Type t)
         {
             IDesignerHost designerHost = (IDesignerHost)serviceProvider.GetService(typeof(IDesignerHost));
-            Debug.Assert(designerHost != null, "Why didn't we get a designer host?");
+            Debug.Assert(designerHost is not null, "Why didn't we get a designer host?");
             int dummyIndex = parent.Items.IndexOf(currentItem);
             DesignerTransaction newItemTransaction = designerHost.CreateTransaction(SR.ToolStripAddingItem);
             try
@@ -447,14 +439,12 @@ namespace System.Windows.Forms.Design
                 {
                     ((ComponentDesigner)designer).InitializeNewComponent(null);
                 }
+
                 Debug.Assert(dummyIndex != -1, "Why is item index negative?");
                 parent.Items.Insert(dummyIndex, (ToolStripItem)component);
-                // set the selection to our new item.. since we destroyed Original component.. we have to ask SelectionServive from new Component
+                // set the selection to our new item.. since we destroyed Original component.. we have to ask SelectionService from new Component
                 ISelectionService selSvc = (ISelectionService)serviceProvider.GetService(typeof(ISelectionService));
-                if (selSvc != null)
-                {
-                    selSvc.SetSelectedComponents(new object[] { component }, SelectionTypes.Replace);
-                }
+                selSvc?.SetSelectedComponents(new object[] { component }, SelectionTypes.Replace);
             }
             catch (Exception ex)
             {
@@ -466,11 +456,7 @@ namespace System.Windows.Forms.Design
             }
             finally
             {
-                if (newItemTransaction != null)
-                {
-                    newItemTransaction.Commit();
-                    newItemTransaction = null;
-                }
+                newItemTransaction?.Commit();
             }
         }
 
@@ -480,7 +466,7 @@ namespace System.Windows.Forms.Design
         private void InsertIntoStatusStrip(StatusStrip parent, Type t)
         {
             IDesignerHost designerHost = (IDesignerHost)serviceProvider.GetService(typeof(IDesignerHost));
-            Debug.Assert(designerHost != null, "Why didn't we get a designer host?");
+            Debug.Assert(designerHost is not null, "Why didn't we get a designer host?");
             int dummyIndex = parent.Items.IndexOf(currentItem);
             DesignerTransaction newItemTransaction = designerHost.CreateTransaction(SR.ToolStripAddingItem);
             try
@@ -492,14 +478,12 @@ namespace System.Windows.Forms.Design
                 {
                     ((ComponentDesigner)designer).InitializeNewComponent(null);
                 }
+
                 Debug.Assert(dummyIndex != -1, "Why is item index negative?");
                 parent.Items.Insert(dummyIndex, (ToolStripItem)component);
-                // set the selection to our new item.. since we destroyed Original component.. we have to ask SelectionServive from new Component
+                // set the selection to our new item.. since we destroyed Original component.. we have to ask SelectionService from new Component
                 ISelectionService selSvc = (ISelectionService)serviceProvider.GetService(typeof(ISelectionService));
-                if (selSvc != null)
-                {
-                    selSvc.SetSelectedComponents(new object[] { component }, SelectionTypes.Replace);
-                }
+                selSvc?.SetSelectedComponents(new object[] { component }, SelectionTypes.Replace);
             }
             catch (Exception ex)
             {
@@ -511,11 +495,7 @@ namespace System.Windows.Forms.Design
             }
             finally
             {
-                if (newItemTransaction != null)
-                {
-                    newItemTransaction.Commit();
-                    newItemTransaction = null;
-                }
+                newItemTransaction?.Commit();
             }
         }
 
@@ -525,7 +505,7 @@ namespace System.Windows.Forms.Design
         private void InsertToolStripItem(Type t)
         {
             IDesignerHost designerHost = (IDesignerHost)serviceProvider.GetService(typeof(IDesignerHost));
-            Debug.Assert(designerHost != null, "Why didn't we get a designer host?");
+            Debug.Assert(designerHost is not null, "Why didn't we get a designer host?");
             ToolStrip parent = ParentTool;
             int dummyIndex = parent.Items.IndexOf(currentItem);
             DesignerTransaction newItemTransaction = designerHost.CreateTransaction(SR.ToolStripAddingItem);
@@ -538,6 +518,7 @@ namespace System.Windows.Forms.Design
                 {
                     ((ComponentDesigner)designer).InitializeNewComponent(null);
                 }
+
                 //Set the Image property and DisplayStyle...
                 if (component is ToolStripButton || component is ToolStripSplitButton || component is ToolStripDropDownButton)
                 {
@@ -553,6 +534,7 @@ namespace System.Windows.Forms.Design
                             throw;
                         }
                     }
+
                     ChangeProperty(component, "Image", image);
                     ChangeProperty(component, "DisplayStyle", ToolStripItemDisplayStyle.Image);
                     ChangeProperty(component, "ImageTransparentColor", Color.Magenta);
@@ -560,20 +542,18 @@ namespace System.Windows.Forms.Design
 
                 Debug.Assert(dummyIndex != -1, "Why is item index negative?");
                 parent.Items.Insert(dummyIndex, (ToolStripItem)component);
-                // set the selection to our new item.. since we destroyed Original component.. we have to ask SelectionServive from new Component
+                // set the selection to our new item.. since we destroyed Original component.. we have to ask SelectionService from new Component
                 ISelectionService selSvc = (ISelectionService)serviceProvider.GetService(typeof(ISelectionService));
-                if (selSvc != null)
-                {
-                    selSvc.SetSelectedComponents(new object[] { component }, SelectionTypes.Replace);
-                }
+                selSvc?.SetSelectedComponents(new object[] { component }, SelectionTypes.Replace);
             }
             catch (Exception ex)
             {
-                if (newItemTransaction != null)
+                if (newItemTransaction is not null)
                 {
                     newItemTransaction.Cancel();
                     newItemTransaction = null;
                 }
+
                 if (ClientUtils.IsCriticalException(ex))
                 {
                     throw;
@@ -582,25 +562,22 @@ namespace System.Windows.Forms.Design
 
             finally
             {
-                if (newItemTransaction != null)
-                {
-                    newItemTransaction.Commit();
-                    newItemTransaction = null;
-                }
+                newItemTransaction?.Commit();
             }
         }
 
         private bool IsPropertyBrowsable(string propertyName)
         {
             PropertyDescriptor getProperty = TypeDescriptor.GetProperties(currentItem)[propertyName];
-            Debug.Assert(getProperty != null, "Could not find given property in control.");
-            if (getProperty != null)
+            Debug.Assert(getProperty is not null, "Could not find given property in control.");
+            if (getProperty is not null)
             {
                 if (getProperty.Attributes[typeof(BrowsableAttribute)] is BrowsableAttribute attribute)
                 {
                     return attribute.Browsable;
                 }
             }
+
             return true;
         }
 
@@ -608,11 +585,12 @@ namespace System.Windows.Forms.Design
         private object GetProperty(string propertyName)
         {
             PropertyDescriptor getProperty = TypeDescriptor.GetProperties(currentItem)[propertyName];
-            Debug.Assert(getProperty != null, "Could not find given property in control.");
-            if (getProperty != null)
+            Debug.Assert(getProperty is not null, "Could not find given property in control.");
+            if (getProperty is not null)
             {
                 return getProperty.GetValue(currentItem);
             }
+
             return null;
         }
 
@@ -625,13 +603,10 @@ namespace System.Windows.Forms.Design
         protected void ChangeProperty(IComponent target, string propertyName, object value)
         {
             PropertyDescriptor changingProperty = TypeDescriptor.GetProperties(target)[propertyName];
-            Debug.Assert(changingProperty != null, "Could not find given property in control.");
+            Debug.Assert(changingProperty is not null, "Could not find given property in control.");
             try
             {
-                if (changingProperty != null)
-                {
-                    changingProperty.SetValue(target, value);
-                }
+                changingProperty?.SetValue(target, value);
             }
             catch (InvalidOperationException ex)
             {
@@ -674,6 +649,7 @@ namespace System.Windows.Forms.Design
                     {
                         isLinkToolStripMenuItem.Checked = (bool)GetProperty("IsLink");
                     }
+
                     RefreshAlignment();
                     RefreshDisplayStyle();
                 }
@@ -688,6 +664,7 @@ namespace System.Windows.Forms.Design
                 PropertyName = propertyName;
                 Value = value;
             }
+
             public string PropertyName;
             public object Value;
         }

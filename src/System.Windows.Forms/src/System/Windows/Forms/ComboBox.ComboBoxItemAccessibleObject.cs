@@ -3,11 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Drawing;
-using System.Runtime.InteropServices;
 using Accessibility;
 using static System.Windows.Forms.ComboBox.ObjectCollection;
 using static Interop;
-using static Interop.User32;
 
 namespace System.Windows.Forms
 {
@@ -29,7 +27,7 @@ namespace System.Windows.Forms
             /// <param name="owningItem">The owning ComboBox item.</param>
             public ComboBoxItemAccessibleObject(ComboBox owningComboBox, Entry owningItem)
             {
-                _owningComboBox = owningComboBox ?? throw new ArgumentNullException(nameof(owningComboBox));
+                _owningComboBox = owningComboBox.OrThrowIfNull();
                 _owningItem = owningItem;
 
                 _systemIAccessible = _owningComboBox.ChildListAccessibleObject.GetSystemIAccessibleInternal();
@@ -42,23 +40,25 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    ChildAccessibleObject listAccessibleObject = _owningComboBox.ChildListAccessibleObject;
                     int currentIndex = GetCurrentIndex();
-                    if (_owningComboBox.IsHandleCreated)
-                    {
-                        int firstVisibleIndex = (int)(long)User32.SendMessageW(_owningComboBox, (User32.WM)User32.CB.GETTOPINDEX);
+                    var listHandle = _owningComboBox.GetListHandle();
+                    RECT itemRect = default(RECT);
 
-                        // Using the first visible index, we make an index shift, which helps to draw a rectangle with the correct position
-                        currentIndex -= firstVisibleIndex;
+                    int result = (int)PInvoke.SendMessage(
+                        listHandle,
+                        (User32.WM)User32.LB.GETITEMRECT,
+                        (WPARAM)currentIndex,
+                        ref itemRect);
+
+                    if (result == User32.LB_ERR)
+                    {
+                        return Rectangle.Empty;
                     }
 
-                    Rectangle parentRect = listAccessibleObject.BoundingRectangle;
-                    int left = parentRect.Left;
-                    int top = parentRect.Top + _owningComboBox.ItemHeight * currentIndex;
-                    int width = parentRect.Width;
-                    int height = _owningComboBox.ItemHeight;
-
-                    return new Rectangle(left, top, width, height);
+                    // Translate the item rect to screen coordinates
+                    RECT translated = itemRect;
+                    PInvoke.MapWindowPoints(listHandle, HWND.Null, ref translated);
+                    return translated;
                 }
             }
 
@@ -112,47 +112,19 @@ namespace System.Windows.Forms
             // Index is zero-based, Child ID is 1-based.
             internal override int GetChildId() => GetCurrentIndex() + 1;
 
-            internal override object? GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                switch (propertyID)
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+                propertyID switch
                 {
-                    case UiaCore.UIA.RuntimeIdPropertyId:
-                        return RuntimeId;
-                    case UiaCore.UIA.BoundingRectanglePropertyId:
-                        return BoundingRectangle;
-                    case UiaCore.UIA.ControlTypePropertyId:
-                        return UiaCore.UIA.ListItemControlTypeId;
-                    case UiaCore.UIA.NamePropertyId:
-                        return Name;
-                    case UiaCore.UIA.AccessKeyPropertyId:
-                        return KeyboardShortcut ?? string.Empty;
-                    case UiaCore.UIA.HasKeyboardFocusPropertyId:
-                        return _owningComboBox.Focused && _owningComboBox.SelectedIndex == GetCurrentIndex();
-                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
-                        return (State & AccessibleStates.Focusable) == AccessibleStates.Focusable;
-                    case UiaCore.UIA.IsEnabledPropertyId:
-                        return _owningComboBox.Enabled;
-                    case UiaCore.UIA.HelpTextPropertyId:
-                        return Help ?? string.Empty;
-                    case UiaCore.UIA.IsControlElementPropertyId:
-                        return true;
-                    case UiaCore.UIA.IsContentElementPropertyId:
-                        return true;
-                    case UiaCore.UIA.IsPasswordPropertyId:
-                        return false;
-                    case UiaCore.UIA.IsOffscreenPropertyId:
-                        return (State & AccessibleStates.Offscreen) == AccessibleStates.Offscreen;
-                    case UiaCore.UIA.IsSelectionItemPatternAvailablePropertyId:
-                        return true;
-                    case UiaCore.UIA.SelectionItemIsSelectedPropertyId:
-                        return (State & AccessibleStates.Selected) != 0;
-                    case UiaCore.UIA.SelectionItemSelectionContainerPropertyId:
-                        return _owningComboBox.ChildListAccessibleObject;
-
-                    default:
-                        return base.GetPropertyValue(propertyID);
-                }
-            }
+                    UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.ListItemControlTypeId,
+                    UiaCore.UIA.HasKeyboardFocusPropertyId => _owningComboBox.Focused && _owningComboBox.SelectedIndex == GetCurrentIndex(),
+                    UiaCore.UIA.IsContentElementPropertyId => true,
+                    UiaCore.UIA.IsControlElementPropertyId => true,
+                    UiaCore.UIA.IsEnabledPropertyId => _owningComboBox.Enabled,
+                    UiaCore.UIA.IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
+                    UiaCore.UIA.SelectionItemIsSelectedPropertyId => (State & AccessibleStates.Selected) != 0,
+                    UiaCore.UIA.SelectionItemSelectionContainerPropertyId => _owningComboBox.ChildListAccessibleObject,
+                    _ => base.GetPropertyValue(propertyID)
+                };
 
             /// <summary>
             ///  Gets the help text.
@@ -168,6 +140,7 @@ namespace System.Windows.Forms
             {
                 if (patternId == UiaCore.UIA.LegacyIAccessiblePatternId ||
                     patternId == UiaCore.UIA.InvokePatternId ||
+                    patternId == UiaCore.UIA.ScrollItemPatternId ||
                     patternId == UiaCore.UIA.SelectionItemPatternId)
                 {
                     return true;
@@ -193,7 +166,7 @@ namespace System.Windows.Forms
                 get
                 {
                     var accRole = _systemIAccessible?.get_accRole(GetChildId());
-                    return accRole != null
+                    return accRole is not null
                         ? (AccessibleRole)accRole
                         : AccessibleRole.None;
                 }
@@ -202,24 +175,14 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Gets the runtime ID.
             /// </summary>
-            internal override int[]? RuntimeId
-            {
-                get
+            internal override int[] RuntimeId
+                => new int[]
                 {
-                    if (!_owningComboBox.IsHandleCreated || !(_owningComboBox.AccessibilityObject is ComboBoxAccessibleObject comboBoxAccessibleObject))
-                    {
-                        return base.RuntimeId;
-                    }
-
-                    var runtimeId = new int[4];
-                    runtimeId[0] = RuntimeIDFirstItem;
-                    runtimeId[1] = (int)(long)_owningComboBox.InternalHandle;
-                    runtimeId[2] = _owningComboBox.GetListNativeWindowRuntimeIdPart();
-                    runtimeId[3] = _owningItem.GetHashCode();
-
-                    return runtimeId;
-                }
-            }
+                    RuntimeIDFirstItem,
+                    PARAM.ToInt(_owningComboBox.InternalHandle),
+                    _owningComboBox.GetListNativeWindowRuntimeIdPart(),
+                    _owningItem.GetHashCode()
+                };
 
             /// <summary>
             ///  Gets the accessible state.
@@ -229,10 +192,37 @@ namespace System.Windows.Forms
                 get
                 {
                     var accState = _systemIAccessible?.get_accState(GetChildId());
-                    return accState != null
-                        ? (AccessibleStates)accState
-                        : AccessibleStates.None;
+                    if (accState is null)
+                    {
+                        return AccessibleStates.None;
+                    }
+
+                    AccessibleStates accessibleStates = (AccessibleStates)accState;
+
+                    if (!_owningComboBox.DroppedDown || !_owningComboBox.ChildListAccessibleObject.Bounds.IntersectsWith(Bounds))
+                    {
+                        accessibleStates |= AccessibleStates.Offscreen;
+                    }
+
+                    return accessibleStates;
                 }
+            }
+
+            internal override void ScrollIntoView()
+            {
+                if (!_owningComboBox.IsHandleCreated || !_owningComboBox.Enabled)
+                {
+                    return;
+                }
+
+                Rectangle listBounds = _owningComboBox.ChildListAccessibleObject.Bounds;
+                if (listBounds.IntersectsWith(Bounds))
+                {
+                    // Do nothing because the item is already visible
+                    return;
+                }
+
+                PInvoke.SendMessage(_owningComboBox, (User32.WM)PInvoke.CB_SETTOPINDEX, (WPARAM)GetCurrentIndex());
             }
 
             internal override void SetFocus()
@@ -242,7 +232,7 @@ namespace System.Windows.Forms
                 base.SetFocus();
             }
 
-            internal unsafe override void SelectItem()
+            internal override unsafe void SelectItem()
             {
                 if (!_owningComboBox.IsHandleCreated)
                 {
@@ -250,7 +240,7 @@ namespace System.Windows.Forms
                 }
 
                 _owningComboBox.SelectedIndex = GetCurrentIndex();
-                InvalidateRect(new HandleRef(this, _owningComboBox.GetListHandle()), null, BOOL.FALSE);
+                PInvoke.InvalidateRect(_owningComboBox.GetListHandle(), lpRect: null, bErase: false);
             }
 
             internal override void AddToSelection()

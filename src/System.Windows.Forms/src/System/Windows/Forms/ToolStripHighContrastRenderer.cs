@@ -2,16 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
-#region Using directives
-
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Collections.Specialized;
+using System.Drawing;
 using System.Drawing.Drawing2D;
-
-#endregion
+using System.Drawing.Imaging;
 
 namespace System.Windows.Forms
 {
@@ -20,31 +14,33 @@ namespace System.Windows.Forms
     {
         private const int GRIP_PADDING = 4;
 
-        BitVector32 options;
-        private static readonly int optionsDottedBorder = BitVector32.CreateMask();
-        private static readonly int optionsDottedGrip = BitVector32.CreateMask(optionsDottedBorder);
-        private static readonly int optionsFillWhenSelected = BitVector32.CreateMask(optionsDottedGrip);
+        private BitVector32 _options;
+        private static readonly int s_optionsDottedBorder = BitVector32.CreateMask();
+        private static readonly int s_optionsDottedGrip = BitVector32.CreateMask(s_optionsDottedBorder);
+        private static readonly int s_optionsFillWhenSelected = BitVector32.CreateMask(s_optionsDottedGrip);
 
         public ToolStripHighContrastRenderer(bool systemRenderMode)
         {
-            options[optionsDottedBorder | optionsDottedGrip | optionsFillWhenSelected] = !systemRenderMode;
+            _options[s_optionsDottedBorder | s_optionsDottedGrip | s_optionsFillWhenSelected] = !systemRenderMode;
         }
 
         public bool DottedBorder
         {
-            get { return options[optionsDottedBorder]; }
-        }
-        public bool DottedGrip
-        {
-            get { return options[optionsDottedGrip]; }
-        }
-        public bool FillWhenSelected
-        {
-            get { return options[optionsFillWhenSelected]; }
+            get { return _options[s_optionsDottedBorder]; }
         }
 
-        // this is a renderer override, so return null so we dont get into an infinite loop.
-        internal override ToolStripRenderer RendererOverride
+        public bool DottedGrip
+        {
+            get { return _options[s_optionsDottedGrip]; }
+        }
+
+        public bool FillWhenSelected
+        {
+            get { return _options[s_optionsFillWhenSelected]; }
+        }
+
+        // this is a renderer override, so return null so we don't get into an infinite loop.
+        internal override ToolStripRenderer? RendererOverride
         {
             get { return null; }
         }
@@ -109,36 +105,27 @@ namespace System.Windows.Forms
 
         protected override void OnRenderItemCheck(ToolStripItemImageRenderEventArgs e)
         {
-            // The ARGB values came directly from the bitmap.
-            // If the bitmap colors change this code will no longer work and will
-            // need to be updated.
-            Color checkColor = Color.FromArgb(255, 4, 2, 4);
-
-            // Create a color map to remap the check color to either the theme
-            // color for highlighted text or menu text, depending on whether
-            // the menu item is selected.
-            ColorMap[] checkColorMap = new ColorMap[1];
-            checkColorMap[0] = new ColorMap
+            if (e.Image is not { } image)
             {
-                OldColor = checkColor,
+                return;
+            }
 
-                NewColor = ((e.Item.Selected || e.Item.Pressed) && e.Item.Enabled) ?
-                SystemColors.HighlightText : SystemColors.MenuText
-            };
+            if (Image.GetPixelFormatSize(image.PixelFormat) > 16)
+            {
+                // For 24, 32 bit images, just paint normally - mapping the color table is not
+                // going to work when you can have full color.
+                base.OnRenderItemCheck(e);
+                return;
+            }
 
-            // If we already have an image attributes associated with the event,
-            // just add the color map. Otherwise, create a new one.
-            ImageAttributes imageAttr = e.ImageAttributes ?? new ImageAttributes();
-            imageAttr.SetRemapTable(checkColorMap, ColorAdjustType.Bitmap);
-            e.ImageAttributes = imageAttr;
-
-            base.OnRenderItemCheck(e);
+            RenderItemImageOfLowColorDepth(e);
         }
 
         protected override void OnRenderImageMargin(ToolStripRenderEventArgs e)
         {
             // do nothing
         }
+
         protected override void OnRenderItemBackground(ToolStripItemRenderEventArgs e)
         {
             base.OnRenderItemBackground(e);
@@ -160,7 +147,7 @@ namespace System.Windows.Forms
                 else if (item.Selected)
                 {
                     g.FillRectangle(SystemBrushes.Highlight, bounds);
-                    g.DrawRectangle(SystemPens.ButtonHighlight, bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
+                    DrawHightContrastDashedBorder(g, e.Item);
                     g.DrawRectangle(SystemPens.ButtonHighlight, dropDownRect);
                 }
 
@@ -185,6 +172,7 @@ namespace System.Windows.Forms
                 base.OnRenderLabelBackground(e);
             }
         }
+
         protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
         {
             base.OnRenderMenuItemBackground(e);
@@ -193,6 +181,7 @@ namespace System.Windows.Forms
                 e.Graphics.DrawRectangle(SystemPens.ButtonHighlight, 0, 0, e.Item.Width - 1, e.Item.Height - 1);
             }
         }
+
         protected override void OnRenderOverflowButtonBackground(ToolStripItemRenderEventArgs e)
         {
             if (FillWhenSelected)
@@ -200,7 +189,9 @@ namespace System.Windows.Forms
                 RenderItemInternalFilled(e, /*pressFill = */false);
                 ToolStripItem item = e.Item;
                 Graphics g = e.Graphics;
-                Color arrowColor = item.Enabled ? SystemColors.ControlText : SystemColors.ControlDark;
+                Color arrowColor = !item.Enabled ? SystemColors.ControlDark
+                    : item.Selected && !item.Pressed ? SystemColors.HighlightText
+                    : SystemColors.ControlText;
                 DrawArrow(new ToolStripArrowRenderEventArgs(g, item, new Rectangle(Point.Empty, item.Size), arrowColor, ArrowDirection.Down));
             }
             else
@@ -302,7 +293,7 @@ namespace System.Windows.Forms
 
                 // connecting pixels
 
-                // top left conntecting pixel - always drawn
+                // top left connecting pixel - always drawn
                 g.FillRectangle(SystemBrushes.ButtonShadow, new Rectangle(1, 1, 1, 1));
 
                 if (oddWidth)
@@ -310,14 +301,15 @@ namespace System.Windows.Forms
                     // top right pixel
                     g.FillRectangle(SystemBrushes.ButtonShadow, new Rectangle(bounds.Width - 2, 1, 1, 1));
                 }
-                // bottom conntecting pixels - drawn only if height is odd
+
+                // bottom connecting pixels - drawn only if height is odd
                 if (oddHeight)
                 {
                     // bottom left
                     g.FillRectangle(SystemBrushes.ButtonShadow, new Rectangle(1, bounds.Height - 2, 1, 1));
                 }
 
-                // top and bottom right conntecting pixel - drawn only if height and width are odd
+                // top and bottom right connecting pixel - drawn only if height and width are odd
                 if (oddHeight && oddWidth)
                 {
                     // bottom right
@@ -332,6 +324,7 @@ namespace System.Windows.Forms
                 g.DrawRectangle(SystemPens.ButtonShadow, bounds);
             }
         }
+
         protected override void OnRenderSeparator(ToolStripSeparatorRenderEventArgs e)
         {
             Pen foreColorPen = SystemPens.ButtonShadow;
@@ -374,48 +367,20 @@ namespace System.Windows.Forms
 
         protected override void OnRenderItemImage(ToolStripItemImageRenderEventArgs e)
         {
-            Image image = e.Image;
-            if (image != null)
+            if (e.Image is not { } image)
             {
-                if (Image.GetPixelFormatSize(image.PixelFormat) > 16)
-                {
-                    // for 24, 32 bit images, just paint normally - mapping the color table is not
-                    // going to work when you can have full color.
-                    base.OnRenderItemImage(e);
-                    return;
-                }
-                Graphics g = e.Graphics;
-
-                ToolStripItem item = e.Item;
-                Rectangle imageRect = e.ImageRectangle;
-                using (ImageAttributes attrs = new ImageAttributes())
-                {
-                    if (IsHighContrastWhiteOnBlack() && !(FillWhenSelected && (e.Item.Pressed || e.Item.Selected)))
-                    {
-                        // translate white, black and blue to colors visible in high contrast mode.
-                        ColorMap cm1 = new ColorMap();
-                        ColorMap cm2 = new ColorMap();
-                        ColorMap cm3 = new ColorMap();
-
-                        cm1.OldColor = Color.Black;
-                        cm1.NewColor = Color.White;
-                        cm2.OldColor = Color.White;
-                        cm2.NewColor = Color.Black;
-                        cm3.OldColor = Color.FromArgb(0, 0, 128);
-                        cm3.NewColor = Color.White;
-
-                        attrs.SetRemapTable(new ColorMap[] { cm1, cm2, cm3 }, ColorAdjustType.Bitmap);
-                    }
-                    if (item.ImageScaling == ToolStripItemImageScaling.None)
-                    {
-                        g.DrawImage(image, imageRect, 0, 0, imageRect.Width, imageRect.Height, GraphicsUnit.Pixel, attrs);
-                    }
-                    else
-                    {
-                        g.DrawImage(image, imageRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, attrs);
-                    }
-                }
+                return;
             }
+
+            if (Image.GetPixelFormatSize(image.PixelFormat) > 16)
+            {
+                // For 24, 32 bit images, just paint normally - mapping the color table is not
+                // going to work when you can have full color.
+                base.OnRenderItemImage(e);
+                return;
+            }
+
+            RenderItemImageOfLowColorDepth(e);
         }
 
         protected override void OnRenderButtonBackground(ToolStripItemRenderEventArgs e)
@@ -427,13 +392,11 @@ namespace System.Windows.Forms
                     Graphics g = e.Graphics;
                     Rectangle bounds = new Rectangle(Point.Empty, e.Item.Size);
 
-                    if (button.CheckState == CheckState.Checked)
-                    {
-                        g.FillRectangle(SystemBrushes.Highlight, bounds);
-                    }
+                    g.FillRectangle(SystemBrushes.Highlight, bounds);
+
                     if (button.Selected)
                     {
-                        g.DrawRectangle(SystemPens.Highlight, bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
+                        DrawHightContrastDashedBorder(g, button);
                     }
                     else
                     {
@@ -451,12 +414,12 @@ namespace System.Windows.Forms
             }
         }
 
-        private void RenderItemInternalFilled(ToolStripItemRenderEventArgs e)
+        private static void RenderItemInternalFilled(ToolStripItemRenderEventArgs e)
         {
             RenderItemInternalFilled(e, /*pressFill=*/true);
         }
 
-        private void RenderItemInternalFilled(ToolStripItemRenderEventArgs e, bool pressFill)
+        private static void RenderItemInternalFilled(ToolStripItemRenderEventArgs e, bool pressFill)
         {
             Graphics g = e.Graphics;
             Rectangle bounds = new Rectangle(Point.Empty, e.Item.Size);
@@ -475,7 +438,71 @@ namespace System.Windows.Forms
             else if (e.Item.Selected)
             {
                 g.FillRectangle(SystemBrushes.Highlight, bounds);
-                g.DrawRectangle(SystemPens.ControlLight, bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
+                DrawHightContrastDashedBorder(g, e.Item);
+            }
+        }
+
+        private static void DrawHightContrastDashedBorder(Graphics graphics, ToolStripItem item)
+        {
+            var bounds = item.ClientBounds;
+            float[] dashValues = { 2, 2 };
+            int penWidth = 2;
+
+            var focusPen1 = new Pen(SystemColors.ControlText, penWidth)
+            {
+                DashPattern = dashValues
+            };
+
+            var focusPen2 = new Pen(SystemColors.Control, penWidth)
+            {
+                DashPattern = dashValues,
+                DashOffset = 2
+            };
+
+            graphics.DrawRectangle(focusPen1, bounds);
+            graphics.DrawRectangle(focusPen2, bounds);
+        }
+
+        private void RenderItemImageOfLowColorDepth(ToolStripItemImageRenderEventArgs e)
+        {
+            if (e.Image is not { } image)
+            {
+                return;
+            }
+
+            ToolStripItem item = e.Item;
+
+            using ImageAttributes attrs = new();
+
+            if (IsHighContrastWhiteOnBlack() && !(FillWhenSelected && (item.Pressed || item. Selected)))
+            {
+                // Translate white, black and blue to colors visible in high contrast mode.
+                ColorMap cm1 = new();
+                ColorMap cm2 = new();
+                ColorMap cm3 = new();
+
+                cm1.OldColor = Color.Black;
+                cm1.NewColor = Color.White;
+
+                cm2.OldColor = Color.White;
+                cm2.NewColor = Color.Black;
+
+                cm3.OldColor = Color.FromArgb(0, 0, 128);
+                cm3.NewColor = Color.White;
+
+                attrs.SetRemapTable(new ColorMap[3] { cm1, cm2, cm3 }, ColorAdjustType.Bitmap);
+            }
+
+            Graphics g = e.Graphics;
+            Rectangle imageRect = e.ImageRectangle;
+
+            if (item.ImageScaling == ToolStripItemImageScaling.None)
+            {
+                g.DrawImage(image, imageRect, 0, 0, imageRect.Width, imageRect.Height, GraphicsUnit.Pixel, attrs);
+            }
+            else
+            {
+                g.DrawImage(image, imageRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, attrs);
             }
         }
     }

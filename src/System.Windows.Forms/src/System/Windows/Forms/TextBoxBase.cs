@@ -2,12 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
-using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Runtime.InteropServices;
@@ -54,38 +52,37 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The current border for this edit control.
         /// </summary>
-        private BorderStyle borderStyle = BorderStyle.Fixed3D;
+        private BorderStyle _borderStyle = BorderStyle.Fixed3D;
 
         /// <summary>
         ///  Controls the maximum length of text in the edit control.
         ///  Matches the Windows limit.
         /// </summary>
-        private int maxLength = 32767;
+        private int _maxLength = 32767;
 
         /// <summary>
         ///  Used by the autoSizing code to help figure out the desired height of
         ///  the edit box.
         /// </summary>
-        private int requestedHeight;
-        bool integralHeightAdjust;
+        private int _requestedHeight;
+        bool _integralHeightAdjust;
 
         //these indices are used to cache the values of the selection, by doing this
         //if the handle isn't created yet, we don't force a creation.
-        private int selectionStart;
-        private int selectionLength;
+        private int _selectionStart;
+        private int _selectionLength;
 
         /// <summary>
         ///  Controls firing of click event (Left click).
         ///  This is used by TextBox, RichTextBox and MaskedTextBox, code was moved down from TextBox/RichTextBox
         ///  but cannot make it as default behavior to avoid introducing breaking changes.
         /// </summary>
-        private bool doubleClickFired;
+        private bool _doubleClickFired;
 
-        private static int[] shortcutsToDisable;
+        private static int[]? s_shortcutsToDisable;
 
         // We store all boolean properties in here.
-        //
-        private BitVector32 textBoxFlags;
+        private BitVector32 _textBoxFlags;
 
         /// <summary>
         ///  Creates a new TextBox control.  Uses the parent's current font and color
@@ -96,8 +93,8 @@ namespace System.Windows.Forms
             // this class overrides GetPreferredSizeCore, let Control automatically cache the result
             SetExtendedState(ExtendedStates.UserPreferredSizeCache, true);
 
-            textBoxFlags[autoSize | hideSelection | wordWrap | shortcutsEnabled] = true;
-            SetStyle(ControlStyles.FixedHeight, textBoxFlags[autoSize]);
+            _textBoxFlags[autoSize | hideSelection | wordWrap | shortcutsEnabled] = true;
+            SetStyle(ControlStyles.FixedHeight, _textBoxFlags[autoSize]);
             SetStyle(ControlStyles.StandardClick
                     | ControlStyles.StandardDoubleClick
                     | ControlStyles.UseTextForAccessibility
@@ -106,7 +103,7 @@ namespace System.Windows.Forms
             // cache requestedHeight. Note: Control calls DefaultSize (overridable) in the constructor
             // to set the control's cached height that is returned when calling Height, so we just
             // need to get the cached height here.
-            requestedHeight = Height;
+            _requestedHeight = Height;
         }
 
         /// <summary>
@@ -123,13 +120,13 @@ namespace System.Windows.Forms
         {
             get
             {
-                return textBoxFlags[acceptsTab];
+                return _textBoxFlags[acceptsTab];
             }
             set
             {
-                if (textBoxFlags[acceptsTab] != value)
+                if (_textBoxFlags[acceptsTab] != value)
                 {
-                    textBoxFlags[acceptsTab] = value;
+                    _textBoxFlags[acceptsTab] = value;
                     OnAcceptsTabChanged(EventArgs.Empty);
                 }
             }
@@ -137,7 +134,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.TextBoxBaseOnAcceptsTabChangedDescr))]
-        public event EventHandler AcceptsTabChanged
+        public event EventHandler? AcceptsTabChanged
         {
             add => Events.AddHandler(EVENT_ACCEPTSTABCHANGED, value);
             remove => Events.RemoveHandler(EVENT_ACCEPTSTABCHANGED, value);
@@ -155,23 +152,24 @@ namespace System.Windows.Forms
         {
             get
             {
-                return textBoxFlags[shortcutsEnabled];
+                return _textBoxFlags[shortcutsEnabled];
             }
             set
             {
-                if (shortcutsToDisable is null)
-                {
-                    shortcutsToDisable = new int[] {(int)Shortcut.CtrlZ, (int)Shortcut.CtrlC, (int)Shortcut.CtrlX,
-                    (int)Shortcut.CtrlV, (int)Shortcut.CtrlA, (int)Shortcut.CtrlL, (int)Shortcut.CtrlR,
-                    (int)Shortcut.CtrlE, (int)Shortcut.CtrlY, (int)Keys.Control + (int)Keys.Back,
-                    (int)Shortcut.CtrlDel, (int)Shortcut.ShiftDel, (int)Shortcut.ShiftIns, (int)Shortcut.CtrlJ};
-                }
-                textBoxFlags[shortcutsEnabled] = value;
+                s_shortcutsToDisable ??= new int[]
+                    {
+                        (int)Shortcut.CtrlZ, (int)Shortcut.CtrlC, (int)Shortcut.CtrlX,
+                        (int)Shortcut.CtrlV, (int)Shortcut.CtrlA, (int)Shortcut.CtrlL, (int)Shortcut.CtrlR,
+                        (int)Shortcut.CtrlE, (int)Shortcut.CtrlY, (int)Keys.Control + (int)Keys.Back,
+                        (int)Shortcut.CtrlDel, (int)Shortcut.ShiftDel, (int)Shortcut.ShiftIns, (int)Shortcut.CtrlJ
+                    };
+
+                _textBoxFlags[shortcutsEnabled] = value;
             }
         }
 
         /// <summary>
-        ///  Implements the <see cref='ShortcutsEnabled'/> property.
+        ///  Implements the <see cref="ShortcutsEnabled"/> property.
         /// </summary>
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
@@ -179,9 +177,9 @@ namespace System.Windows.Forms
             // the shortcut key we are not supported in TextBox.
             bool returnedValue = base.ProcessCmdKey(ref msg, keyData);
 
-            if (ShortcutsEnabled == false)
+            if (ShortcutsEnabled == false && s_shortcutsToDisable is not null)
             {
-                foreach (int shortcutValue in shortcutsToDisable)
+                foreach (int shortcutValue in s_shortcutsToDisable)
                 {
                     if ((int)keyData == shortcutValue ||
                         (int)keyData == (shortcutValue | (int)Keys.Shift))
@@ -190,11 +188,12 @@ namespace System.Windows.Forms
                     }
                 }
             }
+
             //
             // There are a few keys that change the alignment of the text, but that
             // are not ignored by the native control when the ReadOnly property is set.
             // We need to workaround that.
-            if (textBoxFlags[readOnly])
+            if (_textBoxFlags[readOnly])
             {
                 int k = (int)keyData;
                 if (k == (int)Shortcut.CtrlL        // align left
@@ -222,6 +221,7 @@ namespace System.Windows.Forms
                     EndUpdateInternal();
                     SetSelectedTextInternal(string.Empty, clearUndo: false);
                 }
+
                 return true;
             }
 
@@ -247,7 +247,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return textBoxFlags[autoSize];
+                return _textBoxFlags[autoSize];
             }
             set
             {
@@ -255,9 +255,9 @@ namespace System.Windows.Forms
                 // overriding SetBoundsCore (old RTM code).  We let CommonProperties.GetAutoSize
                 // continue to return false to keep our LayoutEngines from messing with TextBoxes.
                 // This is done for backwards compatibility since the new AutoSize behavior differs.
-                if (textBoxFlags[autoSize] != value)
+                if (_textBoxFlags[autoSize] != value)
                 {
-                    textBoxFlags[autoSize] = value;
+                    _textBoxFlags[autoSize] = value;
 
                     // AutoSize's effects are ignored for a multi-line textbox
                     //
@@ -300,7 +300,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override Image BackgroundImage
+        public override Image? BackgroundImage
         {
             get => base.BackgroundImage;
             set => base.BackgroundImage = value;
@@ -308,7 +308,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler AutoSizeChanged
+        public new event EventHandler? AutoSizeChanged
         {
             add => base.AutoSizeChanged += value;
             remove => base.AutoSizeChanged -= value;
@@ -316,7 +316,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler BackgroundImageChanged
+        public new event EventHandler? BackgroundImageChanged
         {
             add => base.BackgroundImageChanged += value;
             remove => base.BackgroundImageChanged -= value;
@@ -332,7 +332,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler BackgroundImageLayoutChanged
+        public new event EventHandler? BackgroundImageLayoutChanged
         {
             add => base.BackgroundImageLayoutChanged += value;
             remove => base.BackgroundImageLayoutChanged -= value;
@@ -348,14 +348,14 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.TextBoxBorderDescr))]
         public BorderStyle BorderStyle
         {
-            get => borderStyle;
+            get => _borderStyle;
             set
             {
-                if (borderStyle != value)
+                if (_borderStyle != value)
                 {
                     SourceGenerated.EnumValidator.Validate(value);
 
-                    borderStyle = value;
+                    _borderStyle = value;
                     UpdateStyles();
                     RecreateHandle();
 
@@ -371,7 +371,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.TextBoxBaseOnBorderStyleChangedDescr))]
-        public event EventHandler BorderStyleChanged
+        public event EventHandler? BorderStyleChanged
         {
             add => Events.AddHandler(EVENT_BORDERSTYLECHANGED, value);
             remove => Events.RemoveHandler(EVENT_BORDERSTYLECHANGED, value);
@@ -412,20 +412,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [SRDescription(nameof(SR.TextBoxCanUndoDescr))]
-        public bool CanUndo
-        {
-            get
-            {
-                if (IsHandleCreated)
-                {
-                    bool b;
-                    b = unchecked((int)(long)SendMessageW(this, (WM)EM.CANUNDO)) != 0;
-
-                    return b;
-                }
-                return false;
-            }
-        }
+        public bool CanUndo => IsHandleCreated && (int)PInvoke.SendMessage(this, (WM)EM.CANUNDO) != 0;
 
         /// <summary>
         ///  Returns the parameters needed to create the handle. Inheriting classes
@@ -438,34 +425,35 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = ComCtl32.WindowClasses.WC_EDIT;
+                cp.ClassName = PInvoke.WC_EDIT;
                 cp.Style |= (int)(ES.AUTOHSCROLL | ES.AUTOVSCROLL);
-                if (!textBoxFlags[hideSelection])
+                if (!_textBoxFlags[hideSelection])
                 {
                     cp.Style |= (int)ES.NOHIDESEL;
                 }
 
-                if (textBoxFlags[readOnly])
+                if (_textBoxFlags[readOnly])
                 {
                     cp.Style |= (int)ES.READONLY;
                 }
 
-                cp.Style &= ~(int)WS.BORDER;
-                cp.ExStyle &= ~(int)WS_EX.CLIENTEDGE;
+                cp.Style &= ~(int)WINDOW_STYLE.WS_BORDER;
+                cp.ExStyle &= ~(int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
 
-                switch (borderStyle)
+                switch (_borderStyle)
                 {
                     case BorderStyle.Fixed3D:
-                        cp.ExStyle |= (int)WS_EX.CLIENTEDGE;
+                        cp.ExStyle |= (int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
                         break;
                     case BorderStyle.FixedSingle:
-                        cp.Style |= (int)WS.BORDER;
+                        cp.Style |= (int)WINDOW_STYLE.WS_BORDER;
                         break;
                 }
-                if (textBoxFlags[multiline])
+
+                if (_textBoxFlags[multiline])
                 {
                     cp.Style |= (int)ES.MULTILINE;
-                    if (textBoxFlags[wordWrap])
+                    if (_textBoxFlags[wordWrap])
                     {
                         cp.Style &= ~(int)ES.AUTOHSCROLL;
                     }
@@ -488,7 +476,7 @@ namespace System.Windows.Forms
 
         [Browsable(true)]
         [EditorBrowsable(EditorBrowsableState.Always)]
-        public new event EventHandler Click
+        public new event EventHandler? Click
         {
             add => base.Click += value;
             remove => base.Click -= value;
@@ -496,7 +484,7 @@ namespace System.Windows.Forms
 
         [Browsable(true)]
         [EditorBrowsable(EditorBrowsableState.Always)]
-        public new event MouseEventHandler MouseClick
+        public new event MouseEventHandler? MouseClick
         {
             add => base.MouseClick += value;
             remove => base.MouseClick -= value;
@@ -555,14 +543,14 @@ namespace System.Windows.Forms
         {
             get
             {
-                return textBoxFlags[hideSelection];
+                return _textBoxFlags[hideSelection];
             }
 
             set
             {
-                if (textBoxFlags[hideSelection] != value)
+                if (_textBoxFlags[hideSelection] != value)
                 {
-                    textBoxFlags[hideSelection] = value;
+                    _textBoxFlags[hideSelection] = value;
                     RecreateHandle();
                     OnHideSelectionChanged(EventArgs.Empty);
                 }
@@ -571,7 +559,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.TextBoxBaseOnHideSelectionChangedDescr))]
-        public event EventHandler HideSelectionChanged
+        public event EventHandler? HideSelectionChanged
         {
             add => Events.AddHandler(EVENT_HIDESELECTIONCHANGED, value);
             remove => Events.RemoveHandler(EVENT_HIDESELECTIONCHANGED, value);
@@ -612,6 +600,7 @@ namespace System.Windows.Forms
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [MergableProperty(false)]
         [Localizable(true)]
+        [AllowNull]
         [SRDescription(nameof(SR.TextBoxLinesDescr))]
         [Editor("System.Windows.Forms.Design.StringArrayEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
         public string[] Lines
@@ -619,7 +608,7 @@ namespace System.Windows.Forms
             get
             {
                 string text = Text;
-                ArrayList list = new ArrayList();
+                List<string> list = new();
 
                 int lineStart = 0;
                 while (lineStart < text.Length)
@@ -654,15 +643,15 @@ namespace System.Windows.Forms
                 // Corner case -- last character in Text is a new line; need to add blank line to list
                 if (text.Length > 0 && (text[text.Length - 1] == '\r' || text[text.Length - 1] == '\n'))
                 {
-                    list.Add("");
+                    list.Add(string.Empty);
                 }
 
-                return (string[])list.ToArray(typeof(string));
+                return list.ToArray();
             }
             set
             {
                 //unparse this string list...
-                if (value != null && value.Length > 0)
+                if (value is not null && value.Length > 0)
                 {
                     // Using a StringBuilder instead of a String
                     // speeds things up approx 150 times
@@ -672,6 +661,7 @@ namespace System.Windows.Forms
                         text.Append("\r\n");
                         text.Append(value[i]);
                     }
+
                     Text = text.ToString();
                 }
                 else
@@ -693,7 +683,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return maxLength;
+                return _maxLength;
             }
             set
             {
@@ -702,9 +692,9 @@ namespace System.Windows.Forms
                     throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(MaxLength), value, 0));
                 }
 
-                if (maxLength != value)
+                if (_maxLength != value)
                 {
-                    maxLength = value;
+                    _maxLength = value;
                     UpdateMaxLength();
                 }
             }
@@ -724,18 +714,19 @@ namespace System.Windows.Forms
             {
                 if (IsHandleCreated)
                 {
-                    bool curState = (0 != unchecked((int)(long)SendMessageW(this, (WM)EM.GETMODIFY)));
-                    if (textBoxFlags[modified] != curState)
+                    bool curState = (int)PInvoke.SendMessage(this, (WM)EM.GETMODIFY) != 0;
+                    if (_textBoxFlags[modified] != curState)
                     {
                         // Raise ModifiedChanged event.  See WmReflectCommand for more info.
-                        textBoxFlags[modified] = curState;
+                        _textBoxFlags[modified] = curState;
                         OnModifiedChanged(EventArgs.Empty);
                     }
+
                     return curState;
                 }
                 else
                 {
-                    return textBoxFlags[modified];
+                    return _textBoxFlags[modified];
                 }
             }
 
@@ -745,12 +736,12 @@ namespace System.Windows.Forms
                 {
                     if (IsHandleCreated)
                     {
-                        SendMessageW(this, (WM)EM.SETMODIFY, PARAM.FromBool(value));
+                        PInvoke.SendMessage(this, (WM)EM.SETMODIFY, (WPARAM)(BOOL)value);
                         // Must maintain this state always in order for the
                         // test in the Get method to work properly.
                     }
 
-                    textBoxFlags[modified] = value;
+                    _textBoxFlags[modified] = value;
                     OnModifiedChanged(EventArgs.Empty);
                 }
             }
@@ -758,7 +749,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.TextBoxBaseOnModifiedChangedDescr))]
-        public event EventHandler ModifiedChanged
+        public event EventHandler? ModifiedChanged
         {
             add => Events.AddHandler(EVENT_MODIFIEDCHANGED, value);
             remove => Events.RemoveHandler(EVENT_MODIFIEDCHANGED, value);
@@ -777,20 +768,19 @@ namespace System.Windows.Forms
         {
             get
             {
-                return textBoxFlags[multiline];
+                return _textBoxFlags[multiline];
             }
             set
             {
-                if (textBoxFlags[multiline] != value)
+                if (_textBoxFlags[multiline] != value)
                 {
                     using (LayoutTransaction.CreateTransactionIf(AutoSize, ParentInternal, this, PropertyNames.Multiline))
                     {
-                        textBoxFlags[multiline] = value;
+                        _textBoxFlags[multiline] = value;
 
                         if (value)
                         {
                             // Multi-line textboxes do not have fixed height
-                            //
                             SetStyle(ControlStyles.FixedHeight, false);
                         }
                         else
@@ -809,7 +799,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.TextBoxBaseOnMultilineChangedDescr))]
-        public event EventHandler MultilineChanged
+        public event EventHandler? MultilineChanged
         {
             add => Events.AddHandler(EVENT_MULTILINECHANGED, value);
             remove => Events.RemoveHandler(EVENT_MULTILINECHANGED, value);
@@ -829,7 +819,7 @@ namespace System.Windows.Forms
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [SRCategory(nameof(SR.CatLayout))]
         [SRDescription(nameof(SR.ControlOnPaddingChangedDescr))]
-        public new event EventHandler PaddingChanged
+        public new event EventHandler? PaddingChanged
         {
             add => base.PaddingChanged += value;
             remove => base.PaddingChanged -= value;
@@ -859,10 +849,11 @@ namespace System.Windows.Forms
                 // if it doesnt take multiline and word wrap into account.  For better accuracy and/or wrapping use
                 // GetPreferredSize instead.
                 int height = FontHeight;
-                if (borderStyle != BorderStyle.None)
+                if (_borderStyle != BorderStyle.None)
                 {
                     height += SystemInformation.GetBorderSizeForDpi(_deviceDpi).Height * 4 + 3;
                 }
+
                 return height;
             }
         }
@@ -891,6 +882,7 @@ namespace System.Windows.Forms
                 bordersAndPadding.Width += 2;
                 bordersAndPadding.Height += 2;
             }
+
             // Reduce constraints by border/padding size
             proposedConstraints -= bordersAndPadding;
 
@@ -905,6 +897,7 @@ namespace System.Windows.Forms
             {
                 format |= TextFormatFlags.WordBreak;
             }
+
             Size textSize = TextRenderer.MeasureText(Text, Font, proposedConstraints, format);
 
             // We use this old computation as a lower bound to ensure backwards compatibility.
@@ -928,20 +921,19 @@ namespace System.Windows.Forms
                 // while the control does not have a handle. We need to return valid values.  We also need
                 // to keep the old cached values in case the Text is changed again making the cached values
                 // valid again.
-                AdjustSelectionStartAndEnd(selectionStart, selectionLength, out start, out end, -1);
+                AdjustSelectionStartAndEnd(_selectionStart, _selectionLength, out start, out end, -1);
                 length = end - start;
             }
             else
             {
                 start = 0;
                 int startResult = 0;
-                User32.SendMessageW(this, (WM)EM.GETSEL, (IntPtr)(&startResult), ref end);
+                PInvoke.SendMessage(this, (WM)EM.GETSEL, (WPARAM)(&startResult), ref end);
                 start = startResult;
 
                 //Here, we return the max of either 0 or the # returned by
                 //the windows call.  This eliminates a problem on nt4 where
                 // a huge negative # is being returned.
-                //
                 start = Math.Max(0, start);
                 // ditto for end
                 end = Math.Max(0, end);
@@ -982,16 +974,16 @@ namespace System.Windows.Forms
         {
             get
             {
-                return textBoxFlags[readOnly];
+                return _textBoxFlags[readOnly];
             }
             set
             {
-                if (textBoxFlags[readOnly] != value)
+                if (_textBoxFlags[readOnly] != value)
                 {
-                    textBoxFlags[readOnly] = value;
+                    _textBoxFlags[readOnly] = value;
                     if (IsHandleCreated)
                     {
-                        SendMessageW(this, (WM)EM.SETREADONLY, PARAM.FromBool(value));
+                        PInvoke.SendMessage(this, (WM)EM.SETREADONLY, (WPARAM)(BOOL)value);
                     }
 
                     OnReadOnlyChanged(EventArgs.Empty);
@@ -1003,7 +995,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.TextBoxBaseOnReadOnlyChangedDescr))]
-        public event EventHandler ReadOnlyChanged
+        public event EventHandler? ReadOnlyChanged
         {
             add => Events.AddHandler(EVENT_READONLYCHANGED, value);
             remove => Events.RemoveHandler(EVENT_READONLYCHANGED, value);
@@ -1014,6 +1006,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatAppearance))]
         [Browsable(false)]
+        [AllowNull]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [SRDescription(nameof(SR.TextBoxSelectedTextDescr))]
         public virtual string SelectedText
@@ -1032,37 +1025,35 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Replaces the selected text with the one passed in.
         /// </summary>
-        internal virtual void SetSelectedTextInternal(string text, bool clearUndo)
+        internal virtual void SetSelectedTextInternal(string? text, bool clearUndo)
         {
             if (!IsHandleCreated)
             {
                 CreateHandle();
             }
 
-            if (text is null)
-            {
-                text = string.Empty;
-            }
+            text ??= string.Empty;
 
             // The EM_LIMITTEXT message limits only the text the user can enter. It does not affect any text
             // already in the edit control when the message is sent, nor does it affect the length of the text
             // copied to the edit control by the WM_SETTEXT message.
-            SendMessageW(this, (WM)EM.LIMITTEXT);
+            PInvoke.SendMessage(this, (WM)EM.LIMITTEXT);
 
             if (clearUndo)
             {
-                SendMessageW(this, (WM)EM.REPLACESEL, IntPtr.Zero, text);
+                PInvoke.SendMessage(this, (WM)EM.REPLACESEL, 0, text);
+
                 // For consistency with Text, we clear the modified flag
-                SendMessageW(this, (WM)EM.SETMODIFY);
+                PInvoke.SendMessage(this, (WM)EM.SETMODIFY);
                 ClearUndo();
             }
             else
             {
-                SendMessageW(this, (WM)EM.REPLACESEL, /*undoable*/ (IntPtr)(-1), text);
+                PInvoke.SendMessage(this, (WM)EM.REPLACESEL, (WPARAM)(-1), text);
             }
 
             // Re-enable user input.
-            SendMessageW(this, (WM)EM.LIMITTEXT, (IntPtr)maxLength);
+            PInvoke.SendMessage(this, (WM)EM.LIMITTEXT, (WPARAM)_maxLength);
         }
 
         /// <summary>
@@ -1131,6 +1122,7 @@ namespace System.Windows.Forms
         ///  the current text in the text box.
         /// </summary>
         [Localizable(true)]
+        [AllowNull]
         [Editor("System.ComponentModel.Design.MultilineStringEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
         public override string Text
         {
@@ -1143,7 +1135,7 @@ namespace System.Windows.Forms
                     if (IsHandleCreated)
                     {
                         // clear the modified flag
-                        SendMessageW(this, (WM)EM.SETMODIFY);
+                        PInvoke.SendMessage(this, (WM)EM.SETMODIFY);
                     }
                 }
             }
@@ -1167,68 +1159,53 @@ namespace System.Windows.Forms
 
             set
             {
-                if (value is null)
-                {
-                    value = string.Empty;
-                }
+                value ??= string.Empty;
 
                 if (!WindowText.Equals(value))
                 {
-                    textBoxFlags[codeUpdateText] = true;
+                    _textBoxFlags[codeUpdateText] = true;
                     try
                     {
                         base.WindowText = value;
                     }
                     finally
                     {
-                        textBoxFlags[codeUpdateText] = false;
+                        _textBoxFlags[codeUpdateText] = false;
                     }
                 }
             }
         }
 
         /// <summary>
-        ///  In certain circumstances we might have to force
-        ///  text into the window whether or not the text is the same.
-        ///  Make this a method on TextBoxBase rather than RichTextBox (which is the only
-        ///  control that needs this at this point), since we need to set codeUpdateText.
+        ///  In certain circumstances we might have to force text into the window whether or not the text is the same.
+        ///  Make this a method on <see cref="TextBoxBase"/> rather than <see cref="RichTextBox"/> (which is the only
+        ///  control that needs this at this point), since we need to set <see cref="codeUpdateText"/>.
         /// </summary>
         internal void ForceWindowText(string value)
         {
-            if (value is null)
-            {
-                value = string.Empty;
-            }
+            value ??= string.Empty;
 
-            textBoxFlags[codeUpdateText] = true;
+            _textBoxFlags[codeUpdateText] = true;
             try
             {
                 if (IsHandleCreated)
                 {
-                    SetWindowTextW(new HandleRef(this, Handle), value);
+                    SetWindowTextW(this, value);
                 }
                 else
                 {
-                    if (value.Length == 0)
-                    {
-                        Text = null;
-                    }
-                    else
-                    {
-                        Text = value;
-                    }
+                    Text = value.Length == 0 ? null : value;
                 }
             }
             finally
             {
-                textBoxFlags[codeUpdateText] = false;
+                _textBoxFlags[codeUpdateText] = false;
             }
         }
 
         /// <summary>
-        ///  Gets or sets a value indicating whether a
-        ///  multiline text box control automatically wraps words to the beginning of the next
-        ///  line when necessary.
+        ///  Gets or sets a value indicating whether a multiline text box control automatically wraps words to the
+        ///  beginning of the next line when necessary.
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
         [Localizable(true)]
@@ -1238,15 +1215,15 @@ namespace System.Windows.Forms
         {
             get
             {
-                return textBoxFlags[wordWrap];
+                return _textBoxFlags[wordWrap];
             }
             set
             {
                 using (LayoutTransaction.CreateTransactionIf(AutoSize, ParentInternal, this, PropertyNames.WordWrap))
                 {
-                    if (textBoxFlags[wordWrap] != value)
+                    if (_textBoxFlags[wordWrap] != value)
                     {
-                        textBoxFlags[wordWrap] = value;
+                        _textBoxFlags[wordWrap] = value;
                         RecreateHandle();
                     }
                 }
@@ -1261,16 +1238,15 @@ namespace System.Windows.Forms
         {
             // If we're anchored to two opposite sides of the form, don't adjust the size because
             // we'll lose our anchored size by resetting to the requested width.
-            //
             if (returnIfAnchored && (Anchor & (AnchorStyles.Top | AnchorStyles.Bottom)) == (AnchorStyles.Top | AnchorStyles.Bottom))
             {
                 return;
             }
 
-            int saveHeight = requestedHeight;
+            int saveHeight = _requestedHeight;
             try
             {
-                if (textBoxFlags[autoSize] && !textBoxFlags[multiline])
+                if (_textBoxFlags[autoSize] && !_textBoxFlags[multiline])
                 {
                     Height = PreferredHeight;
                 }
@@ -1281,33 +1257,32 @@ namespace System.Windows.Forms
                     // Changing the font of a multi-line textbox can sometimes cause a painting problem
                     // The only workaround I can find is to size the textbox big enough for the font, and
                     // then restore its correct size.
-                    //
-                    if (textBoxFlags[multiline])
+                    if (_textBoxFlags[multiline])
                     {
                         Height = Math.Max(saveHeight, PreferredHeight + 2); // 2 = fudge factor
                     }
 
-                    integralHeightAdjust = true;
+                    _integralHeightAdjust = true;
                     try
                     {
                         Height = saveHeight;
                     }
                     finally
                     {
-                        integralHeightAdjust = false;
+                        _integralHeightAdjust = false;
                     }
                 }
             }
             finally
             {
-                requestedHeight = saveHeight;
+                _requestedHeight = saveHeight;
             }
         }
 
         /// <summary>
         ///  Append text to the current text of text box.
         /// </summary>
-        public void AppendText(string text)
+        public void AppendText(string? text)
         {
             if (string.IsNullOrEmpty(text))
             {
@@ -1353,14 +1328,32 @@ namespace System.Windows.Forms
         {
             if (IsHandleCreated)
             {
-                SendMessageW(this, (WM)EM.EMPTYUNDOBUFFER);
+                PInvoke.SendMessage(this, (WM)EM.EMPTYUNDOBUFFER);
+            }
+        }
+
+        protected bool ContainsNavigationKeyCode(Keys keyCode)
+        {
+            switch (keyCode)
+            {
+                case Keys.Up:
+                case Keys.Down:
+                case Keys.PageUp:
+                case Keys.PageDown:
+                case Keys.Home:
+                case Keys.End:
+                case Keys.Left:
+                case Keys.Right:
+                    return true;
+                default:
+                    return false;
             }
         }
 
         /// <summary>
         ///  Copies the current selection in the text box to the Clipboard.
         /// </summary>
-        public void Copy() => SendMessageW(this, WM.COPY);
+        public void Copy() => PInvoke.SendMessage(this, WM.COPY);
 
         protected override AccessibleObject CreateAccessibilityInstance() => new TextBoxBaseAccessibleObject(this);
 
@@ -1368,7 +1361,7 @@ namespace System.Windows.Forms
         {
             // This "creatingHandle" stuff is to avoid property change events
             // when we set the Text property.
-            textBoxFlags[creatingHandle] = true;
+            _textBoxFlags[creatingHandle] = true;
             try
             {
                 base.CreateHandle();
@@ -1378,14 +1371,14 @@ namespace System.Windows.Forms
             }
             finally
             {
-                textBoxFlags[creatingHandle] = false;
+                _textBoxFlags[creatingHandle] = false;
             }
         }
 
         /// <summary>
         ///  Moves the current selection in the text box to the Clipboard.
         /// </summary>
-        public void Cut() => SendMessageW(this, WM.CUT);
+        public void Cut() => PInvoke.SendMessage(this, WM.CUT);
 
         /// <summary>
         ///  Returns the text end position (one past the last input character).  This property is virtual to allow MaskedTextBox
@@ -1409,7 +1402,7 @@ namespace System.Windows.Forms
                     case Keys.Tab:
                         // Single-line RichEd's want tab characters (see WM_GETDLGCODE),
                         // so we don't ask it
-                        return Multiline && textBoxFlags[acceptsTab] && ((keyData & Keys.Control) == 0);
+                        return Multiline && _textBoxFlags[acceptsTab] && ((keyData & Keys.Control) == 0);
                     case Keys.Escape:
                         if (Multiline)
                         {
@@ -1432,6 +1425,7 @@ namespace System.Windows.Forms
                         // else fall through to base
                 }
             }
+
             return base.IsInputKey(keyData);
         }
 
@@ -1453,34 +1447,35 @@ namespace System.Windows.Forms
             AdjustHeight(true);
 
             UpdateMaxLength();
-            if (textBoxFlags[modified])
+            if (_textBoxFlags[modified])
             {
-                SendMessageW(this, (WM)EM.SETMODIFY, PARAM.FromBool(true));
+                PInvoke.SendMessage(this, (WM)EM.SETMODIFY, (WPARAM)(BOOL)true);
             }
-            if (textBoxFlags[scrollToCaretOnHandleCreated])
+
+            if (_textBoxFlags[scrollToCaretOnHandleCreated])
             {
                 ScrollToCaret();
-                textBoxFlags[scrollToCaretOnHandleCreated] = false;
+                _textBoxFlags[scrollToCaretOnHandleCreated] = false;
             }
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
-            textBoxFlags[modified] = Modified;
-            textBoxFlags[setSelectionOnHandleCreated] = true;
+            _textBoxFlags[modified] = Modified;
+            _textBoxFlags[setSelectionOnHandleCreated] = true;
             // Update text selection cached values to be restored when recreating the handle.
-            GetSelectionStartAndLength(out selectionStart, out selectionLength);
+            GetSelectionStartAndLength(out _selectionStart, out _selectionLength);
             base.OnHandleDestroyed(e);
         }
 
         /// <summary>
         ///  Replaces the current selection in the text box with the contents of the Clipboard.
         /// </summary>
-        public void Paste() => SendMessageW(this, WM.PASTE);
+        public void Paste() => PInvoke.SendMessage(this, WM.PASTE);
 
         protected override bool ProcessDialogKey(Keys keyData)
         {
-            Debug.WriteLineIf(s_controlKeyboardRouting.TraceVerbose, "TextBoxBase.ProcessDialogKey [" + keyData.ToString() + "]");
+            s_controlKeyboardRouting.TraceVerbose($"TextBoxBase.ProcessDialogKey [{keyData}]");
             Keys keyCode = (Keys)keyData & Keys.KeyCode;
 
             if (keyCode == Keys.Tab && AcceptsTab && (keyData & Keys.Control) != 0)
@@ -1498,7 +1493,7 @@ namespace System.Windows.Forms
         /// <hideinheritance/>
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event PaintEventHandler Paint
+        public new event PaintEventHandler? Paint
         {
             add => base.Paint += value;
             remove => base.Paint -= value;
@@ -1547,32 +1542,28 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void OnMouseUp(MouseEventArgs mevent)
         {
-            if (mevent != null)
+            if (mevent is not null && mevent.Button == MouseButtons.Left)
             {
-                Point pt = PointToScreen(mevent.Location);
-
-                if (mevent.Button == MouseButtons.Left)
+                if (!ValidationCancelled && PInvoke.WindowFromPoint(PointToScreen(mevent.Location)) == HWND)
                 {
-                    if (!ValidationCancelled && WindowFromPoint(pt) == Handle)
+                    if (!_doubleClickFired)
                     {
-                        if (!doubleClickFired)
-                        {
-                            OnClick(mevent);
-                            OnMouseClick(mevent);
-                        }
-                        else
-                        {
-                            doubleClickFired = false;
-                            OnDoubleClick(mevent);
-                            OnMouseDoubleClick(mevent);
-                        }
+                        OnClick(mevent);
+                        OnMouseClick(mevent);
                     }
-
-                    doubleClickFired = false;
+                    else
+                    {
+                        _doubleClickFired = false;
+                        OnDoubleClick(mevent);
+                        OnMouseDoubleClick(mevent);
+                    }
                 }
+
+                _doubleClickFired = false;
             }
 
-            base.OnMouseUp(mevent);
+            // Because the code has been like that since long time, we assume that mevent is not null.
+            base.OnMouseUp(mevent!);
         }
 
         protected virtual void OnMultilineChanged(EventArgs e)
@@ -1600,20 +1591,25 @@ namespace System.Windows.Forms
         protected override void OnTextChanged(EventArgs e)
         {
             // since AutoSize existed in Everett, (and is the default) we can't
-            // relayout the parent when the "preferredsize" of the control changes.
-            // this means a multiline = true textbox wont natrually grow in height when
+            // relayout the parent when the "PreferredSize" of the control changes.
+            // this means a multiline = true textbox won't naturally grow in height when
             // the text changes.
             CommonProperties.xClearPreferredSizeCache(this);
             base.OnTextChanged(e);
 
-            if (UiaCore.UiaClientsAreListening().IsTrue())
+            if (UiaCore.UiaClientsAreListening())
             {
                 RaiseAccessibilityTextChangedEvent();
             }
         }
 
         private protected virtual void RaiseAccessibilityTextChangedEvent()
-            => AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextChangedEventId);
+        {
+            if (IsAccessibilityObjectCreated)
+            {
+                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextChangedEventId);
+            }
+        }
 
         /// <summary>
         ///  Returns the character nearest to the given point.
@@ -1630,7 +1626,7 @@ namespace System.Windows.Forms
         /// </summary>
         public virtual int GetCharIndexFromPosition(Point pt)
         {
-            int index = (int)User32.SendMessageW(this, (WM)EM.CHARFROMPOS, IntPtr.Zero, PARAM.FromLowHigh(pt.X, pt.Y));
+            int index = (int)PInvoke.SendMessage(this, (WM)EM.CHARFROMPOS, 0, PARAM.FromPoint(pt));
             index = PARAM.LOWORD(index);
 
             if (index < 0)
@@ -1648,6 +1644,7 @@ namespace System.Windows.Forms
                     index = Math.Max(t.Length - 1, 0);
                 }
             }
+
             return index;
         }
 
@@ -1659,10 +1656,7 @@ namespace System.Windows.Forms
         ///  you pass the index of a overflowed character, GetLineFromCharIndex would
         ///  return 1 and not 0.
         /// </summary>
-        public virtual int GetLineFromCharIndex(int index)
-        {
-            return (int)(long)SendMessageW(this, (WM)EM.LINEFROMCHAR, (IntPtr)index);
-        }
+        public virtual int GetLineFromCharIndex(int index) => (int)PInvoke.SendMessage(this, (WM)EM.LINEFROMCHAR, (WPARAM)index);
 
         /// <summary>
         ///  Returns the location of the character at the given index.
@@ -1674,7 +1668,7 @@ namespace System.Windows.Forms
                 return Point.Empty;
             }
 
-            int i = (int)(long)SendMessageW(this, (WM)EM.POSFROMCHAR, (IntPtr)index);
+            int i = (int)PInvoke.SendMessage(this, (WM)EM.POSFROMCHAR, (WPARAM)index);
             return new Point(PARAM.SignedLOWORD(i), PARAM.SignedHIWORD(i));
         }
 
@@ -1687,16 +1681,14 @@ namespace System.Windows.Forms
             {
                 throw new ArgumentOutOfRangeException(nameof(lineNumber), lineNumber, string.Format(SR.InvalidArgument, nameof(lineNumber), lineNumber));
             }
-            return unchecked((int)(long)SendMessageW(this, (WM)EM.LINEINDEX, (IntPtr)lineNumber));
+
+            return (int)PInvoke.SendMessage(this, (WM)EM.LINEINDEX, (WPARAM)lineNumber);
         }
 
         /// <summary>
         ///  Returns the index of the first character of the line where the caret is.
         /// </summary>
-        public int GetFirstCharIndexOfCurrentLine()
-        {
-            return unchecked((int)(long)SendMessageW(this, (WM)EM.LINEINDEX, (IntPtr)(-1)));
-        }
+        public int GetFirstCharIndexOfCurrentLine() => (int)PInvoke.SendMessage(this, (WM)EM.LINEINDEX, (WPARAM)(-1));
 
         /// <summary>
         ///  Ensures that the caret is visible in the TextBox window, by scrolling the
@@ -1706,7 +1698,7 @@ namespace System.Windows.Forms
         {
             if (!IsHandleCreated)
             {
-                textBoxFlags[scrollToCaretOnHandleCreated] = true;
+                _textBoxFlags[scrollToCaretOnHandleCreated] = true;
                 return;
             }
 
@@ -1720,7 +1712,7 @@ namespace System.Windows.Forms
             IntPtr editOlePtr = IntPtr.Zero;
             try
             {
-                if (SendMessageW(this, (WM)Richedit.EM.GETOLEINTERFACE, IntPtr.Zero, ref editOlePtr) != IntPtr.Zero)
+                if (PInvoke.SendMessage(this, (WM)Richedit.EM.GETOLEINTERFACE, 0, ref editOlePtr) != 0)
                 {
                     IntPtr iTextDocument = IntPtr.Zero;
                     Guid iiTextDocumentGuid = typeof(Richedit.ITextDocument).GUID;
@@ -1747,7 +1739,7 @@ namespace System.Windows.Forms
                             textRange.ScrollIntoView(0);   // 0 ==> tomEnd
 
                             // 2. Get the first visible line.
-                            int firstVisibleLine = unchecked((int)(long)SendMessageW(this, (WM)EM.GETFIRSTVISIBLELINE));
+                            int firstVisibleLine = (int)PInvoke.SendMessage(this, (WM)EM.GETFIRSTVISIBLELINE);
 
                             // 3. If the first visible line is smaller than the start of the selection, we are done;
                             if (firstVisibleLine <= selStartLine)
@@ -1783,7 +1775,7 @@ namespace System.Windows.Forms
 
             if (!scrolled)
             {
-                SendMessageW(this, (WM)EM.SCROLLCARET);
+                PInvoke.SendMessage(this, (WM)EM.SCROLLCARET);
             }
         }
 
@@ -1842,17 +1834,20 @@ namespace System.Windows.Forms
             {
                 AdjustSelectionStartAndEnd(start, length, out int s, out int e, textLen);
 
-                SendMessageW(this, (WM)EM.SETSEL, (IntPtr)s, (IntPtr)e);
+                PInvoke.SendMessage(this, (WM)EM.SETSEL, (WPARAM)s, (LPARAM)e);
 
-                AccessibilityObject?.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+                if (IsAccessibilityObjectCreated)
+                {
+                    AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+                }
             }
             else
             {
                 //otherwise, wait until handle is created to send this message.
                 //Store the indices until then...
-                selectionStart = start;
-                selectionLength = length;
-                textBoxFlags[setSelectionOnHandleCreated] = true;
+                _selectionStart = start;
+                _selectionLength = length;
+                _textBoxFlags[setSelectionOnHandleCreated] = true;
             }
         }
 
@@ -1861,8 +1856,8 @@ namespace System.Windows.Forms
         /// </summary>
         public void SelectAll()
         {
-            int textLen = TextLength;
-            SelectInternal(0, textLen, textLen);
+            int textLength = TextLength;
+            SelectInternal(0, textLength, textLength);
         }
 
         /// <summary>
@@ -1870,12 +1865,12 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
         {
-            if (!integralHeightAdjust && height != Height)
+            if (!_integralHeightAdjust && height != Height)
             {
-                requestedHeight = height;
+                _requestedHeight = height;
             }
 
-            if (textBoxFlags[autoSize] && !textBoxFlags[multiline])
+            if (_textBoxFlags[autoSize] && !_textBoxFlags[multiline])
             {
                 height = PreferredHeight;
             }
@@ -1952,17 +1947,17 @@ namespace System.Windows.Forms
         internal void SetSelectionOnHandle()
         {
             Debug.Assert(IsHandleCreated, "Don't call this method until the handle is created.");
-            if (textBoxFlags[setSelectionOnHandleCreated])
+            if (_textBoxFlags[setSelectionOnHandleCreated])
             {
-                textBoxFlags[setSelectionOnHandleCreated] = false;
-                AdjustSelectionStartAndEnd(selectionStart, selectionLength, out int start, out int end, -1);
-                SendMessageW(this, (WM)EM.SETSEL, (IntPtr)start, (IntPtr)end);
+                _textBoxFlags[setSelectionOnHandleCreated] = false;
+                AdjustSelectionStartAndEnd(_selectionStart, _selectionLength, out int start, out int end, -1);
+                PInvoke.SendMessage(this, (WM)EM.SETSEL, (WPARAM)start, (LPARAM)end);
             }
         }
 
         /// <summary>
-        ///  Converts byte offsset to unicode offsets.
-        ///  When procssing WM_GETSEL/WM_SETSEL, EDIT control works with byte offsets instead of character positions
+        ///  Converts byte offset to unicode offsets.
+        ///  When processing WM_GETSEL/WM_SETSEL, EDIT control works with byte offsets instead of character positions
         ///  as opposed to RICHEDIT which does it always as character positions.
         ///  This method is used when handling the WM_GETSEL message.
         /// </summary>
@@ -1984,10 +1979,12 @@ namespace System.Windows.Forms
             {
                 start = 0;
             }
+
             if (start > bytes.Length)
             {
                 start = bytes.Length;
             }
+
             if (end > bytes.Length)
             {
                 end = bytes.Length;
@@ -2007,12 +2004,12 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Converts unicode offsset to byte offsets.
-        ///  When procssing WM_GETSEL/WM_SETSEL, EDIT control works with byte offsets instead of character positions
+        ///  Converts unicode offset to byte offsets.
+        ///  When processing WM_GETSEL/WM_SETSEL, EDIT control works with byte offsets instead of character positions
         ///  as opposed to RICHEDIT which does it always as character positions.
         ///  This method is used when handling the WM_SETSEL message.
         /// </summary>
-        static internal void ToDbcsOffsets(string str, ref int start, ref int end)
+        internal static void ToDbcsOffsets(string str, ref int start, ref int end)
         {
             Encoding e = Encoding.Default;
 
@@ -2028,14 +2025,17 @@ namespace System.Windows.Forms
             {
                 start = 0;
             }
+
             if (start > str.Length)
             {
                 start = str.Length;
             }
+
             if (end < start)
             {
                 end = start;
             }
+
             if (end > str.Length)
             {
                 end = str.Length;
@@ -2044,8 +2044,8 @@ namespace System.Windows.Forms
             // IMPORTANT: Avoid off-by-1 errors!
             // The end value passed in is the character immediately after the last character selected.
 
-            int newStart = start == 0 ? 0 : e.GetByteCount(str.Substring(0, start));
-            end = newStart + e.GetByteCount(str.Substring(start, end - start));
+            int newStart = start == 0 ? 0 : e.GetByteCount(str.AsSpan(0, start));
+            end = newStart + e.GetByteCount(str.AsSpan(start, end - start));
             start = newStart;
 
             if (swap)
@@ -2065,7 +2065,7 @@ namespace System.Windows.Forms
             string txt = Text;
             if (txt.Length > 40)
             {
-                txt = txt.Substring(0, 40) + "...";
+                txt = string.Concat(txt.AsSpan(0, 40), "...");
             }
 
             return s + ", Text: " + txt.ToString();
@@ -2074,17 +2074,17 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Undoes the last edit operation in the text box.
         /// </summary>
-        public void Undo() => SendMessageW(this, (WM)EM.UNDO);
+        public void Undo() => PInvoke.SendMessage(this, (WM)EM.UNDO);
 
         internal virtual void UpdateMaxLength()
         {
             if (IsHandleCreated)
             {
-                SendMessageW(this, (WM)EM.LIMITTEXT, (IntPtr)maxLength);
+                PInvoke.SendMessage(this, (WM)EM.LIMITTEXT, (WPARAM)_maxLength);
             }
         }
 
-        internal override Gdi32.HBRUSH InitializeDCForWmCtlColor(Gdi32.HDC dc, User32.WM msg)
+        internal override HBRUSH InitializeDCForWmCtlColor(HDC dc, User32.WM msg)
         {
             if (msg == WM.CTLCOLORSTATIC && !ShouldSerializeBackColor())
             {
@@ -2101,18 +2101,17 @@ namespace System.Windows.Forms
 
         private void WmReflectCommand(ref Message m)
         {
-            if (!textBoxFlags[codeUpdateText] && !textBoxFlags[creatingHandle])
+            if (!_textBoxFlags[codeUpdateText] && !_textBoxFlags[creatingHandle])
             {
-                EN wParamAsEN = (EN)PARAM.HIWORD(m.WParam);
+                EN wParamAsEN = (EN)m.WParamInternal.HIWORD;
                 if (wParamAsEN == EN.CHANGE && CanRaiseTextChangedEvent)
                 {
                     OnTextChanged(EventArgs.Empty);
                 }
                 else if (wParamAsEN == EN.UPDATE)
                 {
-                    // Force update to the Modified property, which will trigger
-                    // ModifiedChanged event handlers
-                    bool force = Modified;
+                    // Force update to the Modified property, which will trigger ModifiedChanged event handlers
+                    _ = Modified;
                 }
             }
         }
@@ -2120,9 +2119,9 @@ namespace System.Windows.Forms
         void WmSetFont(ref Message m)
         {
             base.WndProc(ref m);
-            if (!textBoxFlags[multiline])
+            if (!_textBoxFlags[multiline])
             {
-                SendMessageW(this, (WM)EM.SETMARGINS, (IntPtr)(EC.LEFTMARGIN | EC.RIGHTMARGIN));
+                PInvoke.SendMessage(this, (WM)EM.SETMARGINS, (WPARAM)(uint)(EC.LEFTMARGIN | EC.RIGHTMARGIN));
             }
         }
 
@@ -2131,13 +2130,13 @@ namespace System.Windows.Forms
             base.WndProc(ref m);
             if (AcceptsTab)
             {
-                Debug.WriteLineIf(Control.s_controlKeyboardRouting.TraceVerbose, "TextBox wants tabs");
-                m.Result = (IntPtr)(unchecked((int)(long)m.Result) | (int)DLGC.WANTTAB);
+                s_controlKeyboardRouting.TraceVerbose("TextBox wants tabs");
+                m.ResultInternal = (LRESULT)(m.ResultInternal | (int)DLGC.WANTTAB);
             }
             else
             {
-                Debug.WriteLineIf(Control.s_controlKeyboardRouting.TraceVerbose, "TextBox doesn't want tabs");
-                m.Result = (IntPtr)(unchecked((int)(long)m.Result) & ~(int)(DLGC.WANTTAB | DLGC.WANTALLKEYS));
+                s_controlKeyboardRouting.TraceVerbose("TextBox doesn't want tabs");
+                m.ResultInternal = (LRESULT)(m.ResultInternal & ~(int)(DLGC.WANTTAB | DLGC.WANTALLKEYS));
             }
         }
 
@@ -2151,24 +2150,21 @@ namespace System.Windows.Forms
                 return;
             }
 
-            int x = PARAM.SignedLOWORD(m.LParam);
-            int y = PARAM.SignedHIWORD(m.LParam);
             Point client;
             bool keyboardActivated = false;
 
-            // Lparam will be exactly -1 when the user invokes the context menu
-            // with the keyboard.
-            if (unchecked((int)(long)m.LParam) == -1)
+            // LParam will be -1 when the user invokes the context menu with the keyboard.
+            if (m.LParamInternal == -1)
             {
                 keyboardActivated = true;
                 client = new Point(Width / 2, Height / 2);
             }
             else
             {
-                client = PointToClient(new Point(x, y));
+                client = PointToClient(PARAM.ToPoint(m.LParamInternal));
             }
 
-            // Only show the context menu when clicked in the client area (VisualStudio7 #156)
+            // Only show the context menu when clicked in the client area.
             if (ClientRectangle.Contains(client))
             {
                 ContextMenuStrip.ShowInternal(this, client, keyboardActivated);
@@ -2185,7 +2181,7 @@ namespace System.Windows.Forms
             switch ((WM)m.Msg)
             {
                 case WM.LBUTTONDBLCLK:
-                    doubleClickFired = true;
+                    _doubleClickFired = true;
                     base.WndProc(ref m);
                     break;
                 case WM.REFLECT_COMMAND:
@@ -2210,6 +2206,17 @@ namespace System.Windows.Forms
                         // SystemMenu if ContextMenuStrip menus are null
                         WmTextBoxContextMenu(ref m);
                     }
+
+                    break;
+                case WM.DESTROY:
+                    if (TryGetAccessibilityObject(out AccessibleObject? @object) && @object is TextBoxBaseAccessibleObject accessibleObject &&
+                        !RecreatingHandle)
+                    {
+                        accessibleObject.ClearObjects();
+                    }
+
+                    base.WndProc(ref m);
+
                     break;
                 default:
                     base.WndProc(ref m);

@@ -19,10 +19,7 @@ namespace System.ComponentModel.Design.Serialization
         {
             get
             {
-                if (s_default is null)
-                {
-                    s_default = new EventMemberCodeDomSerializer();
-                }
+                s_default ??= new EventMemberCodeDomSerializer();
 
                 return s_default;
             }
@@ -34,22 +31,15 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         public override void Serialize(IDesignerSerializationManager manager, object value, MemberDescriptor descriptor, CodeStatementCollection statements)
         {
-            if (manager is null)
-            {
-                throw new ArgumentNullException(nameof(manager));
-            }
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
+            ArgumentNullException.ThrowIfNull(manager);
+            ArgumentNullException.ThrowIfNull(value);
+
             if (!(descriptor is EventDescriptor eventToSerialize))
             {
                 throw new ArgumentNullException(nameof(descriptor));
             }
-            if (statements is null)
-            {
-                throw new ArgumentNullException(nameof(statements));
-            }
+
+            ArgumentNullException.ThrowIfNull(statements);
 
             try
             {
@@ -59,12 +49,12 @@ namespace System.ComponentModel.Design.Serialization
                     PropertyDescriptor prop = eventBindings.GetEventProperty(eventToSerialize);
                     string methodName = (string)prop.GetValue(value);
 
-                    if (methodName != null)
+                    if (methodName is not null)
                     {
-                        CodeDomSerializer.Trace("Event {0} bound to {1}", eventToSerialize.Name, methodName);
+                        Trace("Event {0} bound to {1}", eventToSerialize.Name, methodName);
                         CodeExpression eventTarget = SerializeToExpression(manager, value);
-                        CodeDomSerializer.TraceWarningIf(eventTarget is null, "Object has no name and no propery ref in context so we cannot serialize events: {0}", value);
-                        if (eventTarget != null)
+                        TraceWarningIf(eventTarget is null, "Object has no name and no property ref in context so we cannot serialize events: {0}", value);
+                        if (eventTarget is not null)
                         {
                             CodeTypeReference delegateTypeRef = new CodeTypeReference(eventToSerialize.EventType);
                             CodeDelegateCreateExpression delegateCreate = new CodeDelegateCreateExpression(delegateTypeRef, _thisRef, methodName);

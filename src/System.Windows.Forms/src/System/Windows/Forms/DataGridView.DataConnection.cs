@@ -86,7 +86,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (CurrencyManager != null)
+                    if (CurrencyManager is not null)
                     {
                         // we only allow to add new rows on an IBindingList
                         return (CurrencyManager.List is IBindingList) && CurrencyManager.AllowAdd && ((IBindingList)CurrencyManager.List).SupportsChangeNotification;
@@ -102,7 +102,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (CurrencyManager != null)
+                    if (CurrencyManager is not null)
                     {
                         return CurrencyManager.AllowEdit;
                     }
@@ -117,7 +117,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (CurrencyManager != null)
+                    if (CurrencyManager is not null)
                     {
                         // we only allow deletion on an IBindingList
                         return (CurrencyManager.List is IBindingList) && CurrencyManager.AllowRemove && ((IBindingList)CurrencyManager.List).SupportsChangeNotification;
@@ -167,7 +167,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (CurrencyManager != null)
+                    if (CurrencyManager is not null)
                     {
                         return CurrencyManager.List;
                     }
@@ -225,7 +225,7 @@ namespace System.Windows.Forms
 
             public void AddNew()
             {
-                if (CurrencyManager != null)
+                if (CurrencyManager is not null)
                 {
                     // don't call AddNew on a suspended currency manager.
                     if (!CurrencyManager.ShouldBind)
@@ -344,7 +344,7 @@ namespace System.Windows.Forms
 
             public TypeConverter BoundColumnConverter(int boundColumnIndex)
             {
-                Debug.Assert(_props != null);
+                Debug.Assert(_props is not null);
                 return _props[boundColumnIndex].Converter;
             }
 
@@ -372,8 +372,8 @@ namespace System.Windows.Forms
 
             public SortOrder BoundColumnSortOrder(int boundColumnIndex)
             {
-                IBindingList ibl = CurrencyManager != null ? CurrencyManager.List as IBindingList : null;
-                IBindingListView iblv = ibl != null ? ibl as IBindingListView : null;
+                IBindingList ibl = CurrencyManager is not null ? CurrencyManager.List as IBindingList : null;
+                IBindingListView iblv = ibl is not null ? ibl as IBindingListView : null;
 
                 if (ibl is null || !ibl.SupportsSorting || !ibl.IsSorted)
                 {
@@ -400,7 +400,7 @@ namespace System.Windows.Forms
 
             public Type BoundColumnValueType(int boundColumnIndex)
             {
-                Debug.Assert(_props != null);
+                Debug.Assert(_props is not null);
                 return _props[boundColumnIndex].PropertyType;
             }
 
@@ -457,6 +457,7 @@ namespace System.Windows.Forms
                     {
                         _dataConnectionState[DATACONNECTIONSTATE_processingMetaDataChanges] = false;
                     }
+
                     return;
                 }
 
@@ -478,6 +479,7 @@ namespace System.Windows.Forms
                         // this will also set DATACONNECTIONSTATE_listWasReset to false
                         ResetDataConnectionState();
                     }
+
                     return;
                 }
 
@@ -512,7 +514,8 @@ namespace System.Windows.Forms
                                 // the new row becomes a regular row and a "new" new row is appended
                                 _owner.NewRowIndex = -1;
                                 _owner.AddNewRow(false /* createdByEditing */);
-                            } while (DataBoundRowsCount() < CurrencyManager.Count);
+                            }
+                            while (DataBoundRowsCount() < CurrencyManager.Count);
                         }
 
                         _dataConnectionState[DATACONNECTIONSTATE_finishedAddNew] = true;
@@ -564,7 +567,7 @@ namespace System.Windows.Forms
                     if (_dataConnectionState[DATACONNECTIONSTATE_inDeleteOperation] && _dataConnectionState[DATACONNECTIONSTATE_didNotDeleteRowFromDataGridView])
                     {
                         // we received a ListChangedType.ItemAdded while we were deleting rows from the back end
-                        // and we stil haven't removed a row from the data grid view
+                        // and we still haven't removed a row from the data grid view
                         // System.Data.DataView started an AddNew transaction as a result of deleting rows
                         // mark the state as itemAddedInDeleteOperation
                         _dataConnectionState[DATACONNECTIONSTATE_itemAddedInDeleteOperation] = true;
@@ -611,6 +614,7 @@ namespace System.Windows.Forms
                         {
                             _dataConnectionState[DATACONNECTIONSTATE_listWasReset] = false;
                         }
+
                         return;
                     }
                     else if (CurrencyManager.List.Count == DataBoundRowsCount())
@@ -634,6 +638,7 @@ namespace System.Windows.Forms
                             {
                                 _owner.BeginUpdateInternal();
                             }
+
                             try
                             {
                                 _owner.RefreshRows(!_owner.InSortOperation /*scrollIntoView*/);
@@ -652,6 +657,7 @@ namespace System.Windows.Forms
                                     _owner.Invalidate(true);
                                 }
                             }
+
                             break;
                         case ListChangedType.ItemAdded:
                             if (_owner.NewRowIndex == -1 || e.NewIndex != _owner.Rows.Count)
@@ -665,6 +671,7 @@ namespace System.Windows.Forms
 #endif // DEBUG
                                 throw new InvalidOperationException();
                             }
+
                             break;
                         case ListChangedType.ItemDeleted:
                             _owner.Rows.RemoveAtInternal(e.NewIndex, true /*force*/);
@@ -682,10 +689,11 @@ namespace System.Windows.Forms
                         case ListChangedType.ItemChanged:
                             Debug.Assert(e.NewIndex != -1, "the item changed event does not cover changes to the entire list");
                             string dataPropertyName = null;
-                            if (e.PropertyDescriptor != null)
+                            if (e.PropertyDescriptor is not null)
                             {
                                 dataPropertyName = ((MemberDescriptor)(e.PropertyDescriptor)).Name;
                             }
+
                             for (int columnIndex = 0; columnIndex < _owner.Columns.Count; columnIndex++)
                             {
                                 DataGridViewColumn dataGridViewColumn = _owner.Columns[columnIndex];
@@ -704,6 +712,7 @@ namespace System.Windows.Forms
                                     }
                                 }
                             }
+
                             // Repaint the row header cell to show potential error icon
                             _owner.InvalidateCell(-1, e.NewIndex);
                             // update the editing control value if the data changed in the row the user was editing
@@ -711,10 +720,12 @@ namespace System.Windows.Forms
                             {
                                 _owner.RefreshEdit();
                             }
+
                             break;
                         default:
                             break;
                     }
+
                     // now put the position in the DataGridView control according to the position in the currency manager
                     if (_owner.Rows.Count > 0 &&
                         !_dataConnectionState[DATACONNECTIONSTATE_doNotChangePositionInTheDataGridViewControl] &&
@@ -850,14 +861,14 @@ namespace System.Windows.Forms
 
                 // Update the data manager
                 SetDataConnection(DataSource, DataMember);
-                Debug.Assert(CurrencyManager != null);
+                Debug.Assert(CurrencyManager is not null);
                 _owner.RefreshColumnsAndRows();
                 _owner.OnDataBindingComplete(ListChangedType.Reset);
             }
 
             private void DataSourceMetaDataChanged()
             {
-                Debug.Assert(CurrencyManager != null);
+                Debug.Assert(CurrencyManager is not null);
 
                 // get the new meta data
                 _props = CurrencyManager.GetItemProperties();
@@ -953,9 +964,9 @@ namespace System.Windows.Forms
             {
                 UnWireEvents();
 
-                // Set the currency manager to null so if someone would want to resurect this data grid view data connection
-                // we would not unwire the events from the curency manager twice.
-                // (NOTE: resurecting a disposed data grid view data connection is not allowed.)
+                // Set the currency manager to null so if someone would want to resurrect this data grid view data connection
+                // we would not unwire the events from the currency manager twice.
+                // (NOTE: resurrecting a disposed data grid view data connection is not allowed.)
                 //
                 CurrencyManager = null;
             }
@@ -976,16 +987,18 @@ namespace System.Windows.Forms
                 {
                     dataGridViewColumn = new DataGridViewTextBoxColumn();
                 }
+
                 return dataGridViewColumn;
             }
 
-            public DataGridViewColumn[] GetCollectionOfBoundDataGridViewColumns()
+            public List<DataGridViewColumn> GetCollectionOfBoundDataGridViewColumns()
             {
                 if (_props is null)
                 {
                     return null;
                 }
-                ArrayList cols = new ArrayList();
+
+                List<DataGridViewColumn> cols = new(_props.Count);
 
                 for (int i = 0; i < _props.Count; i++)
                 {
@@ -1019,15 +1032,13 @@ namespace System.Windows.Forms
                     cols.Add(dataGridViewColumn);
                 }
 
-                DataGridViewColumn[] ret = new DataGridViewColumn[cols.Count];
-                cols.CopyTo(ret);
-                return ret;
+                return cols;
             }
 
             private void GetSortingInformationFromBackend(out PropertyDescriptor sortProperty, out SortOrder sortOrder)
             {
-                IBindingList ibl = CurrencyManager != null ? CurrencyManager.List as IBindingList : null;
-                IBindingListView iblv = ibl != null ? ibl as IBindingListView : null;
+                IBindingList ibl = CurrencyManager is not null ? CurrencyManager.List as IBindingList : null;
+                IBindingListView iblv = ibl is not null ? ibl as IBindingListView : null;
 
                 if (ibl is null || !ibl.SupportsSorting || !ibl.IsSorted)
                 {
@@ -1036,20 +1047,20 @@ namespace System.Windows.Forms
                     return;
                 }
 
-                if (ibl.SortProperty != null)
+                if (ibl.SortProperty is not null)
                 {
                     sortProperty = ibl.SortProperty;
                     sortOrder = ibl.SortDirection == ListSortDirection.Ascending ? SortOrder.Ascending : SortOrder.Descending;
                 }
-                else if (iblv != null)
+                else if (iblv is not null)
                 {
                     // Maybe the data view is sorted on multiple columns.
                     // Go thru the IBindingListView which offers the entire list of sorted columns
                     // and pick the first one as the SortedColumn.
                     ListSortDescriptionCollection sorts = iblv.SortDescriptions;
-                    if (sorts != null &&
+                    if (sorts is not null &&
                         sorts.Count > 0 &&
-                        sorts[0].PropertyDescriptor != null)
+                        sorts[0].PropertyDescriptor is not null)
                     {
                         sortProperty = sorts[0].PropertyDescriptor;
                         sortOrder = sorts[0].SortDirection == ListSortDirection.Ascending ? SortOrder.Ascending : SortOrder.Descending;
@@ -1079,7 +1090,7 @@ namespace System.Windows.Forms
                 // Microsoft: I wish there would be a Reset method on BitVector32...
                 _dataConnectionState = new BitVector32(DATACONNECTIONSTATE_finishedAddNew);
 
-                if (CurrencyManager != null)
+                if (CurrencyManager is not null)
                 {
                     _dataConnectionState[DATACONNECTIONSTATE_interestedInRowEvents] = true;
                 }
@@ -1096,10 +1107,7 @@ namespace System.Windows.Forms
 
                 ResetDataConnectionState();
 
-                if (dataMember is null)
-                {
-                    dataMember = string.Empty;
-                }
+                dataMember ??= string.Empty;
 
                 if (this.DataSource is ISupportInitializeNotification dsInit && _dataConnectionState[DATACONNECTIONSTATE_dataSourceInitializedHookedUp])
                 {
@@ -1124,16 +1132,17 @@ namespace System.Windows.Forms
                     // unwire the events
                     UnWireEvents();
 
-                    if (this.DataSource != null && _owner.BindingContext != null && !(this.DataSource == Convert.DBNull))
+                    if (this.DataSource is not null && _owner.BindingContext is not null && !(this.DataSource == Convert.DBNull))
                     {
                         dsInit = this.DataSource as ISupportInitializeNotification;
-                        if (dsInit != null && !dsInit.IsInitialized)
+                        if (dsInit is not null && !dsInit.IsInitialized)
                         {
                             if (!_dataConnectionState[DATACONNECTIONSTATE_dataSourceInitializedHookedUp])
                             {
                                 dsInit.Initialized += new EventHandler(DataSource_Initialized);
                                 _dataConnectionState[DATACONNECTIONSTATE_dataSourceInitializedHookedUp] = true;
                             }
+
                             CurrencyManager = null;
                         }
                         else
@@ -1148,7 +1157,7 @@ namespace System.Windows.Forms
 
                     // wire the events
                     WireEvents();
-                    if (CurrencyManager != null)
+                    if (CurrencyManager is not null)
                     {
                         _props = CurrencyManager.GetItemProperties();
                     }
@@ -1164,7 +1173,7 @@ namespace System.Windows.Forms
 
                 ResetCachedAllowUserToAddRowsInternal();
 
-                if (CurrencyManager != null)
+                if (CurrencyManager is not null)
                 {
                     _lastListCount = CurrencyManager.Count;
                 }
@@ -1187,8 +1196,12 @@ namespace System.Windows.Forms
                     {
                         throw;
                     }
-                    DataGridViewDataErrorEventArgs dgvdee = new DataGridViewDataErrorEventArgs(exception, -1 /*columnIndex*/, rowIndex,
-                                                                                               DataGridViewDataErrorContexts.Display);
+
+                    DataGridViewDataErrorEventArgs dgvdee = new(
+                        exception,
+                        columnIndex: -1,
+                        rowIndex,
+                        DataGridViewDataErrorContexts.Display);
                     _owner.OnDataErrorInternal(dgvdee);
                     if (dgvdee.ThrowException)
                     {
@@ -1196,7 +1209,7 @@ namespace System.Windows.Forms
                     }
                 }
 
-                if (errInfo != null)
+                if (errInfo is not null)
                 {
                     return errInfo.Error;
                 }
@@ -1221,8 +1234,12 @@ namespace System.Windows.Forms
                     {
                         throw;
                     }
-                    DataGridViewDataErrorEventArgs dgvdee = new DataGridViewDataErrorEventArgs(exception, columnIndex, rowIndex,
-                                                                                               DataGridViewDataErrorContexts.Display);
+
+                    DataGridViewDataErrorEventArgs dgvdee = new(
+                        exception,
+                        columnIndex,
+                        rowIndex,
+                        DataGridViewDataErrorContexts.Display);
                     _owner.OnDataErrorInternal(dgvdee);
                     if (dgvdee.ThrowException)
                     {
@@ -1230,7 +1247,7 @@ namespace System.Windows.Forms
                     }
                 }
 
-                if (errInfo != null)
+                if (errInfo is not null)
                 {
                     return errInfo[_props[boundColumnIndex].Name];
                 }
@@ -1254,14 +1271,19 @@ namespace System.Windows.Forms
                     {
                         throw;
                     }
-                    DataGridViewDataErrorEventArgs dgvdee = new DataGridViewDataErrorEventArgs(exception, columnIndex, rowIndex,
-                                                                                               DataGridViewDataErrorContexts.Display);
+
+                    DataGridViewDataErrorEventArgs dgvdee = new(
+                        exception,
+                        columnIndex,
+                        rowIndex,
+                        DataGridViewDataErrorContexts.Display);
                     _owner.OnDataErrorInternal(dgvdee);
                     if (dgvdee.ThrowException)
                     {
                         throw dgvdee.Exception;
                     }
                 }
+
                 return value;
             }
 
@@ -1271,7 +1293,7 @@ namespace System.Windows.Forms
                 {
 #if DEBUG
                     // all the properties in the currency manager should be either Browsable(false) or point to sub lists
-                    if (_props != null)
+                    if (_props is not null)
                     {
                         for (int i = 0; i < _props.Count; i++)
                         {
@@ -1290,7 +1312,7 @@ namespace System.Windows.Forms
                 if (columnIndex == -1)
                 {
                     DataGridViewColumn dataGridViewColumn = _owner.Columns.GetFirstColumn(DataGridViewElementStates.None);
-                    Debug.Assert(dataGridViewColumn != null);
+                    Debug.Assert(dataGridViewColumn is not null);
                     dataGridViewColumn.Visible = true;
                     columnIndex = dataGridViewColumn.Index;
                 }
@@ -1371,7 +1393,7 @@ namespace System.Windows.Forms
                         editableObject = CurrencyManager.Current as IEditableObject;
                     }
 
-                    if (editableObject != null && currentItem == editableObject)
+                    if (editableObject is not null && currentItem == editableObject)
                     {
                         editableObject.BeginEdit();
                     }
@@ -1431,6 +1453,7 @@ namespace System.Windows.Forms
                             {
                                 throw;
                             }
+
                             DataGridViewCellCancelEventArgs dgvce = new DataGridViewCellCancelEventArgs(e.ColumnIndex, e.RowIndex);
                             ProcessException(exception, dgvce, false /*beginEdit*/);
                         }
@@ -1488,6 +1511,7 @@ namespace System.Windows.Forms
                         {
                             throw;
                         }
+
                         ProcessException(exception, e, true /*beginEdit*/);
                     }
                     finally
@@ -1503,10 +1527,10 @@ namespace System.Windows.Forms
 
             public void ProcessException(Exception exception, DataGridViewCellCancelEventArgs e, bool beginEdit)
             {
-                DataGridViewDataErrorEventArgs dgvdee = new DataGridViewDataErrorEventArgs(exception, e.ColumnIndex,
+                DataGridViewDataErrorEventArgs dgvdee = new(
+                    exception,
+                    e.ColumnIndex,
                     e.RowIndex,
-                    // null,
-                    // null,
                     DataGridViewDataErrorContexts.Commit);
                 _owner.OnDataErrorInternal(dgvdee);
 
@@ -1536,7 +1560,7 @@ namespace System.Windows.Forms
             {
                 try
                 {
-                    if (value != null)
+                    if (value is not null)
                     {
                         Type valueType = value.GetType();
                         Type columnType = _owner.Columns[columnIndex].ValueType;
@@ -1544,20 +1568,21 @@ namespace System.Windows.Forms
                         {
                             // value needs to be converted before being fed to the back-end.
                             TypeConverter boundColumnConverter = BoundColumnConverter(boundColumnIndex);
-                            if (boundColumnConverter != null && boundColumnConverter.CanConvertFrom(valueType))
+                            if (boundColumnConverter is not null && boundColumnConverter.CanConvertFrom(valueType))
                             {
                                 value = boundColumnConverter.ConvertFrom(value);
                             }
                             else
                             {
                                 TypeConverter valueConverter = _owner.GetCachedTypeConverter(valueType);
-                                if (valueConverter != null && valueConverter.CanConvertTo(columnType))
+                                if (valueConverter is not null && valueConverter.CanConvertTo(columnType))
                                 {
                                     value = valueConverter.ConvertTo(value, columnType);
                                 }
                             }
                         }
                     }
+
                     _props[boundColumnIndex].SetValue(CurrencyManager[rowIndex], value);
                 }
                 catch (Exception exception)
@@ -1566,10 +1591,12 @@ namespace System.Windows.Forms
                     {
                         throw;
                     }
+
                     DataGridViewCellCancelEventArgs e = new DataGridViewCellCancelEventArgs(columnIndex, rowIndex);
                     ProcessException(exception, e, false);
                     return !e.Cancel;
                 }
+
                 return true;
             }
 
@@ -1601,7 +1628,7 @@ namespace System.Windows.Forms
                 }
 
                 PropertyDescriptorCollection props = cm.GetItemProperties();
-                if (DataMember.Length != 0 && props[DataMember] != null)
+                if (DataMember.Length != 0 && props[DataMember] is not null)
                 {
                     // the data member is valid. Don't change it
                     return false;
@@ -1619,7 +1646,7 @@ namespace System.Windows.Forms
 
             private void UnWireEvents()
             {
-                if (CurrencyManager != null)
+                if (CurrencyManager is not null)
                 {
                     CurrencyManager.PositionChanged -= new EventHandler(currencyManager_PositionChanged);
                     CurrencyManager.ListChanged -= new ListChangedEventHandler(currencyManager_ListChanged);
@@ -1629,7 +1656,7 @@ namespace System.Windows.Forms
 
             private void WireEvents()
             {
-                if (CurrencyManager != null)
+                if (CurrencyManager is not null)
                 {
                     CurrencyManager.PositionChanged += new EventHandler(currencyManager_PositionChanged);
                     CurrencyManager.ListChanged += new ListChangedEventHandler(currencyManager_ListChanged);

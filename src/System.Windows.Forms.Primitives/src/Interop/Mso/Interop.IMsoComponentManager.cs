@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Runtime.InteropServices;
 
 internal static partial class Interop
@@ -29,7 +28,7 @@ internal static partial class Interop
         ///  that are outside of the component manager's state context. <see cref="FInState"/> is used to query the
         ///  state of the component manager's state context at its root.
         /// </remarks>
-        [ComImport()]
+        [ComImport]
         [Guid(ComponentIds.IID_IMsoComponentManager)]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         public unsafe interface IMsoComponentManager

@@ -2,11 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 namespace System.Windows.Forms.ComponentModel.Com2Interop
 {
-    internal class Com2PropertyDescriptorRefresh
+    internal static class Com2PropertyDescriptorRefresh
     {
         public const int Attributes = 0x0001;
         public const int DisplayName = 0x0002;

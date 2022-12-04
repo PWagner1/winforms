@@ -6,17 +6,18 @@
 
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms.ButtonInternal;
 using System.Windows.Forms.VisualStyles;
-using static Interop;
 
 namespace System.Windows.Forms
 {
     /// <summary>
     ///  Identifies a button cell in the dataGridView.
     /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     public partial class DataGridViewButtonCell : DataGridViewCell
     {
         private static readonly int PropButtonCellFlatStyle = PropertyStore.CreateKey();
@@ -49,6 +50,7 @@ namespace System.Windows.Forms
                 {
                     return (ButtonState)buttonState;
                 }
+
                 return ButtonState.Normal;
             }
             set
@@ -63,6 +65,7 @@ namespace System.Windows.Forms
             }
         }
 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | DynamicallyAccessedMemberTypes.Interfaces)]
         public override Type EditType
         {
             get
@@ -82,6 +85,7 @@ namespace System.Windows.Forms
                 {
                     return (FlatStyle)flatStyle;
                 }
+
                 return FlatStyle.Standard;
             }
             set
@@ -127,6 +131,7 @@ namespace System.Windows.Forms
                 {
                     return useColumnTextForButtonValue == 0 ? false : true;
                 }
+
                 return false;
             }
             set
@@ -155,10 +160,11 @@ namespace System.Windows.Forms
             get
             {
                 Type valueType = base.ValueType;
-                if (valueType != null)
+                if (valueType is not null)
                 {
                     return valueType;
                 }
+
                 return defaultValueType;
             }
         }
@@ -176,6 +182,7 @@ namespace System.Windows.Forms
             {
                 dataGridViewCell = (DataGridViewButtonCell)System.Activator.CreateInstance(thisType);
             }
+
             base.CloneInternal(dataGridViewCell);
             dataGridViewCell.FlatStyleInternal = FlatStyle;
             dataGridViewCell.UseColumnTextForButtonValueInternal = UseColumnTextForButtonValue;
@@ -189,10 +196,7 @@ namespace System.Windows.Forms
 
         protected override Rectangle GetContentBounds(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex)
         {
-            if (cellStyle is null)
-            {
-                throw new ArgumentNullException(nameof(cellStyle));
-            }
+            ArgumentNullException.ThrowIfNull(cellStyle);
 
             if (DataGridView is null || rowIndex < 0 || OwningColumn is null)
             {
@@ -252,10 +256,7 @@ namespace System.Windows.Forms
 
         protected override Rectangle GetErrorIconBounds(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex)
         {
-            if (cellStyle is null)
-            {
-                throw new ArgumentNullException(nameof(cellStyle));
-            }
+            ArgumentNullException.ThrowIfNull(cellStyle);
 
             if (DataGridView is null ||
                 rowIndex < 0 ||
@@ -310,10 +311,7 @@ namespace System.Windows.Forms
                 return new Size(-1, -1);
             }
 
-            if (cellStyle is null)
-            {
-                throw new ArgumentNullException(nameof(cellStyle));
-            }
+            ArgumentNullException.ThrowIfNull(cellStyle);
 
             Size preferredSize;
             Rectangle borderWidthsRect = StdBorderWidths;
@@ -326,6 +324,7 @@ namespace System.Windows.Forms
             {
                 formattedString = " ";
             }
+
             TextFormatFlags flags = DataGridViewUtilities.ComputeTextFormatFlagsForCellStyleAlignment(DataGridView.RightToLeftInternal, cellStyle.Alignment, cellStyle.WrapMode);
 
             // Adding space for text padding.
@@ -364,8 +363,10 @@ namespace System.Windows.Forms
                                 MeasureTextSize(graphics, formattedString, cellStyle.Font, flags).Width,
                                 0);
                         }
+
                         break;
                     }
+
                 case DataGridViewFreeDimension.Height:
                     {
                         if (cellStyle.WrapMode == DataGridViewTriState.True && formattedString.Length > 1 &&
@@ -390,8 +391,10 @@ namespace System.Windows.Forms
                                     cellStyle.Font,
                                     flags).Height);
                         }
+
                         break;
                     }
+
                 default:
                     {
                         if (cellStyle.WrapMode == DataGridViewTriState.True && formattedString.Length > 1)
@@ -402,6 +405,7 @@ namespace System.Windows.Forms
                         {
                             preferredSize = MeasureTextSize(graphics, formattedString, cellStyle.Font, flags);
                         }
+
                         break;
                     }
             }
@@ -440,19 +444,21 @@ namespace System.Windows.Forms
                 rectThemeMargins.Width = DATAGRIDVIEWBUTTONCELL_themeMargin - rectContent.Right;
                 rectThemeMargins.Height = DATAGRIDVIEWBUTTONCELL_themeMargin - rectContent.Bottom;
             }
+
             return rectThemeMargins;
         }
 
         protected override object GetValue(int rowIndex)
         {
             if (UseColumnTextForButtonValue &&
-                DataGridView != null &&
+                DataGridView is not null &&
                 DataGridView.NewRowIndex != rowIndex &&
-                OwningColumn != null &&
+                OwningColumn is not null &&
                 OwningColumn is DataGridViewButtonColumn)
             {
                 return ((DataGridViewButtonColumn)OwningColumn).Text;
             }
+
             return base.GetValue(rowIndex);
         }
 
@@ -492,6 +498,7 @@ namespace System.Windows.Forms
             {
                 return;
             }
+
             if (e.KeyCode == Keys.Space && !e.Alt && !e.Control && !e.Shift)
             {
                 UpdateButtonState(ButtonState | ButtonState.Checked, rowIndex);
@@ -505,18 +512,20 @@ namespace System.Windows.Forms
             {
                 return;
             }
+
             if (e.KeyCode == Keys.Space)
             {
                 UpdateButtonState(ButtonState & ~ButtonState.Checked, rowIndex);
                 if (!e.Alt && !e.Control && !e.Shift)
                 {
                     RaiseCellClick(new DataGridViewCellEventArgs(ColumnIndex, rowIndex));
-                    if (DataGridView != null &&
+                    if (DataGridView is not null &&
                         ColumnIndex < DataGridView.Columns.Count &&
                         rowIndex < DataGridView.Rows.Count)
                     {
                         RaiseCellContentClick(new DataGridViewCellEventArgs(ColumnIndex, rowIndex));
                     }
+
                     e.Handled = true;
                 }
             }
@@ -528,6 +537,7 @@ namespace System.Windows.Forms
             {
                 return;
             }
+
             if (ButtonState != ButtonState.Normal)
             {
                 Debug.Assert(RowIndex >= 0); // Cell is not in a shared row.
@@ -541,6 +551,7 @@ namespace System.Windows.Forms
             {
                 return;
             }
+
             if (e.Button == MouseButtons.Left && mouseInContentBounds)
             {
                 Debug.Assert(DataGridView.CellMouseDownInContentBounds);
@@ -616,6 +627,7 @@ namespace System.Windows.Forms
             {
                 return;
             }
+
             if (e.Button == MouseButtons.Left)
             {
                 UpdateButtonState(ButtonState & ~ButtonState.Pushed, e.RowIndex);
@@ -634,10 +646,7 @@ namespace System.Windows.Forms
             DataGridViewAdvancedBorderStyle advancedBorderStyle,
             DataGridViewPaintParts paintParts)
         {
-            if (cellStyle is null)
-            {
-                throw new ArgumentNullException(nameof(cellStyle));
-            }
+            ArgumentNullException.ThrowIfNull(cellStyle);
 
             PaintPrivate(graphics,
                 clipBounds,
@@ -682,7 +691,7 @@ namespace System.Windows.Forms
             Debug.Assert(!paint || !computeContentBounds || !computeErrorIconBounds);
             Debug.Assert(!computeContentBounds || !computeErrorIconBounds || !paint);
             Debug.Assert(!computeErrorIconBounds || !paint || !computeContentBounds);
-            Debug.Assert(cellStyle != null);
+            Debug.Assert(cellStyle is not null);
 
             Point ptCurrentCell = DataGridView.CurrentCellAddress;
             bool cellSelected = (elementState & DataGridViewElementStates.Selected) != 0;
@@ -729,6 +738,7 @@ namespace System.Windows.Forms
                 {
                     valBounds.Offset(cellStyle.Padding.Left, cellStyle.Padding.Top);
                 }
+
                 valBounds.Width -= cellStyle.Padding.Horizontal;
                 valBounds.Height -= cellStyle.Padding.Vertical;
             }
@@ -777,6 +787,7 @@ namespace System.Windows.Forms
                                     SystemColors.Control,
                                     (ButtonState == ButtonState.Normal) ? ButtonBorderStyle.Outset : ButtonBorderStyle.Inset);
                             }
+
                             resultBounds = valBounds;
                             valBounds.Inflate(-SystemInformation.Border3DSize.Width, -SystemInformation.Border3DSize.Height);
                         }
@@ -800,16 +811,16 @@ namespace System.Windows.Forms
                                         cellStyle.BackColor,
                                         DataGridView.Enabled).Calculate();
 
-                                    using var hdc = new DeviceContextHdcScope(g);
-                                    using var hbrush = new Gdi32.CreateBrushScope(
+                                    using DeviceContextHdcScope hdc = new(g);
+                                    using PInvoke.CreateBrushScope hbrush = new (
                                         colors.Options.HighContrast ? colors.ButtonShadow : colors.LowHighlight);
                                     hdc.FillRectangle(valBounds, hbrush);
                                 }
                                 else if (DataGridView.MouseEnteredCellAddress.Y == rowIndex &&
                                     DataGridView.MouseEnteredCellAddress.X == ColumnIndex && mouseInContentBounds)
                                 {
-                                    using var hdc = new DeviceContextHdcScope(g);
-                                    using var hbrush = new Gdi32.CreateBrushScope(SystemColors.ControlDark);
+                                    using DeviceContextHdcScope hdc = new(g);
+                                    using PInvoke.CreateBrushScope hbrush = new(SystemColors.ControlDark);
                                     hdc.FillRectangle(valBounds, hbrush);
                                 }
                             }
@@ -980,7 +991,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            if (formattedString != null && paint && PaintContentForeground(paintParts))
+            if (formattedString is not null && paint && PaintContentForeground(paintParts))
             {
                 // Font independent margins
                 valBounds.Offset(DATAGRIDVIEWBUTTONCELL_horizontalTextMargin, DATAGRIDVIEWBUTTONCELL_verticalTextMargin);

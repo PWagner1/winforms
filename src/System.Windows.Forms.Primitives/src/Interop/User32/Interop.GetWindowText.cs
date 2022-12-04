@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Buffers;
 using System.Runtime.InteropServices;
 
@@ -10,7 +9,7 @@ internal static partial class Interop
 {
     internal static partial class User32
     {
-        [DllImport(Libraries.User32, ExactSpelling = true)]
+        [DllImport(Libraries.User32)]
         public static extern int GetWindowTextLengthW(IntPtr hWnd);
 
         public static int GetWindowTextLengthW(HandleRef hWnd)
@@ -20,8 +19,8 @@ internal static partial class Interop
             return result;
         }
 
-        [DllImport(Libraries.User32, ExactSpelling = true, CharSet = CharSet.Unicode)]
-        private static unsafe extern int GetWindowTextW(IntPtr hWnd, char* lpString, int nMaxCount);
+        [DllImport(Libraries.User32)]
+        private static extern unsafe int GetWindowTextW(IntPtr hWnd, char* lpString, int nMaxCount);
 
         public static unsafe string GetWindowText(IntPtr hWnd)
         {
@@ -61,10 +60,10 @@ internal static partial class Interop
             }
         }
 
-        public static string GetWindowText(HandleRef hWnd)
+        public static string GetWindowText(IHandle hWnd)
         {
             string result = GetWindowText(hWnd.Handle);
-            GC.KeepAlive(hWnd.Wrapper);
+            GC.KeepAlive(hWnd);
             return result;
         }
     }

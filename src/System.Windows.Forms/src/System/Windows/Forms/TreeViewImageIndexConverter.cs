@@ -2,13 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
+using System.ComponentModel;
+using System.Globalization;
 
 namespace System.Windows.Forms
 {
-    using System.ComponentModel;
-    using System.Globalization;
-
     /// <summary>
     ///  TreeViewImageIndexConverter is a class that can be used to convert
     ///  image index values one data type to another.
@@ -26,7 +24,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Converts the given value object to a 32-bit signed integer object.
         /// </summary>
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
         {
             if (value is string strValue)
             {
@@ -50,12 +48,9 @@ namespace System.Windows.Forms
         ///  type is string.  If this cannot convert to the destination type, this will
         ///  throw a NotSupportedException.
         /// </summary>
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        public override object? ConvertTo(ITypeDescriptorContext? context, CultureInfo? culture, object? value, Type destinationType)
         {
-            if (destinationType is null)
-            {
-                throw new ArgumentNullException(nameof(destinationType));
-            }
+            ArgumentNullException.ThrowIfNull(destinationType);
 
             if (destinationType == typeof(string) && value is int index)
             {
@@ -78,15 +73,15 @@ namespace System.Windows.Forms
         ///  will return null if the data type does not support a
         ///  standard set of values.
         /// </summary>
-        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext? context)
         {
-            if (context != null && context.Instance != null)
+            if (context is not null && context.Instance is not null)
             {
-                object instance = context.Instance;
+                object? instance = context.Instance;
 
-                PropertyDescriptor imageListProp = ImageListUtils.GetImageListProperty(context.PropertyDescriptor, ref instance);
+                PropertyDescriptor? imageListProp = ImageListUtils.GetImageListProperty(context.PropertyDescriptor, ref instance);
 
-                while (instance != null && imageListProp is null)
+                while (instance is not null && imageListProp is null)
                 {
                     PropertyDescriptorCollection props = TypeDescriptor.GetProperties(instance);
 
@@ -103,8 +98,8 @@ namespace System.Windows.Forms
                     {
                         // We didn't find the image list in this component.  See if the
                         // component has a "parent" property.  If so, walk the tree...
-                        PropertyDescriptor parentProp = props[ParentImageListProperty];
-                        if (parentProp != null)
+                        PropertyDescriptor? parentProp = props[ParentImageListProperty];
+                        if (parentProp is not null)
                         {
                             instance = parentProp.GetValue(instance);
                         }
@@ -116,17 +111,15 @@ namespace System.Windows.Forms
                     }
                 }
 
-                if (imageListProp != null)
+                if (imageListProp is not null)
                 {
-                    ImageList imageList = (ImageList)imageListProp.GetValue(instance);
+                    ImageList? imageList = (ImageList?)imageListProp.GetValue(instance);
 
-                    if (imageList != null)
+                    if (imageList is not null)
                     {
                         // Create array to contain standard values
-                        //
-                        object[] values;
                         int nImages = imageList.Images.Count + 2;
-                        values = new object[nImages];
+                        object[] values = new object[nImages];
                         values[nImages - 2] = ImageList.Indexer.DefaultIndex;
                         values[nImages - 1] = -2;
 
@@ -135,16 +128,18 @@ namespace System.Windows.Forms
                         {
                             values[i] = i;
                         }
+
                         return new StandardValuesCollection(values);
                     }
                 }
             }
 
-            return new StandardValuesCollection(new object[]
-                                                {
-                                                    ImageList.Indexer.DefaultIndex,
-                                                    ImageList.Indexer.NoneIndex
-                                                });
+            return new StandardValuesCollection(
+                new object[]
+                {
+                    ImageList.Indexer.DefaultIndex,
+                    ImageList.Indexer.NoneIndex
+                });
         }
     }
 }

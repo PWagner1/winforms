@@ -2,13 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms.Layout;
 using System.Windows.Forms.VisualStyles;
-using static Interop;
 
 namespace System.Windows.Forms.ButtonInternal
 {
@@ -61,8 +58,7 @@ namespace System.Windows.Forms.ButtonInternal
         {
             PushButtonState pbState = DetermineState(up);
 
-            // First handle transparent case
-
+            // First handle transparent case.
             if (ButtonRenderer.IsBackgroundPartiallyTransparent(pbState))
             {
                 ButtonRenderer.DrawParentBackground(e, bounds, Control);
@@ -73,7 +69,7 @@ namespace System.Windows.Forms.ButtonInternal
                 Control.ClientRectangle,
                 false,
                 pbState,
-                DpiHelper.IsScalingRequirementMet ? Control.HandleInternal : IntPtr.Zero);
+                DpiHelper.IsScalingRequirementMet ? Control.HWNDInternal : HWND.Null);
 
             // Now overlay the background image or backcolor (the former overrides the latter), leaving a margin.
             // We hardcode this margin for now since GetThemeMargins returns 0 all the time.
@@ -81,7 +77,7 @@ namespace System.Windows.Forms.ButtonInternal
             // Changing this because GetThemeMargins simply does not work in some cases.
             bounds.Inflate(-ButtonBorderSize, -ButtonBorderSize);
 
-            //only paint if the user said not to use the themed backcolor.
+            // Only paint if the user said not to use the themed backcolor.
             if (!Control.UseVisualStyleBackColor)
             {
                 bool isHighContrastHighlighted = up && IsHighContrastHighlighted();
@@ -98,7 +94,7 @@ namespace System.Windows.Forms.ButtonInternal
                     hdc.FillRectangle(
                         bounds,
                         isHighContrastHighlighted
-                            ? User32.GetSysColorBrush(User32.COLOR.HIGHLIGHT)
+                            ? PInvoke.GetSysColorBrush(SYS_COLOR_INDEX.COLOR_HIGHLIGHT)
                             : Control.BackColorBrush);
                 }
             }
@@ -141,7 +137,7 @@ namespace System.Windows.Forms.ButtonInternal
             }
             else
             {
-                Brush backbrush = null;
+                Brush? backbrush = null;
                 if (state == CheckState.Indeterminate)
                 {
                     backbrush = CreateDitherBrush(colors.Highlight, colors.ButtonFace);
@@ -172,7 +168,7 @@ namespace System.Windows.Forms.ButtonInternal
             PaintImage(e, layout);
 
             // Inflate the focus rectangle to be consistent with the behavior of Win32 app
-            if (Application.RenderWithVisualStyles)
+            if (Application.RenderWithVisualStyles && Control.FlatStyle != FlatStyle.Standard)
             {
                 layout.Focus.Inflate(1, 1);
             }
@@ -224,7 +220,7 @@ namespace System.Windows.Forms.ButtonInternal
         protected override LayoutOptions Layout(PaintEventArgs e)
         {
             LayoutOptions layout = PaintLayout(e, up: false);
-            Debug.Assert(layout.GetPreferredSizeCore(LayoutUtils.MaxSize) == PaintLayout(e, /* up = */ true).GetPreferredSizeCore(LayoutUtils.MaxSize),
+            Debug.Assert(layout.GetPreferredSizeCore(LayoutUtils.s_maxSize) == PaintLayout(e, /* up = */ true).GetPreferredSizeCore(LayoutUtils.s_maxSize),
                 "The state of up should not effect PreferredSize");
             return layout;
         }

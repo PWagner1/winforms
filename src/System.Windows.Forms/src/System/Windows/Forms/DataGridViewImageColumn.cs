@@ -6,12 +6,14 @@
 
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.Text;
 
 namespace System.Windows.Forms
 {
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     [ToolboxBitmap(typeof(DataGridViewImageColumn), "DataGridViewImageColumn")]
     public class DataGridViewImageColumn : DataGridViewColumn
     {
@@ -38,6 +40,7 @@ namespace System.Windows.Forms
             {
                 defaultCellStyle.NullValue = DataGridViewImageCell.ErrorBitmap;
             }
+
             DefaultCellStyle = defaultCellStyle;
         }
 
@@ -48,10 +51,11 @@ namespace System.Windows.Forms
             get => base.CellTemplate;
             set
             {
-                if (value != null && !(value is DataGridViewImageCell))
+                if (value is not null && !(value is DataGridViewImageCell))
                 {
                     throw new InvalidCastException(string.Format(SR.DataGridViewTypeColumn_WrongCellTemplateType, "System.Windows.Forms.DataGridViewImageCell"));
                 }
+
                 base.CellTemplate = value;
             }
         }
@@ -77,6 +81,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
+
                 return ImageCellTemplate.Description;
             }
             set
@@ -85,8 +90,9 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
+
                 ImageCellTemplate.Description = value;
-                if (DataGridView != null)
+                if (DataGridView is not null)
                 {
                     DataGridViewRowCollection dataGridViewRows = DataGridView.Rows;
                     int rowCount = dataGridViewRows.Count;
@@ -113,10 +119,7 @@ namespace System.Windows.Forms
             set
             {
                 _icon = value;
-                if (DataGridView != null)
-                {
-                    DataGridView.OnColumnCommonChange(Index);
-                }
+                DataGridView?.OnColumnCommonChange(Index);
             }
         }
 
@@ -132,10 +135,7 @@ namespace System.Windows.Forms
             set
             {
                 _image = value;
-                if (DataGridView != null)
-                {
-                    DataGridView.OnColumnCommonChange(Index);
-                }
+                DataGridView?.OnColumnCommonChange(Index);
             }
         }
 
@@ -158,11 +158,13 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
+
                 DataGridViewImageCellLayout imageLayout = ImageCellTemplate.ImageLayout;
                 if (imageLayout == DataGridViewImageCellLayout.NotSet)
                 {
                     imageLayout = DataGridViewImageCellLayout.Normal;
                 }
+
                 return imageLayout;
             }
             set
@@ -170,7 +172,7 @@ namespace System.Windows.Forms
                 if (ImageLayout != value)
                 {
                     ImageCellTemplate.ImageLayout = value;
-                    if (DataGridView != null)
+                    if (DataGridView is not null)
                     {
                         DataGridViewRowCollection dataGridViewRows = DataGridView.Rows;
                         int rowCount = dataGridViewRows.Count;
@@ -182,6 +184,7 @@ namespace System.Windows.Forms
                                 dataGridViewCell.ImageLayoutInternal = value;
                             }
                         }
+
                         DataGridView.OnColumnCommonChange(Index);
                     }
                 }
@@ -198,6 +201,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
+
                 return ImageCellTemplate.ValueIsIcon;
             }
             set
@@ -205,7 +209,7 @@ namespace System.Windows.Forms
                 if (ValuesAreIcons != value)
                 {
                     ImageCellTemplate.ValueIsIconInternal = value;
-                    if (DataGridView != null)
+                    if (DataGridView is not null)
                     {
                         DataGridViewRowCollection dataGridViewRows = DataGridView.Rows;
                         int rowCount = dataGridViewRows.Count;
@@ -217,6 +221,7 @@ namespace System.Windows.Forms
                                 dataGridViewCell.ValueIsIconInternal = value;
                             }
                         }
+
                         DataGridView.OnColumnCommonChange(Index);
                     }
 
@@ -251,12 +256,14 @@ namespace System.Windows.Forms
 
                 dataGridViewColumn = (DataGridViewImageColumn)System.Activator.CreateInstance(thisType);
             }
-            if (dataGridViewColumn != null)
+
+            if (dataGridViewColumn is not null)
             {
                 base.CloneInternal(dataGridViewColumn);
                 dataGridViewColumn.Icon = _icon;
                 dataGridViewColumn.Image = _image;
             }
+
             return dataGridViewColumn;
         }
 
@@ -289,14 +296,14 @@ namespace System.Windows.Forms
                     !defaultCellStyle.ForeColor.IsEmpty ||
                     !defaultCellStyle.SelectionBackColor.IsEmpty ||
                     !defaultCellStyle.SelectionForeColor.IsEmpty ||
-                    defaultCellStyle.Font != null ||
+                    defaultCellStyle.Font is not null ||
                     !defaultNullValue.Equals(defaultCellStyle.NullValue) ||
                     !defaultCellStyle.IsDataSourceNullValueDefault ||
                     !string.IsNullOrEmpty(defaultCellStyle.Format) ||
                     !defaultCellStyle.FormatProvider.Equals(System.Globalization.CultureInfo.CurrentCulture) ||
                     defaultCellStyle.Alignment != DataGridViewContentAlignment.MiddleCenter ||
                     defaultCellStyle.WrapMode != DataGridViewTriState.NotSet ||
-                    defaultCellStyle.Tag != null ||
+                    defaultCellStyle.Tag is not null ||
                     !defaultCellStyle.Padding.Equals(Padding.Empty));
         }
 

@@ -3,10 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Drawing;
-using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
-using static Interop;
 
 namespace System.Windows.Forms.Tests
 {
@@ -32,7 +29,7 @@ namespace System.Windows.Forms.Tests
                     {
                         using var hfont = cache.GetEntry(
                             fonts[random.Next(10)],
-                            (Gdi32.QUALITY)random.Next(7));
+                            (FONT_QUALITY)random.Next(7));
 
                         Assert.False(hfont.Object.IsNull);
                         Thread.Sleep(random.Next(10));

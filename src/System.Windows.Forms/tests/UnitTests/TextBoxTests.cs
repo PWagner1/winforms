@@ -2,19 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Runtime.InteropServices;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
 using static Interop;
+using Point = System.Drawing.Point;
+using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Tests
 {
-    using Point = System.Drawing.Point;
-    using Size = System.Drawing.Size;
-
     public partial class TextBoxTests : IClassFixture<ThreadExceptionFixture>
     {
         private static int s_preferredHeight = Control.DefaultFont.Height + SystemInformation.BorderSize.Height * 4 + 3;
@@ -388,14 +385,12 @@ namespace System.Windows.Forms.Tests
                 PlaceholderText = "Enter your name"
             };
 
-            HandleRef refHandle = new HandleRef(tb, tb.Handle);
-
-            //Cover the Placeholder draw code path
-            User32.SendMessageW(refHandle, User32.WM.PAINT, PARAM.FromBool(false));
+            // Cover the Placeholder draw code path
+            PInvoke.SendMessage(tb, User32.WM.PAINT, (WPARAM)(BOOL)false);
             tb.TextAlign = HorizontalAlignment.Center;
-            User32.SendMessageW(refHandle, User32.WM.PAINT, PARAM.FromBool(false));
+            PInvoke.SendMessage(tb, User32.WM.PAINT, (WPARAM)(BOOL)false);
             tb.TextAlign = HorizontalAlignment.Right;
-            User32.SendMessageW(refHandle, User32.WM.PAINT, PARAM.FromBool(false));
+            PInvoke.SendMessage(tb, User32.WM.PAINT, (WPARAM)(BOOL)false);
 
             Assert.False(string.IsNullOrEmpty(tb.PlaceholderText));
         }
@@ -409,14 +404,12 @@ namespace System.Windows.Forms.Tests
                 RightToLeft = RightToLeft.Yes
             };
 
-            HandleRef refHandle = new HandleRef(tb, tb.Handle);
-
-            //Cover the Placeholder draw code path in RightToLeft scenario
-            User32.SendMessageW(refHandle, User32.WM.PAINT, PARAM.FromBool(false));
+            // Cover the Placeholder draw code path in RightToLeft scenario
+            PInvoke.SendMessage(tb, User32.WM.PAINT, (WPARAM)(BOOL)false);
             tb.TextAlign = HorizontalAlignment.Center;
-            User32.SendMessageW(refHandle, User32.WM.PAINT, PARAM.FromBool(false));
+            PInvoke.SendMessage(tb, User32.WM.PAINT, (WPARAM)(BOOL)false);
             tb.TextAlign = HorizontalAlignment.Right;
-            User32.SendMessageW(refHandle, User32.WM.PAINT, PARAM.FromBool(false));
+            PInvoke.SendMessage(tb, User32.WM.PAINT, (WPARAM)(BOOL)false);
 
             Assert.False(string.IsNullOrEmpty(tb.PlaceholderText));
         }
@@ -433,7 +426,7 @@ namespace System.Windows.Forms.Tests
             }
 
             Assert.Equal(createControl, control.IsHandleCreated);
-            Control.ControlAccessibleObject instance = Assert.IsType<TextBoxBase.TextBoxBaseAccessibleObject>(control.CreateAccessibilityInstance());
+            Control.ControlAccessibleObject instance = Assert.IsType<TextBox.TextBoxAccessibleObject>(control.CreateAccessibilityInstance());
             Assert.Equal(createControl, control.IsHandleCreated);
             Assert.NotNull(instance);
             Assert.Same(control, instance.Owner);
@@ -450,7 +443,7 @@ namespace System.Windows.Forms.Tests
             {
                 AccessibleRole = AccessibleRole.HelpBalloon
             };
-            Control.ControlAccessibleObject instance = Assert.IsType<TextBoxBase.TextBoxBaseAccessibleObject>(control.CreateAccessibilityInstance());
+            Control.ControlAccessibleObject instance = Assert.IsType<TextBox.TextBoxAccessibleObject>(control.CreateAccessibilityInstance());
             Assert.NotNull(instance);
             Assert.Same(control, instance.Owner);
             Assert.Equal(AccessibleRole.HelpBalloon, instance.Role);
@@ -504,7 +497,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TextBox_OnHandleCreated_Invoke_CallsHandleCreated(EventArgs eventArgs)
         {
             using var control = new SubTextBox();
@@ -532,7 +525,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TextBox_OnHandleCreated_InvokeWithHandle_CallsHandleCreated(EventArgs eventArgs)
         {
             using var control = new SubTextBox();
@@ -561,7 +554,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TextBox_OnHandleDestroyed_Invoke_CallsHandleDestroyed(EventArgs eventArgs)
         {
             using var control = new SubTextBox();

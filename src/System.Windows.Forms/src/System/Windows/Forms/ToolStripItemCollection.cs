@@ -5,7 +5,6 @@
 #nullable disable
 
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
@@ -13,7 +12,7 @@ using System.Windows.Forms.Layout;
 
 namespace System.Windows.Forms
 {
-    [Editor("System.Windows.Forms.Design.ToolStripCollectionEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+    [Editor($"System.Windows.Forms.Design.ToolStripCollectionEditor, {AssemblyRef.SystemDesign}", typeof(UITypeEditor))]
     [ListBindable(false)]
     public class ToolStripItemCollection : ArrangedElementCollection, IList
     {
@@ -39,7 +38,7 @@ namespace System.Windows.Forms
 
         public ToolStripItemCollection(ToolStrip owner, ToolStripItem[] value)
         {
-            _owner = owner ?? throw new ArgumentNullException(nameof(owner));
+            _owner = owner.OrThrowIfNull();
             AddRange(value);
         }
 
@@ -83,14 +82,17 @@ namespace System.Windows.Forms
         {
             return Add(text, null, null);
         }
+
         public ToolStripItem Add(Image image)
         {
             return Add(null, image, null);
         }
+
         public ToolStripItem Add(string text, Image image)
         {
             return Add(text, image, null);
         }
+
         public ToolStripItem Add(string text, Image image, EventHandler onClick)
         {
             ToolStripItem item = _owner.CreateDefaultItem(text, image, onClick);
@@ -103,21 +105,20 @@ namespace System.Windows.Forms
             CheckCanAddOrInsertItem(value);
 
             SetOwner(value);
-            int retVal = InnerList.Add(value);
-            if (_itemsCollection && _owner != null)
+            int retVal = ((IList)InnerList).Add(value);
+            if (_itemsCollection && _owner is not null)
             {
                 _owner.OnItemAddedInternal(value);
                 _owner.OnItemAdded(new ToolStripItemEventArgs(value));
             }
+
             return retVal;
         }
 
         public void AddRange(ToolStripItem[] toolStripItems)
         {
-            if (toolStripItems is null)
-            {
-                throw new ArgumentNullException(nameof(toolStripItems));
-            }
+            ArgumentNullException.ThrowIfNull(toolStripItems);
+
             if (IsReadOnly)
             {
                 throw new NotSupportedException(SR.ToolStripItemCollectionIsReadOnly);
@@ -136,10 +137,8 @@ namespace System.Windows.Forms
 
         public void AddRange(ToolStripItemCollection toolStripItems)
         {
-            if (toolStripItems is null)
-            {
-                throw new ArgumentNullException(nameof(toolStripItems));
-            }
+            ArgumentNullException.ThrowIfNull(toolStripItems);
+
             if (IsReadOnly)
             {
                 throw new NotSupportedException(SR.ToolStripItemCollectionIsReadOnly);
@@ -149,10 +148,12 @@ namespace System.Windows.Forms
             // to resize itself.
             using (new LayoutTransaction(_owner, _owner, PropertyNames.Items))
             {
-                int currentCount = toolStripItems.Count;
-                for (int i = 0; i < currentCount; i++)
+                for (int i = 0; i < toolStripItems.Count; i++)
                 {
-                    Add(toolStripItems[i]);
+                    // Items are removed from their origin when added to a different owner.
+                    // Decrement the index to always add the items from index 0 which will preserve
+                    // the original order and avoid a pesky ArgumentOutOfRangeException.
+                    Add(toolStripItems[i--]);
                 }
             }
         }
@@ -168,21 +169,21 @@ namespace System.Windows.Forms
             {
                 throw new NotSupportedException(SR.ToolStripItemCollectionIsReadOnly);
             }
+
             if (Count == 0)
             {
                 return;
             }
+
             ToolStripOverflow overflow = null;
 
-            if (_owner != null && !_owner.IsDisposingItems)
+            if (_owner is not null && !_owner.IsDisposingItems)
             {
                 _owner.SuspendLayout();
                 overflow = _owner.GetOverflow();
-                if (overflow != null)
-                {
-                    overflow.SuspendLayout();
-                }
+                overflow?.SuspendLayout();
             }
+
             try
             {
                 while (Count != 0)
@@ -192,11 +193,9 @@ namespace System.Windows.Forms
             }
             finally
             {
-                if (overflow != null)
-                {
-                    overflow.ResumeLayout(false);
-                }
-                if (_owner != null && !_owner.IsDisposingItems)
+                overflow?.ResumeLayout(false);
+
+                if (_owner is not null && !_owner.IsDisposingItems)
                 {
                     _owner.ResumeLayout();
                 }
@@ -213,10 +212,8 @@ namespace System.Windows.Forms
 
         private void CheckCanAddOrInsertItem(ToolStripItem value)
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
+            ArgumentNullException.ThrowIfNull(value);
+
             if (IsReadOnly)
             {
                 throw new NotSupportedException(SR.ToolStripItemCollectionIsReadOnly);
@@ -225,7 +222,7 @@ namespace System.Windows.Forms
             if (_owner is ToolStripDropDown dropDown)
             {
                 // If we're on a dropdown, we can only add non-control host items
-                // as we dont want anything on a dropdown to get keyboard messages in the Internet.
+                // as we don't want anything on a dropdown to get keyboard messages in the Internet.
 
                 if (dropDown.OwnerItem == value)
                 {
@@ -240,10 +237,7 @@ namespace System.Windows.Forms
         /// </summary>
         public ToolStripItem[] Find(string key, bool searchAllChildren)
         {
-            if (string.IsNullOrEmpty(key))
-            {
-                throw new ArgumentNullException(nameof(key), SR.FindKeyMayNotBeEmptyOrNull);
-            }
+            key.ThrowIfNullOrEmptyWithMessage(SR.FindKeyMayNotBeEmptyOrNull);
 
             List<ToolStripItem> foundItems = new();
             FindInternal(key, searchAllChildren, this, foundItems);
@@ -297,7 +291,7 @@ namespace System.Windows.Forms
         public override bool IsReadOnly { get { return _isReadOnly; } }
 
         void IList.Clear() { Clear(); }
-        bool IList.IsFixedSize { get { return InnerList.IsFixedSize; } }
+        bool IList.IsFixedSize { get { return ((IList)InnerList).IsFixedSize; } }
         bool IList.Contains(object value) { return InnerList.Contains(value); }
         void IList.RemoveAt(int index) { RemoveAt(index); }
         void IList.Remove(object value) { Remove(value as ToolStripItem); }
@@ -310,12 +304,13 @@ namespace System.Windows.Forms
             get { return InnerList[index]; }
             set { throw new NotSupportedException(SR.ToolStripCollectionMustInsertAndRemove); /* InnerList[index] = value; */ }
         }
+
         public void Insert(int index, ToolStripItem value)
         {
             CheckCanAddOrInsertItem(value);
             SetOwner(value);
             InnerList.Insert(index, value);
-            if (_itemsCollection && _owner != null)
+            if (_itemsCollection && _owner is not null)
             {
                 if (_owner.IsHandleCreated)
                 {
@@ -326,6 +321,7 @@ namespace System.Windows.Forms
                     // next time we fetch the preferred size, recalc it.
                     CommonProperties.xClearPreferredSizeCache(_owner);
                 }
+
                 _owner.OnItemAddedInternal(value);
                 _owner.OnItemAdded(new ToolStripItemEventArgs(value));
             }
@@ -335,6 +331,7 @@ namespace System.Windows.Forms
         {
             return InnerList.IndexOf(value);
         }
+
         /// <summary>
         ///  The zero-based index of the first occurrence of value within the entire CollectionBase, if found; otherwise, -1.
         /// </summary>
@@ -343,7 +340,7 @@ namespace System.Windows.Forms
             // Step 0 - Arg validation
             if ((key is null) || (key.Length == 0))
             {
-                return -1; // we dont support empty or null keys.
+                return -1; // we don't support empty or null keys.
             }
 
             // step 1 - check the last cached item
@@ -386,13 +383,13 @@ namespace System.Windows.Forms
             if (_itemsCollection)
             {
                 ToolStrip parent = null;
-                if (item != null)
+                if (item is not null)
                 {
                     parent = item.ParentInternal;
                     item.SetOwner(null);
                 }
 
-                if (_owner != null)
+                if (_owner is not null)
                 {
                     _owner.OnItemRemovedInternal(item);
 
@@ -401,10 +398,10 @@ namespace System.Windows.Forms
                         ToolStripItemEventArgs e = new ToolStripItemEventArgs(item);
                         _owner.OnItemRemoved(e);
 
-                        // dont fire the ItemRemoved event for Overflow
+                        // don't fire the ItemRemoved event for Overflow
                         // it would fire constantly.... instead clear any state if the item
                         // is really being removed from the master collection.
-                        if (parent != null && parent != _owner)
+                        if (parent is not null && parent != _owner)
                         {
                             parent.OnItemVisibleChanged(e, /*performLayout*/false);
                         }
@@ -419,6 +416,7 @@ namespace System.Windows.Forms
             {
                 throw new NotSupportedException(SR.ToolStripItemCollectionIsReadOnly);
             }
+
             InnerList.Remove(value);
             OnAfterRemove(value);
         }
@@ -429,11 +427,13 @@ namespace System.Windows.Forms
             {
                 throw new NotSupportedException(SR.ToolStripItemCollectionIsReadOnly);
             }
+
             ToolStripItem item = null;
             if (index < Count && index >= 0)
             {
                 item = (ToolStripItem)(InnerList[index]);
             }
+
             InnerList.RemoveAt(index);
             OnAfterRemove(item);
         }
@@ -447,6 +447,7 @@ namespace System.Windows.Forms
             {
                 throw new NotSupportedException(SR.ToolStripItemCollectionIsReadOnly);
             }
+
             int index = IndexOfKey(key);
             if (IsValidIndex(index))
             {
@@ -462,7 +463,7 @@ namespace System.Windows.Forms
         //
         internal void MoveItem(ToolStripItem value)
         {
-            if (value.ParentInternal != null)
+            if (value.ParentInternal is not null)
             {
                 int indexOfItem = value.ParentInternal.Items.IndexOf(value);
                 if (indexOfItem >= 0)
@@ -470,6 +471,7 @@ namespace System.Windows.Forms
                     value.ParentInternal.Items.RemoveAt(indexOfItem);
                 }
             }
+
             Add(value);
         }
 
@@ -482,7 +484,7 @@ namespace System.Windows.Forms
                 return;
             }
 
-            if (value.ParentInternal != null)
+            if (value.ParentInternal is not null)
             {
                 int indexOfItem = value.ParentInternal.Items.IndexOf(value);
 
@@ -496,6 +498,7 @@ namespace System.Windows.Forms
                     }
                 }
             }
+
             Insert(index, value);
         }
 
@@ -503,18 +506,12 @@ namespace System.Windows.Forms
         {
             if (_itemsCollection)
             {
-                if (item != null)
+                if (item is not null)
                 {
-                    if (item.Owner != null)
-                    {
-                        item.Owner.Items.Remove(item);
-                    }
+                    item.Owner?.Items.Remove(item);
 
                     item.SetOwner(_owner);
-                    if (item.Renderer != null)
-                    {
-                        item.Renderer.InitializeItem(item);
-                    }
+                    item.Renderer?.InitializeItem(item);
                 }
             }
         }

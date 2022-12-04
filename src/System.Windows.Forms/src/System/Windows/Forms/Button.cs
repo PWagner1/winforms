@@ -2,12 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.ButtonInternal;
 using System.Windows.Forms.Layout;
 using static Interop;
@@ -31,13 +27,13 @@ namespace System.Windows.Forms
         private const int InvalidDimensionValue = int.MinValue;
 
         /// <summary>
-        ///  For buttons whose FaltStyle = FlatStyle.Flat, this property specifies the size, in pixels
+        ///  For buttons whose FlatStyle = FlatStyle.Flat, this property specifies the size, in pixels
         ///  of the border around the button.
         /// </summary>
         private Size _systemSize = new Size(InvalidDimensionValue, InvalidDimensionValue);
 
         /// <summary>
-        ///  Initializes a new instance of the <see cref='Button'/>
+        ///  Initializes a new instance of the <see cref="Button"/>
         ///  class.
         /// </summary>
         public Button() : base()
@@ -69,7 +65,7 @@ namespace System.Windows.Forms
                 if (GetAutoSizeMode() != value)
                 {
                     SetAutoSizeMode(value);
-                    if (ParentInternal != null)
+                    if (ParentInternal is not null)
                     {
                         // DefaultLayout does not keep anchor information until it needs to.  When
                         // AutoSize became a common property, we could no longer blindly call into
@@ -78,6 +74,7 @@ namespace System.Windows.Forms
                         {
                             ParentInternal.LayoutEngine.InitLayout(this, BoundsSpecified.Size);
                         }
+
                         LayoutTransaction.DoLayout(ParentInternal, this, PropertyNames.AutoSize);
                     }
                 }
@@ -112,11 +109,9 @@ namespace System.Windows.Forms
 
             if (_systemSize.Width == InvalidDimensionValue)
             {
-                Size requiredSize;
                 // Note: The result from the BCM_GETIDEALSIZE message isn't accurate if the font has been
                 // changed, because this method is called before the font is set into the device context.
-
-                requiredSize = TextRenderer.MeasureText(Text, Font);
+                Size requiredSize = TextRenderer.MeasureText(Text, Font);
                 requiredSize = SizeFromClientSize(requiredSize);
 
                 // This padding makes FlatStyle.System about the same size as FlatStyle.Standard
@@ -125,12 +120,13 @@ namespace System.Windows.Forms
                 requiredSize.Height += 9;
                 _systemSize = requiredSize;
             }
+
             Size paddedSize = _systemSize + Padding.Size;
             return AutoSizeMode == AutoSizeMode.GrowAndShrink ? paddedSize : LayoutUtils.UnionSizes(paddedSize, Size);
         }
 
         /// <summary>
-        ///  This is called when creating a window. Inheriting classes can overide
+        ///  This is called when creating a window. Inheriting classes can override
         ///  this to add extra functionality, but should not forget to first call
         ///  base.CreateParams() to make sure the control continues to work
         ///  correctly.
@@ -140,7 +136,7 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = ComCtl32.WindowClasses.WC_BUTTON;
+                cp.ClassName = PInvoke.WC_BUTTON;
                 if (GetStyle(ControlStyles.UserPaint))
                 {
                     cp.Style |= (int)User32.BS.OWNERDRAW;
@@ -153,6 +149,7 @@ namespace System.Windows.Forms
                         cp.Style |= (int)User32.BS.DEFPUSHBUTTON;
                     }
                 }
+
                 return cp;
             }
         }
@@ -183,7 +180,7 @@ namespace System.Windows.Forms
         internal override bool SupportsUiaProviders => true;
 
         /// <summary>
-        ///  Raises the <see cref='Control.OnMouseEnter'/> event.
+        ///  Raises the <see cref="Control.OnMouseEnter"/> event.
         /// </summary>
         protected override void OnMouseEnter(EventArgs e)
         {
@@ -191,7 +188,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Raises the <see cref='Control.OnMouseLeave'/> event.
+        ///  Raises the <see cref="Control.OnMouseLeave"/> event.
         /// </summary>
         protected override void OnMouseLeave(EventArgs e)
         {
@@ -201,7 +198,7 @@ namespace System.Windows.Forms
         /// <hideinheritance/>
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public new event EventHandler DoubleClick
+        public new event EventHandler? DoubleClick
         {
             add => base.DoubleClick += value;
             remove => base.DoubleClick -= value;
@@ -210,14 +207,14 @@ namespace System.Windows.Forms
         /// <hideinheritance/>
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public new event MouseEventHandler MouseDoubleClick
+        public new event MouseEventHandler? MouseDoubleClick
         {
             add => base.MouseDoubleClick += value;
             remove => base.MouseDoubleClick -= value;
         }
 
         /// <summary>
-        ///  Notifies the <see cref='Button'/>
+        ///  Notifies the <see cref="Button"/>
         ///  whether it is the default button so that it can adjust its appearance
         ///  accordingly.
         /// </summary>
@@ -238,20 +235,22 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void OnClick(EventArgs e)
         {
-            Form form = FindForm();
-            if (form != null)
+            Form? form = FindForm();
+            if (form is not null)
             {
                 form.DialogResult = _dialogResult;
             }
 
             // accessibility stuff
-            //
             AccessibilityNotifyClients(AccessibleEvents.StateChange, -1);
             AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
 
             // UIA events:
-            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.NamePropertyId, Name, Name);
-            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId);
+            if (IsAccessibilityObjectCreated)
+            {
+                AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.NamePropertyId, Name, Name);
+                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId);
+            }
 
             base.OnClick(e);
         }
@@ -262,9 +261,6 @@ namespace System.Windows.Forms
             base.OnFontChanged(e);
         }
 
-        /// <summary>
-        ///  Raises the <see cref='ButtonBase.OnMouseUp'/> event.
-        /// </summary>
         protected override void OnMouseUp(MouseEventArgs mevent)
         {
             if (mevent.Button == MouseButtons.Left && MouseIsPressed)
@@ -273,22 +269,24 @@ namespace System.Windows.Forms
 
                 if (GetStyle(ControlStyles.UserPaint))
                 {
-                    //Paint in raised state...
+                    // Paint in raised state.
                     ResetFlagsandPaint();
                 }
+
                 if (isMouseDown)
                 {
-                    Point pt = PointToScreen(new Point(mevent.X, mevent.Y));
-                    if (User32.WindowFromPoint(pt) == Handle && !ValidationCancelled)
+                    if (PInvoke.WindowFromPoint(PointToScreen(mevent.Location)) == HWND && !ValidationCancelled)
                     {
                         if (GetStyle(ControlStyles.UserPaint))
                         {
                             OnClick(mevent);
                         }
+
                         OnMouseClick(mevent);
                     }
                 }
             }
+
             base.OnMouseUp(mevent);
         }
 
@@ -318,7 +316,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Generates a <see cref='Control.Click'/> event for a
+        ///  Generates a <see cref="Control.Click"/> event for a
         ///  button.
         /// </summary>
         public void PerformClick()
@@ -329,7 +327,6 @@ namespace System.Windows.Forms
                 if (!ValidationCancelled && (validate || validatedControlAllowsFocusChange))
                 {
                     //Paint in raised state...
-                    //
                     ResetFlagsandPaint();
                     OnClick(EventArgs.Empty);
                 }
@@ -337,7 +334,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Lets a control process mnmemonic characters. Inheriting classes can
+        ///  Lets a control process mnemonic characters. Inheriting classes can
         ///  override this to add extra functionality, but should not forget to call
         ///  base.ProcessMnemonic(charCode); to ensure basic functionality
         ///  remains unchanged.
@@ -349,18 +346,14 @@ namespace System.Windows.Forms
                 PerformClick();
                 return true;
             }
+
             return base.ProcessMnemonic(charCode);
         }
 
         /// <summary>
-        ///  Provides some interesting information for the Button control in
-        ///  String form.
+        ///  Provides some interesting information for the Button control in String form.
         /// </summary>
-        public override string ToString()
-        {
-            string s = base.ToString();
-            return s + ", Text: " + Text;
-        }
+        public override string ToString() => $"{base.ToString()}, Text: {Text}";
 
         /// <summary>
         ///  The button's window procedure.  Inheriting classes can override this
@@ -369,16 +362,17 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void WndProc(ref Message m)
         {
-            switch ((User32.WM)m.Msg)
+            switch (m.MsgInternal)
             {
                 case User32.WM.REFLECT_COMMAND:
-                    if (PARAM.HIWORD(m.WParam) == (int)User32.BN.CLICKED)
+                    if ((User32.BN)m.WParamInternal.HIWORD == User32.BN.CLICKED)
                     {
                         if (!ValidationCancelled)
                         {
                             OnClick(EventArgs.Empty);
                         }
                     }
+
                     break;
                 case User32.WM.ERASEBKGND:
                     DefWndProc(ref m);

@@ -2,8 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Runtime.InteropServices;
+using Windows.Win32.System.Ole;
 
 internal static partial class Interop
 {
@@ -36,8 +36,8 @@ internal static partial class Interop
 
             [PreserveSig]
             HRESULT SetActiveObject(
-                IOleInPlaceActiveObject pActiveObject,
-                [MarshalAs(UnmanagedType.LPWStr)] string pszObjName);
+                IOleInPlaceActiveObject.Interface? pActiveObject,
+                [MarshalAs(UnmanagedType.LPWStr)] string? pszObjName);
 
             [PreserveSig]
             HRESULT InsertMenus(
@@ -64,7 +64,7 @@ internal static partial class Interop
 
             [PreserveSig]
             HRESULT TranslateAccelerator(
-                User32.MSG* lpmsg,
+                MSG* lpmsg,
                 ushort wID);
         }
     }

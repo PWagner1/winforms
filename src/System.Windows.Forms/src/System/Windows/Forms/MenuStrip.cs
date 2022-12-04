@@ -2,12 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -15,7 +11,7 @@ namespace System.Windows.Forms
     [SRDescription(nameof(SR.DescriptionMenuStrip))]
     public partial class MenuStrip : ToolStrip
     {
-        private ToolStripMenuItem mdiWindowListItem;
+        private ToolStripMenuItem? _mdiWindowListItem;
 
         private static readonly object EventMenuActivate = new object();
         private static readonly object EventMenuDeactivate = new object();
@@ -86,6 +82,7 @@ namespace System.Windows.Forms
                            DpiHelper.LogicalToDeviceUnits(new Padding(3, 2, 0, 2), DeviceDpi) :
                            new Padding(3, 2, 0, 2);
                 }
+
                 return DpiHelper.IsPerMonitorV2Awareness ?
                        DpiHelper.LogicalToDeviceUnits(new Padding(6, 2, 0, 2), DeviceDpi) :
                        new Padding(6, 2, 0, 2);
@@ -101,7 +98,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.MenuStripMenuActivateDescr))]
-        public event EventHandler MenuActivate
+        public event EventHandler? MenuActivate
         {
             add => Events.AddHandler(EventMenuActivate, value);
             remove => Events.RemoveHandler(EventMenuActivate, value);
@@ -109,7 +106,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.MenuStripMenuDeactivateDescr))]
-        public event EventHandler MenuDeactivate
+        public event EventHandler? MenuDeactivate
         {
             add => Events.AddHandler(EventMenuDeactivate, value);
             remove => Events.RemoveHandler(EventMenuDeactivate, value);
@@ -138,16 +135,16 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.MenuStripMdiWindowListItem))]
         [SRCategory(nameof(SR.CatBehavior))]
         [TypeConverter(typeof(MdiWindowListItemConverter))]
-        public ToolStripMenuItem MdiWindowListItem
+        public ToolStripMenuItem? MdiWindowListItem
         {
-            get => mdiWindowListItem;
-            set => mdiWindowListItem = value;
+            get => _mdiWindowListItem;
+            set => _mdiWindowListItem = value;
         }
 
         protected override AccessibleObject CreateAccessibilityInstance()
             => new MenuStripAccessibleObject(this);
 
-        protected internal override ToolStripItem CreateDefaultItem(string text, Image image, EventHandler onClick)
+        protected internal override ToolStripItem CreateDefaultItem(string? text, Image? image, EventHandler? onClick)
         {
             if (text == "-")
             {
@@ -166,6 +163,7 @@ namespace System.Windows.Forms
             {
                 nextItem = base.GetNextItem(nextItem, direction, rtlAware);
             }
+
             return nextItem;
         }
 
@@ -176,7 +174,7 @@ namespace System.Windows.Forms
                 AccessibilityNotifyClients(AccessibleEvents.SystemMenuStart, -1);
             }
 
-            ((EventHandler)Events[EventMenuActivate])?.Invoke(this, e);
+            ((EventHandler?)Events[EventMenuActivate])?.Invoke(this, e);
         }
 
         protected virtual void OnMenuDeactivate(EventArgs e)
@@ -186,7 +184,7 @@ namespace System.Windows.Forms
                 AccessibilityNotifyClients(AccessibleEvents.SystemMenuEnd, -1);
             }
 
-            ((EventHandler)Events[EventMenuDeactivate])?.Invoke(this, e);
+            ((EventHandler?)Events[EventMenuDeactivate])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -196,7 +194,7 @@ namespace System.Windows.Forms
         {
             if (!(Focused || ContainsFocus))
             {
-                Debug.WriteLineIf(ToolStrip.s_snapFocusDebug.TraceVerbose, "[ProcessMenuKey] set focus to menustrip");
+                ToolStrip.s_snapFocusDebug.TraceVerbose("[ProcessMenuKey] set focus to menustrip");
                 ToolStripManager.ModalMenuFilter.SetActiveToolStrip(this, /*menuKeyPressed=*/true);
 
                 if (DisplayedItems.Count > 0)
@@ -214,6 +212,7 @@ namespace System.Windows.Forms
 
                 return true;
             }
+
             return false;
         }
 
@@ -230,15 +229,17 @@ namespace System.Windows.Forms
                     if (Focused || !ContainsFocus)
                     {
                         NotifySelectionChange(null);
-                        Debug.WriteLineIf(ToolStrip.s_snapFocusDebug.TraceVerbose, "[MenuStrip.ProcessCmdKey] Rolling up the menu and invoking the system menu");
+                        ToolStrip.s_snapFocusDebug.TraceVerbose("[MenuStrip.ProcessCmdKey] Rolling up the menu and invoking the system menu");
                         ToolStripManager.ModalMenuFilter.ExitMenuMode();
-                        // send a WM_SYSCOMMAND SC_KEYMENU + Space to activate the system menu.
-                        IntPtr ancestor = User32.GetAncestor(this, User32.GA.ROOT);
+
+                        // Send a WM_SYSCOMMAND SC_KEYMENU + Space to activate the system menu.
+                        HWND ancestor = PInvoke.GetAncestor(this, GET_ANCESTOR_FLAGS.GA_ROOT);
                         User32.PostMessageW(ancestor, User32.WM.SYSCOMMAND, (IntPtr)User32.SC.KEYMENU, (IntPtr)Keys.Space);
                         return true;
                     }
                 }
             }
+
             return base.ProcessCmdKey(ref m, keyData);
         }
 
@@ -249,10 +250,10 @@ namespace System.Windows.Forms
                 // call menu activate before we actually take focus.
                 Point pt = PointToClient(WindowsFormsUtils.LastCursorPoint);
                 ToolStripItem item = GetItemAt(pt);
-                if (item != null && !(item is ToolStripControlHost))
+                if (item is not null && !(item is ToolStripControlHost))
                 {
                     // verify the place where we've clicked is a place where we have to do "fake" focus
-                    // e.g. an item that isnt a control.
+                    // e.g. an item that isn't a control.
                     KeyboardActive = true;
                 }
             }

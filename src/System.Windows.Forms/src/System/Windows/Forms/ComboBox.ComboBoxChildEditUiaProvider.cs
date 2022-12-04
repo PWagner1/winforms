@@ -2,9 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
-using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using static Interop;
 
@@ -19,7 +17,8 @@ namespace System.Windows.Forms
         {
             private const string COMBO_BOX_EDIT_AUTOMATION_ID = "1001";
 
-            private readonly ComboBox _owner;
+            private readonly ComboBox _owningComboBox;
+            private readonly ComboBoxUiaTextProvider _textProvider;
             private readonly IntPtr _handle;
 
             /// <summary>
@@ -29,18 +28,24 @@ namespace System.Windows.Forms
             /// <param name="childEditControlhandle">The child edit native window handle.</param>
             public ComboBoxChildEditUiaProvider(ComboBox owner, IntPtr childEditControlhandle) : base(owner, childEditControlhandle)
             {
-                _owner = owner;
+                _owningComboBox = owner;
                 _handle = childEditControlhandle;
+                _textProvider = new ComboBoxUiaTextProvider(owner);
             }
+
+            private protected override string AutomationId => COMBO_BOX_EDIT_AUTOMATION_ID;
 
             /// <summary>
             ///  Returns the element in the specified direction.
             /// </summary>
             /// <param name="direction">Indicates the direction in which to navigate.</param>
             /// <returns>Returns the element in the specified direction.</returns>
-            internal override UiaCore.IRawElementProviderFragment FragmentNavigate(UiaCore.NavigateDirection direction)
+            internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
             {
-                if (!_owner.IsHandleCreated)
+                if (!_owningComboBox.IsHandleCreated ||
+                    // Created is set to false in WM_DESTROY, but the window Handle is released on NCDESTROY, which comes after DESTROY.
+                    // But between these calls, AccessibleObject can be recreated and might cause memory leaks.
+                    !_owningComboBox.Created)
                 {
                     return null;
                 }
@@ -48,15 +53,14 @@ namespace System.Windows.Forms
                 switch (direction)
                 {
                     case UiaCore.NavigateDirection.Parent:
-                        Debug.WriteLine("Edit parent " + _owner.AccessibilityObject.GetPropertyValue(UiaCore.UIA.ControlTypePropertyId));
-                        return _owner.AccessibilityObject;
+                        return _owningComboBox.AccessibilityObject;
                     case UiaCore.NavigateDirection.PreviousSibling:
-                        return _owner.DroppedDown
-                            ? _owner.ChildListAccessibleObject
+                        return _owningComboBox.DroppedDown
+                            ? _owningComboBox.ChildListAccessibleObject
                             : null;
                     case UiaCore.NavigateDirection.NextSibling:
-                        return _owner.DropDownStyle != ComboBoxStyle.Simple
-                            && _owner.AccessibilityObject is ComboBoxAccessibleObject comboBoxAccessibleObject
+                        return _owningComboBox.DropDownStyle != ComboBoxStyle.Simple
+                            && _owningComboBox.AccessibilityObject is ComboBoxAccessibleObject comboBoxAccessibleObject
                                 ? comboBoxAccessibleObject.DropDownButtonUiaProvider
                                 : null;
                     default:
@@ -68,53 +72,26 @@ namespace System.Windows.Forms
             ///  Gets the top level element.
             /// </summary>
             internal override UiaCore.IRawElementProviderFragmentRoot FragmentRoot
-            {
-                get
-                {
-                    return _owner.AccessibilityObject;
-                }
-            }
+                => _owningComboBox.AccessibilityObject;
+
+            public override string Name => base.Name ?? SR.ComboBoxEditDefaultAccessibleName;
 
             /// <summary>
             ///  Gets the accessible property value.
             /// </summary>
             /// <param name="propertyID">The accessible property ID.</param>
             /// <returns>The accessible property value.</returns>
-            internal override object GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                switch (propertyID)
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+                propertyID switch
                 {
-                    case UiaCore.UIA.RuntimeIdPropertyId:
-                        return RuntimeId;
-                    case UiaCore.UIA.BoundingRectanglePropertyId:
-                        return Bounds;
-                    case UiaCore.UIA.ControlTypePropertyId:
-                        return UiaCore.UIA.EditControlTypeId;
-                    case UiaCore.UIA.NamePropertyId:
-                        return Name ?? SR.ComboBoxEditDefaultAccessibleName;
-                    case UiaCore.UIA.AccessKeyPropertyId:
-                        return string.Empty;
-                    case UiaCore.UIA.HasKeyboardFocusPropertyId:
-                        return _owner.Focused;
-                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
-                        return (State & AccessibleStates.Focusable) == AccessibleStates.Focusable;
-                    case UiaCore.UIA.IsEnabledPropertyId:
-                        return _owner.Enabled;
-                    case UiaCore.UIA.AutomationIdPropertyId:
-                        return COMBO_BOX_EDIT_AUTOMATION_ID;
-                    case UiaCore.UIA.HelpTextPropertyId:
-                        return Help ?? string.Empty;
-                    case UiaCore.UIA.IsPasswordPropertyId:
-                        return false;
-                    case UiaCore.UIA.NativeWindowHandlePropertyId:
-                        return _handle;
-                    case UiaCore.UIA.IsOffscreenPropertyId:
-                        return false;
-
-                    default:
-                        return base.GetPropertyValue(propertyID);
-                }
-            }
+                    UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.EditControlTypeId,
+                    UiaCore.UIA.HasKeyboardFocusPropertyId => _owningComboBox.Focused,
+                    UiaCore.UIA.IsEnabledPropertyId => _owningComboBox.Enabled,
+                    UiaCore.UIA.IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
+                    UiaCore.UIA.IsOffscreenPropertyId => false,
+                    UiaCore.UIA.NativeWindowHandlePropertyId => _handle,
+                    _ => base.GetPropertyValue(propertyID)
+                };
 
             internal override UiaCore.IRawElementProviderSimple HostRawElementProvider
             {
@@ -127,20 +104,43 @@ namespace System.Windows.Forms
 
             internal override bool IsIAccessibleExSupported() => true;
 
+            internal override bool IsPatternSupported(UiaCore.UIA patternId) =>
+                patternId switch
+                {
+                    UiaCore.UIA.ValuePatternId => true,
+                    UiaCore.UIA.TextPatternId => true,
+                    UiaCore.UIA.TextPattern2Id => true,
+                    _ => base.IsPatternSupported(patternId)
+                };
+
             /// <summary>
             ///  Gets the runtime ID.
             /// </summary>
-            internal override int[] RuntimeId
-            {
-                get
-                {
-                    var runtimeId = new int[2];
-                    runtimeId[0] = RuntimeIDFirstItem;
-                    runtimeId[1] = GetHashCode();
+            internal override int[] RuntimeId => new int[] { RuntimeIDFirstItem, GetHashCode() };
 
-                    return runtimeId;
-                }
-            }
+            internal override UiaCore.ITextRangeProvider DocumentRangeInternal
+                => _textProvider.DocumentRange;
+
+            internal override UiaCore.ITextRangeProvider[]? GetTextSelection()
+                => _textProvider.GetSelection();
+
+            internal override UiaCore.ITextRangeProvider[]? GetTextVisibleRanges()
+                => _textProvider.GetVisibleRanges();
+
+            internal override UiaCore.ITextRangeProvider? GetTextRangeFromChild(UiaCore.IRawElementProviderSimple childElement)
+                => _textProvider.RangeFromChild(childElement);
+
+            internal override UiaCore.ITextRangeProvider? GetTextRangeFromPoint(Point screenLocation)
+                => _textProvider.RangeFromPoint(screenLocation);
+
+            internal override UiaCore.SupportedTextSelection SupportedTextSelectionInternal
+                => _textProvider.SupportedTextSelection;
+
+            internal override UiaCore.ITextRangeProvider? GetTextCaretRange(out BOOL isActive)
+                => _textProvider.GetCaretRange(out isActive);
+
+            internal override UiaCore.ITextRangeProvider GetRangeFromAnnotation(UiaCore.IRawElementProviderSimple annotationElement)
+                => _textProvider.RangeFromAnnotation(annotationElement);
         }
     }
 }

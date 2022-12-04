@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Drawing;
 using static Interop;
 
@@ -32,7 +30,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Creates a new DrawItemEventArgs with the given parameters.
         /// </summary>
-        public DrawItemEventArgs(Graphics graphics, Font font, Rectangle rect, int index, DrawItemState state)
+        public DrawItemEventArgs(Graphics graphics, Font? font, Rectangle rect, int index, DrawItemState state)
             : this(graphics, font, rect, index, state, SystemColors.WindowText, SystemColors.Window)
         { }
 
@@ -42,7 +40,7 @@ namespace System.Windows.Forms
         /// </summary>
         public DrawItemEventArgs(
             Graphics graphics,
-            Font font,
+            Font? font,
             Rectangle rect,
             int index,
             DrawItemState state,
@@ -58,8 +56,8 @@ namespace System.Windows.Forms
         }
 
         internal DrawItemEventArgs(
-            Gdi32.HDC hdc,
-            Font font,
+            HDC hdc,
+            Font? font,
             Rectangle rect,
             uint index,
             User32.ODS state)
@@ -67,8 +65,8 @@ namespace System.Windows.Forms
         { }
 
         internal DrawItemEventArgs(
-            Gdi32.HDC hdc,
-            Font font,
+            HDC hdc,
+            Font? font,
             Rectangle rect,
             uint index,
             User32.ODS state,
@@ -84,14 +82,14 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Gets the <see cref='Drawing.Graphics'/> object used to paint.
+        ///  Gets the <see cref="Drawing.Graphics"/> object used to paint.
         /// </summary>
         public Graphics Graphics => _event.Graphics;
 
         /// <summary>
         ///  A suggested font, usually the parent control's Font property.
         /// </summary>
-        public Font Font { get; }
+        public Font? Font { get; }
 
         /// <summary>
         ///  The rectangle outlining the area in which the painting should be  done.
@@ -158,14 +156,14 @@ namespace System.Windows.Forms
         internal Graphics GraphicsInternal => _event.GetOrCreateGraphicsInternal();
 
         /// <summary>
-        ///  Returns the <see cref="Gdi32.HDC"/> the event was created off of, if any.
+        ///  Returns the <see cref="HDC"/> the event was created off of, if any.
         /// </summary>
-        internal Gdi32.HDC HDC => _event.HDC;
+        internal HDC HDC => _event.HDC;
 
         IntPtr IDeviceContext.GetHdc() => Graphics?.GetHdc() ?? IntPtr.Zero;
         void IDeviceContext.ReleaseHdc() => Graphics?.ReleaseHdc();
-        Gdi32.HDC IGraphicsHdcProvider.GetHDC() => _event.GetHDC();
-        Graphics IGraphicsHdcProvider.GetGraphics(bool create) => _event.GetGraphics(create);
+        HDC IGraphicsHdcProvider.GetHDC() => _event.GetHDC();
+        Graphics? IGraphicsHdcProvider.GetGraphics(bool create) => _event.GetGraphics(create);
         bool IGraphicsHdcProvider.IsGraphicsStateClean => _event.IsStateClean;
     }
 }

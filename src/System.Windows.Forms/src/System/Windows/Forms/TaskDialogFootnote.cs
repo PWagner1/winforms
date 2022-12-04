@@ -65,7 +65,7 @@ namespace System.Windows.Forms
             {
                 DenyIfBoundAndNotCreated();
 
-                if (BoundPage != null)
+                if (BoundPage is not null)
                 {
                     // If we are bound but waiting for initialization (e.g. immediately after
                     // starting a navigation), we buffer the change until we apply the
@@ -77,7 +77,7 @@ namespace System.Windows.Forms
                     else
                     {
                         BoundPage.BoundDialog!.UpdateTextElement(
-                            ComCtl32.TDE.FOOTER, value);
+                            TASKDIALOG_ELEMENTS.TDE_FOOTER, value);
                     }
                 }
 
@@ -117,7 +117,7 @@ namespace System.Windows.Forms
                 // while waiting for the initialization.
                 DenyIfWaitingForInitialization();
 
-                if (BoundPage != null)
+                if (BoundPage is not null)
                 {
                     (ComCtl32.TASKDIALOGCONFIG.IconUnion icon, bool? iconIsFromHandle) =
                         TaskDialogPage.GetIconValue(value);
@@ -125,13 +125,13 @@ namespace System.Windows.Forms
                     // The native task dialog icon cannot be updated from a handle
                     // type to a non-handle type and vice versa, so we need to throw
                     // in such a case.
-                    if (iconIsFromHandle != null && iconIsFromHandle != _boundIconIsFromHandle)
+                    if (iconIsFromHandle is not null && iconIsFromHandle != _boundIconIsFromHandle)
                     {
                         throw new InvalidOperationException(SR.TaskDialogCannotUpdateIconType);
                     }
 
                     BoundPage.BoundDialog!.UpdateIconElement(
-                        ComCtl32.TDIE.ICON_FOOTER,
+                         TASKDIALOG_ICON_ELEMENTS.TDIE_ICON_FOOTER,
                         _boundIconIsFromHandle ? icon.hIcon : (IntPtr)icon.pszIcon);
                 }
 
@@ -147,25 +147,25 @@ namespace System.Windows.Forms
         /// <returns>A string that contains the control text.</returns>
         public override string ToString() => _text ?? base.ToString() ?? string.Empty;
 
-        internal ComCtl32.TDF Bind(TaskDialogPage page, out ComCtl32.TASKDIALOGCONFIG.IconUnion icon)
+        internal TASKDIALOG_FLAGS Bind(TaskDialogPage page, out ComCtl32.TASKDIALOGCONFIG.IconUnion icon)
         {
-            ComCtl32.TDF result = base.Bind(page);
+            TASKDIALOG_FLAGS result = base.Bind(page);
 
             icon = TaskDialogPage.GetIconValue(_icon).iconUnion;
 
             return result;
         }
 
-        private protected override ComCtl32.TDF BindCore()
+        private protected override TASKDIALOG_FLAGS BindCore()
         {
-            ComCtl32.TDF flags = base.BindCore();
+            TASKDIALOG_FLAGS flags = base.BindCore();
 
             _updateTextOnInitialization = false;
             _boundIconIsFromHandle = TaskDialogPage.GetIconValue(_icon).iconIsFromHandle ?? false;
 
             if (_boundIconIsFromHandle)
             {
-                flags |= ComCtl32.TDF.USE_HICON_FOOTER;
+                flags |= TASKDIALOG_FLAGS.TDF_USE_HICON_FOOTER;
             }
 
             return flags;

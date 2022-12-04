@@ -2,13 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using static Interop;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms
 {
@@ -17,26 +14,26 @@ namespace System.Windows.Forms
         [ListBindable(false)]
         public class SelectedListViewItemCollection : IList
         {
-            private readonly ListView owner;
+            private readonly ListView _owner;
 
             ///  A caching mechanism for key accessor
             ///  We use an index here rather than control so that we don't have lifetime
             ///  issues by holding on to extra references.
-            private int lastAccessedIndex = -1;
+            private int _lastAccessedIndex = -1;
 
             /* C#r: protected */
             public SelectedListViewItemCollection(ListView owner)
             {
-                this.owner = owner;
+                _owner = owner.OrThrowIfNull();
             }
 
             private ListViewItem[] SelectedItemArray
             {
                 get
                 {
-                    if (owner.IsHandleCreated)
+                    if (_owner.IsHandleCreated)
                     {
-                        int cnt = unchecked((int)(long)User32.SendMessageW(owner, (User32.WM)LVM.GETSELECTEDCOUNT));
+                        int cnt = (int)PInvoke.SendMessage(_owner, (User32.WM)PInvoke.LVM_GETSELECTEDCOUNT);
 
                         ListViewItem[] lvitems = new ListViewItem[cnt];
 
@@ -44,10 +41,15 @@ namespace System.Windows.Forms
 
                         for (int i = 0; i < cnt; i++)
                         {
-                            int fidx = unchecked((int)(long)User32.SendMessageW(owner, (User32.WM)LVM.GETNEXTITEM, (IntPtr)displayIndex, (IntPtr)LVNI.SELECTED));
+                            int fidx = (int)PInvoke.SendMessage(
+                                _owner,
+                                (User32.WM)PInvoke.LVM_GETNEXTITEM,
+                                (WPARAM)displayIndex,
+                                (LPARAM)(uint)PInvoke.LVNI_SELECTED);
+
                             if (fidx > -1)
                             {
-                                lvitems[i] = owner.Items[fidx];
+                                lvitems[i] = _owner.Items[fidx];
                                 displayIndex = fidx;
                             }
                             else
@@ -60,13 +62,14 @@ namespace System.Windows.Forms
                     }
                     else
                     {
-                        if (owner.savedSelectedItems != null)
+                        if (_owner._savedSelectedItems is not null)
                         {
-                            ListViewItem[] cloned = new ListViewItem[owner.savedSelectedItems.Count];
-                            for (int i = 0; i < owner.savedSelectedItems.Count; i++)
+                            ListViewItem[] cloned = new ListViewItem[_owner._savedSelectedItems.Count];
+                            for (int i = 0; i < _owner._savedSelectedItems.Count; i++)
                             {
-                                cloned[i] = owner.savedSelectedItems[i];
+                                cloned[i] = _owner._savedSelectedItems[i];
                             }
+
                             return cloned;
                         }
                         else
@@ -85,21 +88,22 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (owner.VirtualMode)
+                    if (_owner.VirtualMode)
                     {
                         throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                     }
 
-                    if (owner.IsHandleCreated)
+                    if (_owner.IsHandleCreated)
                     {
-                        return unchecked((int)(long)User32.SendMessageW(owner, (User32.WM)LVM.GETSELECTEDCOUNT));
+                        return (int)PInvoke.SendMessage(_owner, (User32.WM)PInvoke.LVM_GETSELECTEDCOUNT);
                     }
                     else
                     {
-                        if (owner.savedSelectedItems != null)
+                        if (_owner._savedSelectedItems is not null)
                         {
-                            return owner.savedSelectedItems.Count;
+                            return _owner._savedSelectedItems.Count;
                         }
+
                         return 0;
                     }
                 }
@@ -112,7 +116,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (owner.VirtualMode)
+                    if (_owner.VirtualMode)
                     {
                         throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                     }
@@ -122,24 +126,27 @@ namespace System.Windows.Forms
                         throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
                     }
 
-                    if (owner.IsHandleCreated)
+                    if (_owner.IsHandleCreated)
                     {
-                        // Count through the selected items in the ListView, until
-                        // we reach the 'index'th selected item.
-                        //
+                        // Count through the selected items in the ListView, until we reach the 'index'th selected item.
                         int fidx = -1;
                         for (int count = 0; count <= index; count++)
                         {
-                            fidx = unchecked((int)(long)User32.SendMessageW(owner, (User32.WM)LVM.GETNEXTITEM, (IntPtr)fidx, (IntPtr)LVNI.SELECTED));
+                            fidx = (int)PInvoke.SendMessage(
+                                _owner,
+                                (User32.WM)PInvoke.LVM_GETNEXTITEM,
+                                (WPARAM)fidx,
+                                (LPARAM)(uint)PInvoke.LVNI_SELECTED);
+
                             Debug.Assert(fidx != -1, "Invalid index returned from LVM_GETNEXTITEM");
                         }
 
-                        return owner.Items[fidx];
+                        return _owner.Items[fidx];
                     }
                     else
                     {
-                        Debug.Assert(owner.savedSelectedItems != null, "Null selected items collection");
-                        return owner.savedSelectedItems[index];
+                        Debug.Assert(_owner._savedSelectedItems is not null, "Null selected items collection");
+                        return _owner._savedSelectedItems[index];
                     }
                 }
             }
@@ -147,11 +154,11 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Retrieves the child control with the specified key.
             /// </summary>
-            public virtual ListViewItem this[string key]
+            public virtual ListViewItem? this[string? key]
             {
                 get
                 {
-                    if (owner.VirtualMode)
+                    if (_owner.VirtualMode)
                     {
                         throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                     }
@@ -175,11 +182,11 @@ namespace System.Windows.Forms
                 }
             }
 
-            object IList.this[int index]
+            object? IList.this[int index]
             {
                 get
                 {
-                    if (owner.VirtualMode)
+                    if (_owner.VirtualMode)
                     {
                         throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                     }
@@ -225,13 +232,13 @@ namespace System.Windows.Forms
                 }
             }
 
-            int IList.Add(object value)
+            int IList.Add(object? value)
             {
                 // SelectedListViewItemCollection is read-only
                 throw new NotSupportedException();
             }
 
-            void IList.Insert(int index, object value)
+            void IList.Insert(int index, object? value)
             {
                 // SelectedListViewItemCollection is read-only
                 throw new NotSupportedException();
@@ -245,7 +252,7 @@ namespace System.Windows.Forms
                 return (index >= 0) && (index < Count);
             }
 
-            void IList.Remove(object value)
+            void IList.Remove(object? value)
             {
                 // SelectedListViewItemCollection is read-only
                 throw new NotSupportedException();
@@ -258,11 +265,11 @@ namespace System.Windows.Forms
             }
 
             /// <summary>
-            ///  Unselects all items.
+            ///  Deselects all items.
             /// </summary>
             public void Clear()
             {
-                if (owner.VirtualMode)
+                if (_owner.VirtualMode)
                 {
                     throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                 }
@@ -277,9 +284,9 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Returns true if the collection contains an item with the specified key, false otherwise.
             /// </summary>
-            public virtual bool ContainsKey(string key)
+            public virtual bool ContainsKey(string? key)
             {
-                if (owner.VirtualMode)
+                if (_owner.VirtualMode)
                 {
                     throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                 }
@@ -287,9 +294,9 @@ namespace System.Windows.Forms
                 return IsValidIndex(IndexOfKey(key));
             }
 
-            public bool Contains(ListViewItem item)
+            public bool Contains(ListViewItem? item)
             {
-                if (owner.VirtualMode)
+                if (_owner.VirtualMode)
                 {
                     throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                 }
@@ -297,16 +304,16 @@ namespace System.Windows.Forms
                 return IndexOf(item) != -1;
             }
 
-            bool IList.Contains(object item)
+            bool IList.Contains(object? item)
             {
-                if (owner.VirtualMode)
+                if (_owner.VirtualMode)
                 {
                     throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                 }
 
-                if (item is ListViewItem)
+                if (item is ListViewItem listViewItem)
                 {
-                    return Contains((ListViewItem)item);
+                    return Contains(listViewItem);
                 }
                 else
                 {
@@ -316,26 +323,26 @@ namespace System.Windows.Forms
 
             public void CopyTo(Array dest, int index)
             {
-                if (owner.VirtualMode)
+                if (_owner.VirtualMode)
                 {
                     throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                 }
 
                 if (Count > 0)
                 {
-                    System.Array.Copy(SelectedItemArray, 0, dest, index, Count);
+                    Array.Copy(SelectedItemArray, 0, dest, index, Count);
                 }
             }
 
             public IEnumerator GetEnumerator()
             {
-                if (owner.VirtualMode)
+                if (_owner.VirtualMode)
                 {
                     throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                 }
 
                 ListViewItem[] items = SelectedItemArray;
-                if (items != null)
+                if (items is not null)
                 {
                     return items.GetEnumerator();
                 }
@@ -345,9 +352,9 @@ namespace System.Windows.Forms
                 }
             }
 
-            public int IndexOf(ListViewItem item)
+            public int IndexOf(ListViewItem? item)
             {
-                if (owner.VirtualMode)
+                if (_owner.VirtualMode)
                 {
                     throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                 }
@@ -360,19 +367,20 @@ namespace System.Windows.Forms
                         return index;
                     }
                 }
+
                 return -1;
             }
 
-            int IList.IndexOf(object item)
+            int IList.IndexOf(object? item)
             {
-                if (owner.VirtualMode)
+                if (_owner.VirtualMode)
                 {
                     throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                 }
 
-                if (item is ListViewItem)
+                if (item is ListViewItem listViewItem)
                 {
-                    return IndexOf((ListViewItem)item);
+                    return IndexOf(listViewItem);
                 }
                 else
                 {
@@ -383,9 +391,9 @@ namespace System.Windows.Forms
             /// <summary>
             ///  The zero-based index of the first occurrence of value within the entire CollectionBase, if found; otherwise, -1.
             /// </summary>
-            public virtual int IndexOfKey(string key)
+            public virtual int IndexOfKey(string? key)
             {
-                if (owner.VirtualMode)
+                if (_owner.VirtualMode)
                 {
                     throw new InvalidOperationException(SR.ListViewCantAccessSelectedItemsCollectionWhenInVirtualMode);
                 }
@@ -393,15 +401,15 @@ namespace System.Windows.Forms
                 // Step 0 - Arg validation
                 if (string.IsNullOrEmpty(key))
                 {
-                    return -1; // we dont support empty or null keys.
+                    return -1; // we don't support empty or null keys.
                 }
 
                 // step 1 - check the last cached item
-                if (IsValidIndex(lastAccessedIndex))
+                if (IsValidIndex(_lastAccessedIndex))
                 {
-                    if (WindowsFormsUtils.SafeCompareStrings(this[lastAccessedIndex].Name, key, /* ignoreCase = */ true))
+                    if (WindowsFormsUtils.SafeCompareStrings(this[_lastAccessedIndex].Name, key, /* ignoreCase = */ true))
                     {
-                        return lastAccessedIndex;
+                        return _lastAccessedIndex;
                     }
                 }
 
@@ -410,13 +418,13 @@ namespace System.Windows.Forms
                 {
                     if (WindowsFormsUtils.SafeCompareStrings(this[i].Name, key, /* ignoreCase = */ true))
                     {
-                        lastAccessedIndex = i;
+                        _lastAccessedIndex = i;
                         return i;
                     }
                 }
 
                 // step 3 - we didn't find it.  Invalidate the last accessed index and return -1.
-                lastAccessedIndex = -1;
+                _lastAccessedIndex = -1;
                 return -1;
             }
         }

@@ -2,12 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Data;
 using System.Windows.Forms;
-using System.Windows.Forms.Automation;
 
-namespace AccessibilityTests
+namespace Accessibility_Core_App
 {
     public partial class DataControls : Form
     {
@@ -18,21 +16,20 @@ namespace AccessibilityTests
 
         private void DataControls_Load(object sender, EventArgs e)
         {
-            DataTable dt = new DataTable();
-            dt.Columns.Add("Name");
-            dt.Columns.Add("Id");
-            dt.Columns.Add("Desc");
+            DataTable dataTable = new DataTable();
+            dataTable.Columns.Add("Name");
+            dataTable.Columns.Add("Id");
+            dataTable.Columns.Add("Desc");
             for (int i = 0; i < 20; i++)
             {
-                DataRow dr = dt.NewRow();
-                dr[0] = "Jack" + i.ToString();
-                dr[1] = i * 10;
-                dr[2] = "I like" + i.ToString();
-                dt.Rows.Add(dr);
+                DataRow dataRow = dataTable.NewRow();
+                dataRow[0] = "Jack" + i.ToString();
+                dataRow[1] = i * 10;
+                dataRow[2] = "I like" + i.ToString();
+                dataTable.Rows.Add(dataRow);
             }
-            //this.dataGridView2.DataSource = dt;
 
-            bindingSource1.DataSource = dt;
+            bindingSource1.DataSource = dataTable;
             dataGridView2.DataSource = bindingSource1;
             bindingNavigator1.BindingSource = bindingSource1;
 
@@ -40,14 +37,17 @@ namespace AccessibilityTests
             dataGridView1.CurrentCell = dataGridView1.Rows[0].Cells[0];
             dataGridView1.BeginEdit(false);
             DataGridViewComboBoxEditingControl cbox = dataGridView1.EditingControl as DataGridViewComboBoxEditingControl;
-            if (cbox != null)
+            if (cbox is not null)
                 cbox.DroppedDown = true;
         }
 
         private void bindingNavigatorAddNewItem_Click(object sender, EventArgs e)
         {
             dataGridView2.Focus();
-            bindingNavigator1.AccessibilityObject.RaiseAutomationNotification(AutomationNotificationKind.Other, AutomationNotificationProcessing.CurrentThenMostRecent, "Please enter first name now");
+            bindingNavigator1.AccessibilityObject.RaiseAutomationNotification(
+                System.Windows.Forms.Automation.AutomationNotificationKind.Other,
+              System.Windows.Forms.Automation.AutomationNotificationProcessing.CurrentThenMostRecent,
+              "Please enter first name now");
         }
     }
 }

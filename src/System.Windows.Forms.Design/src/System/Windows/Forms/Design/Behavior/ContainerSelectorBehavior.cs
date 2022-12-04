@@ -47,7 +47,7 @@ namespace System.Windows.Forms.Design.Behavior
             _behaviorService = (BehaviorService)serviceProvider.GetService(typeof(BehaviorService));
             if (_behaviorService is null)
             {
-                Debug.Fail("Could not get the BehaviorService from ContainerSelectroBehavior!");
+                Debug.Fail("Could not get the BehaviorService from ContainerSelectorBehavior!");
                 return;
             }
 
@@ -86,7 +86,7 @@ namespace System.Windows.Forms.Design.Behavior
             {
                 //select our component
                 ISelectionService selSvc = (ISelectionService)_serviceProvider.GetService(typeof(ISelectionService));
-                if (selSvc != null && !_containerControl.Equals(selSvc.PrimarySelection as Control))
+                if (selSvc is not null && !_containerControl.Equals(selSvc.PrimarySelection as Control))
                 {
                     selSvc.SetSelectedComponents(new object[] { _containerControl }, SelectionTypes.Primary | SelectionTypes.Toggle);
                     // Setting the selected component will create a new glyph, so this instance of the glyph won't receive any more mouse messages. So we need to tell the new glyph what the initialDragPoint and okToMove are.
@@ -94,6 +94,7 @@ namespace System.Windows.Forms.Design.Behavior
                     {
                         return false;
                     }
+
                     foreach (Adorner a in _behaviorService.Adorners)
                     {
                         foreach (Glyph glyph in a.Glyphs)
@@ -102,18 +103,20 @@ namespace System.Windows.Forms.Design.Behavior
                             {
                                 continue;
                             }
+
                             // Don't care if we are looking at the same containerselectorglyph
                             if (selNew.Equals(selOld))
                             {
                                 continue;
                             }
+
                             // Check if the containercontrols are the same
                             if (!(selNew.RelatedBehavior is ContainerSelectorBehavior behNew) || !(selOld.RelatedBehavior is ContainerSelectorBehavior behOld))
                             {
                                 continue;
                             }
 
-                            // and the relatedcomponents are the same, then we have found the new glyph that just got added
+                            // and the related components are the same, then we have found the new glyph that just got added
                             if (behOld.ContainerControl.Equals(behNew.ContainerControl))
                             {
                                 behNew.OkToMove = true;
@@ -130,6 +133,7 @@ namespace System.Windows.Forms.Design.Behavior
                     OkToMove = true;
                 }
             }
+
             return false;
         }
 
@@ -161,6 +165,7 @@ namespace System.Windows.Forms.Design.Behavior
                 {
                     InitialDragPoint = DetermineInitialDragPoint(mouseLoc);
                 }
+
                 Size delta = new Size(Math.Abs(mouseLoc.X - InitialDragPoint.X), Math.Abs(mouseLoc.Y - InitialDragPoint.Y));
                 if (delta.Width >= DesignerUtils.MinDragSize.Width / 2 || delta.Height >= DesignerUtils.MinDragSize.Height / 2)
                 {
@@ -170,6 +175,7 @@ namespace System.Windows.Forms.Design.Behavior
                     StartDragOperation(screenLoc);
                 }
             }
+
             return false;
         }
 
@@ -196,6 +202,7 @@ namespace System.Windows.Forms.Design.Behavior
                 Debug.Fail("Can't drag this Container! Either SelectionService is null or DesignerHost is null");
                 return;
             }
+
             //must identify a required parent to avoid dragging mixes of children
             Control requiredParent = _containerControl.Parent;
             ArrayList dragControls = new ArrayList();
@@ -203,12 +210,13 @@ namespace System.Windows.Forms.Design.Behavior
             //create our list of controls-to-drag
             foreach (IComponent comp in selComps)
             {
-                if ((comp is Control ctrl) && (ctrl.Parent != null))
+                if ((comp is Control ctrl) && (ctrl.Parent is not null))
                 {
                     if (!ctrl.Parent.Equals(requiredParent))
                     {
                         continue; //mixed selection of different parents - don't add this
                     }
+
                     if (host.GetDesigner(ctrl) is ControlDesigner des && (des.SelectionRules & SelectionRules.Moveable) != 0)
                     {
                         dragControls.Add(ctrl);
@@ -230,6 +238,7 @@ namespace System.Windows.Forms.Design.Behavior
                 {
                     controlOrigin = initialMouseLocation;
                 }
+
                 DropSourceBehavior dsb = new DropSourceBehavior(dragControls, _containerControl.Parent, controlOrigin);
                 try
                 {

@@ -2,10 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Windows.Forms;
 
-namespace AccessibilityTests
+namespace Accessibility_Core_App
 {
     public partial class Main : Form
     {
@@ -16,8 +15,8 @@ namespace AccessibilityTests
 
         private void Button1_Click(object sender, EventArgs e)
         {
-            Commontrol1 commontrol1 = new Commontrol1();
-            commontrol1.Show();
+            CommonControl1 commonControl1 = new CommonControl1();
+            commonControl1.Show();
         }
 
         private void Button2_Click(object sender, EventArgs e)
@@ -34,7 +33,7 @@ namespace AccessibilityTests
 
         private void Button4_Click(object sender, EventArgs e)
         {
-            DialogsTesting dialogsTesting = new DialogsTesting();
+            DialogControls dialogsTesting = new DialogControls();
             dialogsTesting.Show();
         }
 
@@ -46,7 +45,7 @@ namespace AccessibilityTests
 
         private void Button6_Click(object sender, EventArgs e)
         {
-            PrintingTesting printingTesting = new PrintingTesting();
+            PrintingControls printingTesting = new PrintingControls();
             printingTesting.Show();
         }
 
@@ -58,13 +57,32 @@ namespace AccessibilityTests
 
         private void Button8_Click(object sender, EventArgs e)
         {
-            ContainersTesting containerControl = new ContainersTesting();
+            ContainerControls containerControl = new ContainerControls();
             containerControl.Show();
         }
 
-        private void btnDataBindingExample_Click(object sender, EventArgs e)
+        private void button9_Click(object sender, EventArgs e)
         {
-            DataBindingExample dataBindingExample = new DataBindingExample();
+            ContainerControls2 containerControl2 = new ContainerControls2();
+            containerControl2.Show();
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            TaskDialogTesting taskDialogTesting = new();
+            taskDialogTesting.ShowEventsDemoTaskDialog();
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            CustomAccessiblePropertiesForm cusAcccName = new();
+            cusAcccName.StartPosition = FormStartPosition.CenterParent;
+            cusAcccName.Show();
+        }
+
+        private void button12_Click(object sender, EventArgs e)
+        {
+            DataBindingExample dataBindingExample = new();
             dataBindingExample.Show();
         }
     }

@@ -8,6 +8,7 @@ using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.Windows.Forms.Design.Behavior;
 
 namespace System.Windows.Forms.Design
 {
@@ -18,7 +19,7 @@ namespace System.Windows.Forms.Design
     {
         private readonly ToolStripDesigner _designer;
         private readonly IDesignerHost _host;
-        private readonly IComponentChangeService _componentChangeSvc;
+        private readonly IComponentChangeService _changeService;
         private readonly IServiceProvider _provider;
 
         /// <summary>
@@ -26,11 +27,11 @@ namespace System.Windows.Forms.Design
         /// </summary>
         internal StandardMenuStripVerb(ToolStripDesigner designer)
         {
-            Debug.Assert(designer != null, "Can't have a StandardMenuStripVerb without an associated designer");
+            Debug.Assert(designer is not null, "Can't have a StandardMenuStripVerb without an associated designer");
             _designer = designer;
             _provider = designer.Component.Site;
             _host = (IDesignerHost)_provider.GetService(typeof(IDesignerHost));
-            _componentChangeSvc = (IComponentChangeService)_provider.GetService(typeof(IComponentChangeService));
+            _changeService = (IComponentChangeService)_provider.GetService(typeof(IComponentChangeService));
         }
 
         /// <summary>
@@ -39,10 +40,8 @@ namespace System.Windows.Forms.Design
         public void InsertItems()
         {
             DesignerActionUIService actionUIService = (DesignerActionUIService)_host.GetService(typeof(DesignerActionUIService));
-            if (actionUIService != null)
-            {
-                actionUIService.HideUI(_designer.Component);
-            }
+            actionUIService?.HideUI(_designer.Component);
+
             Cursor current = Cursor.Current;
             try
             {
@@ -65,33 +64,40 @@ namespace System.Windows.Forms.Design
         /// <summary>
         ///  Here is where all the fun stuff starts.  We create the structure and apply the naming here.
         /// </summary>
-        private void CreateStandardMenuStrip(System.ComponentModel.Design.IDesignerHost host, MenuStrip tool)
+        private void CreateStandardMenuStrip(IDesignerHost host, MenuStrip tool)
         {
             // build the static menu items structure.
-            string[][] menuItemNames = new string[][]{
-            new string[]{SR.StandardMenuFile, SR.StandardMenuNew, SR.StandardMenuOpen, "-", SR.StandardMenuSave, SR.StandardMenuSaveAs, "-", SR.StandardMenuPrint, SR.StandardMenuPrintPreview, "-", SR.StandardMenuExit},
-            new string[]{SR.StandardMenuEdit, SR.StandardMenuUndo, SR.StandardMenuRedo, "-", SR.StandardMenuCut, SR.StandardMenuCopy, SR.StandardMenuPaste, "-", SR.StandardMenuSelectAll},
-            new string[]{SR.StandardMenuTools, SR.StandardMenuCustomize, SR.StandardMenuOptions},
-            new string[]{SR.StandardMenuHelp, SR.StandardMenuContents, SR.StandardMenuIndex, SR.StandardMenuSearch, "-", SR.StandardMenuAbout } };
+            string[][] menuItemNames = new string[][]
+            {
+                new string[] { SR.StandardMenuFile, SR.StandardMenuNew, SR.StandardMenuOpen, "-", SR.StandardMenuSave, SR.StandardMenuSaveAs, "-", SR.StandardMenuPrint, SR.StandardMenuPrintPreview, "-", SR.StandardMenuExit },
+                new string[] { SR.StandardMenuEdit, SR.StandardMenuUndo, SR.StandardMenuRedo, "-", SR.StandardMenuCut, SR.StandardMenuCopy, SR.StandardMenuPaste, "-", SR.StandardMenuSelectAll },
+                new string[] { SR.StandardMenuTools, SR.StandardMenuCustomize, SR.StandardMenuOptions },
+                new string[] { SR.StandardMenuHelp, SR.StandardMenuContents, SR.StandardMenuIndex, SR.StandardMenuSearch, "-", SR.StandardMenuAbout }
+            };
 
-            // build the static menu items image list that maps one-one with above menuItems structure. this is required so that the in LOCALIZED build we dont use the Localized item string.
-            string[][] menuItemImageNames = new string[][]{
-            new string[]{"","new", "open", "-", "save", "", "-", "print", "printPreview", "-", ""},
-            new string[]{"", "", "", "-", "cut", "copy", "paste", "-", ""},
-            new string[]{"", "", ""},
-            new string[]{"", "", "", "", "-", ""}};
+            // build the static menu items image list that maps one-one with above menuItems structure. this is required so that the in LOCALIZED build we don't use the Localized item string.
+            string[][] menuItemImageNames = new string[][]
+            {
+                new string[] { "", "new", "open", "-", "save", "", "-", "print", "printPreview", "-", "" },
+                new string[] { "", "", "", "-", "cut", "copy", "paste", "-", "" },
+                new string[] { "", "", "" },
+                new string[] { "", "", "", "", "-", "" }
+            };
 
-            Keys[][] menuItemShortcuts = new Keys[][]{
-                        new Keys[]{/*File*/Keys.None, /*New*/Keys.Control | Keys.N, /*Open*/Keys.Control | Keys.O, /*Separator*/ Keys.None, /*Save*/ Keys.Control | Keys.S, /*SaveAs*/Keys.None, Keys.None, /*Print*/ Keys.Control | Keys.P, /*PrintPreview*/ Keys.None, /*Separator*/Keys.None, /*Exit*/ Keys.None},
-                        new Keys[]{/*Edit*/Keys.None, /*Undo*/Keys.Control | Keys.Z, /*Redo*/Keys.Control | Keys.Y, /*Separator*/Keys.None, /*Cut*/ Keys.Control | Keys.X, /*Copy*/ Keys.Control | Keys.C, /*Paste*/Keys.Control | Keys.V, /*Separator*/ Keys.None, /*SelectAll*/Keys.None},
-                        new Keys[]{/*Tools*/Keys.None, /*Customize*/Keys.None, /*Options*/Keys.None},
-                        new Keys[]{/*Help*/Keys.None, /*Contents*/Keys.None, /*Index*/Keys.None, /*Search*/Keys.None,/*Separator*/Keys.None , /*About*/Keys.None}};
+            Keys[][] menuItemShortcuts = new Keys[][]
+            {
+                new Keys[] { /*File*/Keys.None, /*New*/Keys.Control | Keys.N, /*Open*/Keys.Control | Keys.O, /*Separator*/ Keys.None, /*Save*/ Keys.Control | Keys.S, /*SaveAs*/Keys.None, Keys.None, /*Print*/ Keys.Control | Keys.P, /*PrintPreview*/ Keys.None, /*Separator*/Keys.None, /*Exit*/ Keys.None },
+                new Keys[] { /*Edit*/Keys.None, /*Undo*/Keys.Control | Keys.Z, /*Redo*/Keys.Control | Keys.Y, /*Separator*/Keys.None, /*Cut*/ Keys.Control | Keys.X, /*Copy*/ Keys.Control | Keys.C, /*Paste*/Keys.Control | Keys.V, /*Separator*/ Keys.None, /*SelectAll*/Keys.None },
+                new Keys[] { /*Tools*/Keys.None, /*Customize*/Keys.None, /*Options*/Keys.None },
+                new Keys[] { /*Help*/Keys.None, /*Contents*/Keys.None, /*Index*/Keys.None, /*Search*/Keys.None, /*Separator*/Keys.None, /*About*/Keys.None }
+            };
 
-            Debug.Assert(host != null, "can't create standard menu without designer _host.");
+            Debug.Assert(host is not null, "can't create standard menu without designer _host.");
             if (host is null)
             {
                 return;
             }
+
             tool.SuspendLayout();
             ToolStripDesigner.s_autoAddNewItems = false;
             // create a transaction so this happens as an atomic unit.
@@ -103,9 +109,9 @@ namespace System.Windows.Forms.Design
                 string name = defaultName;
                 int index = 1;
 
-                if (host != null)
+                if (host is not null)
                 {
-                    while (_host.Container.Components[name] != null)
+                    while (_host.Container.Components[name] is not null)
                     {
                         name = defaultName + (index++).ToString(CultureInfo.InvariantCulture);
                     }
@@ -125,24 +131,26 @@ namespace System.Windows.Forms.Design
                         ToolStripItem item = null;
                         if (name.Contains("Separator"))
                         {
-                            // create the componennt.
+                            // create the component.
                             item = (ToolStripSeparator)_host.CreateComponent(typeof(ToolStripSeparator), name);
                             IDesigner designer = _host.GetDesigner(item);
                             if (designer is ComponentDesigner)
                             {
                                 ((ComponentDesigner)designer).InitializeNewComponent(null);
                             }
+
                             item.Text = itemText;
                         }
                         else
                         {
-                            // create the componennt.
+                            // create the component.
                             item = (ToolStripMenuItem)_host.CreateComponent(typeof(ToolStripMenuItem), name);
                             IDesigner designer = _host.GetDesigner(item);
                             if (designer is ComponentDesigner)
                             {
                                 ((ComponentDesigner)designer).InitializeNewComponent(null);
                             }
+
                             item.Text = itemText;
                             Keys shortcut = menuItemShortcuts[j][i];
                             if ((item is ToolStripMenuItem) && shortcut != Keys.None)
@@ -152,6 +160,7 @@ namespace System.Windows.Forms.Design
                                     ((ToolStripMenuItem)item).ShortcutKeys = shortcut;
                                 }
                             }
+
                             Bitmap image = null;
                             try
                             {
@@ -161,14 +170,13 @@ namespace System.Windows.Forms.Design
                             {
                                 // eat the exception.. as you may not find image for all MenuItems.
                             }
-                            if (image != null)
+
+                            if (image is not null)
                             {
                                 PropertyDescriptor imageProperty = TypeDescriptor.GetProperties(item)["Image"];
-                                Debug.Assert(imageProperty != null, "Could not find 'Image' property in ToolStripItem.");
-                                if (imageProperty != null)
-                                {
-                                    imageProperty.SetValue(item, image);
-                                }
+                                Debug.Assert(imageProperty is not null, "Could not find 'Image' property in ToolStripItem.");
+                                imageProperty?.SetValue(item, image);
+
                                 item.ImageTransparentColor = Color.Magenta;
                             }
                         }
@@ -183,13 +191,14 @@ namespace System.Windows.Forms.Design
                         {
                             rootItem.DropDownItems.Add(item);
                         }
+
                         //If Last SubItem Added the Raise the Events
                         if (i == menuArray.Length - 1)
                         {
                             // member is OK to be null...
                             MemberDescriptor member = TypeDescriptor.GetProperties(rootItem)["DropDownItems"];
-                            _componentChangeSvc.OnComponentChanging(rootItem, member);
-                            _componentChangeSvc.OnComponentChanged(rootItem, member, null, null);
+                            _changeService.OnComponentChanging(rootItem, member);
+                            _changeService.OnComponentChanged(rootItem, member);
                         }
                     }
 
@@ -201,8 +210,8 @@ namespace System.Windows.Forms.Design
                     {
                         // member is OK to be null...
                         MemberDescriptor topMember = TypeDescriptor.GetProperties(tool)["Items"];
-                        _componentChangeSvc.OnComponentChanging(tool, topMember);
-                        _componentChangeSvc.OnComponentChanged(tool, topMember, null, null);
+                        _changeService.OnComponentChanging(tool, topMember);
+                        _changeService.OnComponentChanged(tool, topMember);
                     }
                 }
             }
@@ -213,7 +222,8 @@ namespace System.Windows.Forms.Design
                     IUIService uiService = (IUIService)_provider.GetService(typeof(IUIService));
                     uiService.ShowError(e.Message);
                 }
-                if (createMenu != null)
+
+                if (createMenu is not null)
                 {
                     createMenu.Cancel();
                     createMenu = null;
@@ -222,24 +232,21 @@ namespace System.Windows.Forms.Design
             finally
             {
                 ToolStripDesigner.s_autoAddNewItems = true;
-                if (createMenu != null)
+                if (createMenu is not null)
                 {
                     createMenu.Commit();
                     createMenu = null;
                 }
+
                 tool.ResumeLayout();
                 // Select the Main Menu...
                 ISelectionService selSvc = (ISelectionService)_provider.GetService(typeof(ISelectionService));
-                if (selSvc != null)
-                {
-                    selSvc.SetSelectedComponents(new object[] { _designer.Component });
-                }
+                selSvc?.SetSelectedComponents(new object[] { _designer.Component });
+
                 //Refresh the Glyph
                 DesignerActionUIService actionUIService = (DesignerActionUIService)_provider.GetService(typeof(DesignerActionUIService));
-                if (actionUIService != null)
-                {
-                    actionUIService.Refresh(_designer.Component);
-                }
+                actionUIService?.Refresh(_designer.Component);
+
                 // this will invalidate the Selection Glyphs.
                 SelectionManager selMgr = (SelectionManager)_provider.GetService(typeof(SelectionManager));
                 selMgr.Refresh();
@@ -255,9 +262,9 @@ namespace System.Windows.Forms.Design
             //
             string[] menuItemNames = new string[] { SR.StandardMenuNew, SR.StandardMenuOpen, SR.StandardMenuSave, SR.StandardMenuPrint, "-", SR.StandardToolCut, SR.StandardMenuCopy, SR.StandardMenuPaste, "-", SR.StandardToolHelp };
 
-            // build a image list mapping one-one the above menuItems list... this is required so that the in LOCALIZED build we dont use the Localized item string.
+            // build a image list mapping one-one the above menuItems list... this is required so that the in LOCALIZED build we don't use the Localized item string.
             string[] menuItemImageNames = new string[] { "new", "open", "save", "print", "-", "cut", "copy", "paste", "-", "help" };
-            Debug.Assert(host != null, "can't create standard menu without designer _host.");
+            Debug.Assert(host is not null, "can't create standard menu without designer _host.");
 
             if (host is null)
             {
@@ -274,9 +281,9 @@ namespace System.Windows.Forms.Design
                 string defaultName = "standardMainToolStrip";
                 string name = defaultName;
                 int index = 1;
-                if (host != null)
+                if (host is not null)
                 {
-                    while (_host.Container.Components[name] != null)
+                    while (_host.Container.Components[name] is not null)
                     {
                         name = defaultName + (index++).ToString(CultureInfo.InvariantCulture);
                     }
@@ -294,7 +301,7 @@ namespace System.Windows.Forms.Design
                     ToolStripItem item = null;
                     if (name.Contains("Separator"))
                     {
-                        // create the componennt.
+                        // create the component.
                         item = (ToolStripSeparator)_host.CreateComponent(typeof(ToolStripSeparator), name);
                         IDesigner designer = _host.GetDesigner(item);
                         if (designer is ComponentDesigner)
@@ -313,18 +320,12 @@ namespace System.Windows.Forms.Design
                         }
 
                         PropertyDescriptor displayStyleProperty = TypeDescriptor.GetProperties(item)["DisplayStyle"];
-                        Debug.Assert(displayStyleProperty != null, "Could not find 'Text' property in ToolStripItem.");
-                        if (displayStyleProperty != null)
-                        {
-                            displayStyleProperty.SetValue(item, ToolStripItemDisplayStyle.Image);
-                        }
+                        Debug.Assert(displayStyleProperty is not null, "Could not find 'Text' property in ToolStripItem.");
+                        displayStyleProperty?.SetValue(item, ToolStripItemDisplayStyle.Image);
 
                         PropertyDescriptor textProperty = TypeDescriptor.GetProperties(item)["Text"];
-                        Debug.Assert(textProperty != null, "Could not find 'Text' property in ToolStripItem.");
-                        if (textProperty != null)
-                        {
-                            textProperty.SetValue(item, itemText);
-                        }
+                        Debug.Assert(textProperty is not null, "Could not find 'Text' property in ToolStripItem.");
+                        textProperty?.SetValue(item, itemText);
 
                         Bitmap image = null;
                         try
@@ -335,25 +336,26 @@ namespace System.Windows.Forms.Design
                         {
                             // eat the exception.. as you may not find image for all MenuItems.
                         }
-                        if (image != null)
+
+                        if (image is not null)
                         {
                             PropertyDescriptor imageProperty = TypeDescriptor.GetProperties(item)["Image"];
-                            Debug.Assert(imageProperty != null, "Could not find 'Image' property in ToolStripItem.");
-                            if (imageProperty != null)
-                            {
-                                imageProperty.SetValue(item, image);
-                            }
+                            Debug.Assert(imageProperty is not null, "Could not find 'Image' property in ToolStripItem.");
+                            imageProperty?.SetValue(item, image);
+
                             item.ImageTransparentColor = Color.Magenta;
                         }
                     }
+
                     tool.Items.Add(item);
                     //increment the counter...
                     menuItemImageNamesCount++;
                 }
+
                 // finally, add it to the Main ToolStrip.
                 MemberDescriptor topMember = TypeDescriptor.GetProperties(tool)["Items"];
-                _componentChangeSvc.OnComponentChanging(tool, topMember);
-                _componentChangeSvc.OnComponentChanged(tool, topMember, null, null);
+                _changeService.OnComponentChanging(tool, topMember);
+                _changeService.OnComponentChanged(tool, topMember);
             }
             catch (Exception e)
             {
@@ -362,7 +364,8 @@ namespace System.Windows.Forms.Design
                     IUIService uiService = (IUIService)_provider.GetService(typeof(IUIService));
                     uiService.ShowError(e.Message);
                 }
-                if (createMenu != null)
+
+                if (createMenu is not null)
                 {
                     createMenu.Cancel();
                     createMenu = null;
@@ -372,25 +375,21 @@ namespace System.Windows.Forms.Design
             {
                 //Reset the AutoAdd state
                 ToolStripDesigner.s_autoAddNewItems = true;
-                if (createMenu != null)
+                if (createMenu is not null)
                 {
                     createMenu.Commit();
                     createMenu = null;
                 }
+
                 tool.ResumeLayout();
                 // Select the Main Menu...
                 ISelectionService selSvc = (ISelectionService)_provider.GetService(typeof(ISelectionService));
-                if (selSvc != null)
-                {
-                    selSvc.SetSelectedComponents(new object[] { _designer.Component });
-                }
+                selSvc?.SetSelectedComponents(new object[] { _designer.Component });
 
                 //Refresh the Glyph
                 DesignerActionUIService actionUIService = (DesignerActionUIService)_provider.GetService(typeof(DesignerActionUIService));
-                if (actionUIService != null)
-                {
-                    actionUIService.Refresh(_designer.Component);
-                }
+                actionUIService?.Refresh(_designer.Component);
+
                 // this will invalidate the Selection Glyphs.
                 SelectionManager selMgr = (SelectionManager)_provider.GetService(typeof(SelectionManager));
                 selMgr.Refresh();
@@ -400,7 +399,7 @@ namespace System.Windows.Forms.Design
         /// <summary>
         ///  Helper Function to get Images from types.
         /// </summary>
-        private Bitmap GetImage(string name)
+        private static Bitmap GetImage(string name)
         {
             Bitmap image = null;
             if (name.StartsWith("new"))
@@ -439,6 +438,7 @@ namespace System.Windows.Forms.Design
             {
                 image = new Icon(typeof(ToolStripMenuItem), "help").ToBitmap();
             }
+
             return image;
         }
 
@@ -469,9 +469,11 @@ namespace System.Windows.Forms.Design
                             c = char.ToLower(c, CultureInfo.CurrentCulture);
                             firstCharSeen = true;
                         }
+
                         name.Append(c);
                     }
                 }
+
                 name.Append(nameSuffix);
                 baseName = name.ToString();
                 if (adjustCapitalization)
@@ -506,6 +508,7 @@ namespace System.Windows.Forms.Design
                 {
                     newName = baseName + indexer.ToString(CultureInfo.InvariantCulture);
                 }
+
                 return newName;
             }
         }

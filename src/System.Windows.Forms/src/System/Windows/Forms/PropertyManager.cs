@@ -29,7 +29,7 @@ namespace System.Windows.Forms
 
         private protected override void SetDataSource(object dataSource)
         {
-            if (_dataSource != null && !string.IsNullOrEmpty(_propName))
+            if (_dataSource is not null && !string.IsNullOrEmpty(_propName))
             {
                 _propInfo.RemoveValueChanged(_dataSource, new EventHandler(PropertyChanged));
                 _propInfo = null;
@@ -37,7 +37,7 @@ namespace System.Windows.Forms
 
             _dataSource = dataSource;
 
-            if (_dataSource != null && !string.IsNullOrEmpty(_propName))
+            if (_dataSource is not null && !string.IsNullOrEmpty(_propName))
             {
                 _propInfo = TypeDescriptor.GetProperties(dataSource).Find(_propName, true);
                 if (_propInfo is null)
@@ -158,7 +158,7 @@ namespace System.Windows.Forms
         ///  Raises the <see cref="BindingManagerBase.CurrentChanged" /> event.
         /// </summary>
         /// <param name="ea">The event data.</param>
-        internal protected override void OnCurrentChanged(EventArgs ea)
+        protected internal override void OnCurrentChanged(EventArgs ea)
         {
             PushData();
 
@@ -170,7 +170,7 @@ namespace System.Windows.Forms
         ///  Raises the <see cref="BindingManagerBase.CurrentItemChanged" /> event.
         /// </summary>
         /// <param name="ea">The event data.</param>
-        internal protected override void OnCurrentItemChanged(EventArgs ea)
+        protected internal override void OnCurrentItemChanged(EventArgs ea)
         {
             PushData();
 
@@ -179,7 +179,7 @@ namespace System.Windows.Forms
 
         internal override object DataSource => _dataSource;
 
-        internal override bool IsBinding => _dataSource != null;
+        internal override bool IsBinding => _dataSource is not null;
 
         /// <summary>
         ///  Gets the position in the underlying list that controls bound to this data source point to.

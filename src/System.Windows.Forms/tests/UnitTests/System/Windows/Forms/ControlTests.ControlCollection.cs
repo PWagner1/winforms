@@ -3,16 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Runtime.ExceptionServices;
-using System.Threading;
 using System.Windows.Forms.Layout;
 using Moq;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
-using static Interop;
 
 namespace System.Windows.Forms.Tests
 {
@@ -50,6 +45,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("Parent", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             int layoutCallCount1 = 0;
             control1.Layout += (sender, e) => layoutCallCount1++;
@@ -84,7 +80,7 @@ namespace System.Windows.Forms.Tests
                 Assert.False(control2.IsHandleCreated);
 
                 // Add existing.
-                Assert.Throws<ArgumentException>(null, () => collection.Add(control2));
+                Assert.Throws<ArgumentException>(() => collection.Add(control2));
                 Assert.Equal(new Control[] { control1, control2 }, collection.Cast<Control>());
                 Assert.Same(owner, control1.Parent);
                 Assert.Equal(0, control1.TabIndex);
@@ -124,6 +120,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(affectedProperty, e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             int layoutCallCount1 = 0;
             control1.Layout += (sender, e) => layoutCallCount1++;
@@ -166,7 +163,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(0, control1.TabIndex);
                 Assert.Same(owner, control2.Parent);
                 Assert.Equal(1, control2.TabIndex);
-                Assert.Equal(new Control[] { control2, control1}, owner.Controls.Cast<Control>());
+                Assert.Equal(new Control[] { control2, control1 }, owner.Controls.Cast<Control>());
                 Assert.Equal(0, layoutCallCount1);
                 Assert.Equal(0, layoutCallCount2);
                 Assert.Equal(3, parentLayoutCallCount);
@@ -201,6 +198,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(affectedProperty, e.AffectedProperty);
                 layoutCallCount++;
             }
+
             owner2.Layout += parentHandler;
 
             try
@@ -236,6 +234,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(affectedProperty, e.AffectedProperty);
                 layoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             using var control = new CustomLayoutEngineControl();
@@ -326,7 +325,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ControlCollection_Add_InvokeValueWithoutHandleOwnerWithHandle_CreatedValueIfVisible(bool visible)
         {
             using var owner = new Control();
@@ -355,7 +354,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ControlCollection_Add_InvokeValueWithHandleOwnerWithoutHandle_Success(bool visible)
         {
             using var owner = new Control();
@@ -384,7 +383,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ControlCollection_Add_InvokeValueWithHandleOwnerWithHandleControlNewCollection_Success(bool visible)
         {
             using var owner = new Control();
@@ -408,7 +407,7 @@ namespace System.Windows.Forms.Tests
             int createdCallCount = 0;
             control.HandleCreated += (sender, e) => createdCallCount++;
 
-            Assert.Throws<ArgumentException>(null, () => collection.Add(control));
+            Assert.Throws<ArgumentException>(() => collection.Add(control));
             Assert.Same(control, Assert.Single(collection));
             Assert.Same(owner, control.Parent);
             Assert.Equal(visible, control.Visible);
@@ -423,7 +422,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ControlCollection_Add_InvokeValueWithHandleOwnerWithHandleControlExistingCollection_Success(bool visible)
         {
             using var owner = new Control();
@@ -448,7 +447,7 @@ namespace System.Windows.Forms.Tests
             control.HandleCreated += (sender, e) => createdCallCount++;
 
             collection.Add(control);
-            Assert.Equal(owner.Handle, User32.GetParent(control.Handle));
+            Assert.Equal(owner.Handle, PInvoke.GetParent(control));
             Assert.Same(control, Assert.Single(collection));
             Assert.Same(owner, control.Parent);
             Assert.Equal(visible, control.Visible);
@@ -493,6 +492,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(affectedProperty, e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             void handler(object sender, ControlEventArgs e)
             {
@@ -680,6 +680,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(bindingContextChangedCallCount, parentChangedCallCount);
                 parentChangedCallCount++;
             }
+
             control.ParentChanged += parentChangedHandler;
             control.EnabledChanged += (sender, e) =>
             {
@@ -835,6 +836,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(rightToLeftChangedCallCount, parentChangedCallCount);
                 parentChangedCallCount++;
             }
+
             control.ParentChanged += parentChangedHandler;
             control.EnabledChanged += (sender, e) =>
             {
@@ -974,6 +976,7 @@ namespace System.Windows.Forms.Tests
             {
                 parentChangedCallCount++;
             }
+
             ((Control)control).ParentChanged += parentChangedHandler;
             ((Control)control).EnabledChanged += (sender, e) => enabledChangedCallCount++;
             ((Control)control).VisibleChanged += (sender, e) => visibleChangedCallCount++;
@@ -1053,6 +1056,7 @@ namespace System.Windows.Forms.Tests
             {
                 parentChangedCallCount++;
             }
+
             ((Control)control).ParentChanged += parentChangedHandler;
             ((Control)control).EnabledChanged += (sender, e) => enabledChangedCallCount++;
             ((Control)control).VisibleChanged += (sender, e) => visibleChangedCallCount++;
@@ -1110,7 +1114,7 @@ namespace System.Windows.Forms.Tests
             using var control = new SubControl();
             control.SetTopLevel(true);
             var collection = new Control.ControlCollection(owner);
-            Assert.Throws<ArgumentException>(null, () => collection.Add(control));
+            Assert.Throws<ArgumentException>(() => collection.Add(control));
         }
 
         [Fact] // cross-thread access
@@ -1127,7 +1131,7 @@ namespace System.Windows.Forms.Tests
 
             using var control = new Control();
             var collection = new Control.ControlCollection(owner);
-            Assert.Throws<ArgumentException>(null, () => collection.Add(control));
+            Assert.Throws<ArgumentException>(() => collection.Add(control));
         }
 
         [Fact] // cross-thread access
@@ -1144,7 +1148,7 @@ namespace System.Windows.Forms.Tests
 
             using var owner = new Control();
             var collection = new Control.ControlCollection(owner);
-            Assert.Throws<ArgumentException>(null, () => collection.Add(control));
+            Assert.Throws<ArgumentException>(() => collection.Add(control));
         }
 
         [WinFormsFact]
@@ -1152,7 +1156,7 @@ namespace System.Windows.Forms.Tests
         {
             using var owner = new Control();
             var collection = new Control.ControlCollection(owner);
-            Assert.Throws<ArgumentException>(null, () => collection.Add(owner));
+            Assert.Throws<ArgumentException>(() => collection.Add(owner));
         }
 
         [WinFormsFact]
@@ -1164,7 +1168,7 @@ namespace System.Windows.Forms.Tests
                 Parent = parent
             };
             var collection = new Control.ControlCollection(owner);
-            Assert.Throws<ArgumentException>(null, () => collection.Add(parent));
+            Assert.Throws<ArgumentException>(() => collection.Add(parent));
         }
 
         [WinFormsFact]
@@ -1180,7 +1184,7 @@ namespace System.Windows.Forms.Tests
                 Parent = parent
             };
             var collection = new Control.ControlCollection(owner);
-            Assert.Throws<ArgumentException>(null, () => collection.Add(grandparent));
+            Assert.Throws<ArgumentException>(() => collection.Add(grandparent));
         }
 
         [WinFormsFact]
@@ -1201,6 +1205,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(affectedProperty, e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             int controlAddedCallCount = 0;
             owner.ControlAdded += (sender, e) => controlAddedCallCount++;
@@ -1318,7 +1323,7 @@ namespace System.Windows.Forms.Tests
             using var child2 = new Control();
             using var child3 = new Control();
             var sourceCollection = new Control.ControlCollection(owner);
-            ICloneable iClonable = sourceCollection;
+            ICloneable iCloneable = sourceCollection;
             sourceCollection.Add(child1);
             sourceCollection.Add(child2);
             sourceCollection.Add(child3);
@@ -1326,12 +1331,13 @@ namespace System.Windows.Forms.Tests
             void parentHandler(object sender, LayoutEventArgs e)
             {
                 parentLayoutCallCount++;
-            };
+            }
+
             owner.Layout += parentHandler;
 
             try
             {
-                var collection = Assert.IsType<Control.ControlCollection>(iClonable.Clone());
+                var collection = Assert.IsType<Control.ControlCollection>(iCloneable.Clone());
                 Assert.NotSame(sourceCollection, collection);
                 Assert.Equal(new Control[] { child1, child2, child3 }, sourceCollection.Cast<Control>());
                 Assert.Equal(new Control[] { child1, child2, child3 }, collection.Cast<Control>());
@@ -1486,7 +1492,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
         public void ControlCollection_Find_NullOrEmptyKey_ThrowsArgumentNullException(string key)
         {
             using var owner = new Control();
@@ -1556,8 +1562,8 @@ namespace System.Windows.Forms.Tests
             collection.Add(child1);
             collection.Add(child2);
 
-            Assert.Throws<ArgumentException>(null, () => collection.GetChildIndex(child));
-            Assert.Throws<ArgumentException>(null, () => collection.GetChildIndex(child));
+            Assert.Throws<ArgumentException>(() => collection.GetChildIndex(child));
+            Assert.Throws<ArgumentException>(() => collection.GetChildIndex(child));
         }
 
         [WinFormsFact]
@@ -1889,6 +1895,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("Parent", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
@@ -1950,6 +1957,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("Parent", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
@@ -2012,6 +2020,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("Parent", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, child1.Handle);
             int invalidatedCallCount = 0;
@@ -2087,6 +2096,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("Parent", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, owner.Handle);
             int invalidatedCallCount = 0;
@@ -2476,6 +2486,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(rightToLeftChangedCallCount, parentChangedCallCount);
                 parentChangedCallCount++;
             }
+
             control.ParentChanged += parentChangedHandler;
             control.EnabledChanged += (sender, e) =>
             {
@@ -2662,6 +2673,7 @@ namespace System.Windows.Forms.Tests
             {
                 parentChangedCallCount++;
             }
+
             ((Control)control).ParentChanged += parentChangedHandler;
             ((Control)control).EnabledChanged += (sender, e) => enabledChangedCallCount++;
             ((Control)control).VisibleChanged += (sender, e) => visibleChangedCallCount++;
@@ -2740,6 +2752,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(callCount, parentLayoutCallCount);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             void handler(object sender, ControlEventArgs e)
             {
@@ -2797,6 +2810,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("Parent", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
@@ -2886,6 +2900,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("Parent", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
@@ -2978,6 +2993,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("ChildIndex", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
@@ -3043,6 +3059,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("ChildIndex", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try
@@ -3095,6 +3112,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("ChildIndex", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, child1.Handle);
             int invalidatedCallCount = 0;
@@ -3173,6 +3191,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("ChildIndex", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, owner.Handle);
             int invalidatedCallCount = 0;
@@ -3266,6 +3285,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("ChildIndex", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             Assert.NotEqual(IntPtr.Zero, owner.Handle);
             int parentInvalidatedCallCount = 0;
@@ -3357,6 +3377,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(affectedProperty, e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
             int layoutCallCount1 = 0;
             control1.Layout += (sender, e) => layoutCallCount1++;
@@ -3400,7 +3421,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(0, control1.TabIndex);
                 Assert.Same(owner, control2.Parent);
                 Assert.Equal(1, control2.TabIndex);
-                Assert.Equal(new Control[] { control2, control1}, owner.Controls.Cast<Control>());
+                Assert.Equal(new Control[] { control2, control1 }, owner.Controls.Cast<Control>());
                 Assert.Equal(0, layoutCallCount1);
                 Assert.Equal(0, layoutCallCount2);
                 Assert.Equal(3, parentLayoutCallCount);
@@ -3443,6 +3464,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("Parent", e.AffectedProperty);
                 parentLayoutCallCount++;
             }
+
             owner.Layout += parentHandler;
 
             try

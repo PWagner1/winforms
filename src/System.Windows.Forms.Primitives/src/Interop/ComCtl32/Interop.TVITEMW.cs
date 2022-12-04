@@ -2,15 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-
 internal static partial class Interop
 {
     internal static partial class ComCtl32
     {
         public struct TVITEMW
         {
-            public TVIF mask;
+            public TVITEM_MASK mask;
             public IntPtr hItem;
             public TVIS state;
             public TVIS stateMask;

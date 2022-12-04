@@ -5,7 +5,6 @@
 #nullable disable
 
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 
@@ -17,30 +16,12 @@ namespace System.Windows.Forms
         ///  Represents the collection of items in a ListView or ListViewGroup
         /// </summary>
         [ListBindable(false)]
-        public class ListViewItemCollection : IList
+        public partial class ListViewItemCollection : IList
         {
             ///  A caching mechanism for key accessor
             ///  We use an index here rather than control so that we don't have lifetime
             ///  issues by holding on to extra references.
             private int lastAccessedIndex = -1;
-
-            internal interface IInnerList
-            {
-                int Count { get; }
-                bool OwnerIsVirtualListView { get; }
-                bool OwnerIsDesignMode { get; }
-                ListViewItem this[int index] { get; set; }
-                ListViewItem Add(ListViewItem item);
-                void AddRange(ListViewItem[] items);
-                void Clear();
-                bool Contains(ListViewItem item);
-                void CopyTo(Array dest, int index);
-                IEnumerator GetEnumerator();
-                int IndexOf(ListViewItem item);
-                ListViewItem Insert(int index, ListViewItem item);
-                void Remove(ListViewItem item);
-                void RemoveAt(int index);
-            }
 
             private readonly IInnerList innerList;
 
@@ -55,7 +36,7 @@ namespace System.Windows.Forms
 
             internal ListViewItemCollection(IInnerList innerList)
             {
-                Debug.Assert(innerList != null, "Can't pass in null innerList");
+                Debug.Assert(innerList is not null, "Can't pass in null innerList");
                 this.innerList = innerList;
             }
 
@@ -144,14 +125,9 @@ namespace System.Windows.Forms
                 }
                 set
                 {
-                    if (value is ListViewItem)
-                    {
-                        this[index] = (ListViewItem)value;
-                    }
-                    else if (value != null)
-                    {
-                        this[index] = new ListViewItem(value.ToString(), -1);
-                    }
+                    this[index] = value is ListViewItem item
+                        ? item
+                        : new ListViewItem(value.ToString(), -1);
                 }
             }
 
@@ -174,10 +150,8 @@ namespace System.Windows.Forms
                     {
                         return this[index];
                     }
-                    else
-                    {
-                        return null;
-                    }
+
+                    return null;
                 }
             }
 
@@ -193,14 +167,16 @@ namespace System.Windows.Forms
 
             int IList.Add(object item)
             {
-                if (item is ListViewItem)
+                if (item is ListViewItem listViewItem)
                 {
-                    return IndexOf(Add((ListViewItem)item));
+                    return IndexOf(Add(listViewItem));
                 }
-                else if (item != null)
+
+                if (item is {} obj)
                 {
-                    return IndexOf(Add(item.ToString()));
+                    return IndexOf(Add(obj.ToString()));
                 }
+
                 return -1;
             }
 
@@ -211,9 +187,9 @@ namespace System.Windows.Forms
             /// </summary>
             public virtual ListViewItem Add(string text, int imageIndex)
             {
-                ListViewItem li = new ListViewItem(text, imageIndex);
-                Add(li);
-                return li;
+                ListViewItem item = new(text, imageIndex);
+                Add(item);
+                return item;
             }
 
             /// <summary>
@@ -236,9 +212,9 @@ namespace System.Windows.Forms
             /// </summary>
             public virtual ListViewItem Add(string text, string imageKey)
             {
-                ListViewItem li = new ListViewItem(text, imageKey);
-                Add(li);
-                return li;
+                ListViewItem item = new(text, imageKey);
+                Add(item);
+                return item;
             }
 
             /// <summary>
@@ -248,12 +224,12 @@ namespace System.Windows.Forms
             /// </summary>
             public virtual ListViewItem Add(string key, string text, string imageKey)
             {
-                ListViewItem li = new ListViewItem(text, imageKey)
+                ListViewItem item = new(text, imageKey)
                 {
                     Name = key
                 };
-                Add(li);
-                return li;
+                Add(item);
+                return item;
             }
 
             /// <summary>
@@ -263,34 +239,28 @@ namespace System.Windows.Forms
             /// </summary>
             public virtual ListViewItem Add(string key, string text, int imageIndex)
             {
-                ListViewItem li = new ListViewItem(text, imageIndex)
+                ListViewItem item = new(text, imageIndex)
                 {
                     Name = key
                 };
-                Add(li);
-                return li;
+                Add(item);
+                return item;
             }
 
             // END - NEW ADD OVERLOADS IN WHIDBEY  -->
 
             public void AddRange(ListViewItem[] items)
             {
-                if (items is null)
-                {
-                    throw new ArgumentNullException(nameof(items));
-                }
+                ArgumentNullException.ThrowIfNull(items);
 
                 InnerList.AddRange(items);
             }
 
             public void AddRange(ListViewItemCollection items)
             {
-                if (items is null)
-                {
-                    throw new ArgumentNullException(nameof(items));
-                }
+                ArgumentNullException.ThrowIfNull(items);
 
-                ListViewItem[] itemArray = new ListViewItem[items.Count];
+                var itemArray = new ListViewItem[items.Count];
                 items.CopyTo(itemArray, 0);
                 InnerList.AddRange(itemArray);
             }
@@ -309,16 +279,7 @@ namespace System.Windows.Forms
             }
 
             bool IList.Contains(object item)
-            {
-                if (item is ListViewItem)
-                {
-                    return Contains((ListViewItem)item);
-                }
-                else
-                {
-                    return false;
-                }
-            }
+                => item is ListViewItem listViewItem && Contains(listViewItem);
 
             /// <summary>
             ///  Returns true if the collection contains an item with the specified key, false otherwise.
@@ -339,10 +300,7 @@ namespace System.Windows.Forms
             /// </summary>
             public ListViewItem[] Find(string key, bool searchAllSubItems)
             {
-                if (string.IsNullOrEmpty(key))
-                {
-                    throw new ArgumentNullException(nameof(key), SR.FindKeyMayNotBeEmptyOrNull);
-                }
+                key.ThrowIfNullOrEmptyWithMessage(SR.FindKeyMayNotBeEmptyOrNull);
 
                 List<ListViewItem> foundItems = new();
                 FindInternal(key, searchAllSubItems, this, foundItems);
@@ -354,7 +312,7 @@ namespace System.Windows.Forms
             ///  Searches for Controls by their Name property, builds up a list
             ///  of all the controls that match.
             /// </summary>
-            private void FindInternal(string key, bool searchAllSubItems, ListViewItemCollection listViewItems, List<ListViewItem> foundItems)
+            private static void FindInternal(string key, bool searchAllSubItems, ListViewItemCollection listViewItems, List<ListViewItem> foundItems)
             {
                 for (int i = 0; i < listViewItems.Count; i++)
                 {
@@ -387,6 +345,7 @@ namespace System.Windows.Forms
                     // Throw the exception only at runtime.
                     throw new InvalidOperationException(SR.ListViewCantGetEnumeratorInVirtualMode);
                 }
+
                 return InnerList.GetEnumerator();
             }
 
@@ -399,20 +358,13 @@ namespace System.Windows.Forms
                         return index;
                     }
                 }
+
                 return -1;
             }
 
             int IList.IndexOf(object item)
-            {
-                if (item is ListViewItem)
-                {
-                    return IndexOf((ListViewItem)item);
-                }
-                else
-                {
-                    return -1;
-                }
-            }
+                => item is ListViewItem listViewItem ? IndexOf(listViewItem) : -1;
+
             /// <summary>
             ///  The zero-based index of the first occurrence of value within the entire CollectionBase, if found; otherwise, -1.
             /// </summary>
@@ -421,7 +373,7 @@ namespace System.Windows.Forms
                 // Step 0 - Arg validation
                 if (string.IsNullOrEmpty(key))
                 {
-                    return -1; // we dont support empty or null keys.
+                    return -1; // we don't support empty or null keys.
                 }
 
                 // step 1 - check the last cached item
@@ -453,7 +405,7 @@ namespace System.Windows.Forms
             /// </summary>
             private bool IsValidIndex(int index)
             {
-                return (index >= 0) && (index < Count);
+                return index >= 0 && index < Count;
             }
 
             public ListViewItem Insert(int index, ListViewItem item)
@@ -462,6 +414,7 @@ namespace System.Windows.Forms
                 {
                     throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
                 }
+
                 InnerList.Insert(index, item);
                 return item;
             }
@@ -478,40 +431,32 @@ namespace System.Windows.Forms
 
             void IList.Insert(int index, object item)
             {
-                if (item is ListViewItem)
+                if (item is ListViewItem listViewItem)
                 {
-                    Insert(index, (ListViewItem)item);
+                    Insert(index, listViewItem);
                 }
-                else if (item != null)
+                else if (item is {} obj)
                 {
-                    Insert(index, item.ToString());
+                    Insert(index, obj.ToString());
                 }
             }
 
             // <-- NEW INSERT OVERLOADS IN WHIDBEY
 
             public ListViewItem Insert(int index, string text, string imageKey)
-            {
-                return Insert(index, new ListViewItem(text, imageKey));
-            }
+                => Insert(index, new ListViewItem(text, imageKey));
 
             public virtual ListViewItem Insert(int index, string key, string text, string imageKey)
-            {
-                ListViewItem li = new ListViewItem(text, imageKey)
-                {
-                    Name = key
-                };
-                return Insert(index, li);
-            }
+                => Insert(index, new ListViewItem(text, imageKey)
+                    {
+                        Name = key
+                    });
 
             public virtual ListViewItem Insert(int index, string key, string text, int imageIndex)
-            {
-                ListViewItem li = new ListViewItem(text, imageIndex)
-                {
-                    Name = key
-                };
-                return Insert(index, li);
-            }
+                => Insert(index, new ListViewItem(text, imageIndex)
+                    {
+                        Name = key
+                    });
 
             // END - NEW INSERT OVERLOADS IN WHIDBEY -->
 
@@ -550,12 +495,10 @@ namespace System.Windows.Forms
 
             void IList.Remove(object item)
             {
-                if (item is null || !(item is ListViewItem))
+                if (item is ListViewItem listViewItem)
                 {
-                    return;
+                    Remove(listViewItem);
                 }
-
-                Remove((ListViewItem)item);
             }
         }
     }

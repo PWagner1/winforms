@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Collections;
 using System.ComponentModel;
 
@@ -14,12 +12,12 @@ namespace System.Windows.Forms
         [ListBindable(false)]
         public class CheckedIndexCollection : IList
         {
-            private readonly ListView owner;
+            private readonly ListView _owner;
 
             /* C#r: protected */
             public CheckedIndexCollection(ListView owner)
             {
-                this.owner = owner;
+                _owner = owner.OrThrowIfNull();
             }
 
             /// <summary>
@@ -30,21 +28,21 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (!owner.CheckBoxes)
+                    if (!_owner.CheckBoxes)
                     {
                         return 0;
                     }
 
                     // Count the number of checked items
-                    //
                     int count = 0;
-                    foreach (ListViewItem item in owner.Items)
+                    foreach (ListViewItem item in _owner.Items)
                     {
-                        if (item != null && item.Checked)
+                        if (item is not null && item.Checked)
                         {
                             count++;
                         }
                     }
+
                     return count;
                 }
             }
@@ -55,13 +53,14 @@ namespace System.Windows.Forms
                 {
                     int[] indices = new int[Count];
                     int index = 0;
-                    for (int i = 0; i < owner.Items.Count && index < indices.Length; ++i)
+                    for (int i = 0; i < _owner.Items.Count && index < indices.Length; ++i)
                     {
-                        if (owner.Items[i].Checked)
+                        if (_owner.Items[i].Checked)
                         {
                             indices[index++] = i;
                         }
                     }
+
                     return indices;
                 }
             }
@@ -79,12 +78,11 @@ namespace System.Windows.Forms
                     }
 
                     // Loop through the main collection until we find the right index.
-                    //
-                    int cnt = owner.Items.Count;
+                    int cnt = _owner.Items.Count;
                     int nChecked = 0;
                     for (int i = 0; i < cnt; i++)
                     {
-                        ListViewItem item = owner.Items[i];
+                        ListViewItem item = _owner.Items[i];
 
                         if (item.Checked)
                         {
@@ -92,6 +90,7 @@ namespace System.Windows.Forms
                             {
                                 return i;
                             }
+
                             nChecked++;
                         }
                     }
@@ -101,7 +100,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            object IList.this[int index]
+            object? IList.this[int index]
             {
                 get
                 {
@@ -147,7 +146,7 @@ namespace System.Windows.Forms
 
             public bool Contains(int checkedIndex)
             {
-                if (owner.Items[checkedIndex].Checked)
+                if (_owner.Items[checkedIndex].Checked)
                 {
                     return true;
                 }
@@ -157,11 +156,11 @@ namespace System.Windows.Forms
                 }
             }
 
-            bool IList.Contains(object checkedIndex)
+            bool IList.Contains(object? checkedIndex)
             {
-                if (checkedIndex is int)
+                if (checkedIndex is int checkedIndexAsInt)
                 {
-                    return Contains((int)checkedIndex);
+                    return Contains(checkedIndexAsInt);
                 }
                 else
                 {
@@ -179,14 +178,15 @@ namespace System.Windows.Forms
                         return index;
                     }
                 }
+
                 return -1;
             }
 
-            int IList.IndexOf(object checkedIndex)
+            int IList.IndexOf(object? checkedIndex)
             {
-                if (checkedIndex is int)
+                if (checkedIndex is int checkedIndexAsInt)
                 {
-                    return IndexOf((int)checkedIndex);
+                    return IndexOf(checkedIndexAsInt);
                 }
                 else
                 {
@@ -194,7 +194,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            int IList.Add(object value)
+            int IList.Add(object? value)
             {
                 throw new NotSupportedException();
             }
@@ -204,12 +204,12 @@ namespace System.Windows.Forms
                 throw new NotSupportedException();
             }
 
-            void IList.Insert(int index, object value)
+            void IList.Insert(int index, object? value)
             {
                 throw new NotSupportedException();
             }
 
-            void IList.Remove(object value)
+            void IList.Remove(object? value)
             {
                 throw new NotSupportedException();
             }
@@ -223,14 +223,14 @@ namespace System.Windows.Forms
             {
                 if (Count > 0)
                 {
-                    System.Array.Copy(IndicesArray, 0, dest, index, Count);
+                    Array.Copy(IndicesArray, 0, dest, index, Count);
                 }
             }
 
             public IEnumerator GetEnumerator()
             {
                 int[] indices = IndicesArray;
-                if (indices != null)
+                if (indices is not null)
                 {
                     return indices.GetEnumerator();
                 }

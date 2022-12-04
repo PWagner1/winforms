@@ -7,7 +7,6 @@ using System.Numerics;
 using System.Windows.Forms.Metafiles;
 using Xunit;
 using static System.Windows.Forms.Metafiles.DataHelpers;
-using static Interop;
 
 namespace System.Windows.Forms.Tests
 {
@@ -29,7 +28,7 @@ namespace System.Windows.Forms.Tests
                 Validate.Rectangle(
                     // We match the legacy GDI+ rendering, where the right and bottom are drawn inside the bounds
                     new Rectangle(10, 10, 9, 9),
-                    State.Pen(1, Color.Blue, Gdi32.PS.SOLID)));
+                    State.Pen(1, Color.Blue, PEN_STYLE.PS_SOLID)));
         }
 
         [WinFormsFact]
@@ -49,8 +48,8 @@ namespace System.Windows.Forms.Tests
             Matrix3x2 times16 = Matrix3x2.CreateScale(16.0f);
 
             // This is the default pen style GDI+ renders polylines with
-            Gdi32.PS penStyle = Gdi32.PS.SOLID | Gdi32.PS.JOIN_ROUND | Gdi32.PS.COSMETIC | Gdi32.PS.ENDCAP_FLAT
-                | Gdi32.PS.JOIN_MITER | Gdi32.PS.GEOMETRIC;
+            PEN_STYLE penStyle = PEN_STYLE.PS_SOLID | PEN_STYLE.PS_JOIN_ROUND | PEN_STYLE.PS_COSMETIC |
+                PEN_STYLE.PS_ENDCAP_FLAT | PEN_STYLE.PS_JOIN_MITER | PEN_STYLE.PS_GEOMETRIC;
 
             emf.Validate(
                 state,
@@ -89,8 +88,7 @@ namespace System.Windows.Forms.Tests
                     bounds: null,
                     PointArray(times16, 11, 11, 11, 18),
                     State.Pen(16, ControlPaint.Light(Color.Gray), penStyle),
-                    State.Transform(oneSixteenth))
-                );
+                    State.Transform(oneSixteenth)));
         }
 
         [WinFormsFact]
@@ -110,8 +108,8 @@ namespace System.Windows.Forms.Tests
             Matrix3x2 times16 = Matrix3x2.CreateScale(16.0f);
 
             // This is the default pen style GDI+ renders polylines with
-            Gdi32.PS penStyle = Gdi32.PS.SOLID | Gdi32.PS.JOIN_ROUND | Gdi32.PS.COSMETIC | Gdi32.PS.ENDCAP_FLAT
-                | Gdi32.PS.JOIN_MITER | Gdi32.PS.GEOMETRIC;
+            PEN_STYLE penStyle = PEN_STYLE.PS_SOLID | PEN_STYLE.PS_JOIN_ROUND | PEN_STYLE.PS_COSMETIC |
+                PEN_STYLE.PS_ENDCAP_FLAT | PEN_STYLE.PS_JOIN_MITER | PEN_STYLE.PS_GEOMETRIC;
 
             emf.Validate(
                 state,
@@ -165,8 +163,7 @@ namespace System.Windows.Forms.Tests
                     bounds: null,
                     PointArray(times16, 18, 11, 18, 18),
                     State.Pen(16, SystemColors.ControlLight, penStyle),
-                    State.Transform(oneSixteenth))
-                );
+                    State.Transform(oneSixteenth)));
         }
 
         [WinFormsFact]
@@ -188,8 +185,8 @@ namespace System.Windows.Forms.Tests
             Matrix3x2 times16 = Matrix3x2.CreateScale(16.0f);
 
             // This is the default pen style GDI+ renders polylines with
-            Gdi32.PS penStyle = Gdi32.PS.SOLID | Gdi32.PS.JOIN_ROUND | Gdi32.PS.COSMETIC | Gdi32.PS.ENDCAP_FLAT
-                | Gdi32.PS.JOIN_MITER | Gdi32.PS.GEOMETRIC;
+            PEN_STYLE penStyle = PEN_STYLE.PS_SOLID | PEN_STYLE.PS_JOIN_ROUND | PEN_STYLE.PS_COSMETIC |
+                PEN_STYLE.PS_ENDCAP_FLAT | PEN_STYLE.PS_JOIN_MITER | PEN_STYLE.PS_GEOMETRIC;
 
             emf.Validate(
                 state,
@@ -240,8 +237,7 @@ namespace System.Windows.Forms.Tests
                     bounds: null,
                     PointArray(times16, 18, 11, 18, 18),
                     State.Pen(16, ControlPaint.Dark(Color.PeachPuff), penStyle),
-                    State.Transform(oneSixteenth))
-                );
+                    State.Transform(oneSixteenth)));
         }
 
         [WinFormsFact]
@@ -263,8 +259,8 @@ namespace System.Windows.Forms.Tests
             Matrix3x2 times16 = Matrix3x2.CreateScale(16.0f);
 
             // This is the default pen style GDI+ renders polylines with
-            Gdi32.PS penStyle = Gdi32.PS.SOLID | Gdi32.PS.JOIN_ROUND | Gdi32.PS.COSMETIC | Gdi32.PS.ENDCAP_FLAT
-                | Gdi32.PS.JOIN_MITER | Gdi32.PS.GEOMETRIC;
+            PEN_STYLE penStyle = PEN_STYLE.PS_SOLID | PEN_STYLE.PS_JOIN_ROUND | PEN_STYLE.PS_COSMETIC |
+                PEN_STYLE.PS_ENDCAP_FLAT | PEN_STYLE.PS_JOIN_MITER | PEN_STYLE.PS_GEOMETRIC;
 
             emf.Validate(
                 state,
@@ -315,8 +311,7 @@ namespace System.Windows.Forms.Tests
                     bounds: null,
                     PointArray(times16, 18, 11, 18, 18),
                     State.Pen(16, SystemColors.ControlDark, penStyle),
-                    State.Transform(oneSixteenth))
-                );
+                    State.Transform(oneSixteenth)));
         }
 
         [WinFormsFact]
@@ -334,8 +329,8 @@ namespace System.Windows.Forms.Tests
             Matrix3x2 oneSixteenth = Matrix3x2.CreateScale(0.0625f);
 
             // This is the default pen style GDI+ renders dotted lines with
-            Gdi32.PS penStyle = Gdi32.PS.SOLID | Gdi32.PS.JOIN_ROUND | Gdi32.PS.COSMETIC | Gdi32.PS.ENDCAP_FLAT
-                | Gdi32.PS.JOIN_BEVEL | Gdi32.PS.GEOMETRIC;
+            PEN_STYLE penStyle = PEN_STYLE.PS_SOLID | PEN_STYLE.PS_JOIN_ROUND | PEN_STYLE.PS_COSMETIC |
+                PEN_STYLE.PS_ENDCAP_FLAT | PEN_STYLE.PS_JOIN_BEVEL | PEN_STYLE.PS_GEOMETRIC;
 
             emf.Validate(
             state,
@@ -344,7 +339,7 @@ namespace System.Windows.Forms.Tests
                     polyCount: 18,
                     State.Transform(oneSixteenth),
                     State.Pen(16, Color.Green, penStyle),
-                    State.Brush(Color.Green, Gdi32.BS.SOLID)));
+                    State.Brush(Color.Green, BRUSH_STYLE.BS_SOLID)));
         }
 
         [WinFormsFact]
@@ -362,8 +357,8 @@ namespace System.Windows.Forms.Tests
             Matrix3x2 oneSixteenth = Matrix3x2.CreateScale(0.0625f);
 
             // This is the default pen style GDI+ renders dotted lines with
-            Gdi32.PS penStyle = Gdi32.PS.SOLID | Gdi32.PS.JOIN_ROUND | Gdi32.PS.COSMETIC | Gdi32.PS.ENDCAP_FLAT
-                | Gdi32.PS.JOIN_BEVEL | Gdi32.PS.GEOMETRIC;
+            PEN_STYLE penStyle = PEN_STYLE.PS_SOLID | PEN_STYLE.PS_JOIN_ROUND | PEN_STYLE.PS_COSMETIC |
+                PEN_STYLE.PS_ENDCAP_FLAT | PEN_STYLE.PS_JOIN_BEVEL | PEN_STYLE.PS_GEOMETRIC;
 
             emf.Validate(
             state,
@@ -372,7 +367,7 @@ namespace System.Windows.Forms.Tests
                     polyCount: 9,
                     State.Transform(oneSixteenth),
                     State.Pen(16, Color.Pink, penStyle),
-                    State.Brush(Color.Pink, Gdi32.BS.SOLID)));
+                    State.Brush(Color.Pink, BRUSH_STYLE.BS_SOLID)));
         }
     }
 }

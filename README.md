@@ -1,13 +1,13 @@
 # Windows Forms
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/dotnet/winforms/blob/master/LICENSE.TXT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/dotnet/winforms/blob/main/LICENSE.TXT)
 
 Windows Forms (WinForms) is a UI framework for building Windows desktop applications. It is a .NET wrapper over Windows user interface libraries, such as User32 and GDI+. It also offers controls and other functionality that is unique to Windows Forms.
 
 Windows Forms also provides one of the most productive ways to create desktop applications based on the visual designer provided in Visual Studio. It enables drag-and-drop of visual controls and other similar functionality that make it easy to build desktop applications.
 
 ### Windows Forms Designer
-For more information about the designer, please see the [Windows Forms Designer Documentation](docs/winforms-designer.md).<br />
+For more information about the designer, please see the [Windows Forms Designer Documentation](docs/designer/readme.md).<br />
 
 ### Relationship to .NET Framework
 
@@ -18,10 +18,10 @@ For more information about breaking changes, see the [Porting guide][porting-gui
 
 ## Please note
 
-:warning: This repository contains only implemenations for Windows Forms for [.NET platform](https://github.com/dotnet/core).<br />
+:warning: This repository contains only implementations for Windows Forms for [.NET platform](https://github.com/dotnet/core).<br />
 It does not contain either:
 * The .NET Framework variant of Windows Forms. Issues with .NET Framework, including Windows Forms, should be filed on the [Developer Community](https://developercommunity.visualstudio.com/spaces/61/index.html) or [Product Support](https://support.microsoft.com/en-us/contactus?ws=support) websites. They should not be filed on this repository.
-* The Windows Forms Designer implemenations. Issues with the Designer should be filed via VS Feedback tool (top right handside icon in Visual Studio).
+* The Windows Forms Designer implementations. Issues with the Designer should be filed via VS Feedback tool (top right-hand side icon in Visual Studio).
 
 
 # How can I contribute?

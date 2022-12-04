@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-
 internal static partial class Interop
 {
     internal static partial class User32
@@ -27,7 +25,7 @@ internal static partial class Interop
             NODATA = 0x2000,
             COMBOBOX = 0x8000,
             NOSEL = 0x4000,
-            STANDARD = NOTIFY | SORT | WS.VSCROLL | WS.BORDER,
+            STANDARD = NOTIFY | SORT | WINDOW_STYLE.WS_VSCROLL | WINDOW_STYLE.WS_BORDER,
         }
     }
 }

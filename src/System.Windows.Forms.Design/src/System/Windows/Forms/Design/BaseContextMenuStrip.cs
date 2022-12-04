@@ -23,7 +23,7 @@ namespace System.Windows.Forms.Design
         {
             serviceProvider = provider;
             this.component = component;
-            // Now initialiaze the contextMenu
+            // Now initialize the contextMenu
             InitializeContextMenu();
         }
 
@@ -71,12 +71,13 @@ namespace System.Windows.Forms.Design
         private void RefreshSelectionMenuItem()
         {
             int index = -1;
-            if (selectionMenuItem != null)
+            if (selectionMenuItem is not null)
             {
                 index = Items.IndexOf(selectionMenuItem);
                 Groups[StandardGroups.Selection].Items.Remove(selectionMenuItem);
                 Items.Remove(selectionMenuItem);
             }
+
             ArrayList parentControls = new ArrayList();
             int nParentControls = 0;
 
@@ -84,21 +85,23 @@ namespace System.Windows.Forms.Design
             if (serviceProvider.GetService(typeof(ISelectionService)) is ISelectionService selectionService && serviceProvider.GetService(typeof(IDesignerHost)) is IDesignerHost host)
             {
                 IComponent root = host.RootComponent;
-                Debug.Assert(root != null, "Null root component. Will be unable to build selection menu");
-                if (selectionService.PrimarySelection is Control selectedControl && root != null && selectedControl != root)
+                Debug.Assert(root is not null, "Null root component. Will be unable to build selection menu");
+                if (selectionService.PrimarySelection is Control selectedControl && root is not null && selectedControl != root)
                 {
                     Control parentControl = selectedControl.Parent;
-                    while (parentControl != null)
+                    while (parentControl is not null)
                     {
-                        if (parentControl.Site != null)
+                        if (parentControl.Site is not null)
                         {
                             parentControls.Add(parentControl);
                             nParentControls++;
                         }
+
                         if (parentControl == root)
                         {
                             break;
                         }
+
                         parentControl = parentControl.Parent;
                     }
                 }
@@ -112,6 +115,7 @@ namespace System.Windows.Forms.Design
                     }
                 }
             }
+
             if (nParentControls > 0)
             {
                 selectionMenuItem = new ToolStripMenuItem();
@@ -133,6 +137,7 @@ namespace System.Windows.Forms.Design
                     ToolStripMenuItem selectListItem = new SelectToolStripMenuItem(parent, serviceProvider);
                     selectionMenuItem.DropDownItems.Add(selectListItem);
                 }
+
                 Groups[StandardGroups.Selection].Items.Add(selectionMenuItem);
                 // Re add the newly refreshed item..
                 if (index != -1)
@@ -149,7 +154,7 @@ namespace System.Windows.Forms.Design
         {
             //Add Designer Verbs..
             IMenuCommandService menuCommandService = (IMenuCommandService)serviceProvider.GetService(typeof(IMenuCommandService));
-            if (menuCommandService != null)
+            if (menuCommandService is not null)
             {
                 DesignerVerbCollection verbCollection = menuCommandService.Verbs;
                 foreach (DesignerVerb verb in verbCollection)
@@ -201,6 +206,7 @@ namespace System.Windows.Forms.Design
                     ForeColor = (Color)uis.Styles["VsColorPanelText"];
                 }
             }
+
             GroupOrdering.AddRange(new string[] { StandardGroups.Code, StandardGroups.ZORder, StandardGroups.Grid, StandardGroups.Lock, StandardGroups.Verbs, StandardGroups.Custom, StandardGroups.Selection, StandardGroups.Edit, StandardGroups.Properties });
             // ADD MENUITEMS
             AddCodeMenuItem();
@@ -230,6 +236,7 @@ namespace System.Windows.Forms.Design
                     stdItem.RefreshItem();
                 }
             }
+
             RefreshSelectionMenuItem();
         }
 
@@ -251,10 +258,10 @@ namespace System.Windows.Forms.Design
                 _serviceProvider = provider;
                 // Get NestedSiteName...
                 string compName = null;
-                if (_comp != null)
+                if (_comp is not null)
                 {
                     ISite site = _comp.Site;
-                    if (site != null)
+                    if (site is not null)
                     {
                         if (site is INestedSite nestedSite && !string.IsNullOrEmpty(nestedSite.FullName))
                         {
@@ -266,6 +273,7 @@ namespace System.Windows.Forms.Design
                         }
                     }
                 }
+
                 Text = string.Format(SR.ToolStripSelectMenuItem, compName);
                 _itemType = c.GetType();
             }
@@ -285,11 +293,9 @@ namespace System.Windows.Forms.Design
                         }
 
                         // if all else fails, throw up a default image.
-                        if (_image is null)
-                        {
-                            _image = ToolboxBitmapAttribute.GetImageFromResource(_comp.GetType(), null, false);
-                        }
+                        _image ??= ToolboxBitmapAttribute.GetImageFromResource(_comp.GetType(), null, false);
                     }
+
                     return _image;
                 }
                 set
@@ -302,7 +308,7 @@ namespace System.Windows.Forms.Design
             /// <summary>
             ///  Items OnClick event, to select the Parent Control.
             /// </summary>
-            protected override void OnClick(System.EventArgs e)
+            protected override void OnClick(EventArgs e)
             {
                 if (_serviceProvider.GetService(typeof(ISelectionService)) is ISelectionService selectionService)
                 {

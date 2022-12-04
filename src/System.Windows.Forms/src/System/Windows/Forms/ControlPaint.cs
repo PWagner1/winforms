@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Buffers;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -22,13 +20,13 @@ namespace System.Windows.Forms
     public static partial class ControlPaint
     {
         [ThreadStatic]
-        private static Bitmap t_checkImage;         // image used to render checkmarks
+        private static Bitmap? t_checkImage;         // image used to render checkmarks
 
         [ThreadStatic]
-        private static Pen t_focusPen;              // pen used to draw a focus rectangle
+        private static Pen? t_focusPen;              // pen used to draw a focus rectangle
 
         [ThreadStatic]
-        private static Pen t_focusPenInvert;        // pen used to draw a focus rectangle
+        private static Pen? t_focusPenInvert;        // pen used to draw a focus rectangle
 
         [ThreadStatic]
         private static Color t_focusPenColor;       // the last background color the focus pen was created with
@@ -36,29 +34,29 @@ namespace System.Windows.Forms
         [ThreadStatic]
         private static bool t_hcFocusPen;           // cached focus pen intended for high contrast mode
 
-        private static Pen s_grabPenPrimary;        // pen used for primary grab handles
-        private static Pen s_grabPenSecondary;      // pen used for secondary grab handles
-        private static Brush s_grabBrushPrimary;    // brush used for primary grab handles
-        private static Brush s_grabBrushSecondary;  // brush used for secondary grab handles
+        private static Pen? s_grabPenPrimary;        // pen used for primary grab handles
+        private static Pen? s_grabPenSecondary;      // pen used for secondary grab handles
+        private static Brush? s_grabBrushPrimary;    // brush used for primary grab handles
+        private static Brush? s_grabBrushSecondary;  // brush used for secondary grab handles
 
         [ThreadStatic]
-        private static Brush t_frameBrushActive;    // brush used for the active selection frame
+        private static Brush? t_frameBrushActive;    // brush used for the active selection frame
 
         private static Color s_frameColorActive;    // color of active frame brush
 
         [ThreadStatic]
-        private static Brush t_frameBrushSelected;  // brush used for the inactive selection frame
+        private static Brush? t_frameBrushSelected;  // brush used for the inactive selection frame
 
         private static Color s_frameColorSelected;  // color of selected frame brush
 
         [ThreadStatic]
-        private static Brush t_gridBrush;           // brush used to draw a grid
+        private static Brush? t_gridBrush;           // brush used to draw a grid
 
         private static Size s_gridSize;             // the dimensions of the grid dots
         private static bool s_gridInvert;           // true if the grid color is inverted
 
         [ThreadStatic]
-        private static ImageAttributes t_disabledImageAttr; // ImageAttributes used to render disabled images
+        private static ImageAttributes? t_disabledImageAttr; // ImageAttributes used to render disabled images
 
         private const ContentAlignment AnyRight
             = ContentAlignment.TopRight | ContentAlignment.MiddleRight | ContentAlignment.BottomRight;
@@ -68,6 +66,10 @@ namespace System.Windows.Forms
             = ContentAlignment.TopCenter | ContentAlignment.MiddleCenter | ContentAlignment.BottomCenter;
         private const ContentAlignment AnyMiddle
             = ContentAlignment.MiddleLeft | ContentAlignment.MiddleCenter | ContentAlignment.MiddleRight;
+
+        // This constant is needed in order to correctly select which pixels of the icon should be repainted.
+        // Otherwise, we will recolor intermediate shades and the icon will look inconsistent (too bold).
+        private const int MaximumLuminosityDifference = 20;
 
         internal static Rectangle CalculateBackgroundImageRectangle(Rectangle bounds, Image backgroundImage, ImageLayout imageLayout)
         {
@@ -96,10 +98,12 @@ namespace System.Windows.Forms
                     {
                         result.X = (szCtl.Width - result.Width) / 2;
                     }
+
                     if (szCtl.Height > result.Height)
                     {
                         result.Y = (szCtl.Height - result.Height) / 2;
                     }
+
                     break;
 
                 case ImageLayout.Zoom:
@@ -121,10 +125,10 @@ namespace System.Windows.Forms
                     }
                     else
                     {
-                        // Width should fill the entire bounds.
+                        // Height should fill the entire bounds.
                         result.Height = bounds.Height;
 
-                        // Preserve the aspect ratio by multiplying the xRatio by the height, adding .5 to round to
+                        // Preserve the aspect ratio by multiplying the yRatio by the width, adding .5 to round to
                         // the nearest pixel.
                         result.Width = (int)((imageSize.Width * yRatio) + .5);
                         if (bounds.X >= 0)
@@ -152,45 +156,45 @@ namespace System.Windows.Forms
         ///  From MSDN:
         ///    This member supports the framework infrastructure and is not intended to be used directly from your code.
         /// </summary>
-        public unsafe static IntPtr CreateHBitmap16Bit(Bitmap bitmap, Color background)
+        public static unsafe IntPtr CreateHBitmap16Bit(Bitmap bitmap, Color background)
         {
-            Gdi32.HBITMAP hbitmap;
+            ArgumentNullException.ThrowIfNull(bitmap);
+
+            HBITMAP hbitmap;
             Size size = bitmap.Size;
 
             // Don't use the cached DC here as this isn't a common API and we're manipulating the state.
-            using var screen = new Gdi32.CreateDcScope(default);
-            using var dc = new Gdi32.CreateDcScope(screen);
+            using PInvoke.CreateDcScope screen = new(default);
+            using PInvoke.CreateDcScope dc = new(screen);
 
-            Gdi32.HPALETTE palette = Gdi32.CreateHalftonePalette(dc);
-            Gdi32.GetObjectW(palette, out uint entryCount);
-
-            byte[] imageBuffer = ArrayPool<byte>.Shared.Rent(bitmap.Width * bitmap.Height);
+            HPALETTE palette = PInvoke.CreateHalftonePalette(dc);
+            PInvoke.GetObject(palette, out uint entryCount);
 
             byte[] bitmapInfoBuffer = ArrayPool<byte>.Shared
-                .Rent(checked((int)(sizeof(Gdi32.BITMAPINFOHEADER) + (sizeof(Gdi32.RGBQUAD) * entryCount))));
+                .Rent(checked((int)(sizeof(BITMAPINFOHEADER) + (sizeof(RGBQUAD) * entryCount))));
 
             // Create a DIB based on the screen DC to write into with a halftone palette
             fixed (byte* bi = bitmapInfoBuffer)
             {
-                *((Gdi32.BITMAPINFOHEADER*)bi) = new Gdi32.BITMAPINFOHEADER
+                *((BITMAPINFOHEADER*)bi) = new BITMAPINFOHEADER
                 {
-                    biSize = (uint)sizeof(Gdi32.BITMAPINFOHEADER),
+                    biSize = (uint)sizeof(BITMAPINFOHEADER),
                     biWidth = bitmap.Width,
                     biHeight = bitmap.Height,
                     biPlanes = 1,
                     biBitCount = 16,
-                    biCompression = Gdi32.BI.RGB
+                    biCompression = BI_COMPRESSION.BI_RGB
                 };
 
-                var colors = new Span<Gdi32.RGBQUAD>(bi + sizeof(Gdi32.BITMAPINFOHEADER), (int)entryCount);
-                Span<Gdi32.PALETTEENTRY> entries = stackalloc Gdi32.PALETTEENTRY[(int)entryCount];
-                Gdi32.GetPaletteEntries(palette, entries);
+                Span<RGBQUAD> colors = new(bi + sizeof(BITMAPINFOHEADER), (int)entryCount);
+                Span<PALETTEENTRY> entries = stackalloc PALETTEENTRY[(int)entryCount];
+                PInvoke.GetPaletteEntries(palette, entries);
 
                 // Set up color table
                 for (int i = 0; i < entryCount; i++)
                 {
-                    Gdi32.PALETTEENTRY entry = entries[i];
-                    colors[i] = new Gdi32.RGBQUAD()
+                    PALETTEENTRY entry = entries[i];
+                    colors[i] = new RGBQUAD
                     {
                         rgbRed = entry.peRed,
                         rgbGreen = entry.peGreen,
@@ -198,15 +202,16 @@ namespace System.Windows.Forms
                     };
                 }
 
-                Gdi32.DeleteObject(palette);
+                PInvoke.DeleteObject(palette);
 
-                hbitmap = Gdi32.CreateDIBSection(
+                void* bitsBuffer;
+                hbitmap = PInvoke.CreateDIBSection(
                     screen,
-                    (IntPtr)bi,
-                    Gdi32.DIB.RGB_COLORS,
-                    imageBuffer,
-                    IntPtr.Zero,
-                    0);
+                    (BITMAPINFO*)bi,
+                    DIB_USAGE.DIB_RGB_COLORS,
+                    &bitsBuffer,
+                    hSection: default,
+                    offset: 0);
 
                 if (hbitmap.IsNull)
                 {
@@ -221,13 +226,13 @@ namespace System.Windows.Forms
                 // Put our new bitmap handle (with the halftone palette) into the dc and use Graphics to
                 // copy the Bitmap into it.
 
-                Gdi32.HGDIOBJ previousBitmap = Gdi32.SelectObject(dc, hbitmap);
+                HGDIOBJ previousBitmap = PInvoke.SelectObject(dc, hbitmap);
                 if (previousBitmap.IsNull)
                 {
                     throw new Win32Exception();
                 }
 
-                Gdi32.DeleteObject(previousBitmap);
+                PInvoke.DeleteObject(previousBitmap);
 
                 using Graphics graphics = dc.CreateGraphics();
                 using var brush = background.GetCachedSolidBrushScope();
@@ -237,7 +242,7 @@ namespace System.Windows.Forms
             catch
             {
                 // As we're throwing out, we can't return this and need to delete it.
-                Gdi32.DeleteObject(hbitmap);
+                PInvoke.DeleteObject(hbitmap);
                 throw;
             }
 
@@ -249,10 +254,9 @@ namespace System.Windows.Forms
         ///  Creates a Win32 HBITMAP out of the image. You are responsible for deleting the HBITMAP. If the image
         ///  uses transparency the background will be filled with the specified color.
         /// </summary>
-        public unsafe static IntPtr CreateHBitmapTransparencyMask(Bitmap bitmap)
+        public static unsafe IntPtr CreateHBitmapTransparencyMask(Bitmap bitmap)
         {
-            if (bitmap is null)
-                throw new ArgumentNullException(nameof(bitmap));
+            ArgumentNullException.ThrowIfNull(bitmap);
 
             Size size = bitmap.Size;
             int width = bitmap.Width;
@@ -299,7 +303,7 @@ namespace System.Windows.Forms
             // Create 1bpp.
             fixed (byte* pBits = bits)
             {
-                return (IntPtr)Gdi32.CreateBitmap(size.Width, size.Height, 1, 1, pBits);
+                return (IntPtr)PInvoke.CreateBitmap(size.Width, size.Height, nPlanes: 1, nBitCount: 1, pBits);
             }
         }
 
@@ -309,33 +313,31 @@ namespace System.Windows.Forms
         /// </summary>
         public static IntPtr CreateHBitmapColorMask(Bitmap bitmap, IntPtr monochromeMask)
         {
+            ArgumentNullException.ThrowIfNull(bitmap);
+
             Size size = bitmap.Size;
 
-            Gdi32.HBITMAP colorMask = (Gdi32.HBITMAP)bitmap.GetHbitmap();
-            using var screenDC = new User32.GetDcScope(IntPtr.Zero);
-            using var sourceDC = new Gdi32.CreateDcScope(screenDC);
-            using var targetDC = new Gdi32.CreateDcScope(screenDC);
-            using var sourceBitmapSelection = new Gdi32.SelectObjectScope(sourceDC, (Gdi32.HBITMAP)monochromeMask);
-            using var targetBitmapSelection = new Gdi32.SelectObjectScope(targetDC, colorMask);
+            HBITMAP colorMask = (HBITMAP)bitmap.GetHbitmap();
+            using User32.GetDcScope screenDC = new(IntPtr.Zero);
+            using PInvoke.CreateDcScope sourceDC = new(screenDC);
+            using PInvoke.CreateDcScope targetDC = new(screenDC);
+            using PInvoke.SelectObjectScope sourceBitmapSelection = new(sourceDC, (HGDIOBJ)monochromeMask);
+            using PInvoke.SelectObjectScope targetBitmapSelection = new(targetDC, (HGDIOBJ)colorMask.Value);
 
             // Now the trick is to make colorBitmap black wherever the transparent color is located, but keep the
             // original color everywhere else. We've already got the original bitmap, so all we need to do is to AND
             // with the inverse of the mask (ROP DSna). When going from monochrome to color, Windows sets all 1 bits
             // to the background color, and all 0 bits to the foreground color.
 
-            Gdi32.SetBkColor(targetDC, 0x00ffffff);    // white
-            Gdi32.SetTextColor(targetDC, 0x00000000);  // black
-            Gdi32.BitBlt(
-                targetDC,
-                0, 0, size.Width, size.Height,
-                sourceDC,
-                0, 0,
-                (Gdi32.ROP)0x220326); // RasterOp.SOURCE.Invert().AndWith(RasterOp.TARGET).GetRop());
+            PInvoke.SetBkColor(targetDC, (COLORREF)0x00ffffff);    // white
+            PInvoke.SetTextColor(targetDC, (COLORREF)0x00000000);  // black
+            PInvoke.BitBlt(targetDC, x: 0, y: 0, size.Width, size.Height, sourceDC, x1: 0, y1: 0, (ROP_CODE)0x220326);
+            //RasterOp.SOURCE.Invert().AndWith(RasterOp.TARGET).GetRop());
 
             return (IntPtr)colorMask;
         }
 
-        internal unsafe static Gdi32.HBRUSH CreateHalftoneHBRUSH()
+        internal static unsafe HBRUSH CreateHalftoneHBRUSH()
         {
             short* grayPattern = stackalloc short[8];
             for (int i = 0; i < 8; i++)
@@ -343,16 +345,16 @@ namespace System.Windows.Forms
                 grayPattern[i] = (short)(0x5555 << (i & 1));
             }
 
-            using var hBitmap = new Gdi32.CreateBitmapScope(8, 8, 1, 1, grayPattern);
+            using PInvoke.CreateBitmapScope hBitmap = new(8, 8, 1, 1, grayPattern);
 
-            var lb = new Gdi32.LOGBRUSH
+            LOGBRUSH lb = new()
             {
-                lbColor = Color.Black,
-                lbStyle = Gdi32.BS.PATTERN,
-                lbHatch = (IntPtr)hBitmap
+                lbStyle = BRUSH_STYLE.BS_PATTERN,
+                lbColor = default, // color is ignored since style is BS.PATTERN
+                lbHatch = (nuint)(IntPtr)hBitmap
             };
 
-            return Gdi32.CreateBrushIndirect(ref lb);
+            return PInvoke.CreateBrushIndirect(&lb);
         }
 
         /// <summary>
@@ -400,8 +402,7 @@ namespace System.Windows.Forms
         /// </summary>
         internal static void PrintBorder(Graphics graphics, Rectangle bounds, BorderStyle style, Border3DStyle b3dStyle)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             switch (style)
             {
@@ -429,8 +430,7 @@ namespace System.Windows.Forms
             Point scrollOffset = default,
             RightToLeft rightToLeft = RightToLeft.No)
         {
-            if (g is null)
-                throw new ArgumentNullException(nameof(g));
+            ArgumentNullException.ThrowIfNull(g);
 
             if (backgroundImageLayout == ImageLayout.Tile)
             {
@@ -531,8 +531,7 @@ namespace System.Windows.Forms
 
         public static void DrawBorder(Graphics graphics, Rectangle bounds, Color color, ButtonBorderStyle style)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             switch (style)
             {
@@ -564,8 +563,7 @@ namespace System.Windows.Forms
             Color rightColor, int rightWidth, ButtonBorderStyle rightStyle,
             Color bottomColor, int bottomWidth, ButtonBorderStyle bottomStyle)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             DrawBorder(
                 (IDeviceContext)graphics,
@@ -741,8 +739,8 @@ namespace System.Windows.Forms
                     {
                         if (!topColor.HasTransparency() && topStyle == ButtonBorderStyle.Solid)
                         {
-                            using var hdc = new DeviceContextHdcScope(deviceContext);
-                            using var hpen = new Gdi32.CreatePenScope(topColor);
+                            using DeviceContextHdcScope hdc = new(deviceContext);
+                            using PInvoke.CreatePenScope hpen = new(topColor);
                             for (int i = 0; i < topWidth; i++)
                             {
                                 // Need to add one to the destination point for GDI to render the same as GDI+
@@ -751,8 +749,10 @@ namespace System.Windows.Forms
                         }
                         else
                         {
-                            Graphics graphics = deviceContext.TryGetGraphics(create: true);
-                            using var pen = topColor.CreateStaticPen(
+                            Graphics? graphics = deviceContext.TryGetGraphics(create: true);
+                            if (graphics is not null)
+                            {
+                                using var pen = topColor.CreateStaticPen(
                                 topStyle switch
                                 {
                                     ButtonBorderStyle.Dotted => DashStyle.Dot,
@@ -760,14 +760,16 @@ namespace System.Windows.Forms
                                     _ => DashStyle.Solid,
                                 });
 
-                            for (int i = 0; i < topWidth; i++)
-                            {
-                                graphics.DrawLine(pen, topLineLefts[i], bounds.Y + i, topLineRights[i], bounds.Y + i);
+                                for (int i = 0; i < topWidth; i++)
+                                {
+                                    graphics.DrawLine(pen, topLineLefts[i], bounds.Y + i, topLineRights[i], bounds.Y + i);
+                                }
                             }
                         }
 
                         break;
                     }
+
                 case ButtonBorderStyle.Inset:
                 case ButtonBorderStyle.Outset:
                     {
@@ -776,13 +778,15 @@ namespace System.Windows.Forms
                         using var hdc = new DeviceContextHdcScope(deviceContext);
                         for (int i = 0; i < topWidth; i++)
                         {
-                            using var hpen = new Gdi32.CreatePenScope(topStyle == ButtonBorderStyle.Inset
+                            using PInvoke.CreatePenScope hpen = new(
+                                topStyle == ButtonBorderStyle.Inset
                                 ? hlsColor.Darker(1.0f - i * inc)
                                 : hlsColor.Lighter(1.0f - i * inc));
 
                             // Need to add one to the destination point for GDI to render the same as GDI+
                             hdc.DrawLine(hpen, topLineLefts[i], bounds.Y + i, topLineRights[i] + 1, bounds.Y + i);
                         }
+
                         break;
                     }
             }
@@ -798,8 +802,8 @@ namespace System.Windows.Forms
                     {
                         if (!leftColor.HasTransparency() && leftStyle == ButtonBorderStyle.Solid)
                         {
-                            using var hdc = new DeviceContextHdcScope(deviceContext);
-                            using var hpen = new Gdi32.CreatePenScope(leftColor);
+                            using DeviceContextHdcScope hdc = new(deviceContext);
+                            using PInvoke.CreatePenScope hpen = new(leftColor);
                             for (int i = 0; i < leftWidth; i++)
                             {
                                 // Need to add one to the destination point for GDI to render the same as GDI+
@@ -808,22 +812,27 @@ namespace System.Windows.Forms
                         }
                         else
                         {
-                            Graphics graphics = deviceContext.TryGetGraphics(create: true);
-                            using var pen = leftColor.CreateStaticPen(
-                                leftStyle switch
-                                {
-                                    ButtonBorderStyle.Dotted => DashStyle.Dot,
-                                    ButtonBorderStyle.Dashed => DashStyle.Dash,
-                                    _ => DashStyle.Solid,
-                                });
-
-                            for (int i = 0; i < leftWidth; i++)
+                            Graphics? graphics = deviceContext.TryGetGraphics(create: true);
+                            if (graphics is not null)
                             {
-                                graphics.DrawLine(pen, bounds.X + i, leftLineTops[i], bounds.X + i, leftLineBottoms[i]);
+                                using var pen = leftColor.CreateStaticPen(
+                                   leftStyle switch
+                                   {
+                                       ButtonBorderStyle.Dotted => DashStyle.Dot,
+                                       ButtonBorderStyle.Dashed => DashStyle.Dash,
+                                       _ => DashStyle.Solid,
+                                   });
+
+                                for (int i = 0; i < leftWidth; i++)
+                                {
+                                    graphics.DrawLine(pen, bounds.X + i, leftLineTops[i], bounds.X + i, leftLineBottoms[i]);
+                                }
                             }
                         }
+
                         break;
                     }
+
                 case ButtonBorderStyle.Inset:
                 case ButtonBorderStyle.Outset:
                     {
@@ -832,13 +841,15 @@ namespace System.Windows.Forms
                         using var hdc = new DeviceContextHdcScope(deviceContext);
                         for (int i = 0; i < leftWidth; i++)
                         {
-                            using var hpen = new Gdi32.CreatePenScope(leftStyle == ButtonBorderStyle.Inset
+                            using PInvoke.CreatePenScope hpen = new(
+                                leftStyle == ButtonBorderStyle.Inset
                                 ? hlsColor.Darker(1.0f - i * inc)
                                 : hlsColor.Lighter(1.0f - i * inc));
 
                             // Need to add one to the destination point for GDI to render the same as GDI+
                             hdc.DrawLine(hpen, bounds.X + i, leftLineTops[i], bounds.X + i, leftLineBottoms[i] + 1);
                         }
+
                         break;
                     }
             }
@@ -854,8 +865,8 @@ namespace System.Windows.Forms
                     {
                         if (!bottomColor.HasTransparency() && bottomStyle == ButtonBorderStyle.Solid)
                         {
-                            using var hdc = new DeviceContextHdcScope(deviceContext);
-                            using var hpen = new Gdi32.CreatePenScope(bottomColor);
+                            using DeviceContextHdcScope hdc = new(deviceContext);
+                            using PInvoke.CreatePenScope hpen = new(bottomColor);
                             for (int i = 0; i < bottomWidth; i++)
                             {
                                 // Need to add one to the destination point for GDI to render the same as GDI+
@@ -869,36 +880,42 @@ namespace System.Windows.Forms
                         }
                         else
                         {
-                            Graphics graphics = deviceContext.TryGetGraphics(create: true);
-                            using var pen = bottomColor.CreateStaticPen(
-                                bottomStyle switch
-                                {
-                                    ButtonBorderStyle.Dotted => DashStyle.Dot,
-                                    ButtonBorderStyle.Dashed => DashStyle.Dash,
-                                    _ => DashStyle.Solid,
-                                });
-
-                            for (int i = 0; i < bottomWidth; i++)
+                            Graphics? graphics = deviceContext.TryGetGraphics(create: true);
+                            if (graphics is not null)
                             {
-                                graphics.DrawLine(
-                                    pen,
-                                    bottomLineLefts[i],
-                                    bounds.Y + bounds.Height - 1 - i,
-                                    bottomLineRights[i],
-                                    bounds.Y + bounds.Height - 1 - i);
+                                using var pen = bottomColor.CreateStaticPen(
+                                   bottomStyle switch
+                                   {
+                                       ButtonBorderStyle.Dotted => DashStyle.Dot,
+                                       ButtonBorderStyle.Dashed => DashStyle.Dash,
+                                       _ => DashStyle.Solid,
+                                   });
+
+                                for (int i = 0; i < bottomWidth; i++)
+                                {
+                                    graphics.DrawLine(
+                                        pen,
+                                        bottomLineLefts[i],
+                                        bounds.Y + bounds.Height - 1 - i,
+                                        bottomLineRights[i],
+                                        bounds.Y + bounds.Height - 1 - i);
+                                }
                             }
                         }
+
                         break;
                     }
+
                 case ButtonBorderStyle.Inset:
                 case ButtonBorderStyle.Outset:
                     {
                         HLSColor hlsColor = new HLSColor(bottomColor);
                         float inc = InfinityToOne(1.0f / (bottomWidth - 1));
-                        using var hdc = new DeviceContextHdcScope(deviceContext);
+                        using DeviceContextHdcScope hdc = new(deviceContext);
                         for (int i = 0; i < bottomWidth; i++)
                         {
-                            using var hpen = new Gdi32.CreatePenScope(bottomStyle != ButtonBorderStyle.Inset
+                            using PInvoke.CreatePenScope hpen = new(
+                                bottomStyle != ButtonBorderStyle.Inset
                                 ? hlsColor.Darker(1.0f - i * inc)
                                 : hlsColor.Lighter(1.0f - i * inc));
 
@@ -910,6 +927,7 @@ namespace System.Windows.Forms
                                 bottomLineRights[i] + 1,
                                 bounds.Y + bounds.Height - 1 - i);
                         }
+
                         break;
                     }
             }
@@ -925,8 +943,8 @@ namespace System.Windows.Forms
                     {
                         if (!rightColor.HasTransparency() && rightStyle == ButtonBorderStyle.Solid)
                         {
-                            using var hdc = new DeviceContextHdcScope(deviceContext);
-                            using var hpen = new Gdi32.CreatePenScope(rightColor);
+                            using DeviceContextHdcScope hdc = new(deviceContext);
+                            using PInvoke.CreatePenScope hpen = new(rightColor);
                             for (int i = 0; i < rightWidth; i++)
                             {
                                 // Need to add one to the destination point for GDI to render the same as GDI+
@@ -940,36 +958,42 @@ namespace System.Windows.Forms
                         }
                         else
                         {
-                            Graphics graphics = deviceContext.TryGetGraphics(create: true);
-                            using var pen = rightColor.CreateStaticPen(
-                                rightStyle switch
-                                {
-                                    ButtonBorderStyle.Dotted => DashStyle.Dot,
-                                    ButtonBorderStyle.Dashed => DashStyle.Dash,
-                                    _ => DashStyle.Solid,
-                                });
-
-                            for (int i = 0; i < rightWidth; i++)
+                            Graphics? graphics = deviceContext.TryGetGraphics(create: true);
+                            if (graphics is not null)
                             {
-                                graphics.DrawLine(
-                                    pen,
-                                    bounds.X + bounds.Width - 1 - i,
-                                    rightLineTops[i],
-                                    bounds.X + bounds.Width - 1 - i,
-                                    rightLineBottoms[i]);
+                                using var pen = rightColor.CreateStaticPen(
+                                                                rightStyle switch
+                                                                {
+                                                                    ButtonBorderStyle.Dotted => DashStyle.Dot,
+                                                                    ButtonBorderStyle.Dashed => DashStyle.Dash,
+                                                                    _ => DashStyle.Solid,
+                                                                });
+
+                                for (int i = 0; i < rightWidth; i++)
+                                {
+                                    graphics.DrawLine(
+                                        pen,
+                                        bounds.X + bounds.Width - 1 - i,
+                                        rightLineTops[i],
+                                        bounds.X + bounds.Width - 1 - i,
+                                        rightLineBottoms[i]);
+                                }
                             }
                         }
+
                         break;
                     }
+
                 case ButtonBorderStyle.Inset:
                 case ButtonBorderStyle.Outset:
                     {
-                        HLSColor hlsColor = new HLSColor(rightColor);
+                        HLSColor hlsColor = new(rightColor);
                         float inc = InfinityToOne(1.0f / (rightWidth - 1));
-                        using var hdc = new DeviceContextHdcScope(deviceContext);
+                        using DeviceContextHdcScope hdc = new(deviceContext);
                         for (int i = 0; i < rightWidth; i++)
                         {
-                            using var hpen = new Gdi32.CreatePenScope(rightStyle != ButtonBorderStyle.Inset
+                            using PInvoke.CreatePenScope hpen = new(
+                                rightStyle != ButtonBorderStyle.Inset
                                 ? hlsColor.Darker(1.0f - i * inc)
                                 : hlsColor.Lighter(1.0f - i * inc));
 
@@ -980,6 +1004,7 @@ namespace System.Windows.Forms
                                 bounds.X + bounds.Width - 1 - i,
                                 rightLineBottoms[i] + 1);
                         }
+
                         break;
                     }
             }
@@ -1037,30 +1062,29 @@ namespace System.Windows.Forms
         /// </summary>
         public static void DrawBorder3D(Graphics graphics, int x, int y, int width, int height, Border3DStyle style, Border3DSide sides)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
-            User32.EDGE edge = (User32.EDGE)((uint)style & 0x0F);
-            User32.BF flags = (User32.BF)sides | (User32.BF)((uint)style & ~0x0F);
+            DRAWEDGE_FLAGS edge = (DRAWEDGE_FLAGS)((uint)style & 0x0F);
+            DRAW_EDGE_FLAGS flags = (DRAW_EDGE_FLAGS)sides | (DRAW_EDGE_FLAGS)((uint)style & ~0x0F);
 
             RECT rc = new Rectangle(x, y, width, height);
 
             // Windows just draws the border to size, and then shrinks the rectangle so the user can paint the client
             // area. We can't really do that, so we do the opposite: We precalculate the size of the border and enlarge
             // the rectangle so the client size is preserved.
-            if ((flags & (User32.BF)Border3DStyle.Adjust) == (User32.BF)Border3DStyle.Adjust)
+            if (flags.HasFlag((DRAW_EDGE_FLAGS)Border3DStyle.Adjust))
             {
                 Size sz = SystemInformation.Border3DSize;
                 rc.left -= sz.Width;
                 rc.right += sz.Width;
                 rc.top -= sz.Height;
                 rc.bottom += sz.Height;
-                flags &= ~(User32.BF)Border3DStyle.Adjust;
+                flags &= ~(DRAW_EDGE_FLAGS)Border3DStyle.Adjust;
             }
 
             // Get Win32 dc with Graphics properties applied to it.
             using var hdc = new DeviceContextHdcScope(graphics);
-            User32.DrawEdge(hdc, ref rc, edge, flags);
+            PInvoke.DrawEdge(hdc, ref rc, edge, flags);
         }
 
         /// <summary>
@@ -1070,8 +1094,7 @@ namespace System.Windows.Forms
         /// </summary>
         private static void DrawBorderComplex(Graphics graphics, Rectangle bounds, Color color, ButtonBorderStyle style)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             if (style == ButtonBorderStyle.Inset)
             {
@@ -1160,16 +1183,15 @@ namespace System.Windows.Forms
             Color color,
             ButtonBorderStyle style = ButtonBorderStyle.Solid)
         {
-            if (context is null)
-                throw new ArgumentNullException(nameof(context));
+            ArgumentNullException.ThrowIfNull(context);
 
             if (color.HasTransparency() || style != ButtonBorderStyle.Solid)
             {
                 // GDI+ right and bottom DrawRectangle border are 1 greater than GDI
                 bounds = new Rectangle(bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
 
-                Graphics graphics = context.TryGetGraphics(create: true);
-                if (graphics != null)
+                Graphics? graphics = context.TryGetGraphics(create: true);
+                if (graphics is not null)
                 {
                     if (style == ButtonBorderStyle.Solid)
                     {
@@ -1186,8 +1208,8 @@ namespace System.Windows.Forms
                 }
             }
 
-            using var hdc = new DeviceContextHdcScope(context);
-            using var hpen = new Gdi32.CreatePenScope(color);
+            using DeviceContextHdcScope hdc = new(context);
+            using PInvoke.CreatePenScope hpen = new(color);
             hdc.DrawRectangle(bounds, hpen);
         }
 
@@ -1205,8 +1227,8 @@ namespace System.Windows.Forms
             DrawFrameControl(
                 graphics,
                 x, y, width, height,
-                User32.DFC.BUTTON,
-                User32.DFCS.BUTTONPUSH | (User32.DFCS)state,
+                DFC_TYPE.DFC_BUTTON,
+                DFCS_STATE.DFCS_BUTTONPUSH | (DFCS_STATE)state,
                 Color.Empty,
                 Color.Empty);
         }
@@ -1234,8 +1256,8 @@ namespace System.Windows.Forms
             ButtonState state) => DrawFrameControl(
                 graphics,
                 x, y, width, height,
-                User32.DFC.CAPTION,
-                (User32.DFCS)button | (User32.DFCS)state,
+                DFC_TYPE.DFC_CAPTION,
+                (DFCS_STATE)button | (DFCS_STATE)state,
                 Color.Empty,
                 Color.Empty);
 
@@ -1260,8 +1282,8 @@ namespace System.Windows.Forms
                 DrawFrameControl(
                     graphics,
                     x, y, width, height,
-                    User32.DFC.BUTTON,
-                    User32.DFCS.BUTTONCHECK | (User32.DFCS)state,
+                    DFC_TYPE.DFC_BUTTON,
+                    DFCS_STATE.DFCS_BUTTONCHECK | (DFCS_STATE)state,
                     Color.Empty,
                     Color.Empty);
             }
@@ -1280,8 +1302,8 @@ namespace System.Windows.Forms
             => DrawFrameControl(
                 graphics,
                 x, y, width, height,
-                User32.DFC.SCROLL,
-                User32.DFCS.SCROLLCOMBOBOX | (User32.DFCS)state,
+                DFC_TYPE.DFC_SCROLL,
+                DFCS_STATE.DFCS_SCROLLCOMBOBOX | (DFCS_STATE)state,
                 Color.Empty,
                 Color.Empty);
 
@@ -1290,8 +1312,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void DrawContainerGrabHandle(Graphics graphics, Rectangle bounds)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             Brush brush = Brushes.White;
             Pen pen = Pens.Black;
@@ -1335,8 +1356,7 @@ namespace System.Windows.Forms
         /// </summary>
         private static void DrawFlatCheckBox(Graphics graphics, Rectangle rectangle, ButtonState state)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             // Background color of checkbox
 
@@ -1361,8 +1381,7 @@ namespace System.Windows.Forms
             Brush background,
             ButtonState state)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
             if (rectangle.Width < 0 || rectangle.Height < 0)
                 throw new ArgumentOutOfRangeException(nameof(rectangle));
 
@@ -1380,21 +1399,20 @@ namespace System.Windows.Forms
             {
                 if (t_checkImage is null || t_checkImage.Width != rectangle.Width || t_checkImage.Height != rectangle.Height)
                 {
-                    if (t_checkImage != null)
+                    if (t_checkImage is not null)
                     {
                         t_checkImage.Dispose();
                         t_checkImage = null;
                     }
 
-                    // We draw the checkmark slightly off center to eliminate 3-D border artifacts,
-                    // and compensate below
-                    RECT rcCheck = new RECT(0, 0, rectangle.Width, rectangle.Height);
+                    // We draw the checkmark slightly off center to eliminate 3-D border artifacts and compensate below
+                    RECT rcCheck = new(rectangle.Size);
                     Bitmap bitmap = new Bitmap(rectangle.Width, rectangle.Height);
                     using (Graphics g2 = Graphics.FromImage(bitmap))
                     {
                         g2.Clear(Color.Transparent);
                         using var dc = new DeviceContextHdcScope(g2, applyGraphicsState: false);
-                        User32.DrawFrameControl(dc, ref rcCheck, User32.DFC.MENU, User32.DFCS.MENUCHECK);
+                        PInvoke.DrawFrameControl(dc, ref rcCheck, DFC_TYPE.DFC_MENU, DFCS_STATE.DFCS_MENUCHECK);
                     }
 
                     bitmap.MakeTransparent();
@@ -1429,16 +1447,18 @@ namespace System.Windows.Forms
         internal static void DrawHighContrastFocusRectangle(Graphics graphics, Rectangle rectangle, Color color)
             => DrawFocusRectangle(graphics, rectangle, color, highContrast: true);
 
-        private static void DrawFocusRectangle(Graphics graphics, Rectangle rectangle, Color color, bool highContrast)
+        internal static void DrawBlackWhiteFocusRectangle(Graphics graphics, Rectangle rectangle, Color color)
+            => DrawFocusRectangle(graphics, rectangle, color, highContrast: false, blackAndWhite: true);
+
+        private static void DrawFocusRectangle(Graphics graphics, Rectangle rectangle, Color color, bool highContrast, bool blackAndWhite = false)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             rectangle.Width--;
             rectangle.Height--;
             graphics.DrawRectangle(
                 // We want the corner to be penned see GetFocusPen for more explanation
-                GetFocusPen(color, (rectangle.X + rectangle.Y) % 2 == 1, highContrast),
+                GetFocusPen(color, (rectangle.X + rectangle.Y) % 2 == 1, highContrast, blackAndWhite),
                 rectangle);
         }
 
@@ -1448,13 +1468,12 @@ namespace System.Windows.Forms
         private static void DrawFrameControl(
             Graphics graphics,
             int x, int y, int width, int height,
-            User32.DFC kind,
-            User32.DFCS state,
+            DFC_TYPE kind,
+            DFCS_STATE state,
             Color foreColor,
             Color backColor)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
             if (width < 0)
                 throw new ArgumentOutOfRangeException(nameof(width));
             if (height < 0)
@@ -1468,7 +1487,7 @@ namespace System.Windows.Forms
             using (var hdc = new DeviceContextHdcScope(g2, applyGraphicsState: false))
             {
                 // Get Win32 dc with Graphics properties applied to it.
-                User32.DrawFrameControl(hdc, ref rcFrame, kind, state);
+                PInvoke.DrawFrameControl(hdc, ref rcFrame, kind, state);
             }
 
             if (foreColor == Color.Empty || backColor == Color.Empty)
@@ -1506,12 +1525,11 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Draws a standard selection grab handle with the given dimensions. Grab
         ///  handles are used by components to indicate to the user that they can
-        ///  be directly maniupulated.
+        ///  be directly manipulated.
         /// </summary>
         public static void DrawGrabHandle(Graphics graphics, Rectangle rectangle, bool primary, bool enabled)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             Pen pen = primary
                 ? s_grabPenPrimary ??= Pens.Black
@@ -1538,8 +1556,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void DrawGrid(Graphics graphics, Rectangle area, Size pixelsBetweenDots, Color backColor)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
             if (pixelsBetweenDots.Width <= 0 || pixelsBetweenDots.Height <= 0)
                 throw new ArgumentOutOfRangeException(nameof(pixelsBetweenDots));
 
@@ -1549,7 +1566,7 @@ namespace System.Windows.Forms
             if (t_gridBrush is null || s_gridSize.Width != pixelsBetweenDots.Width
                 || s_gridSize.Height != pixelsBetweenDots.Height || invert != s_gridInvert)
             {
-                if (t_gridBrush != null)
+                if (t_gridBrush is not null)
                 {
                     t_gridBrush.Dispose();
                     t_gridBrush = null;
@@ -1588,8 +1605,7 @@ namespace System.Windows.Forms
             Rectangle destination,
             Color replaceBlack)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             using var attributes = new ImageAttributes();
             attributes.SetColorMatrix(RemapBlackAndWhitePreserveTransparentMatrix(replaceBlack, Color.White));
@@ -1603,8 +1619,8 @@ namespace System.Windows.Forms
                 IntPtr.Zero);
         }
 
-        internal static bool IsImageTransparent(Image backgroundImage)
-            => backgroundImage != null && (backgroundImage.Flags & (int)ImageFlags.HasAlpha) > 0;
+        internal static bool IsImageTransparent(Image? backgroundImage)
+            => backgroundImage is not null && (backgroundImage.Flags & (int)ImageFlags.HasAlpha) > 0;
 
         // takes an image and replaces all the pixels of oldColor with newColor, drawing the new image into the rectangle on
         // the supplied Graphics object.
@@ -1637,10 +1653,8 @@ namespace System.Windows.Forms
         /// </summary>
         internal static void DrawImageDisabled(Graphics graphics, Image image, Rectangle imageBounds, bool unscaledImage)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
-            if (image is null)
-                throw new ArgumentNullException(nameof(image));
+            ArgumentNullException.ThrowIfNull(graphics);
+            ArgumentNullException.ThrowIfNull(image);
 
             Size imageSize = image.Size;
 
@@ -1652,7 +1666,7 @@ namespace System.Windows.Forms
                 // The idea is to scale everything down (more than just a grayscale does, therefore the small numbers
                 // in the scaling part of matrix). White becomes some shade of gray and black stays black.
                 //
-                // Second part of the matrix is to translate everything, so all colors are a bit brigher. Grays become
+                // Second part of the matrix is to translate everything, so all colors are a bit brighter. Grays become
                 // lighter and washed out looking black becomes a shade of gray as well.
 
                 float[][] array = new float[5][];
@@ -1681,6 +1695,7 @@ namespace System.Windows.Forms
                         GraphicsUnit.Pixel,
                         t_disabledImageAttr);
                 }
+
                 graphics.DrawImageUnscaled(bmp, imageBounds);
             }
             else
@@ -1695,12 +1710,31 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
+        ///  This method is needed as a workaround for the https://github.com/dotnet/winforms/issues/3043.
+        ///  Since the row header and column header dividing lines drawn by the
+        ///  https://docs.microsoft.com/dotnet/api/system.windows.forms.visualstyles.visualstylerenderer.drawbackground
+        ///  method has low contrast, we draw a lines with a suitable contrast on top of it.
+        /// </summary>
+        internal static void EnforceHeaderCellDividerContrast(Graphics graphics, Rectangle bounds)
+        {
+            using Pen pen = new(SystemColors.WindowFrame, 1);
+
+            // -1 when calculating X coordinates is necessary because without this the line will not be drawn.
+            // This is most likely due to the fact that drawing the next cell overlaps the line
+            // we have drawn and it is not displayed.
+            // -1 when calculating Y coordinates, it is necessary that there are no gaps
+            // between the dividing line and the upper line of the border.
+            Point start = new(bounds.X + bounds.Width - 1, bounds.Y - 1);
+            Point end = new(bounds.X + bounds.Width - 1, bounds.Y + bounds.Height);
+            graphics.DrawLine(pen, start, end);
+        }
+
+        /// <summary>
         ///  Draws a locked selection frame around the given rectangle.
         /// </summary>
         public static void DrawLockedFrame(Graphics graphics, Rectangle rectangle, bool primary)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             Pen pen = primary ? Pens.White : Pens.Black;
 
@@ -1739,7 +1773,7 @@ namespace System.Windows.Forms
         ///  Draws a menu glyph for a Win32 menu in the given rectangle with the given state.
         /// </summary>
         public static void DrawMenuGlyph(Graphics graphics, int x, int y, int width, int height, MenuGlyph glyph)
-            => DrawFrameControl(graphics, x, y, width, height, User32.DFC.MENU, (User32.DFCS)glyph, Color.Empty, Color.Empty);
+            => DrawFrameControl(graphics, x, y, width, height, DFC_TYPE.DFC_MENU, (DFCS_STATE)glyph, Color.Empty, Color.Empty);
 
         /// <summary>
         ///  Draws a menu glyph for a Win32 menu in the given rectangle with the given state. White color is replaced
@@ -1753,8 +1787,8 @@ namespace System.Windows.Forms
             Color backColor) => DrawFrameControl(
                 graphics,
                 x, y, width, height,
-                User32.DFC.MENU,
-                (User32.DFCS)glyph,
+                DFC_TYPE.DFC_MENU,
+                (DFCS_STATE)glyph,
                 foreColor,
                 backColor);
 
@@ -1769,8 +1803,8 @@ namespace System.Windows.Forms
             DrawFrameControl(
                 graphics,
                 x, y, width, height,
-                User32.DFC.BUTTON,
-                User32.DFCS.BUTTON3STATE | (User32.DFCS)state,
+                DFC_TYPE.DFC_BUTTON,
+                DFCS_STATE.DFCS_BUTTON3STATE | (DFCS_STATE)state,
                 Color.Empty,
                 Color.Empty);
         }
@@ -1789,8 +1823,8 @@ namespace System.Windows.Forms
             DrawFrameControl(
                 graphics,
                 x, y, width, height,
-                User32.DFC.BUTTON,
-                User32.DFCS.BUTTONRADIO | (User32.DFCS)state,
+                DFC_TYPE.DFC_BUTTON,
+                DFCS_STATE.DFCS_BUTTONRADIO | (DFCS_STATE)state,
                 Color.Empty,
                 Color.Empty);
         }
@@ -1802,38 +1836,38 @@ namespace System.Windows.Forms
         /// </summary>
         public static void DrawReversibleFrame(Rectangle rectangle, Color backColor, FrameStyle style)
         {
-            Gdi32.R2 rop2;
+            R2_MODE rop2;
             Color graphicsColor;
 
             if (backColor.GetBrightness() < .5)
             {
-                rop2 = Gdi32.R2.NOTXORPEN;
+                rop2 = R2_MODE.R2_NOTXORPEN;
                 graphicsColor = Color.White;
             }
             else
             {
-                rop2 = Gdi32.R2.XORPEN;
+                rop2 = R2_MODE.R2_XORPEN;
                 graphicsColor = Color.Black;
             }
 
-            using var desktopDC = new User32.GetDcScope(
-                User32.GetDesktopWindow(),
+            using User32.GetDcScope desktopDC = new(
+                PInvoke.GetDesktopWindow(),
                 IntPtr.Zero,
                 User32.DCX.WINDOW | User32.DCX.LOCKWINDOWUPDATE | User32.DCX.CACHE);
 
-            using var pen = new Gdi32.ObjectScope(style switch
+            using PInvoke.ObjectScope pen = new(style switch
             {
-                FrameStyle.Dashed => Gdi32.CreatePen(Gdi32.PS.DOT, 1, ColorTranslator.ToWin32(backColor)),
-                FrameStyle.Thick => Gdi32.CreatePen(Gdi32.PS.SOLID, 2, ColorTranslator.ToWin32(backColor)),
+                FrameStyle.Dashed => (HGDIOBJ)PInvoke.CreatePen(PEN_STYLE.PS_DOT, cWidth: 1, (COLORREF)(uint)ColorTranslator.ToWin32(backColor)).Value,
+                FrameStyle.Thick => (HGDIOBJ)PInvoke.CreatePen(PEN_STYLE.PS_SOLID, cWidth: 2, (COLORREF)(uint)ColorTranslator.ToWin32(backColor)).Value,
                 _ => default
             });
 
-            using var rop2Scope = new Gdi32.SetRop2Scope(desktopDC, rop2);
-            using var brushSelection = new Gdi32.SelectObjectScope(desktopDC, Gdi32.GetStockObject(Gdi32.StockObject.NULL_BRUSH));
-            using var penSelection = new Gdi32.SelectObjectScope(desktopDC, pen);
+            using PInvoke.SetRop2Scope rop2Scope = new(desktopDC, rop2);
+            using PInvoke.SelectObjectScope brushSelection = new(desktopDC, PInvoke.GetStockObject(GET_STOCK_OBJECT_FLAGS.NULL_BRUSH));
+            using PInvoke.SelectObjectScope penSelection = new(desktopDC, pen);
 
-            Gdi32.SetBkColor(desktopDC, ColorTranslator.ToWin32(graphicsColor));
-            Gdi32.Rectangle(desktopDC, rectangle.X, rectangle.Y, rectangle.Right, rectangle.Bottom);
+            PInvoke.SetBkColor(desktopDC, (COLORREF)(uint)ColorTranslator.ToWin32(graphicsColor));
+            PInvoke.Rectangle(desktopDC, rectangle.X, rectangle.Y, rectangle.Right, rectangle.Bottom);
         }
 
         /// <summary>
@@ -1841,22 +1875,20 @@ namespace System.Windows.Forms
         /// </summary>
         public static unsafe void DrawReversibleLine(Point start, Point end, Color backColor)
         {
-            Gdi32.R2 rop2 = (Gdi32.R2)GetColorRop(backColor, (int)Gdi32.R2.NOTXORPEN, (int)Gdi32.R2.XORPEN);
+            R2_MODE rop2 = (R2_MODE)GetColorRop(backColor, (int)R2_MODE.R2_NOTXORPEN, (int)R2_MODE.R2_XORPEN);
 
-            using var desktopDC = new User32.GetDcScope(
-                User32.GetDesktopWindow(),
+            using User32.GetDcScope desktopDC = new(
+                PInvoke.GetDesktopWindow(),
                 IntPtr.Zero,
                 User32.DCX.WINDOW | User32.DCX.LOCKWINDOWUPDATE | User32.DCX.CACHE);
 
-            using var pen = new Gdi32.ObjectScope(Gdi32.CreatePen(Gdi32.PS.SOLID, 1, ColorTranslator.ToWin32(backColor)));
-            using var ropScope = new Gdi32.SetRop2Scope(desktopDC, rop2);
-            using var brushSelection = new Gdi32.SelectObjectScope(
-                desktopDC,
-                Gdi32.GetStockObject(Gdi32.StockObject.NULL_BRUSH));
-            using var penSelection = new Gdi32.SelectObjectScope(desktopDC, pen);
+            using PInvoke.ObjectScope pen = new(PInvoke.CreatePen(PEN_STYLE.PS_SOLID, cWidth: 1, (COLORREF)(uint)ColorTranslator.ToWin32(backColor)));
+            using PInvoke.SetRop2Scope ropScope = new(desktopDC, rop2);
+            using PInvoke.SelectObjectScope brushSelection = new(desktopDC, PInvoke.GetStockObject(GET_STOCK_OBJECT_FLAGS.NULL_BRUSH));
+            using PInvoke.SelectObjectScope penSelection = new(desktopDC, pen);
 
-            Gdi32.MoveToEx(desktopDC, start.X, start.Y, null);
-            Gdi32.LineTo(desktopDC, end.X, end.Y);
+            PInvoke.MoveToEx(desktopDC, start.X, start.Y, lppt: null);
+            PInvoke.LineTo(desktopDC, end.X, end.Y);
         }
 
         /// <summary>
@@ -1875,8 +1907,8 @@ namespace System.Windows.Forms
             ButtonState state) => DrawFrameControl(
                 graphics,
                 x, y, width, height,
-                User32.DFC.SCROLL,
-                (User32.DFCS)button | (User32.DFCS)state,
+                DFC_TYPE.DFC_SCROLL,
+                (DFCS_STATE)button | (DFCS_STATE)state,
                 Color.Empty,
                 Color.Empty);
 
@@ -1891,8 +1923,7 @@ namespace System.Windows.Forms
             Rectangle insideRect,
             Color backColor)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             Brush frameBrush = active ? GetActiveBrush(backColor) : GetSelectedBrush(backColor);
 
@@ -1913,8 +1944,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void DrawSizeGrip(Graphics graphics, Color backColor, int x, int y, int width, int height)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             using var bright = GdiPlusCache.GetCachedPenScope(LightLight(backColor));
             using var dark = GdiPlusCache.GetCachedPenScope(Dark(backColor));
@@ -1945,9 +1975,9 @@ namespace System.Windows.Forms
             int right = x + width - 1;
             int bottom = y + height - 2;
 
-            using var hdc = new DeviceContextHdcScope(deviceContext);
-            using var hpenBright = new Gdi32.CreatePenScope(LightLight(backColor));
-            using var hpenDark = new Gdi32.CreatePenScope(Dark(backColor));
+            using DeviceContextHdcScope hdc = new(deviceContext);
+            using PInvoke.CreatePenScope hpenBright = new(LightLight(backColor));
+            using PInvoke.CreatePenScope hpenDark = new(Dark(backColor));
 
             // Moving from the lower right corner, draw as many groups of 4 diagonal lines as will fit
             // (skip a line, dark, dark, light)
@@ -1971,8 +2001,7 @@ namespace System.Windows.Forms
             RectangleF layoutRectangle,
             StringFormat format)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             if (SystemInformation.HighContrast)
             {
@@ -2004,24 +2033,23 @@ namespace System.Windows.Forms
             Rectangle layoutRectangle,
             TextFormatFlags format)
         {
-            if (dc is null)
-                throw new ArgumentNullException(nameof(dc));
+            ArgumentNullException.ThrowIfNull(dc);
 
             // This must come before creating the scope.
-            Gdi32.QUALITY quality = TextRenderer.FontQualityFromTextRenderingHint(dc);
+            FONT_QUALITY quality = TextRenderer.FontQualityFromTextRenderingHint(dc);
 
             using var hdc = new DeviceContextHdcScope(dc);
             DrawStringDisabled(hdc, s, font, color, layoutRectangle, format, quality);
         }
 
         internal static void DrawStringDisabled(
-            Gdi32.HDC dc,
+            HDC dc,
             string s,
             Font font,
             Color color,
             Rectangle layoutRectangle,
             TextFormatFlags format,
-            Gdi32.QUALITY quality = Gdi32.QUALITY.DEFAULT)
+            FONT_QUALITY quality = FONT_QUALITY.DEFAULT_QUALITY)
         {
             if (SystemInformation.HighContrast)
             {
@@ -2044,8 +2072,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void DrawVisualStyleBorder(Graphics graphics, Rectangle bounds)
         {
-            if (graphics is null)
-                throw new ArgumentNullException(nameof(graphics));
+            ArgumentNullException.ThrowIfNull(graphics);
 
             using var borderPen = VisualStyles.VisualStyleInformation.TextControlBorder.GetCachedPenScope();
             graphics.DrawRectangle(borderPen, bounds);
@@ -2059,22 +2086,22 @@ namespace System.Windows.Forms
         /// </summary>
         public static void FillReversibleRectangle(Rectangle rectangle, Color backColor)
         {
-            Gdi32.ROP rop3 = (Gdi32.ROP)GetColorRop(
+            ROP_CODE rop3 = (ROP_CODE)GetColorRop(
                 backColor,
                 0xa50065,   // RasterOp.BRUSH.Invert().XorWith(RasterOp.TARGET),
                 0x5a0049);  // RasterOp.BRUSH.XorWith(RasterOp.TARGET));
-            Gdi32.R2 rop2 = Gdi32.R2.NOT;
+            R2_MODE rop2 = R2_MODE.R2_NOT;
 
             using var desktopDC = new User32.GetDcScope(
-                User32.GetDesktopWindow(),
+                PInvoke.GetDesktopWindow(),
                 IntPtr.Zero,
                 User32.DCX.WINDOW | User32.DCX.LOCKWINDOWUPDATE | User32.DCX.CACHE);
-            using var brush = new Gdi32.ObjectScope(Gdi32.CreateSolidBrush(ColorTranslator.ToWin32(backColor)));
-            using var ropScope = new Gdi32.SetRop2Scope(desktopDC, rop2);
-            using var brushSelection = new Gdi32.SelectObjectScope(desktopDC, brush);
+            using PInvoke.ObjectScope brush = new(PInvoke.CreateSolidBrush((COLORREF)(uint)ColorTranslator.ToWin32(backColor)));
+            using PInvoke.SetRop2Scope ropScope = new(desktopDC, rop2);
+            using PInvoke.SelectObjectScope brushSelection = new(desktopDC, brush);
 
             // PatBlt must be the only Win32 function that wants height in width rather than x2,y2.
-            Gdi32.PatBlt(desktopDC, rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height, rop3);
+            PInvoke.PatBlt(desktopDC, rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height, rop3);
         }
 
         /// <summary>
@@ -2121,7 +2148,7 @@ namespace System.Windows.Forms
                 changed = true;
             }
 
-            User32.LOGFONTW logfont = User32.LOGFONTW.FromFont(source);
+            LOGFONTW logfont = LOGFONTW.FromFont(source);
 
             short fontWeight = target.Weight;
             if (fontWeight != (short)logfont.lfWeight)
@@ -2130,42 +2157,42 @@ namespace System.Windows.Forms
                 changed = true;
             }
 
-            bool fontBold = target.Bold.IsTrue();
-            bool isBold = logfont.lfWeight >= Gdi32.FW.BOLD;
+            bool fontBold = target.Bold;
+            bool isBold = logfont.lfWeight >= (int)FW.BOLD;
             if (fontBold != isBold)
             {
-                target.Bold = isBold.ToBOOL();
+                target.Bold = isBold;
                 changed = true;
             }
 
-            bool fontItalic = target.Italic.IsTrue();
+            bool fontItalic = target.Italic;
             bool isItalic = logfont.lfItalic != 0;
             if (fontItalic != isItalic)
             {
-                target.Italic = isItalic.ToBOOL();
+                target.Italic = isItalic;
                 changed = true;
             }
 
-            bool fontUnderline = target.Underline.IsTrue();
+            bool fontUnderline = target.Underline;
             bool isUnderline = logfont.lfUnderline != 0;
             if (fontUnderline != isUnderline)
             {
-                target.Underline = isUnderline.ToBOOL();
+                target.Underline = isUnderline;
                 changed = true;
             }
 
-            bool fontStrike = target.Strikethrough.IsTrue();
+            bool fontStrike = target.Strikethrough;
             bool isStrike = logfont.lfStrikeOut != 0;
             if (fontStrike != isStrike)
             {
-                target.Strikethrough = isStrike.ToBOOL();
+                target.Strikethrough = isStrike;
                 changed = true;
             }
 
             short fontCharset = target.Charset;
-            if (fontCharset != logfont.lfCharSet)
+            if (fontCharset != (short)logfont.lfCharSet)
             {
-                target.Charset = logfont.lfCharSet;
+                target.Charset = (short)logfont.lfCharSet;
                 changed = true;
             }
 
@@ -2188,7 +2215,7 @@ namespace System.Windows.Forms
 
             if (t_frameBrushActive is null || !s_frameColorActive.Equals(brushColor))
             {
-                if (t_frameBrushActive != null)
+                if (t_frameBrushActive is not null)
                 {
                     t_frameBrushActive.Dispose();
                     t_frameBrushActive = null;
@@ -2232,18 +2259,18 @@ namespace System.Windows.Forms
         ///  Retrieves the pen used to draw a focus rectangle around a control. The focus rectangle is typically drawn
         ///  when the control has keyboard focus.
         /// </summary>
-        private static Pen GetFocusPen(Color baseColor, bool odds, bool highContrast)
+        private static Pen GetFocusPen(Color baseColor, bool odds, bool highContrast, bool blackAndWhite)
         {
             if (t_focusPen is null
                 || t_hcFocusPen != highContrast
                 || (!highContrast && t_focusPenColor.GetBrightness() <= .5 && baseColor.GetBrightness() <= .5)
                 || t_focusPenColor.ToArgb() != baseColor.ToArgb())
             {
-                if (t_focusPen != null)
+                if (t_focusPen is not null)
                 {
                     t_focusPen.Dispose();
                     t_focusPen = null;
-                    t_focusPenInvert.Dispose();
+                    t_focusPenInvert?.Dispose();
                     t_focusPenInvert = null;
                 }
 
@@ -2257,6 +2284,11 @@ namespace System.Windows.Forms
                 {
                     // In highcontrast mode "baseColor" itself is used as the focus pen color.
                     color2 = baseColor;
+                }
+                else if (blackAndWhite)
+                {
+                    color1 = Color.White;
+                    color2 = Color.Black;
                 }
                 else
                 {
@@ -2302,7 +2334,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            return odds ? t_focusPen : t_focusPenInvert;
+            return odds ? t_focusPen : t_focusPenInvert!;
         }
 
         /// <summary>
@@ -2314,7 +2346,7 @@ namespace System.Windows.Forms
 
             if (t_frameBrushSelected is null || !s_frameColorSelected.Equals(brushColor))
             {
-                if (t_frameBrushSelected != null)
+                if (t_frameBrushSelected is not null)
                 {
                     t_frameBrushSelected.Dispose();
                     t_frameBrushSelected = null;
@@ -2407,6 +2439,7 @@ namespace System.Windows.Forms
                     {
                         s += row[k] * column[k];
                     }
+
                     result[i][j] = s;
                 }
             }
@@ -2506,6 +2539,27 @@ namespace System.Windows.Forms
             }
         }
 
+        internal static void InvertForeColorIfNeeded(Bitmap bitmap, Color backgroundColor)
+        {
+            ControlPaint.HLSColor backgroundColorWrapper = new(backgroundColor);
+
+            for (int y = 0; y < bitmap.Height; ++y)
+            {
+                for (int x = 0; x < bitmap.Width; ++x)
+                {
+                    var pixel = bitmap.GetPixel(x, y);
+                    if (pixel != backgroundColor)
+                    {
+                        var pixelColorWrapper = new ControlPaint.HLSColor(pixel);
+                        if (Math.Abs(pixelColorWrapper.Luminosity - backgroundColorWrapper.Luminosity) > MaximumLuminosityDifference)
+                        {
+                            bitmap.SetPixel(x, y, pixel.InvertColor());
+                        }
+                    }
+                }
+            }
+        }
+
         /// <summary>
         ///  Takes a black and white image, and replaces those colors with the colors of your choice. The
         ///  <paramref name="replaceBlack"/> and <paramref name="replaceWhite"/> must have alpha = 255, because the
@@ -2567,7 +2621,7 @@ namespace System.Windows.Forms
 
         internal static TextFormatFlags TextFormatFlagsForAlignmentGDI(ContentAlignment align)
         {
-            TextFormatFlags output = new TextFormatFlags();
+            TextFormatFlags output = default(TextFormatFlags);
             output |= TranslateAlignmentForGDI(align);
             output |= TranslateLineAlignmentForGDI(align);
             return output;
@@ -2626,6 +2680,7 @@ namespace System.Windows.Forms
             {
                 result = StringAlignment.Near;
             }
+
             return result;
         }
 

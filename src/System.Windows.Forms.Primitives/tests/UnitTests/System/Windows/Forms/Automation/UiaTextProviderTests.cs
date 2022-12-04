@@ -2,11 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms.Automation;
 using Moq;
-using Xunit;
 using static Interop.User32;
 
 namespace System.Windows.Forms.Primitives.Tests.Automation
@@ -19,10 +17,10 @@ namespace System.Windows.Forms.Primitives.Tests.Automation
             // EditControl Multiline is true when EditControl has ES_MULTILINE style
             using EditControl textBox = new EditControl(
                 editStyle: ES.MULTILINE | ES.LEFT | ES.AUTOHSCROLL | ES.AUTOVSCROLL,
-                style: WS.OVERLAPPED | WS.VISIBLE);
+                style: WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_VISIBLE);
             Mock<UiaTextProvider> providerMock = new Mock<UiaTextProvider>(MockBehavior.Strict);
 
-            ES actual = providerMock.Object.GetEditStyle(textBox);
+            ES actual = UiaTextProvider.GetEditStyle(textBox);
             Assert.True(actual.HasFlag(ES.MULTILINE));
         }
 
@@ -32,10 +30,10 @@ namespace System.Windows.Forms.Primitives.Tests.Automation
             // EditControl Multiline is false when EditControl doesn't have ES_MULTILINE style
             using EditControl textBox = new EditControl(
                 editStyle: ES.LEFT | ES.AUTOHSCROLL | ES.AUTOVSCROLL,
-                style: WS.OVERLAPPED | WS.VISIBLE);
+                style: WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_VISIBLE);
             Mock<UiaTextProvider> providerMock = new Mock<UiaTextProvider>(MockBehavior.Strict);
 
-            ES actual = providerMock.Object.GetEditStyle(textBox);
+            ES actual = UiaTextProvider.GetEditStyle(textBox);
             Assert.False(actual.HasFlag(ES.MULTILINE));
         }
 
@@ -44,22 +42,22 @@ namespace System.Windows.Forms.Primitives.Tests.Automation
         {
             using EditControl textBox = new EditControl(
                 editStyle: ES.MULTILINE | ES.LEFT | ES.AUTOHSCROLL | ES.AUTOVSCROLL,
-                style: WS.OVERLAPPED | WS.VISIBLE);
+                style: WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_VISIBLE);
             Mock<UiaTextProvider> providerMock = new Mock<UiaTextProvider>(MockBehavior.Strict);
 
-            WS actual = providerMock.Object.GetWindowStyle(textBox);
-            Assert.True(actual.HasFlag(WS.VISIBLE));
+            WINDOW_STYLE actual = UiaTextProvider.GetWindowStyle(textBox);
+            Assert.True(actual.HasFlag(WINDOW_STYLE.WS_VISIBLE));
         }
 
         [StaFact]
         public void UiaTextProvider_GetWindowExStyle_ContainsClientedge()
         {
             using EditControl textBox = new EditControl(
-                style: WS.OVERLAPPED | WS.VISIBLE);
+                style: WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_VISIBLE);
             Mock<UiaTextProvider> providerMock = new Mock<UiaTextProvider>(MockBehavior.Strict);
 
-            WS_EX actual = providerMock.Object.GetWindowExStyle(textBox);
-            Assert.True(actual.HasFlag(WS_EX.CLIENTEDGE));
+            WINDOW_EX_STYLE actual = UiaTextProvider.GetWindowExStyle(textBox);
+            Assert.True(actual.HasFlag(WINDOW_EX_STYLE.WS_EX_CLIENTEDGE));
         }
 
         [StaFact]
@@ -68,7 +66,7 @@ namespace System.Windows.Forms.Primitives.Tests.Automation
             Mock<UiaTextProvider> providerMock = new Mock<UiaTextProvider>(MockBehavior.Strict);
 
             double[] expected = { 0, 0, 10, 5, 10, 10, 20, 30 };
-            double[] actual = providerMock.Object.RectListToDoubleArray(new List<Rectangle>
+            double[] actual = UiaTextProvider.RectListToDoubleArray(new List<Rectangle>
             {
                 new Rectangle(0, 0, 10, 5),
                 new Rectangle(10, 10, 20, 30)
@@ -88,7 +86,7 @@ namespace System.Windows.Forms.Primitives.Tests.Automation
         {
             Mock<UiaTextProvider> providerMock = new Mock<UiaTextProvider>(MockBehavior.Strict);
 
-            double[] actual = providerMock.Object.RectListToDoubleArray(null);
+            double[] actual = UiaTextProvider.RectListToDoubleArray(null);
             Assert.Empty(actual);
         }
 #pragma warning restore CS8625
@@ -98,7 +96,7 @@ namespace System.Windows.Forms.Primitives.Tests.Automation
         {
             Mock<UiaTextProvider> providerMock = new Mock<UiaTextProvider>(MockBehavior.Strict);
 
-            double[] actual = providerMock.Object.RectListToDoubleArray(new List<Rectangle>());
+            double[] actual = UiaTextProvider.RectListToDoubleArray(new List<Rectangle>());
             Assert.Empty(actual);
         }
 

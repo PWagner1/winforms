@@ -4,8 +4,6 @@
 
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using static Interop;
 
 namespace System.Windows.Forms
 {
@@ -26,15 +24,15 @@ namespace System.Windows.Forms
         ///  DC (Display context) for obtaining the graphics object. Used to delay getting the graphics object until
         ///  absolutely necessary (for perf reasons)
         /// </summary>
-        private readonly Gdi32.HDC _hdc;
-        private Gdi32.HPALETTE _oldPalette;
+        private readonly HDC _hdc;
+        private HPALETTE _oldPalette;
 
         public DrawingEventArgs(
             Graphics graphics,
             Rectangle clipRect,
             DrawingEventFlags flags)
         {
-            _graphics = graphics ?? throw new ArgumentNullException(nameof(graphics));
+            _graphics = graphics.OrThrowIfNull();
             _hdc = default;
             _oldPalette = default;
             CheckGraphicsForState(graphics, flags);
@@ -46,19 +44,18 @@ namespace System.Windows.Forms
         ///  Internal version of constructor for performance. We try to avoid getting the graphics object until needed.
         /// </summary>
         public DrawingEventArgs(
-            Gdi32.HDC dc,
+            HDC dc,
             Rectangle clipRect,
             DrawingEventFlags flags)
         {
-            if (dc.IsNull)
-                throw new ArgumentNullException(nameof(dc));
+            ArgumentValidation.ThrowIfNull(dc);
 
 #if DEBUG
-            Gdi32.OBJ type = Gdi32.GetObjectType(dc);
-            Debug.Assert(type == Gdi32.OBJ.DC
-                || type == Gdi32.OBJ.ENHMETADC
-                || type == Gdi32.OBJ.MEMDC
-                || type == Gdi32.OBJ.METADC);
+            OBJ_TYPE type = (OBJ_TYPE)PInvoke.GetObjectType(dc);
+            Debug.Assert(type == OBJ_TYPE.OBJ_DC
+                || type == OBJ_TYPE.OBJ_ENHMETADC
+                || type == OBJ_TYPE.OBJ_MEMDC
+                || type == OBJ_TYPE.OBJ_METADC);
 #endif
 
             _hdc = dc;
@@ -77,10 +74,10 @@ namespace System.Windows.Forms
         ///  Gets the HDC this event is connected to.  If there is no associated HDC, or the GDI+ Graphics object has
         ///  been externally accessed (where it may have gotten a transform or clip) a null handle is returned.
         /// </summary>
-        internal Gdi32.HDC HDC => IsStateClean ? default : _hdc;
+        internal HDC HDC => IsStateClean ? default : _hdc;
 
         /// <summary>
-        ///  Gets the <see cref='Graphics'/> object used to paint.
+        ///  Gets the <see cref="Graphics"/> object used to paint.
         /// </summary>
         internal Graphics Graphics
         {
@@ -102,14 +99,14 @@ namespace System.Windows.Forms
                 Debug.Assert(!_hdc.IsNull);
 
                 // We need to manually unset the palette here so this scope shouldn't be disposed
-                var palleteScope = Gdi32.SelectPaletteScope.HalftonePalette(
+                var paletteScope = PInvoke.SelectPaletteScope.HalftonePalette(
                     _hdc,
                     forceBackground: false,
                     realizePalette: false);
 
-                GC.SuppressFinalize(palleteScope);
+                GC.SuppressFinalize(paletteScope);
 
-                _oldPalette = palleteScope.HPalette;
+                _oldPalette = paletteScope.HPalette;
 
                 _graphics = Graphics.FromHdcInternal((IntPtr)_hdc);
                 _graphics.PageUnit = GraphicsUnit.Pixel;
@@ -121,7 +118,7 @@ namespace System.Windows.Forms
             return _graphics;
         }
 
-        internal Gdi32.HDC GetHDC() => _hdc;
+        internal HDC GetHDC() => _hdc;
 
         internal Graphics? GetGraphics(bool create)
         {
@@ -134,7 +131,7 @@ namespace System.Windows.Forms
             if (disposing)
             {
                 // Only dispose the graphics object if we created it via the HDC.
-                if (_graphics != null && !_hdc.IsNull)
+                if (_graphics is not null && !_hdc.IsNull)
                 {
                     _graphics.Dispose();
                 }
@@ -142,7 +139,7 @@ namespace System.Windows.Forms
 
             if (!_oldPalette.IsNull && !_hdc.IsNull)
             {
-                Gdi32.SelectPalette(_hdc, _oldPalette, BOOL.FALSE);
+                PInvoke.SelectPalette(_hdc, _oldPalette, bForceBkgd: false);
                 _oldPalette = default;
             }
         }
@@ -157,15 +154,14 @@ namespace System.Windows.Forms
             }
 
             // Check to see if we've actually corrupted the state
-            object[] data = (object[])graphics.GetContextInfo();
+            graphics.GetContextInfo(out PointF offset, out Region? clip);
 
-            using Region clipRegion = (Region)data[0];
-            using Matrix worldTransform = (Matrix)data[1];
-
-            float[] elements = worldTransform?.Elements!;
-            bool isInfinite = clipRegion.IsInfinite(graphics);
-            Debug.Assert((int)elements[4] == 0 && (int)elements[5] == 0, "transform has been modified");
-            Debug.Assert(isInfinite, "clipping as been applied");
+            using (clip)
+            {
+                bool isInfinite = clip?.IsInfinite(graphics) ?? true;
+                Debug.Assert(offset.IsEmpty, "transform has been modified");
+                Debug.Assert(isInfinite, "clipping as been applied");
+            }
         }
     }
 }

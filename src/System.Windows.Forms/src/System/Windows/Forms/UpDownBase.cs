@@ -2,10 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms.VisualStyles;
@@ -45,7 +44,7 @@ namespace System.Windows.Forms
         internal int _defaultButtonsWidth = DefaultButtonsWidth;
 
         /// <summary>
-        ///  Initializes a new instance of the <see cref='UpDownBase'/> class.
+        ///  Initializes a new instance of the <see cref="UpDownBase"/> class.
         /// </summary>
         public UpDownBase()
         {
@@ -122,7 +121,7 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.ControlOnAutoSizeChangedDescr))]
         [Browsable(true)]
         [EditorBrowsable(EditorBrowsableState.Always)]
-        public new event EventHandler AutoSizeChanged
+        public new event EventHandler? AutoSizeChanged
         {
             add => base.AutoSizeChanged += value;
             remove => base.AutoSizeChanged -= value;
@@ -146,7 +145,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public override Image BackgroundImage
+        public override Image? BackgroundImage
         {
             get => base.BackgroundImage;
             set => base.BackgroundImage = value;
@@ -154,7 +153,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler BackgroundImageChanged
+        public new event EventHandler? BackgroundImageChanged
         {
             add => base.BackgroundImageChanged += value;
             remove => base.BackgroundImageChanged -= value;
@@ -171,7 +170,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler BackgroundImageLayoutChanged
+        public new event EventHandler? BackgroundImageLayoutChanged
         {
             add => base.BackgroundImageLayoutChanged += value;
             remove => base.BackgroundImageLayoutChanged -= value;
@@ -205,7 +204,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected bool ChangingText { get; set; }
 
-        public override ContextMenuStrip ContextMenuStrip
+        public override ContextMenuStrip? ContextMenuStrip
         {
             get => base.ContextMenuStrip;
             set
@@ -215,25 +214,29 @@ namespace System.Windows.Forms
             }
         }
 
+        protected override AccessibleObject CreateAccessibilityInstance()
+            => new UpDownBaseAccessibleObject(this);
+
         protected override CreateParams CreateParams
         {
             get
             {
                 CreateParams cp = base.CreateParams;
 
-                cp.Style &= ~(int)User32.WS.BORDER;
+                cp.Style &= ~(int)WINDOW_STYLE.WS_BORDER;
                 if (!Application.RenderWithVisualStyles)
                 {
                     switch (_borderStyle)
                     {
                         case BorderStyle.Fixed3D:
-                            cp.ExStyle |= (int)User32.WS_EX.CLIENTEDGE;
+                            cp.ExStyle |= (int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
                             break;
                         case BorderStyle.FixedSingle:
-                            cp.Style |= (int)User32.WS.BORDER;
+                            cp.Style |= (int)WINDOW_STYLE.WS_BORDER;
                             break;
                     }
                 }
+
                 return cp;
             }
         }
@@ -293,7 +296,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler MouseEnter
+        public new event EventHandler? MouseEnter
         {
             add => base.MouseEnter += value;
             remove => base.MouseEnter -= value;
@@ -301,7 +304,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler MouseLeave
+        public new event EventHandler? MouseLeave
         {
             add => base.MouseLeave += value;
             remove => base.MouseLeave -= value;
@@ -309,7 +312,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler MouseHover
+        public new event EventHandler? MouseHover
         {
             add => base.MouseHover += value;
             remove => base.MouseHover -= value;
@@ -317,7 +320,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event MouseEventHandler MouseMove
+        public new event MouseEventHandler? MouseMove
         {
             add => base.MouseMove += value;
             remove => base.MouseMove -= value;
@@ -368,6 +371,7 @@ namespace System.Windows.Forms
         ///  Gets or sets the text displayed in the up-down control.
         /// </summary>
         [Localizable(true)]
+        [AllowNull]
         public override string Text
         {
             get => _upDownEdit.Text;
@@ -453,6 +457,19 @@ namespace System.Windows.Forms
             return base.ApplyBoundsConstraints(suggestedX, suggestedY, proposedWidth, PreferredHeight);
         }
 
+        internal override void ReleaseUiaProvider(IntPtr handle)
+        {
+            // UpDownEdit as TextBox is a control, that should disconnect its accessible object itself,
+            // but if it supports Uia providers. If no, force disconnecting for UpDownEdit accessible object
+            // as a part of UIA tree of Domain/NumericUpDown controls.
+            if (!_upDownEdit.SupportsUiaProviders)
+            {
+                _upDownEdit.ReleaseUiaProvider(_upDownEdit.HandleInternal);
+            }
+
+            base.ReleaseUiaProvider(handle);
+        }
+
         /// <summary>
         ///  When overridden in a derived class, handles rescaling of any magic numbers used in control painting.
         ///  For UpDown controls, scale the width of the up/down buttons.
@@ -470,7 +487,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  When overridden in a derived class, raises the Changed event.
         /// </summary>
-        protected virtual void OnChanged(object source, EventArgs e)
+        protected virtual void OnChanged(object? source, EventArgs e)
         {
         }
 
@@ -523,10 +540,10 @@ namespace System.Windows.Forms
                     clipBottom.Intersect(clipBounds);
 
                     using var hdc = new DeviceContextHdcScope(e);
-                    vsr.DrawBackground(hdc, bounds, clipLeft, HandleInternal);
-                    vsr.DrawBackground(hdc, bounds, clipTop, HandleInternal);
-                    vsr.DrawBackground(hdc, bounds, clipRight, HandleInternal);
-                    vsr.DrawBackground(hdc, bounds, clipBottom, HandleInternal);
+                    vsr.DrawBackground(hdc, bounds, clipLeft, HWNDInternal);
+                    vsr.DrawBackground(hdc, bounds, clipTop, HWNDInternal);
+                    vsr.DrawBackground(hdc, bounds, clipRight, HWNDInternal);
+                    vsr.DrawBackground(hdc, bounds, clipBottom, HWNDInternal);
 
                     // Draw a rectangle around edit control with the background color.
                     Rectangle backRect = editBounds;
@@ -534,7 +551,7 @@ namespace System.Windows.Forms
                     backRect.Y--;
                     backRect.Width += 2;
                     backRect.Height += 2;
-                    using var hpen = new Gdi32.CreatePenScope(backColor);
+                    using PInvoke.CreatePenScope hpen = new(backColor);
                     hdc.DrawRectangle(backRect, hpen);
                 }
             }
@@ -555,8 +572,8 @@ namespace System.Windows.Forms
 
                 backRect.Width++;
                 backRect.Height++;
-                using var hdc = new DeviceContextHdcScope(e);
-                using var hpen = new Gdi32.CreatePenScope(backColor, width);
+                using DeviceContextHdcScope hdc = new(e);
+                using PInvoke.CreatePenScope hpen = new(backColor, width);
                 hdc.DrawRectangle(backRect, hpen);
             }
 
@@ -572,9 +589,9 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Raises the <see cref='Control.KeyDown'/> event.
+        ///  Raises the <see cref="Control.KeyDown"/> event.
         /// </summary>
-        protected virtual void OnTextBoxKeyDown(object source, KeyEventArgs e)
+        protected virtual void OnTextBoxKeyDown(object? source, KeyEventArgs e)
         {
             OnKeyDown(e);
             if (InterceptArrowKeys)
@@ -602,15 +619,15 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Raises the <see cref='Control.KeyPress'/> event.
+        ///  Raises the <see cref="Control.KeyPress"/> event.
         /// </summary>
-        protected virtual void OnTextBoxKeyPress(object source, KeyPressEventArgs e)
+        protected virtual void OnTextBoxKeyPress(object? source, KeyPressEventArgs e)
             => OnKeyPress(e);
 
         /// <summary>
-        ///  Raises the <see cref='Control.LostFocus'/> event.
+        ///  Raises the <see cref="Control.LostFocus"/> event.
         /// </summary>
-        protected virtual void OnTextBoxLostFocus(object source, EventArgs e)
+        protected virtual void OnTextBoxLostFocus(object? source, EventArgs e)
         {
             if (UserEdit)
             {
@@ -619,9 +636,9 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Raises the <see cref='Control.Resize'/> event.
+        ///  Raises the <see cref="Control.Resize"/> event.
         /// </summary>
-        protected virtual void OnTextBoxResize(object source, EventArgs e)
+        protected virtual void OnTextBoxResize(object? source, EventArgs e)
         {
             Height = PreferredHeight;
             PositionControls();
@@ -631,7 +648,7 @@ namespace System.Windows.Forms
         ///  Raises the TextBoxTextChanged event.
         ///  event.
         /// </summary>
-        protected virtual void OnTextBoxTextChanged(object source, EventArgs e)
+        protected virtual void OnTextBoxTextChanged(object? source, EventArgs e)
         {
             if (ChangingText)
             {
@@ -659,7 +676,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Raises the <see cref='Control.OnMouseDown'/> event.
+        ///  Raises the <see cref="Control.OnMouseDown"/> event.
         /// </summary>
         protected override void OnMouseDown(MouseEventArgs e)
         {
@@ -672,14 +689,13 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Raises the <see cref='Control.OnMouseUp'/> event.
+        ///  Raises the <see cref="Control.OnMouseUp"/> event.
         /// </summary>
         protected override void OnMouseUp(MouseEventArgs mevent)
         {
             if (mevent.Button == MouseButtons.Left)
             {
-                Point pt = PointToScreen(new Point(mevent.X, mevent.Y));
-                if (User32.WindowFromPoint(pt) == Handle && !ValidationCancelled)
+                if (PInvoke.WindowFromPoint(PointToScreen(mevent.Location)) == HWND && !ValidationCancelled)
                 {
                     if (!_doubleClickFired)
                     {
@@ -701,7 +717,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Raises the <see cref='Control.OnMouseWheel'/> event.
+        ///  Raises the <see cref="Control.OnMouseWheel"/> event.
         /// </summary>
         protected override void OnMouseWheel(MouseEventArgs e)
         {
@@ -729,7 +745,7 @@ namespace System.Windows.Forms
                 return;
             }
 
-            Debug.Assert(_wheelDelta > -NativeMethods.WHEEL_DELTA, "wheelDelta is too smal");
+            Debug.Assert(_wheelDelta > -NativeMethods.WHEEL_DELTA, "wheelDelta is too small");
             Debug.Assert(_wheelDelta < NativeMethods.WHEEL_DELTA, "wheelDelta is too big");
             _wheelDelta += e.Delta;
 
@@ -799,7 +815,7 @@ namespace System.Windows.Forms
         ///  Handles UpDown events, which are generated by clicking on the updown
         ///  buttons in the child updown control.
         /// </summary>
-        private void OnUpDown(object source, UpDownEventArgs e)
+        private void OnUpDown(object? source, UpDownEventArgs e)
         {
             // Modify the value
             if (e.ButtonID == (int)ButtonID.Up)
@@ -830,14 +846,14 @@ namespace System.Windows.Forms
             clientArea.Inflate(-borderWidth, -borderWidth);
 
             // Reposition and resize the upDownEdit control
-            if (_upDownEdit != null)
+            if (_upDownEdit is not null)
             {
                 upDownEditBounds = clientArea;
                 upDownEditBounds.Size = new Size(clientArea.Width - _defaultButtonsWidth, clientArea.Height);
             }
 
             // Reposition and resize the updown buttons
-            if (_upDownButtons != null)
+            if (_upDownButtons is not null)
             {
                 int borderFixup = (themed) ? 1 : 2;
                 if (borderStyle == BorderStyle.None)
@@ -865,11 +881,12 @@ namespace System.Windows.Forms
             }
 
             // Apply locations
-            if (_upDownEdit != null)
+            if (_upDownEdit is not null)
             {
                 _upDownEdit.Bounds = upDownEditBounds;
             }
-            if (_upDownButtons != null)
+
+            if (_upDownButtons is not null)
             {
                 _upDownButtons.Bounds = upDownButtonsBounds;
                 _upDownButtons.Invalidate();
@@ -882,16 +899,17 @@ namespace System.Windows.Forms
         public void Select(int start, int length) => _upDownEdit.Select(start, length);
 
         /// <summary>
-        ///  Child controls run their
+        ///  Create a new <see cref="MouseEventArgs"/> with the points translated from the <paramref name="child"/>
+        ///  coordinates to this control's.
         /// </summary>
         private MouseEventArgs TranslateMouseEvent(Control child, MouseEventArgs e)
         {
-            if (child != null && IsHandleCreated)
+            if (child is not null && IsHandleCreated)
             {
                 // Same control as PointToClient or PointToScreen, just
                 // with two specific controls in mind.
-                var point = new Point(e.X, e.Y);
-                User32.MapWindowPoints(new HandleRef(child, child.Handle), new HandleRef(this, Handle), ref point, 1);
+                Point point = e.Location;
+                point = WindowsFormsUtils.TranslatePoint(point, child, this);
                 return new MouseEventArgs(e.Button, e.Clicks, point.X, point.Y, e.Delta);
             }
 
@@ -944,10 +962,12 @@ namespace System.Windows.Forms
                     {
                         if (TextBox.CanFocus)
                         {
-                            User32.SetFocus(new HandleRef(TextBox, TextBox.Handle));
+                            PInvoke.SetFocus(TextBox);
                         }
+
                         base.WndProc(ref m);
                     }
+
                     break;
                 case User32.WM.KILLFOCUS:
                     DefWndProc(ref m);
@@ -958,8 +978,14 @@ namespace System.Windows.Forms
             }
         }
 
-        internal void SetToolTip(ToolTip toolTip, string caption)
+        internal override void SetToolTip(ToolTip toolTip)
         {
+            if (toolTip is null)
+            {
+                return;
+            }
+
+            string caption = toolTip.GetToolTip(this);
             toolTip.SetToolTip(_upDownEdit, caption);
             toolTip.SetToolTip(_upDownButtons, caption);
         }

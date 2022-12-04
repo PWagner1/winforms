@@ -2,12 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
 using System.ComponentModel.Design;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.Layout;
 using static Interop;
 
@@ -25,7 +23,7 @@ namespace System.Windows.Forms
     public class UserControl : ContainerControl
     {
         private static readonly object EVENT_LOAD = new object();
-        private BorderStyle borderStyle = System.Windows.Forms.BorderStyle.None;
+        private BorderStyle _borderStyle = BorderStyle.None;
 
         /// <summary>
         ///  Creates a new UserControl object. A vast majority of people
@@ -57,7 +55,7 @@ namespace System.Windows.Forms
         /// </summary>
         [Browsable(true)]
         [EditorBrowsable(EditorBrowsableState.Always)]
-        public new event EventHandler AutoSizeChanged
+        public new event EventHandler? AutoSizeChanged
         {
             add => base.AutoSizeChanged += value;
             remove => base.AutoSizeChanged -= value;
@@ -86,7 +84,7 @@ namespace System.Windows.Forms
                     SetAutoSizeMode(value);
                     Control toLayout = DesignMode || ParentInternal is null ? this : ParentInternal;
 
-                    if (toLayout != null)
+                    if (toLayout is not null)
                     {
                         // DefaultLayout does not keep anchor information until it needs to.  When
                         // AutoSize became a common property, we could no longer blindly call into
@@ -95,6 +93,7 @@ namespace System.Windows.Forms
                         {
                             toLayout.LayoutEngine.InitLayout(this, BoundsSpecified.Size);
                         }
+
                         LayoutTransaction.DoLayout(toLayout, this, PropertyNames.AutoSize);
                     }
                 }
@@ -114,7 +113,7 @@ namespace System.Windows.Forms
 
         [Browsable(true)]
         [EditorBrowsable(EditorBrowsableState.Always)]
-        public new event EventHandler AutoValidateChanged
+        public new event EventHandler? AutoValidateChanged
         {
             add => base.AutoValidateChanged += value;
             remove => base.AutoValidateChanged -= value;
@@ -133,17 +132,17 @@ namespace System.Windows.Forms
         {
             get
             {
-                return borderStyle;
+                return _borderStyle;
             }
 
             set
             {
-                if (borderStyle != value)
+                if (_borderStyle != value)
                 {
                     //valid values are 0x0 to 0x2
                     SourceGenerated.EnumValidator.Validate(value);
 
-                    borderStyle = value;
+                    _borderStyle = value;
                     UpdateStyles();
                 }
             }
@@ -161,19 +160,20 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.Style &= ~(int)User32.WS.BORDER;
-                cp.ExStyle |= (int)User32.WS_EX.CONTROLPARENT;
-                cp.ExStyle &= ~(int)User32.WS_EX.CLIENTEDGE;
+                cp.Style &= ~(int)WINDOW_STYLE.WS_BORDER;
+                cp.ExStyle |= (int)WINDOW_EX_STYLE.WS_EX_CONTROLPARENT;
+                cp.ExStyle &= ~(int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
 
-                switch (borderStyle)
+                switch (_borderStyle)
                 {
                     case BorderStyle.Fixed3D:
-                        cp.ExStyle |= (int)User32.WS_EX.CLIENTEDGE;
+                        cp.ExStyle |= (int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
                         break;
                     case BorderStyle.FixedSingle:
-                        cp.Style |= (int)User32.WS.BORDER;
+                        cp.Style |= (int)WINDOW_STYLE.WS_BORDER;
                         break;
                 }
+
                 return cp;
             }
         }
@@ -194,7 +194,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.UserControlOnLoadDescr))]
-        public event EventHandler Load
+        public event EventHandler? Load
         {
             add => Events.AddHandler(EVENT_LOAD, value);
             remove => Events.RemoveHandler(EVENT_LOAD, value);
@@ -204,6 +204,7 @@ namespace System.Windows.Forms
         [EditorBrowsable(EditorBrowsableState.Never)]
         [Bindable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [AllowNull]
         public override string Text
         {
             get => base.Text;
@@ -212,7 +213,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler TextChanged
+        public new event EventHandler? TextChanged
         {
             add => base.TextChanged += value;
             remove => base.TextChanged -= value;
@@ -220,7 +221,7 @@ namespace System.Windows.Forms
 
         /// <summary>
         ///  Validates all selectable child controls in the container, including descendants. This is
-        ///  equivalent to calling ValidateChildren(ValidationConstraints.Selectable). See <see cref='ValidationConstraints.Selectable'/>
+        ///  equivalent to calling ValidateChildren(ValidationConstraints.Selectable). See <see cref="ValidationConstraints.Selectable"/>
         ///  for details of exactly which child controls will be validated.
         /// </summary>
         [Browsable(true)]
@@ -248,14 +249,13 @@ namespace System.Windows.Forms
                 return false;
             }
 
-            IntPtr hwndFocus = User32.GetFocus();
-            if (hwndFocus == IntPtr.Zero)
+            HWND hwndFocus = PInvoke.GetFocus();
+            if (hwndFocus.IsNull)
             {
                 return false;
             }
 
-            IntPtr hwnd = Handle;
-            return hwnd == hwndFocus || User32.IsChild(new HandleRef(this, hwnd), hwndFocus).IsTrue();
+            return HWND == hwndFocus || PInvoke.IsChild(this, hwndFocus);
         }
 
         /// <summary>
@@ -277,7 +277,7 @@ namespace System.Windows.Forms
         {
             // There is no good way to explain this event except to say
             // that it's just another name for OnControlCreated.
-            ((EventHandler)Events[EVENT_LOAD])?.Invoke(this, e);
+            ((EventHandler?)Events[EVENT_LOAD])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -286,7 +286,7 @@ namespace System.Windows.Forms
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            if (BackgroundImage != null)
+            if (BackgroundImage is not null)
             {
                 Invalidate();
             }
@@ -312,6 +312,7 @@ namespace System.Windows.Forms
                     SelectNextControl(null, true, true, true, false);
                 }
             }
+
             if (!ValidationCancelled)
             {
                 base.WndProc(ref m);

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections;
 using System.Windows.Forms.Design;
 
 namespace System.ComponentModel.Design
@@ -12,12 +11,12 @@ namespace System.ComponentModel.Design
     /// </summary>
     public class DesignerActionService : IDisposable
     {
-        private readonly Hashtable _designerActionLists; // this is how we store 'em.  Syntax: key = object, value = DesignerActionListCollection
+        private readonly Dictionary<IComponent, DesignerActionListCollection> _designerActionLists; // this is how we store 'em.  Syntax: key = object, value = DesignerActionListCollection
         private DesignerActionListsChangedEventHandler _designerActionListsChanged;
         private readonly IServiceProvider _serviceProvider; // standard service provider
         private readonly ISelectionService _selSvc; // selection service
-        private readonly Hashtable _componentToVerbsEventHookedUp; //table component true/false
-        // Guard against ReEntrant Code. The Infragistics TabControlDesigner, Sets the Commands Status when the Verbs property is accesssed. This property is used in the OnVerbStatusChanged code here and hence causes recursion leading to Stack Overflow Exception.
+        private readonly HashSet<IComponent> _componentToVerbsEventHookedUp; //Hashset of components which have events hooked up.
+        // Guard against ReEntrant Code. The Infragistics TabControlDesigner, Sets the Commands Status when the Verbs property is accessed. This property is used in the OnVerbStatusChanged code here and hence causes recursion leading to Stack Overflow Exception.
         private bool _reEntrantCode;
 
         /// <summary>
@@ -25,22 +24,24 @@ namespace System.ComponentModel.Design
         /// </summary>
         public DesignerActionService(IServiceProvider serviceProvider)
         {
-            if (serviceProvider != null)
+            if (serviceProvider is not null)
             {
                 _serviceProvider = serviceProvider;
                 if (serviceProvider.GetService(typeof(IDesignerHost)) is IDesignerHost host)
                 {
                     host.AddService(typeof(DesignerActionService), this);
                 }
+
                 if (serviceProvider.GetService(typeof(IComponentChangeService)) is IComponentChangeService cs)
                 {
                     cs.ComponentRemoved += new ComponentEventHandler(OnComponentRemoved);
                 }
+
                 _selSvc = serviceProvider.GetService(typeof(ISelectionService)) as ISelectionService;
             }
 
-            _designerActionLists = new Hashtable();
-            _componentToVerbsEventHookedUp = new Hashtable();
+            _designerActionLists = new();
+            _componentToVerbsEventHookedUp = new();
         }
 
         /// <summary>
@@ -57,17 +58,10 @@ namespace System.ComponentModel.Design
         /// </summary>
         public void Add(IComponent comp, DesignerActionListCollection designerActionListCollection)
         {
-            if (comp is null)
-            {
-                throw new ArgumentNullException(nameof(comp));
-            }
-            if (designerActionListCollection is null)
-            {
-                throw new ArgumentNullException(nameof(designerActionListCollection));
-            }
+            ArgumentNullException.ThrowIfNull(comp);
+            ArgumentNullException.ThrowIfNull(designerActionListCollection);
 
-            DesignerActionListCollection dhlc = (DesignerActionListCollection)_designerActionLists[comp];
-            if (dhlc != null)
+            if (_designerActionLists.TryGetValue(comp, out DesignerActionListCollection dhlc))
             {
                 dhlc.AddRange(designerActionListCollection);
             }
@@ -98,19 +92,16 @@ namespace System.ComponentModel.Design
                 return;
             }
 
-            //this will represent the list of componets we just cleared
-            ArrayList compsRemoved = new ArrayList(_designerActionLists.Count);
-            foreach (DictionaryEntry entry in _designerActionLists)
-            {
-                compsRemoved.Add(entry.Key);
-            }
+            // Get list of components
+            IComponent[] compsRemoved = _designerActionLists.Keys.ToArray();
 
-            //actually clear our hashtable
+            // Actually clear our dictionary.
             _designerActionLists.Clear();
-            //fire our DesignerActionsChanged event for each comp we just removed
+
+            // Fire our DesignerActionsChanged event for each comp we just removed.
             foreach (Component comp in compsRemoved)
             {
-                OnDesignerActionListsChanged(new DesignerActionListsChangedEventArgs(comp, DesignerActionListsChangedType.ActionListsRemoved, GetComponentActions(comp)));
+                OnDesignerActionListsChanged(new(comp, DesignerActionListsChangedType.ActionListsRemoved, GetComponentActions(comp)));
             }
         }
 
@@ -119,11 +110,8 @@ namespace System.ComponentModel.Design
         /// </summary>
         public bool Contains(IComponent comp)
         {
-            if (comp is null)
-            {
-                throw new ArgumentNullException(nameof(comp));
-            }
-            return _designerActionLists.Contains(comp);
+            ArgumentNullException.ThrowIfNull(comp);
+            return _designerActionLists.ContainsKey(comp);
         }
 
         /// <summary>
@@ -136,7 +124,7 @@ namespace System.ComponentModel.Design
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing && _serviceProvider != null)
+            if (disposing && _serviceProvider is not null)
             {
                 if (_serviceProvider.GetService(typeof(IDesignerHost)) is IDesignerHost host)
                 {
@@ -157,10 +145,8 @@ namespace System.ComponentModel.Design
 
         public virtual DesignerActionListCollection GetComponentActions(IComponent component, ComponentActionsType type)
         {
-            if (component is null)
-            {
-                throw new ArgumentNullException(nameof(component));
-            }
+            ArgumentNullException.ThrowIfNull(component);
+
             DesignerActionListCollection result = new DesignerActionListCollection();
             switch (type)
             {
@@ -175,27 +161,21 @@ namespace System.ComponentModel.Design
                     GetComponentServiceActions(component, result);
                     break;
             }
+
             return result;
         }
 
         protected virtual void GetComponentDesignerActions(IComponent component, DesignerActionListCollection actionLists)
         {
-            if (component is null)
-            {
-                throw new ArgumentNullException(nameof(component));
-            }
-
-            if (actionLists is null)
-            {
-                throw new ArgumentNullException(nameof(actionLists));
-            }
+            ArgumentNullException.ThrowIfNull(component);
+            ArgumentNullException.ThrowIfNull(actionLists);
 
             if (component.Site is IServiceContainer sc)
             {
                 if (sc.GetService(typeof(DesignerCommandSet)) is DesignerCommandSet dcs)
                 {
                     DesignerActionListCollection pullCollection = dcs.ActionLists;
-                    if (pullCollection != null)
+                    if (pullCollection is not null)
                     {
                         actionLists.AddRange(pullCollection);
                     }
@@ -204,14 +184,11 @@ namespace System.ComponentModel.Design
                     if (actionLists.Count == 0)
                     {
                         DesignerVerbCollection verbs = dcs.Verbs;
-                        if (verbs != null && verbs.Count != 0)
+                        if (verbs is not null && verbs.Count != 0)
                         {
-                            ArrayList verbsArray = new ArrayList();
-                            bool hookupEvents = _componentToVerbsEventHookedUp[component] is null;
-                            if (hookupEvents)
-                            {
-                                _componentToVerbsEventHookedUp[component] = true;
-                            }
+                            List<DesignerVerb> verbsArray = new();
+                            bool hookupEvents = _componentToVerbsEventHookedUp.Add(component);
+
                             foreach (DesignerVerb verb in verbs)
                             {
                                 if (verb is null)
@@ -223,22 +200,23 @@ namespace System.ComponentModel.Design
                                 {
                                     verb.CommandChanged += new EventHandler(OnVerbStatusChanged);
                                 }
+
                                 if (verb.Enabled && verb.Visible)
                                 {
                                     verbsArray.Add(verb);
                                 }
                             }
+
                             if (verbsArray.Count != 0)
                             {
-                                DesignerActionVerbList davl = new DesignerActionVerbList((DesignerVerb[])verbsArray.ToArray(typeof(DesignerVerb)));
-                                actionLists.Add(davl);
+                                actionLists.Add(new DesignerActionVerbList(verbsArray.ToArray()));
                             }
                         }
                     }
 
                     // remove all the ones that are empty... ie GetSortedActionList returns nothing. we might waste some time doing this twice but don't have much of a choice here... the panel is not yet displayed and we want to know if a non empty panel is present...
                     // NOTE: We do this AFTER the verb check that way to disable auto verb upgrading you can just return an empty actionlist collection
-                    if (pullCollection != null)
+                    if (pullCollection is not null)
                     {
                         foreach (DesignerActionList actionList in pullCollection)
                         {
@@ -270,10 +248,7 @@ namespace System.ComponentModel.Design
                                 if (verb == sender)
                                 {
                                     DesignerActionUIService dapUISvc = (DesignerActionUIService)sc.GetService(typeof(DesignerActionUIService));
-                                    if (dapUISvc != null)
-                                    {
-                                        dapUISvc.Refresh(comp); // we need to refresh, a verb on the current panel has changed its state
-                                    }
+                                    dapUISvc?.Refresh(comp); // we need to refresh, a verb on the current panel has changed its state
                                 }
                             }
                         }
@@ -288,18 +263,10 @@ namespace System.ComponentModel.Design
 
         protected virtual void GetComponentServiceActions(IComponent component, DesignerActionListCollection actionLists)
         {
-            if (component is null)
-            {
-                throw new ArgumentNullException(nameof(component));
-            }
+            ArgumentNullException.ThrowIfNull(component);
+            ArgumentNullException.ThrowIfNull(actionLists);
 
-            if (actionLists is null)
-            {
-                throw new ArgumentNullException(nameof(actionLists));
-            }
-
-            DesignerActionListCollection pushCollection = (DesignerActionListCollection)_designerActionLists[component];
-            if (pushCollection != null)
+            if (_designerActionLists.TryGetValue(component, out DesignerActionListCollection pushCollection))
             {
                 actionLists.AddRange(pushCollection);
                 // remove all the ones that are empty... ie GetSortedActionList returns nothing. we might waste some time doing this twice but don't have much of a choice here... the panel is not yet displayed and we want to know if a non empty panel is present...
@@ -331,38 +298,29 @@ namespace System.ComponentModel.Design
         }
 
         /// <summary>
-        ///  This will remove all DesignerActions associated with the 'comp' object.  All alarms will be unhooked and the DesignerActionsChagned event will be fired.
+        ///  This will remove all DesignerActions associated with the 'comp' object.  All alarms will be unhooked and the DesignerActionsChanged event will be fired.
         /// </summary>
         public void Remove(IComponent comp)
         {
-            if (comp is null)
-            {
-                throw new ArgumentNullException(nameof(comp));
-            }
+            ArgumentNullException.ThrowIfNull(comp);
 
-            if (!_designerActionLists.Contains(comp))
+            if (_designerActionLists.Remove(comp))
             {
-                return;
+                OnDesignerActionListsChanged(new DesignerActionListsChangedEventArgs(comp, DesignerActionListsChangedType.ActionListsRemoved, GetComponentActions(comp)));
             }
-
-            _designerActionLists.Remove(comp);
-            OnDesignerActionListsChanged(new DesignerActionListsChangedEventArgs(comp, DesignerActionListsChangedType.ActionListsRemoved, GetComponentActions(comp)));
         }
 
         /// <summary>
-        ///  This will remove the specified Designeraction from the DesignerActionService.  All alarms will be unhooked and the DesignerActionsChagned event will be fired.
+        ///  This will remove the specified Designeraction from the DesignerActionService.  All alarms will be unhooked and the DesignerActionsChanged event will be fired.
         /// </summary>
         public void Remove(DesignerActionList actionList)
         {
-            if (actionList is null)
-            {
-                throw new ArgumentNullException(nameof(actionList));
-            }
+            ArgumentNullException.ThrowIfNull(actionList);
 
             //find the associated component
             foreach (IComponent comp in _designerActionLists.Keys)
             {
-                if (((DesignerActionListCollection)_designerActionLists[comp]).Contains(actionList))
+                if (_designerActionLists.TryGetValue(comp, out DesignerActionListCollection dacl) && dacl.Contains(actionList))
                 {
                     Remove(comp, actionList);
                     break;
@@ -375,21 +333,10 @@ namespace System.ComponentModel.Design
         /// </summary>
         public void Remove(IComponent comp, DesignerActionList actionList)
         {
-            if (comp is null)
-            {
-                throw new ArgumentNullException(nameof(comp));
-            }
-            if (actionList is null)
-            {
-                throw new ArgumentNullException(nameof(actionList));
-            }
-            if (!_designerActionLists.Contains(comp))
-            {
-                return;
-            }
+            ArgumentNullException.ThrowIfNull(comp);
+            ArgumentNullException.ThrowIfNull(actionList);
 
-            DesignerActionListCollection actionLists = (DesignerActionListCollection)_designerActionLists[comp];
-            if (!actionLists.Contains(actionList))
+            if (!_designerActionLists.TryGetValue(comp, out DesignerActionListCollection actionLists) || !actionLists.Contains(actionList))
             {
                 return;
             }
@@ -402,20 +349,15 @@ namespace System.ComponentModel.Design
             else
             {
                 //remove each instance of this action
-                ArrayList actionListsToRemove = new ArrayList(1);
-                foreach (DesignerActionList t in actionLists)
+                for (int i = actionLists.Count - 1; i >= 0; i--)
                 {
-                    if (actionList.Equals(t))
+                    if (actionList.Equals(actionLists[i]))
                     {
                         //found one to remove
-                        actionListsToRemove.Add(t);
+                        actionLists.RemoveAt(i);
                     }
                 }
 
-                foreach (DesignerActionList t in actionListsToRemove)
-                {
-                    actionLists.Remove(t);
-                }
                 OnDesignerActionListsChanged(new DesignerActionListsChangedEventArgs(comp, DesignerActionListsChangedType.ActionListsRemoved, GetComponentActions(comp)));
             }
         }
@@ -425,7 +367,7 @@ namespace System.ComponentModel.Design
             add
             {
                 DesignerActionUIService dapUISvc = (DesignerActionUIService)_serviceProvider.GetService(typeof(DesignerActionUIService));
-                if (dapUISvc != null)
+                if (dapUISvc is not null)
                 {
                     dapUISvc.DesignerActionUIStateChange += value;
                 }
@@ -433,7 +375,7 @@ namespace System.ComponentModel.Design
             remove
             {
                 DesignerActionUIService dapUISvc = (DesignerActionUIService)_serviceProvider.GetService(typeof(DesignerActionUIService));
-                if (dapUISvc != null)
+                if (dapUISvc is not null)
                 {
                     dapUISvc.DesignerActionUIStateChange -= value;
                 }

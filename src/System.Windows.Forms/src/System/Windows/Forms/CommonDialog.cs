@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -18,18 +16,15 @@ namespace System.Windows.Forms
     [ToolboxItemFilter("System.Windows.Forms")]
     public abstract class CommonDialog : Component
     {
-        private static readonly object s_helpRequestEvent = new object();
+        private static readonly object s_helpRequestEvent = new();
         private const int CDM_SETDEFAULTFOCUS = (int)User32.WM.USER + 0x51;
-        private static User32.WM s_helpMsg;
+        private static User32.WM s_helpMessage;
 
-        private IntPtr _defOwnerWndProc;
-
-        private IntPtr _hookedWndProc;
-
-        private IntPtr _defaultControlHwnd;
+        private nint _priorWindowProcedure;
+        private HWND _defaultControlHwnd;
 
         /// <summary>
-        ///  Initializes a new instance of the <see cref='CommonDialog'/> class.
+        ///  Initializes a new instance of the <see cref="CommonDialog"/> class.
         /// </summary>
         public CommonDialog()
         {
@@ -41,18 +36,21 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.ControlTagDescr))]
         [DefaultValue(null)]
         [TypeConverter(typeof(StringConverter))]
-        public object Tag { get; set; }
+        public object? Tag { get; set; }
 
         /// <summary>
         ///  Occurs when the user clicks the Help button on a common
         ///  dialog box.
         /// </summary>
         [SRDescription(nameof(SR.CommonDialogHelpRequested))]
-        public event EventHandler HelpRequest
+        public event EventHandler? HelpRequest
         {
             add => Events.AddHandler(s_helpRequestEvent, value);
             remove => Events.RemoveHandler(s_helpRequestEvent, value);
         }
+
+        internal LRESULT HookProcInternal(HWND hWnd, User32.WM msg, WPARAM wparam, LPARAM lparam)
+            => (LRESULT)HookProc(hWnd, (int)msg, (nint)wparam, lparam);
 
         /// <summary>
         ///  Defines the common dialog box hook procedure that is overridden to add specific
@@ -62,12 +60,12 @@ namespace System.Windows.Forms
         {
             if (msg == (int)User32.WM.INITDIALOG)
             {
-                MoveToScreenCenter(hWnd);
+                MoveToScreenCenter((HWND)hWnd);
 
                 // Under some circumstances, the dialog does not initially focus on any
                 // control. We fix that by explicitly setting focus ourselves.
-                _defaultControlHwnd = wparam;
-                User32.SetFocus(wparam);
+                _defaultControlHwnd = (HWND)wparam;
+                PInvoke.SetFocus((HWND)wparam);
             }
             else if (msg == (int)User32.WM.SETFOCUS)
             {
@@ -78,7 +76,7 @@ namespace System.Windows.Forms
                 // If the dialog box gets focus, bounce it to the default control.
                 // So we post a message back to ourselves to wait for the focus change
                 // then push it to the default control.
-                User32.SetFocus(new HandleRef(this, _defaultControlHwnd));
+                PInvoke.SetFocus(_defaultControlHwnd);
             }
 
             return IntPtr.Zero;
@@ -89,37 +87,37 @@ namespace System.Windows.Forms
         ///  common dialog hook procedure to center the dialog on the screen before it
         ///  is shown.
         /// </summary>
-        private protected static void MoveToScreenCenter(IntPtr hWnd)
+        private protected static void MoveToScreenCenter(HWND hwnd)
         {
-            var r = new RECT();
-            User32.GetWindowRect(hWnd, ref r);
+            PInvoke.GetWindowRect(hwnd, out var r);
             Rectangle screen = Screen.GetWorkingArea(Control.MousePosition);
             int x = screen.X + (screen.Width - r.right + r.left) / 2;
             int y = screen.Y + (screen.Height - r.bottom + r.top) / 3;
-            User32.SetWindowPos(
-                hWnd,
-                User32.HWND_TOP,
-                x,
-                y,
-                flags: User32.SWP.NOSIZE | User32.SWP.NOZORDER | User32.SWP.NOACTIVATE);
+            PInvoke.SetWindowPos(
+                hwnd,
+                HWND.HWND_TOP,
+                x, y, 0, 0,
+                SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
         }
 
         /// <summary>
-        ///  Raises the <see cref='HelpRequest'/> event.
+        ///  Raises the <see cref="HelpRequest"/> event.
         /// </summary>
         protected virtual void OnHelpRequest(EventArgs e)
         {
-            EventHandler handler = (EventHandler)Events[s_helpRequestEvent];
+            EventHandler? handler = (EventHandler?)Events[s_helpRequestEvent];
             handler?.Invoke(this, e);
         }
 
+        private LRESULT OwnerWndProcInternal(HWND hWnd, User32.WM msg, WPARAM wparam, LPARAM lparam)
+            => (LRESULT)OwnerWndProc(hWnd, (int)msg, (nint)wparam, lparam);
+
         /// <summary>
-        ///  Defines the owner window procedure that is overridden to add specific
-        ///  functionality to a common dialog box.
+        ///  Defines the owner window procedure that is overridden to add specific functionality to a common dialog box.
         /// </summary>
         protected virtual IntPtr OwnerWndProc(IntPtr hWnd, int msg, IntPtr wparam, IntPtr lparam)
         {
-            if (msg == (int)s_helpMsg)
+            if (msg == (int)s_helpMessage)
             {
                 if (NativeWindow.WndProcShouldBeDebuggable)
                 {
@@ -140,7 +138,7 @@ namespace System.Windows.Forms
                 return IntPtr.Zero;
             }
 
-            return User32.CallWindowProcW(_defOwnerWndProc, hWnd, (User32.WM)msg, wparam, lparam);
+            return User32.CallWindowProcW(_priorWindowProcedure, hWnd, (User32.WM)msg, wparam, lparam);
         }
 
         /// <summary>
@@ -162,7 +160,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Runs a common dialog box, parented to the given IWin32Window.
         /// </summary>
-        public DialogResult ShowDialog(IWin32Window owner)
+        public DialogResult ShowDialog(IWin32Window? owner)
         {
             if (!SystemInformation.UserInteractive)
             {
@@ -171,44 +169,46 @@ namespace System.Windows.Forms
 
             // This will be used if there is no owner or active window.
             // Declared here so it can be kept alive.
-            NativeWindow native = null;
+            NativeWindow? nativeWindow = null;
 
-            IntPtr hwndOwner = IntPtr.Zero;
+            HandleRef<HWND> ownerHwnd = default;
             DialogResult result = DialogResult.Cancel;
             try
             {
-                if (owner != null)
+                if (owner is not null)
                 {
-                    hwndOwner = Control.GetSafeHandle(owner);
+                    ownerHwnd = Control.GetSafeHandle(owner);
                 }
 
-                if (hwndOwner == IntPtr.Zero)
+                if (ownerHwnd.IsNull)
                 {
-                    hwndOwner = User32.GetActiveWindow();
+                    ownerHwnd = Control.GetHandleRef(PInvoke.GetActiveWindow());
                 }
 
-                if (hwndOwner == IntPtr.Zero)
+                if (ownerHwnd.IsNull)
                 {
                     // We will have to create our own Window
-                    native = new NativeWindow();
-                    native.CreateHandle(new CreateParams());
-                    hwndOwner = native.Handle;
+                    nativeWindow = new NativeWindow();
+                    nativeWindow.CreateHandle(new CreateParams());
+                    ownerHwnd = new(nativeWindow, nativeWindow.HWND);
                 }
 
-                if (s_helpMsg == User32.WM.NULL)
+                if (s_helpMessage == User32.WM.NULL)
                 {
-                    s_helpMsg = User32.RegisterWindowMessageW("commdlg_help");
+                    s_helpMessage = User32.RegisterWindowMessageW("commdlg_help");
                 }
 
-                User32.WNDPROCINT ownerProc = new User32.WNDPROCINT(OwnerWndProc);
-                _hookedWndProc = Marshal.GetFunctionPointerForDelegate(ownerProc);
-                Debug.Assert(IntPtr.Zero == _defOwnerWndProc, "The previous subclass wasn't properly cleaned up");
+                WNDPROC ownerWindowProcedure = OwnerWndProcInternal;
+                nint hookedWndProc = Marshal.GetFunctionPointerForDelegate(ownerWindowProcedure);
+                Debug.Assert(_priorWindowProcedure == 0, "The previous subclass wasn't properly cleaned up");
 
-                IntPtr userCookie = IntPtr.Zero;
+                nint userCookie = 0;
                 try
                 {
-                    // UnsafeNativeMethods.[Get|Set]WindowLong is smart enough to call SetWindowLongPtr on 64-bit OS
-                    _defOwnerWndProc = User32.SetWindowLong(new HandleRef(this, hwndOwner), User32.GWL.WNDPROC, ownerProc);
+                    _priorWindowProcedure = PInvoke.SetWindowLong(
+                        ownerHwnd,
+                        WINDOW_LONG_PTR_INDEX.GWL_WNDPROC,
+                        hookedWndProc);
 
                     if (Application.UseVisualStyles)
                     {
@@ -218,7 +218,7 @@ namespace System.Windows.Forms
                     Application.BeginModalMessageLoop();
                     try
                     {
-                        result = RunDialog(hwndOwner) ? DialogResult.OK : DialogResult.Cancel;
+                        result = RunDialog(ownerHwnd.Handle) ? DialogResult.OK : DialogResult.Cancel;
                     }
                     finally
                     {
@@ -227,25 +227,26 @@ namespace System.Windows.Forms
                 }
                 finally
                 {
-                    IntPtr currentSubClass = User32.GetWindowLong(new HandleRef(this, hwndOwner), User32.GWL.WNDPROC);
-                    if (_defOwnerWndProc != IntPtr.Zero || currentSubClass != _hookedWndProc)
+                    nint currentSubClass = PInvoke.GetWindowLong(ownerHwnd.Handle, WINDOW_LONG_PTR_INDEX.GWL_WNDPROC);
+                    if (_priorWindowProcedure != 0 || currentSubClass != hookedWndProc)
                     {
-                        User32.SetWindowLong(new HandleRef(this, hwndOwner), User32.GWL.WNDPROC, new HandleRef(this, _defOwnerWndProc));
+                        PInvoke.SetWindowLong(ownerHwnd.Handle, WINDOW_LONG_PTR_INDEX.GWL_WNDPROC, _priorWindowProcedure);
                     }
 
                     ThemingScope.Deactivate(userCookie);
 
-                    _defOwnerWndProc = IntPtr.Zero;
-                    _hookedWndProc = IntPtr.Zero;
-                    // Ensure that the subclass delegate will not be GC collected until
-                    // after it has been subclassed
-                    GC.KeepAlive(ownerProc);
+                    _priorWindowProcedure = 0;
+
+                    // Ensure that the subclass delegate will not be GC collected until after it has been subclassed.
+                    GC.KeepAlive(ownerWindowProcedure);
                 }
             }
             finally
             {
-                native?.DestroyHandle();
+                nativeWindow?.DestroyHandle();
             }
+
+            GC.KeepAlive(ownerHwnd.Wrapper);
 
             return result;
         }

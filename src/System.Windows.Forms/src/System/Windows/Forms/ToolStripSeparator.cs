@@ -2,9 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Windows.Forms.Design;
 
@@ -33,7 +32,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public override Image BackgroundImage
+        public override Image? BackgroundImage
         {
             get => base.BackgroundImage;
             set => base.BackgroundImage = value;
@@ -78,7 +77,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler EnabledChanged
+        public new event EventHandler? EnabledChanged
         {
             add => base.EnabledChanged += value;
             remove => base.EnabledChanged -= value;
@@ -95,7 +94,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler DisplayStyleChanged
+        public new event EventHandler? DisplayStyleChanged
         {
             add => base.DisplayStyleChanged += value;
             remove => base.DisplayStyleChanged -= value;
@@ -104,6 +103,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [AllowNull]
         public override Font Font
         {
             get => base.Font;
@@ -122,7 +122,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public override Image Image
+        public override Image? Image
         {
             get => base.Image;
             set => base.Image = value;
@@ -141,6 +141,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [AllowNull]
         public new string ImageKey
         {
             get => base.ImageKey;
@@ -169,15 +170,18 @@ namespace System.Windows.Forms
         {
             get
             {
-                ToolStrip parent = ParentInternal;
+                ToolStrip? parent = ParentInternal ?? Owner;
+
                 if (parent is null)
                 {
-                    parent = Owner;
+                    return true;
                 }
+
                 if (parent is ToolStripDropDownMenu dropDownMenu)
                 {
                     return false;
                 }
+
                 switch (parent.LayoutStyle)
                 {
                     case ToolStripLayoutStyle.VerticalStackWithOverflow:
@@ -194,7 +198,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public override string Text
+        public override string? Text
         {
             get => base.Text;
             set => base.Text = value;
@@ -202,7 +206,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler TextChanged
+        public new event EventHandler? TextChanged
         {
             add => base.TextChanged += value;
             remove => base.TextChanged -= value;
@@ -238,7 +242,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public new string ToolTipText
+        public new string? ToolTipText
         {
             get => base.ToolTipText;
             set => base.ToolTipText = value;
@@ -259,11 +263,8 @@ namespace System.Windows.Forms
 
         public override Size GetPreferredSize(Size constrainingSize)
         {
-            ToolStrip parent = ParentInternal;
-            if (parent is null)
-            {
-                parent = Owner;
-            }
+            ToolStrip? parent = ParentInternal ?? Owner;
+
             if (parent is null)
             {
                 return new Size(SeparatorThickness, SeparatorThickness);
@@ -276,10 +277,11 @@ namespace System.Windows.Forms
 
             if (parent.LayoutStyle != ToolStripLayoutStyle.HorizontalStackWithOverflow || parent.LayoutStyle != ToolStripLayoutStyle.VerticalStackWithOverflow)
             {
-                // we dont actually know what size to make it, so just keep it a stock size.
+                // we don't actually know what size to make it, so just keep it a stock size.
                 constrainingSize.Width = SeparatorHeight;
                 constrainingSize.Height = SeparatorHeight;
             }
+
             if (IsVertical)
             {
                 return new Size(SeparatorThickness, constrainingSize.Height);
@@ -290,23 +292,25 @@ namespace System.Windows.Forms
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            if (Owner != null && ParentInternal != null)
+            if (Owner is not null && ParentInternal is not null)
             {
-                Renderer.DrawSeparator(new ToolStripSeparatorRenderEventArgs(e.Graphics, this, IsVertical));
+                Renderer!.DrawSeparator(new ToolStripSeparatorRenderEventArgs(e.Graphics, this, IsVertical));
             }
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void OnFontChanged(EventArgs e)
         {
-            // Perf: dont call base, we dont care if the font changes
+            // Perf: don't call base, we don't care if the font changes
+#pragma warning disable CA2252 // Suppress 'Opt in to preview features' (https://aka.ms/dotnet-warnings/preview-features)
             RaiseEvent(s_fontChangedEvent, e);
+#pragma warning restore CA2252
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         internal override bool ShouldSerializeForeColor() => ForeColor != SystemColors.ControlDark;
 
-        internal protected override void SetBounds(Rectangle rect)
+        protected internal override void SetBounds(Rectangle rect)
         {
             if (Owner is ToolStripDropDownMenu dropDownMenu)
             {
@@ -316,6 +320,7 @@ namespace System.Windows.Forms
                 rect.X = 2;
                 rect.Width = dropDownMenu.Width - 4;
             }
+
             base.SetBounds(rect);
         }
     }

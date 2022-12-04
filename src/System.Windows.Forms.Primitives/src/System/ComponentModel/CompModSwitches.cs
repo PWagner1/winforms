@@ -46,10 +46,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (activeX is null)
-                {
-                    activeX = new TraceSwitch("ActiveX", "Debug ActiveX sourcing");
-                }
+                activeX ??= new TraceSwitch("ActiveX", "Debug ActiveX sourcing");
+
                 return activeX;
             }
         }
@@ -58,10 +56,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dataCursor is null)
-                {
-                    dataCursor = new TraceSwitch("Microsoft.WFC.Data.DataCursor", "DataCursor");
-                }
+                dataCursor ??= new TraceSwitch("Microsoft.WFC.Data.DataCursor", "DataCursor");
+
                 return dataCursor;
             }
         }
@@ -70,10 +66,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dataGridCursor is null)
-                {
-                    dataGridCursor = new TraceSwitch("DataGridCursor", "DataGrid cursor tracing");
-                }
+                dataGridCursor ??= new TraceSwitch("DataGridCursor", "DataGrid cursor tracing");
+
                 return dataGridCursor;
             }
         }
@@ -82,10 +76,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dataGridEditing is null)
-                {
-                    dataGridEditing = new TraceSwitch("DataGridEditing", "DataGrid edit related tracing");
-                }
+                dataGridEditing ??= new TraceSwitch("DataGridEditing", "DataGrid edit related tracing");
+
                 return dataGridEditing;
             }
         }
@@ -94,10 +86,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dataGridKeys is null)
-                {
-                    dataGridKeys = new TraceSwitch("DataGridKeys", "DataGrid keystroke management tracing");
-                }
+                dataGridKeys ??= new TraceSwitch("DataGridKeys", "DataGrid keystroke management tracing");
+
                 return dataGridKeys;
             }
         }
@@ -106,10 +96,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dataGridLayout is null)
-                {
-                    dataGridLayout = new TraceSwitch("DataGridLayout", "DataGrid layout tracing");
-                }
+                dataGridLayout ??= new TraceSwitch("DataGridLayout", "DataGrid layout tracing");
+
                 return dataGridLayout;
             }
         }
@@ -118,10 +106,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dataGridPainting is null)
-                {
-                    dataGridPainting = new TraceSwitch("DataGridPainting", "DataGrid Painting related tracing");
-                }
+                dataGridPainting ??= new TraceSwitch("DataGridPainting", "DataGrid Painting related tracing");
+
                 return dataGridPainting;
             }
         }
@@ -130,10 +116,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dataGridParents is null)
-                {
-                    dataGridParents = new TraceSwitch("DataGridParents", "DataGrid parent rows");
-                }
+                dataGridParents ??= new TraceSwitch("DataGridParents", "DataGrid parent rows");
+
                 return dataGridParents;
             }
         }
@@ -142,10 +126,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dataGridScrolling is null)
-                {
-                    dataGridScrolling = new TraceSwitch("DataGridScrolling", "DataGrid scrolling");
-                }
+                dataGridScrolling ??= new TraceSwitch("DataGridScrolling", "DataGrid scrolling");
+
                 return dataGridScrolling;
             }
         }
@@ -154,10 +136,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dataGridSelection is null)
-                {
-                    dataGridSelection = new TraceSwitch("DataGridSelection", "DataGrid selection management tracing");
-                }
+                dataGridSelection ??= new TraceSwitch("DataGridSelection", "DataGrid selection management tracing");
+
                 return dataGridSelection;
             }
         }
@@ -166,10 +146,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dataObject is null)
-                {
-                    dataObject = new TraceSwitch("DataObject", "Enable tracing for the DataObject class.");
-                }
+                dataObject ??= new TraceSwitch("DataObject", "Enable tracing for the DataObject class.");
+
                 return dataObject;
             }
         }
@@ -178,10 +156,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dataView is null)
-                {
-                    dataView = new TraceSwitch("DataView", "DataView");
-                }
+                dataView ??= new TraceSwitch("DataView", "DataView");
+
                 return dataView;
             }
         }
@@ -190,10 +166,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (debugGridView is null)
-                {
-                    debugGridView = new TraceSwitch("PSDEBUGGRIDVIEW", "Debug PropertyGridView");
-                }
+                debugGridView ??= new TraceSwitch("PSDEBUGGRIDVIEW", "Debug PropertyGridView");
+
                 return debugGridView;
             }
         }
@@ -202,10 +176,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dgCaptionPaint is null)
-                {
-                    dgCaptionPaint = new TraceSwitch("DGCaptionPaint", "DataGridCaption");
-                }
+                dgCaptionPaint ??= new TraceSwitch("DGCaptionPaint", "DataGridCaption");
+
                 return dgCaptionPaint;
             }
         }
@@ -214,10 +186,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dgEditColumnEditing is null)
-                {
-                    dgEditColumnEditing = new TraceSwitch("DGEditColumnEditing", "Editing related tracing");
-                }
+                dgEditColumnEditing ??= new TraceSwitch("DGEditColumnEditing", "Editing related tracing");
+
                 return dgEditColumnEditing;
             }
         }
@@ -226,10 +196,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dgRelationShpRowLayout is null)
-                {
-                    dgRelationShpRowLayout = new TraceSwitch("DGRelationShpRowLayout", "Relationship row layout");
-                }
+                dgRelationShpRowLayout ??= new TraceSwitch("DGRelationShpRowLayout", "Relationship row layout");
+
                 return dgRelationShpRowLayout;
             }
         }
@@ -238,10 +206,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dgRelationShpRowPaint is null)
-                {
-                    dgRelationShpRowPaint = new TraceSwitch("DGRelationShpRowPaint", "Relationship row painting");
-                }
+                dgRelationShpRowPaint ??= new TraceSwitch("DGRelationShpRowPaint", "Relationship row painting");
+
                 return dgRelationShpRowPaint;
             }
         }
@@ -250,10 +216,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dgRowPaint is null)
-                {
-                    dgRowPaint = new TraceSwitch("DGRowPaint", "DataGrid Simple Row painting stuff");
-                }
+                dgRowPaint ??= new TraceSwitch("DGRowPaint", "DataGrid Simple Row painting stuff");
+
                 return dgRowPaint;
             }
         }
@@ -262,10 +226,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (dragDrop is null)
-                {
-                    dragDrop = new TraceSwitch("DragDrop", "Debug OLEDragDrop support in Controls");
-                }
+                dragDrop ??= new TraceSwitch("DragDrop", "Debug OLEDragDrop support in Controls");
+
                 return dragDrop;
             }
         }
@@ -274,10 +236,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (flowLayout is null)
-                {
-                    flowLayout = new TraceSwitch("FlowLayout", "Debug flow layout");
-                }
+                flowLayout ??= new TraceSwitch("FlowLayout", "Debug flow layout");
+
                 return flowLayout;
             }
         }
@@ -286,10 +246,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (imeMode is null)
-                {
-                    imeMode = new TraceSwitch("ImeMode", "Debug IME Mode");
-                }
+                imeMode ??= new TraceSwitch("ImeMode", "Debug IME Mode");
+
                 return imeMode;
             }
         }
@@ -298,10 +256,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (layoutPerformance is null)
-                {
-                    layoutPerformance = new TraceSwitch("LayoutPerformance", "Tracks layout events which impact performance.");
-                }
+                layoutPerformance ??= new TraceSwitch("LayoutPerformance", "Tracks layout events which impact performance.");
+
                 return layoutPerformance;
             }
         }
@@ -310,10 +266,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (layoutSuspendResume is null)
-                {
-                    layoutSuspendResume = new TraceSwitch("LayoutSuspendResume", "Tracks SuspendLayout/ResumeLayout.");
-                }
+                layoutSuspendResume ??= new TraceSwitch("LayoutSuspendResume", "Tracks SuspendLayout/ResumeLayout.");
+
                 return layoutSuspendResume;
             }
         }
@@ -322,10 +276,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (lifetimeTracing is null)
-                {
-                    lifetimeTracing = new BooleanSwitch("LifetimeTracing", "Track lifetime events. This will cause objects to track the stack at creation and dispose.");
-                }
+                lifetimeTracing ??= new BooleanSwitch("LifetimeTracing", "Track lifetime events. This will cause objects to track the stack at creation and dispose.");
+
                 return lifetimeTracing;
             }
         }
@@ -334,10 +286,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (msaa is null)
-                {
-                    msaa = new TraceSwitch("MSAA", "Debug Microsoft Active Accessibility");
-                }
+                msaa ??= new TraceSwitch("MSAA", "Debug Microsoft Active Accessibility");
+
                 return msaa;
             }
         }
@@ -346,10 +296,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (msoComponentManager is null)
-                {
-                    msoComponentManager = new TraceSwitch("MSOComponentManager", "Debug MSO Component Manager support");
-                }
+                msoComponentManager ??= new TraceSwitch("MSOComponentManager", "Debug MSO Component Manager support");
+
                 return msoComponentManager;
             }
         }
@@ -358,10 +306,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (richLayout is null)
-                {
-                    richLayout = new TraceSwitch("RichLayout", "Debug layout in RichControls");
-                }
+                richLayout ??= new TraceSwitch("RichLayout", "Debug layout in RichControls");
+
                 return richLayout;
             }
         }
@@ -370,10 +316,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (setBounds is null)
-                {
-                    setBounds = new TraceSwitch("SetBounds", "Trace changes to control size/position.");
-                }
+                setBounds ??= new TraceSwitch("SetBounds", "Trace changes to control size/position.");
+
                 return setBounds;
             }
         }
@@ -382,10 +326,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (s_handleLeak is null)
-                {
-                    s_handleLeak = new TraceSwitch("HANDLELEAK", "HandleCollector: Track Win32 Handle Leaks");
-                }
+                s_handleLeak ??= new TraceSwitch("HANDLELEAK", "HandleCollector: Track Win32 Handle Leaks");
+
                 return s_handleLeak;
             }
         }
@@ -394,10 +336,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (s_traceCollect is null)
-                {
-                    s_traceCollect = new BooleanSwitch("TRACECOLLECT", "HandleCollector: Trace HandleCollector operations");
-                }
+                s_traceCollect ??= new BooleanSwitch("TRACECOLLECT", "HandleCollector: Trace HandleCollector operations");
+
                 return s_traceCollect;
             }
         }
@@ -406,10 +346,8 @@ namespace System.ComponentModel
         {
             get
             {
-                if (s_commonDesignerServices is null)
-                {
-                    s_commonDesignerServices = new BooleanSwitch("CommonDesignerServices", "Assert if any common designer service is not found.");
-                }
+                s_commonDesignerServices ??= new BooleanSwitch("CommonDesignerServices", "Assert if any common designer service is not found.");
+
                 return s_commonDesignerServices;
             }
         }

@@ -2,14 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Windows.Forms.TestUtilities;
 using Moq;
-using WinForms.Common.Tests;
 using Xunit;
 using static Interop;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms.Tests
 {
@@ -65,7 +63,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_Ctor_String(string imageKey, string expectedImageKey)
         {
             using var header = new SubColumnHeader(imageKey);
@@ -224,7 +222,7 @@ namespace System.Windows.Forms.Tests
             Assert.NotEqual(IntPtr.Zero, listView.Handle);
             listView.Columns[columnIndex].DisplayIndex = value;
             var result = new int[3];
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WM)LVM.GETCOLUMNORDERARRAY, (IntPtr)3, ref result[0]));
+            Assert.Equal(1, (int)PInvoke.SendMessage(listView, (User32.WM)PInvoke.LVM_GETCOLUMNORDERARRAY, 3, ref result[0]));
             Assert.Equal(expectedDisplayIndices, result);
         }
 
@@ -448,9 +446,9 @@ namespace System.Windows.Forms.Tests
             header.ImageIndex = value;
             var column = new ComCtl32.LVCOLUMNW
             {
-                mask = ComCtl32.LVCF.IMAGE
+                mask = LVCOLUMNW_MASK.LVCF_IMAGE
             };
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WM)LVM.GETCOLUMNW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(listView, (User32.WM)PInvoke.LVM_GETCOLUMNW, 0, ref column));
             Assert.Equal(0, column.iImage);
         }
 
@@ -477,10 +475,10 @@ namespace System.Windows.Forms.Tests
             header.ImageIndex = value;
             var column = new ComCtl32.LVCOLUMNW
             {
-                mask = ComCtl32.LVCF.IMAGE | ComCtl32.LVCF.FMT,
-                fmt = ComCtl32.LVCFMT.IMAGE
+                mask = LVCOLUMNW_MASK.LVCF_IMAGE | LVCOLUMNW_MASK.LVCF_FMT,
+                fmt = LVCOLUMNW_FORMAT.LVCFMT_IMAGE
             };
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WM)LVM.GETCOLUMNW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(listView, (User32.WM)PInvoke.LVM_GETCOLUMNW, 0, ref column));
             Assert.Equal(expected, column.iImage);
         }
 
@@ -505,7 +503,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_ImageKey_SetWithoutListView_GetReturnsExpected(string value, string expected)
         {
             using var header = new ColumnHeader
@@ -542,7 +540,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_ImageKey_SetWithListView_GetReturnsExpected(string value, string expected)
         {
             using var listView = new ListView();
@@ -562,7 +560,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_ImageKey_SetWithListViewWithEmptyList_GetReturnsExpected(string value, string expected)
         {
             using var imageList = new ImageList();
@@ -619,7 +617,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_ImageKey_SetWithListViewWithHandle_GetReturnsExpected(string value, string expected)
         {
             using var listView = new ListView();
@@ -668,9 +666,9 @@ namespace System.Windows.Forms.Tests
             header.ImageKey = value;
             var column = new ComCtl32.LVCOLUMNW
             {
-                mask = ComCtl32.LVCF.IMAGE
+                mask = LVCOLUMNW_MASK.LVCF_IMAGE
             };
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WM)LVM.GETCOLUMNW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(listView, (User32.WM)PInvoke.LVM_GETCOLUMNW, 0, ref column));
             Assert.Equal(0, column.iImage);
         }
 
@@ -699,10 +697,10 @@ namespace System.Windows.Forms.Tests
             header.ImageKey = value;
             var column = new ComCtl32.LVCOLUMNW
             {
-                mask = ComCtl32.LVCF.IMAGE | ComCtl32.LVCF.FMT,
-                fmt = ComCtl32.LVCFMT.IMAGE
+                mask = LVCOLUMNW_MASK.LVCF_IMAGE | LVCOLUMNW_MASK.LVCF_FMT,
+                fmt = LVCOLUMNW_FORMAT.LVCFMT_IMAGE
             };
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WM)LVM.GETCOLUMNW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(listView, (User32.WM)PInvoke.LVM_GETCOLUMNW, 0, ref column));
             Assert.Equal(expected, column.iImage);
         }
 
@@ -759,7 +757,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_Name_GetWithSite_ReturnsExpected(string name, string expected)
         {
             var mockSite = new Mock<ISite>(MockBehavior.Strict);
@@ -777,7 +775,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_Name_SetWithoutListView_GetReturnsExpected(string value, string expected)
         {
             using var header = new ColumnHeader
@@ -792,7 +790,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_Name_SetWithListView_GetReturnsExpected(string value, string expected)
         {
             using var listView = new ListView();
@@ -810,7 +808,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_Name_SetWithListViewWithHandle_GetReturnsExpected(string value, string expected)
         {
             using var listView = new ListView();
@@ -841,7 +839,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_Name_SetWithSite_GetReturnsExpected(string value, string expected)
         {
             using var header = new ColumnHeader
@@ -939,7 +937,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void ColumnHeader_Tag_Set_GetReturnsExpected(object value)
         {
             using var header = new ColumnHeader
@@ -954,7 +952,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_Text_SetWithoutListView_GetReturnsExpected(string value, string expected)
         {
             using var header = new ColumnHeader
@@ -969,7 +967,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_Text_SetWithListView_GetReturnsExpected(string value, string expected)
         {
             using var listView = new ListView();
@@ -985,7 +983,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ColumnHeader_Text_SetWithListViewWithHandle_GetReturnsExpected(string value, string expected)
         {
             using var listView = new ListView();
@@ -1002,7 +1000,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public unsafe void ColumnHeader_Text_GetColumn_Success(string value, string expected)
         {
             using var listView = new ListView();
@@ -1014,11 +1012,11 @@ namespace System.Windows.Forms.Tests
             char* buffer = stackalloc char[256];
             var column = new ComCtl32.LVCOLUMNW
             {
-                mask = ComCtl32.LVCF.TEXT,
+                mask = LVCOLUMNW_MASK.LVCF_TEXT,
                 pszText = buffer,
                 cchTextMax = 256
             };
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WM)LVM.GETCOLUMNW, (IntPtr)0, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(listView, (User32.WM)PInvoke.LVM_GETCOLUMNW, 0, ref column));
             Assert.Equal(expected, new string(column.pszText));
         }
 
@@ -1109,7 +1107,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(HorizontalAlignment))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(HorizontalAlignment))]
         public void ColumnHeader_TextAlign_SetWithoutListView_GetReturnsExpected(HorizontalAlignment value)
         {
             using var header = new ColumnHeader
@@ -1205,14 +1203,14 @@ namespace System.Windows.Forms.Tests
             listView.Columns[columnIndex].TextAlign = value;
             var column = new ComCtl32.LVCOLUMNW
             {
-                mask = ComCtl32.LVCF.FMT
+                mask = LVCOLUMNW_MASK.LVCF_FMT
             };
-            Assert.Equal((IntPtr)1, User32.SendMessageW(listView.Handle, (User32.WM)LVM.GETCOLUMNW, (IntPtr)columnIndex, ref column));
+            Assert.Equal(1, (int)PInvoke.SendMessage(listView, (User32.WM)PInvoke.LVM_GETCOLUMNW, (WPARAM)columnIndex, ref column));
             Assert.Equal(expected, (int)column.fmt);
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(HorizontalAlignment))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(HorizontalAlignment))]
         public void ColumnHeader_TextAlign_SetInvalid_ThrowsInvalidEnumArgumentException(HorizontalAlignment value)
         {
             using var header = new ColumnHeader();
@@ -1365,7 +1363,7 @@ namespace System.Windows.Forms.Tests
 
             Assert.NotEqual(IntPtr.Zero, listView.Handle);
             header.Width = value;
-            Assert.Equal((IntPtr)value, User32.SendMessageW(listView.Handle, (User32.WM)LVM.GETCOLUMNWIDTH, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(value, (int)PInvoke.SendMessage(listView, (User32.WM)PInvoke.LVM_GETCOLUMNWIDTH));
         }
 
         [WinFormsTheory]
@@ -1383,11 +1381,11 @@ namespace System.Windows.Forms.Tests
 
             Assert.NotEqual(IntPtr.Zero, listView.Handle);
             header.Width = value;
-            Assert.True(User32.SendMessageW(listView.Handle, (User32.WM)LVM.GETCOLUMNWIDTH, IntPtr.Zero, IntPtr.Zero).ToInt32() > 0);
+            Assert.True(PInvoke.SendMessage(listView, (User32.WM)PInvoke.LVM_GETCOLUMNWIDTH) > 0);
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ColumnHeaderAutoResizeStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ColumnHeaderAutoResizeStyle))]
         public void ColumnHeader_AutoSize_WithoutListView_Nop(ColumnHeaderAutoResizeStyle headerAutoResize)
         {
             using var header = new ColumnHeader();
@@ -1400,7 +1398,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ColumnHeaderAutoResizeStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ColumnHeaderAutoResizeStyle))]
         public void ColumnHeader_AutoSize_WithListView_Success(ColumnHeaderAutoResizeStyle headerAutoResize)
         {
             using var listView = new ListView();
@@ -1418,7 +1416,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ColumnHeaderAutoResizeStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ColumnHeaderAutoResizeStyle))]
         public void ColumnHeader_AutoSize_WithListViewWithHandle_Success(ColumnHeaderAutoResizeStyle headerAutoResize)
         {
             using var listView = new ListView();
@@ -1449,7 +1447,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ColumnHeaderAutoResizeStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ColumnHeaderAutoResizeStyle))]
         public void ColumnHeader_AutoSize_InvalidHeaderAutoResize_ThrowsInvalidEnumArgumentException(ColumnHeaderAutoResizeStyle headerAutoResize)
         {
             using var header = new ColumnHeader();
@@ -1600,7 +1598,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void ColumnHeader_ToString_InvokeWithText_ReturnsExpected(string value)
         {
             using var header = new ColumnHeader
@@ -1616,7 +1614,7 @@ namespace System.Windows.Forms.Tests
 
             protected override void WndProc(ref Message m)
             {
-                if (MakeInvalid && m.Msg == (int)LVM.SETCOLUMNW)
+                if (MakeInvalid && m.Msg == (int)PInvoke.LVM_SETCOLUMNW)
                 {
                     m.Result = IntPtr.Zero;
                 }

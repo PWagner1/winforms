@@ -24,10 +24,7 @@ namespace System.ComponentModel.Design.Serialization
         {
             get
             {
-                if (s_default is null)
-                {
-                    s_default = new CodeDomSerializer();
-                }
+                s_default ??= new CodeDomSerializer();
 
                 return s_default;
             }
@@ -50,21 +47,20 @@ namespace System.ComponentModel.Design.Serialization
             {
                 name = fieldReferenceEx.FieldName;
             }
+
             return name;
         }
 
         /// <summary>
-        ///  Deserilizes the given CodeDom object into a real object.  This
+        ///  Deserializes the given CodeDom object into a real object.  This
         ///  will use the serialization manager to create objects and resolve
         ///  data types.  The root of the object graph is returned.
         /// </summary>
         public virtual object Deserialize(IDesignerSerializationManager manager, object codeObject)
         {
             object instance = null;
-            if (manager is null || codeObject is null)
-            {
-                throw new ArgumentNullException(manager is null ? "manager" : "codeObject");
-            }
+            ArgumentNullException.ThrowIfNull(manager);
+            ArgumentNullException.ThrowIfNull(codeObject);
 
             using (TraceScope("CodeDomSerializer::Deserialize"))
             {
@@ -83,7 +79,7 @@ namespace System.ComponentModel.Design.Serialization
                             if (instance is null)
                             {
                                 instance = DeserializeStatementToInstance(manager, element);
-                                if (instance != null)
+                                if (instance is not null)
                                 {
                                     PropertyDescriptorCollection props = TypeDescriptor.GetProperties(instance, new Attribute[] { BrowsableAttribute.Yes });
                                     foreach (PropertyDescriptor prop in props)
@@ -108,12 +104,13 @@ namespace System.ComponentModel.Design.Serialization
                         if (!(codeObject is CodeStatement statement))
                         {
                             Debug.Fail("CodeDomSerializer::Deserialize requires a CodeExpression, CodeStatement or CodeStatementCollection to parse");
-                            string supportedTypes = string.Format(CultureInfo.CurrentCulture, "{0}, {1}, {2}", typeof(CodeExpression).Name, typeof(CodeStatement).Name, typeof(CodeStatementCollection).Name);
+                            string supportedTypes = string.Format(CultureInfo.CurrentCulture, "{0}, {1}, {2}", nameof(CodeExpression), nameof(CodeStatement), nameof(CodeStatementCollection));
                             throw new ArgumentException(string.Format(SR.SerializerBadElementTypes, codeObject.GetType().Name, supportedTypes));
                         }
                     }
                 }
             }
+
             return instance;
         }
 
@@ -146,7 +143,7 @@ namespace System.ComponentModel.Design.Serialization
                     }
                 }
             }
-            else if (statement is CodeVariableDeclarationStatement varDecl && varDecl.InitExpression != null)
+            else if (statement is CodeVariableDeclarationStatement varDecl && varDecl.InitExpression is not null)
             {
                 Trace("Initializing variable declaration for variable {0}", varDecl.Name);
                 instance = DeserializeExpression(manager, varDecl.Name, varDecl.InitExpression);
@@ -156,6 +153,7 @@ namespace System.ComponentModel.Design.Serialization
                 // This statement isn't one that will return a named object.  Deserialize it normally.
                 DeserializeStatement(manager, statement);
             }
+
             return instance;
         }
 
@@ -165,14 +163,8 @@ namespace System.ComponentModel.Design.Serialization
         public virtual object Serialize(IDesignerSerializationManager manager, object value)
         {
             object result = null;
-            if (manager is null)
-            {
-                throw new ArgumentNullException(nameof(manager));
-            }
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
+            ArgumentNullException.ThrowIfNull(manager);
+            ArgumentNullException.ThrowIfNull(value);
 
             using (TraceScope("CodeDomSerializer::" + nameof(Serialize)))
             {
@@ -194,7 +186,7 @@ namespace System.ComponentModel.Design.Serialization
                     }
 
                     // We need to find out if SerializeCreationExpression returned a preset expression.
-                    if (manager.Context[typeof(ExpressionContext)] is ExpressionContext cxt && object.ReferenceEquals(cxt.PresetValue, value))
+                    if (manager.Context[typeof(ExpressionContext)] is ExpressionContext ctx && ReferenceEquals(ctx.PresetValue, value))
                     {
                         isPreset = true;
                     }
@@ -205,7 +197,7 @@ namespace System.ComponentModel.Design.Serialization
 
                     TraceIf(expression is null, "Unable to create object; aborting.");
                     // Short circuit common cases
-                    if (expression != null)
+                    if (expression is not null)
                     {
                         if (isComplete)
                         {
@@ -234,6 +226,7 @@ namespace System.ComponentModel.Design.Serialization
                                 variableReference = new CodeVariableReferenceExpression(varName);
                                 SetExpression(manager, value, variableReference);
                             }
+
                             // Finally, we need to walk properties and events for this object
                             SerializePropertiesToResources(manager, statements, value, _designTimeFilter);
                             SerializeProperties(manager, statements, value, _runTimeFilter);
@@ -243,6 +236,7 @@ namespace System.ComponentModel.Design.Serialization
                     }
                 }
             }
+
             return result;
         }
 
@@ -263,6 +257,7 @@ namespace System.ComponentModel.Design.Serialization
                 Debug.Assert(manager.Context.Current == abs, "Serializer added a context it didn't remove.");
                 manager.Context.Pop();
             }
+
             return data;
         }
 
@@ -271,20 +266,9 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         public virtual CodeStatementCollection SerializeMember(IDesignerSerializationManager manager, object owningObject, MemberDescriptor member)
         {
-            if (manager is null)
-            {
-                throw new ArgumentNullException(nameof(manager));
-            }
-
-            if (owningObject is null)
-            {
-                throw new ArgumentNullException(nameof(owningObject));
-            }
-
-            if (member is null)
-            {
-                throw new ArgumentNullException(nameof(member));
-            }
+            ArgumentNullException.ThrowIfNull(manager);
+            ArgumentNullException.ThrowIfNull(owningObject);
+            ArgumentNullException.ThrowIfNull(member);
 
             CodeStatementCollection statements = new CodeStatementCollection();
             // See if we have an existing expression for this member.  If not, fabricate one
@@ -311,6 +295,7 @@ namespace System.ComponentModel.Design.Serialization
                     throw new NotSupportedException(string.Format(SR.SerializerMemberTypeNotSerializable, member.GetType().FullName));
                 }
             }
+
             return statements;
         }
 
@@ -319,20 +304,9 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         public virtual CodeStatementCollection SerializeMemberAbsolute(IDesignerSerializationManager manager, object owningObject, MemberDescriptor member)
         {
-            if (manager is null)
-            {
-                throw new ArgumentNullException(nameof(manager));
-            }
-
-            if (owningObject is null)
-            {
-                throw new ArgumentNullException(nameof(owningObject));
-            }
-
-            if (member is null)
-            {
-                throw new ArgumentNullException(nameof(member));
-            }
+            ArgumentNullException.ThrowIfNull(manager);
+            ArgumentNullException.ThrowIfNull(owningObject);
+            ArgumentNullException.ThrowIfNull(member);
 
             CodeStatementCollection statements;
             SerializeAbsoluteContext abs = new SerializeAbsoluteContext(member);
@@ -347,6 +321,7 @@ namespace System.ComponentModel.Design.Serialization
                 Debug.Assert(manager.Context.Current == abs, "Serializer added a context it didn't remove.");
                 manager.Context.Pop();
             }
+
             return statements;
         }
 
@@ -373,19 +348,19 @@ namespace System.ComponentModel.Design.Serialization
                     if (name is null)
                     {
                         IReferenceService referenceService = (IReferenceService)manager.GetService(typeof(IReferenceService));
-                        if (referenceService != null)
+                        if (referenceService is not null)
                         {
                             name = referenceService.GetName(value);
-                            referenceName = name != null;
+                            referenceName = name is not null;
                         }
                     }
 
-                    if (name != null)
+                    if (name is not null)
                     {
                         Trace("Object is reference ({0}) Creating reference expression", name);
                         // Check to see if this is a reference to the root component.  If it is, then use "this".
                         RootContext root = (RootContext)manager.Context[typeof(RootContext)];
-                        if (root != null && root.Value == value)
+                        if (root is not null && root.Value == value)
                         {
                             expression = root.Expression;
                         }
@@ -402,8 +377,10 @@ namespace System.ComponentModel.Design.Serialization
                     }
                 }
             }
+
             return expression;
         }
+
         private void ResetBrowsableProperties(object instance)
         {
             if (instance is null)

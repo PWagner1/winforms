@@ -2,14 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Windows.Forms.Metafiles;
+using System.Windows.Forms.TestUtilities;
 using Moq;
-using WinForms.Common.Tests;
 using Xunit;
-using static Interop;
 
 namespace System.Windows.Forms.Tests
 {
@@ -517,7 +517,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
         public void TextRenderer_MeasureText_NullOrEmptyString_ReturnsEmpty(string text)
         {
             using var image = new Bitmap(10, 10);
@@ -587,7 +587,7 @@ namespace System.Windows.Forms.Tests
                     bounds: null,                                   // Don't care about the bounds for this test
                     State.FontFace(SystemFonts.DefaultFont.Name),
                     State.TextColor(Color.Blue),
-                    State.BackgroundMode(Gdi32.BKMODE.TRANSPARENT)));
+                    State.BackgroundMode(BACKGROUND_MODE.TRANSPARENT)));
         }
 
         public static TheoryData<Func<IDeviceContext, Action>> TextRenderer_DrawText_DefaultBackground_RendersTransparent_TestData
@@ -680,7 +680,7 @@ namespace System.Windows.Forms.Tests
                 new HdcDeviceContextAdapter(emf),
                 "Sparkling Cider",
                 SystemFonts.DefaultFont,
-                (Point) default,
+                (Point)default,
                 Color.Red,
                 flags);
 
@@ -746,6 +746,96 @@ namespace System.Windows.Forms.Tests
                 { TextFormatFlags.GlyphOverhangPadding, new Size(78, 13) },
                 { TextFormatFlags.LeftAndRightPadding, new Size(82, 13) },
                 { TextFormatFlags.NoPadding, new Size(71, 13) }
+            };
+
+        [WinFormsTheory]
+        [MemberData(nameof(TextRenderer_DrawText_ApplyState_TestData))]
+        public void TextRenderer_DrawText_ApplyState(TextFormatFlags flags, Rectangle expectedBounds)
+        {
+            using var hdc = new PInvoke.CreateDcScope(default);
+            DeviceContextState state = new DeviceContextState(hdc);
+
+            using MemoryStream stream = new MemoryStream(1024);
+            using (Metafile metafileRecorder = new Metafile(stream, hdc.HDC, EmfType.EmfOnly))
+            using (Graphics graphics = Graphics.FromImage(metafileRecorder))
+            {
+                using Matrix matrix = new Matrix();
+                matrix.Translate(5, 10);
+                graphics.Transform = matrix;
+                using Region region = new(new Rectangle(1, 2, 6, 8));
+                graphics.Clip = region;
+
+                // We have modified graphics, but several tests don't set all the flags
+                // TextRenderer asserts for to ensure integrity.
+                using NoAssertContext noAssertContext = new();
+
+                TextRenderer.DrawText(
+                    graphics,
+                    "Landshark",
+                    SystemFonts.DefaultFont,
+                    new Rectangle(0, 0, int.MaxValue, int.MaxValue),
+                    Color.Red,
+                    flags);
+            }
+
+            // Need to queue the stream back to the beginning for the reader
+            stream.Position = 0;
+            using Metafile metafile = new Metafile(stream);
+            using var emf = new EmfScope((HENHMETAFILE)metafile.GetHenhmetafile());
+
+            emf.Validate(
+                state,
+                Validate.TextOut(
+                    "Landshark",
+                    expectedBounds,
+                    State.FontFace(SystemFonts.DefaultFont.Name),
+                    State.TextColor(Color.Red)));
+        }
+
+        public static TheoryData<TextFormatFlags, Rectangle> TextRenderer_DrawText_ApplyState_TestData
+            => new()
+            {
+                { TextFormatFlags.Default, new Rectangle(3, 0, 49, 12) },
+                { TextFormatFlags.PreserveGraphicsTranslateTransform, new Rectangle(8, 10, 49, 12) },
+                { TextFormatFlags.PreserveGraphicsClipping, new Rectangle(6, 12, 5, 0) },
+                { TextFormatFlags.PreserveGraphicsClipping | TextFormatFlags.PreserveGraphicsTranslateTransform, new Rectangle(8, 12, 3, 7) },
+            };
+
+        [WinFormsTheory]
+        [MemberData(nameof(TextRenderer_MeasureText_ApplyState_TestData))]
+        public void TextRenderer_MeasureText_ApplyState(TextFormatFlags flags, Size expectedSize)
+        {
+            using var image = new Bitmap(200, 50);
+            using Graphics graphics = Graphics.FromImage(image);
+            using Matrix matrix = new Matrix();
+            matrix.Translate(5, 10);
+            graphics.Transform = matrix;
+            using Region region = new(new Rectangle(1, 2, 6, 8));
+            graphics.Clip = region;
+
+            // We have modified graphics, but several tests don't set all the flags
+            // TextRenderer asserts for to ensure integrity.
+            using NoAssertContext noAssertContext = new();
+
+            Size size = TextRenderer.MeasureText(
+                graphics,
+                "Landshark",
+                SystemFonts.DefaultFont,
+                new Size(int.MaxValue, int.MaxValue),
+                flags);
+
+            Assert.Equal(expectedSize, size);
+        }
+
+        public static TheoryData<TextFormatFlags, Size> TextRenderer_MeasureText_ApplyState_TestData
+            => new TheoryData<TextFormatFlags, Size>
+            {
+                // State application doesn't practically impact size measurements, but we still want to have a regression test
+                // here in case something sneaks in.
+                { TextFormatFlags.Default, new Size(57, 13) },
+                { TextFormatFlags.PreserveGraphicsTranslateTransform, new Size(57, 13) },
+                { TextFormatFlags.PreserveGraphicsClipping, new Size(57, 13) },
+                { TextFormatFlags.PreserveGraphicsClipping | TextFormatFlags.PreserveGraphicsTranslateTransform, new Size(57, 13) },
             };
     }
 }

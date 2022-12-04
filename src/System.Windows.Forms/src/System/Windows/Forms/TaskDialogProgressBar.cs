@@ -2,9 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.ComponentModel;
 using System.Diagnostics;
-using static Interop;
 
 namespace System.Windows.Forms
 {
@@ -79,7 +77,7 @@ namespace System.Windows.Forms
 
                 DenyIfBoundAndNotCreated();
 
-                if (BoundPage != null && value == TaskDialogProgressBarState.None)
+                if (BoundPage is not null && value == TaskDialogProgressBarState.None)
                 {
                     throw new InvalidOperationException(
                         SR.TaskDialogCannotRemoveProgressBarWhileDialogIsShown);
@@ -319,17 +317,17 @@ namespace System.Windows.Forms
             state == TaskDialogProgressBarState.Marquee ||
             state == TaskDialogProgressBarState.MarqueePaused;
 
-        private static ComCtl32.PBST GetNativeProgressBarState(TaskDialogProgressBarState state) => state switch
+        private static uint GetNativeProgressBarState(TaskDialogProgressBarState state) => state switch
         {
-            TaskDialogProgressBarState.Normal => ComCtl32.PBST.NORMAL,
-            TaskDialogProgressBarState.Paused => ComCtl32.PBST.PAUSED,
-            TaskDialogProgressBarState.Error => ComCtl32.PBST.ERROR,
+            TaskDialogProgressBarState.Normal => PInvoke.PBST_NORMAL,
+            TaskDialogProgressBarState.Paused => PInvoke.PBST_PAUSED,
+            TaskDialogProgressBarState.Error => PInvoke.PBST_ERROR,
             _ => throw new ArgumentException()
         };
 
-        private protected override ComCtl32.TDF BindCore()
+        private protected override TASKDIALOG_FLAGS BindCore()
         {
-            ComCtl32.TDF flags = base.BindCore();
+            TASKDIALOG_FLAGS flags = base.BindCore();
 
             // When specifying the flags for the page creation, the state of the initial progress bar
             // shown in the dialog will either be equivalent to the 'MarqueePaused' or 'Normal' state.
@@ -339,7 +337,7 @@ namespace System.Windows.Forms
                 TaskDialogProgressBarState.MarqueePaused : TaskDialogProgressBarState.Normal;
 
             flags |= initialStateIsMarquee ?
-                ComCtl32.TDF.SHOW_MARQUEE_PROGRESS_BAR : ComCtl32.TDF.SHOW_PROGRESS_BAR;
+                TASKDIALOG_FLAGS.TDF_SHOW_MARQUEE_PROGRESS_BAR : TASKDIALOG_FLAGS.TDF_SHOW_PROGRESS_BAR;
 
             return flags;
         }
@@ -351,7 +349,7 @@ namespace System.Windows.Forms
 
         private void UpdateState(TaskDialogProgressBarState previousState, bool isInitialization = false)
         {
-            Debug.Assert(BoundPage != null);
+            Debug.Assert(BoundPage is not null);
 
             TaskDialog taskDialog = BoundPage.BoundDialog!;
 
@@ -367,7 +365,7 @@ namespace System.Windows.Forms
                 // the marquee will not show.
                 if (newStateIsMarquee && previousState != TaskDialogProgressBarState.Normal)
                 {
-                    taskDialog.SetProgressBarState(ComCtl32.PBST.NORMAL);
+                    taskDialog.SetProgressBarState(PInvoke.PBST_NORMAL);
                 }
 
                 taskDialog.SwitchProgressBarMode(newStateIsMarquee);

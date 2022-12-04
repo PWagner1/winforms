@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Drawing;
 using static Interop;
 
@@ -27,32 +25,40 @@ namespace System.Windows.Forms
 
             public override Rectangle Bounds => _owner.IsHandleCreated ? _owner.RectangleToScreen(_owner.ClientRectangle) : Rectangle.Empty;
 
-            internal override Rectangle BoundingRectangle => _owner.IsHandleCreated ? _owner.Bounds : Rectangle.Empty;
-
-            internal override object GetPropertyValue(UiaCore.UIA propertyID)
+            internal override Rectangle BoundingRectangle
             {
-                return propertyID switch
+                get
                 {
-                    UiaCore.UIA.NamePropertyId => Name,
+                    if (!_owner.IsHandleCreated)
+                    {
+                        return Rectangle.Empty;
+                    }
+
+                    if (_owner.Parent is null)
+                    {
+                        // If the Forms is a main window and a root object.
+                        return _owner.Bounds;
+                    }
+
+                    // If the Form is placed on another control, eg. Form or Panel.
+                    return _owner.Parent.RectangleToScreen(_owner.Bounds);
+                }
+            }
+
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+                propertyID switch
+                {
                     // Unlike other controls, here the default "ControlType" doesn't correspond the value from the mapping
                     // depending on the default Role.
                     // In other cases "ControlType" will reflect changes to Form.AccessibleRole (i.e. if it is set to a custom role).
-                    UiaCore.UIA.ControlTypePropertyId => Role == AccessibleRole.Client
-                                                         ? UiaCore.UIA.WindowControlTypeId
-                                                         : base.GetPropertyValue(propertyID),
+                    UiaCore.UIA.ControlTypePropertyId when
+                        Role == AccessibleRole.Client
+                        => UiaCore.UIA.WindowControlTypeId,
+                    UiaCore.UIA.IsDialogPropertyId => _owner.Modal,
                     _ => base.GetPropertyValue(propertyID)
                 };
-            }
 
-            internal override bool IsIAccessibleExSupported()
-            {
-                if (_owner != null)
-                {
-                    return true;
-                }
-
-                return base.IsIAccessibleExSupported();
-            }
+            internal override bool IsIAccessibleExSupported() => true;
 
             public override AccessibleRole Role
             {
@@ -63,11 +69,6 @@ namespace System.Windows.Forms
                         ? role
                         : AccessibleRole.Client;
                 }
-            }
-
-            internal override void SetValue(string newValue)
-            {
-                Value = newValue;
             }
         }
     }

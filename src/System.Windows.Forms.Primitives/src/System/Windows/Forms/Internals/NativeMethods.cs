@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Drawing;
 using System.Runtime.InteropServices;
 using static Interop;
 
@@ -10,16 +9,11 @@ namespace System.Windows.Forms
 {
     internal static class NativeMethods
     {
-        public static IntPtr InvalidIntPtr = (IntPtr)(-1);
         public static HandleRef NullHandleRef = new HandleRef(null, IntPtr.Zero);
 
         public const int CW_USEDEFAULT = (unchecked((int)0x80000000));
 
-        public const int
-        GDI_ERROR = (unchecked((int)0xFFFFFFFF));
-
-        public const int
-        HCF_HIGHCONTRASTON = 0x00000001;
+        public const int GDI_ERROR = (unchecked((int)0xFFFFFFFF));
 
         public const int HLP_FILE = 1,
         HLP_KEYWORD = 2,
@@ -48,8 +42,6 @@ namespace System.Windows.Forms
 
         public const int UiaRootObjectId = -25;
         public const int UiaAppendRuntimeId = 3;
-
-        public const string uuid_IAccessible = "{618736E0-3C3D-11CF-810C-00AA00389B71}";
 
         public const string WinFormFrameworkId = "WinForm";
 
@@ -97,69 +89,7 @@ namespace System.Windows.Forms
             public Comdlg32.PD_RESULT dwResultAction;
         }
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public class OPENFILENAME_I
-        {
-            public int lStructSize = Marshal.SizeOf<OPENFILENAME_I>(); //ndirect.DllLib.sizeOf(this);
-            public IntPtr hwndOwner;
-            public IntPtr hInstance;
-            public string? lpstrFilter;   // use embedded nulls to separate filters
-            public IntPtr lpstrCustomFilter = IntPtr.Zero;
-            public int nMaxCustFilter;
-            public int nFilterIndex;
-            public IntPtr lpstrFile;
-            public int nMaxFile = Kernel32.MAX_PATH;
-            public IntPtr lpstrFileTitle = IntPtr.Zero;
-            public int nMaxFileTitle = Kernel32.MAX_PATH;
-            public string? lpstrInitialDir;
-            public string? lpstrTitle;
-            public int Flags;
-            public short nFileOffset;
-            public short nFileExtension;
-            public string? lpstrDefExt;
-            public IntPtr lCustData = IntPtr.Zero;
-            public WndProc? lpfnHook;
-            public string? lpTemplateName;
-            public IntPtr pvReserved = IntPtr.Zero;
-            public int dwReserved;
-            public int FlagsEx;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public class ENLINK
-        {
-            public User32.NMHDR nmhdr;
-            public int msg;
-            public IntPtr wParam = IntPtr.Zero;
-            public IntPtr lParam = IntPtr.Zero;
-            public Richedit.CHARRANGE charrange;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public class ENLINK64
-        {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 56)]
-            public byte[] contents = new byte[56];
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public class ENPROTECTED
-        {
-            public User32.NMHDR nmhdr;
-            public int msg;
-            public IntPtr wParam;
-            public IntPtr lParam;
-            public Richedit.CHARRANGE chrg;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public class ENPROTECTED64
-        {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 56)]
-            public byte[] contents = new byte[56];
-        }
-
-        public class ActiveX
+        public static class ActiveX
         {
             public const int ALIGN_MIN = 0x0;
             public const int ALIGN_NO_CHANGE = 0x0;
@@ -170,10 +100,6 @@ namespace System.Windows.Forms
             public const int ALIGN_MAX = 0x4;
 
             public static Guid IID_IUnknown = new Guid("{00000000-0000-0000-C000-000000000046}");
-
-            private ActiveX()
-            {
-            }
         }
 
         /// <summary>

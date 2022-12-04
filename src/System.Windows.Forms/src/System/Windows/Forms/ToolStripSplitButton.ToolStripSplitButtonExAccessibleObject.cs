@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using static Interop;
 
 namespace System.Windows.Forms
@@ -20,22 +18,21 @@ namespace System.Windows.Forms
                 _owningToolStripSplitButton = item;
             }
 
-            internal override object GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                // If we don't set a default role for the accessible object
-                // it will be retrieved from Windows.
-                // And we don't have a 100% guarantee it will be correct, hence set it ourselves.
-                if (propertyID == UiaCore.UIA.ControlTypePropertyId && _owningToolStripSplitButton.AccessibleRole == AccessibleRole.Default)
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+                propertyID switch
                 {
-                    return UiaCore.UIA.ButtonControlTypeId;
-                }
-
-                return base.GetPropertyValue(propertyID);
-            }
+                    // If we don't set a default role for the accessible object
+                    // it will be retrieved from Windows.
+                    // And we don't have a 100% guarantee it will be correct, hence set it ourselves.
+                    UiaCore.UIA.ControlTypePropertyId when
+                        _owningToolStripSplitButton.AccessibleRole == AccessibleRole.Default
+                        => UiaCore.UIA.ButtonControlTypeId,
+                    _ => base.GetPropertyValue(propertyID)
+                };
 
             internal override bool IsIAccessibleExSupported()
             {
-                if (_owningToolStripSplitButton != null)
+                if (_owningToolStripSplitButton is not null)
                 {
                     return true;
                 }
@@ -64,7 +61,7 @@ namespace System.Windows.Forms
 
             internal override void Collapse()
             {
-                if (_owningToolStripSplitButton != null && _owningToolStripSplitButton.DropDown != null && _owningToolStripSplitButton.DropDown.Visible)
+                if (_owningToolStripSplitButton is not null && _owningToolStripSplitButton.DropDown is not null && _owningToolStripSplitButton.DropDown.Visible)
                 {
                     _owningToolStripSplitButton.DropDown.Close();
                 }
@@ -78,7 +75,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            internal override UiaCore.IRawElementProviderFragment FragmentNavigate(UiaCore.NavigateDirection direction)
+            internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
             {
                 switch (direction)
                 {
@@ -87,6 +84,7 @@ namespace System.Windows.Forms
                     case UiaCore.NavigateDirection.LastChild:
                         return DropDownItemsCount > 0 ? _owningToolStripSplitButton.DropDown.Items[_owningToolStripSplitButton.DropDown.Items.Count - 1].AccessibilityObject : null;
                 }
+
                 return base.FragmentNavigate(direction);
             }
 

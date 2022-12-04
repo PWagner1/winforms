@@ -2,8 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Runtime.InteropServices;
+using Windows.Win32.System.Com;
 
 internal partial class Interop
 {
@@ -19,7 +19,7 @@ internal partial class Interop
                 Ole32.DispatchID dispid,
                 uint* pceltAttrs,
                 IntPtr* ppbstrTypeNames,
-                Oleaut32.VARIANT** ppvarAttrValues);
+                VARIANT** ppvarAttrValues);
         }
     }
 }

@@ -2,66 +2,75 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
-using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Windows.Win32.System.Com;
+using Windows.Win32.System.Ole;
 using static Interop;
 
 namespace System.Windows.Forms
 {
-    internal class WebBrowserContainer : Ole32.IOleContainer, Ole32.IOleInPlaceFrame
+    internal class WebBrowserContainer : IOleContainer.Interface, Ole32.IOleInPlaceFrame
     {
         private readonly WebBrowserBase parent;
-        private IContainer assocContainer;  // associated IContainer...
-                                            // the assocContainer may be null, in which case all this container does is
-                                            // forward [de]activation messages to the requisite container...
-        private WebBrowserBase siteUIActive;
-        private WebBrowserBase siteActive;
-        private readonly Hashtable containerCache = new Hashtable();  // name -> Control
-        private Hashtable components;  // Control -> any
-        private WebBrowserBase ctlInEditMode;
+        private IContainer? assocContainer;  // associated IContainer...
+                                             // the assocContainer may be null, in which case all this container does is
+                                             // forward [de]activation messages to the requisite container...
+        private WebBrowserBase? siteUIActive;
+        private WebBrowserBase? siteActive;
+        private readonly HashSet<Control> containerCache = new();
+        private HashSet<Control>? components;
+        private WebBrowserBase? ctlInEditMode;
 
         internal WebBrowserContainer(WebBrowserBase parent)
         {
             this.parent = parent;
         }
 
+        unsafe HRESULT IParseDisplayName.Interface.ParseDisplayName(IBindCtx* pbc, PWSTR pszDisplayName, uint* pchEaten, IMoniker** ppmkOut)
+           => ((IOleContainer.Interface)this).ParseDisplayName(pbc, pszDisplayName, pchEaten, ppmkOut);
+
         // IOleContainer methods:
-        unsafe HRESULT Ole32.IOleContainer.ParseDisplayName(IntPtr pbc, string pszDisplayName, uint* pchEaten, IntPtr* ppmkOut)
+        unsafe HRESULT IOleContainer.Interface.ParseDisplayName(IBindCtx* pbc, PWSTR pszDisplayName, uint* pchEaten, IMoniker** ppmkOut)
         {
-            if (ppmkOut != null)
+            if (ppmkOut is not null)
             {
-                *ppmkOut = IntPtr.Zero;
+                *ppmkOut = null;
             }
 
             return HRESULT.E_NOTIMPL;
         }
 
-        HRESULT Ole32.IOleContainer.EnumObjects(Ole32.OLECONTF grfFlags, out Ole32.IEnumUnknown ppenum)
+        unsafe HRESULT IOleContainer.Interface.EnumObjects(OLECONTF grfFlags, IEnumUnknown** ppenum)
         {
-            ppenum = null;
-            if ((grfFlags & Ole32.OLECONTF.EMBEDDINGS) != 0)
+            if (ppenum is null)
             {
-                Debug.Assert(parent != null, "gotta have it...");
-                ArrayList list = new ArrayList();
+                return HRESULT.E_POINTER;
+            }
+
+            if ((grfFlags & OLECONTF.OLECONTF_EMBEDDINGS) != 0)
+            {
+                Debug.Assert(parent is not null, "gotta have it...");
+                List<object> list = new();
                 ListAXControls(list, true);
                 if (list.Count > 0)
                 {
                     object[] temp = new object[list.Count];
                     list.CopyTo(temp, 0);
-                    ppenum = new AxHost.EnumUnknown(temp);
+                    bool hr = ComHelpers.TryGetComPointer(new AxHost.EnumUnknown(temp), out *ppenum);
+                    Debug.Assert(hr);
                     return HRESULT.S_OK;
                 }
             }
 
-            ppenum = new AxHost.EnumUnknown(null);
+            bool result = ComHelpers.TryGetComPointer(new AxHost.EnumUnknown(null), out *ppenum);
+            Debug.Assert(result);
             return HRESULT.S_OK;
         }
 
-        HRESULT Ole32.IOleContainer.LockContainer(BOOL fLock)
+        HRESULT IOleContainer.Interface.LockContainer(BOOL fLock)
         {
             return HRESULT.E_NOTIMPL;
         }
@@ -98,27 +107,31 @@ namespace System.Windows.Forms
             return HRESULT.E_NOTIMPL;
         }
 
-        HRESULT Ole32.IOleInPlaceFrame.SetActiveObject(Ole32.IOleInPlaceActiveObject pActiveObject, string pszObjName)
+        unsafe HRESULT Ole32.IOleInPlaceFrame.SetActiveObject(IOleInPlaceActiveObject.Interface? pActiveObject, string? pszObjName)
         {
             if (pActiveObject is null)
             {
-                if (ctlInEditMode != null)
+                if (ctlInEditMode is not null)
                 {
                     ctlInEditMode.SetEditMode(WebBrowserHelper.AXEditMode.None);
                     ctlInEditMode = null;
                 }
+
                 return HRESULT.S_OK;
             }
-            WebBrowserBase ctl = null;
-            if (pActiveObject is Ole32.IOleObject oleObject)
+
+            WebBrowserBase? ctl = null;
+            if (pActiveObject is IOleObject.Interface oleObject)
             {
-                oleObject.GetClientSite(out Ole32.IOleClientSite clientSite);
-                if (clientSite is WebBrowserSiteBase webBrowserSiteBase)
+                IOleClientSite* clientSite;
+                oleObject.GetClientSite(&clientSite);
+                var clientSiteObject = Marshal.GetObjectForIUnknown((nint)clientSite);
+                if (clientSiteObject is WebBrowserSiteBase webBrowserSiteBase)
                 {
                     ctl = webBrowserSiteBase.Host;
                 }
 
-                if (ctlInEditMode != null)
+                if (ctlInEditMode is not null)
                 {
                     Debug.Fail("control " + ctlInEditMode.ToString() + " did not reset its edit mode to null");
                     ctlInEditMode.SetSelectionStyle(WebBrowserHelper.SelectionStyle.Selected);
@@ -169,7 +182,7 @@ namespace System.Windows.Forms
             return HRESULT.E_NOTIMPL;
         }
 
-        unsafe HRESULT Ole32.IOleInPlaceFrame.TranslateAccelerator(User32.MSG* lpmsg, ushort wID)
+        unsafe HRESULT Ole32.IOleInPlaceFrame.TranslateAccelerator(MSG* lpmsg, ushort wID)
         {
             return HRESULT.S_FALSE;
         }
@@ -177,106 +190,91 @@ namespace System.Windows.Forms
         //
         // Private helper methods:
         //
-        private void ListAXControls(ArrayList list, bool fuseOcx)
+        private void ListAXControls(List<object> list, bool fuseOcx)
         {
-            Hashtable components = GetComponents();
+            HashSet<Control>? components = GetComponents();
             if (components is null)
             {
                 return;
             }
-            Control[] ctls = new Control[components.Keys.Count];
-            components.Keys.CopyTo(ctls, 0);
-            if (ctls != null)
+
+            foreach (Control ctl in components.ToArray())
             {
-                for (int i = 0; i < ctls.Length; i++)
+                if (ctl is WebBrowserBase webBrowserBase)
                 {
-                    Control ctl = ctls[i];
-                    if (ctl is WebBrowserBase webBrowserBase)
+                    if (fuseOcx)
                     {
-                        if (fuseOcx)
+                        object ax = webBrowserBase.activeXInstance;
+                        if (ax is not null)
                         {
-                            object ax = webBrowserBase.activeXInstance;
-                            if (ax != null)
-                            {
-                                list.Add(ax);
-                            }
+                            list.Add(ax);
                         }
-                        else
-                        {
-                            list.Add(ctl);
-                        }
+                    }
+                    else
+                    {
+                        list.Add(ctl);
                     }
                 }
             }
         }
 
-        private Hashtable GetComponents()
+        private HashSet<Control>? GetComponents()
         {
-            return GetComponents(GetParentsContainer());
+            FillComponentsTable(GetParentsContainer());
+            return components;
         }
 
-        private IContainer GetParentsContainer()
+        private IContainer? GetParentsContainer()
         {
-            //
-            IContainer rval = GetParentIContainer();
+            IContainer? rval = GetParentIContainer();
             Debug.Assert(rval is null || assocContainer is null || rval == assocContainer,
                          "mismatch between getIPD & aContainer");
             return rval ?? assocContainer;
         }
 
-        private IContainer GetParentIContainer()
+        private IContainer? GetParentIContainer()
         {
             ISite site = parent.Site;
-            if (site != null && site.DesignMode)
-            {
-                return site.Container;
-            }
-
-            return null;
+            return site is not null && site.DesignMode ? site.Container : null;
         }
 
-        private Hashtable GetComponents(IContainer cont)
+        private void FillComponentsTable(IContainer? container)
         {
-            FillComponentsTable(cont);
-            return components;
-        }
-
-        private void FillComponentsTable(IContainer container)
-        {
-            if (container != null)
+            if (container is not null)
             {
                 ComponentCollection comps = container.Components;
-                if (comps != null)
+                if (comps is not null)
                 {
-                    components = new Hashtable();
+                    components = new();
                     foreach (IComponent comp in comps)
                     {
-                        if (comp is Control && comp != parent && comp.Site != null)
+                        if (comp is Control ctrl && comp != parent && comp.Site is not null)
                         {
-                            components.Add(comp, comp);
+                            components.Add(ctrl);
                         }
                     }
+
                     return;
                 }
             }
 
             Debug.Assert(parent.Site is null, "Parent is sited but we could not find IContainer!!!");
 
-            bool checkHashTable = true;
-            Control[] ctls = new Control[containerCache.Values.Count];
-            containerCache.Values.CopyTo(ctls, 0);
-            if (ctls != null)
+            bool checkHashSet = true;
+            Control[] ctls = containerCache.ToArray();
+            if (ctls is not null)
             {
                 if (ctls.Length > 0 && components is null)
                 {
-                    components = new Hashtable();
-                    checkHashTable = false;
+                    components = new();
+                    checkHashSet = false;
                 }
+
                 for (int i = 0; i < ctls.Length; i++)
                 {
-                    if (checkHashTable && !components.Contains(ctls[i]))
+                    if (checkHashSet)
                     {
-                        components.Add(ctls[i], ctls[i]);
+                        components?.Add(ctls[i]);
                     }
                 }
             }
@@ -291,14 +289,11 @@ namespace System.Windows.Forms
                 return;
             }
 
-            if (components is null)
-            {
-                components = new Hashtable();
-            }
+            components ??= new();
 
             if (ctl != parent && !components.Contains(ctl))
             {
-                components.Add(ctl, ctl);
+                components.Add(ctl);
             }
 
             foreach (Control c in ctl.Controls)
@@ -309,32 +304,31 @@ namespace System.Windows.Forms
 
         private bool RegisterControl(WebBrowserBase ctl)
         {
-            ISite site = ctl.Site;
-            if (site != null)
+            if (ctl.Site is ISite site)
             {
-                IContainer cont = site.Container;
-                if (cont != null)
+                if (site.Container is IContainer cont)
                 {
-                    if (assocContainer != null)
+                    if (assocContainer is not null)
                     {
                         return cont == assocContainer;
                     }
                     else
                     {
                         assocContainer = cont;
-                        IComponentChangeService ccs = (IComponentChangeService)site.GetService(typeof(IComponentChangeService));
-                        if (ccs != null)
+                        if (site.GetService(typeof(IComponentChangeService)) is IComponentChangeService ccs)
                         {
                             ccs.ComponentRemoved += new ComponentEventHandler(OnComponentRemoved);
                         }
+
                         return true;
                     }
                 }
             }
+
             return false;
         }
 
-        private void OnComponentRemoved(object sender, ComponentEventArgs e)
+        private void OnComponentRemoved(object? sender, ComponentEventArgs e)
         {
             if (sender == assocContainer && e.Component is Control c)
             {
@@ -352,16 +346,14 @@ namespace System.Windows.Forms
                 throw new ArgumentException(string.Format(SR.AXDuplicateControl, GetNameForControl(ctl)), nameof(ctl));
             }
 
-            containerCache.Add(ctl, ctl);
+            containerCache.Add(ctl);
 
             if (assocContainer is null)
             {
-                ISite site = ctl.Site;
-                if (site != null)
+                if (ctl.Site is ISite site)
                 {
                     assocContainer = site.Container;
-                    IComponentChangeService ccs = (IComponentChangeService)site.GetService(typeof(IComponentChangeService));
-                    if (ccs != null)
+                    if (site.GetService(typeof(IComponentChangeService)) is IComponentChangeService ccs)
                     {
                         ccs.ComponentRemoved += new ComponentEventHandler(OnComponentRemoved);
                     }
@@ -375,16 +367,17 @@ namespace System.Windows.Forms
             containerCache.Remove(ctl);
         }
 
-        internal static WebBrowserContainer FindContainerForControl(WebBrowserBase ctl)
+        internal static WebBrowserContainer? FindContainerForControl(WebBrowserBase ctl)
         {
-            if (ctl != null)
+            if (ctl is not null)
             {
-                if (ctl.container != null)
+                if (ctl.container is not null)
                 {
                     return ctl.container;
                 }
+
                 ScrollableControl f = ctl.ContainingControl;
-                if (f != null)
+                if (f is not null)
                 {
                     WebBrowserContainer container = ctl.CreateWebBrowserContainer();
                     if (container.RegisterControl(ctl))
@@ -394,14 +387,12 @@ namespace System.Windows.Forms
                     }
                 }
             }
+
             return null;
         }
 
-        internal string GetNameForControl(Control ctl)
-        {
-            string name = (ctl.Site != null) ? ctl.Site.Name : ctl.Name;
-            return name ?? "";
-        }
+        internal static string GetNameForControl(Control ctl)
+            => ctl.Site is not null ? ctl.Site.Name ?? string.Empty : ctl.Name ?? string.Empty;
 
         internal void OnUIActivate(WebBrowserBase site)
         {
@@ -413,16 +404,17 @@ namespace System.Windows.Forms
                 return;
             }
 
-            if (siteUIActive != null && siteUIActive != site)
+            if (siteUIActive is not null && siteUIActive != site)
             {
                 WebBrowserBase tempSite = siteUIActive;
                 tempSite.AXInPlaceObject.UIDeactivate();
             }
+
             site.AddSelectionHandler();
             Debug.Assert(siteUIActive is null, "Object did not call OnUIDeactivate");
             siteUIActive = site;
             ContainerControl f = site.ContainingControl;
-            if (f != null && f.Contains(site))
+            if (f is not null && f.Contains(site))
             {
                 f.SetActiveControl(site);
             }
@@ -431,7 +423,7 @@ namespace System.Windows.Forms
         internal void OnUIDeactivate(WebBrowserBase site)
         {
 #if DEBUG
-            if (siteUIActive != null)
+            if (siteUIActive is not null)
             {
                 Debug.Assert(siteUIActive == site, "deactivating when not active...");
             }
@@ -449,10 +441,7 @@ namespace System.Windows.Forms
             {
                 siteActive = null;
                 ContainerControl parentContainer = parent.FindContainerControlInternal();
-                if (parentContainer != null)
-                {
-                    parentContainer.SetActiveControl(null);
-                }
+                parentContainer?.SetActiveControl(null);
             }
         }
 

@@ -3,14 +3,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Windows.Forms.TestUtilities;
 using Moq;
-using WinForms.Common.Tests;
 using Xunit;
 using static Interop;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms.Tests
 {
@@ -609,7 +607,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TreeView_CreateParams_GetCheckBoxes_ReturnsExpected(bool checkBoxes)
         {
             using var control = new SubTreeView
@@ -792,7 +790,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void TreeView_BackgroundImage_Set_GetReturnsExpected(Image value)
         {
             using var control = new TreeView
@@ -851,7 +849,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ImageLayout))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ImageLayout))]
         public void TreeView_BackgroundImageLayout_Set_GetReturnsExpected(ImageLayout value)
         {
             using var control = new TreeView
@@ -903,7 +901,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImageLayout))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImageLayout))]
         public void BackgroundImageLayout_SetInvalid_ThrowsInvalidEnumArgumentException(ImageLayout value)
         {
             using var control = new TreeView();
@@ -911,7 +909,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(BorderStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(BorderStyle))]
         public void BorderStyle_Set_GetReturnsExpected(BorderStyle value)
         {
             using var treeView = new TreeView
@@ -1029,7 +1027,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(BorderStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(BorderStyle))]
         public void BorderStyle_SetInvalid_ThrowsInvalidEnumArgumentException(BorderStyle value)
         {
             using var treeView = new TreeView();
@@ -1037,7 +1035,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void CheckBoxes_Set_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView
@@ -1056,7 +1054,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void CheckBoxes_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView();
@@ -1178,7 +1176,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DoubleBuffered_Set_GetReturnsExpected(bool value)
         {
             using var treeView = new SubTreeView
@@ -1197,7 +1195,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DoubleBuffered_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var treeView = new SubTreeView();
@@ -1319,7 +1317,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TreeViewDrawMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TreeViewDrawMode))]
         public void DrawMode_Set_GetReturnsExpected(TreeViewDrawMode value)
         {
             using var control = new TreeView
@@ -1334,7 +1332,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TreeViewDrawMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TreeViewDrawMode))]
         public void DrawMode_SetWithHandle_GetReturnsExpected(TreeViewDrawMode value)
         {
             using var treeView = new TreeView();
@@ -1452,7 +1450,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TreeViewDrawMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TreeViewDrawMode))]
         public void DrawMode_SetInvalid_ThrowsInvalidEnumArgumentException(TreeViewDrawMode value)
         {
             using var treeView = new TreeView();
@@ -1534,7 +1532,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void FullRowSelect_Set_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView
@@ -1553,7 +1551,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void FullRowSelect_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView();
@@ -1681,7 +1679,7 @@ namespace System.Windows.Forms.Tests
 
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             int version = Application.UseVisualStyles ? 6 : 5;
-            Assert.Equal((IntPtr)version, User32.SendMessageW(control.Handle, (User32.WM)CCM.GETVERSION));
+            Assert.Equal(version, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.CCM_GETVERSION));
         }
 
         public static IEnumerable<object[]> Handle_CustomGetVersion_TestData()
@@ -1711,14 +1709,14 @@ namespace System.Windows.Forms.Tests
 
             protected override void WndProc(ref Message m)
             {
-                if (m.Msg == (int)CCM.GETVERSION)
+                if (m.Msg == (int)PInvoke.CCM_GETVERSION)
                 {
                     Assert.Equal(IntPtr.Zero, m.WParam);
                     Assert.Equal(IntPtr.Zero, m.LParam);
                     m.Result = GetVersionResult;
                     return;
                 }
-                else if (m.Msg == (int)CCM.SETVERSION)
+                else if (m.Msg == (int)PInvoke.CCM_SETVERSION)
                 {
                     Assert.Equal((IntPtr)5, m.WParam);
                     Assert.Equal(IntPtr.Zero, m.LParam);
@@ -1731,7 +1729,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void HideSelection_Set_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView
@@ -1750,7 +1748,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void HideSelection_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView();
@@ -1872,7 +1870,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void HotTracking_Set_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView
@@ -1891,7 +1889,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void HotTracking_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView();
@@ -2222,7 +2220,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         [InlineData("(none)", "")]
         public void ImageKey_SetWithoutImageList_GetReturnsExpected(string value, string expected)
         {
@@ -2240,7 +2238,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         [InlineData("(none)", "")]
         public void ImageKey_SetWithoutImageListWithImageIndex_GetReturnsExpected(string value, string expected)
         {
@@ -2356,7 +2354,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         [InlineData("(none)", "")]
         public void ImageKey_SetWithoutImageListWithHandle_GetReturnsExpected(string value, string expected)
         {
@@ -2733,6 +2731,7 @@ namespace System.Windows.Forms.Tests
             };
             Assert.Equal(expectedHeight, treeView.ItemHeight);
         }
+
         public static IEnumerable<object[]> ItemHeight_Set_TestData()
         {
             yield return new object[] { -1, Control.DefaultFont.Height + 3 };
@@ -2815,7 +2814,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void LabelEdit_Set_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView
@@ -2834,7 +2833,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void LabelEdit_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView();
@@ -2956,7 +2955,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetColorWithEmptyTheoryData))]
         public void LineColor_Set_GetReturnsExpected(Color value)
         {
             using var treeView = new TreeView
@@ -2971,7 +2970,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void PathSeparator_Set_GetReturnsExpected(string value)
         {
             using var treeView = new TreeView
@@ -2986,7 +2985,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetPaddingNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetPaddingNormalizedTheoryData))]
         public void TreeView_Padding_Set_GetReturnsExpected(Padding value, Padding expected)
         {
             using var control = new TreeView
@@ -3003,7 +3002,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetPaddingNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetPaddingNormalizedTheoryData))]
         public void TreeView_Padding_SetWithHandle_GetReturnsExpected(Padding value, Padding expected)
         {
             using var control = new TreeView();
@@ -3231,7 +3230,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Scrollable_Set_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView
@@ -3250,7 +3249,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Scrollable_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView();
@@ -3581,7 +3580,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         [InlineData("(none)", "")]
         public void SelectedImageKey_SetWithoutImageList_GetReturnsExpected(string value, string expected)
         {
@@ -3599,7 +3598,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         [InlineData("(none)", "")]
         public void SelectedImageKey_SetWithoutImageListWithImageIndex_GetReturnsExpected(string value, string expected)
         {
@@ -3705,7 +3704,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         [InlineData("(none)", "")]
         public void SelectedImageKey_SetWithoutImageListWithHandle_GetReturnsExpected(string value, string expected)
         {
@@ -3767,7 +3766,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowLines_Set_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView
@@ -3786,7 +3785,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowLines_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView();
@@ -3908,7 +3907,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowNodeToolTips_Set_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView
@@ -3927,7 +3926,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowNodeToolTips_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView();
@@ -4049,7 +4048,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowPlusMinus_Set_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView
@@ -4068,7 +4067,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowPlusMinus_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView();
@@ -4190,7 +4189,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowRootLines_Set_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView
@@ -4209,7 +4208,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ShowRootLines_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView();
@@ -4331,7 +4330,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Sorted_Set_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView
@@ -4350,7 +4349,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Sorted_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var treeView = new TreeView();
@@ -4615,7 +4614,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void Text_Set_GetReturnsExpected(string value, string expected)
         {
             using var control = new TreeView
@@ -4632,7 +4631,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TreeView_Text_SetWithHandle_GetReturnsExpected(string value, string expected)
         {
             using var control = new TreeView();
@@ -5644,10 +5643,11 @@ namespace System.Windows.Forms.Tests
         public static IEnumerable<object[]> OnDrawNode_TestData()
         {
             yield return new object[] { null };
-            yield return new object[] { new DrawTreeNodeEventArgs(null, null, Rectangle.Empty, TreeNodeStates.Checked) };
 
             var image = new Bitmap(10, 10);
             Graphics graphics = Graphics.FromImage(image);
+            yield return new object[] { new DrawTreeNodeEventArgs(graphics, null, Rectangle.Empty, TreeNodeStates.Checked) };
+
             yield return new object[] { new DrawTreeNodeEventArgs(graphics, new TreeNode(), new Rectangle(1, 2, 3, 4), TreeNodeStates.Checked) };
         }
 
@@ -5920,7 +5920,7 @@ namespace System.Windows.Forms.Tests
 
         /*
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TreeView_OnHandleCreated_Invoke_CallsHandleCreated(EventArgs eventArgs)
         {
             using var control = new SubTreeView();
@@ -5949,7 +5949,7 @@ namespace System.Windows.Forms.Tests
         */
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TreeView_OnHandleCreated_InvokeWithHandle_CallsHandleCreated(EventArgs eventArgs)
         {
             using var control = new SubTreeView();
@@ -6139,7 +6139,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TreeView_OnHandleDestroyed_Invoke_CallsHandleDestroyed(EventArgs eventArgs)
         {
             using var control = new SubTreeView();
@@ -6167,7 +6167,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TreeView_OnHandleDestroyed_InvokeWithHandle_CallsHandleDestroyed(EventArgs eventArgs)
         {
             using var control = new SubTreeView();
@@ -6197,7 +6197,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TreeView_OnHandleDestroyed_InvokeWithHandleWithSelectedNode_CallsHandleDestroyed(EventArgs eventArgs)
         {
             using var control = new SubTreeView();
@@ -6232,7 +6232,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TreeView_OnHandleDestroyed_InvokeWithHandleWithStateImageList_CallsHandleDestroyed(EventArgs eventArgs)
         {
             using var imageList = new ImageList();
@@ -6270,7 +6270,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TreeView_OnMouseHover_Invoke_CallsMouseHover(EventArgs eventArgs)
         {
             using var control = new SubTreeView();
@@ -6313,7 +6313,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TreeView_OnMouseHover_InvokeWithHandle_CallsMouseHover(EventArgs eventArgs)
         {
             using var control = new SubTreeView();
@@ -6369,7 +6369,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TreeView_OnMouseLeave_Invoke_CallsMouseLeave(EventArgs eventArgs)
         {
             using var control = new SubTreeView();
@@ -6594,6 +6594,500 @@ namespace System.Windows.Forms.Tests
 
             control.Dispose();
             Assert.Equal(1, disposedCallCount);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true, true)]
+        [InlineData(false, true)]
+        [InlineData(false, false)]
+        public unsafe void TreeView_InvokeGetToolInfoWrapper_ReturnsExpected(bool showNodeToolTips, bool useKeyboardToolTip)
+        {
+            using var treeView = new TreeView();
+            treeView.ShowNodeToolTips = showNodeToolTips;
+            ToolTip toolTip = useKeyboardToolTip ? treeView.KeyboardToolTip : new ToolTip();
+            ComCtl32.ToolInfoWrapper<Control> wrapper = treeView.GetToolInfoWrapper(TOOLTIP_FLAGS.TTF_ABSOLUTE, "Test caption", toolTip);
+
+            Assert.Equal("Test caption", wrapper.Text);
+            // Assert.Equal method does not work because char* cannot be used as an argument to it
+            Assert.Equal(string.Empty, new string(wrapper.Info.lpszText));
+        }
+
+        [WinFormsFact]
+        public unsafe void TreeView_ShowNodesEnabled_ExternalToolTip_InvokeGetToolInfoWrapper_ReturnsExpected()
+        {
+            using var treeView = new TreeView();
+            treeView.ShowNodeToolTips = true;
+            ToolTip toolTip = new ToolTip();
+            ComCtl32.ToolInfoWrapper<Control> wrapper = treeView.GetToolInfoWrapper(TOOLTIP_FLAGS.TTF_ABSOLUTE, "Test caption", toolTip);
+            char* expected = (char*)(-1);
+
+            Assert.Null(wrapper.Text);
+            //Assert.Equal method does not work because char* cannot be used as an argument to it
+            Assert.True(wrapper.Info.lpszText == expected);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_InvokeAdd_AddNodeToTrackList(bool showNodeToolTips)
+        {
+            using var treeView = new TreeView();
+            treeView.ShowNodeToolTips = showNodeToolTips;
+            TreeNode treeNode = new TreeNode();
+            treeView.Nodes.Add(treeNode);
+
+            Assert.True(KeyboardToolTipStateMachine.Instance.TestAccessor().IsToolTracked(treeNode));
+            treeView.Nodes.Remove(treeNode);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_InvokeAddRange_AddNodesToTrackList(bool showNodeToolTips)
+        {
+            using var treeView = new TreeView();
+            treeView.ShowNodeToolTips = showNodeToolTips;
+            TreeNode treeNode1 = new TreeNode();
+            TreeNode treeNode2 = new TreeNode();
+            TreeNode treeNode3 = new TreeNode();
+            var accessor = KeyboardToolTipStateMachine.Instance.TestAccessor();
+
+            treeView.Nodes.AddRange(new TreeNode[] { treeNode1, treeNode2, treeNode3 });
+
+            Assert.True(accessor.IsToolTracked(treeNode1));
+            Assert.True(accessor.IsToolTracked(treeNode2));
+            Assert.True(accessor.IsToolTracked(treeNode3));
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_InvokeAdd_AddSubNodeToTrackList(bool showNodeToolTips)
+        {
+            using var treeView = new TreeView();
+            treeView.ShowNodeToolTips = showNodeToolTips;
+            TreeNode treeNode = new TreeNode();
+            TreeNode treeSubNodeLevel1 = new TreeNode();
+            TreeNode treeSubNodeLevel2 = new TreeNode();
+            var accessor = KeyboardToolTipStateMachine.Instance.TestAccessor();
+            treeView.Nodes.Add(treeNode);
+            treeNode.Nodes.Add(treeSubNodeLevel1);
+            treeSubNodeLevel1.Nodes.Add(treeSubNodeLevel2);
+
+            Assert.True(accessor.IsToolTracked(treeNode));
+            Assert.True(accessor.IsToolTracked(treeSubNodeLevel1));
+            Assert.True(accessor.IsToolTracked(treeSubNodeLevel2));
+            treeView.Nodes.Remove(treeNode);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_InvokeAdd_AddNodeAndSubNodeToTrackList(bool showNodeToolTips)
+        {
+            using var treeView = new TreeView();
+            treeView.ShowNodeToolTips = showNodeToolTips;
+            TreeNode treeNode = new TreeNode();
+            TreeNode treeSubNodeLevel1 = new TreeNode();
+            TreeNode treeSubNodeLevel2 = new TreeNode();
+            var accessor = KeyboardToolTipStateMachine.Instance.TestAccessor();
+            treeNode.Nodes.Add(treeSubNodeLevel1);
+            treeSubNodeLevel1.Nodes.Add(treeSubNodeLevel2);
+            treeView.Nodes.Add(treeNode);
+
+            Assert.True(accessor.IsToolTracked(treeNode));
+            Assert.True(accessor.IsToolTracked(treeSubNodeLevel1));
+            Assert.True(accessor.IsToolTracked(treeSubNodeLevel2));
+            treeView.Nodes.Remove(treeNode);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_InvokeRemove_RemoveNodeFromTrackList(bool showNodeToolTips)
+        {
+            using var treeView = new TreeView();
+            treeView.ShowNodeToolTips = showNodeToolTips;
+            TreeNode treeNode = new TreeNode();
+            var accessor = KeyboardToolTipStateMachine.Instance.TestAccessor();
+
+            treeView.Nodes.Add(treeNode);
+            Assert.True(accessor.IsToolTracked(treeNode));
+
+            treeView.Nodes.Remove(treeNode);
+
+            Assert.False(accessor.IsToolTracked(treeNode));
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_InvokeRemove_RemoveNodeAndSubNodesFromTrackList(bool showNodeToolTips)
+        {
+            using var treeView = new TreeView();
+            treeView.ShowNodeToolTips = showNodeToolTips;
+            TreeNode treeNode = new TreeNode();
+            TreeNode treeSubNodeLevel1 = new TreeNode();
+            TreeNode treeSubNodeLevel2 = new TreeNode();
+            var accessor = KeyboardToolTipStateMachine.Instance.TestAccessor();
+            treeNode.Nodes.Add(treeSubNodeLevel1);
+            treeSubNodeLevel1.Nodes.Add(treeSubNodeLevel2);
+            treeView.Nodes.Add(treeNode);
+
+            Assert.True(accessor.IsToolTracked(treeNode));
+            Assert.True(accessor.IsToolTracked(treeSubNodeLevel1));
+            Assert.True(accessor.IsToolTracked(treeSubNodeLevel2));
+
+            treeView.Nodes.Remove(treeNode);
+
+            Assert.False(accessor.IsToolTracked(treeNode));
+            Assert.False(accessor.IsToolTracked(treeSubNodeLevel1));
+            Assert.False(accessor.IsToolTracked(treeSubNodeLevel2));
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_InvokeInsert_AddNodeToTrackList(bool showNodeToolTips)
+        {
+            using var treeView = new TreeView();
+            treeView.ShowNodeToolTips = showNodeToolTips;
+            TreeNode treeNode = new TreeNode();
+
+            treeView.Nodes.Insert(0, treeNode);
+
+            Assert.True(KeyboardToolTipStateMachine.Instance.TestAccessor().IsToolTracked(treeNode));
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_InvokeDispose_RemoveNodesFromTrackList(bool showNodeToolTips)
+        {
+            using var treeView = new TreeView();
+            treeView.ShowNodeToolTips = showNodeToolTips;
+            TreeNode treeNode = new TreeNode();
+            TreeNode treeSubNodeLevel1 = new TreeNode();
+            TreeNode treeSubNodeLevel2 = new TreeNode();
+            var accessor = KeyboardToolTipStateMachine.Instance.TestAccessor();
+            treeNode.Nodes.Add(treeSubNodeLevel1);
+            treeSubNodeLevel1.Nodes.Add(treeSubNodeLevel2);
+            treeView.Nodes.Add(treeNode);
+
+            Assert.True(accessor.IsToolTracked(treeNode));
+            Assert.True(accessor.IsToolTracked(treeSubNodeLevel1));
+            Assert.True(accessor.IsToolTracked(treeSubNodeLevel2));
+
+            treeView.Dispose();
+
+            Assert.False(accessor.IsToolTracked(treeNode));
+            Assert.False(accessor.IsToolTracked(treeSubNodeLevel1));
+            Assert.False(accessor.IsToolTracked(treeSubNodeLevel2));
+        }
+
+        [WinFormsFact]
+        public void TreeView_Invokes_SetToolTip_IfExternalToolTipIsSet()
+        {
+            using TreeView treeView = new TreeView();
+            treeView.ShowNodeToolTips = true;
+            using ToolTip toolTip = new ToolTip();
+            treeView.CreateControl();
+
+            dynamic listViewDynamic = treeView.TestAccessor().Dynamic;
+            string actual = listViewDynamic.controlToolTipText;
+
+            Assert.Null(actual);
+            Assert.NotEqual(IntPtr.Zero, toolTip.Handle); // A workaround to create the toolTip native window Handle
+
+            string text = "Some test text";
+            toolTip.SetToolTip(treeView, text); // Invokes TreeView's SetToolTip inside
+            actual = listViewDynamic.controlToolTipText;
+
+            Assert.Equal(text, actual);
+        }
+
+        [WinFormsFact]
+        public void TreeView_Remove_NotSelectedNode()
+        {
+            using TreeView treeView = new();
+            treeView.CreateControl();
+            treeView.Nodes.AddRange(new TreeNode[] { new("Test 1"), new("Test 2"), new("Test 3") });
+
+            treeView.SelectedNode = treeView.Nodes[0];
+
+            Assert.True(treeView.Nodes[0].IsSelected);
+            Assert.Equal(3, treeView.Nodes.Count);
+            Assert.Equal(treeView.Nodes[0], treeView.SelectedNode);
+
+            treeView.Nodes.Remove(treeView.Nodes[2]);
+
+            Assert.True(treeView.Nodes[0].IsSelected);
+            Assert.Equal(2, treeView.Nodes.Count);
+            Assert.Equal(treeView.Nodes[0], treeView.SelectedNode);
+
+            treeView.Nodes.Remove(treeView.Nodes[1]);
+
+            Assert.True(treeView.Nodes[0].IsSelected);
+            Assert.Equal(1, treeView.Nodes.Count);
+            Assert.Equal(treeView.Nodes[0], treeView.SelectedNode);
+        }
+
+        [WinFormsFact]
+        public void TreeView_Remove_SelectedNode()
+        {
+            using TreeView treeView = new();
+            treeView.CreateControl();
+            treeView.Nodes.AddRange(new TreeNode[] { new("Test 1"), new("Test 2"), new("Test 3") });
+
+            treeView.SelectedNode = treeView.Nodes[0];
+
+            for (int count = treeView.Nodes.Count; count > 1; count -= 1)
+            {
+                TreeNode node = treeView.Nodes[0];
+
+                Assert.True(node.IsSelected);
+                Assert.Equal(count, treeView.Nodes.Count);
+                Assert.Equal(node, treeView.SelectedNode);
+
+                treeView.Nodes.Remove(node);
+                count -= 1;
+
+                Assert.False(node.IsSelected);
+                Assert.Equal(count, treeView.Nodes.Count);
+
+                if (count == 0)
+                {
+                    Assert.Null(treeView.SelectedNode);
+                }
+                else
+                {
+                    Assert.Equal(treeView.Nodes[0], treeView.SelectedNode);
+                }
+            }
+        }
+
+        [WinFormsFact]
+        public void TreeView_Remove_NotSelectedSubNode()
+        {
+            using TreeView treeView = new();
+            treeView.CreateControl();
+
+            treeView.Nodes.Add("Test");
+            TreeNode treeNode = treeView.Nodes[0];
+            treeNode.Nodes.AddRange(new TreeNode[] { new("Test 1"), new("Test 2"), new("Test 3") });
+
+            treeView.SelectedNode = treeNode.Nodes[0];
+
+            Assert.True(treeNode.Nodes[0].IsSelected);
+            Assert.Equal(3, treeNode.Nodes.Count);
+            Assert.Equal(treeNode.Nodes[0], treeView.SelectedNode);
+
+            treeNode.Nodes.Remove(treeNode.Nodes[2]);
+
+            Assert.True(treeNode.Nodes[0].IsSelected);
+            Assert.Equal(2, treeNode.Nodes.Count);
+            Assert.Equal(treeNode.Nodes[0], treeView.SelectedNode);
+
+            treeNode.Nodes.Remove(treeNode.Nodes[1]);
+
+            Assert.True(treeNode.Nodes[0].IsSelected);
+            Assert.Equal(1, treeNode.Nodes.Count);
+            Assert.Equal(treeNode.Nodes[0], treeView.SelectedNode);
+        }
+
+        [WinFormsFact]
+        public void TreeView_Remove_SelectedSubNode()
+        {
+            using TreeView treeView = new();
+            treeView.CreateControl();
+
+            treeView.Nodes.Add("Test");
+            TreeNode treeNode = treeView.Nodes[0];
+            treeNode.Nodes.AddRange(new TreeNode[] { new("Test 1"), new("Test 2"), new("Test 3") });
+
+            treeView.SelectedNode = treeNode.Nodes[0];
+
+            for (int count = treeNode.Nodes.Count; count > 1; count -= 1)
+            {
+                TreeNode node = treeNode.Nodes[0];
+
+                Assert.True(node.IsSelected);
+                Assert.Equal(count, treeNode.Nodes.Count);
+                Assert.Equal(node, treeView.SelectedNode);
+
+                treeView.Nodes.Remove(node);
+                count -= 1;
+
+                Assert.False(node.IsSelected);
+                Assert.Equal(count, treeNode.Nodes.Count);
+
+                if (count == 0)
+                {
+                    Assert.Equal(treeView.Nodes[0], treeView.SelectedNode);
+                }
+                else
+                {
+                    Assert.Equal(treeNode.Nodes[0], treeView.SelectedNode);
+                }
+            }
+        }
+
+        [WinFormsFact]
+        public void TreeView_Remove_ParentSelectedNode()
+        {
+            using TreeView treeView = new();
+            treeView.CreateControl();
+
+            treeView.Nodes.Add("Test");
+            TreeNode treeNode = treeView.Nodes[0];
+            treeNode.Nodes.Add("Test 1");
+
+            treeView.SelectedNode = treeNode.Nodes[0];
+
+            Assert.True(treeNode.Nodes[0].IsSelected);
+            Assert.Equal(treeNode.Nodes[0], treeView.SelectedNode);
+            Assert.Equal(1, treeNode.Nodes.Count);
+            Assert.Equal(1, treeView.Nodes.Count);
+
+            treeView.Nodes.Remove(treeNode);
+
+            Assert.False(treeNode.Nodes[0].IsSelected);
+            Assert.Null(treeView.SelectedNode);
+            Assert.Equal(0, treeView.Nodes.Count);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_Remove_NotCheckedNode(bool checkBoxes)
+        {
+            using TreeView treeView = new() { CheckBoxes = checkBoxes };
+            treeView.CreateControl();
+            treeView.Nodes.AddRange(new TreeNode[] { new("Test 1"), new("Test 2"), new("Test 3") });
+
+            treeView.Nodes[0].Checked = true;
+
+            Assert.True(treeView.Nodes[0].Checked);
+            Assert.Equal(3, treeView.Nodes.Count);
+
+            treeView.Nodes.Remove(treeView.Nodes[2]);
+
+            Assert.True(treeView.Nodes[0].Checked);
+            Assert.Equal(2, treeView.Nodes.Count);
+
+            treeView.Nodes.Remove(treeView.Nodes[1]);
+
+            Assert.True(treeView.Nodes[0].Checked);
+            Assert.Equal(1, treeView.Nodes.Count);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_Remove_CheckedNode(bool checkBoxes)
+        {
+            using TreeView treeView = new() { CheckBoxes = checkBoxes };
+            treeView.CreateControl();
+            treeView.Nodes.AddRange(new TreeNode[] { new("Test 1"), new("Test 2"), new("Test 3") });
+
+            for (int count = treeView.Nodes.Count; count > 1; count -= 1)
+            {
+                TreeNode node = treeView.Nodes[0];
+                node.Checked = true;
+
+                Assert.True(node.Checked);
+                Assert.Equal(count, treeView.Nodes.Count);
+
+                treeView.Nodes.Remove(node);
+                count -= 1;
+
+                Assert.True(node.Checked);
+                Assert.Equal(count, treeView.Nodes.Count);
+            }
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_Remove_NotCheckedSubNode(bool checkBoxes)
+        {
+            using TreeView treeView = new() { CheckBoxes = checkBoxes };
+            treeView.CreateControl();
+
+            treeView.Nodes.Add("Test");
+            TreeNode treeNode = treeView.Nodes[0];
+            treeNode.Nodes.AddRange(new TreeNode[] { new("Test 1"), new("Test 2"), new("Test 3") });
+
+            treeNode.Nodes[0].Checked = true;
+
+            Assert.True(treeNode.Nodes[0].Checked);
+            Assert.Equal(3, treeNode.Nodes.Count);
+
+            treeNode.Nodes.Remove(treeNode.Nodes[2]);
+
+            Assert.True(treeNode.Nodes[0].Checked);
+            Assert.Equal(2, treeNode.Nodes.Count);
+
+            treeNode.Nodes.Remove(treeNode.Nodes[1]);
+
+            Assert.True(treeNode.Nodes[0].Checked);
+            Assert.Equal(1, treeNode.Nodes.Count);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_Remove_CheckedSubNode(bool checkBoxes)
+        {
+            using TreeView treeView = new() { CheckBoxes = checkBoxes };
+            treeView.CreateControl();
+
+            treeView.Nodes.Add("Test");
+            TreeNode treeNode = treeView.Nodes[0];
+            treeNode.Nodes.AddRange(new TreeNode[] { new("Test 1"), new("Test 2"), new("Test 3") });
+
+            for (int count = treeNode.Nodes.Count; count > 1; count -= 1)
+            {
+                TreeNode node = treeNode.Nodes[0];
+                node.Checked = true;
+
+                Assert.True(node.Checked);
+                Assert.Equal(count, treeNode.Nodes.Count);
+
+                treeView.Nodes.Remove(node);
+                count -= 1;
+
+                Assert.True(node.Checked);
+                Assert.Equal(count, treeNode.Nodes.Count);
+            }
+        }
+
+        [WinFormsTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TreeView_Remove_ParentCheckedNode(bool checkBoxes)
+        {
+            using TreeView treeView = new() { CheckBoxes = checkBoxes };
+            treeView.CreateControl();
+
+            treeView.Nodes.Add("Test");
+            TreeNode treeNode = treeView.Nodes[0];
+            treeNode.Nodes.Add("Test 1");
+
+            treeView.Nodes[0].Checked = true;
+            treeNode.Nodes[0].Checked = true;
+
+            Assert.True(treeNode.Checked);
+            Assert.True(treeNode.Nodes[0].Checked);
+            Assert.Equal(1, treeNode.Nodes.Count);
+            Assert.Equal(1, treeView.Nodes.Count);
+
+            treeView.Nodes.Remove(treeNode);
+
+            Assert.True(treeNode.Checked);
+            Assert.True(treeNode.Nodes[0].Checked);
+            Assert.Equal(1, treeNode.Nodes.Count);
+            Assert.Equal(0, treeView.Nodes.Count);
         }
 
         private class SubTreeView : TreeView

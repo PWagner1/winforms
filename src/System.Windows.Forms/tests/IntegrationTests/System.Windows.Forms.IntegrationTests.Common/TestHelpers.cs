@@ -4,9 +4,7 @@
 
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Reflection;
-using System.Threading;
 using Newtonsoft.Json.Linq;
 using static Interop.User32;
 
@@ -30,10 +28,21 @@ namespace System.Windows.Forms.IntegrationTests.Common
         }
 
         /// <summary>
-        ///  Should always match the TargetFramework in the .csproj
+        /// Should always match the TargetFramework in the .csproj
         /// </summary>
         private static string TargetFramework
-            => "netcoreapp5.0";
+        {
+            get
+            {
+                var frameworkAttribute = (Runtime.Versioning.TargetFrameworkAttribute)Assembly.GetExecutingAssembly()
+                    .GetCustomAttributes(typeof(Runtime.Versioning.TargetFrameworkAttribute), false)
+                    .SingleOrDefault();
+
+                string[] etractedTokens = frameworkAttribute.FrameworkName.Split("=v"); // "NetcoreApp, Version=v7.0"
+
+                return $"net{etractedTokens[1]}";
+            }
+        }
 
         /// <summary>
         ///  Get the output exe path for a specified project.
@@ -124,6 +133,7 @@ namespace System.Windows.Forms.IntegrationTests.Common
             catch (Exception)
             {
             }
+
             process.WaitForExit(timeout);
             return process.ExitCode;
         }
@@ -234,8 +244,10 @@ namespace System.Windows.Forms.IntegrationTests.Common
                     var ret = Path.Combine(currentDirectory, seek);
                     return ret;
                 }
+
                 currentDirectory = Directory.GetParent(currentDirectory).FullName;
             }
+
             throw new DirectoryNotFoundException($"No {seek} folder was found among siblings of subfolders of {codeBasePath}.");
         }
 
@@ -259,6 +271,17 @@ namespace System.Windows.Forms.IntegrationTests.Common
         public static bool SendTabKeyToProcess(Process process, bool switchToMainWindow = true)
         {
             return SendKeysToProcess(process, "{TAB}", switchToMainWindow);
+        }
+
+        /// <summary>
+        ///  Presses Backspace on the given process if it can be made the foreground process
+        /// </summary>
+        /// <param name="process">The process to send the Backspace key to</param>
+        /// <returns>Whether or not the Backspace key was pressed on the process</returns>
+        /// <seealso cref="SendKeysToProcess(Process, string, bool)"/>
+        public static bool SendBackspaceKeyToProcess(Process process, bool switchToMainWindow = true)
+        {
+            return SendKeysToProcess(process, "{BACKSPACE}", switchToMainWindow);
         }
 
         /// <summary>
@@ -303,6 +326,18 @@ namespace System.Windows.Forms.IntegrationTests.Common
         public static bool SendUpArrowKeyToProcess(Process process, bool switchToMainWindow = true)
         {
             return SendKeysToProcess(process, "{UP}");
+        }
+
+        /// <summary>
+        ///  Presses Alt plus choosen letter on the given process if it can be made the foreground process
+        /// </summary>
+        /// <param name="process">The process to send the Alt and key to</param>
+        /// <param name="letter">Letter in addition to Alt to send to process.</param>
+        /// <returns>Whether or not the Up key was pressed on the process</returns>
+        /// <seealso cref="SendKeysToProcess(Process, string, bool)"/>
+        public static bool SendAltKeyToProcess(Process process, char letter, bool switchToMainWindow = true)
+        {
+            return SendKeysToProcess(process, "%{" + letter + "}", switchToMainWindow);
         }
 
         /// <summary>
@@ -371,8 +406,8 @@ namespace System.Windows.Forms.IntegrationTests.Common
         /// <remarks>Throws an ArgumentException if the given key(s) is null or the empty string.</remarks>
         /// <returns>Whether or not the key(s) were pressed on the process</returns>
         /// <seealso cref="System.Diagnostics.Process.MainWindowHandle"/>
-        /// <seealso cref="SetForegroundWindow(IntPtr)"/>
-        /// <seealso cref="GetForegroundWindow()"/>
+        /// <seealso cref="PInvoke.SetForegroundWindow{T}(T)"/>
+        /// <seealso cref="PInvoke.GetForegroundWindow()"/>
         /// <seealso cref="System.Windows.Forms.SendKeys.SendWait(string)"/>
         /// <seealso cref="System.Threading.Thread.Sleep(int)"/>
         internal static bool SendKeysToProcess(Process process, string keys, bool switchToMainWindow = true)
@@ -392,18 +427,18 @@ namespace System.Windows.Forms.IntegrationTests.Common
                 throw new ArgumentException(nameof(keys) + " must not be null or empty.");
             }
 
-            IntPtr mainWindowHandle = process.MainWindowHandle;
+            HWND mainWindowHandle = (HWND)process.MainWindowHandle;
 
             if (switchToMainWindow)
             {
-                SetForegroundWindow(mainWindowHandle);
+                PInvoke.SetForegroundWindow(mainWindowHandle);
             }
 
-            IntPtr foregroundWindow = GetForegroundWindow();
+            HWND foregroundWindow = PInvoke.GetForegroundWindow();
 
             string windowTitle = GetWindowText(foregroundWindow);
 
-            if (GetWindowThreadProcessId(foregroundWindow, out uint processId) == 0 ||
+            if (PInvoke.GetWindowThreadProcessId(foregroundWindow, out uint processId) == 0 ||
                 processId != process.Id)
             {
                 Debug.WriteLine($"ForegroundWindow doesn't belong the test process! The current window is {windowTitle}.");

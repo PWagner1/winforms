@@ -58,7 +58,16 @@ namespace System.Windows.Forms.Metafiles
             return sb.ToString();
         }
 
-        public ReadOnlySpan<uint> aPolyCounts => TrailingArray<uint>.GetBuffer(ref _aPolyCounts, nPolys);
+        public unsafe ReadOnlySpan<uint> aPolyCounts
+        {
+            get
+            {
+                fixed(uint* c = &_aPolyCounts)
+                {
+                    return new(c, checked((int)nPolys));
+                }
+            }
+        }
 
         public unsafe ReadOnlySpan<POINTS> GetPointsForPoly(int index)
         {
@@ -75,6 +84,7 @@ namespace System.Windows.Forms.Metafiles
                     currentPoint += counts[current];
                     current++;
                 }
+
                 return new ReadOnlySpan<POINTS>(currentPoint, (int)counts[current]);
             }
         }

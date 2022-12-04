@@ -3,16 +3,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
-using System.Drawing;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using Moq;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
 
 namespace System.Drawing.Design.Tests
@@ -133,7 +129,7 @@ namespace System.Drawing.Design.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ToolboxItem_Company_Set_GetReturnsExpected(string value, string expected)
         {
             var item = new ToolboxItem
@@ -209,7 +205,7 @@ namespace System.Drawing.Design.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ToolboxItem_Description_Set_GetReturnsExpected(string value, string expected)
         {
             var item = new ToolboxItem
@@ -233,7 +229,7 @@ namespace System.Drawing.Design.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ToolboxItem_DisplayName_Set_GetReturnsExpected(string value, string expected)
         {
             var item = new ToolboxItem
@@ -289,7 +285,7 @@ namespace System.Drawing.Design.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ToolboxItem_IsTransient_Set_GetReturnsExpected(bool value)
         {
             var item = new ToolboxItem
@@ -344,7 +340,7 @@ namespace System.Drawing.Design.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void ToolboxItem_TypeName_Set_GetReturnsExpected(string value, string expected)
         {
             var item = new ToolboxItem
@@ -1173,6 +1169,7 @@ namespace System.Drawing.Design.Tests
             {
                 Assert.Equal(expected, actual);
             }
+
             Assert.Equal(same, object.ReferenceEquals(value, actual));
         }
 
@@ -1208,6 +1205,7 @@ namespace System.Drawing.Design.Tests
                 yield return new object[] { null, new AssemblyName(typeof(ToolboxItemTests).Assembly.FullName), "NoSuchType", false, null };
                 yield return new object[] { null, null, string.Empty, false, null };
 
+#pragma warning disable SYSLIB0044 // Type or member is obsolete
                 var validNameWithCodeBase = new AssemblyName(typeof(int).Assembly.FullName)
                 {
                     CodeBase = "System.Windows.Forms.Design.Tests.dll"
@@ -1252,6 +1250,7 @@ namespace System.Drawing.Design.Tests
                 {
                     CodeBase = "ThrowIOException"
                 };
+#pragma warning restore SYSLIB0044 // Type or member is obsolete
                 yield return new object[] { null, ioFormatExceptionCodeBase, "System.Int32", false, typeof(int) };
             }
 
@@ -1322,8 +1321,8 @@ namespace System.Drawing.Design.Tests
             mockDesignerHost
                 .Setup(h => h.GetService(typeof(ITypeResolutionService)))
                 .Returns(null);
-            Assert.Throws<ArgumentException>(null, () => item.GetType(mockDesignerHost.Object, new AssemblyName(), "typeName", false));
-            Assert.Throws<ArgumentException>(null, () => item.GetType(null, new AssemblyName(), "typeName", false));
+            Assert.Throws<ArgumentException>(() => item.GetType(mockDesignerHost.Object, new AssemblyName(), "typeName", false));
+            Assert.Throws<ArgumentException>(() => item.GetType(null, new AssemblyName(), "typeName", false));
         }
 
         public static IEnumerable<object[]> Initialize_TypeWithAttributes_TestData()
@@ -1363,6 +1362,7 @@ namespace System.Drawing.Design.Tests
                 {
                     Assert.Equal(new Size(16, 16), item.Bitmap.Size);
                 }
+
                 Assert.Equal("Microsoft Corporation", item.Company);
                 Assert.Equal("Description", item.Description);
                 Assert.Equal(type.Assembly.FullName, item.AssemblyName.FullName);
@@ -1486,6 +1486,7 @@ namespace System.Drawing.Design.Tests
             item.OnComponentsCreated(null);
             Assert.Equal(1, callCount);
         }
+
         [Fact]
         public void ToolboxItem_OnComponentsCreating_Invoke_Success()
         {

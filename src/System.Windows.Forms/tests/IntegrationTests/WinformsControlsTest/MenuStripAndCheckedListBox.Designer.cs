@@ -107,6 +107,7 @@ namespace WinformsControlsTest
             //
             // checkUnCheckToolStripMenuItem
             //
+            this.checkUnCheckToolStripMenuItem.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.checkUnCheckToolStripMenuItem.Checked = true;
             this.checkUnCheckToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkUnCheckToolStripMenuItem.Name = "checkUnCheckToolStripMenuItem";
@@ -124,6 +125,7 @@ namespace WinformsControlsTest
             this.memoryCardFileToolStripMenuItem.Name = "memoryCardFileToolStripMenuItem";
             this.memoryCardFileToolStripMenuItem.Size = new System.Drawing.Size(401, 44);
             this.memoryCardFileToolStripMenuItem.Text = "Memory Card File";
+            this.memoryCardFileToolStripMenuItem.ToolTipText = "Looooooooooooooooooooooooooooooooong ToolTip";
             //
             // navigationToolStripMenuItem
             //
@@ -132,6 +134,7 @@ namespace WinformsControlsTest
             this.navigationToolStripMenuItem.Name = "navigationToolStripMenuItem";
             this.navigationToolStripMenuItem.Size = new System.Drawing.Size(265, 44);
             this.navigationToolStripMenuItem.Text = "Navigation";
+            this.navigationToolStripMenuItem.ToolTipText = "Looooooooooooooooooooooooooooooooong ToolTip 2";
             //
             // newToolStripMenuItem1
             //

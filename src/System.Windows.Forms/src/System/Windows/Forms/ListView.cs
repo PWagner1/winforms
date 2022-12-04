@@ -2,13 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Globalization;
@@ -51,13 +49,13 @@ namespace System.Windows.Forms
         private static readonly object EVENT_GROUPCOLLAPSEDSTATECHANGED = new object();
         private static readonly object EVENT_GROUPTASKLINKCLICK = new object();
 
-        private ItemActivation activation = ItemActivation.Standard;
-        private ListViewAlignment alignStyle = ListViewAlignment.Top;
-        private BorderStyle borderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-        private ColumnHeaderStyle headerStyle = ColumnHeaderStyle.Clickable;
-        private SortOrder sorting = SortOrder.None;
-        private View viewStyle = System.Windows.Forms.View.LargeIcon;
-        private string toolTipCaption = string.Empty;
+        private ItemActivation _activation = ItemActivation.Standard;
+        private ListViewAlignment _alignStyle = ListViewAlignment.Top;
+        private BorderStyle _borderStyle = BorderStyle.Fixed3D;
+        private ColumnHeaderStyle _headerStyle = ColumnHeaderStyle.Clickable;
+        private SortOrder _sorting = SortOrder.None;
+        private View _viewStyle = View.LargeIcon;
+        private string _toolTipCaption = string.Empty;
 
         private const int LISTVIEWSTATE_ownerDraw = 0x00000001;
         private const int LISTVIEWSTATE_allowColumnReorder = 0x00000002;
@@ -94,50 +92,52 @@ namespace System.Windows.Forms
         private const int LISTVIEWSTATE1_disposingImageLists = 0x00000004;
         private const int LISTVIEWSTATE1_useCompatibleStateImageBehavior = 0x00000008;
         private const int LISTVIEWSTATE1_selectedIndexChangedSkipped = 0x00000010;
+        private const int LISTVIEWSTATE1_clearingInnerListOnDispose = 0x00000020;
 
+        private const int LVLABELEDITTIMER = 0x2A;
         private const int LVTOOLTIPTRACKING = 0x30;
         private const int MAXTILECOLUMNS = 20;
 
         // PERF: take all the bools and put them into a state variable
-        private Collections.Specialized.BitVector32 listViewState; // see LISTVIEWSTATE_ consts above
-        private Collections.Specialized.BitVector32 listViewState1;// see LISTVIEWSTATE1_ consts above
+        private Collections.Specialized.BitVector32 _listViewState; // see LISTVIEWSTATE_ consts above
+        private Collections.Specialized.BitVector32 _listViewState1; // see LISTVIEWSTATE1_ consts above
 
         // Ownerdraw data caches...  Only valid inside WM_PAINT.
-        //
 
-        private Color odCacheForeColor = SystemColors.WindowText;
-        private Color odCacheBackColor = SystemColors.Window;
-        private Font odCacheFont;
-        private Gdi32.HFONT odCacheFontHandle;
-        private FontHandleWrapper odCacheFontHandleWrapper;
+        private Color _odCacheForeColor = SystemColors.WindowText;
+        private Color _odCacheBackColor = SystemColors.Window;
+        private Font _odCacheFont;
+        private HFONT _odCacheFontHandle;
+        private FontHandleWrapper? _odCacheFontHandleWrapper;
 
-        private ImageList _imageListLarge;
-        private ImageList _imageListSmall;
-        private ImageList _imageListState;
-        private ImageList _imageListGroup;
+        private ImageList? _imageListLarge;
+        private ImageList? _imageListSmall;
+        private ImageList? _imageListState;
+        private ImageList? _imageListGroup;
 
-        private MouseButtons downButton;
-        private int itemCount;
-        private int columnIndex;
-        private int topIndex;
-        private bool hoveredAlready;
+        private MouseButtons _downButton;
+        private int _itemCount;
+        private int _columnIndex;
+        private ListViewItem? _selectedItem;
+        private int _topIndex;
+        private bool _hoveredAlready;
 
-        private bool rightToLeftLayout;
+        private bool _rightToLeftLayout;
 
         // member variables which are used for VirtualMode
-        private int virtualListSize;
+        private int _virtualListSize;
 
-        private ListViewGroup defaultGroup;
-        private ListViewGroup focusedGroup;
+        private ListViewGroup? _defaultGroup;
+        private ListViewGroup? _focusedGroup;
 
         // Invariant: the table always contains all Items in the ListView, and maps IDs -> Items.
         // listItemsArray is null if the handle is created; otherwise, it contains all Items.
         // We do not try to sort listItemsArray as items are added, but during a handle recreate
         // we will make sure we get the items in the same order the ListView displays them.
-        private readonly Hashtable listItemsTable = new Hashtable(); // elements are ListViewItem's
-        private ArrayList listItemsArray = new ArrayList(); // elements are ListViewItem's
+        private readonly Dictionary<int, ListViewItem> _listItemsTable = new(); // elements are ListViewItem's
+        private List<ListViewItem>? _listViewItems = new();
 
-        private Size tileSize = Size.Empty;
+        private Size _tileSize = Size.Empty;
 
         // when we are in delayed update mode (that is when BeginUpdate has been called, we want to cache the items to
         // add until EndUpdate is called. To do that, we push in an array list into our PropertyStore
@@ -145,50 +145,54 @@ namespace System.Windows.Forms
         //
         private static readonly int PropDelayedUpdateItems = PropertyStore.CreateKey();
 
-        private int updateCounter; // the counter we use to track how many BeginUpdate/EndUpdate calls there have been.
+        private int _updateCounter; // the counter we use to track how many BeginUpdate/EndUpdate calls there have been.
 
-        private ColumnHeader[] columnHeaders;
-        private readonly ListViewItemCollection listItemCollection;
-        private readonly ColumnHeaderCollection columnHeaderCollection;
-        private CheckedIndexCollection checkedIndexCollection;
-        private CheckedListViewItemCollection checkedListViewItemCollection;
-        private SelectedListViewItemCollection selectedListViewItemCollection;
-        private SelectedIndexCollection selectedIndexCollection;
-        private ListViewGroupCollection groups;
-        private ListViewInsertionMark insertionMark;
-        private LabelEditEventHandler onAfterLabelEdit;
-        private LabelEditEventHandler onBeforeLabelEdit;
-        private ColumnClickEventHandler onColumnClick;
-        private EventHandler onItemActivate;
-        private ItemCheckedEventHandler onItemChecked;
-        private ItemDragEventHandler onItemDrag;
-        private ItemCheckEventHandler onItemCheck;
-        private ListViewItemMouseHoverEventHandler onItemMouseHover;
+        private ColumnHeader[]? _columnHeaders;
+        private readonly ListViewItemCollection _listItemCollection;
+        private readonly ColumnHeaderCollection _columnHeaderCollection;
+        private CheckedIndexCollection? _checkedIndexCollection;
+        private CheckedListViewItemCollection? _checkedListViewItemCollection;
+        private SelectedListViewItemCollection? _selectedListViewItemCollection;
+        private SelectedIndexCollection? _selectedIndexCollection;
+        private ListViewGroupCollection? _groups;
+        private ListViewInsertionMark? _insertionMark;
+        private LabelEditEventHandler? _onAfterLabelEdit;
+        private LabelEditEventHandler? _onBeforeLabelEdit;
+        private ColumnClickEventHandler? _onColumnClick;
+        private EventHandler? _onItemActivate;
+        private ItemCheckedEventHandler? _onItemChecked;
+        private ItemDragEventHandler? _onItemDrag;
+        private ItemCheckEventHandler? _onItemCheck;
+        private ListViewItemMouseHoverEventHandler? _onItemMouseHover;
 
         // IDs for identifying ListViewItem's
-        private int nextID;
+        private int _nextID;
 
         // We save selected and checked items between handle creates.
-        private List<ListViewItem> savedSelectedItems;
-        private List<ListViewItem> savedCheckedItems;
+        private List<ListViewItem>? _savedSelectedItems;
+        private List<ListViewItem>? _savedCheckedItems;
 
         // Sorting
-        private IComparer listItemSorter;
+        private IComparer? _listItemSorter;
 
-        private ListViewItem prevHoveredItem;
+        private ListViewItem? _prevHoveredItem;
+
+        private bool _blockLabelEdit;
+
+        private ListViewLabelEditNativeWindow? _labelEdit;
 
         // Background image stuff
         // Because we have to create a temporary file and the OS does not clean up the temporary files from the machine
         // we have to do that ourselves
-        string backgroundImageFileName = string.Empty;
+        private string _backgroundImageFileName = string.Empty;
 
         // it *seems* that if the user changes the background image then the win32 listView will hang on to the previous
         // background image until it gets the first WM_PAINT message -  I use words like *seems* because nothing is guaranteed
         // when it comes to win32 listView.
         // so our wrapper has to hang on to the previousBackgroundImageFileNames and destroy them after it gets the first WM_PAINT message
 
-        int bkImgFileNamesCount = -1;
-        string[] bkImgFileNames;
+        private int _bkImgFileNamesCount = -1;
+        private string?[]? _bkImgFileNames;
         private const int BKIMGARRAYSIZE = 8;
 
         // If the user clicked on the column divider, the native ListView fires HDN_ITEMCHANGED on each mouse up event.
@@ -196,12 +200,12 @@ namespace System.Windows.Forms
         // that the column header width changed.
         // We need to make our ListView wrapper more robust in face of this limitation inside ComCtl ListView.
         // columnHeaderClicked will be set in HDN_BEGINTRACK and reset in HDN_ITEMCHANGED.
-        ColumnHeader columnHeaderClicked;
-        int columnHeaderClickedWidth;
+        private ColumnHeader? _columnHeaderClicked;
+        private int _columnHeaderClickedWidth;
 
         // The user cancelled the column width changing event.
         // We cache the NewWidth supplied by the user and use it on HDN_ENDTRACK to set the final column width.
-        int newWidthForColumnWidthChangingCancelled = -1;
+        private int _newWidthForColumnWidthChangingCancelled = -1;
 
         /// <summary>
         ///  Creates an empty ListView with default styles.
@@ -214,19 +218,19 @@ namespace System.Windows.Forms
                                      LISTVIEWSTATE_autoArrange |
                                      LISTVIEWSTATE_showGroups;
 
-            listViewState = new Collections.Specialized.BitVector32(listViewStateFlags);
+            _listViewState = new Collections.Specialized.BitVector32(listViewStateFlags);
 
-            listViewState1 = new Collections.Specialized.BitVector32(LISTVIEWSTATE1_useCompatibleStateImageBehavior);
+            _listViewState1 = new Collections.Specialized.BitVector32(LISTVIEWSTATE1_useCompatibleStateImageBehavior);
             SetStyle(ControlStyles.UserPaint, false);
             SetStyle(ControlStyles.StandardClick, false);
             SetStyle(ControlStyles.UseTextForAccessibility, false);
 
-            odCacheFont = Font;
-            odCacheFontHandle = FontHandle;
+            _odCacheFont = Font;
+            _odCacheFontHandle = FontHandle;
             SetBounds(0, 0, 121, 97);
 
-            listItemCollection = new ListViewItemCollection(new ListViewNativeItemCollection(this));
-            columnHeaderCollection = new ColumnHeaderCollection(this);
+            _listItemCollection = new ListViewItemCollection(new ListViewNativeItemCollection(this));
+            _columnHeaderCollection = new ColumnHeaderCollection(this);
         }
 
         /// <summary>
@@ -240,7 +244,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return activation;
+                return _activation;
             }
 
             set
@@ -253,9 +257,9 @@ namespace System.Windows.Forms
                     throw new ArgumentException(SR.ListViewActivationMustBeOnWhenHotTrackingIsOn, nameof(value));
                 }
 
-                if (activation != value)
+                if (_activation != value)
                 {
-                    activation = value;
+                    _activation = value;
                     UpdateExtendedStyles();
                 }
             }
@@ -273,16 +277,16 @@ namespace System.Windows.Forms
         {
             get
             {
-                return alignStyle;
+                return _alignStyle;
             }
 
             set
             {
                 SourceGenerated.EnumValidator.Validate(value);
 
-                if (alignStyle != value)
+                if (_alignStyle != value)
                 {
-                    alignStyle = value;
+                    _alignStyle = value;
                     RecreateHandleInternal();
                 }
             }
@@ -300,14 +304,14 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_allowColumnReorder];
+                return _listViewState[LISTVIEWSTATE_allowColumnReorder];
             }
 
             set
             {
                 if (AllowColumnReorder != value)
                 {
-                    listViewState[LISTVIEWSTATE_allowColumnReorder] = value;
+                    _listViewState[LISTVIEWSTATE_allowColumnReorder] = value;
                     UpdateExtendedStyles();
                 }
             }
@@ -325,14 +329,14 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_autoArrange];
+                return _listViewState[LISTVIEWSTATE_autoArrange];
             }
 
             set
             {
                 if (AutoArrange != value)
                 {
-                    listViewState[LISTVIEWSTATE_autoArrange] = value;
+                    _listViewState[LISTVIEWSTATE_autoArrange] = value;
                     UpdateStyles();
                 }
             }
@@ -356,7 +360,7 @@ namespace System.Windows.Forms
                 base.BackColor = value;
                 if (IsHandleCreated)
                 {
-                    User32.SendMessageW(this, (User32.WM)LVM.SETBKCOLOR, IntPtr.Zero, PARAM.FromColor(BackColor));
+                    PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETBKCOLOR, (WPARAM)0, (LPARAM)BackColor);
                 }
             }
         }
@@ -371,7 +375,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler BackgroundImageLayoutChanged
+        public new event EventHandler? BackgroundImageLayoutChanged
         {
             add => base.BackgroundImageLayoutChanged += value;
             remove => base.BackgroundImageLayoutChanged -= value;
@@ -384,34 +388,34 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_backgroundImageTiled];
+                return _listViewState[LISTVIEWSTATE_backgroundImageTiled];
             }
             set
             {
                 if (BackgroundImageTiled != value)
                 {
-                    listViewState[LISTVIEWSTATE_backgroundImageTiled] = value;
-                    if (IsHandleCreated && BackgroundImage != null)
+                    _listViewState[LISTVIEWSTATE_backgroundImageTiled] = value;
+                    if (IsHandleCreated && BackgroundImage is not null)
                     {
                         // Don't call SetBackgroundImage because SetBackgroundImage deletes the existing image
                         // We don't need to delete it and this causes BAD problems w/ the Win32 list view control.
-                        fixed (char* pBackgroundImageFileName = backgroundImageFileName)
+                        fixed (char* pBackgroundImageFileName = _backgroundImageFileName)
                         {
-                            var lvbkImage = new LVBKIMAGEW();
+                            var lvbkImage = default(LVBKIMAGEW);
                             if (BackgroundImageTiled)
                             {
-                                lvbkImage.ulFlags = LVBKIF.STYLE_TILE;
+                                lvbkImage.ulFlags = LIST_VIEW_BACKGROUND_IMAGE_FLAGS.LVBKIF_STYLE_TILE;
                             }
                             else
                             {
-                                lvbkImage.ulFlags = LVBKIF.STYLE_NORMAL;
+                                lvbkImage.ulFlags = LIST_VIEW_BACKGROUND_IMAGE_FLAGS.LVBKIF_STYLE_NORMAL;
                             }
 
-                            lvbkImage.ulFlags |= LVBKIF.SOURCE_URL;
+                            lvbkImage.ulFlags |= LIST_VIEW_BACKGROUND_IMAGE_FLAGS.LVBKIF_SOURCE_URL;
                             lvbkImage.pszImage = pBackgroundImageFileName;
-                            lvbkImage.cchImageMax = (uint)(backgroundImageFileName.Length + 1);
+                            lvbkImage.cchImageMax = (uint)(_backgroundImageFileName.Length + 1);
 
-                            User32.SendMessageW(this, (User32.WM)LVM.SETBKIMAGEW, IntPtr.Zero, ref lvbkImage);
+                            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETBKIMAGEW, (WPARAM)0, ref lvbkImage);
                         }
                     }
                 }
@@ -427,14 +431,14 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.borderStyleDescr))]
         public BorderStyle BorderStyle
         {
-            get => borderStyle;
+            get => _borderStyle;
             set
             {
                 SourceGenerated.EnumValidator.Validate(value);
 
-                if (borderStyle != value)
+                if (_borderStyle != value)
                 {
-                    borderStyle = value;
+                    _borderStyle = value;
                     UpdateStyles();
                 }
             }
@@ -451,7 +455,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_checkBoxes];
+                return _listViewState[LISTVIEWSTATE_checkBoxes];
             }
 
             set
@@ -465,34 +469,33 @@ namespace System.Windows.Forms
                             throw new NotSupportedException(SR.ListViewCheckBoxesNotSupportedInTileView);
                         }
 
-                        if (CheckBoxes)
+                        if (CheckBoxes && !VirtualMode)
                         {
                             // Save away the checked items just in case we re-activate checkboxes
-                            //
-                            savedCheckedItems = new List<ListViewItem>(CheckedItems.Count);
+                            _savedCheckedItems = new List<ListViewItem>(CheckedItems.Count);
                             ListViewItem[] items = new ListViewItem[CheckedItems.Count];
                             CheckedItems.CopyTo(items, 0);
                             for (int i = 0; i < items.Length; i++)
                             {
-                                savedCheckedItems.Add(items[i]);
+                                _savedCheckedItems.Add(items[i]);
                             }
                         }
 
-                        listViewState[LISTVIEWSTATE_checkBoxes] = value;
+                        _listViewState[LISTVIEWSTATE_checkBoxes] = value;
                         UpdateExtendedStyles();
 
-                        if (CheckBoxes && savedCheckedItems != null)
+                        if (CheckBoxes && _savedCheckedItems is not null)
                         {
                             // Check the saved checked items.
-                            //
-                            if (savedCheckedItems.Count > 0)
+                            if (_savedCheckedItems.Count > 0)
                             {
-                                foreach (ListViewItem item in savedCheckedItems)
+                                foreach (ListViewItem item in _savedCheckedItems)
                                 {
                                     item.Checked = true;
                                 }
                             }
-                            savedCheckedItems = null;
+
+                            _savedCheckedItems = null;
                         }
 
                         // Comctl should handle auto-arrange for us, but doesn't
@@ -511,22 +514,21 @@ namespace System.Windows.Forms
                             throw new NotSupportedException(SR.ListViewCheckBoxesNotSupportedInTileView);
                         }
 
-                        if (CheckBoxes)
+                        if (CheckBoxes && !VirtualMode)
                         {
                             // Save away the checked items just in case we re-activate checkboxes
-                            //
-                            savedCheckedItems = new List<ListViewItem>(CheckedItems.Count);
+                            _savedCheckedItems = new List<ListViewItem>(CheckedItems.Count);
                             ListViewItem[] items = new ListViewItem[CheckedItems.Count];
                             CheckedItems.CopyTo(items, 0);
                             for (int i = 0; i < items.Length; i++)
                             {
-                                savedCheckedItems.Add(items[i]);
+                                _savedCheckedItems.Add(items[i]);
                             }
                         }
 
-                        listViewState[LISTVIEWSTATE_checkBoxes] = value;
+                        _listViewState[LISTVIEWSTATE_checkBoxes] = value;
 
-                        if ((!value && StateImageList != null && IsHandleCreated) ||
+                        if ((!value && StateImageList is not null && IsHandleCreated) ||
                             (!value && Alignment == ListViewAlignment.Left && IsHandleCreated) ||
                             (value && View == View.List && IsHandleCreated) ||
                             (value && (View == View.SmallIcon || View == View.LargeIcon) && IsHandleCreated))
@@ -546,32 +548,33 @@ namespace System.Windows.Forms
                             UpdateExtendedStyles();
                         }
 
-                        if (CheckBoxes && savedCheckedItems != null)
+                        if (CheckBoxes && _savedCheckedItems is not null)
                         {
                             // Check the saved checked items.
-                            //
-                            if (savedCheckedItems.Count > 0)
+                            if (_savedCheckedItems.Count > 0)
                             {
-                                foreach (ListViewItem item in savedCheckedItems)
+                                foreach (ListViewItem item in _savedCheckedItems)
                                 {
                                     item.Checked = true;
                                 }
                             }
-                            savedCheckedItems = null;
+
+                            _savedCheckedItems = null;
                         }
 
                         // Setting the LVS_CHECKBOXES window style also causes the ListView to display the default checkbox
                         // images rather than the user specified StateImageList.  We send a LVM_SETIMAGELIST to restore the
                         // user's images.
-                        if (IsHandleCreated && _imageListState != null)
+                        if (IsHandleCreated && _imageListState is not null)
                         {
                             if (CheckBoxes)
-                            { // we want custom checkboxes
-                                User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.STATE, _imageListState.Handle);
+                            {
+                                // We want custom checkboxes.
+                                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (WPARAM)(uint)PInvoke.LVSIL_STATE, (LPARAM)_imageListState.Handle);
                             }
                             else
                             {
-                                User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.STATE, IntPtr.Zero);
+                                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (uint)PInvoke.LVSIL_STATE);
                             }
                         }
 
@@ -594,13 +597,13 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (checkedIndexCollection is null)
-                {
-                    checkedIndexCollection = new CheckedIndexCollection(this);
-                }
-                return checkedIndexCollection;
+                _checkedIndexCollection ??= new CheckedIndexCollection(this);
+
+                return _checkedIndexCollection;
             }
         }
+
+        internal ToolTip KeyboardToolTip { get; } = new ToolTip();
 
         /// <summary>
         ///  The currently checked list items.
@@ -611,11 +614,9 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (checkedListViewItemCollection is null)
-                {
-                    checkedListViewItemCollection = new CheckedListViewItemCollection(this);
-                }
-                return checkedListViewItemCollection;
+                _checkedListViewItemCollection ??= new CheckedListViewItemCollection(this);
+
+                return _checkedListViewItemCollection;
             }
         }
 
@@ -629,7 +630,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return columnHeaderCollection;
+                return _columnHeaderCollection;
             }
         }
 
@@ -642,106 +643,106 @@ namespace System.Windows.Forms
             {
                 CreateParams cp = base.CreateParams;
 
-                cp.ClassName = WindowClasses.WC_LISTVIEW;
+                cp.ClassName = PInvoke.WC_LISTVIEW;
 
-                // Keep the scrollbar if we are just updating styles...
-                //
+                // Keep the scrollbar if we are just updating styles.
                 if (IsHandleCreated)
                 {
-                    int currentStyle = unchecked((int)((long)User32.GetWindowLong(this, User32.GWL.STYLE)));
-                    cp.Style |= (currentStyle & (int)(User32.WS.HSCROLL | User32.WS.VSCROLL));
+                    int currentStyle = (int)PInvoke.GetWindowLong(this, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
+                    cp.Style |= currentStyle & (int)(WINDOW_STYLE.WS_HSCROLL | WINDOW_STYLE.WS_VSCROLL);
                 }
 
-                cp.Style |= (int)LVS.SHAREIMAGELISTS;
+                cp.Style |= (int)PInvoke.LVS_SHAREIMAGELISTS;
 
-                switch (alignStyle)
+                switch (_alignStyle)
                 {
                     case ListViewAlignment.Top:
-                        cp.Style |= (int)LVS.ALIGNTOP;
+                        cp.Style |= (int)PInvoke.LVS_ALIGNTOP;
                         break;
                     case ListViewAlignment.Left:
-                        cp.Style |= (int)LVS.ALIGNLEFT;
+                        cp.Style |= (int)PInvoke.LVS_ALIGNLEFT;
                         break;
                 }
 
                 if (AutoArrange)
                 {
-                    cp.Style |= (int)LVS.AUTOARRANGE;
+                    cp.Style |= (int)PInvoke.LVS_AUTOARRANGE;
                 }
 
-                switch (borderStyle)
+                switch (_borderStyle)
                 {
                     case BorderStyle.Fixed3D:
-                        cp.ExStyle |= (int)User32.WS_EX.CLIENTEDGE;
+                        cp.ExStyle |= (int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
                         break;
                     case BorderStyle.FixedSingle:
-                        cp.Style |= (int)User32.WS.BORDER;
+                        cp.Style |= (int)WINDOW_STYLE.WS_BORDER;
                         break;
                 }
 
-                switch (headerStyle)
+                switch (_headerStyle)
                 {
                     case ColumnHeaderStyle.None:
-                        cp.Style |= (int)LVS.NOCOLUMNHEADER;
+                        cp.Style |= (int)PInvoke.LVS_NOCOLUMNHEADER;
                         break;
                     case ColumnHeaderStyle.Nonclickable:
-                        cp.Style |= (int)LVS.NOSORTHEADER;
+                        cp.Style |= (int)PInvoke.LVS_NOSORTHEADER;
                         break;
                 }
 
                 if (LabelEdit)
                 {
-                    cp.Style |= (int)LVS.EDITLABELS;
+                    cp.Style |= (int)PInvoke.LVS_EDITLABELS;
                 }
 
                 if (!LabelWrap)
                 {
-                    cp.Style |= (int)LVS.NOLABELWRAP;
+                    cp.Style |= (int)PInvoke.LVS_NOLABELWRAP;
                 }
 
                 if (!HideSelection)
                 {
-                    cp.Style |= (int)LVS.SHOWSELALWAYS;
+                    cp.Style |= (int)PInvoke.LVS_SHOWSELALWAYS;
                 }
 
                 if (!MultiSelect)
                 {
-                    cp.Style |= (int)LVS.SINGLESEL;
+                    cp.Style |= (int)PInvoke.LVS_SINGLESEL;
                 }
 
-                if (listItemSorter is null)
+                if (_listItemSorter is null)
                 {
-                    switch (sorting)
+                    switch (_sorting)
                     {
                         case SortOrder.Ascending:
-                            cp.Style |= (int)LVS.SORTASCENDING;
+                            cp.Style |= (int)PInvoke.LVS_SORTASCENDING;
                             break;
                         case SortOrder.Descending:
-                            cp.Style |= (int)LVS.SORTDESCENDING;
+                            cp.Style |= (int)PInvoke.LVS_SORTDESCENDING;
                             break;
                     }
                 }
 
                 if (VirtualMode)
                 {
-                    cp.Style |= (int)LVS.OWNERDATA;
+                    cp.Style |= (int)PInvoke.LVS_OWNERDATA;
                 }
 
                 // We can do this 'cuz the viewStyle enums are the same values as the actual LVS styles
-                // this new check since the value for LV_VIEW_TILE == LVS_SINGLESEL; so dont OR that value since
+                // this new check since the value for LV_VIEW_TILE == LVS_SINGLESEL; so don't OR that value since
                 // LV_VIEW_TILE is not a STYLE but should be Send via a SENDMESSAGE.
-                if (viewStyle != View.Tile)
+                if (_viewStyle != View.Tile)
                 {
-                    cp.Style |= (int)viewStyle;
+                    cp.Style |= (int)_viewStyle;
                 }
 
                 if (RightToLeft == RightToLeft.Yes && RightToLeftLayout)
                 {
                     //We want to turn on mirroring for Form explicitly.
-                    cp.ExStyle |= (int)User32.WS_EX.LAYOUTRTL;
+                    cp.ExStyle |= (int)WINDOW_EX_STYLE.WS_EX_LAYOUTRTL;
                     //Don't need these styles when mirroring is turned on.
-                    cp.ExStyle &= ~(int)(User32.WS_EX.RTLREADING | User32.WS_EX.RIGHT | User32.WS_EX.LEFTSCROLLBAR);
+                    cp.ExStyle &= ~(int)(WINDOW_EX_STYLE.WS_EX_RTLREADING | WINDOW_EX_STYLE.WS_EX_RIGHT | WINDOW_EX_STYLE.WS_EX_LEFTSCROLLBAR);
                 }
+
                 return cp;
             }
         }
@@ -750,13 +751,13 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (defaultGroup is null)
+                if (_defaultGroup is null)
                 {
-                    defaultGroup = new ListViewGroup(string.Format(SR.ListViewGroupDefaultGroup, "1"));
-                    defaultGroup.ListView = this;
+                    _defaultGroup = new ListViewGroup(string.Format(SR.ListViewGroupDefaultGroup, "1"));
+                    _defaultGroup.ListView = this;
                 }
 
-                return defaultGroup;
+                return _defaultGroup;
             }
         }
 
@@ -789,30 +790,30 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_expectingMouseUp];
+                return _listViewState[LISTVIEWSTATE_expectingMouseUp];
             }
         }
 
         /// <summary>
-        ///  Retreives the group which currently has the user focus.  This is the
+        ///  Retrieves the group which currently has the user focus.  This is the
         ///  group that's drawn with the dotted focus rectangle around it.
         ///  Returns null if no group is currently focused.
         /// </summary>
-        internal ListViewGroup FocusedGroup
+        internal ListViewGroup? FocusedGroup
         {
-            get => IsHandleCreated ? focusedGroup : null;
+            get => IsHandleCreated ? _focusedGroup : null;
             set
             {
-                if (IsHandleCreated && value != null)
+                if (IsHandleCreated && value is not null)
                 {
                     value.Focused = true;
-                    focusedGroup = value;
+                    _focusedGroup = value;
                 }
             }
         }
 
         /// <summary>
-        ///  Retreives the item which currently has the user focus.  This is the
+        ///  Retrieves the item which currently has the user focus.  This is the
         ///  item that's drawn with the dotted focus rectangle around it.
         ///  Returns null if no item is currently focused.
         /// </summary>
@@ -820,23 +821,29 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [SRDescription(nameof(SR.ListViewFocusedItemDescr))]
-        public ListViewItem FocusedItem
+        public ListViewItem? FocusedItem
         {
             get
             {
                 if (IsHandleCreated)
                 {
-                    int displayIndex = PARAM.ToInt(User32.SendMessageW(this, (User32.WM)LVM.GETNEXTITEM, (IntPtr)(-1), (IntPtr)LVNI.FOCUSED));
+                    int displayIndex = (int)PInvoke.SendMessage(
+                        this,
+                        (User32.WM)PInvoke.LVM_GETNEXTITEM,
+                        (WPARAM)(-1),
+                        (LPARAM)(uint)PInvoke.LVNI_FOCUSED);
+
                     if (displayIndex > -1)
                     {
                         return Items[displayIndex];
                     }
                 }
+
                 return null;
             }
             set
             {
-                if (IsHandleCreated && value != null)
+                if (IsHandleCreated && value is not null)
                 {
                     value.Focused = true;
                 }
@@ -861,7 +868,7 @@ namespace System.Windows.Forms
                 base.ForeColor = value;
                 if (IsHandleCreated)
                 {
-                    User32.SendMessageW(this, (User32.WM)LVM.SETTEXTCOLOR, IntPtr.Zero, PARAM.FromColor(ForeColor));
+                    PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETTEXTCOLOR, (WPARAM)0, (LPARAM)ForeColor);
                 }
             }
         }
@@ -871,10 +878,10 @@ namespace System.Windows.Forms
             get
             {
                 // it never hurts to check that our house is in order
-                Debug.Assert(!listViewState[LISTVIEWSTATE_flipViewToLargeIconAndSmallIcon] || View == View.SmallIcon, "we need this bit only in SmallIcon view");
-                Debug.Assert(!listViewState[LISTVIEWSTATE_flipViewToLargeIconAndSmallIcon] || Application.ComCtlSupportsVisualStyles, "we need this bit only when loading ComCtl 6.0");
+                Debug.Assert(!_listViewState[LISTVIEWSTATE_flipViewToLargeIconAndSmallIcon] || View == View.SmallIcon, "we need this bit only in SmallIcon view");
+                Debug.Assert(!_listViewState[LISTVIEWSTATE_flipViewToLargeIconAndSmallIcon] || Application.ComCtlSupportsVisualStyles, "we need this bit only when loading ComCtl 6.0");
 
-                return listViewState[LISTVIEWSTATE_flipViewToLargeIconAndSmallIcon];
+                return _listViewState[LISTVIEWSTATE_flipViewToLargeIconAndSmallIcon];
             }
             set
             {
@@ -882,7 +889,7 @@ namespace System.Windows.Forms
                 Debug.Assert(!value || View == View.SmallIcon, "we need this bit only in SmallIcon view");
                 Debug.Assert(!value || Application.ComCtlSupportsVisualStyles, "we need this bit only when loading ComCtl 6.0");
 
-                listViewState[LISTVIEWSTATE_flipViewToLargeIconAndSmallIcon] = value;
+                _listViewState[LISTVIEWSTATE_flipViewToLargeIconAndSmallIcon] = value;
             }
         }
 
@@ -898,13 +905,13 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_fullRowSelect];
+                return _listViewState[LISTVIEWSTATE_fullRowSelect];
             }
             set
             {
                 if (FullRowSelect != value)
                 {
-                    listViewState[LISTVIEWSTATE_fullRowSelect] = value;
+                    _listViewState[LISTVIEWSTATE_fullRowSelect] = value;
                     UpdateExtendedStyles();
                 }
             }
@@ -921,14 +928,14 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_gridLines];
+                return _listViewState[LISTVIEWSTATE_gridLines];
             }
 
             set
             {
                 if (GridLines != value)
                 {
-                    listViewState[LISTVIEWSTATE_gridLines] = value;
+                    _listViewState[LISTVIEWSTATE_gridLines] = value;
                     UpdateExtendedStyles();
                 }
             }
@@ -955,7 +962,7 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatBehavior))]
         [DefaultValue(null)]
         [SRDescription(nameof(SR.ListViewGroupImageListDescr))]
-        public ImageList GroupImageList
+        public ImageList? GroupImageList
         {
             get => _imageListGroup;
             set
@@ -974,8 +981,11 @@ namespace System.Windows.Forms
                     return;
                 }
 
-                User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.GROUPHEADER,
-                        value is null ? IntPtr.Zero : value.Handle);
+                PInvoke.SendMessage(
+                    this,
+                    (User32.WM)PInvoke.LVM_SETIMAGELIST,
+                    (WPARAM)(uint)PInvoke.LVSIL_GROUPHEADER,
+                    (LPARAM)(value is null ? 0 : value.Handle));
             }
         }
 
@@ -992,23 +1002,19 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (groups is null)
-                {
-                    groups = new ListViewGroupCollection(this);
-                }
-                return groups;
+                _groups ??= new ListViewGroupCollection(this);
+
+                return _groups;
             }
         }
+
+        // ListViewGroup are not displayed when the ListView is in "List" view
+        internal bool GroupsDisplayed => View != View.List && GroupsEnabled;
 
         // this essentially means that the version of CommCtl supports list view grouping
         // and that the user wants to make use of list view groups
         internal bool GroupsEnabled
-        {
-            get
-            {
-                return ShowGroups && groups != null && groups.Count > 0 && Application.ComCtlSupportsVisualStyles && !VirtualMode;
-            }
-        }
+            => ShowGroups && _groups is not null && _groups.Count > 0 && Application.ComCtlSupportsVisualStyles && !VirtualMode;
 
         /// <summary>
         ///  Column headers can either be invisible, clickable, or non-clickable.
@@ -1019,22 +1025,22 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.ListViewHeaderStyleDescr))]
         public ColumnHeaderStyle HeaderStyle
         {
-            get { return headerStyle; }
+            get { return _headerStyle; }
             set
             {
                 //valid values are 0x0 to 0x2
                 SourceGenerated.EnumValidator.Validate(value);
-                if (headerStyle != value)
+                if (_headerStyle != value)
                 {
                     // We can switch between NONE and either *one* of the other styles without
                     // recreating the handle, but if we change from CLICKABLE to NONCLICKABLE
                     // or vice versa, with or without an intervening setting of NONE, then
                     // the handle needs to be recreated.
-                    headerStyle = value;
-                    if ((listViewState[LISTVIEWSTATE_nonclickHdr] && value == ColumnHeaderStyle.Clickable) ||
-                        (!listViewState[LISTVIEWSTATE_nonclickHdr] && value == ColumnHeaderStyle.Nonclickable))
+                    _headerStyle = value;
+                    if ((_listViewState[LISTVIEWSTATE_nonclickHdr] && value == ColumnHeaderStyle.Clickable) ||
+                        (!_listViewState[LISTVIEWSTATE_nonclickHdr] && value == ColumnHeaderStyle.Nonclickable))
                     {
-                        listViewState[LISTVIEWSTATE_nonclickHdr] = !listViewState[LISTVIEWSTATE_nonclickHdr];
+                        _listViewState[LISTVIEWSTATE_nonclickHdr] = !_listViewState[LISTVIEWSTATE_nonclickHdr];
                         RecreateHandleInternal();
                     }
                     else
@@ -1050,20 +1056,20 @@ namespace System.Windows.Forms
         ///  different color) when focus is moved away from the ListView.
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
-        [DefaultValue(true)]
+        [DefaultValue(false)]
         [SRDescription(nameof(SR.ListViewHideSelectionDescr))]
         public bool HideSelection
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_hideSelection];
+                return _listViewState[LISTVIEWSTATE_hideSelection];
             }
 
             set
             {
                 if (HideSelection != value)
                 {
-                    listViewState[LISTVIEWSTATE_hideSelection] = value;
+                    _listViewState[LISTVIEWSTATE_hideSelection] = value;
                     UpdateStyles();
                 }
             }
@@ -1076,18 +1082,19 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_hotTracking];
+                return _listViewState[LISTVIEWSTATE_hotTracking];
             }
             set
             {
                 if (HotTracking != value)
                 {
-                    listViewState[LISTVIEWSTATE_hotTracking] = value;
+                    _listViewState[LISTVIEWSTATE_hotTracking] = value;
                     if (value)
                     {
                         HoverSelection = true;
                         Activation = ItemActivation.OneClick;
                     }
+
                     UpdateExtendedStyles();
                 }
             }
@@ -1103,7 +1110,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_hoverSelection];
+                return _listViewState[LISTVIEWSTATE_hoverSelection];
             }
 
             set
@@ -1115,7 +1122,7 @@ namespace System.Windows.Forms
                         throw new ArgumentException(SR.ListViewHoverMustBeOnWhenHotTrackingIsOn, nameof(value));
                     }
 
-                    listViewState[LISTVIEWSTATE_hoverSelection] = value;
+                    _listViewState[LISTVIEWSTATE_hoverSelection] = value;
                     UpdateExtendedStyles();
                 }
             }
@@ -1125,7 +1132,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState1[LISTVIEWSTATE1_insertingItemsNatively];
+                return _listViewState1[LISTVIEWSTATE1_insertingItemsNatively];
             }
         }
 
@@ -1136,11 +1143,9 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (insertionMark is null)
-                {
-                    insertionMark = new ListViewInsertionMark(this);
-                }
-                return insertionMark;
+                _insertionMark ??= new ListViewInsertionMark(this);
+
+                return _insertionMark;
             }
         }
 
@@ -1148,11 +1153,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_itemCollectionChangedInMouseDown];
+                return _listViewState[LISTVIEWSTATE_itemCollectionChangedInMouseDown];
             }
             set
             {
-                listViewState[LISTVIEWSTATE_itemCollectionChangedInMouseDown] = value;
+                _listViewState[LISTVIEWSTATE_itemCollectionChangedInMouseDown] = value;
             }
         }
 
@@ -1166,7 +1171,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listItemCollection;
+                return _listItemCollection;
             }
         }
 
@@ -1180,13 +1185,13 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_labelEdit];
+                return _listViewState[LISTVIEWSTATE_labelEdit];
             }
             set
             {
                 if (LabelEdit != value)
                 {
-                    listViewState[LISTVIEWSTATE_labelEdit] = value;
+                    _listViewState[LISTVIEWSTATE_labelEdit] = value;
                     UpdateStyles();
                 }
             }
@@ -1203,13 +1208,13 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_labelWrap];
+                return _listViewState[LISTVIEWSTATE_labelWrap];
             }
             set
             {
                 if (LabelWrap != value)
                 {
-                    listViewState[LISTVIEWSTATE_labelWrap] = value;
+                    _listViewState[LISTVIEWSTATE_labelWrap] = value;
                     UpdateStyles();
                 }
             }
@@ -1221,7 +1226,7 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatBehavior))]
         [DefaultValue(null)]
         [SRDescription(nameof(SR.ListViewLargeImageListDescr))]
-        public ImageList LargeImageList
+        public ImageList? LargeImageList
         {
             get => _imageListLarge;
             set
@@ -1240,8 +1245,12 @@ namespace System.Windows.Forms
                     return;
                 }
 
-                User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.NORMAL, value is null ? IntPtr.Zero : value.Handle);
-                if (AutoArrange && !listViewState1[LISTVIEWSTATE1_disposingImageLists])
+                PInvoke.SendMessage(
+                    this,
+                    (User32.WM)PInvoke.LVM_SETIMAGELIST,
+                    (WPARAM)(uint)PInvoke.LVSIL_NORMAL,
+                    (LPARAM)(value?.Handle ?? 0));
+                if (AutoArrange && !_listViewState1[LISTVIEWSTATE1_disposingImageLists])
                 {
                     UpdateListViewItemsLocations();
                 }
@@ -1256,11 +1265,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_handleDestroyed];
+                return _listViewState[LISTVIEWSTATE_handleDestroyed];
             }
             set
             {
-                listViewState[LISTVIEWSTATE_handleDestroyed] = value;
+                _listViewState[LISTVIEWSTATE_handleDestroyed] = value;
             }
         }
 
@@ -1271,17 +1280,17 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [SRDescription(nameof(SR.ListViewItemSorterDescr))]
-        public IComparer ListViewItemSorter
+        public IComparer? ListViewItemSorter
         {
             get
             {
-                return listItemSorter;
+                return _listItemSorter;
             }
             set
             {
-                if (listItemSorter != value)
+                if (_listItemSorter != value)
                 {
-                    listItemSorter = value;
+                    _listItemSorter = value;
 
                     if (!VirtualMode)
                     {
@@ -1301,13 +1310,13 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_multiSelect];
+                return _listViewState[LISTVIEWSTATE_multiSelect];
             }
             set
             {
                 if (MultiSelect != value)
                 {
-                    listViewState[LISTVIEWSTATE_multiSelect] = value;
+                    _listViewState[LISTVIEWSTATE_multiSelect] = value;
                     UpdateStyles();
                 }
             }
@@ -1324,14 +1333,14 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_ownerDraw];
+                return _listViewState[LISTVIEWSTATE_ownerDraw];
             }
 
             set
             {
                 if (OwnerDraw != value)
                 {
-                    listViewState[LISTVIEWSTATE_ownerDraw] = value;
+                    _listViewState[LISTVIEWSTATE_ownerDraw] = value;
                     Invalidate(true);
                 }
             }
@@ -1350,14 +1359,14 @@ namespace System.Windows.Forms
         {
             get
             {
-                return rightToLeftLayout;
+                return _rightToLeftLayout;
             }
 
             set
             {
-                if (value != rightToLeftLayout)
+                if (value != _rightToLeftLayout)
                 {
-                    rightToLeftLayout = value;
+                    _rightToLeftLayout = value;
                     using (new LayoutTransaction(this, this, PropertyNames.RightToLeftLayout))
                     {
                         OnRightToLeftLayoutChanged(EventArgs.Empty);
@@ -1368,7 +1377,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.ControlOnRightToLeftLayoutChangedDescr))]
-        public event EventHandler RightToLeftLayoutChanged
+        public event EventHandler? RightToLeftLayoutChanged
         {
             add => Events.AddHandler(EVENT_RIGHTTOLEFTLAYOUTCHANGED, value);
             remove => Events.RemoveHandler(EVENT_RIGHTTOLEFTLAYOUTCHANGED, value);
@@ -1384,13 +1393,13 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_scrollable];
+                return _listViewState[LISTVIEWSTATE_scrollable];
             }
             set
             {
                 if (Scrollable != value)
                 {
-                    listViewState[LISTVIEWSTATE_scrollable] = value;
+                    _listViewState[LISTVIEWSTATE_scrollable] = value;
                     RecreateHandleInternal();
                 }
             }
@@ -1405,11 +1414,9 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (selectedIndexCollection is null)
-                {
-                    selectedIndexCollection = new SelectedIndexCollection(this);
-                }
-                return selectedIndexCollection;
+                _selectedIndexCollection ??= new SelectedIndexCollection(this);
+
+                return _selectedIndexCollection;
             }
         }
 
@@ -1424,11 +1431,9 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (selectedListViewItemCollection is null)
-                {
-                    selectedListViewItemCollection = new SelectedListViewItemCollection(this);
-                }
-                return selectedListViewItemCollection;
+                _selectedListViewItemCollection ??= new SelectedListViewItemCollection(this);
+
+                return _selectedListViewItemCollection;
             }
         }
 
@@ -1439,13 +1444,13 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_showGroups];
+                return _listViewState[LISTVIEWSTATE_showGroups];
             }
             set
             {
                 if (value != ShowGroups)
                 {
-                    listViewState[LISTVIEWSTATE_showGroups] = value;
+                    _listViewState[LISTVIEWSTATE_showGroups] = value;
                     if (IsHandleCreated)
                     {
                         UpdateGroupView();
@@ -1460,7 +1465,7 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatBehavior))]
         [DefaultValue(null)]
         [SRDescription(nameof(SR.ListViewSmallImageListDescr))]
-        public ImageList SmallImageList
+        public ImageList? SmallImageList
         {
             get => _imageListSmall;
             set
@@ -1479,14 +1484,14 @@ namespace System.Windows.Forms
                     return;
                 }
 
-                User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.SMALL, value is null ? IntPtr.Zero : value.Handle);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (WPARAM)(uint)PInvoke.LVSIL_SMALL, (LPARAM)(value?.Handle ?? 0));
 
                 if (View == View.SmallIcon)
                 {
                     View = View.LargeIcon;
                     View = View.SmallIcon;
                 }
-                else if (!listViewState1[LISTVIEWSTATE1_disposingImageLists])
+                else if (!_listViewState1[LISTVIEWSTATE1_disposingImageLists])
                 {
                     UpdateListViewItemsLocations();
                 }
@@ -1505,13 +1510,13 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_showItemToolTips];
+                return _listViewState[LISTVIEWSTATE_showItemToolTips];
             }
             set
             {
                 if (ShowItemToolTips != value)
                 {
-                    listViewState[LISTVIEWSTATE_showItemToolTips] = value;
+                    _listViewState[LISTVIEWSTATE_showItemToolTips] = value;
                     RecreateHandleInternal();
                 }
             }
@@ -1524,29 +1529,29 @@ namespace System.Windows.Forms
         {
             get
             {
-                return sorting;
+                return _sorting;
             }
             set
             {
                 //valid values are 0x0 to 0x2
                 SourceGenerated.EnumValidator.Validate(value);
-                if (sorting != value)
+                if (_sorting != value)
                 {
-                    sorting = value;
+                    _sorting = value;
                     if (View == View.LargeIcon || View == View.SmallIcon)
                     {
-                        if (listItemSorter is null)
+                        if (_listItemSorter is null)
                         {
-                            listItemSorter = new IconComparer(sorting);
+                            _listItemSorter = new IconComparer(_sorting);
                         }
-                        else if (listItemSorter is IconComparer)
+                        else if (_listItemSorter is IconComparer iconComparer)
                         {
-                            ((IconComparer)listItemSorter).SortOrder = sorting;
+                            iconComparer.SortOrder = _sorting;
                         }
                     }
                     else if (value == SortOrder.None)
                     {
-                        listItemSorter = null;
+                        _listItemSorter = null;
                     }
 
                     // If we're changing to No Sorting, no need to recreate the handle
@@ -1566,7 +1571,7 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatBehavior))]
         [DefaultValue(null)]
         [SRDescription(nameof(SR.ListViewStateImageListDescr))]
-        public ImageList StateImageList
+        public ImageList? StateImageList
         {
             get => _imageListState;
             set
@@ -1584,14 +1589,17 @@ namespace System.Windows.Forms
 
                     if (IsHandleCreated)
                     {
-                        User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.STATE, value is null ? IntPtr.Zero : value.Handle);
+                        PInvoke.SendMessage(this,
+                            (User32.WM)PInvoke.LVM_SETIMAGELIST,
+                            (WPARAM)(uint)PInvoke.LVSIL_STATE,
+                            (LPARAM)(value?.Handle ?? 0));
                     }
                 }
                 else
                 {
                     DetachStateImageListHandlers();
 
-                    if (IsHandleCreated && _imageListState != null && CheckBoxes)
+                    if (IsHandleCreated && _imageListState is not null && CheckBoxes)
                     {
                         // If CheckBoxes are set to true, then we will have to recreate the handle.
                         // For some reason, if CheckBoxes are set to true and the list view has a state imageList, then the native listView destroys
@@ -1599,7 +1607,7 @@ namespace System.Windows.Forms
                         // (Yes, it does exactly that even though our wrapper sets LVS_SHAREIMAGELISTS on the native listView.)
                         // So we make the native listView forget about its StateImageList just before we recreate the handle.
                         // Likely related to https://devblogs.microsoft.com/oldnewthing/20171128-00/?p=97475
-                        User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.STATE, IntPtr.Zero);
+                        PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (WPARAM)(uint)PInvoke.LVSIL_STATE);
                     }
 
                     _imageListState = value;
@@ -1612,17 +1620,20 @@ namespace System.Windows.Forms
 
                     if (CheckBoxes)
                     {
-                        // need to recreate to get the new images pushed in.
+                        // Need to recreate to get the new images pushed in.
                         RecreateHandleInternal();
                     }
                     else
                     {
-                        User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.STATE,
-                            (_imageListState is null || _imageListState.Images.Count == 0) ? IntPtr.Zero : _imageListState.Handle);
+                        PInvoke.SendMessage(
+                            this,
+                            (User32.WM)PInvoke.LVM_SETIMAGELIST,
+                            (WPARAM)(uint)PInvoke.LVSIL_STATE,
+                            (_imageListState is null || _imageListState.Images.Count == 0) ? 0 : _imageListState.Handle);
                     }
 
                     // Comctl should handle auto-arrange for us, but doesn't
-                    if (!listViewState1[LISTVIEWSTATE1_disposingImageLists])
+                    if (!_listViewState1[LISTVIEWSTATE1_disposingImageLists])
                     {
                         UpdateListViewItemsLocations();
                     }
@@ -1630,11 +1641,16 @@ namespace System.Windows.Forms
             }
         }
 
+        // Getting a rectangle for a sub item only works for a ListView in "Details" and "Tile" views.
+        // Additionally, a ListView in the "Tile" view does not show ListViewSubItems when visual styles are disabled.
+        internal bool SupportsListViewSubItems => View == View.Details || (View == View.Tile && Application.ComCtlSupportsVisualStyles);
+
         internal override bool SupportsUiaProviders => true;
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [Bindable(false)]
+        [AllowNull]
         public override string Text
         {
             get => base.Text;
@@ -1643,7 +1659,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        new public event EventHandler TextChanged
+        public new event EventHandler? TextChanged
         {
             add => base.TextChanged += value;
             remove => base.TextChanged -= value;
@@ -1656,9 +1672,9 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (!tileSize.IsEmpty)
+                if (!_tileSize.IsEmpty)
                 {
-                    return tileSize;
+                    return _tileSize;
                 }
 
                 if (!IsHandleCreated)
@@ -1669,15 +1685,16 @@ namespace System.Windows.Forms
                 var tileViewInfo = new LVTILEVIEWINFO
                 {
                     cbSize = (uint)sizeof(LVTILEVIEWINFO),
-                    dwMask = LVTVIM.TILESIZE
+                    dwMask = LVTILEVIEWINFO_MASK.LVTVIM_TILESIZE
                 };
-                User32.SendMessageW(this, (User32.WM)LVM.GETTILEVIEWINFO, IntPtr.Zero, ref tileViewInfo);
+
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETTILEVIEWINFO, (WPARAM)0, ref tileViewInfo);
 
                 return tileViewInfo.sizeTile;
             }
             set
             {
-                if (tileSize == value)
+                if (_tileSize == value)
                 {
                     return;
                 }
@@ -1687,7 +1704,7 @@ namespace System.Windows.Forms
                     throw new ArgumentOutOfRangeException(nameof(TileSize), SR.ListViewTileSizeMustBePositive);
                 }
 
-                tileSize = value;
+                _tileSize = value;
                 if (!IsHandleCreated)
                 {
                     return;
@@ -1696,12 +1713,13 @@ namespace System.Windows.Forms
                 var tileViewInfo = new LVTILEVIEWINFO
                 {
                     cbSize = (uint)sizeof(LVTILEVIEWINFO),
-                    dwMask = LVTVIM.TILESIZE,
-                    dwFlags = LVTVIF.FIXEDSIZE,
-                    sizeTile = tileSize
+                    dwMask = LVTILEVIEWINFO_MASK.LVTVIM_TILESIZE,
+                    dwFlags = LVTILEVIEWINFO_FLAGS.LVTVIF_FIXEDSIZE,
+                    sizeTile = _tileSize
                 };
-                IntPtr retval = User32.SendMessageW(this, (User32.WM)LVM.SETTILEVIEWINFO, IntPtr.Zero, ref tileViewInfo);
-                Debug.Assert(retval != IntPtr.Zero, "LVM_SETTILEVIEWINFO failed");
+
+                nint result = PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETTILEVIEWINFO, (WPARAM)0, ref tileViewInfo);
+                Debug.Assert(result != 0, "LVM_SETTILEVIEWINFO failed");
 
                 if (AutoArrange)
                 {
@@ -1712,18 +1730,18 @@ namespace System.Windows.Forms
 
         private bool ShouldSerializeTileSize()
         {
-            return !tileSize.Equals(Size.Empty);
+            return !_tileSize.Equals(Size.Empty);
         }
 
         [SRCategory(nameof(SR.CatAppearance))]
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [SRDescription(nameof(SR.ListViewTopItemDescr))]
-        public ListViewItem TopItem
+        public ListViewItem? TopItem
         {
             get
             {
-                if (viewStyle == View.LargeIcon || viewStyle == View.SmallIcon || viewStyle == View.Tile)
+                if (_viewStyle == View.LargeIcon || _viewStyle == View.SmallIcon || _viewStyle == View.Tile)
                 {
                     throw new InvalidOperationException(SR.ListViewGetTopItem);
                 }
@@ -1740,17 +1758,17 @@ namespace System.Windows.Forms
                     }
                 }
 
-                topIndex = unchecked((int)(long)User32.SendMessageW(this, (User32.WM)LVM.GETTOPINDEX));
-                if (topIndex >= 0 && topIndex < Items.Count)
+                _topIndex = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETTOPINDEX);
+                if (_topIndex >= 0 && _topIndex < Items.Count)
                 {
-                    return Items[topIndex];
+                    return Items[_topIndex];
                 }
 
                 return null;
             }
             set
             {
-                if (viewStyle == View.LargeIcon || viewStyle == View.SmallIcon || viewStyle == View.Tile)
+                if (_viewStyle == View.LargeIcon || _viewStyle == View.SmallIcon || _viewStyle == View.Tile)
                 {
                     throw new InvalidOperationException(SR.ListViewSetTopItem);
                 }
@@ -1769,15 +1787,16 @@ namespace System.Windows.Forms
                 {
                     CreateHandle();
                 }
+
                 if (value == TopItem)
                 {
                     return;
                 }
 
                 EnsureVisible(value.Index);
-                ListViewItem topItem = TopItem;
+                ListViewItem? topItem = TopItem;
 
-                if ((topItem is null) && (topIndex == Items.Count)) //
+                if ((topItem is null) && (_topIndex == Items.Count))
                 {                                                   // There's a
                     topItem = value;                                // a single item.  Result of the
                     if (Scrollable)                                 // message is the number of items in the list rather than an index of an item in the list.
@@ -1785,10 +1804,11 @@ namespace System.Windows.Forms
                         EnsureVisible(0);                           // here either, because it causes the listview to go blank rather than displaying anything useful.
                         Scroll(0, value.Index);                     // To work around this, we force the listbox to display the first item, then scroll down to the item
                     }                                               // user is setting as the top item.
-                    return;                                         //
-                }                                                   //
 
-                if (value.Index == topItem.Index)
+                    return;
+                }
+
+                if (topItem is null || value.Index == topItem.Index)
                 {
                     return;
                 }
@@ -1807,11 +1827,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState1[LISTVIEWSTATE1_useCompatibleStateImageBehavior];
+                return _listViewState1[LISTVIEWSTATE1_useCompatibleStateImageBehavior];
             }
             set
             {
-                listViewState1[LISTVIEWSTATE1_useCompatibleStateImageBehavior] = value;
+                _listViewState1[LISTVIEWSTATE1_useCompatibleStateImageBehavior] = value;
             }
         }
 
@@ -1822,7 +1842,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return viewStyle;
+                return _viewStyle;
             }
             set
             {
@@ -1841,16 +1861,16 @@ namespace System.Windows.Forms
                     throw new NotSupportedException(SR.ListViewCantSetViewToTileViewInVirtualMode);
                 }
 
-                if (viewStyle != value)
+                if (_viewStyle != value)
                 {
-                    viewStyle = value;
+                    _viewStyle = value;
                     if (IsHandleCreated && Application.ComCtlSupportsVisualStyles)
                     {
-                        User32.SendMessageW(this, (User32.WM)LVM.SETVIEW, (IntPtr)viewStyle);
+                        PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETVIEW, (WPARAM)(int)_viewStyle);
                         UpdateGroupView();
 
                         // if we switched to Tile view we should update the win32 list view tile view info
-                        if (viewStyle == View.Tile)
+                        if (_viewStyle == View.Tile)
                         {
                             UpdateTileView();
                         }
@@ -1873,7 +1893,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return virtualListSize;
+                return _virtualListSize;
             }
             set
             {
@@ -1882,7 +1902,7 @@ namespace System.Windows.Forms
                     throw new ArgumentException(string.Format(SR.ListViewVirtualListSizeInvalidArgument, "value", value));
                 }
 
-                if (value == virtualListSize)
+                if (value == _virtualListSize)
                 {
                     return;
                 }
@@ -1891,14 +1911,14 @@ namespace System.Windows.Forms
                 int topIndex = -1;
                 if (keepTopItem)
                 {
-                    topIndex = unchecked((int)(long)User32.SendMessageW(this, (User32.WM)LVM.GETTOPINDEX));
+                    topIndex = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETTOPINDEX);
                 }
 
-                virtualListSize = value;
+                _virtualListSize = value;
 
                 if (IsHandleCreated && VirtualMode && !DesignMode)
                 {
-                    User32.SendMessageW(this, (User32.WM)LVM.SETITEMCOUNT, (IntPtr)virtualListSize);
+                    PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETITEMCOUNT, (WPARAM)_virtualListSize);
                 }
 
                 if (keepTopItem)
@@ -1923,7 +1943,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return listViewState[LISTVIEWSTATE_virtualMode];
+                return _listViewState[LISTVIEWSTATE_virtualMode];
             }
             set
             {
@@ -1953,7 +1973,7 @@ namespace System.Windows.Forms
                     throw new NotSupportedException(SR.ListViewCantSetVirtualModeWhenInTileView);
                 }
 
-                listViewState[LISTVIEWSTATE_virtualMode] = value;
+                _listViewState[LISTVIEWSTATE_virtualMode] = value;
 
                 RecreateHandleInternal();
             }
@@ -1961,23 +1981,23 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.ListViewAfterLabelEditDescr))]
-        public event LabelEditEventHandler AfterLabelEdit
+        public event LabelEditEventHandler? AfterLabelEdit
         {
-            add => onAfterLabelEdit += value;
-            remove => onAfterLabelEdit -= value;
+            add => _onAfterLabelEdit += value;
+            remove => _onAfterLabelEdit -= value;
         }
 
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.ListViewBeforeLabelEditDescr))]
-        public event LabelEditEventHandler BeforeLabelEdit
+        public event LabelEditEventHandler? BeforeLabelEdit
         {
-            add => onBeforeLabelEdit += value;
-            remove => onBeforeLabelEdit -= value;
+            add => _onBeforeLabelEdit += value;
+            remove => _onBeforeLabelEdit -= value;
         }
 
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.ListViewCacheVirtualItemsEventDescr))]
-        public event CacheVirtualItemsEventHandler CacheVirtualItems
+        public event CacheVirtualItemsEventHandler? CacheVirtualItems
         {
             add => Events.AddHandler(EVENT_CACHEVIRTUALITEMS, value);
             remove => Events.RemoveHandler(EVENT_CACHEVIRTUALITEMS, value);
@@ -1985,10 +2005,10 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.ListViewColumnClickDescr))]
-        public event ColumnClickEventHandler ColumnClick
+        public event ColumnClickEventHandler? ColumnClick
         {
-            add => onColumnClick += value;
-            remove => onColumnClick -= value;
+            add => _onColumnClick += value;
+            remove => _onColumnClick -= value;
         }
 
         /// <summary>
@@ -1996,7 +2016,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.ListViewGroupTaskLinkClickDescr))]
-        public event EventHandler<ListViewGroupEventArgs> GroupTaskLinkClick
+        public event EventHandler<ListViewGroupEventArgs>? GroupTaskLinkClick
         {
             add => Events.AddHandler(EVENT_GROUPTASKLINKCLICK, value);
             remove => Events.RemoveHandler(EVENT_GROUPTASKLINKCLICK, value);
@@ -2007,7 +2027,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.ListViewColumnReorderedDscr))]
-        public event ColumnReorderedEventHandler ColumnReordered
+        public event ColumnReorderedEventHandler? ColumnReordered
         {
             add => Events.AddHandler(EVENT_COLUMNREORDERED, value);
             remove => Events.RemoveHandler(EVENT_COLUMNREORDERED, value);
@@ -2018,7 +2038,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.ListViewColumnWidthChangedDscr))]
-        public event ColumnWidthChangedEventHandler ColumnWidthChanged
+        public event ColumnWidthChangedEventHandler? ColumnWidthChanged
         {
             add => Events.AddHandler(EVENT_COLUMNWIDTHCHANGED, value);
             remove => Events.RemoveHandler(EVENT_COLUMNWIDTHCHANGED, value);
@@ -2029,7 +2049,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.ListViewColumnWidthChangingDscr))]
-        public event ColumnWidthChangingEventHandler ColumnWidthChanging
+        public event ColumnWidthChangingEventHandler? ColumnWidthChanging
         {
             add => Events.AddHandler(EVENT_COLUMNWIDTHCHANGING, value);
             remove => Events.RemoveHandler(EVENT_COLUMNWIDTHCHANGING, value);
@@ -2040,7 +2060,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.ListViewDrawColumnHeaderEventDescr))]
-        public event DrawListViewColumnHeaderEventHandler DrawColumnHeader
+        public event DrawListViewColumnHeaderEventHandler? DrawColumnHeader
         {
             add => Events.AddHandler(EVENT_DRAWCOLUMNHEADER, value);
             remove => Events.RemoveHandler(EVENT_DRAWCOLUMNHEADER, value);
@@ -2051,7 +2071,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.ListViewDrawItemEventDescr))]
-        public event DrawListViewItemEventHandler DrawItem
+        public event DrawListViewItemEventHandler? DrawItem
         {
             add => Events.AddHandler(EVENT_DRAWITEM, value);
             remove => Events.RemoveHandler(EVENT_DRAWITEM, value);
@@ -2062,7 +2082,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.ListViewDrawSubItemEventDescr))]
-        public event DrawListViewSubItemEventHandler DrawSubItem
+        public event DrawListViewSubItemEventHandler? DrawSubItem
         {
             add => Events.AddHandler(EVENT_DRAWSUBITEM, value);
             remove => Events.RemoveHandler(EVENT_DRAWSUBITEM, value);
@@ -2070,47 +2090,47 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.ListViewItemClickDescr))]
-        public event EventHandler ItemActivate
+        public event EventHandler? ItemActivate
         {
-            add => onItemActivate += value;
-            remove => onItemActivate -= value;
+            add => _onItemActivate += value;
+            remove => _onItemActivate -= value;
         }
 
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.CheckedListBoxItemCheckDescr))]
-        public event ItemCheckEventHandler ItemCheck
+        public event ItemCheckEventHandler? ItemCheck
         {
-            add => onItemCheck += value;
-            remove => onItemCheck -= value;
+            add => _onItemCheck += value;
+            remove => _onItemCheck -= value;
         }
 
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.ListViewItemCheckedDescr))]
-        public event ItemCheckedEventHandler ItemChecked
+        public event ItemCheckedEventHandler? ItemChecked
         {
-            add => onItemChecked += value;
-            remove => onItemChecked -= value;
+            add => _onItemChecked += value;
+            remove => _onItemChecked -= value;
         }
 
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.ListViewItemDragDescr))]
-        public event ItemDragEventHandler ItemDrag
+        public event ItemDragEventHandler? ItemDrag
         {
-            add => onItemDrag += value;
-            remove => onItemDrag -= value;
+            add => _onItemDrag += value;
+            remove => _onItemDrag -= value;
         }
 
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.ListViewItemMouseHoverDescr))]
-        public event ListViewItemMouseHoverEventHandler ItemMouseHover
+        public event ListViewItemMouseHoverEventHandler? ItemMouseHover
         {
-            add => onItemMouseHover += value;
-            remove => onItemMouseHover -= value;
+            add => _onItemMouseHover += value;
+            remove => _onItemMouseHover -= value;
         }
 
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.ListViewItemSelectionChangedDescr))]
-        public event ListViewItemSelectionChangedEventHandler ItemSelectionChanged
+        public event ListViewItemSelectionChangedEventHandler? ItemSelectionChanged
         {
             add => Events.AddHandler(EVENT_ITEMSELECTIONCHANGED, value);
             remove => Events.RemoveHandler(EVENT_ITEMSELECTIONCHANGED, value);
@@ -2121,7 +2141,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.ListViewGroupCollapsedStateChangedDescr))]
-        public event EventHandler<ListViewGroupEventArgs> GroupCollapsedStateChanged
+        public event EventHandler<ListViewGroupEventArgs>? GroupCollapsedStateChanged
         {
             add => Events.AddHandler(EVENT_GROUPCOLLAPSEDSTATECHANGED, value);
             remove => Events.RemoveHandler(EVENT_GROUPCOLLAPSEDSTATECHANGED, value);
@@ -2138,7 +2158,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler PaddingChanged
+        public new event EventHandler? PaddingChanged
         {
             add => base.PaddingChanged += value;
             remove => base.PaddingChanged -= value;
@@ -2149,7 +2169,7 @@ namespace System.Windows.Forms
         /// </summary>
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event PaintEventHandler Paint
+        public new event PaintEventHandler? Paint
         {
             add => base.Paint += value;
             remove => base.Paint -= value;
@@ -2157,7 +2177,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.ListViewRetrieveVirtualItemEventDescr))]
-        public event RetrieveVirtualItemEventHandler RetrieveVirtualItem
+        public event RetrieveVirtualItemEventHandler? RetrieveVirtualItem
         {
             add => Events.AddHandler(EVENT_RETRIEVEVIRTUALITEM, value);
             remove => Events.RemoveHandler(EVENT_RETRIEVEVIRTUALITEM, value);
@@ -2165,7 +2185,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.ListViewSearchForVirtualItemDescr))]
-        public event SearchForVirtualItemEventHandler SearchForVirtualItem
+        public event SearchForVirtualItemEventHandler? SearchForVirtualItem
         {
             add => Events.AddHandler(EVENT_SEARCHFORVIRTUALITEM, value);
             remove => Events.RemoveHandler(EVENT_SEARCHFORVIRTUALITEM, value);
@@ -2173,7 +2193,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.ListViewSelectedIndexChangedDescr))]
-        public event EventHandler SelectedIndexChanged
+        public event EventHandler? SelectedIndexChanged
         {
             add => Events.AddHandler(EVENT_SELECTEDINDEXCHANGED, value);
             remove => Events.RemoveHandler(EVENT_SELECTEDINDEXCHANGED, value);
@@ -2181,25 +2201,63 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatBehavior))]
         [SRDescription(nameof(SR.ListViewVirtualItemsSelectionRangeChangedDescr))]
-        public event ListViewVirtualItemsSelectionRangeChangedEventHandler VirtualItemsSelectionRangeChanged
+        public event ListViewVirtualItemsSelectionRangeChangedEventHandler? VirtualItemsSelectionRangeChanged
         {
             add => Events.AddHandler(EVENT_VIRTUALITEMSSELECTIONRANGECHANGED, value);
             remove => Events.RemoveHandler(EVENT_VIRTUALITEMSSELECTIONRANGECHANGED, value);
         }
 
+        internal unsafe void AnnounceColumnHeader(Point point)
+        {
+            if (!IsHandleCreated)
+            {
+                return;
+            }
+
+            HWND hwnd = (HWND)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETHEADER);
+            if (hwnd.IsNull)
+            {
+                return;
+            }
+
+            LVHITTESTINFO lvhi = new()
+            {
+                pt = PointToClient(point)
+            };
+
+            SCROLLINFO si = new()
+            {
+                cbSize = (uint)sizeof(SCROLLINFO),
+                fMask = SCROLLINFO_MASK.SIF_POS
+            };
+
+            if (PInvoke.GetScrollInfo(this, SCROLLBAR_CONSTANTS.SB_HORZ, ref si))
+            {
+                lvhi.pt.X += si.nPos;
+            }
+
+            if (IsAccessibilityObjectCreated
+                && PInvoke.SendMessage(hwnd, (User32.WM)PInvoke.HDM_HITTEST, (WPARAM)0, ref lvhi) != -1 && lvhi.iItem > -1)
+            {
+                AccessibilityObject.InternalRaiseAutomationNotification(
+                    Automation.AutomationNotificationKind.Other,
+                    Automation.AutomationNotificationProcessing.MostRecent,
+                    Columns[lvhi.iItem].Text);
+            }
+        }
+
         /// <summary>
         ///  Called to add any delayed update items we have to the list view.  We do this because
-        ///  we have optimnized the case where a user is only adding items within a beginupdate/endupdate
+        ///  we have optimized the case where a user is only adding items within a beginupdate/endupdate
         ///  block.  If they do any other operations (get the count, remove, insert, etc.), we push in the
         ///  cached up items first, then do the requested operation.  This keeps it simple so we don't have to
-        ///  try to maintain parellel state of the cache during a begin update end update.
+        ///  try to maintain parallel state of the cache during a begin update end update.
         /// </summary>
         private void ApplyUpdateCachedItems()
         {
             // first check if there is a delayed update array
-            //
-            ArrayList newItems = (ArrayList)Properties.GetObject(PropDelayedUpdateItems);
-            if (newItems != null)
+            ArrayList? newItems = (ArrayList?)Properties.GetObject(PropDelayedUpdateItems);
+            if (newItems is not null)
             {
                 // if there is, clear it and push the items in.
                 //
@@ -2207,7 +2265,7 @@ namespace System.Windows.Forms
                 ListViewItem[] items = (ListViewItem[])newItems.ToArray(typeof(ListViewItem));
                 if (items.Length > 0)
                 {
-                    InsertItems(itemCount, items, false /*checkHosting*/);
+                    InsertItems(_itemCount, items, false /*checkHosting*/);
                 }
             }
         }
@@ -2219,28 +2277,29 @@ namespace System.Windows.Forms
         public void ArrangeIcons(ListViewAlignment value)
         {
             // LVM_ARRANGE only work in SmallIcon view
-            if (viewStyle != View.SmallIcon)
+            if (_viewStyle != View.SmallIcon)
             {
                 return;
             }
 
-            switch ((LVA)value)
+            switch (value)
             {
-                case LVA.DEFAULT:
-                case LVA.ALIGNLEFT:
-                case LVA.ALIGNTOP:
-                case LVA.SNAPTOGRID:
+                case PInvoke.LVA_DEFAULT:
+                case (ListViewAlignment)PInvoke.LVA_ALIGNLEFT:
+                case (ListViewAlignment)PInvoke.LVA_ALIGNTOP:
+                case (ListViewAlignment)PInvoke.LVA_SNAPTOGRID:
                     if (IsHandleCreated)
                     {
-                        User32.PostMessageW(this, (User32.WM)LVM.ARRANGE, (IntPtr)value, IntPtr.Zero);
+                        User32.PostMessageW(this, (User32.WM)PInvoke.LVM_ARRANGE, (IntPtr)value, IntPtr.Zero);
                     }
+
                     break;
 
                 default:
                     throw new ArgumentException(string.Format(SR.InvalidArgument, nameof(value), value), nameof(value));
             }
 
-            if (!VirtualMode && sorting != SortOrder.None)
+            if (!VirtualMode && _sorting != SortOrder.None)
             {
                 Sort();
             }
@@ -2250,7 +2309,7 @@ namespace System.Windows.Forms
         ///  In Large Icon or Small Icon view, arranges items according to the ListView's
         ///  current alignment style.
         /// </summary>
-        public void ArrangeIcons() => ArrangeIcons((ListViewAlignment)LVA.DEFAULT);
+        public void ArrangeIcons() => ArrangeIcons((ListViewAlignment)PInvoke.LVA_DEFAULT);
 
         private void AttachGroupImageListHandlers()
         {
@@ -2308,6 +2367,7 @@ namespace System.Windows.Forms
             {
                 CreateHandle();
             }
+
             UpdateColumnWidths(headerAutoResize);
         }
 
@@ -2317,6 +2377,7 @@ namespace System.Windows.Forms
             {
                 CreateHandle();
             }
+
             SetColumnWidth(columnIndex, headerAutoResize);
         }
 
@@ -2332,8 +2393,7 @@ namespace System.Windows.Forms
 
             // if this is the first BeginUpdate call, push an ArrayList into the PropertyStore so
             // we can cache up any items that have been added while this is active.
-            //
-            if (updateCounter++ == 0 && Properties.GetObject(PropDelayedUpdateItems) is null)
+            if (_updateCounter++ == 0 && Properties.GetObject(PropDelayedUpdateItems) is null)
             {
                 Properties.SetObject(PropDelayedUpdateItems, new ArrayList());
             }
@@ -2343,21 +2403,34 @@ namespace System.Windows.Forms
         {
             if (selected)
             {
-                if (savedSelectedItems is null)
+                _savedSelectedItems ??= new List<ListViewItem>();
+
+                if (!_savedSelectedItems.Contains(lvi))
                 {
-                    savedSelectedItems = new List<ListViewItem>();
-                }
-                if (!savedSelectedItems.Contains(lvi))
-                {
-                    savedSelectedItems.Add(lvi);
+                    _savedSelectedItems.Add(lvi);
                 }
             }
             else
             {
-                if (savedSelectedItems != null && savedSelectedItems.Contains(lvi))
+                if (_savedSelectedItems is not null && _savedSelectedItems.Contains(lvi))
                 {
-                    savedSelectedItems.Remove(lvi);
+                    _savedSelectedItems.Remove(lvi);
                 }
+            }
+        }
+
+        private void CancelPendingLabelEdit()
+        {
+            // Invoke the timer that was already set, this will cause label editing to start (LVN.BEGINLABELEDITW will be sent).
+            // Using _blockLabelEdit will cancel label editing in LVN.BEGINLABELEDITW handler.
+            _blockLabelEdit = true;
+            try
+            {
+                PInvoke.SendMessage(this, User32.WM.TIMER, (WPARAM)LVLABELEDITTIMER);
+            }
+            finally
+            {
+                _blockLabelEdit = false;
             }
         }
 
@@ -2373,6 +2446,7 @@ namespace System.Windows.Forms
                 sumOfDisplayIndices += Columns[i].DisplayIndex;
                 Debug.Assert(Columns[i].DisplayIndex > -1 && Columns[i].DisplayIndex < Columns.Count, "display indices out of whack");
             }
+
             int colsCount = Columns.Count;
             Debug.Assert(sumOfDisplayIndices == (colsCount - 1) * colsCount / 2, "display indices out of whack");
         }
@@ -2380,18 +2454,23 @@ namespace System.Windows.Forms
 
         private void CleanPreviousBackgroundImageFiles()
         {
-            if (bkImgFileNames is null)
+            if (_bkImgFileNames is null)
             {
                 return;
             }
 
-            IO.FileInfo fi;
-            for (int i = 0; i <= bkImgFileNamesCount; i++)
+            FileInfo fi;
+            for (int i = 0; i <= _bkImgFileNamesCount; i++)
             {
-                fi = new IO.FileInfo(bkImgFileNames[i]);
+                var bkImgFileName = _bkImgFileNames[i];
+                if (bkImgFileName is null)
+                {
+                    continue;
+                }
+
+                fi = new FileInfo(bkImgFileName);
                 if (fi.Exists)
                 {
-                    //
                     // ComCtl ListView uses COM objects to manipulate the bitmap we send it to them.
                     // I could not find any resources which explain in detail when the IImgCtx objects
                     // release the temporary file. So if we get a FileIO when we delete the temporary file
@@ -2400,12 +2479,12 @@ namespace System.Windows.Forms
                     {
                         fi.Delete();
                     }
-                    catch (IO.IOException) { }
+                    catch (IOException) { }
                 }
             }
 
-            bkImgFileNames = null;
-            bkImgFileNamesCount = -1;
+            _bkImgFileNames = null;
+            _bkImgFileNamesCount = -1;
         }
 
         /// <summary>
@@ -2422,10 +2501,12 @@ namespace System.Windows.Forms
         /// </summary>
         private int CompareFunc(IntPtr lparam1, IntPtr lparam2, IntPtr lparamSort)
         {
-            Debug.Assert(listItemSorter != null, "null sorter!");
-            if (listItemSorter != null)
+            Debug.Assert(_listItemSorter is not null, "null sorter!");
+            if (_listItemSorter is not null)
             {
-                return listItemSorter.Compare(listItemsTable[(int)lparam1], listItemsTable[(int)lparam2]);
+                _listItemsTable.TryGetValue((int)lparam1, out ListViewItem? x);
+                _listItemsTable.TryGetValue((int)lparam2, out ListViewItem? y);
+                return _listItemSorter.Compare(x, y);
             }
             else
             {
@@ -2435,12 +2516,12 @@ namespace System.Windows.Forms
 
         private unsafe int CompensateColumnHeaderResize(Message m, bool columnResizeCancelled)
         {
-            if (Application.ComCtlSupportsVisualStyles &&
-                View == View.Details &&
-                !columnResizeCancelled &&
-                Items.Count > 0)
+            if (Application.ComCtlSupportsVisualStyles
+                && View == View.Details
+                && !columnResizeCancelled
+                && Items.Count > 0)
             {
-                NMHEADERW* header = (NMHEADERW*)m.LParam;
+                NMHEADERW* header = (NMHEADERW*)(nint)m.LParamInternal;
                 return CompensateColumnHeaderResize(header->iItem, columnResizeCancelled);
             }
             else
@@ -2469,8 +2550,8 @@ namespace System.Windows.Forms
                 // The user resized the first column.
                 if (columnIndex == 0)
                 {
-                    ColumnHeader col = (columnHeaders != null && columnHeaders.Length > 0) ? columnHeaders[0] : null;
-                    if (col != null)
+                    ColumnHeader? col = (_columnHeaders is not null && _columnHeaders.Length > 0) ? _columnHeaders[0] : null;
+                    if (col is not null)
                     {
                         if (SmallImageList is null)
                         {
@@ -2515,7 +2596,7 @@ namespace System.Windows.Forms
                 {
                     var icc = new INITCOMMONCONTROLSEX
                     {
-                        dwICC = ICC.LISTVIEW_CLASSES
+                        dwICC = INITCOMMONCONTROLSEX_ICC.ICC_LISTVIEW_CLASSES
                     };
                     InitCommonControlsEx(ref icc);
                 }
@@ -2524,10 +2605,11 @@ namespace System.Windows.Forms
                     ThemingScope.Deactivate(userCookie);
                 }
             }
+
             base.CreateHandle();
 
             // image location
-            if (BackgroundImage != null)
+            if (BackgroundImage is not null)
             {
                 SetBackgroundImage();
             }
@@ -2546,46 +2628,46 @@ namespace System.Windows.Forms
 
             try
             {
-                NMLVCUSTOMDRAW* nmcd = (NMLVCUSTOMDRAW*)m.LParam;
+                NMLVCUSTOMDRAW* nmcd = (NMLVCUSTOMDRAW*)(nint)m.LParamInternal;
                 // Find out which stage we're drawing
                 switch (nmcd->nmcd.dwDrawStage)
                 {
-                    case CDDS.PREPAINT:
+                    case NMCUSTOMDRAW_DRAW_STAGE.CDDS_PREPAINT:
                         if (OwnerDraw)
                         {
-                            m.Result = (IntPtr)CDRF.NOTIFYITEMDRAW;
+                            m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_NOTIFYITEMDRAW;
                             return;
                         }
 
                         // We want custom draw for this paint cycle
-                        m.Result = (IntPtr)(CDRF.NOTIFYSUBITEMDRAW | CDRF.NEWFONT);
+                        m.ResultInternal = (LRESULT)(nint)(PInvoke.CDRF_NOTIFYSUBITEMDRAW | PInvoke.CDRF_NEWFONT);
 
                         // refresh the cache of the current color & font settings for this paint cycle
-                        odCacheBackColor = BackColor;
-                        odCacheForeColor = ForeColor;
-                        odCacheFont = Font;
-                        odCacheFontHandle = FontHandle;
+                        _odCacheBackColor = BackColor;
+                        _odCacheForeColor = ForeColor;
+                        _odCacheFont = Font;
+                        _odCacheFontHandle = FontHandle;
 
                         // If preparing to paint a group item, make sure its bolded.
-                        if (nmcd->dwItemType == LVCDI.GROUP)
+                        if (nmcd->dwItemType == NMLVCUSTOMDRAW_ITEM_TYPE.LVCDI_GROUP)
                         {
-                            odCacheFontHandleWrapper?.Dispose();
+                            _odCacheFontHandleWrapper?.Dispose();
 
-                            odCacheFont = new Font(odCacheFont, FontStyle.Bold);
-                            odCacheFontHandleWrapper = new FontHandleWrapper(odCacheFont);
-                            odCacheFontHandle = odCacheFontHandleWrapper.Handle;
-                            Gdi32.SelectObject(nmcd->nmcd.hdc, odCacheFontHandleWrapper.Handle);
-                            m.Result = (IntPtr)CDRF.NEWFONT;
+                            _odCacheFont = new Font(_odCacheFont, FontStyle.Bold);
+                            _odCacheFontHandleWrapper = new FontHandleWrapper(_odCacheFont);
+                            _odCacheFontHandle = _odCacheFontHandleWrapper.Handle;
+                            PInvoke.SelectObject(nmcd->nmcd.hdc, _odCacheFontHandleWrapper.Handle);
+                            m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_NEWFONT;
                         }
 
                         return;
 
-                    //We have to return a NOTIFYSUBITEMDRAW (called NOTIFYSUBITEMREDRAW in the docs) here to
-                    //get it to enter "change all subitems instead of whole rows" mode.
+                    // We have to return a NOTIFYSUBITEMDRAW (called NOTIFYSUBITEMREDRAW in the docs) here to
+                    // get it to enter "change all subitems instead of whole rows" mode.
 
-                    //HOWEVER... we only want to do this for report styles...
+                    // HOWEVER... we only want to do this for report styles...
 
-                    case CDDS.ITEMPREPAINT:
+                    case NMCUSTOMDRAW_DRAW_STAGE.CDDS_ITEMPREPAINT:
 
                         int itemIndex = (int)nmcd->nmcd.dwItemSpec;
                         // The following call silently returns Rectangle.Empty if no corresponding
@@ -2616,15 +2698,15 @@ namespace System.Windows.Forms
 
                             // For the Details view, we send a SKIPDEFAULT when we get a sub-item drawing notification.
                             // For other view styles, we do it here.
-                            if (viewStyle == View.Details)
+                            if (_viewStyle == View.Details)
                             {
-                                m.Result = (IntPtr)CDRF.NOTIFYSUBITEMDRAW;
+                                m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_NOTIFYSUBITEMDRAW;
                             }
                             else
                             {
                                 if (!e.DrawDefault)
                                 {
-                                    m.Result = (IntPtr)CDRF.SKIPDEFAULT;
+                                    m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_SKIPDEFAULT;
                                 }
                             }
 
@@ -2634,22 +2716,22 @@ namespace System.Windows.Forms
                             }
                         }
 
-                        if (viewStyle == View.Details || viewStyle == View.Tile)
+                        if (_viewStyle == View.Details || _viewStyle == View.Tile)
                         {
-                            m.Result = (IntPtr)(CDRF.NOTIFYSUBITEMDRAW | CDRF.NEWFONT);
+                            m.ResultInternal = (LRESULT)(nint)(PInvoke.CDRF_NOTIFYSUBITEMDRAW | PInvoke.CDRF_NEWFONT);
                             dontmess = true; // don't mess with our return value!
 
-                            //ITEMPREPAINT is used to work out the rect for the first column!!! GAH!!!
-                            //(which means we can't just do our color/font work on SUBITEM|ITEM_PREPAINT)
-                            //so fall through... and tell the end of SUBITEM|ITEM_PREPAINT not to mess
-                            //with our return value...
+                            // ITEMPREPAINT is used to work out the rect for the first column!!! GAH!!!
+                            // (which means we can't just do our color/font work on SUBITEM|ITEM_PREPAINT)
+                            // so fall through... and tell the end of SUBITEM|ITEM_PREPAINT not to mess
+                            // with our return value...
                         }
 
-                        //If it's not a report, we fall through and change the main item's styles
+                        // If it's not a report, we fall through and change the main item's styles
 
-                        goto case (CDDS.SUBITEM | CDDS.ITEMPREPAINT);
+                        goto case (NMCUSTOMDRAW_DRAW_STAGE.CDDS_SUBITEM | NMCUSTOMDRAW_DRAW_STAGE.CDDS_ITEMPREPAINT);
 
-                    case CDDS.SUBITEM | CDDS.ITEMPREPAINT:
+                    case NMCUSTOMDRAW_DRAW_STAGE.CDDS_SUBITEM | NMCUSTOMDRAW_DRAW_STAGE.CDDS_ITEMPREPAINT:
 
                         itemIndex = (int)nmcd->nmcd.dwItemSpec;
                         // The following call silently returns Rectangle.Empty if no corresponding
@@ -2667,7 +2749,7 @@ namespace System.Windows.Forms
                         if (OwnerDraw && !itemDrawDefault)
                         {
                             using Graphics g = nmcd->nmcd.hdc.CreateGraphics();
-                            DrawListViewSubItemEventArgs e = null;
+                            DrawListViewSubItemEventArgs? e = null;
 
                             // by default, we want to skip the customDrawCode
                             bool skipCustomDrawCode = true;
@@ -2684,7 +2766,10 @@ namespace System.Windows.Forms
                                 if (nmcd->iSubItem == 0 && Items[itemIndex].SubItems.Count > 1)
                                 {
                                     // Use the width for the first column header.
-                                    subItemBounds.Width = columnHeaders[0].Width;
+                                    if (_columnHeaders is not null)
+                                    {
+                                        subItemBounds.Width = _columnHeaders[0].Width;
+                                    }
                                 }
 
                                 if (ClientRectangle.IntersectsWith(subItemBounds))
@@ -2696,7 +2781,7 @@ namespace System.Windows.Forms
                                         Items[itemIndex].SubItems[nmcd->iSubItem],
                                         itemIndex,
                                         nmcd->iSubItem,
-                                        columnHeaders[nmcd->iSubItem],
+                                        _columnHeaders![nmcd->iSubItem],
                                         (ListViewItemStates)nmcd->nmcd.uItemState);
                                     OnDrawSubItem(e);
 
@@ -2708,7 +2793,7 @@ namespace System.Windows.Forms
 
                             if (skipCustomDrawCode)
                             {
-                                m.Result = (IntPtr)CDRF.SKIPDEFAULT;
+                                m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_SKIPDEFAULT;
                                 return; // skip our custom draw code
                             }
                         }
@@ -2718,21 +2803,22 @@ namespace System.Windows.Forms
                         // if we're doing the whole row in one style, change our result!
                         if (dontmess && item.UseItemStyleForSubItems)
                         {
-                            m.Result = (IntPtr)CDRF.NEWFONT;
+                            m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_NEWFONT;
                         }
-                        Debug.Assert(item != null, "Item was null in ITEMPREPAINT");
 
-                        CDIS state = nmcd->nmcd.uItemState;
+                        Debug.Assert(item is not null, "Item was null in ITEMPREPAINT");
+
+                        NMCUSTOMDRAW_DRAW_STATE_FLAGS state = nmcd->nmcd.uItemState;
                         // There is a known and documented problem in the ListView winctl control -
                         // if the LVS_SHOWSELALWAYS style is set, then the item state will have
                         // the CDIS_SELECTED bit set for all items. So we need to verify with the
                         // real item state to be sure.
                         if (!HideSelection)
                         {
-                            LVIS realState = GetItemState((int)nmcd->nmcd.dwItemSpec);
-                            if ((realState & LVIS.SELECTED) == 0)
+                            LIST_VIEW_ITEM_STATE_FLAGS realState = GetItemState((int)nmcd->nmcd.dwItemSpec);
+                            if ((realState & LIST_VIEW_ITEM_STATE_FLAGS.LVIS_SELECTED) == 0)
                             {
-                                state &= ~CDIS.SELECTED;
+                                state &= ~NMCUSTOMDRAW_DRAW_STATE_FLAGS.CDIS_SELECTED;
                             }
                         }
 
@@ -2740,19 +2826,18 @@ namespace System.Windows.Forms
                         // cases where subitems aren't visible (ie. non-Details modes), so if subitem
                         // is invalid, point it at the main item's render info
 
-                        int subitem = ((nmcd->nmcd.dwDrawStage & CDDS.SUBITEM) != 0) ? nmcd->iSubItem : 0;
+                        int subitem = ((nmcd->nmcd.dwDrawStage & NMCUSTOMDRAW_DRAW_STAGE.CDDS_SUBITEM) != 0) ? nmcd->iSubItem : 0;
 
                         // Work out the style in which to render this item
-                        //
-                        Font subItemFont = null;
+                        Font? subItemFont = null;
                         Color subItemForeColor = Color.Empty;
                         Color subItemBackColor = Color.Empty;
                         bool haveRenderInfo = false;
                         bool disposeSubItemFont = false;
-                        if (item != null && subitem < item.SubItems.Count)
+                        if (item is not null && subitem < item.SubItems.Count)
                         {
                             haveRenderInfo = true;
-                            if (subitem == 0 && (state & CDIS.HOT) != 0 && HotTracking)
+                            if (subitem == 0 && (state & NMCUSTOMDRAW_DRAW_STATE_FLAGS.CDIS_HOT) != 0 && HotTracking)
                             {
                                 disposeSubItemFont = true;
                                 subItemFont = new Font(item.SubItems[0].Font, FontStyle.Underline);
@@ -2762,9 +2847,11 @@ namespace System.Windows.Forms
                                 subItemFont = item.SubItems[subitem].Font;
                             }
 
-                            if (subitem > 0 || (state & (CDIS.SELECTED | CDIS.GRAYED | CDIS.HOT | CDIS.DISABLED)) == 0)
+                            if (subitem > 0 ||
+                                (state & (NMCUSTOMDRAW_DRAW_STATE_FLAGS.CDIS_SELECTED | NMCUSTOMDRAW_DRAW_STATE_FLAGS.CDIS_GRAYED |
+                                NMCUSTOMDRAW_DRAW_STATE_FLAGS.CDIS_HOT | NMCUSTOMDRAW_DRAW_STATE_FLAGS.CDIS_DISABLED)) == 0)
                             {
-                                // we only propogate colors if we're displaying things normally
+                                // we only propagate colors if we're displaying things normally
                                 // the user can override this method to do all kinds of other bad things if they
                                 // want to though - but we don't support that.
                                 subItemForeColor = item.SubItems[subitem].ForeColor;
@@ -2773,8 +2860,6 @@ namespace System.Windows.Forms
                         }
 
                         // We always have to set font and color data, because of comctl design
-
-                        //
 
                         Color riFore = Color.Empty;
                         Color riBack = Color.Empty;
@@ -2790,13 +2875,13 @@ namespace System.Windows.Forms
                         {
                             changeColor = false;
                         }
-                        else if ((activation == ItemActivation.OneClick)
-                              || (activation == ItemActivation.TwoClick))
+                        else if ((_activation == ItemActivation.OneClick)
+                              || (_activation == ItemActivation.TwoClick))
                         {
-                            if ((state & (CDIS.SELECTED
-                                        | CDIS.GRAYED
-                                        | CDIS.HOT
-                                        | CDIS.DISABLED)) != 0)
+                            if ((state & (NMCUSTOMDRAW_DRAW_STATE_FLAGS.CDIS_SELECTED
+                                        | NMCUSTOMDRAW_DRAW_STATE_FLAGS.CDIS_GRAYED
+                                        | NMCUSTOMDRAW_DRAW_STATE_FLAGS.CDIS_HOT
+                                        | NMCUSTOMDRAW_DRAW_STATE_FLAGS.CDIS_DISABLED)) != 0)
                             {
                                 changeColor = false;
                             }
@@ -2806,7 +2891,7 @@ namespace System.Windows.Forms
                         {
                             if (!haveRenderInfo || riFore.IsEmpty)
                             {
-                                nmcd->clrText = ColorTranslator.ToWin32(odCacheForeColor);
+                                nmcd->clrText = ColorTranslator.ToWin32(_odCacheForeColor);
                             }
                             else
                             {
@@ -2842,6 +2927,7 @@ namespace System.Windows.Forms
                                         {
                                             C = ((C >> n) + 1) << n;
                                         }
+
                                         // Copy the adjustment into nmcd->clrText
                                         nmcd->clrText = (nmcd->clrText & (~mask)) | C;
                                         clrAdjusted = true;
@@ -2854,12 +2940,13 @@ namespace System.Windows.Forms
                                         // SystemColors.HotTrack
                                         totalshift += 8;
                                     }
-                                } while (!clrAdjusted);
+                                }
+                                while (!clrAdjusted);
                             }
 
                             if (!haveRenderInfo || riBack.IsEmpty)
                             {
-                                nmcd->clrTextBk = ColorTranslator.ToWin32(odCacheBackColor);
+                                nmcd->clrTextBk = ColorTranslator.ToWin32(_odCacheBackColor);
                             }
                             else
                             {
@@ -2870,51 +2957,50 @@ namespace System.Windows.Forms
                         if (!haveRenderInfo || subItemFont is null)
                         {
                             // safety net code just in case
-                            if (odCacheFont != null)
+                            if (_odCacheFont is not null)
                             {
-                                Gdi32.SelectObject(nmcd->nmcd.hdc, odCacheFontHandle);
+                                PInvoke.SelectObject(nmcd->nmcd.hdc, _odCacheFontHandle);
                             }
                         }
                         else
                         {
-                            if (odCacheFontHandleWrapper != null)
-                            {
-                                odCacheFontHandleWrapper.Dispose();
-                            }
-                            odCacheFontHandleWrapper = new FontHandleWrapper(subItemFont);
-                            Gdi32.SelectObject(nmcd->nmcd.hdc, odCacheFontHandleWrapper.Handle);
+                            _odCacheFontHandleWrapper?.Dispose();
+
+                            _odCacheFontHandleWrapper = new FontHandleWrapper(subItemFont);
+                            PInvoke.SelectObject(nmcd->nmcd.hdc, _odCacheFontHandleWrapper.Handle);
                         }
 
                         if (!dontmess)
                         {
-                            m.Result = (IntPtr)CDRF.NEWFONT;
+                            m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_NEWFONT;
                         }
+
                         if (disposeSubItemFont)
                         {
-                            subItemFont.Dispose();
+                            subItemFont?.Dispose();
                         }
+
                         return;
 
                     default:
-                        m.Result = (IntPtr)CDRF.DODEFAULT;
+                        m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_DODEFAULT;
                         return;
                 }
             }
             catch (Exception e)
             {
                 Debug.Fail("Exception occurred attempting to setup custom draw. Disabling custom draw for this control", e.ToString());
-                m.Result = (IntPtr)CDRF.DODEFAULT;
+                m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_DODEFAULT;
             }
         }
 
-        private void DeleteFileName(string fileName)
+        private static void DeleteFileName(string? fileName)
         {
             if (!string.IsNullOrEmpty(fileName))
             {
-                IO.FileInfo fi = new IO.FileInfo(fileName);
+                FileInfo fi = new FileInfo(fileName);
                 if (fi.Exists)
                 {
-                    //
                     // ComCtl ListView uses COM objects to manipulate the bitmap we send it to them.
                     // I could not find any resources which explain in detail when the IImgCtx objects
                     // release the temporary file. So if we get a FileIO when we delete the temporary file
@@ -2923,7 +3009,7 @@ namespace System.Windows.Forms
                     {
                         fi.Delete();
                     }
-                    catch (IO.IOException) { }
+                    catch (IOException) { }
                 }
             }
         }
@@ -2932,17 +3018,18 @@ namespace System.Windows.Forms
         ///  Resets the imageList to null.  We wire this method up to the imageList's
         ///  Dispose event, so that we don't hang onto an imageList that's gone away.
         /// </summary>
-        private void DetachImageList(object sender, EventArgs e)
+        private void DetachImageList(object? sender, EventArgs e)
         {
-            listViewState1[LISTVIEWSTATE1_disposingImageLists] = true;
+            _listViewState1[LISTVIEWSTATE1_disposingImageLists] = true;
             try
             {
 #if DEBUG
-                if (sender != _imageListSmall && sender != _imageListState && sender != _imageListLarge && sender != _imageListGroup)
+                if (sender is ImageList imageList && !imageList.IsDisposed &&
+                    sender != _imageListSmall && sender != _imageListState && sender != _imageListLarge && sender != _imageListGroup)
                 {
                     Debug.Fail("ListView sunk dispose event from unknown component");
                 }
-#endif // DEBUG
+#endif
                 if (sender == _imageListSmall)
                 {
                     SmallImageList = null;
@@ -2965,7 +3052,7 @@ namespace System.Windows.Forms
             }
             finally
             {
-                listViewState1[LISTVIEWSTATE1_disposingImageLists] = false;
+                _listViewState1[LISTVIEWSTATE1_disposingImageLists] = false;
             }
 
             UpdateListViewItemsLocations();
@@ -3037,33 +3124,44 @@ namespace System.Windows.Forms
                 _imageListGroup = null;
 
                 // Remove any ColumnHeaders contained in this control
-                if (columnHeaders != null)
+                if (_columnHeaders is not null)
                 {
-                    for (int colIdx = columnHeaders.Length - 1; colIdx >= 0; colIdx--)
+                    for (int colIdx = _columnHeaders.Length - 1; colIdx >= 0; colIdx--)
                     {
-                        columnHeaders[colIdx].OwnerListview = null;
-                        columnHeaders[colIdx].Dispose();
+                        _columnHeaders[colIdx].OwnerListview = null;
+                        _columnHeaders[colIdx].Dispose();
                     }
-                    columnHeaders = null;
+
+                    _columnHeaders = null;
                 }
 
-                // Remove any items we have
-                Items.Clear();
-
-                if (odCacheFontHandleWrapper != null)
+                // We do not store data about items when the ListView is in virtual mode,
+                // so "Unhook" method is only called for normal mode
+                if (!VirtualMode)
                 {
-                    odCacheFontHandleWrapper.Dispose();
-                    odCacheFontHandleWrapper = null;
+                    Unhook();
                 }
 
-                if (!string.IsNullOrEmpty(backgroundImageFileName) || bkImgFileNames != null)
+                using (DisposingContext context = new(this))
                 {
-                    IO.FileInfo fi;
-                    if (!string.IsNullOrEmpty(backgroundImageFileName))
+                    // Remove any items we have
+                    Items.Clear();
+                }
+
+                if (_odCacheFontHandleWrapper is not null)
+                {
+                    _odCacheFontHandleWrapper.Dispose();
+                    _odCacheFontHandleWrapper = null;
+                }
+
+                if (!string.IsNullOrEmpty(_backgroundImageFileName) || _bkImgFileNames is not null)
+                {
+                    FileInfo fi;
+                    if (!string.IsNullOrEmpty(_backgroundImageFileName))
                     {
-                        fi = new IO.FileInfo(backgroundImageFileName);
+                        fi = new FileInfo(_backgroundImageFileName);
                         Debug.Assert(fi.Exists, "who deleted our temp file?");
-                        //
+
                         // ComCtl ListView uses COM objects to manipulate the bitmap we send it to them.
                         // I could not find any resources which explain in detail when the IImgCtx objects
                         // release the temporary file. So if we get a FileIO when we delete the temporary file
@@ -3072,31 +3170,49 @@ namespace System.Windows.Forms
                         {
                             fi.Delete();
                         }
-                        catch (IO.IOException) { }
-                        backgroundImageFileName = string.Empty;
-                    }
-                    for (int i = 0; i <= bkImgFileNamesCount; i++)
-                    {
-                        fi = new IO.FileInfo(bkImgFileNames[i]);
-                        Debug.Assert(fi.Exists, "who deleted our temp file?");
-                        //
-                        // ComCtl ListView uses COM objects to manipulate the bitmap we send it to them.
-                        // I could not find any resources which explain in detail when the IImgCtx objects
-                        // release the temporary file. So if we get a FileIO when we delete the temporary file
-                        // we don't do anything about it ( because we don't know what is a good time to try to delete the file again ).
-                        try
-                        {
-                            fi.Delete();
-                        }
-                        catch (IO.IOException) { }
+                        catch (IOException) { }
+                        _backgroundImageFileName = string.Empty;
                     }
 
-                    bkImgFileNames = null;
-                    bkImgFileNamesCount = -1;
+                    for (int i = 0; i <= _bkImgFileNamesCount; i++)
+                    {
+                        if (_bkImgFileNames is not null)
+                        {
+                            var bkImgFileName = _bkImgFileNames[i];
+                            if (bkImgFileName is null)
+                            {
+                                continue;
+                            }
+
+                            fi = new FileInfo(bkImgFileName);
+                            Debug.Assert(fi.Exists, "who deleted our temp file?");
+
+                            // ComCtl ListView uses COM objects to manipulate the bitmap we send it to them.
+                            // I could not find any resources which explain in detail when the IImgCtx objects
+                            // release the temporary file. So if we get a FileIO when we delete the temporary file
+                            // we don't do anything about it ( because we don't know what is a good time to try to delete the file again ).
+                            try
+                            {
+                                fi.Delete();
+                            }
+                            catch (IOException) { }
+                        }
+                    }
+
+                    _bkImgFileNames = null;
+                    _bkImgFileNamesCount = -1;
                 }
+
+                KeyboardToolTip.Dispose();
             }
 
             base.Dispose(disposing);
+        }
+
+        private bool ClearingInnerListOnDispose
+        {
+            get => _listViewState1[LISTVIEWSTATE1_clearingInnerListOnDispose];
+            set => _listViewState1[LISTVIEWSTATE1_clearingInnerListOnDispose] = value;
         }
 
         /// <summary>
@@ -3106,19 +3222,19 @@ namespace System.Windows.Forms
         {
             // On the final EndUpdate, check to see if we've got any cached items.
             // If we do, insert them as normal, then turn off the painting freeze.
-            //
-            if (--updateCounter == 0 && null != Properties.GetObject(PropDelayedUpdateItems))
+            if (--_updateCounter == 0 && Properties.GetObject(PropDelayedUpdateItems) is not null)
             {
                 ApplyUpdateCachedItems();
             }
+
             EndUpdateInternal();
         }
 
         private void EnsureDefaultGroup()
         {
-            if (IsHandleCreated && Application.ComCtlSupportsVisualStyles && GroupsEnabled)
+            if (IsHandleCreated && GroupsEnabled)
             {
-                if (User32.SendMessageW(this, (User32.WM)LVM.HASGROUP, (IntPtr)DefaultGroup.ID) == IntPtr.Zero)
+                if (PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_HASGROUP, (WPARAM)DefaultGroup.ID) == 0)
                 {
                     UpdateGroupView();
                     InsertGroupNative(0, DefaultGroup);
@@ -3136,13 +3252,14 @@ namespace System.Windows.Forms
             {
                 throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
             }
+
             if (IsHandleCreated)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.ENSUREVISIBLE, (IntPtr)index);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_ENSUREVISIBLE, (WPARAM)index);
             }
         }
 
-        public ListViewItem FindItemWithText(string text)
+        public ListViewItem? FindItemWithText(string text)
         {
             // if the user does not use the FindItemWithText overloads that specify a StartIndex and the listView is empty then return null
             if (Items.Count == 0)
@@ -3153,26 +3270,27 @@ namespace System.Windows.Forms
             return FindItemWithText(text, true, 0, true);
         }
 
-        public ListViewItem FindItemWithText(string text, bool includeSubItemsInSearch, int startIndex)
+        public ListViewItem? FindItemWithText(string text, bool includeSubItemsInSearch, int startIndex)
         {
             return FindItemWithText(text, includeSubItemsInSearch, startIndex, true);
         }
 
-        public ListViewItem FindItemWithText(string text, bool includeSubItemsInSearch, int startIndex, bool isPrefixSearch)
+        public ListViewItem? FindItemWithText(string text, bool includeSubItemsInSearch, int startIndex, bool isPrefixSearch)
         {
             if (startIndex < 0 || startIndex >= Items.Count)
             {
                 throw new ArgumentOutOfRangeException(nameof(startIndex), startIndex, string.Format(SR.InvalidArgument, nameof(startIndex), startIndex));
             }
+
             return FindItem(true, text, isPrefixSearch, new Point(0, 0), SearchDirectionHint.Down, startIndex, includeSubItemsInSearch);
         }
 
-        public ListViewItem FindNearestItem(SearchDirectionHint dir, Point point)
+        public ListViewItem? FindNearestItem(SearchDirectionHint dir, Point point)
         {
             return FindNearestItem(dir, point.X, point.Y);
         }
 
-        public ListViewItem FindNearestItem(SearchDirectionHint searchDirection, int x, int y)
+        public ListViewItem? FindNearestItem(SearchDirectionHint searchDirection, int x, int y)
         {
             if (View != View.SmallIcon && View != View.LargeIcon)
             {
@@ -3187,32 +3305,34 @@ namespace System.Windows.Forms
             // the win32 ListView::FindNearestItem does some pretty weird things to determine the nearest item.
             // simply passing the (x,y) coordinates will cause problems when we call FindNearestItem for a point inside an item.
             // so we have to do some special processing when (x,y) falls inside an item;
-            //
-            ListViewItem lvi = GetItemAt(x, y);
+            ListViewItem? lvi = GetItemAt(x, y);
 
-            if (lvi != null)
+            if (lvi is not null)
             {
                 Rectangle itemBounds = lvi.Bounds;
                 // LVM_FINDITEM is a nightmare
                 // LVM_FINDITEM will use the top left corner of icon rectangle to determine the closest item
                 // What happens if there is no icon for this item? then the top left corner of the icon rectangle falls INSIDE the item label (???)
-                //
 
                 Rectangle iconBounds = GetItemRect(lvi.Index, ItemBoundsPortion.Icon);
 
                 switch (searchDirection)
                 {
                     case SearchDirectionHint.Up:
+                        x = Math.Max(itemBounds.Left, iconBounds.Left);
                         y = Math.Max(itemBounds.Top, iconBounds.Top) - 1;
                         break;
                     case SearchDirectionHint.Down:
+                        x = Math.Max(itemBounds.Left, iconBounds.Left);
                         y = Math.Max(itemBounds.Top, iconBounds.Top) + 1;
                         break;
                     case SearchDirectionHint.Left:
                         x = Math.Max(itemBounds.Left, iconBounds.Left) - 1;
+                        y = Math.Max(itemBounds.Top, iconBounds.Top);
                         break;
                     case SearchDirectionHint.Right:
                         x = Math.Max(itemBounds.Left, iconBounds.Left) + 1;
+                        y = Math.Max(itemBounds.Top, iconBounds.Top);
                         break;
                     default:
                         Debug.Assert(false, "these are all the search directions");
@@ -3220,10 +3340,10 @@ namespace System.Windows.Forms
                 }
             }
 
-            return FindItem(false, string.Empty, false, new Point(x, y), searchDirection, -1, false);
+            return FindItem(false, string.Empty, false, new Point(x, y), searchDirection, 0, false);
         }
 
-        private unsafe ListViewItem FindItem(bool isTextSearch, string text, bool isPrefixSearch, Point pt, SearchDirectionHint dir, int startIndex, bool includeSubItemsInSearch)
+        private unsafe ListViewItem? FindItem(bool isTextSearch, string text, bool isPrefixSearch, Point pt, SearchDirectionHint dir, int startIndex, bool includeSubItemsInSearch)
         {
             if (Items.Count == 0)
             {
@@ -3254,26 +3374,29 @@ namespace System.Windows.Forms
             {
                 fixed (char* pText = text)
                 {
-                    var lvFindInfo = new LVFINDINFOW();
+                    var lvFindInfo = default(LVFINDINFOW);
                     if (isTextSearch)
                     {
-                        lvFindInfo.flags = LVFI.STRING;
-                        lvFindInfo.flags |= isPrefixSearch ? LVFI.PARTIAL : 0;
+                        lvFindInfo.flags = LVFINDINFOW_FLAGS.LVFI_STRING;
+                        lvFindInfo.flags |= isPrefixSearch ? LVFINDINFOW_FLAGS.LVFI_PARTIAL : 0;
                         lvFindInfo.psz = pText;
                     }
                     else
                     {
-                        lvFindInfo.flags = LVFI.NEARESTXY;
+                        lvFindInfo.flags = LVFINDINFOW_FLAGS.LVFI_NEARESTXY;
                         lvFindInfo.pt = pt;
                         // we can do this because SearchDirectionHint is set to the VK_*
                         lvFindInfo.vkDirection = (uint)dir;
                     }
-                    lvFindInfo.lParam = IntPtr.Zero;
-                    int index = (int)User32.SendMessageW(
+
+                    lvFindInfo.lParam = 0;
+                    int index = (int)PInvoke.SendMessage(
                         this,
-                        (User32.WM)LVM.FINDITEMW,
-                        (IntPtr)(startIndex - 1), // decrement startIndex so that the search is 0-based
+                        (User32.WM)PInvoke.LVM_FINDITEMW,
+                        // decrement startIndex so that the search is 0-based
+                        (WPARAM)(startIndex - 1),
                         ref lvFindInfo);
+
                     if (index >= 0)
                     {
                         return Items[index];
@@ -3317,47 +3440,21 @@ namespace System.Windows.Forms
         private void ForceCheckBoxUpdate()
         {
             // Force ListView to update its checkbox bitmaps.
-            //
             if (CheckBoxes && IsHandleCreated)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETEXTENDEDLISTVIEWSTYLE, (IntPtr)LVS_EX.CHECKBOXES, IntPtr.Zero);
-                User32.SendMessageW(this, (User32.WM)LVM.SETEXTENDEDLISTVIEWSTYLE, (IntPtr)LVS_EX.CHECKBOXES, (IntPtr)LVS_EX.CHECKBOXES);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETEXTENDEDLISTVIEWSTYLE, (WPARAM)(uint)PInvoke.LVS_EX_CHECKBOXES);
+                PInvoke.SendMessage(
+                    this,
+                    (User32.WM)PInvoke.LVM_SETEXTENDEDLISTVIEWSTYLE,
+                    (WPARAM)(uint)PInvoke.LVS_EX_CHECKBOXES,
+                    (LPARAM)(uint)PInvoke.LVS_EX_CHECKBOXES);
 
-                // Comctl should handle auto-arrange for us, but doesn't
+                // Comctl should handle auto-arrange for us, but doesn't.
                 if (AutoArrange)
                 {
                     ArrangeIcons(Alignment);
                 }
             }
-        }
-
-        private string GenerateRandomName()
-        {
-            Debug.Assert(BackgroundImage != null, "we need to generate random numbers only when saving the background image to disk");
-            Bitmap bm = new Bitmap(BackgroundImage);
-            int handle = 0;
-
-            try
-            {
-                handle = unchecked((int)(long)bm.GetHicon());
-            }
-            catch
-            {
-                bm.Dispose();
-            }
-
-            Random rnd;
-            if (handle == 0)
-            {
-                // there was a problem when we got the icon handle
-                // use DateTime.Now to seed the randomizer
-                rnd = new Random((int)System.DateTime.Now.Ticks);
-            }
-            else
-            {
-                rnd = new Random(handle);
-            }
-            return rnd.Next().ToString(CultureInfo.InvariantCulture);
         }
 
         // IDs for identifying ListViewItem's
@@ -3366,12 +3463,14 @@ namespace System.Windows.Forms
             // Okay, if someone adds several billion items to the list and doesn't remove all of them,
             // we can reuse the same ID, but I'm willing to take that risk.  We are even tracking IDs
             // on a per-list view basis to reduce the problem.
-            int result = nextID++;
+            int result = _nextID++;
             if (result == -1)
-            {// leave -1 as a "no such value" ID
+            {
+                // leave -1 as a "no such value" ID
                 result = 0;
-                nextID = 1;
+                _nextID = 1;
             }
+
             return result;
         }
 
@@ -3391,20 +3490,21 @@ namespace System.Windows.Forms
                 var info = new LVFINDINFOW
                 {
                     lParam = (IntPtr)item.ID,
-                    flags = LVFI.PARAM
+                    flags = LVFINDINFOW_FLAGS.LVFI_PARAM
                 };
 
                 int displayIndex = -1;
 
                 if (lastIndex != -1)
                 {
-                    displayIndex = (int)User32.SendMessageW(this, (User32.WM)LVM.FINDITEMW, (IntPtr)(lastIndex - 1), ref info);
+                    displayIndex = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_FINDITEMW, (WPARAM)(lastIndex - 1), ref info);
                 }
 
                 if (displayIndex == -1)
                 {
-                    displayIndex = (int)User32.SendMessageW(this, (User32.WM)LVM.FINDITEMW, (IntPtr)(-1) /* beginning */, ref info);
+                    displayIndex = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_FINDITEMW, (WPARAM)(-1) /* beginning */, ref info);
                 }
+
                 Debug.Assert(displayIndex != -1, "This item is in the list view -- why can't we find a display index for it?");
                 return displayIndex;
             }
@@ -3412,18 +3512,19 @@ namespace System.Windows.Forms
             {
                 // PERF: The only reason we should ever call this before the handle is created
                 // is if the user calls ListViewItem.Index.
-                Debug.Assert(listItemsArray != null, "listItemsArray is null, but the handle isn't created");
+                Debug.Assert(_listViewItems is not null, "listItemsArray is null, but the handle isn't created");
 
                 int index = 0;
-                foreach (object o in listItemsArray)
+                foreach (ListViewItem listViewItem in _listViewItems)
                 {
-                    if (o == item)
+                    if (listViewItem == item)
                     {
                         return index;
                     }
 
                     index++;
                 }
+
                 return -1;
             }
         }
@@ -3434,14 +3535,14 @@ namespace System.Windows.Forms
         /// </summary>
         internal int GetColumnIndex(ColumnHeader ch)
         {
-            if (columnHeaders is null)
+            if (_columnHeaders is null)
             {
                 return -1;
             }
 
-            for (int i = 0; i < columnHeaders.Length; i++)
+            for (int i = 0; i < _columnHeaders.Length; i++)
             {
-                if (columnHeaders[i] == ch)
+                if (_columnHeaders[i] == ch)
                 {
                     return i;
                 }
@@ -3450,36 +3551,23 @@ namespace System.Windows.Forms
             return -1;
         }
 
-        internal int GetGroupIndex(ListViewGroup owningGroup)
-        {
-            if (Groups.Count == 0)
-            {
-                return -1;
-            }
-            // Default group it's last group in accessibility and not specified in Groups collection, therefore default group index = Groups.Count
-            if (DefaultGroup == owningGroup)
-            {
-                return Groups.Count;
-            }
-
-            return Groups.IndexOf(owningGroup);
-        }
-
         /// <summary>
         ///  Returns the current ListViewItem corresponding to the specific
         ///  x,y co-ordinate.
         /// </summary>
-        public ListViewItem GetItemAt(int x, int y)
+        public ListViewItem? GetItemAt(int x, int y)
         {
             var lvhi = new LVHITTESTINFO
             {
                 pt = new Point(x, y)
             };
 
-            int displayIndex = (int)User32.SendMessageW(this, (User32.WM)LVM.HITTEST, IntPtr.Zero, ref lvhi);
+            int displayIndex = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_HITTEST, (WPARAM)0, ref lvhi);
 
-            ListViewItem li = null;
-            if (displayIndex >= 0 && ((lvhi.flags & LVHT.ONITEM) != 0))
+            ListViewItem? li = null;
+            if (displayIndex >= 0 &&
+                ((lvhi.flags &
+                (LVHITTESTINFO_FLAGS.LVHT_ONITEMICON | LVHITTESTINFO_FLAGS.LVHT_ONITEMLABEL | LVHITTESTINFO_FLAGS.LVHT_ABOVE)) != 0))
             {
                 li = Items[displayIndex];
             }
@@ -3491,7 +3579,7 @@ namespace System.Windows.Forms
         {
             item.UpdateGroupFromName();
 
-            if (item.Group != null && Groups.Contains(item.Group))
+            if (item.Group is not null && Groups.Contains(item.Group))
             {
                 return item.Group.ID;
             }
@@ -3502,6 +3590,20 @@ namespace System.Windows.Forms
             }
         }
 
+        internal override unsafe ComCtl32.ToolInfoWrapper<Control> GetToolInfoWrapper(TOOLTIP_FLAGS flags, string caption, ToolTip tooltip)
+        {
+            // The "ShowItemToolTips" flag is required so that when the user hovers over the ListViewItem,
+            // their own tooltip is displayed, not the ListViewItem tooltip.
+            // The second condition is necessary for the correct display of the keyboard tooltip,
+            // since the logic of the external tooltip blocks its display
+            bool isExternalTooltip = ShowItemToolTips && tooltip != KeyboardToolTip;
+            var wrapper = new ComCtl32.ToolInfoWrapper<Control>(this, flags, isExternalTooltip ? null : caption);
+            if (isExternalTooltip)
+                wrapper.Info.lpszText = (char*)(-1);
+
+            return wrapper;
+        }
+
         internal void GetSubItemAt(int x, int y, out int iItem, out int iSubItem)
         {
             var lvhi = new LVHITTESTINFO
@@ -3509,7 +3611,7 @@ namespace System.Windows.Forms
                 pt = new Point(x, y)
             };
 
-            int index = (int)User32.SendMessageW(this, (User32.WM)LVM.SUBITEMHITTEST, IntPtr.Zero, ref lvhi);
+            int index = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SUBITEMHITTEST, (WPARAM)0, ref lvhi);
             if (index > -1)
             {
                 iItem = lvhi.iItem;
@@ -3524,36 +3626,33 @@ namespace System.Windows.Forms
 
         internal Point GetItemPosition(int index)
         {
-            var pt = new Point();
-            User32.SendMessageW(this, (User32.WM)LVM.GETITEMPOSITION, (IntPtr)index, ref pt);
+            var pt = default(Point);
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETITEMPOSITION, (WPARAM)index, ref pt);
             return pt;
         }
 
-        internal LVIS GetItemState(int index)
-        {
-            return GetItemState(index, LVIS.FOCUSED | LVIS.SELECTED | LVIS.CUT |
-                                LVIS.DROPHILITED | LVIS.OVERLAYMASK |
-                                LVIS.STATEIMAGEMASK);
-        }
+        internal LIST_VIEW_ITEM_STATE_FLAGS GetItemState(int index)
+            => GetItemState(
+                index,
+                LIST_VIEW_ITEM_STATE_FLAGS.LVIS_FOCUSED | LIST_VIEW_ITEM_STATE_FLAGS.LVIS_SELECTED |
+                LIST_VIEW_ITEM_STATE_FLAGS.LVIS_CUT | LIST_VIEW_ITEM_STATE_FLAGS.LVIS_DROPHILITED |
+                LIST_VIEW_ITEM_STATE_FLAGS.LVIS_OVERLAYMASK | LIST_VIEW_ITEM_STATE_FLAGS.LVIS_STATEIMAGEMASK);
 
-        internal LVIS GetItemState(int index, LVIS mask)
+        internal LIST_VIEW_ITEM_STATE_FLAGS GetItemState(int index, LIST_VIEW_ITEM_STATE_FLAGS mask)
         {
-            if (index < 0 || (VirtualMode && index >= VirtualListSize) || (!VirtualMode && index >= itemCount))
+            if (index < 0 || (VirtualMode && index >= VirtualListSize) || (!VirtualMode && index >= _itemCount))
             {
                 throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
             }
 
             Debug.Assert(IsHandleCreated, "How did we add items without a handle?");
-            return unchecked((LVIS)(long)User32.SendMessageW(this, (User32.WM)LVM.GETITEMSTATE, (IntPtr)index, (IntPtr)mask));
+            return (LIST_VIEW_ITEM_STATE_FLAGS)(uint)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETITEMSTATE, (WPARAM)index, (LPARAM)(uint)mask);
         }
 
         /// <summary>
         ///  Returns a list item's bounding rectangle, including subitems.
         /// </summary>
-        public Rectangle GetItemRect(int index)
-        {
-            return GetItemRect(index, 0);
-        }
+        public Rectangle GetItemRect(int index) => GetItemRect(index, 0);
 
         /// <summary>
         ///  Returns a specific portion of a list item's bounding rectangle.
@@ -3564,7 +3663,8 @@ namespace System.Windows.Forms
             {
                 throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
             }
-            //valid values are 0x0 to 0x3
+
+            // Valid values are 0x0 to 0x3
             SourceGenerated.EnumValidator.Validate(portion, nameof(portion));
 
             if (View == View.Details && Columns.Count == 0)
@@ -3576,9 +3676,13 @@ namespace System.Windows.Forms
             {
                 left = (int)portion
             };
-            if (User32.SendMessageW(this, (User32.WM)LVM.GETITEMRECT, (IntPtr)index, ref itemrect) == IntPtr.Zero)
+
+            if (PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETITEMRECT, (WPARAM)index, ref itemrect) == 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
+                throw new ArgumentOutOfRangeException(
+                    nameof(index),
+                    index,
+                    string.Format(SR.InvalidArgument, nameof(index), index));
             }
 
             return Rectangle.FromLTRB(itemrect.left, itemrect.top, itemrect.right, itemrect.bottom);
@@ -3604,7 +3708,8 @@ namespace System.Windows.Forms
             {
                 left = 0
             };
-            if (User32.SendMessageW(this, (User32.WM)LVM.GETITEMRECT, (IntPtr)index, ref itemrect) == IntPtr.Zero)
+
+            if (PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETITEMRECT, (WPARAM)index, ref itemrect) == 0)
             {
                 return Rectangle.Empty;
             }
@@ -3622,21 +3727,25 @@ namespace System.Windows.Forms
 
         internal Rectangle GetSubItemRect(int itemIndex, int subItemIndex, ItemBoundsPortion portion)
         {
-            // it seems that getting the rectangle for a sub item only works for list view which are in Details view
-            if (View != View.Details)
+            if (!SupportsListViewSubItems)
             {
                 return Rectangle.Empty;
             }
+
             if (itemIndex < 0 || itemIndex >= Items.Count)
             {
                 throw new ArgumentOutOfRangeException(nameof(itemIndex), itemIndex, string.Format(SR.InvalidArgument, nameof(itemIndex), itemIndex));
             }
+
             int subItemCount = Items[itemIndex].SubItems.Count;
 
-            if (subItemIndex < 0 || subItemIndex >= subItemCount)
+            if (subItemIndex < 0
+                || (View == View.Tile && subItemIndex >= subItemCount)
+                || (View == View.Details && subItemIndex >= Columns.Count))
             {
                 throw new ArgumentOutOfRangeException(nameof(subItemIndex), subItemIndex, string.Format(SR.InvalidArgument, nameof(subItemIndex), subItemIndex));
             }
+
             //valid values are 0x0 to 0x3
             SourceGenerated.EnumValidator.Validate(portion, nameof(portion));
 
@@ -3650,7 +3759,8 @@ namespace System.Windows.Forms
                 left = (int)portion,
                 top = subItemIndex
             };
-            if (User32.SendMessageW(this, (User32.WM)LVM.GETSUBITEMRECT, (IntPtr)itemIndex, ref itemrect) == IntPtr.Zero)
+
+            if (PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETSUBITEMRECT, (WPARAM)itemIndex, ref itemrect) == 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(itemIndex), itemIndex, string.Format(SR.InvalidArgument, nameof(itemIndex), itemIndex));
             }
@@ -3660,7 +3770,7 @@ namespace System.Windows.Forms
             return result;
         }
 
-        private void GroupImageListChangedHandle(object sender, EventArgs e)
+        private void GroupImageListChangedHandle(object? sender, EventArgs e)
         {
             if (VirtualMode || sender is null || sender != _imageListGroup || !IsHandleCreated)
             {
@@ -3675,27 +3785,24 @@ namespace System.Windows.Forms
             }
         }
 
-        private void GroupImageListRecreateHandle(object sender, EventArgs e)
+        private void GroupImageListRecreateHandle(object? sender, EventArgs e)
         {
             if (!IsHandleCreated)
             {
                 return;
             }
 
-            IntPtr handle = (GroupImageList is null) ? IntPtr.Zero : GroupImageList.Handle;
-            User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.GROUPHEADER, handle);
+            nint handle = (GroupImageList is null) ? 0 : GroupImageList.Handle;
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (WPARAM)(uint)PInvoke.LVSIL_GROUPHEADER, handle);
         }
 
-        public ListViewHitTestInfo HitTest(Point point)
-        {
-            return HitTest(point.X, point.Y);
-        }
+        public ListViewHitTestInfo HitTest(Point point) => HitTest(point.X, point.Y);
 
         public ListViewHitTestInfo HitTest(int x, int y)
         {
             if (!ClientRectangle.Contains(x, y))
             {
-                return new ListViewHitTestInfo(null /*hitItem*/, null /*hitSubItem*/, ListViewHitTestLocations.None /*hitLocation*/);
+                return new ListViewHitTestInfo(hitItem: null, hitSubItem: null, hitLocation: ListViewHitTestLocations.None);
             }
 
             var lvhi = new LVHITTESTINFO
@@ -3704,23 +3811,23 @@ namespace System.Windows.Forms
             };
 
             int iItem;
-            if (View == View.Details)
+            if (SupportsListViewSubItems)
             {
-                iItem = (int)User32.SendMessageW(this, (User32.WM)LVM.SUBITEMHITTEST, IntPtr.Zero, ref lvhi);
+                iItem = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SUBITEMHITTEST, (WPARAM)0, ref lvhi);
             }
             else
             {
-                iItem = (int)User32.SendMessageW(this, (User32.WM)LVM.HITTEST, IntPtr.Zero, ref lvhi);
+                iItem = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_HITTEST, (WPARAM)0, ref lvhi);
             }
 
-            ListViewItem item = (iItem == -1) ? null : Items[iItem];
-            ListViewHitTestLocations location = ListViewHitTestLocations.None;
+            ListViewItem? item = (iItem == -1) ? null : Items[iItem];
+            ListViewHitTestLocations location;
 
-            if (item is null && (LVHT.ABOVE & lvhi.flags) == LVHT.ABOVE)
+            if (item is null && (LVHITTESTINFO_FLAGS.LVHT_ABOVE & lvhi.flags) == LVHITTESTINFO_FLAGS.LVHT_ABOVE)
             {
                 location = (ListViewHitTestLocations)((MASK_HITTESTFLAG & (int)lvhi.flags) | (int)ListViewHitTestLocations.AboveClientArea);
             }
-            else if (item != null && (LVHT.ONITEMSTATEICON & lvhi.flags) == LVHT.ONITEMSTATEICON)
+            else if (item is not null && (LVHITTESTINFO_FLAGS.LVHT_ONITEMSTATEICON & lvhi.flags) == LVHITTESTINFO_FLAGS.LVHT_ONITEMSTATEICON)
             {
                 location = (ListViewHitTestLocations)((MASK_HITTESTFLAG & (int)lvhi.flags) | (int)ListViewHitTestLocations.StateImage);
             }
@@ -3729,7 +3836,7 @@ namespace System.Windows.Forms
                 location = (ListViewHitTestLocations)lvhi.flags;
             }
 
-            if (View == View.Details && item != null)
+            if (SupportsListViewSubItems && item is not null)
             {
                 if (lvhi.iSubItem < item.SubItems.Count)
                 {
@@ -3746,14 +3853,44 @@ namespace System.Windows.Forms
             }
         }
 
+        private void NotifyAboutGotFocus(ListViewItem listViewItem)
+        {
+            if (listViewItem is not null)
+            {
+                // We do not store data about items when the ListView is in virtual mode, so we need to execute
+                // the "Hook" method just before displaying the tooltip.
+                if (VirtualMode)
+                {
+                    KeyboardToolTipStateMachine.Instance.Hook(listViewItem, KeyboardToolTip);
+                }
+
+                KeyboardToolTipStateMachine.Instance.NotifyAboutGotFocus(listViewItem);
+            }
+        }
+
+        private void NotifyAboutLostFocus(ListViewItem? listViewItem)
+        {
+            if (listViewItem is not null)
+            {
+                KeyboardToolTipStateMachine.Instance.NotifyAboutLostFocus(listViewItem);
+
+                // We do not store data about items when the ListView is in virtual mode, so we need to execute
+                // the "Unhook" method just after hiding the tooltip.
+                if (VirtualMode)
+                {
+                    KeyboardToolTipStateMachine.Instance.Unhook(listViewItem, KeyboardToolTip);
+                }
+            }
+        }
+
         private unsafe void InvalidateColumnHeaders()
         {
-            if (viewStyle == View.Details && IsHandleCreated)
+            if (_viewStyle == View.Details && IsHandleCreated)
             {
-                IntPtr hwndHdr = User32.SendMessageW(this, (User32.WM)LVM.GETHEADER);
-                if (hwndHdr != IntPtr.Zero)
+                HWND header = (HWND)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETHEADER);
+                if (!header.IsNull)
                 {
-                    User32.InvalidateRect(new HandleRef(this, hwndHdr), null, BOOL.TRUE);
+                    PInvoke.InvalidateRect(new HandleRef<HWND>(this, header), lpRect: null, bErase: true);
                 }
             }
         }
@@ -3763,12 +3900,9 @@ namespace System.Windows.Forms
         /// </summary>
         internal ColumnHeader InsertColumn(int index, ColumnHeader ch, bool refreshSubItems = true)
         {
-            if (ch is null)
-            {
-                throw new ArgumentNullException(nameof(ch));
-            }
+            ArgumentNullException.ThrowIfNull(ch);
 
-            if (ch.OwnerListview != null)
+            if (ch.OwnerListview is not null)
             {
                 throw new ArgumentException(string.Format(SR.OnlyOneControl, ch.Text), nameof(ch));
             }
@@ -3793,34 +3927,35 @@ namespace System.Windows.Forms
             }
 
             // Add the column to our internal array
-            int columnCount = columnHeaders is null ? 0 : columnHeaders.Length;
+            int columnCount = _columnHeaders is null ? 0 : _columnHeaders.Length;
             if (columnCount > 0)
             {
                 ColumnHeader[] newHeaders = new ColumnHeader[columnCount + 1];
                 if (columnCount > 0)
                 {
-                    System.Array.Copy(columnHeaders, 0, newHeaders, 0, columnCount);
+                    Array.Copy(_columnHeaders!, 0, newHeaders, 0, columnCount);
                 }
 
-                columnHeaders = newHeaders;
+                _columnHeaders = newHeaders;
             }
             else
             {
-                columnHeaders = new ColumnHeader[1];
+                _columnHeaders = new ColumnHeader[1];
             }
 
             if (idx < columnCount)
             {
-                System.Array.Copy(columnHeaders, idx, columnHeaders, idx + 1, columnCount - idx);
+                Array.Copy(_columnHeaders, idx, _columnHeaders, idx + 1, columnCount - idx);
             }
-            columnHeaders[idx] = ch;
+
+            _columnHeaders[idx] = ch;
             ch.OwnerListview = this;
 
             // in Tile view the ColumnHeaders collection is used for the Tile Information
             // recreate the handle in that case
             if (ch.ActualImageIndex_Internal != -1 && IsHandleCreated && View != View.Tile)
             {
-                SetColumnInfo(LVCF.IMAGE, ch);
+                SetColumnInfo(LVCOLUMNW_MASK.LVCF_IMAGE, ch);
             }
 
             // update the DisplayIndex for each column
@@ -3838,6 +3973,7 @@ namespace System.Windows.Forms
                 {
                     hdr.DisplayIndexInternal++;
                 }
+
                 indices[i] = hdr.DisplayIndexInternal;
             }
 
@@ -3864,23 +4000,23 @@ namespace System.Windows.Forms
         {
             var lvColumn = new LVCOLUMNW
             {
-                mask = LVCF.FMT | LVCF.TEXT | LVCF.WIDTH
+                mask = LVCOLUMNW_MASK.LVCF_FMT | LVCOLUMNW_MASK.LVCF_TEXT | LVCOLUMNW_MASK.LVCF_WIDTH
             };
 
-            if (ch.OwnerListview != null && ch.ActualImageIndex_Internal != -1)
+            if (ch.OwnerListview is not null && ch.ActualImageIndex_Internal != -1)
             {
-                lvColumn.mask |= LVCF.IMAGE;
+                lvColumn.mask |= LVCOLUMNW_MASK.LVCF_IMAGE;
                 lvColumn.iImage = ch.ActualImageIndex_Internal;
             }
 
-            lvColumn.fmt = (LVCFMT)ch.TextAlign;
+            lvColumn.fmt = (LVCOLUMNW_FORMAT)ch.TextAlign;
             lvColumn.cx = ch.Width;
 
             fixed (char* columnHeaderText = ch.Text)
             {
                 lvColumn.pszText = columnHeaderText;
 
-                return (int)User32.SendMessageW(this, (User32.WM)LVM.INSERTCOLUMNW, (IntPtr)index, ref lvColumn);
+                return (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_INSERTCOLUMNW, (WPARAM)index, ref lvColumn);
             }
         }
 
@@ -3888,11 +4024,11 @@ namespace System.Windows.Forms
         // in the list view are parented by a group - be it the DefaultGroup or some other group
         internal void InsertGroupInListView(int index, ListViewGroup group)
         {
-            Debug.Assert(groups != null && groups.Count > 0, "this method should be used only when the user adds a group, not when we add our own DefaultGroup");
+            Debug.Assert(_groups is not null && _groups.Count > 0, "this method should be used only when the user adds a group, not when we add our own DefaultGroup");
             Debug.Assert(group != DefaultGroup, "this method should be used only when the user adds a group, not when we add our own DefaultGroup");
 
             // the first time we add a group we have to group the items in the Default Group
-            bool groupItems = (groups.Count == 1) && GroupsEnabled;
+            bool groupItems = (_groups.Count == 1) && GroupsEnabled;
 
             UpdateGroupView();
             EnsureDefaultGroup();
@@ -3922,9 +4058,10 @@ namespace System.Windows.Forms
                     var lvItem = new LVITEMW
                     {
                         iItem = item.Index,
-                        mask = LVIF.GROUPID
+                        mask = LIST_VIEW_ITEM_FLAGS.LVIF_GROUPID
                     };
-                    User32.SendMessageW(this, (User32.WM)LVM.GETITEMW, IntPtr.Zero, ref lvItem);
+
+                    PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETITEMW, (WPARAM)0, ref lvItem);
                     Debug.Assert(lvItem.iGroupId != -1, "there is a list view item which is not parented");
                 }
             }
@@ -3937,8 +4074,8 @@ namespace System.Windows.Forms
             Debug.Assert(IsHandleCreated, "InsertGroupNative precondition: list-view handle must be created");
             Debug.Assert(group == DefaultGroup || Groups.Contains(group), "Make sure ListView.Groups contains this group before adding the native LVGROUP. Otherwise, custom-drawing may break.");
 
-            IntPtr result = SendGroupMessage(group, LVM.INSERTGROUP, (IntPtr)index, LVGF.GROUPID);
-            Debug.Assert(result != (IntPtr)(-1), "Failed to insert group");
+            nint result = SendGroupMessage(group, PInvoke.LVM_INSERTGROUP, index, LVGF.GROUPID);
+            Debug.Assert(result != -1, "Failed to insert group");
         }
 
         /// <summary>
@@ -3960,27 +4097,23 @@ namespace System.Windows.Forms
 
             // if we're in the middle of a Begin/EndUpdate, just push the items into our array list
             // as they'll get processed on EndUpdate.
-            //
-            if (updateCounter > 0 && Properties.GetObject(PropDelayedUpdateItems) != null)
+            if (_updateCounter > 0 && Properties.GetObject(PropDelayedUpdateItems) is not null)
             {
                 // CheckHosting.
                 if (checkHosting)
                 {
                     for (int i = 0; i < items.Length; i++)
                     {
-                        if (items[i].listView != null)
+                        if (items[i].listView is not null)
                         {
                             throw new ArgumentException(string.Format(SR.OnlyOneControl, items[i].Text), "item");
                         }
                     }
                 }
 
-                ArrayList itemList = (ArrayList)Properties.GetObject(PropDelayedUpdateItems);
-                Debug.Assert(itemList != null, "In Begin/EndUpdate with no delayed array!");
-                if (itemList != null)
-                {
-                    itemList.AddRange(items);
-                }
+                ArrayList? itemList = (ArrayList?)Properties.GetObject(PropDelayedUpdateItems);
+                Debug.Assert(itemList is not null, "In Begin/EndUpdate with no delayed array!");
+                itemList?.AddRange(items);
 
                 // add the list view item to the list view
                 // this way we can retrieve the item's index inside BeginUpdate/EndUpdate
@@ -3995,31 +4128,28 @@ namespace System.Windows.Forms
             }
 
             // loop through the items and give them id's so we can identify them later.
-            //
             for (int i = 0; i < items.Length; i++)
             {
                 ListViewItem item = items[i];
 
-                if (checkHosting && item.listView != null)
+                if (checkHosting && item.listView is not null)
                 {
                     throw new ArgumentException(string.Format(SR.OnlyOneControl, item.Text), "item");
                 }
 
                 // create an ID..
-                //
                 int itemID = GenerateUniqueID();
-                Debug.Assert(!listItemsTable.ContainsKey(itemID), "internal hash table inconsistent -- inserting item, but it's already in the hash table");
-                listItemsTable.Add(itemID, item);
+                Debug.Assert(!_listItemsTable.ContainsKey(itemID), "internal hash table inconsistent -- inserting item, but it's already in the hash table");
+                _listItemsTable.Add(itemID, item);
 
-                itemCount++;
+                _itemCount++;
                 item.Host(this, itemID, -1);
 
                 // if there's no handle created, just ad them to our list items array.
-                //
                 if (!IsHandleCreated)
                 {
-                    Debug.Assert(listItemsArray != null, "listItemsArray is null, but the handle isn't created");
-                    listItemsArray.Insert(displayIndex + i, item);
+                    Debug.Assert(_listViewItems is not null, "listItemsArray is null, but the handle isn't created");
+                    _listViewItems.Insert(displayIndex + i, item);
                 }
             }
 
@@ -4031,9 +4161,9 @@ namespace System.Windows.Forms
             }
 
             Invalidate();
-            ArrangeIcons(alignStyle);
+            ArrangeIcons(_alignStyle);
 
-            // Any newly added items shoul dhave the correct location.
+            // Any newly added items should have the correct location.
             // UpdateListViewItemsLocations();
 
             // Update sorted order
@@ -4056,12 +4186,12 @@ namespace System.Windows.Forms
             {
                 return 0;
             }
+
             Debug.Assert(IsHandleCreated, "InsertItemsNative precondition: list-view handle must be created");
 
             // Much more efficient to call the native insert with max + 1, than with max.  The + 1
             // for the display index accounts for itemCount++ above.
-            //
-            if (index == itemCount - 1)
+            if (index == _itemCount - 1)
             {
                 index++;
             }
@@ -4070,12 +4200,12 @@ namespace System.Windows.Forms
             int actualIndex = -1;
             IntPtr hGlobalColumns = IntPtr.Zero;
             int maxColumns = 0;
-            listViewState1[LISTVIEWSTATE1_insertingItemsNatively] = true;
+            _listViewState1[LISTVIEWSTATE1_insertingItemsNatively] = true;
 
             try
             {
                 // Set the count of items first.
-                User32.SendMessageW(this, (User32.WM)LVM.SETITEMCOUNT, (IntPtr)itemCount);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETITEMCOUNT, (WPARAM)_itemCount);
 
                 // Now add the items.
                 for (int i = 0; i < items.Length; i++)
@@ -4086,35 +4216,37 @@ namespace System.Windows.Forms
 
                     var lvItem = new LVITEMW
                     {
-                        mask = LVIF.TEXT | LVIF.IMAGE | LVIF.PARAM | LVIF.INDENT | LVIF.COLUMNS,
+                        mask = LIST_VIEW_ITEM_FLAGS.LVIF_TEXT | LIST_VIEW_ITEM_FLAGS.LVIF_IMAGE |
+                                LIST_VIEW_ITEM_FLAGS.LVIF_PARAM | LIST_VIEW_ITEM_FLAGS.LVIF_INDENT |
+                                LIST_VIEW_ITEM_FLAGS.LVIF_COLUMNS,
                         iItem = index + i,
                         iImage = li.ImageIndexer.ActualIndex,
                         iIndent = li.IndentCount,
                         lParam = (IntPtr)li.ID,
-                        cColumns = columnHeaders != null ? Math.Min(MAXTILECOLUMNS, columnHeaders.Length) : 0,
+                        cColumns = _columnHeaders is not null ? Math.Min(MAXTILECOLUMNS, _columnHeaders.Length) : 0,
                     };
 
                     if (GroupsEnabled)
                     {
-                        lvItem.mask |= LVIF.GROUPID;
+                        lvItem.mask |= LIST_VIEW_ITEM_FLAGS.LVIF_GROUPID;
                         lvItem.iGroupId = GetNativeGroupId(li);
 
 #if DEBUG
-                        IntPtr result = User32.SendMessageW(this, (User32.WM)LVM.ISGROUPVIEWENABLED);
+                        IntPtr result = PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_ISGROUPVIEWENABLED);
                         Debug.Assert(result != IntPtr.Zero, "Groups not enabled");
-                        result = User32.SendMessageW(this, (User32.WM)LVM.HASGROUP, (IntPtr)lvItem.iGroupId);
-                        Debug.Assert(result != IntPtr.Zero, "Doesn't contain group id: " + lvItem.iGroupId.ToString(CultureInfo.InvariantCulture));
+                        result = PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_HASGROUP, (WPARAM)lvItem.iGroupId);
+                        Debug.Assert(result != IntPtr.Zero, $"Doesn't contain group id: {lvItem.iGroupId}");
 #endif
                     }
 
-                    // make sure that our columns memory is big enough.
-                    // if not, then realloc it.
+                    // Make sure that our columns memory is big enough. If not, then realloc it.
                     if (lvItem.cColumns > maxColumns || hGlobalColumns == IntPtr.Zero)
                     {
                         if (hGlobalColumns != IntPtr.Zero)
                         {
                             Marshal.FreeHGlobal(hGlobalColumns);
                         }
+
                         hGlobalColumns = Marshal.AllocHGlobal(lvItem.cColumns * sizeof(int));
                         maxColumns = lvItem.cColumns;
                     }
@@ -4126,13 +4258,14 @@ namespace System.Windows.Forms
                     {
                         columns[c] = c + 1;
                     }
+
                     Marshal.Copy(columns, 0, lvItem.puColumns, lvItem.cColumns);
 
                     // Inserting an item into a ListView with checkboxes causes one or more
                     // item check events to be fired for the newly added item.
                     // Therefore, we disable the item check event handler temporarily.
-                    ItemCheckEventHandler oldOnItemCheck = onItemCheck;
-                    onItemCheck = null;
+                    ItemCheckEventHandler? oldOnItemCheck = _onItemCheck;
+                    _onItemCheck = null;
 
                     int insertIndex;
 
@@ -4144,7 +4277,11 @@ namespace System.Windows.Forms
                         {
                             lvItem.pszText = pText;
 
-                            insertIndex = (int)User32.SendMessageW(this, (User32.WM)LVM.INSERTITEMW, IntPtr.Zero, ref lvItem);
+                            insertIndex = (int)PInvoke.SendMessage(
+                                this,
+                                (User32.WM)PInvoke.LVM_INSERTITEMW,
+                                (WPARAM)0,
+                                ref lvItem);
                         }
 
                         if (actualIndex == -1)
@@ -4158,7 +4295,7 @@ namespace System.Windows.Forms
                     finally
                     {
                         // Restore the item check event handler.
-                        onItemCheck = oldOnItemCheck;
+                        _onItemCheck = oldOnItemCheck;
                     }
 
                     if (-1 == insertIndex)
@@ -4187,13 +4324,14 @@ namespace System.Windows.Forms
                 {
                     Marshal.FreeHGlobal(hGlobalColumns);
                 }
-                listViewState1[LISTVIEWSTATE1_insertingItemsNatively] = false;
+
+                _listViewState1[LISTVIEWSTATE1_insertingItemsNatively] = false;
             }
 
-            if (listViewState1[LISTVIEWSTATE1_selectedIndexChangedSkipped])
+            if (_listViewState1[LISTVIEWSTATE1_selectedIndexChangedSkipped])
             {
                 // SelectedIndexChanged event was delayed
-                listViewState1[LISTVIEWSTATE1_selectedIndexChangedSkipped] = false;
+                _listViewState1[LISTVIEWSTATE1_selectedIndexChangedSkipped] = false;
                 OnSelectedIndexChanged(EventArgs.Empty);
             }
 
@@ -4233,7 +4371,7 @@ namespace System.Windows.Forms
                 return true;
             }
 
-            if (listViewState[LISTVIEWSTATE_inLabelEdit])
+            if (_listViewState[LISTVIEWSTATE_inLabelEdit])
             {
                 switch (keyData & Keys.KeyCode)
                 {
@@ -4246,20 +4384,20 @@ namespace System.Windows.Forms
             return false;
         }
 
-        private void LargeImageListRecreateHandle(object sender, EventArgs e)
+        private void LargeImageListRecreateHandle(object? sender, EventArgs e)
         {
             if (!IsHandleCreated)
             {
                 return;
             }
 
-            IntPtr handle = (LargeImageList is null) ? IntPtr.Zero : LargeImageList.Handle;
-            User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.NORMAL, handle);
+            nint handle = (LargeImageList is null) ? 0 : LargeImageList.Handle;
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (WPARAM)(uint)PInvoke.LVSIL_NORMAL, (LPARAM)handle);
 
             ForceCheckBoxUpdate();
         }
 
-        private void LargeImageListChangedHandle(object sender, EventArgs e)
+        private void LargeImageListChangedHandle(object? sender, EventArgs e)
         {
             if (VirtualMode || sender is null || sender != _imageListLarge || !IsHandleCreated)
             {
@@ -4280,7 +4418,6 @@ namespace System.Windows.Forms
             if (IsHandleCreated)
             {
                 // If we reset the item text then we also reset the tool tip text
-                //
                 SetItemText(item.Index, 0 /*subItemIndex*/, item.Text);
             }
         }
@@ -4290,7 +4427,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnAfterLabelEdit(LabelEditEventArgs e)
         {
-            onAfterLabelEdit?.Invoke(this, e);
+            _onAfterLabelEdit?.Invoke(this, e);
         }
 
         protected override void OnBackgroundImageChanged(EventArgs e)
@@ -4299,6 +4436,7 @@ namespace System.Windows.Forms
             {
                 SetBackgroundImage();
             }
+
             base.OnBackgroundImageChanged(e);
         }
 
@@ -4307,7 +4445,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void OnMouseLeave(EventArgs e)
         {
-            hoveredAlready = false;
+            _hoveredAlready = false;
             base.OnMouseLeave(e);
         }
 
@@ -4320,7 +4458,7 @@ namespace System.Windows.Forms
         {
             // Hover events need to be caught for each node within the TreeView so
             // the appropriate NodeHovered event can be raised.
-            ListViewItem item = null;
+            ListViewItem? item = null;
 
             if (Items.Count > 0)
             {
@@ -4334,16 +4472,16 @@ namespace System.Windows.Forms
                 item = GetItemAt(pos.X, pos.Y);
             }
 
-            if (item != prevHoveredItem && item != null)
+            if (item != _prevHoveredItem && item is not null)
             {
                 OnItemMouseHover(new ListViewItemMouseHoverEventArgs(item));
-                prevHoveredItem = item;
+                _prevHoveredItem = item;
             }
 
-            if (!hoveredAlready)
+            if (!_hoveredAlready)
             {
                 base.OnMouseHover(e);
-                hoveredAlready = true;
+                _hoveredAlready = true;
             }
 
             ResetMouseEventArgs();
@@ -4354,12 +4492,12 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnBeforeLabelEdit(LabelEditEventArgs e)
         {
-            onBeforeLabelEdit?.Invoke(this, e);
+            _onBeforeLabelEdit?.Invoke(this, e);
         }
 
         protected virtual void OnCacheVirtualItems(CacheVirtualItemsEventArgs e)
         {
-            ((CacheVirtualItemsEventHandler)Events[EVENT_CACHEVIRTUALITEMS])?.Invoke(this, e);
+            ((CacheVirtualItemsEventHandler?)Events[EVENT_CACHEVIRTUALITEMS])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4367,7 +4505,22 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnGroupCollapsedStateChanged(ListViewGroupEventArgs e)
         {
-            ((EventHandler<ListViewGroupEventArgs>)Events[EVENT_GROUPCOLLAPSEDSTATECHANGED])?.Invoke(this, e);
+            if (IsAccessibilityObjectCreated && GroupsEnabled && e.GroupIndex >= 0 && e.GroupIndex < Groups.Count)
+            {
+                ListViewGroup listViewGroup = Groups[e.GroupIndex];
+                // A fix for https://github.com/dotnet/winforms/issues/3269.
+                // Unfortunately we cannot use RaiseAutomationEvent method here since the control does not respond to
+                // CollapseState messages. Use RaiseAutomationNotification instead to announce a custom notification.
+                // See https://docs.microsoft.com/dotnet/api/system.windows.forms.accessibleobject.raiseautomationnotification.
+                AccessibilityObject.InternalRaiseAutomationNotification(
+                    Automation.AutomationNotificationKind.ActionCompleted,
+                    Automation.AutomationNotificationProcessing.CurrentThenMostRecent,
+                    listViewGroup.CollapsedState == ListViewGroupCollapsedState.Collapsed
+                        ? string.Format(SR.ListViewGroupCollapsedStateName, listViewGroup.Header)
+                        : string.Format(SR.ListViewGroupExpandedStateName, listViewGroup.Header));
+            }
+
+            ((EventHandler<ListViewGroupEventArgs>?)Events[EVENT_GROUPCOLLAPSEDSTATECHANGED])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4375,7 +4528,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnColumnClick(ColumnClickEventArgs e)
         {
-            onColumnClick?.Invoke(this, e);
+            _onColumnClick?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4383,7 +4536,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnGroupTaskLinkClick(ListViewGroupEventArgs e)
         {
-            ((EventHandler<ListViewGroupEventArgs>)Events[EVENT_GROUPTASKLINKCLICK])?.Invoke(this, e);
+            ((EventHandler<ListViewGroupEventArgs>?)Events[EVENT_GROUPTASKLINKCLICK])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4391,7 +4544,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnColumnReordered(ColumnReorderedEventArgs e)
         {
-            ((ColumnReorderedEventHandler)Events[EVENT_COLUMNREORDERED])?.Invoke(this, e);
+            ((ColumnReorderedEventHandler?)Events[EVENT_COLUMNREORDERED])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4399,7 +4552,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnColumnWidthChanged(ColumnWidthChangedEventArgs e)
         {
-            ((ColumnWidthChangedEventHandler)Events[EVENT_COLUMNWIDTHCHANGED])?.Invoke(this, e);
+            ((ColumnWidthChangedEventHandler?)Events[EVENT_COLUMNWIDTHCHANGED])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4407,7 +4560,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnColumnWidthChanging(ColumnWidthChangingEventArgs e)
         {
-            ((ColumnWidthChangingEventHandler)Events[EVENT_COLUMNWIDTHCHANGING])?.Invoke(this, e);
+            ((ColumnWidthChangingEventHandler?)Events[EVENT_COLUMNWIDTHCHANGING])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4415,7 +4568,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
         {
-            ((DrawListViewColumnHeaderEventHandler)Events[EVENT_DRAWCOLUMNHEADER])?.Invoke(this, e);
+            ((DrawListViewColumnHeaderEventHandler?)Events[EVENT_DRAWCOLUMNHEADER])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4423,7 +4576,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnDrawItem(DrawListViewItemEventArgs e)
         {
-            ((DrawListViewItemEventHandler)Events[EVENT_DRAWITEM])?.Invoke(this, e);
+            ((DrawListViewItemEventHandler?)Events[EVENT_DRAWITEM])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4431,7 +4584,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnDrawSubItem(DrawListViewSubItemEventArgs e)
         {
-            ((DrawListViewSubItemEventHandler)Events[EVENT_DRAWSUBITEM])?.Invoke(this, e);
+            ((DrawListViewSubItemEventHandler?)Events[EVENT_DRAWSUBITEM])?.Invoke(this, e);
         }
 
         protected override void OnFontChanged(EventArgs e)
@@ -4447,7 +4600,7 @@ namespace System.Windows.Forms
                 BeginUpdate();
                 try
                 {
-                    User32.SendMessageW(this, (User32.WM)LVM.UPDATE, (IntPtr)(-1));
+                    PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_UPDATE, (WPARAM)(-1));
                 }
                 finally
                 {
@@ -4455,71 +4608,67 @@ namespace System.Windows.Forms
                 }
             }
 
-            // If font changes and we have headers, they need to be expicitly invalidated
-            //
+            // If font changes and we have headers, they need to be explicitly invalidated.
             InvalidateColumnHeaders();
         }
 
         protected override void OnHandleCreated(EventArgs e)
         {
-            // don't persist flipViewToLargeIconAndSmallIcon accross handle recreations...
+            // don't persist flipViewToLargeIconAndSmallIcon across handle recreations...
             FlipViewToLargeIconAndSmallIcon = false;
 
             base.OnHandleCreated(e);
 
-            int version = unchecked((int)(long)User32.SendMessageW(this, (User32.WM)CCM.GETVERSION));
+            int version = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.CCM_GETVERSION);
             if (version < 5)
             {
-                User32.SendMessageW(this, (User32.WM)CCM.SETVERSION, (IntPtr)5);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.CCM_SETVERSION, (WPARAM)5);
             }
 
             UpdateExtendedStyles();
             RealizeProperties();
-            User32.SendMessageW(this, (User32.WM)LVM.SETBKCOLOR, IntPtr.Zero, PARAM.FromColor(BackColor));
-            User32.SendMessageW(this, (User32.WM)LVM.SETTEXTCOLOR, IntPtr.Zero, PARAM.FromColor(base.ForeColor));
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETBKCOLOR, (WPARAM)0, (LPARAM)BackColor);
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETTEXTCOLOR, (WPARAM)0, (LPARAM)ForeColor);
 
             // The native list view will not invalidate the entire list view item area if the BkColor is not CLR_NONE.
             // This not noticeable if the customer paints the items w/ the same background color as the list view itself.
             // However, if the customer paints the items w/ a color different from the list view's back color
             // then when the user changes selection the native list view will not invalidate the entire list view item area.
-            User32.SendMessageW(this, (User32.WM)LVM.SETTEXTBKCOLOR, IntPtr.Zero, (IntPtr)CLR.NONE);
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETTEXTBKCOLOR, (WPARAM)0, (LPARAM)PInvoke.CLR_NONE);
 
             // LVS_NOSCROLL does not work well when the list view is in View.Details or in View.List modes.
             // we have to set this style after the list view was created and before we position the native list view items.
-            //
             if (!Scrollable)
             {
-                int style = unchecked((int)((long)User32.GetWindowLong(this, User32.GWL.STYLE)));
-                style |= (int)LVS.NOSCROLL;
-                User32.SetWindowLong(this, User32.GWL.STYLE, (IntPtr)style);
+                int style = (int)PInvoke.GetWindowLong(this, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
+                style |= (int)PInvoke.LVS_NOSCROLL;
+                PInvoke.SetWindowLong(this, WINDOW_LONG_PTR_INDEX.GWL_STYLE, style);
             }
 
-            // in VirtualMode we have to tell the list view to ask for the list view item's state image index
+            // In VirtualMode we have to tell the list view to ask for the list view item's state image index.
             if (VirtualMode)
             {
-                LVIS callbackMask = unchecked((LVIS)(long)User32.SendMessageW(this, (User32.WM)LVM.GETCALLBACKMASK));
-                callbackMask |= LVIS.STATEIMAGEMASK;
-                User32.SendMessageW(this, (User32.WM)LVM.SETCALLBACKMASK, (IntPtr)callbackMask);
+                LIST_VIEW_ITEM_STATE_FLAGS callbackMask = (LIST_VIEW_ITEM_STATE_FLAGS)(int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETCALLBACKMASK);
+                callbackMask |= LIST_VIEW_ITEM_STATE_FLAGS.LVIS_STATEIMAGEMASK;
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETCALLBACKMASK, (WPARAM)(uint)callbackMask);
             }
 
             if (Application.ComCtlSupportsVisualStyles)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETVIEW, (IntPtr)viewStyle);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETVIEW, (WPARAM)(uint)_viewStyle);
                 UpdateGroupView();
 
-                // Add groups
-                //
-                if (groups != null)
+                // Add groups.
+                if (_groups is not null)
                 {
-                    for (int index = 0; index < groups.Count; index++)
+                    for (int index = 0; index < _groups.Count; index++)
                     {
-                        InsertGroupNative(index, groups[index]);
+                        InsertGroupNative(index, _groups[index]);
                     }
                 }
 
-                // Set tile view settings
-                //
-                if (viewStyle == View.Tile)
+                // Set tile view settings.
+                if (_viewStyle == View.Tile)
                 {
                     UpdateTileView();
                 }
@@ -4527,38 +4676,37 @@ namespace System.Windows.Forms
 
             ListViewHandleDestroyed = false;
 
-            // Use a copy of the list items array so that we can maintain the (handle created || listItemsArray != null) invariant
-            //
-            ListViewItem[] listViewItemsToAdd = null;
-            if (listItemsArray != null)
+            // Use a copy of the list items array so that we can maintain the (handle created || listItemsArray is not null) invariant
+            ListViewItem[]? listViewItemsToAdd = null;
+            if (_listViewItems is not null)
             {
-                listViewItemsToAdd = (ListViewItem[])listItemsArray.ToArray(typeof(ListViewItem));
-                listItemsArray = null;
+                listViewItemsToAdd = _listViewItems.ToArray();
+                _listViewItems = null;
             }
 
-            int columnCount = columnHeaders is null ? 0 : columnHeaders.Length;
+            int columnCount = _columnHeaders is null ? 0 : _columnHeaders.Length;
             if (columnCount > 0)
             {
-                int[] indices = new int[columnHeaders.Length];
+                int[] indices = new int[columnCount];
                 int index = 0;
-                foreach (ColumnHeader column in columnHeaders)
+                foreach (ColumnHeader column in _columnHeaders!)
                 {
                     indices[index] = column.DisplayIndex;
                     InsertColumnNative(index++, column);
                 }
+
                 SetDisplayIndices(indices);
             }
 
-            // make sure that we're not in a begin/end update call.
-            //
-            if (itemCount > 0 && listViewItemsToAdd != null)
+            // Make sure that we're not in a begin/end update call.
+            if (_itemCount > 0 && listViewItemsToAdd is not null)
             {
                 InsertItemsNative(0, listViewItemsToAdd);
             }
 
             if (VirtualMode && VirtualListSize > -1 && !DesignMode)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETITEMCOUNT, (IntPtr)VirtualListSize);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETITEMCOUNT, (WPARAM)VirtualListSize);
             }
 
             if (columnCount > 0)
@@ -4566,23 +4714,22 @@ namespace System.Windows.Forms
                 UpdateColumnWidths(ColumnHeaderAutoResizeStyle.None);
             }
 
-            ArrangeIcons(alignStyle);
+            ArrangeIcons(_alignStyle);
             UpdateListViewItemsLocations();
 
             if (!VirtualMode)
             {
                 Sort();
             }
+
             if (Application.ComCtlSupportsVisualStyles && (InsertionMark.Index > 0))
             {
                 InsertionMark.UpdateListView();
             }
 
-            //
             // When the handle is recreated, update the SavedCheckedItems.
             // It is possible some checked items were added to the list view while its handle was null.
-            //
-            savedCheckedItems = null;
+            _savedCheckedItems = null;
             if (!CheckBoxes && !VirtualMode)
             {
                 for (int i = 0; i < Items.Count; i++)
@@ -4597,7 +4744,7 @@ namespace System.Windows.Forms
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
-            // don't save the list view items state when in virtual mode : it is the responsability of the
+            // don't save the list view items state when in virtual mode : it is the responsibility of the
             // user to cache the list view items in virtual mode
             if (!Disposing && !VirtualMode)
             {
@@ -4608,33 +4755,26 @@ namespace System.Windows.Forms
                 }
 
                 // Save away the selected and checked items
-                //
-                if (SelectedItems != null && !VirtualMode)
+                if (SelectedItems is not null && !VirtualMode)
                 {
                     // Create an array because the SelectedItems collection is tuned for CopyTo()
                     ListViewItem[] lviArr = new ListViewItem[SelectedItems.Count];
                     SelectedItems.CopyTo(lviArr, 0);
-                    savedSelectedItems = new List<ListViewItem>(lviArr.Length);
+                    _savedSelectedItems = new List<ListViewItem>(lviArr.Length);
                     for (int i = 0; i < lviArr.Length; i++)
                     {
-                        savedSelectedItems.Add(lviArr[i]);
+                        _savedSelectedItems.Add(lviArr[i]);
                     }
                 }
-                Debug.Assert(listItemsArray is null, "listItemsArray not null, even though handle created");
-                ListViewItem[] items = null;
+
+                Debug.Assert(_listViewItems is null, "listItemsArray not null, even though handle created");
                 ListViewItemCollection tempItems = Items;
 
-                if (tempItems != null)
-                {
-                    items = new ListViewItem[tempItems.Count];
-                    tempItems.CopyTo(items, 0);
-                }
+                var items = new ListViewItem[tempItems.Count];
+                tempItems.CopyTo(items, 0);
 
-                if (items != null)
-                {
-                    listItemsArray = new ArrayList(items.Length);
-                    listItemsArray.AddRange(items);
-                }
+                _listViewItems = new List<ListViewItem>(items.Length);
+                _listViewItems.AddRange(items);
 
                 ListViewHandleDestroyed = true;
             }
@@ -4644,11 +4784,30 @@ namespace System.Windows.Forms
 
         protected override void OnGotFocus(EventArgs e)
         {
+            if (ClearingInnerListOnDispose)
+            {
+                return;
+            }
+
             base.OnGotFocus(e);
-            if (IsHandleCreated && AccessibilityObject.GetFocus() is AccessibleObject focusedAccessibleObject)
+
+            if (ShowItemToolTips && Items.Count > 0 && (FocusedItem ?? Items[0]) is ListViewItem focusedItem)
+            {
+                NotifyAboutGotFocus(focusedItem);
+            }
+
+            if (IsHandleCreated &&
+                IsAccessibilityObjectCreated &&
+                AccessibilityObject.GetFocus() is AccessibleObject focusedAccessibleObject)
             {
                 focusedAccessibleObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
             }
+        }
+
+        protected override void OnLostFocus(EventArgs e)
+        {
+            NotifyAboutLostFocus(FocusedItem);
+            base.OnLostFocus(e);
         }
 
         /// <summary>
@@ -4656,7 +4815,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnItemActivate(EventArgs e)
         {
-            onItemActivate?.Invoke(this, e);
+            _onItemActivate?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4666,27 +4825,30 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnItemCheck(ItemCheckEventArgs ice)
         {
-            onItemCheck?.Invoke(this, ice);
+            _onItemCheck?.Invoke(this, ice);
         }
 
         protected virtual void OnItemChecked(ItemCheckedEventArgs e)
         {
-            onItemChecked?.Invoke(this, e);
+            _onItemChecked?.Invoke(this, e);
 
             if (!CheckBoxes)
             {
                 return;
             }
 
-            ListViewItem item = e.Item;
-            UiaCore.ToggleState oldValue = item.Checked ? UiaCore.ToggleState.Off : UiaCore.ToggleState.On;
-            UiaCore.ToggleState newValue = item.Checked ? UiaCore.ToggleState.On : UiaCore.ToggleState.Off;
-            item.AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.ToggleToggleStatePropertyId, oldValue, newValue);
+            if (IsAccessibilityObjectCreated)
+            {
+                ListViewItem item = e.Item;
+                UiaCore.ToggleState oldValue = item.Checked ? UiaCore.ToggleState.Off : UiaCore.ToggleState.On;
+                UiaCore.ToggleState newValue = item.Checked ? UiaCore.ToggleState.On : UiaCore.ToggleState.Off;
+                item.AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.ToggleToggleStatePropertyId, oldValue, newValue);
+            }
         }
 
         protected virtual void OnItemDrag(ItemDragEventArgs e)
         {
-            onItemDrag?.Invoke(this, e);
+            _onItemDrag?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4694,7 +4856,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnItemMouseHover(ListViewItemMouseHoverEventArgs e)
         {
-            onItemMouseHover?.Invoke(this, e);
+            _onItemMouseHover?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4702,7 +4864,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnItemSelectionChanged(ListViewItemSelectionChangedEventArgs e)
         {
-            ((ListViewItemSelectionChangedEventHandler)Events[EVENT_ITEMSELECTIONCHANGED])?.Invoke(this, e);
+            ((ListViewItemSelectionChangedEventHandler?)Events[EVENT_ITEMSELECTIONCHANGED])?.Invoke(this, e);
         }
 
         protected override void OnParentChanged(EventArgs e)
@@ -4730,7 +4892,7 @@ namespace System.Windows.Forms
 
         protected virtual void OnRetrieveVirtualItem(RetrieveVirtualItemEventArgs e)
         {
-            ((RetrieveVirtualItemEventHandler)Events[EVENT_RETRIEVEVIRTUALITEM])?.Invoke(this, e);
+            ((RetrieveVirtualItemEventHandler?)Events[EVENT_RETRIEVEVIRTUALITEM])?.Invoke(this, e);
         }
 
         [EditorBrowsable(EditorBrowsableState.Advanced)]
@@ -4757,7 +4919,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnSearchForVirtualItem(SearchForVirtualItemEventArgs e)
         {
-            ((SearchForVirtualItemEventHandler)Events[EVENT_SEARCHFORVIRTUALITEM])?.Invoke(this, e);
+            ((SearchForVirtualItemEventHandler?)Events[EVENT_SEARCHFORVIRTUALITEM])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -4769,7 +4931,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnSelectedIndexChanged(EventArgs e)
         {
-            ((EventHandler)Events[EVENT_SELECTEDINDEXCHANGED])?.Invoke(this, e);
+            ((EventHandler?)Events[EVENT_SELECTEDINDEXCHANGED])?.Invoke(this, e);
 
             if (SelectedIndices.Count == 0)
             {
@@ -4777,9 +4939,17 @@ namespace System.Windows.Forms
             }
 
             ListViewItem firstSelectedItem = Items[SelectedIndices[0]];
-            if (firstSelectedItem.Focused)
+
+            // The second condition is necessary to avoid unexpected switch of the Inspect's focus
+            // when the user clicks on the ListViewSubItem. This is due to the fact that the "OnSelectedIndexChanged"
+            // and "WmMouseDown" methods simultaneously send message about the selected item.
+            if (firstSelectedItem.Focused && _selectedItem != firstSelectedItem)
             {
-                firstSelectedItem.AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+                _selectedItem = firstSelectedItem;
+                if (IsAccessibilityObjectCreated)
+                {
+                    firstSelectedItem.AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+                }
             }
         }
 
@@ -4789,52 +4959,53 @@ namespace System.Windows.Forms
 
             if (IsHandleCreated)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETBKCOLOR, IntPtr.Zero, PARAM.FromColor(BackColor));
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETBKCOLOR, (WPARAM)0, (LPARAM)BackColor);
+
                 // We should probably be OK if we don't set the TEXTBKCOLOR to CLR_NONE.
                 // However, for the sake of being more robust, reset the TECTBKCOLOR to CLR_NONE when the system palette changes.
-                User32.SendMessageW(this, (User32.WM)LVM.SETTEXTBKCOLOR, IntPtr.Zero, (IntPtr)CLR.NONE);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETTEXTBKCOLOR, (WPARAM)0, (LPARAM)PInvoke.CLR_NONE);
             }
         }
 
         protected virtual void OnVirtualItemsSelectionRangeChanged(ListViewVirtualItemsSelectionRangeChangedEventArgs e)
         {
-            ((ListViewVirtualItemsSelectionRangeChangedEventHandler)Events[EVENT_VIRTUALITEMSSELECTIONRANGECHANGED])?.Invoke(this, e);
+            ((ListViewVirtualItemsSelectionRangeChangedEventHandler?)Events[EVENT_VIRTUALITEMSSELECTIONRANGECHANGED])?.Invoke(this, e);
         }
 
         private unsafe void PositionHeader()
         {
-            IntPtr hdrHWND = User32.GetWindow(new HandleRef(this, Handle), User32.GW.CHILD);
-            if (hdrHWND != IntPtr.Zero)
+            HWND headerWindow = PInvoke.GetWindow(this, GET_WINDOW_CMD.GW_CHILD);
+            if (!headerWindow.IsNull)
             {
-                var rc = new RECT();
-                var wpos = new User32.WINDOWPOS();
-                User32.GetClientRect(new HandleRef(this, Handle), ref rc);
-
+                WINDOWPOS position = default;
+                PInvoke.GetClientRect(this, out RECT clientRect);
                 var hd = new User32.HDLAYOUT
                 {
-                    prc = &rc,
-                    pwpos = &wpos
+                    prc = &clientRect,
+                    pwpos = &position
                 };
 
-                // get the layout information
-                User32.SendMessageW(hdrHWND, (User32.WM)HDM.LAYOUT, IntPtr.Zero, ref hd);
+                // Get the layout information.
+                PInvoke.SendMessage(headerWindow, (User32.WM)PInvoke.HDM_LAYOUT, (WPARAM)0, ref hd);
 
-                // position the header control
-                User32.SetWindowPos(
-                    new HandleRef(this, hdrHWND),
-                    new HandleRef(this, wpos.hwndInsertAfter),
-                    wpos.x,
-                    wpos.y,
-                    wpos.cx,
-                    wpos.cy,
-                    wpos.flags | User32.SWP.SHOWWINDOW);
+                // Position the header control.
+                PInvoke.SetWindowPos(
+                    headerWindow,
+                    position.hwndInsertAfter,
+                    position.x,
+                    position.y,
+                    position.cx,
+                    position.cy,
+                    position.flags | SET_WINDOW_POS_FLAGS.SWP_SHOWWINDOW);
+
+                GC.KeepAlive(this);
             }
         }
 
         private void RealizeAllSubItems()
         {
-            var lvItem = new LVITEMW();
-            for (int i = 0; i < itemCount; i++)
+            var lvItem = default(LVITEMW);
+            for (int i = 0; i < _itemCount; i++)
             {
                 int subItemCount = Items[i].SubItems.Count;
                 for (int j = 0; j < subItemCount; j++)
@@ -4846,38 +5017,39 @@ namespace System.Windows.Forms
 
         protected void RealizeProperties()
         {
-            //Realize state information
+            // Realize state information
             Color c;
 
             c = BackColor;
             if (c != SystemColors.Window)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETBKCOLOR, IntPtr.Zero, PARAM.FromColor(c));
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETBKCOLOR, (WPARAM)0, (LPARAM)c);
             }
+
             c = ForeColor;
             if (c != SystemColors.WindowText)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETTEXTCOLOR, IntPtr.Zero, PARAM.FromColor(c));
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETTEXTCOLOR, (WPARAM)0, (LPARAM)c);
             }
 
-            if (_imageListLarge != null)
+            if (_imageListLarge is not null)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.NORMAL, _imageListLarge.Handle);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (WPARAM)(uint)PInvoke.LVSIL_NORMAL, (LPARAM)_imageListLarge.Handle);
             }
 
-            if (_imageListSmall != null)
+            if (_imageListSmall is not null)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.SMALL, _imageListSmall.Handle);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (WPARAM)(uint)PInvoke.LVSIL_SMALL, (LPARAM)_imageListSmall.Handle);
             }
 
-            if (_imageListState != null)
+            if (_imageListState is not null)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.STATE, _imageListState.Handle);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (WPARAM)(uint)PInvoke.LVSIL_STATE, (LPARAM)_imageListState.Handle);
             }
 
-            if (_imageListGroup != null)
+            if (_imageListGroup is not null)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.GROUPHEADER, _imageListGroup.Handle);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (WPARAM)(uint)PInvoke.LVSIL_GROUPHEADER, (LPARAM)_imageListGroup.Handle);
             }
         }
 
@@ -4893,6 +5065,7 @@ namespace System.Windows.Forms
                 {
                     throw new ArgumentOutOfRangeException(nameof(startIndex), startIndex, string.Format(SR.InvalidArgument, nameof(startIndex), startIndex));
                 }
+
                 if (endIndex < 0 || endIndex >= VirtualListSize)
                 {
                     throw new ArgumentOutOfRangeException(nameof(endIndex), endIndex, string.Format(SR.InvalidArgument, nameof(endIndex), endIndex));
@@ -4904,19 +5077,23 @@ namespace System.Windows.Forms
                 {
                     throw new ArgumentOutOfRangeException(nameof(startIndex), startIndex, string.Format(SR.InvalidArgument, nameof(startIndex), startIndex));
                 }
+
                 if (endIndex < 0 || endIndex >= Items.Count)
                 {
                     throw new ArgumentOutOfRangeException(nameof(endIndex), endIndex, string.Format(SR.InvalidArgument, nameof(endIndex), endIndex));
                 }
             }
+
             if (startIndex > endIndex)
             {
                 throw new ArgumentException(SR.ListViewStartIndexCannotBeLargerThanEndIndex);
             }
+
             if (IsHandleCreated)
             {
-                int retval = (int)User32.SendMessageW(this, (User32.WM)LVM.REDRAWITEMS, (IntPtr)startIndex, (IntPtr)endIndex);
+                int retval = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_REDRAWITEMS, (WPARAM)startIndex, (LPARAM)endIndex);
                 Debug.Assert(retval != 0);
+
                 // ListView control seems to be bogus. Items affected need to be invalidated in LargeIcon and SmallIcons views.
                 if (View == View.LargeIcon || View == View.SmallIcon)
                 {
@@ -4925,6 +5102,7 @@ namespace System.Windows.Forms
                     {
                         rectInvalid = Rectangle.Union(rectInvalid, Items[index].Bounds);
                     }
+
                     if (startIndex > 0)
                     {
                         rectInvalid = Rectangle.Union(rectInvalid, Items[startIndex - 1].Bounds);
@@ -4935,6 +5113,7 @@ namespace System.Windows.Forms
                         rectInvalid.Height += rectInvalid.Y;
                         rectInvalid.X = rectInvalid.Y = 0;
                     }
+
                     if (endIndex < Items.Count - 1)
                     {
                         rectInvalid = Rectangle.Union(rectInvalid, Items[endIndex + 1].Bounds);
@@ -4944,17 +5123,50 @@ namespace System.Windows.Forms
                         rectInvalid.Height += ClientRectangle.Bottom - rectInvalid.Bottom;
                         rectInvalid.Width += ClientRectangle.Right - rectInvalid.Right;
                     }
+
                     if (View == View.LargeIcon)
                     {
                         rectInvalid.Inflate(1, Font.Height + 1);
                     }
+
                     Invalidate(rectInvalid);
                 }
+
                 if (!invalidateOnly)
                 {
                     Update();
                 }
             }
+        }
+
+        internal override void ReleaseUiaProvider(nint handle)
+        {
+            if (!OsVersion.IsWindows8OrGreater() || !IsAccessibilityObjectCreated)
+            {
+                return;
+            }
+
+            for (int i = 0; i < Items.Count; i++)
+            {
+                Items[i].ReleaseUiaProvider();
+            }
+
+            if (_defaultGroup is not null)
+            {
+                DefaultGroup.ReleaseUiaProvider();
+            }
+
+            foreach (ListViewGroup group in Groups)
+            {
+                group.ReleaseUiaProvider();
+            }
+
+            foreach (ColumnHeader columnHeader in Columns)
+            {
+                columnHeader.ReleaseUiaProvider();
+            }
+
+            base.ReleaseUiaProvider(handle);
         }
 
         // makes sure that the list view items which are w/o a listView group are parented to the DefaultGroup - if necessary
@@ -4986,13 +5198,13 @@ namespace System.Windows.Forms
         private void RemoveGroupNative(ListViewGroup group)
         {
             Debug.Assert(IsHandleCreated, "RemoveGroupNative precondition: list-view handle must be created");
-            User32.SendMessageW(this, (User32.WM)LVM.REMOVEGROUP, (IntPtr)group.ID);
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_REMOVEGROUP, (WPARAM)group.ID);
         }
 
         private void Scroll(int fromLVItem, int toLVItem)
         {
             int scrollY = GetItemPosition(toLVItem).Y - GetItemPosition(fromLVItem).Y;
-            User32.SendMessageW(this, (User32.WM)LVM.SCROLL, IntPtr.Zero, (IntPtr)scrollY);
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SCROLL, (WPARAM)0, (LPARAM)scrollY);
         }
 
         private unsafe void SetBackgroundImage()
@@ -5000,44 +5212,40 @@ namespace System.Windows.Forms
             // needed for OleInitialize
             Application.OleRequired();
 
-            var lvbkImage = new LVBKIMAGEW();
+            var lvbkImage = default(LVBKIMAGEW);
 
             // first, is there an existing temporary file to delete, remember its name
             // so that we can delete it if the list control doesn't...
-            string fileNameToDelete = backgroundImageFileName;
+            string fileNameToDelete = _backgroundImageFileName;
 
-            if (BackgroundImage != null)
+            if (BackgroundImage is not null)
             {
                 // save the image to a temporary file name
-                string tempDirName = System.IO.Path.GetTempPath();
-                Text.StringBuilder sb = new Text.StringBuilder(1024);
-                UnsafeNativeMethods.GetTempFileName(tempDirName, GenerateRandomName(), 0, sb);
+                _backgroundImageFileName = Path.GetTempFileName();
 
-                backgroundImageFileName = sb.ToString();
+                BackgroundImage.Save(_backgroundImageFileName, System.Drawing.Imaging.ImageFormat.Bmp);
 
-                BackgroundImage.Save(backgroundImageFileName, System.Drawing.Imaging.ImageFormat.Bmp);
-
-                lvbkImage.cchImageMax = (uint)(backgroundImageFileName.Length + 1);
-                lvbkImage.ulFlags = LVBKIF.SOURCE_URL;
+                lvbkImage.cchImageMax = (uint)(_backgroundImageFileName.Length + 1);
+                lvbkImage.ulFlags = LIST_VIEW_BACKGROUND_IMAGE_FLAGS.LVBKIF_SOURCE_URL;
                 if (BackgroundImageTiled)
                 {
-                    lvbkImage.ulFlags |= LVBKIF.STYLE_TILE;
+                    lvbkImage.ulFlags |= LIST_VIEW_BACKGROUND_IMAGE_FLAGS.LVBKIF_STYLE_TILE;
                 }
                 else
                 {
-                    lvbkImage.ulFlags |= LVBKIF.STYLE_NORMAL;
+                    lvbkImage.ulFlags |= LIST_VIEW_BACKGROUND_IMAGE_FLAGS.LVBKIF_STYLE_NORMAL;
                 }
             }
             else
             {
-                lvbkImage.ulFlags = LVBKIF.SOURCE_NONE;
-                backgroundImageFileName = string.Empty;
+                lvbkImage.ulFlags = LIST_VIEW_BACKGROUND_IMAGE_FLAGS.LVBKIF_SOURCE_NONE;
+                _backgroundImageFileName = string.Empty;
             }
 
-            fixed (char* pBackgroundImageFileName = backgroundImageFileName)
+            fixed (char* pBackgroundImageFileName = _backgroundImageFileName)
             {
                 lvbkImage.pszImage = pBackgroundImageFileName;
-                User32.SendMessageW(this, (User32.WM)LVM.SETBKIMAGEW, IntPtr.Zero, ref lvbkImage);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETBKIMAGEW, (WPARAM)0, ref lvbkImage);
             }
 
             if (string.IsNullOrEmpty(fileNameToDelete))
@@ -5047,79 +5255,78 @@ namespace System.Windows.Forms
 
             // we need to cause a paint message on the win32 list view. This way the win 32 list view gives up
             // its reference to the previous image file it was holding on to.
-            //
 
             // 8 strings should be good enough for us
-            if (bkImgFileNames is null)
+            if (_bkImgFileNames is null)
             {
-                bkImgFileNames = new string[BKIMGARRAYSIZE];
-                bkImgFileNamesCount = -1;
+                _bkImgFileNames = new string[BKIMGARRAYSIZE];
+                _bkImgFileNamesCount = -1;
             }
 
-            if (bkImgFileNamesCount == BKIMGARRAYSIZE - 1)
+            if (_bkImgFileNamesCount == BKIMGARRAYSIZE - 1)
             {
                 // it should be fine to delete the file name that was added first.
                 // if it's not fine, then increase BKIMGARRAYSIZE
-                DeleteFileName(bkImgFileNames[0]);
-                bkImgFileNames[0] = bkImgFileNames[1];
-                bkImgFileNames[1] = bkImgFileNames[2];
-                bkImgFileNames[2] = bkImgFileNames[3];
-                bkImgFileNames[3] = bkImgFileNames[4];
-                bkImgFileNames[4] = bkImgFileNames[5];
-                bkImgFileNames[5] = bkImgFileNames[6];
-                bkImgFileNames[6] = bkImgFileNames[7];
-                bkImgFileNames[7] = null;
+                DeleteFileName(_bkImgFileNames[0]);
+                _bkImgFileNames[0] = _bkImgFileNames[1];
+                _bkImgFileNames[1] = _bkImgFileNames[2];
+                _bkImgFileNames[2] = _bkImgFileNames[3];
+                _bkImgFileNames[3] = _bkImgFileNames[4];
+                _bkImgFileNames[4] = _bkImgFileNames[5];
+                _bkImgFileNames[5] = _bkImgFileNames[6];
+                _bkImgFileNames[6] = _bkImgFileNames[7];
+                _bkImgFileNames[7] = null;
 
-                bkImgFileNamesCount--;
+                _bkImgFileNamesCount--;
             }
 
-            bkImgFileNamesCount++;
-            bkImgFileNames[bkImgFileNamesCount] = fileNameToDelete;
+            _bkImgFileNamesCount++;
+            _bkImgFileNames[_bkImgFileNamesCount] = fileNameToDelete;
 
             // now force the paint
             Refresh();
         }
 
-        internal unsafe void SetColumnInfo(LVCF mask, ColumnHeader ch)
+        internal unsafe void SetColumnInfo(LVCOLUMNW_MASK mask, ColumnHeader ch)
         {
             if (!IsHandleCreated)
             {
                 return;
             }
 
-            Debug.Assert((mask & ~(LVCF.FMT | LVCF.TEXT | LVCF.IMAGE)) == 0, "Unsupported mask in setColumnInfo");
+            Debug.Assert((mask & ~(LVCOLUMNW_MASK.LVCF_FMT | LVCOLUMNW_MASK.LVCF_TEXT | LVCOLUMNW_MASK.LVCF_IMAGE)) == 0, "Unsupported mask in setColumnInfo");
             LVCOLUMNW lvColumn = new LVCOLUMNW
             {
                 mask = mask
             };
 
-            if ((mask & LVCF.IMAGE) != 0 || (mask & LVCF.FMT) != 0)
+            if ((mask & LVCOLUMNW_MASK.LVCF_IMAGE) != 0 || (mask & LVCOLUMNW_MASK.LVCF_FMT) != 0)
             {
                 // When we set the ImageIndex we also have to alter the column format.
                 // This means that we have to include the TextAlign into the column format.
 
-                lvColumn.mask |= LVCF.FMT;
+                lvColumn.mask |= LVCOLUMNW_MASK.LVCF_FMT;
 
                 if (ch.ActualImageIndex_Internal > -1)
                 {
                     // you would think that setting iImage would be enough.
-                    // actually we also have to set the format to include LVCFMT_IMAGE
+                    // actually we also have to set the format to include LVCOLUMNW_FORMAT.LVCFMT_IMAGE
                     lvColumn.iImage = ch.ActualImageIndex_Internal;
-                    lvColumn.fmt |= LVCFMT.IMAGE;
+                    lvColumn.fmt |= LVCOLUMNW_FORMAT.LVCFMT_IMAGE;
                 }
 
-                lvColumn.fmt |= (LVCFMT)ch.TextAlign;
+                lvColumn.fmt |= (LVCOLUMNW_FORMAT)ch.TextAlign;
             }
 
             IntPtr result;
             fixed (char* columnHeaderText = ch.Text)
             {
-                if ((mask & LVCF.TEXT) != 0)
+                if ((mask & LVCOLUMNW_MASK.LVCF_TEXT) != 0)
                 {
                     lvColumn.pszText = columnHeaderText;
                 }
 
-                result = User32.SendMessageW(this, (User32.WM)LVM.SETCOLUMNW, (IntPtr)ch.Index, ref lvColumn);
+                result = PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETCOLUMNW, (WPARAM)ch.Index, ref lvColumn);
             }
 
             if (result == IntPtr.Zero)
@@ -5139,8 +5346,8 @@ namespace System.Windows.Forms
         internal void SetColumnWidth(int columnIndex, ColumnHeaderAutoResizeStyle headerAutoResize)
         {
             if ((columnIndex < 0) ||
-                (columnIndex >= 0 && columnHeaders is null) ||
-                (columnIndex >= columnHeaders.Length))
+                (columnIndex >= 0 && _columnHeaders is null) ||
+                (columnIndex >= _columnHeaders!.Length))
             {
                 throw new ArgumentOutOfRangeException(nameof(columnIndex), columnIndex, string.Format(SR.InvalidArgument, nameof(columnIndex), columnIndex));
             }
@@ -5153,15 +5360,15 @@ namespace System.Windows.Forms
 
             if (headerAutoResize == ColumnHeaderAutoResizeStyle.None)
             {
-                width = columnHeaders[columnIndex].WidthInternal;
+                width = _columnHeaders[columnIndex].WidthInternal;
 
                 // If the width maps to a LVCSW_ const, then native control will autoresize.
                 // We may need to compensate for that.
-                if (width == (int)LVSCW.AUTOSIZE_USEHEADER)
+                if (width == (int)PInvoke.LVSCW_AUTOSIZE_USEHEADER)
                 {
                     headerAutoResize = ColumnHeaderAutoResizeStyle.HeaderSize;
                 }
-                else if (width == (int)LVSCW.AUTOSIZE)
+                else if (width == (int)PInvoke.LVSCW_AUTOSIZE)
                 {
                     headerAutoResize = ColumnHeaderAutoResizeStyle.ColumnContent;
                 }
@@ -5170,17 +5377,17 @@ namespace System.Windows.Forms
             if (headerAutoResize == ColumnHeaderAutoResizeStyle.HeaderSize)
             {
                 compensate = CompensateColumnHeaderResize(columnIndex, columnResizeCancelled: false);
-                width = (int)LVSCW.AUTOSIZE_USEHEADER;
+                width = (int)PInvoke.LVSCW_AUTOSIZE_USEHEADER;
             }
             else if (headerAutoResize == ColumnHeaderAutoResizeStyle.ColumnContent)
             {
                 compensate = CompensateColumnHeaderResize(columnIndex, columnResizeCancelled: false);
-                width = (int)LVSCW.AUTOSIZE;
+                width = (int)PInvoke.LVSCW_AUTOSIZE;
             }
 
             if (IsHandleCreated)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETCOLUMNWIDTH, (IntPtr)columnIndex, PARAM.FromLowHigh(width, 0));
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETCOLUMNWIDTH, (WPARAM)columnIndex, LPARAM.MAKELPARAM(width, 0));
             }
 
             if (IsHandleCreated &&
@@ -5189,8 +5396,12 @@ namespace System.Windows.Forms
             {
                 if (compensate != 0)
                 {
-                    int newWidth = columnHeaders[columnIndex].Width + compensate;
-                    User32.SendMessageW(this, (User32.WM)LVM.SETCOLUMNWIDTH, (IntPtr)columnIndex, PARAM.FromLowHigh(newWidth, 0));
+                    int newWidth = _columnHeaders[columnIndex].Width + compensate;
+                    PInvoke.SendMessage(
+                        this,
+                        (User32.WM)PInvoke.LVM_SETCOLUMNWIDTH,
+                        (WPARAM)columnIndex,
+                        (LPARAM)newWidth);
                 }
             }
         }
@@ -5199,7 +5410,7 @@ namespace System.Windows.Forms
         {
             if (IsHandleCreated)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETCOLUMNWIDTH, (IntPtr)index, PARAM.FromLowHigh(width, 0));
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETCOLUMNWIDTH, (WPARAM)index, LPARAM.MAKELPARAM(width, 0));
             }
         }
 
@@ -5217,7 +5428,11 @@ namespace System.Windows.Forms
             {
                 fixed (int* pOrderedColumns = orderedColumns)
                 {
-                    User32.SendMessageW(this, (User32.WM)LVM.SETCOLUMNORDERARRAY, (IntPtr)orderedColumns.Length, (IntPtr)pOrderedColumns);
+                    PInvoke.SendMessage(
+                        this,
+                        (User32.WM)PInvoke.LVM_SETCOLUMNORDERARRAY,
+                        (WPARAM)orderedColumns.Length,
+                        (LPARAM)pOrderedColumns);
                 }
             }
         }
@@ -5229,38 +5444,38 @@ namespace System.Windows.Forms
         /// </summary>
         internal void UpdateSavedCheckedItems(ListViewItem item, bool addItem)
         {
-            if (addItem && savedCheckedItems is null)
-            {
-                savedCheckedItems = new List<ListViewItem>();
-            }
-
             if (addItem)
             {
-                savedCheckedItems.Add(item);
+                _savedCheckedItems ??= new List<ListViewItem>();
+                _savedCheckedItems.Add(item);
             }
-            else if (savedCheckedItems != null)
+            else if (_savedCheckedItems is not null)
             {
-                Debug.Assert(savedCheckedItems.Contains(item), "somehow we lost track of one item");
-                savedCheckedItems.Remove(item);
+                Debug.Assert(_savedCheckedItems.Contains(item), "somehow we lost track of one item");
+                _savedCheckedItems.Remove(item);
             }
         }
 
         /// <summary>
         ///  Called by ToolTip to poke in that Tooltip into this ComCtl so that the Native ChildToolTip is not exposed.
         /// </summary>
-        internal void SetToolTip(ToolTip toolTip, string toolTipCaption)
+        internal override void SetToolTip(ToolTip toolTip)
         {
-            this.toolTipCaption = toolTipCaption;
+            if (toolTip is null)
+            {
+                return;
+            }
 
-            // native ListView expects tooltip HWND as a wParam and ignores lParam
-            IntPtr oldHandle = User32.SendMessageW(this, (User32.WM)LVM.SETTOOLTIPS, toolTip.Handle, IntPtr.Zero);
-            GC.KeepAlive(toolTip);
-            User32.DestroyWindow(oldHandle);
+            _toolTipCaption = toolTip.GetToolTip(this);
+
+            // Native ListView expects tooltip HWND as a wParam and ignores lParam
+            HWND oldHandle = (HWND)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETTOOLTIPS, toolTip);
+            PInvoke.DestroyWindow(oldHandle);
         }
 
         internal void SetItemImage(int itemIndex, int imageIndex)
         {
-            if (itemIndex < 0 || (VirtualMode && itemIndex >= VirtualListSize) || (!VirtualMode && itemIndex >= itemCount))
+            if (itemIndex < 0 || (VirtualMode && itemIndex >= VirtualListSize) || (!VirtualMode && itemIndex >= _itemCount))
             {
                 throw new ArgumentOutOfRangeException(nameof(itemIndex), itemIndex, string.Format(SR.InvalidArgument, nameof(itemIndex), itemIndex));
             }
@@ -5272,16 +5487,17 @@ namespace System.Windows.Forms
 
             var lvItem = new LVITEMW
             {
-                mask = LVIF.IMAGE,
+                mask = LIST_VIEW_ITEM_FLAGS.LVIF_IMAGE,
                 iItem = itemIndex,
                 iImage = imageIndex
             };
-            User32.SendMessageW(this, (User32.WM)LVM.SETITEMW, IntPtr.Zero, ref lvItem);
+
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETITEMW, (WPARAM)0, ref lvItem);
         }
 
         internal void SetItemIndentCount(int index, int indentCount)
         {
-            if (index < 0 || (VirtualMode && index >= VirtualListSize) || (!VirtualMode && index >= itemCount))
+            if (index < 0 || (VirtualMode && index >= VirtualListSize) || (!VirtualMode && index >= _itemCount))
             {
                 throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
             }
@@ -5293,11 +5509,12 @@ namespace System.Windows.Forms
 
             var lvItem = new LVITEMW
             {
-                mask = LVIF.INDENT,
+                mask = LIST_VIEW_ITEM_FLAGS.LVIF_INDENT,
                 iItem = index,
                 iIndent = indentCount
             };
-            User32.SendMessageW(this, (User32.WM)LVM.SETITEMW, IntPtr.Zero, ref lvItem);
+
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETITEMW, (WPARAM)0, ref lvItem);
         }
 
         internal void SetItemPosition(int index, int x, int y)
@@ -5307,7 +5524,7 @@ namespace System.Windows.Forms
                 return;
             }
 
-            if (index < 0 || index >= itemCount)
+            if (index < 0 || index >= _itemCount)
             {
                 throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
             }
@@ -5315,12 +5532,12 @@ namespace System.Windows.Forms
             Debug.Assert(IsHandleCreated, "How did we add items without a handle?");
 
             var pt = new Point(x, y);
-            User32.SendMessageW(this, (User32.WM)LVM.SETITEMPOSITION32, (IntPtr)index, ref pt);
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETITEMPOSITION32, (WPARAM)index, ref pt);
         }
 
-        internal void SetItemState(int index, LVIS state, LVIS mask)
+        internal void SetItemState(int index, LIST_VIEW_ITEM_STATE_FLAGS state, LIST_VIEW_ITEM_STATE_FLAGS mask)
         {
-            if (index < -1 || (VirtualMode && index >= VirtualListSize) || (!VirtualMode && index >= itemCount))
+            if (index < -1 || (VirtualMode && index >= VirtualListSize) || (!VirtualMode && index >= _itemCount))
             {
                 throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
             }
@@ -5332,16 +5549,17 @@ namespace System.Windows.Forms
 
             var lvItem = new LVITEMW
             {
-                mask = LVIF.STATE,
+                mask = LIST_VIEW_ITEM_FLAGS.LVIF_STATE,
                 state = state,
                 stateMask = mask
             };
-            User32.SendMessageW(this, (User32.WM)LVM.SETITEMSTATE, (IntPtr)index, ref lvItem);
+
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETITEMSTATE, (WPARAM)index, ref lvItem);
         }
 
         internal void SetItemText(int itemIndex, int subItemIndex, string text)
         {
-            var lvItem = new LVITEMW();
+            var lvItem = default(LVITEMW);
             SetItemText(itemIndex, subItemIndex, text, ref lvItem);
         }
 
@@ -5354,7 +5572,7 @@ namespace System.Windows.Forms
 
             if (View == View.List && subItemIndex == 0)
             {
-                int colWidth = unchecked((int)(long)User32.SendMessageW(this, (User32.WM)LVM.GETCOLUMNWIDTH));
+                int colWidth = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETCOLUMNWIDTH);
 
                 using Graphics g = CreateGraphicsInternal();
 
@@ -5365,7 +5583,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            lvItem.mask = LVIF.TEXT;
+            lvItem.mask = LIST_VIEW_ITEM_FLAGS.LVIF_TEXT;
             lvItem.iItem = itemIndex;
             lvItem.iSubItem = subItemIndex;
 
@@ -5373,17 +5591,15 @@ namespace System.Windows.Forms
             {
                 lvItem.pszText = pText;
 
-                User32.SendMessageW(this, (User32.WM)LVM.SETITEMTEXTW, (IntPtr)itemIndex, ref lvItem);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETITEMTEXTW, (WPARAM)itemIndex, ref lvItem);
             }
         }
 
-        //
         // ComCtl32 list view uses a selection mark to keep track of selection state - iMark.
         // ComCtl32 list view updates iMark only when the user hovers over the item.
-        // This means that if we programatically set the selection item, then the list view will not update
+        // This means that if we programmatically set the selection item, then the list view will not update
         // its selection mark.
         // So we explicitly set the selection mark.
-        //
         internal void SetSelectionMark(int itemIndex)
         {
             if (itemIndex < 0 || itemIndex >= Items.Count)
@@ -5391,18 +5607,18 @@ namespace System.Windows.Forms
                 return;
             }
 
-            User32.SendMessageW(this, (User32.WM)LVM.SETSELECTIONMARK, IntPtr.Zero, (IntPtr)itemIndex);
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETSELECTIONMARK, (WPARAM)0, itemIndex);
         }
 
-        private void SmallImageListRecreateHandle(object sender, EventArgs e)
+        private void SmallImageListRecreateHandle(object? sender, EventArgs e)
         {
             if (!IsHandleCreated)
             {
                 return;
             }
 
-            IntPtr handle = (SmallImageList is null) ? IntPtr.Zero : SmallImageList.Handle;
-            User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.SMALL, handle);
+            nint handle = (SmallImageList is null) ? 0 : SmallImageList.Handle;
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (WPARAM)(uint)PInvoke.LVSIL_SMALL, (LPARAM)handle);
 
             ForceCheckBoxUpdate();
         }
@@ -5418,24 +5634,24 @@ namespace System.Windows.Forms
             }
 
             ApplyUpdateCachedItems();
-            if (IsHandleCreated && listItemSorter != null)
+            if (IsHandleCreated && _listItemSorter is not null)
             {
                 NativeMethods.ListViewCompareCallback callback = new NativeMethods.ListViewCompareCallback(CompareFunc);
                 IntPtr callbackPointer = Marshal.GetFunctionPointerForDelegate(callback);
-                User32.SendMessageW(this, (User32.WM)LVM.SORTITEMS, IntPtr.Zero, callbackPointer);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SORTITEMS, (WPARAM)0, (LPARAM)callbackPointer);
                 GC.KeepAlive(callback);
             }
         }
 
-        private void StateImageListRecreateHandle(object sender, EventArgs e)
+        private void StateImageListRecreateHandle(object? sender, EventArgs e)
         {
             if (!IsHandleCreated)
             {
                 return;
             }
 
-            IntPtr handle = (StateImageList is null) ? IntPtr.Zero : StateImageList.Handle;
-            User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.STATE, handle);
+            nint handle = (StateImageList is null) ? 0 : StateImageList.Handle;
+            PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (WPARAM)(uint)PInvoke.LVSIL_STATE, (LPARAM)handle);
         }
 
         /// <summary>
@@ -5445,17 +5661,17 @@ namespace System.Windows.Forms
         {
             string s = base.ToString();
 
-            if (listItemsArray != null)
+            if (_listViewItems is not null)
             {
-                s += ", Items.Count: " + listItemsArray.Count.ToString(CultureInfo.CurrentCulture);
-                if (listItemsArray.Count > 0)
+                s += ", Items.Count: " + _listViewItems.Count.ToString(CultureInfo.CurrentCulture);
+                if (_listViewItems.Count > 0)
                 {
-                    string z = listItemsArray[0].ToString();
+                    string z = _listViewItems[0].ToString();
                     string txt = (z.Length > 40) ? z.Substring(0, 40) : z;
                     s += ", Items[0]: " + txt;
                 }
             }
-            else if (Items != null)
+            else if (Items is not null)
             {
                 s += ", Items.Count: " + Items.Count.ToString(CultureInfo.CurrentCulture);
                 if (Items.Count > 0 && !VirtualMode)
@@ -5465,6 +5681,7 @@ namespace System.Windows.Forms
                     s += ", Items[0]: " + txt;
                 }
             }
+
             return s;
         }
 
@@ -5472,11 +5689,11 @@ namespace System.Windows.Forms
         {
             if (!VirtualMode && IsHandleCreated && AutoArrange && (View == View.LargeIcon || View == View.SmallIcon))
             {
-                // this only has an affect for large icon and small icon views.
+                // This only has an affect for large icon and small icon views.
                 try
                 {
                     BeginUpdate();
-                    User32.SendMessageW(this, (User32.WM)LVM.UPDATE, (IntPtr)(-1));
+                    PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_UPDATE, (WPARAM)(-1));
                 }
                 finally
                 {
@@ -5487,9 +5704,9 @@ namespace System.Windows.Forms
 
         private void UpdateColumnWidths(ColumnHeaderAutoResizeStyle headerAutoResize)
         {
-            if (columnHeaders != null)
+            if (_columnHeaders is not null)
             {
-                for (int i = 0; i < columnHeaders.Length; i++)
+                for (int i = 0; i < _columnHeaders.Length; i++)
                 {
                     SetColumnWidth(i, headerAutoResize);
                 }
@@ -5500,64 +5717,64 @@ namespace System.Windows.Forms
         {
             if (IsHandleCreated)
             {
-                LVS_EX exStyle = 0;
-                LVS_EX exMask = LVS_EX.ONECLICKACTIVATE | LVS_EX.TWOCLICKACTIVATE |
-                                LVS_EX.TRACKSELECT | LVS_EX.UNDERLINEHOT |
-                                LVS_EX.ONECLICKACTIVATE | LVS_EX.HEADERDRAGDROP |
-                                LVS_EX.CHECKBOXES | LVS_EX.FULLROWSELECT |
-                                LVS_EX.GRIDLINES | LVS_EX.INFOTIP | LVS_EX.DOUBLEBUFFER;
+                uint exStyle = 0;
+                uint exMask = PInvoke.LVS_EX_ONECLICKACTIVATE | PInvoke.LVS_EX_TWOCLICKACTIVATE |
+                                PInvoke.LVS_EX_TRACKSELECT | PInvoke.LVS_EX_UNDERLINEHOT |
+                                PInvoke.LVS_EX_ONECLICKACTIVATE | PInvoke.LVS_EX_HEADERDRAGDROP |
+                                PInvoke.LVS_EX_CHECKBOXES | PInvoke.LVS_EX_FULLROWSELECT |
+                                PInvoke.LVS_EX_GRIDLINES | PInvoke.LVS_EX_INFOTIP | PInvoke.LVS_EX_DOUBLEBUFFER;
 
-                switch (activation)
+                switch (_activation)
                 {
                     case ItemActivation.OneClick:
-                        exStyle |= LVS_EX.ONECLICKACTIVATE;
+                        exStyle |= PInvoke.LVS_EX_ONECLICKACTIVATE;
                         break;
                     case ItemActivation.TwoClick:
-                        exStyle |= LVS_EX.TWOCLICKACTIVATE;
+                        exStyle |= PInvoke.LVS_EX_TWOCLICKACTIVATE;
                         break;
                 }
 
                 if (AllowColumnReorder)
                 {
-                    exStyle |= LVS_EX.HEADERDRAGDROP;
+                    exStyle |= PInvoke.LVS_EX_HEADERDRAGDROP;
                 }
 
                 if (CheckBoxes)
                 {
-                    exStyle |= LVS_EX.CHECKBOXES;
+                    exStyle |= PInvoke.LVS_EX_CHECKBOXES;
                 }
 
                 if (DoubleBuffered)
                 {
-                    exStyle |= LVS_EX.DOUBLEBUFFER;
+                    exStyle |= PInvoke.LVS_EX_DOUBLEBUFFER;
                 }
 
                 if (FullRowSelect)
                 {
-                    exStyle |= LVS_EX.FULLROWSELECT;
+                    exStyle |= PInvoke.LVS_EX_FULLROWSELECT;
                 }
 
                 if (GridLines)
                 {
-                    exStyle |= LVS_EX.GRIDLINES;
+                    exStyle |= PInvoke.LVS_EX_GRIDLINES;
                 }
 
                 if (HoverSelection)
                 {
-                    exStyle |= LVS_EX.TRACKSELECT;
+                    exStyle |= PInvoke.LVS_EX_TRACKSELECT;
                 }
 
                 if (HotTracking)
                 {
-                    exStyle |= LVS_EX.UNDERLINEHOT;
+                    exStyle |= PInvoke.LVS_EX_UNDERLINEHOT;
                 }
 
                 if (ShowItemToolTips)
                 {
-                    exStyle |= LVS_EX.INFOTIP;
+                    exStyle |= PInvoke.LVS_EX_INFOTIP;
                 }
 
-                User32.SendMessageW(this, (User32.WM)LVM.SETEXTENDEDLISTVIEWSTYLE, (IntPtr)exMask, (IntPtr)exStyle);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETEXTENDEDLISTVIEWSTYLE, (WPARAM)(uint)exMask, (LPARAM)(uint)exStyle);
                 Invalidate();
             }
         }
@@ -5566,11 +5783,11 @@ namespace System.Windows.Forms
         {
             Debug.Assert(IsHandleCreated, "UpdateGroupNative precondition: list-view handle must be created");
 
-            IntPtr result = SendGroupMessage(group, LVM.SETGROUPINFO, (IntPtr)group.ID, (LVGF)0);
-            Debug.Assert(result != (IntPtr)(-1));
+            nint result = SendGroupMessage(group, PInvoke.LVM_SETGROUPINFO, group.ID, 0);
+            Debug.Assert(result != -1);
         }
 
-        private unsafe IntPtr SendGroupMessage(ListViewGroup group, LVM msg, IntPtr lParam, LVGF additionalMask)
+        private unsafe nint SendGroupMessage(ListViewGroup group, uint msg, nint lParam, LVGF additionalMask)
         {
             string header = group.Header;
             string footer = group.Footer;
@@ -5579,31 +5796,46 @@ namespace System.Windows.Forms
             var lvgroup = new LVGROUPW
             {
                 cbSize = (uint)sizeof(LVGROUPW),
-                mask = LVGF.HEADER | LVGF.FOOTER | LVGF.ALIGN | LVGF.STATE | LVGF.SUBTITLE | LVGF.TASK | LVGF.TITLEIMAGE | additionalMask,
+                mask = LVGF.HEADER | LVGF.ALIGN | LVGF.STATE | LVGF.TITLEIMAGE | additionalMask,
                 cchHeader = header.Length,
                 iTitleImage = -1,
                 iGroupId = group.ID
             };
 
+            if (subtitle.Length != 0)
+            {
+                lvgroup.mask |= LVGF.SUBTITLE;
+            }
+
+            if (task.Length != 0)
+            {
+                lvgroup.mask |= LVGF.TASK;
+            }
+
+            if (footer.Length != 0)
+            {
+                lvgroup.mask |= LVGF.FOOTER;
+            }
+
             if (group.CollapsedState != ListViewGroupCollapsedState.Default)
             {
-                lvgroup.state |= LVGS.COLLAPSIBLE;
+                lvgroup.state |= LIST_VIEW_GROUP_STATE_FLAGS.LVGS_COLLAPSIBLE;
                 if (group.CollapsedState == ListViewGroupCollapsedState.Collapsed)
                 {
-                    lvgroup.state |= LVGS.COLLAPSED;
+                    lvgroup.state |= LIST_VIEW_GROUP_STATE_FLAGS.LVGS_COLLAPSED;
                 }
             }
 
             switch (group.HeaderAlignment)
             {
                 case HorizontalAlignment.Left:
-                    lvgroup.uAlign = LVGA.HEADER_LEFT;
+                    lvgroup.uAlign = LIST_VIEW_GROUP_ALIGN_FLAGS.LVGA_HEADER_LEFT;
                     break;
                 case HorizontalAlignment.Right:
-                    lvgroup.uAlign = LVGA.HEADER_RIGHT;
+                    lvgroup.uAlign = LIST_VIEW_GROUP_ALIGN_FLAGS.LVGA_HEADER_RIGHT;
                     break;
                 case HorizontalAlignment.Center:
-                    lvgroup.uAlign = LVGA.HEADER_CENTER;
+                    lvgroup.uAlign = LIST_VIEW_GROUP_ALIGN_FLAGS.LVGA_HEADER_CENTER;
                     break;
             }
 
@@ -5617,37 +5849,47 @@ namespace System.Windows.Forms
             fixed (char* pHeader = header)
             fixed (char* pFooter = footer)
             {
-                lvgroup.cchFooter = footer.Length;
-                lvgroup.pszFooter = pFooter;
-                switch (group.FooterAlignment)
+                if (footer.Length != 0)
                 {
-                    case HorizontalAlignment.Left:
-                        lvgroup.uAlign |= LVGA.FOOTER_LEFT;
-                        break;
-                    case HorizontalAlignment.Right:
-                        lvgroup.uAlign |= LVGA.FOOTER_RIGHT;
-                        break;
-                    case HorizontalAlignment.Center:
-                        lvgroup.uAlign |= LVGA.FOOTER_CENTER;
-                        break;
+                    lvgroup.cchFooter = footer.Length;
+                    lvgroup.pszFooter = pFooter;
+                    switch (group.FooterAlignment)
+                    {
+                        case HorizontalAlignment.Left:
+                            lvgroup.uAlign |= LIST_VIEW_GROUP_ALIGN_FLAGS.LVGA_FOOTER_LEFT;
+                            break;
+                        case HorizontalAlignment.Right:
+                            lvgroup.uAlign |= LIST_VIEW_GROUP_ALIGN_FLAGS.LVGA_FOOTER_RIGHT;
+                            break;
+                        case HorizontalAlignment.Center:
+                            lvgroup.uAlign |= LIST_VIEW_GROUP_ALIGN_FLAGS.LVGA_FOOTER_CENTER;
+                            break;
+                    }
                 }
 
-                lvgroup.cchSubtitle = (uint)subtitle.Length;
-                lvgroup.pszSubtitle = pSubtitle;
-                lvgroup.cchTask = (uint)task.Length;
-                lvgroup.pszTask = pTask;
+                if (subtitle.Length != 0)
+                {
+                    lvgroup.cchSubtitle = (uint)subtitle.Length;
+                    lvgroup.pszSubtitle = pSubtitle;
+                }
+
+                if (task.Length != 0)
+                {
+                    lvgroup.cchTask = (uint)task.Length;
+                    lvgroup.pszTask = pTask;
+                }
+
                 lvgroup.pszHeader = pHeader;
-                return User32.SendMessageW(this, (User32.WM)msg, lParam, ref lvgroup);
+                return PInvoke.SendMessage(this, (User32.WM)msg, (WPARAM)lParam, ref lvgroup);
             }
         }
 
         // ListViewGroupCollection::Clear needs to remove the items from the Default group
-        //
         internal void UpdateGroupView()
         {
             if (IsHandleCreated && Application.ComCtlSupportsVisualStyles && !VirtualMode)
             {
-                int retval = unchecked((int)(long)User32.SendMessageW(this, (User32.WM)LVM.ENABLEGROUPVIEW, PARAM.FromBool(GroupsEnabled)));
+                int retval = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_ENABLEGROUPVIEW, (WPARAM)(BOOL)GroupsEnabled);
                 Debug.Assert(retval != -1, "Error enabling group view");
             }
         }
@@ -5656,23 +5898,23 @@ namespace System.Windows.Forms
         private unsafe void UpdateTileView()
         {
             Debug.Assert(Application.ComCtlSupportsVisualStyles, "this function works only when ComCtl 6.0 and higher is loaded");
-            Debug.Assert(viewStyle == View.Tile, "this function should be called only in Tile view");
+            Debug.Assert(_viewStyle == View.Tile, "this function should be called only in Tile view");
 
             var tileViewInfo = new LVTILEVIEWINFO
             {
                 cbSize = (uint)sizeof(LVTILEVIEWINFO),
 
-                dwMask = LVTVIM.COLUMNS | LVTVIM.TILESIZE,
-                dwFlags = LVTVIF.FIXEDSIZE,
-                cLines = columnHeaders != null ? columnHeaders.Length : 0,
+                dwMask = LVTILEVIEWINFO_MASK.LVTVIM_COLUMNS | LVTILEVIEWINFO_MASK.LVTVIM_TILESIZE,
+                dwFlags = LVTILEVIEWINFO_FLAGS.LVTVIF_FIXEDSIZE,
+                cLines = _columnHeaders is not null ? _columnHeaders.Length : 0,
                 sizeTile = TileSize,
             };
 
-            IntPtr retval = User32.SendMessageW(this, (User32.WM)LVM.SETTILEVIEWINFO, IntPtr.Zero, ref tileViewInfo);
-            Debug.Assert(retval != IntPtr.Zero, "LVM_SETTILEVIEWINFO failed");
+            nint retval = PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETTILEVIEWINFO, (WPARAM)0, ref tileViewInfo);
+            Debug.Assert(retval != 0, "LVM_SETTILEVIEWINFO failed");
         }
 
-        private void WmNmClick(ref Message m)
+        private void WmNmClick()
         {
             // If we're checked, hittest to see if we're
             // on the check mark
@@ -5687,8 +5929,8 @@ namespace System.Windows.Forms
                 pt = PointToClient(Cursor.Position)
             };
 
-            int displayIndex = (int)User32.SendMessageW(this, (User32.WM)LVM.SUBITEMHITTEST, IntPtr.Zero, ref lvhi);
-            if (displayIndex == -1 || lvhi.iSubItem != 0 || (lvhi.flags & LVHT.ONITEMSTATEICON) == 0)
+            int displayIndex = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SUBITEMHITTEST, (WPARAM)0, ref lvhi);
+            if (displayIndex == -1 || lvhi.iSubItem != 0 || (lvhi.flags & LVHITTESTINFO_FLAGS.LVHT_ONITEMSTATEICON) == 0)
             {
                 return;
             }
@@ -5714,7 +5956,7 @@ namespace System.Windows.Forms
             }
         }
 
-        private void WmNmDblClick(ref Message m)
+        private void WmNmDblClick()
         {
             // If we're checked, hittest to see if we're
             // on the item
@@ -5729,8 +5971,10 @@ namespace System.Windows.Forms
                 pt = PointToClient(Cursor.Position)
             };
 
-            int displayIndex = (int)User32.SendMessageW(this, (User32.WM)LVM.HITTEST, IntPtr.Zero, ref lvhi);
-            if (displayIndex != -1 && (lvhi.flags & LVHT.ONITEM) != 0)
+            int displayIndex = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_HITTEST, (WPARAM)0, ref lvhi);
+            if (displayIndex != -1 &&
+                (lvhi.flags &
+                (LVHITTESTINFO_FLAGS.LVHT_ONITEMICON | LVHITTESTINFO_FLAGS.LVHT_ONITEMLABEL | LVHITTESTINFO_FLAGS.LVHT_ABOVE)) != 0)
             {
                 ListViewItem clickedItem = Items[displayIndex];
                 clickedItem.Checked = !clickedItem.Checked;
@@ -5740,8 +5984,8 @@ namespace System.Windows.Forms
         private void WmMouseDown(ref Message m, MouseButtons button, int clicks)
         {
             //Always Reset the MouseupFired....
-            listViewState[LISTVIEWSTATE_mouseUpFired] = false;
-            listViewState[LISTVIEWSTATE_expectingMouseUp] = true;
+            _listViewState[LISTVIEWSTATE_mouseUpFired] = false;
+            _listViewState[LISTVIEWSTATE_expectingMouseUp] = true;
 
             //This is required to FORCE Validation before Windows ListView pushes its own message loop...
             Focus();
@@ -5749,17 +5993,16 @@ namespace System.Windows.Forms
             // Windows ListView pushes its own Windows ListView in WM_xBUTTONDOWN, so fire the
             // event before calling defWndProc or else it won't get fired until the button
             // comes back up.
-            int x = PARAM.SignedLOWORD(m.LParam);
-            int y = PARAM.SignedHIWORD(m.LParam);
-            OnMouseDown(new MouseEventArgs(button, clicks, x, y, 0));
+            Point point = PARAM.ToPoint(m.LParamInternal);
+            OnMouseDown(new MouseEventArgs(button, clicks, point));
 
-            //If Validation is cancelled dont fire any events through the Windows ListView's message loop...
+            // If Validation is cancelled don't fire any events through the Windows ListView's message loop.
             if (!ValidationCancelled)
             {
                 if (CheckBoxes)
                 {
-                    ListViewHitTestInfo lvhti = HitTest(x, y);
-                    if (_imageListState != null && _imageListState.Images.Count < 2)
+                    ListViewHitTestInfo lvhti = HitTest(point);
+                    if (_imageListState is not null && _imageListState.Images.Count < 2)
                     {
                         // When the user clicks on the check box and the listView's state image list
                         // does not have 2 images, comctl will give us an AttemptToDivideByZero exception.
@@ -5772,10 +6015,11 @@ namespace System.Windows.Forms
                     else
                     {
                         // When a user clicks on the state image, focus the item.
-                        if (lvhti.Item != null && lvhti.Location == ListViewHitTestLocations.StateImage)
+                        if (lvhti.Item is not null && lvhti.Location == ListViewHitTestLocations.StateImage)
                         {
                             lvhti.Item.Focused = true;
                         }
+
                         DefWndProc(ref m);
                     }
                 }
@@ -5785,40 +6029,54 @@ namespace System.Windows.Forms
                 }
             }
 
-            Point screenPoint = PointToScreen(new Point(x, y));
-            AccessibleObject accessibilityObject = AccessibilityObject.HitTest(screenPoint.X, screenPoint.Y);
-            accessibilityObject?.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+            if (IsAccessibilityObjectCreated)
+            {
+                Point screenPoint = PointToScreen(point);
+                AccessibleObject? accessibilityObject = AccessibilityObject.HitTest(screenPoint.X, screenPoint.Y);
+                accessibilityObject?.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+            }
         }
 
         private unsafe bool WmNotify(ref Message m)
         {
-            User32.NMHDR* nmhdr = (User32.NMHDR*)m.LParam;
+            NMHDR* nmhdr = (NMHDR*)(nint)m.LParamInternal;
 
-            // column header custom draw message handling
-            if (nmhdr->code == (int)NM.CUSTOMDRAW && OwnerDraw)
+            if ((int)nmhdr->code == (int)NM.CUSTOMDRAW && UiaCore.UiaClientsAreListening())
+            {
+                // Checking that mouse buttons are not pressed is necessary to avoid
+                // multiple annotation of the column header when resizing the column with the mouse
+                if (m.LParamInternal != 0 && MouseButtons == MouseButtons.None)
+                {
+                    AnnounceColumnHeader(Cursor.Position);
+                }
+            }
+
+            // Column header custom draw message handling.
+            if ((int)nmhdr->code == (int)NM.CUSTOMDRAW && OwnerDraw)
             {
                 try
                 {
-                    NMCUSTOMDRAW* nmcd = (NMCUSTOMDRAW*)m.LParam;
+                    NMCUSTOMDRAW* nmcd = (NMCUSTOMDRAW*)(nint)m.LParamInternal;
                     // Find out which stage we're drawing
                     switch (nmcd->dwDrawStage)
                     {
-                        case CDDS.PREPAINT:
+                        case NMCUSTOMDRAW_DRAW_STAGE.CDDS_PREPAINT:
                             {
-                                m.Result = (IntPtr)CDRF.NOTIFYITEMDRAW;
+                                m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_NOTIFYITEMDRAW;
                                 return true; // we are done - don't do default handling
                             }
-                        case CDDS.ITEMPREPAINT:
+
+                        case NMCUSTOMDRAW_DRAW_STAGE.CDDS_ITEMPREPAINT:
                             {
                                 using Graphics g = nmcd->hdc.CreateGraphics();
-                                Color foreColor = Gdi32.GetTextColor(nmcd->hdc);
-                                Color backColor = Gdi32.GetBkColor(nmcd->hdc);
+                                Color foreColor = Color.FromArgb((int)PInvoke.GetTextColor(nmcd->hdc).Value);
+                                Color backColor = Color.FromArgb((int)PInvoke.GetBkColor(nmcd->hdc).Value);
                                 Font font = GetListHeaderFont();
                                 var e = new DrawListViewColumnHeaderEventArgs(
                                     g,
                                     nmcd->rc,
                                     (int)nmcd->dwItemSpec,
-                                    columnHeaders[(int)nmcd->dwItemSpec],
+                                    _columnHeaders![(int)nmcd->dwItemSpec],
                                     (ListViewItemStates)nmcd->uItemState,
                                     foreColor,
                                     backColor,
@@ -5826,12 +6084,12 @@ namespace System.Windows.Forms
                                 OnDrawColumnHeader(e);
                                 if (e.DrawDefault)
                                 {
-                                    m.Result = (IntPtr)CDRF.DODEFAULT;
+                                    m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_DODEFAULT;
                                     return false;
                                 }
                                 else
                                 {
-                                    m.Result = (IntPtr)CDRF.SKIPDEFAULT;
+                                    m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_SKIPDEFAULT;
                                     return true; // we are done - don't do default handling
                                 }
                             }
@@ -5843,62 +6101,62 @@ namespace System.Windows.Forms
                 catch (Exception e)
                 {
                     Debug.Fail("Exception occurred attempting to setup header custom draw. Disabling custom draw for the column header", e.ToString());
-                    m.Result = (IntPtr)CDRF.DODEFAULT;
+                    m.ResultInternal = (LRESULT)(nint)PInvoke.CDRF_DODEFAULT;
                 }
             }
 
-            if (nmhdr->code == (int)NM.RELEASEDCAPTURE && listViewState[LISTVIEWSTATE_columnClicked])
+            if ((int)nmhdr->code == (int)NM.RELEASEDCAPTURE && _listViewState[LISTVIEWSTATE_columnClicked])
             {
-                listViewState[LISTVIEWSTATE_columnClicked] = false;
-                OnColumnClick(new ColumnClickEventArgs(columnIndex));
+                _listViewState[LISTVIEWSTATE_columnClicked] = false;
+                OnColumnClick(new ColumnClickEventArgs(_columnIndex));
             }
 
-            if (nmhdr->code == (int)HDN.BEGINTRACKW)
+            if ((int)nmhdr->code == (int)HDN.BEGINTRACKW)
             {
-                listViewState[LISTVIEWSTATE_headerControlTracking] = true;
+                _listViewState[LISTVIEWSTATE_headerControlTracking] = true;
 
                 // Reset our tracking information for the new BEGINTRACK cycle.
-                listViewState1[LISTVIEWSTATE1_cancelledColumnWidthChanging] = false;
-                newWidthForColumnWidthChangingCancelled = -1;
-                listViewState1[LISTVIEWSTATE1_cancelledColumnWidthChanging] = false;
+                _listViewState1[LISTVIEWSTATE1_cancelledColumnWidthChanging] = false;
+                _newWidthForColumnWidthChangingCancelled = -1;
+                _listViewState1[LISTVIEWSTATE1_cancelledColumnWidthChanging] = false;
 
-                NMHEADERW* nmheader = (NMHEADERW*)m.LParam;
-                if (columnHeaders != null && columnHeaders.Length > nmheader->iItem)
+                NMHEADERW* nmheader = (NMHEADERW*)(nint)m.LParamInternal;
+                if (_columnHeaders is not null && _columnHeaders.Length > nmheader->iItem)
                 {
-                    columnHeaderClicked = columnHeaders[nmheader->iItem];
-                    columnHeaderClickedWidth = columnHeaderClicked.Width;
+                    _columnHeaderClicked = _columnHeaders[nmheader->iItem];
+                    _columnHeaderClickedWidth = _columnHeaderClicked.Width;
                 }
                 else
                 {
-                    columnHeaderClickedWidth = -1;
-                    columnHeaderClicked = null;
+                    _columnHeaderClickedWidth = -1;
+                    _columnHeaderClicked = null;
                 }
             }
 
-            if (nmhdr->code == (int)HDN.ITEMCHANGINGW)
+            if ((int)nmhdr->code == (int)HDN.ITEMCHANGINGW)
             {
-                NMHEADERW* nmheader = (NMHEADERW*)m.LParam;
+                NMHEADERW* nmheader = (NMHEADERW*)(nint)m.LParamInternal;
 
-                if (columnHeaders != null && nmheader->iItem < columnHeaders.Length &&
-                    (listViewState[LISTVIEWSTATE_headerControlTracking] || listViewState[LISTVIEWSTATE_headerDividerDblClick]))
+                if (_columnHeaders is not null && nmheader->iItem < _columnHeaders.Length &&
+                    (_listViewState[LISTVIEWSTATE_headerControlTracking] || _listViewState[LISTVIEWSTATE_headerDividerDblClick]))
                 {
-                    int newColumnWidth = ((nmheader->pitem->mask & HDI.WIDTH) != 0) ? nmheader->pitem->cxy : -1;
+                    int newColumnWidth = ((nmheader->pitem->mask & HDI_MASK.HDI_WIDTH) != 0) ? nmheader->pitem->cxy : -1;
                     ColumnWidthChangingEventArgs colWidthChanging = new ColumnWidthChangingEventArgs(nmheader->iItem, newColumnWidth);
                     OnColumnWidthChanging(colWidthChanging);
-                    m.Result = (IntPtr)(colWidthChanging.Cancel ? 1 : 0);
+                    m.ResultInternal = (LRESULT)(colWidthChanging.Cancel ? 1 : 0);
                     if (colWidthChanging.Cancel)
                     {
                         nmheader->pitem->cxy = colWidthChanging.NewWidth;
 
                         // We are called inside HDN_DIVIDERDBLCLICK.
                         // Turn off the compensation that our processing of HDN_DIVIDERDBLCLICK would otherwise add.
-                        if (listViewState[LISTVIEWSTATE_headerDividerDblClick])
+                        if (_listViewState[LISTVIEWSTATE_headerDividerDblClick])
                         {
-                            listViewState[LISTVIEWSTATE_columnResizeCancelled] = true;
+                            _listViewState[LISTVIEWSTATE_columnResizeCancelled] = true;
                         }
 
-                        listViewState1[LISTVIEWSTATE1_cancelledColumnWidthChanging] = true;
-                        newWidthForColumnWidthChangingCancelled = colWidthChanging.NewWidth;
+                        _listViewState1[LISTVIEWSTATE1_cancelledColumnWidthChanging] = true;
+                        _newWidthForColumnWidthChangingCancelled = colWidthChanging.NewWidth;
 
                         // skip default processing
                         return true;
@@ -5910,26 +6168,24 @@ namespace System.Windows.Forms
                 }
             }
 
-            if ((nmhdr->code == (int)HDN.ITEMCHANGEDW) &&
-                !listViewState[LISTVIEWSTATE_headerControlTracking])
+            if (((int)nmhdr->code == (int)HDN.ITEMCHANGEDW) &&
+                !_listViewState[LISTVIEWSTATE_headerControlTracking])
             {
-                NMHEADERW* nmheader = (NMHEADERW*)m.LParam;
-                if (columnHeaders != null && nmheader->iItem < columnHeaders.Length)
+                NMHEADERW* nmheader = (NMHEADERW*)(nint)m.LParamInternal;
+                if (_columnHeaders is not null && nmheader->iItem < _columnHeaders.Length)
                 {
-                    int w = columnHeaders[nmheader->iItem].Width;
+                    int w = _columnHeaders[nmheader->iItem].Width;
 
-                    if (columnHeaderClicked is null ||
-                        (columnHeaderClicked == columnHeaders[nmheader->iItem] &&
-                         columnHeaderClickedWidth != -1 &&
-                         columnHeaderClickedWidth != w))
+                    if (_columnHeaderClicked is null ||
+                        (_columnHeaderClicked == _columnHeaders[nmheader->iItem] &&
+                         _columnHeaderClickedWidth != -1 &&
+                         _columnHeaderClickedWidth != w))
                     {
-                        //
                         // If the user double clicked on the column header and we still need to compensate for the column resize
                         // then don't fire ColumnWidthChanged because at this point the column header does not have the final width.
-                        //
-                        if (listViewState[LISTVIEWSTATE_headerDividerDblClick])
+                        if (_listViewState[LISTVIEWSTATE_headerDividerDblClick])
                         {
-                            if (CompensateColumnHeaderResize(m, listViewState[LISTVIEWSTATE_columnResizeCancelled]) == 0)
+                            if (CompensateColumnHeaderResize(m, _listViewState[LISTVIEWSTATE_columnResizeCancelled]) == 0)
                             {
                                 OnColumnWidthChanged(new ColumnWidthChangedEventArgs(nmheader->iItem));
                             }
@@ -5941,15 +6197,15 @@ namespace System.Windows.Forms
                     }
                 }
 
-                columnHeaderClicked = null;
-                columnHeaderClickedWidth = -1;
+                _columnHeaderClicked = null;
+                _columnHeaderClickedWidth = -1;
 
-                ISite site = Site;
+                ISite? site = Site;
 
-                if (site != null)
+                if (site is not null)
                 {
-                    IComponentChangeService cs = (IComponentChangeService)site.GetService(typeof(IComponentChangeService));
-                    if (cs != null)
+                    IComponentChangeService? cs = (IComponentChangeService?)site.GetService(typeof(IComponentChangeService));
+                    if (cs is not null)
                     {
                         try
                         {
@@ -5961,30 +6217,31 @@ namespace System.Windows.Forms
                             {
                                 return false;
                             }
+
                             throw;
                         }
                     }
                 }
             }
 
-            if (nmhdr->code == (int)HDN.ENDTRACKW)
+            if ((int)nmhdr->code == (int)HDN.ENDTRACKW)
             {
-                Debug.Assert(listViewState[LISTVIEWSTATE_headerControlTracking], "HDN_ENDTRACK and HDN_BEGINTRACK are out of sync...");
-                listViewState[LISTVIEWSTATE_headerControlTracking] = false;
-                if (listViewState1[LISTVIEWSTATE1_cancelledColumnWidthChanging])
+                Debug.Assert(_listViewState[LISTVIEWSTATE_headerControlTracking], "HDN_ENDTRACK and HDN_BEGINTRACK are out of sync.");
+                _listViewState[LISTVIEWSTATE_headerControlTracking] = false;
+                if (_listViewState1[LISTVIEWSTATE1_cancelledColumnWidthChanging])
                 {
-                    m.Result = (IntPtr)1;
-                    if (newWidthForColumnWidthChangingCancelled != -1)
+                    m.ResultInternal = (LRESULT)1;
+                    if (_newWidthForColumnWidthChangingCancelled != -1)
                     {
-                        NMHEADERW* nmheader = (NMHEADERW*)m.LParam;
-                        if (columnHeaders != null && columnHeaders.Length > nmheader->iItem)
+                        NMHEADERW* nmheader = (NMHEADERW*)(nint)m.LParamInternal;
+                        if (_columnHeaders is not null && _columnHeaders.Length > nmheader->iItem)
                         {
-                            columnHeaders[nmheader->iItem].Width = newWidthForColumnWidthChangingCancelled;
+                            _columnHeaders[nmheader->iItem].Width = _newWidthForColumnWidthChangingCancelled;
                         }
                     }
 
-                    listViewState1[LISTVIEWSTATE1_cancelledColumnWidthChanging] = false;
-                    newWidthForColumnWidthChangingCancelled = -1;
+                    _listViewState1[LISTVIEWSTATE1_cancelledColumnWidthChanging] = false;
+                    _newWidthForColumnWidthChangingCancelled = -1;
 
                     // skip default processing
                     return true;
@@ -5995,12 +6252,12 @@ namespace System.Windows.Forms
                 }
             }
 
-            if (nmhdr->code == (int)HDN.ENDDRAG)
+            if ((int)nmhdr->code == (int)HDN.ENDDRAG)
             {
-                NMHEADERW* header = (NMHEADERW*)m.LParam;
-                if (header->pitem != null)
+                NMHEADERW* header = (NMHEADERW*)(nint)m.LParamInternal;
+                if (header->pitem is not null)
                 {
-                    if ((header->pitem->mask & HDI.ORDER) == HDI.ORDER)
+                    if (header->pitem->mask.HasFlag(HDI_MASK.HDI_ORDER))
                     {
                         int from = Columns[header->iItem].DisplayIndex;
                         int to = header->pitem->iOrder;
@@ -6016,6 +6273,7 @@ namespace System.Windows.Forms
                         {
                             return false;
                         }
+
                         ColumnReorderedEventArgs chrevent = new ColumnReorderedEventArgs(
                             from,
                             to,
@@ -6023,7 +6281,7 @@ namespace System.Windows.Forms
                         OnColumnReordered(chrevent);
                         if (chrevent.Cancel)
                         {
-                            m.Result = new IntPtr(1);
+                            m.ResultInternal = (LRESULT)1;
                             return true;
                         }
                         else
@@ -6033,7 +6291,7 @@ namespace System.Windows.Forms
                             int lowDI = Math.Min(from, to);
                             int hiDI = Math.Max(from, to);
                             bool hdrMovedForward = to > from;
-                            ColumnHeader movedHdr = null;
+                            ColumnHeader? movedHdr = null;
                             int[] indices = new int[Columns.Count];
                             for (int i = 0; i < Columns.Count; i++)
                             {
@@ -6046,10 +6304,11 @@ namespace System.Windows.Forms
                                 {
                                     hdr.DisplayIndexInternal -= hdrMovedForward ? 1 : -1;
                                 }
+
                                 indices[i] = hdr.DisplayIndexInternal;
                             }
 
-                            movedHdr.DisplayIndexInternal = to;
+                            movedHdr!.DisplayIndexInternal = to;
                             indices[movedHdr.Index] = movedHdr.DisplayIndexInternal;
                             SetDisplayIndices(indices);
 #if DEBUG
@@ -6060,15 +6319,15 @@ namespace System.Windows.Forms
                 }
             }
 
-            if (nmhdr->code == (int)HDN.DIVIDERDBLCLICKW)
+            if ((int)nmhdr->code == (int)HDN.DIVIDERDBLCLICKW)
             {
                 // We need to keep track that the user double clicked the column header divider
                 // so we know that the column header width is changing.
-                listViewState[LISTVIEWSTATE_headerDividerDblClick] = true;
+                _listViewState[LISTVIEWSTATE_headerDividerDblClick] = true;
 
                 // Reset ColumnResizeCancelled.
                 // It will be set if the user cancels the ColumnWidthChanging event.
-                listViewState[LISTVIEWSTATE_columnResizeCancelled] = false;
+                _listViewState[LISTVIEWSTATE_columnResizeCancelled] = false;
 
                 bool columnResizeCancelled = false;
 
@@ -6083,28 +6342,28 @@ namespace System.Windows.Forms
                 }
                 finally
                 {
-                    listViewState[LISTVIEWSTATE_headerDividerDblClick] = false;
-                    columnResizeCancelled = listViewState[LISTVIEWSTATE_columnResizeCancelled];
-                    listViewState[LISTVIEWSTATE_columnResizeCancelled] = false;
+                    _listViewState[LISTVIEWSTATE_headerDividerDblClick] = false;
+                    columnResizeCancelled = _listViewState[LISTVIEWSTATE_columnResizeCancelled];
+                    _listViewState[LISTVIEWSTATE_columnResizeCancelled] = false;
                 }
 
-                columnHeaderClicked = null;
-                columnHeaderClickedWidth = -1;
+                _columnHeaderClicked = null;
+                _columnHeaderClickedWidth = -1;
 
                 if (columnResizeCancelled)
                 {
                     // If the column resize was cancelled then apply the NewWidth supplied by the user.
-                    if (newWidthForColumnWidthChangingCancelled != -1)
+                    if (_newWidthForColumnWidthChangingCancelled != -1)
                     {
-                        NMHEADERW* nmheader = (NMHEADERW*)m.LParam;
-                        if (columnHeaders != null && columnHeaders.Length > nmheader->iItem)
+                        NMHEADERW* nmheader = (NMHEADERW*)(nint)m.LParamInternal;
+                        if (_columnHeaders is not null && _columnHeaders.Length > nmheader->iItem)
                         {
-                            columnHeaders[nmheader->iItem].Width = newWidthForColumnWidthChangingCancelled;
+                            _columnHeaders[nmheader->iItem].Width = _newWidthForColumnWidthChangingCancelled;
                         }
                     }
 
                     // Tell ComCtl that the HDN_DIVIDERDBLCLICK was cancelled.
-                    m.Result = (IntPtr)1;
+                    m.ResultInternal = (LRESULT)1;
                 }
                 else
                 {
@@ -6113,12 +6372,12 @@ namespace System.Windows.Forms
                     if (compensateForColumnResize != 0)
                     {
 #if DEBUG
-                        NMHEADERW* header = (NMHEADERW*)m.LParam;
+                        NMHEADERW* header = (NMHEADERW*)(nint)m.LParamInternal;
                         Debug.Assert(header->iItem == 0, "we only need to compensate for the first column resize");
-                        Debug.Assert(columnHeaders.Length > 0, "there should be a column that we need to compensate for");
+                        Debug.Assert(_columnHeaders!.Length > 0, "there should be a column that we need to compensate for");
 #endif
 
-                        ColumnHeader col = columnHeaders[0];
+                        ColumnHeader col = _columnHeaders![0];
                         col.Width += compensateForColumnResize;
                     }
                 }
@@ -6132,15 +6391,15 @@ namespace System.Windows.Forms
 
         private Font GetListHeaderFont()
         {
-            IntPtr hwndHdr = User32.SendMessageW(this, (User32.WM)LVM.GETHEADER);
-            IntPtr hFont = User32.SendMessageW(hwndHdr, User32.WM.GETFONT);
+            HWND hwndHdr = (HWND)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETHEADER);
+            HFONT hFont = (HFONT)PInvoke.SendMessage(hwndHdr, User32.WM.GETFONT);
             return Font.FromHfont(hFont);
         }
 
         private int GetIndexOfClickedItem()
         {
             var lvhi = SetupHitTestInfo();
-            return unchecked((int)(long)User32.SendMessageW(this, (User32.WM)LVM.HITTEST, IntPtr.Zero, ref lvhi));
+            return (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_HITTEST, (WPARAM)0, ref lvhi);
         }
 
         private LVHITTESTINFO SetupHitTestInfo()
@@ -6153,27 +6412,36 @@ namespace System.Windows.Forms
             return lvhi;
         }
 
-        private int UpdateGroupCollapse(Interop.User32.WM clickType)
+        private void Unhook()
         {
-            // see if the mouse event occurred on a group
+            foreach (ListViewItem listViewItem in Items)
+            {
+                KeyboardToolTipStateMachine.Instance.Unhook(listViewItem, KeyboardToolTip);
+            }
+        }
+
+        private int UpdateGroupCollapse(User32.WM clickType)
+        {
+            // See if the mouse event occurred on a group.
             var lvhi = SetupHitTestInfo();
-            int groupID = unchecked((int)(long)User32.SendMessageW(this, (User32.WM)LVM.HITTEST, (IntPtr)(-1), ref lvhi));
+            int groupID = (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_HITTEST, (WPARAM)(-1), ref lvhi);
             if (groupID == -1)
             {
                 return groupID;
             }
 
             // check if group header was double clicked
-            bool groupHeaderDblClked = lvhi.flags == LVHT.EX_GROUP_HEADER && clickType == User32.WM.LBUTTONDBLCLK;
+            bool groupHeaderDblClicked = lvhi.flags == LVHITTESTINFO_FLAGS.LVHT_EX_GROUP_HEADER && clickType == User32.WM.LBUTTONDBLCLK;
             // check if chevron was clicked
-            bool chevronClked = (lvhi.flags & LVHT.EX_GROUP_COLLAPSE) == LVHT.EX_GROUP_COLLAPSE && clickType == User32.WM.LBUTTONUP;
-            if (!groupHeaderDblClked && !chevronClked)
+            bool chevronClicked = (lvhi.flags & LVHITTESTINFO_FLAGS.LVHT_EX_GROUP_COLLAPSE) == LVHITTESTINFO_FLAGS.LVHT_EX_GROUP_COLLAPSE && clickType == User32.WM.LBUTTONUP;
+            if (!groupHeaderDblClicked && !chevronClicked)
             {
                 return groupID;
             }
-            for (int i = 0; i < groups.Count; i++)
+
+            for (int i = 0; i < _groups!.Count; i++)
             {
-                ListViewGroup targetGroup = groups[i];
+                ListViewGroup targetGroup = _groups[i];
                 if (targetGroup.ID == groupID)
                 {
                     if (targetGroup.CollapsedState == ListViewGroupCollapsedState.Default)
@@ -6184,7 +6452,9 @@ namespace System.Windows.Forms
                     targetGroup.CollapsedState = targetGroup.CollapsedState == ListViewGroupCollapsedState.Expanded
                                                 ? ListViewGroupCollapsedState.Collapsed
                                                 : ListViewGroupCollapsedState.Expanded;
+
                     OnGroupCollapsedStateChanged(new ListViewGroupEventArgs(i));
+
                     break;
                 }
             }
@@ -6194,13 +6464,12 @@ namespace System.Windows.Forms
 
         internal void RecreateHandleInternal()
         {
-            //
-            // For some reason, if CheckBoxes are set to true and the list view has a state imageList, then the native listView destroys
-            // the state imageList.
+            // For some reason, if CheckBoxes are set to true and the list view has a state imageList, then the native
+            // listView destroys the state imageList.
             // (Yes, it does exactly that even though our wrapper sets LVS_SHAREIMAGELISTS on the native listView.)
-            if (IsHandleCreated && StateImageList != null)
+            if (IsHandleCreated && StateImageList is not null)
             {
-                User32.SendMessageW(this, (User32.WM)LVM.SETIMAGELIST, (IntPtr)LVSIL.STATE, IntPtr.Zero);
+                PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_SETIMAGELIST, (WPARAM)(uint)PInvoke.LVSIL_STATE);
             }
 
             RecreateHandle();
@@ -6208,9 +6477,9 @@ namespace System.Windows.Forms
 
         private unsafe void WmReflectNotify(ref Message m)
         {
-            User32.NMHDR* nmhdr = (User32.NMHDR*)m.LParam;
+            NMHDR* nmhdr = (NMHDR*)(nint)m.LParamInternal;
 
-            switch (nmhdr->code)
+            switch ((int)nmhdr->code)
             {
                 case (int)NM.CUSTOMDRAW:
                     CustomDraw(ref m);
@@ -6218,29 +6487,54 @@ namespace System.Windows.Forms
 
                 case (int)LVN.BEGINLABELEDITW:
                     {
-                        NMLVDISPINFO* dispInfo = (NMLVDISPINFO*)m.LParam;
-                        LabelEditEventArgs e = new LabelEditEventArgs(dispInfo->item.iItem);
-                        OnBeforeLabelEdit(e);
-                        m.Result = (IntPtr)(e.CancelEdit ? 1 : 0);
-                        listViewState[LISTVIEWSTATE_inLabelEdit] = !e.CancelEdit;
+                        Debug.Assert(_labelEdit is null,
+                            "A new label editing shouldn't start before the previous one ended");
+                        if (_labelEdit is not null)
+                        {
+                            _labelEdit.ReleaseHandle();
+                            _labelEdit = null;
+                        }
+
+                        bool cancelEdit;
+                        if (_blockLabelEdit)
+                        {
+                            cancelEdit = true;
+                        }
+                        else
+                        {
+                            NMLVDISPINFO* dispInfo = (NMLVDISPINFO*)(nint)m.LParamInternal;
+                            LabelEditEventArgs e = new(dispInfo->item.iItem);
+                            OnBeforeLabelEdit(e);
+                            cancelEdit = e.CancelEdit;
+                        }
+
+                        m.ResultInternal = (LRESULT)(nint)(BOOL)cancelEdit;
+                        _listViewState[LISTVIEWSTATE_inLabelEdit] = !cancelEdit;
+
+                        if (!cancelEdit)
+                        {
+                            _labelEdit = new ListViewLabelEditNativeWindow(this);
+                            _labelEdit.AssignHandle(PInvoke.SendMessage(this, (User32.WM)PInvoke.LVM_GETEDITCONTROL));
+                        }
+
                         break;
                     }
 
                 case (int)LVN.COLUMNCLICK:
                     {
-                        NMLISTVIEW* nmlv = (NMLISTVIEW*)m.LParam;
-                        listViewState[LISTVIEWSTATE_columnClicked] = true;
-                        columnIndex = nmlv->iSubItem;
+                        NMLISTVIEW* nmlv = (NMLISTVIEW*)(nint)m.LParamInternal;
+                        _listViewState[LISTVIEWSTATE_columnClicked] = true;
+                        _columnIndex = nmlv->iSubItem;
                         break;
                     }
 
                 case (int)LVN.LINKCLICK:
                     {
-                        NMLVLINK* pLink = (NMLVLINK*)m.LParam;
+                        NMLVLINK* pLink = (NMLVLINK*)(nint)m.LParamInternal;
                         int groupID = pLink->iSubItem;
-                        for (int i = 0; i < groups.Count; i++)
+                        for (int i = 0; i < _groups!.Count; i++)
                         {
-                            if (groups[i].ID == groupID)
+                            if (_groups[i].ID == groupID)
                             {
                                 OnGroupTaskLinkClick(new ListViewGroupEventArgs(i));
                                 break;
@@ -6252,16 +6546,25 @@ namespace System.Windows.Forms
 
                 case (int)LVN.ENDLABELEDITW:
                     {
-                        listViewState[LISTVIEWSTATE_inLabelEdit] = false;
-                        NMLVDISPINFO* dispInfo = (NMLVDISPINFO*)m.LParam;
-                        var text = new string(dispInfo->item.pszText);
+                        Debug.Assert(_labelEdit is not null, "There is no active label edit to end");
+                        if (_labelEdit is null)
+                        {
+                            break;
+                        }
+
+                        _labelEdit.ReleaseHandle();
+                        _labelEdit = null;
+
+                        _listViewState[LISTVIEWSTATE_inLabelEdit] = false;
+                        NMLVDISPINFO* dispInfo = (NMLVDISPINFO*)(nint)m.LParamInternal;
+                        string? text = dispInfo->item.pszText is null ? null : new string(dispInfo->item.pszText);
                         LabelEditEventArgs e = new LabelEditEventArgs(dispInfo->item.iItem, text);
                         OnAfterLabelEdit(e);
-                        m.Result = (IntPtr)(e.CancelEdit ? 0 : 1);
+                        m.ResultInternal = (LRESULT)(nint)(BOOL)e.CancelEdit;
 
                         // from msdn:
                         //   "If the user cancels editing, the pszText member of the LVITEM structure is NULL"
-                        if (!e.CancelEdit && dispInfo->item.pszText != null)
+                        if (!e.CancelEdit && dispInfo->item.pszText is not null)
                         {
                             Items[dispInfo->item.iItem].Text = text;
                         }
@@ -6280,7 +6583,7 @@ namespace System.Windows.Forms
                         // started so don't tell the user about this operation.
                         if (!ItemCollectionChangedInMouseDown)
                         {
-                            NMLISTVIEW* nmlv = (NMLISTVIEW*)m.LParam;
+                            NMLISTVIEW* nmlv = (NMLISTVIEW*)(nint)m.LParamInternal;
                             ListViewItem item = Items[nmlv->iItem];
                             OnItemDrag(new ItemDragEventArgs(MouseButtons.Left, item));
                         }
@@ -6295,7 +6598,7 @@ namespace System.Windows.Forms
                         // started so don't tell the user about this operation.
                         if (!ItemCollectionChangedInMouseDown)
                         {
-                            NMLISTVIEW* nmlv = (NMLISTVIEW*)m.LParam;
+                            NMLISTVIEW* nmlv = (NMLISTVIEW*)(nint)m.LParamInternal;
                             ListViewItem item = Items[nmlv->iItem];
                             OnItemDrag(new ItemDragEventArgs(MouseButtons.Right, item));
                         }
@@ -6305,34 +6608,35 @@ namespace System.Windows.Forms
 
                 case (int)LVN.ITEMCHANGING:
                     {
-                        NMLISTVIEW* nmlv = (NMLISTVIEW*)m.LParam;
-                        if ((nmlv->uChanged & LVIF.STATE) != 0)
+                        NMLISTVIEW* nmlv = (NMLISTVIEW*)(nint)m.LParamInternal;
+                        if ((nmlv->uChanged & LIST_VIEW_ITEM_FLAGS.LVIF_STATE) != 0)
                         {
                             // Because the state image mask is 1-based, a value of 1 means unchecked,
                             // anything else means checked.  We convert this to the more standard 0 or 1
-                            CheckState oldState = (CheckState)(((int)(nmlv->uOldState & LVIS.STATEIMAGEMASK) >> 12) == 1 ? 0 : 1);
-                            CheckState newState = (CheckState)(((int)(nmlv->uNewState & LVIS.STATEIMAGEMASK) >> 12) == 1 ? 0 : 1);
+                            CheckState oldState = (CheckState)(((int)(nmlv->uOldState & LIST_VIEW_ITEM_STATE_FLAGS.LVIS_STATEIMAGEMASK) >> 12) == 1 ? 0 : 1);
+                            CheckState newState = (CheckState)(((int)(nmlv->uNewState & LIST_VIEW_ITEM_STATE_FLAGS.LVIS_STATEIMAGEMASK) >> 12) == 1 ? 0 : 1);
 
                             if (oldState != newState)
                             {
                                 ItemCheckEventArgs e = new ItemCheckEventArgs(nmlv->iItem, newState, oldState);
                                 OnItemCheck(e);
-                                m.Result = (IntPtr)(((int)e.NewValue == 0 ? 0 : 1) == (int)oldState ? 1 : 0);
+                                m.ResultInternal = (LRESULT)(nint)(BOOL)(e.NewValue == oldState);
                             }
                         }
+
                         break;
                     }
 
                 case (int)LVN.ITEMCHANGED:
                     {
-                        NMLISTVIEW* nmlv = (NMLISTVIEW*)m.LParam;
+                        NMLISTVIEW* nmlv = (NMLISTVIEW*)(nint)m.LParamInternal;
                         // Check for state changes to the selected state...
-                        if ((nmlv->uChanged & LVIF.STATE) != 0)
+                        if ((nmlv->uChanged & LIST_VIEW_ITEM_FLAGS.LVIF_STATE) != 0)
                         {
                             // Because the state image mask is 1-based, a value of 1 means unchecked,
                             // anything else means checked.  We convert this to the more standard 0 or 1
-                            CheckState oldValue = (CheckState)(((int)(nmlv->uOldState & LVIS.STATEIMAGEMASK) >> 12) == 1 ? 0 : 1);
-                            CheckState newValue = (CheckState)(((int)(nmlv->uNewState & LVIS.STATEIMAGEMASK) >> 12) == 1 ? 0 : 1);
+                            CheckState oldValue = (CheckState)(((int)(nmlv->uOldState & LIST_VIEW_ITEM_STATE_FLAGS.LVIS_STATEIMAGEMASK) >> 12) == 1 ? 0 : 1);
+                            CheckState newValue = (CheckState)(((int)(nmlv->uNewState & LIST_VIEW_ITEM_STATE_FLAGS.LVIS_STATEIMAGEMASK) >> 12) == 1 ? 0 : 1);
 
                             if (newValue != oldValue)
                             {
@@ -6343,13 +6647,34 @@ namespace System.Windows.Forms
                                 AccessibilityNotifyClients(AccessibleEvents.NameChange, nmlv->iItem);
                             }
 
-                            LVIS oldState = nmlv->uOldState & LVIS.SELECTED;
-                            LVIS newState = nmlv->uNewState & LVIS.SELECTED;
+                            int indexItem = nmlv->iItem;
+
+                            // This code handles a change in the state of an item. We get here twice.
+                            // The first time the focus goes off the old item, then we hide the tooltip.
+                            // The second time the next item receives focus and we show a tooltip for it.
+                            if (indexItem >= 0 && indexItem < Items.Count)
+                            {
+                                if (ShowItemToolTips)
+                                {
+                                    ListViewItem item = Items[indexItem];
+                                    if (item.Focused)
+                                    {
+                                        NotifyAboutGotFocus(item);
+                                    }
+                                    else
+                                    {
+                                        NotifyAboutLostFocus(item);
+                                    }
+                                }
+                            }
+
+                            LIST_VIEW_ITEM_STATE_FLAGS oldState = nmlv->uOldState & LIST_VIEW_ITEM_STATE_FLAGS.LVIS_SELECTED;
+                            LIST_VIEW_ITEM_STATE_FLAGS newState = nmlv->uNewState & LIST_VIEW_ITEM_STATE_FLAGS.LVIS_SELECTED;
                             // Windows common control always fires
                             // this event twice, once with newState, oldState, and again with
                             // oldState, newState.
                             // Changing this affects the behaviour as the control never
-                            // fires the event on a Deselct of an Items from multiple selections.
+                            // fires the event on a Deselect of an Items from multiple selections.
                             // So leave it as it is...
                             if (newState != oldState)
                             {
@@ -6377,30 +6702,32 @@ namespace System.Windows.Forms
                                         OnItemSelectionChanged(lvisce);
                                     }
                                 }
+
                                 // Delay SelectedIndexChanged event because the last item isn't present yet.
-                                if (Items.Count == 0 || Items[Items.Count - 1] != null)
+                                if (Items.Count == 0 || Items[Items.Count - 1] is not null)
                                 {
-                                    listViewState1[LISTVIEWSTATE1_selectedIndexChangedSkipped] = false;
+                                    _listViewState1[LISTVIEWSTATE1_selectedIndexChangedSkipped] = false;
                                     OnSelectedIndexChanged(EventArgs.Empty);
                                 }
                                 else
                                 {
-                                    listViewState1[LISTVIEWSTATE1_selectedIndexChangedSkipped] = true;
+                                    _listViewState1[LISTVIEWSTATE1_selectedIndexChangedSkipped] = true;
                                 }
                             }
                         }
+
                         break;
                     }
 
                 case (int)NM.CLICK:
-                    WmNmClick(ref m);
+                    WmNmClick();
                     // FALL THROUGH //
                     goto case (int)NM.RCLICK;
 
                 case (int)NM.RCLICK:
                     int displayIndex = GetIndexOfClickedItem();
 
-                    MouseButtons button = nmhdr->code == (int)NM.CLICK ? MouseButtons.Left : MouseButtons.Right;
+                    MouseButtons button = (int)nmhdr->code == (int)NM.CLICK ? MouseButtons.Left : MouseButtons.Right;
                     Point pos = Cursor.Position;
                     pos = PointToClient(pos);
 
@@ -6409,15 +6736,17 @@ namespace System.Windows.Forms
                         OnClick(EventArgs.Empty);
                         OnMouseClick(new MouseEventArgs(button, 1, pos.X, pos.Y, 0));
                     }
-                    if (!listViewState[LISTVIEWSTATE_mouseUpFired])
+
+                    if (!_listViewState[LISTVIEWSTATE_mouseUpFired])
                     {
                         OnMouseUp(new MouseEventArgs(button, 1, pos.X, pos.Y, 0));
-                        listViewState[LISTVIEWSTATE_mouseUpFired] = true;
+                        _listViewState[LISTVIEWSTATE_mouseUpFired] = true;
                     }
+
                     break;
 
                 case (int)NM.DBLCLK:
-                    WmNmDblClick(ref m);
+                    WmNmDblClick();
                     // FALL THROUGH //
                     goto case (int)NM.RDBLCLK;
 
@@ -6426,11 +6755,11 @@ namespace System.Windows.Forms
                     if (index != -1)
                     {
                         //just maintain state and fire double click.. in final mouseUp...
-                        listViewState[LISTVIEWSTATE_doubleclickFired] = true;
+                        _listViewState[LISTVIEWSTATE_doubleclickFired] = true;
                     }
 
                     // Fire mouse up in the Wndproc
-                    listViewState[LISTVIEWSTATE_mouseUpFired] = false;
+                    _listViewState[LISTVIEWSTATE_mouseUpFired] = false;
 
                     // Make sure we get the mouse up if it happens outside the control.
                     Capture = true;
@@ -6439,75 +6768,72 @@ namespace System.Windows.Forms
                 case (int)LVN.KEYDOWN:
                     if (GroupsEnabled)
                     {
-                        NMLVKEYDOWN* lvkd = (NMLVKEYDOWN*)m.LParam;
+                        NMLVKEYDOWN* lvkd = (NMLVKEYDOWN*)(nint)m.LParamInternal;
                         if ((lvkd->wVKey == (short)Keys.Down || lvkd->wVKey == (short)Keys.Up) && SelectedItems.Count > 0)
                         {
                             AccessibleObject accessibleObject = SelectedItems[0].AccessibilityObject;
                             if (lvkd->wVKey == (short)Keys.Down
                                 && accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.NextSibling) is null)
                             {
-                                ListViewGroupAccessibleObject groupAccObj = (ListViewGroupAccessibleObject)accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.Parent);
-                                ListViewGroupAccessibleObject nextGroupAccObj = (ListViewGroupAccessibleObject)groupAccObj.FragmentNavigate(UiaCore.NavigateDirection.NextSibling);
-                                nextGroupAccObj?.SetFocus();
+                                ListViewGroupAccessibleObject? groupAccObj = (ListViewGroupAccessibleObject?)accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.Parent);
+                                if (groupAccObj is not null)
+                                {
+                                    ListViewGroupAccessibleObject? nextGroupAccObj = (ListViewGroupAccessibleObject?)groupAccObj.FragmentNavigate(UiaCore.NavigateDirection.NextSibling);
+                                    nextGroupAccObj?.SetFocus();
+                                }
                             }
 
                             if (lvkd->wVKey == (short)Keys.Up
                             && accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.PreviousSibling) is null)
                             {
-                                ListViewGroupAccessibleObject groupAccObj = (ListViewGroupAccessibleObject)accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.Parent);
+                                ListViewGroupAccessibleObject? groupAccObj = (ListViewGroupAccessibleObject?)accessibleObject.FragmentNavigate(UiaCore.NavigateDirection.Parent);
                                 groupAccObj?.SetFocus();
                             }
                         }
                     }
 
-                    if (CheckBoxes)
+                    if (CheckBoxes && !VirtualMode)
                     {
-                        NMLVKEYDOWN* lvkd = (NMLVKEYDOWN*)m.LParam;
+                        NMLVKEYDOWN* lvkd = (NMLVKEYDOWN*)(nint)m.LParamInternal;
                         if (lvkd->wVKey == (short)Keys.Space)
                         {
-                            ListViewItem focusedItem = FocusedItem;
-                            if (focusedItem != null)
+                            ListViewItem? focusedItem = FocusedItem;
+                            if (focusedItem is not null)
                             {
                                 bool check = !focusedItem.Checked;
-                                if (!VirtualMode)
+                                foreach (ListViewItem item in SelectedItems)
                                 {
-                                    foreach (ListViewItem item in SelectedItems)
+                                    if (item != focusedItem)
                                     {
-                                        if (item != focusedItem)
-                                        {
-                                            item.Checked = check;
-                                        }
+                                        item.Checked = check;
                                     }
                                 }
                             }
                         }
                     }
+
                     break;
 
                 case (int)LVN.ODCACHEHINT:
                     // tell the user to prepare the cache:
-                    NMLVCACHEHINT* cacheHint = (NMLVCACHEHINT*)m.LParam;
+                    NMLVCACHEHINT* cacheHint = (NMLVCACHEHINT*)(nint)m.LParamInternal;
                     OnCacheVirtualItems(new CacheVirtualItemsEventArgs(cacheHint->iFrom, cacheHint->iTo));
                     break;
 
                 default:
-                    if (nmhdr->code == (int)LVN.GETDISPINFOW)
+                    if ((int)nmhdr->code == (int)LVN.GETDISPINFOW)
                     {
                         // we use the LVN_GETDISPINFO message only in virtual mode
-                        if (VirtualMode && m.LParam != IntPtr.Zero)
+                        if (VirtualMode && m.LParamInternal != 0)
                         {
-                            NMLVDISPINFO* dispInfo = (NMLVDISPINFO*)m.LParam;
+                            NMLVDISPINFO* dispInfo = (NMLVDISPINFO*)(nint)m.LParamInternal;
 
                             RetrieveVirtualItemEventArgs rVI = new RetrieveVirtualItemEventArgs(dispInfo->item.iItem);
                             OnRetrieveVirtualItem(rVI);
-                            ListViewItem lvItem = rVI.Item;
-                            if (lvItem is null)
-                            {
-                                throw new InvalidOperationException(SR.ListViewVirtualItemRequired);
-                            }
+                            ListViewItem lvItem = rVI.Item ?? throw new InvalidOperationException(SR.ListViewVirtualItemRequired);
 
                             lvItem.SetItemIndex(this, dispInfo->item.iItem);
-                            if ((dispInfo->item.mask & LVIF.TEXT) != 0)
+                            if ((dispInfo->item.mask & LIST_VIEW_ITEM_FLAGS.LVIF_TEXT) != 0)
                             {
                                 ReadOnlySpan<char> text = default;
                                 if (dispInfo->item.iSubItem == 0)
@@ -6529,47 +6855,52 @@ namespace System.Windows.Forms
                                 dispInfo->item.UpdateText(text);
                             }
 
-                            if ((dispInfo->item.mask & LVIF.IMAGE) != 0 && lvItem.ImageIndex != -1)
+                            if ((dispInfo->item.mask & LIST_VIEW_ITEM_FLAGS.LVIF_IMAGE) != 0 && lvItem.ImageIndex != -1)
                             {
                                 dispInfo->item.iImage = lvItem.ImageIndex;
                             }
 
-                            if ((dispInfo->item.mask & LVIF.INDENT) != 0)
+                            if ((dispInfo->item.mask & LIST_VIEW_ITEM_FLAGS.LVIF_INDENT) != 0)
                             {
                                 dispInfo->item.iIndent = lvItem.IndentCount;
                             }
 
-                            if ((dispInfo->item.stateMask & LVIS.STATEIMAGEMASK) != 0)
+                            if ((dispInfo->item.stateMask & LIST_VIEW_ITEM_STATE_FLAGS.LVIS_STATEIMAGEMASK) != 0)
                             {
                                 dispInfo->item.state |= lvItem.RawStateImageIndex;
                             }
                         }
                     }
-                    else if (nmhdr->code == (int)LVN.ODSTATECHANGED)
+                    else if ((int)nmhdr->code == (int)LVN.ODSTATECHANGED)
                     {
-                        if (VirtualMode && m.LParam != IntPtr.Zero)
+                        if (VirtualMode && m.LParamInternal != 0)
                         {
-                            NMLVODSTATECHANGE* odStateChange = (NMLVODSTATECHANGE*)m.LParam;
-                            bool selectedChanged = (odStateChange->uNewState & LVIS.SELECTED) != (odStateChange->uOldState & LVIS.SELECTED);
+                            NMLVODSTATECHANGE* odStateChange = (NMLVODSTATECHANGE*)(nint)m.LParamInternal;
+                            bool selectedChanged = (odStateChange->uNewState & LIST_VIEW_ITEM_STATE_FLAGS.LVIS_SELECTED) !=
+                                (odStateChange->uOldState & LIST_VIEW_ITEM_STATE_FLAGS.LVIS_SELECTED);
                             if (selectedChanged)
                             {
                                 // we have to substract 1 from iTo
                                 int iTo = odStateChange->iTo;
-                                ListViewVirtualItemsSelectionRangeChangedEventArgs lvvisrce = new ListViewVirtualItemsSelectionRangeChangedEventArgs(odStateChange->iFrom, iTo, (odStateChange->uNewState & LVIS.SELECTED) != 0);
+                                ListViewVirtualItemsSelectionRangeChangedEventArgs lvvisrce = new(odStateChange->iFrom, iTo, (odStateChange->uNewState & LIST_VIEW_ITEM_STATE_FLAGS.LVIS_SELECTED) != 0);
                                 OnVirtualItemsSelectionRangeChanged(lvvisrce);
                             }
                         }
                     }
-                    else if (nmhdr->code == (int)LVN.GETINFOTIPW)
+                    else if ((int)nmhdr->code == (int)LVN.GETINFOTIPW)
                     {
-                        if (ShowItemToolTips && m.LParam != IntPtr.Zero)
+                        if (ShowItemToolTips && m.LParamInternal != 0)
                         {
-                            NMLVGETINFOTIPW* infoTip = (NMLVGETINFOTIPW*)m.LParam;
+                            NMLVGETINFOTIPW* infoTip = (NMLVGETINFOTIPW*)(nint)m.LParamInternal;
                             ListViewItem lvi = Items[infoTip->item];
-                            if (lvi != null && !string.IsNullOrEmpty(lvi.ToolTipText))
+
+                            // This code is needed to hide the keyboard tooltip before showing the mouse tooltip
+                            NotifyAboutLostFocus(FocusedItem);
+
+                            if (lvi is not null && !string.IsNullOrEmpty(lvi.ToolTipText))
                             {
                                 // Setting the max width has the added benefit of enabling multiline tool tips
-                                User32.SendMessageW(nmhdr->hwndFrom, (User32.WM)TTM.SETMAXTIPWIDTH, IntPtr.Zero, (IntPtr)SystemInformation.MaxWindowTrackSize.Width);
+                                PInvoke.SendMessage(nmhdr->hwndFrom, (User32.WM)PInvoke.TTM_SETMAXTIPWIDTH, (WPARAM)0, (LPARAM)SystemInformation.MaxWindowTrackSize.Width);
 
                                 // UNICODE. Use char.
                                 // we need to copy the null terminator character ourselves
@@ -6578,37 +6909,37 @@ namespace System.Windows.Forms
                             }
                         }
                     }
-                    else if (nmhdr->code == (int)LVN.ODFINDITEMW)
+                    else if ((int)nmhdr->code == (int)LVN.ODFINDITEMW)
                     {
                         if (VirtualMode)
                         {
-                            NMLVFINDITEMW* nmlvif = (NMLVFINDITEMW*)m.LParam;
+                            NMLVFINDITEMW* nmlvif = (NMLVFINDITEMW*)(nint)m.LParamInternal;
 
-                            if ((nmlvif->lvfi.flags & LVFI.PARAM) != 0)
+                            if ((nmlvif->lvfi.flags & LVFINDINFOW_FLAGS.LVFI_PARAM) != 0)
                             {
-                                m.Result = (IntPtr)(-1);
+                                m.ResultInternal = (LRESULT)(-1);
                                 return;
                             }
 
-                            bool isTextSearch = ((nmlvif->lvfi.flags & LVFI.STRING) != 0) ||
-                                                ((nmlvif->lvfi.flags & LVFI.PARTIAL) != 0);
+                            bool isTextSearch = ((nmlvif->lvfi.flags & LVFINDINFOW_FLAGS.LVFI_STRING) != 0) ||
+                                                ((nmlvif->lvfi.flags & LVFINDINFOW_FLAGS.LVFI_PARTIAL) != 0);
 
-                            bool isPrefixSearch = (nmlvif->lvfi.flags & LVFI.PARTIAL) != 0;
+                            bool isPrefixSearch = (nmlvif->lvfi.flags & LVFINDINFOW_FLAGS.LVFI_PARTIAL) != 0;
 
                             string text = string.Empty;
-                            if (isTextSearch && nmlvif->lvfi.psz != null)
+                            if (isTextSearch && nmlvif->lvfi.psz is not null)
                             {
                                 text = new string(nmlvif->lvfi.psz);
                             }
 
                             Point startingPoint = Point.Empty;
-                            if ((nmlvif->lvfi.flags & LVFI.NEARESTXY) != 0)
+                            if ((nmlvif->lvfi.flags & LVFINDINFOW_FLAGS.LVFI_NEARESTXY) != 0)
                             {
                                 startingPoint = nmlvif->lvfi.pt;
                             }
 
                             SearchDirectionHint dir = SearchDirectionHint.Down;
-                            if ((nmlvif->lvfi.flags & LVFI.NEARESTXY) != 0)
+                            if ((nmlvif->lvfi.flags & LVFINDINFOW_FLAGS.LVFI_NEARESTXY) != 0)
                             {
                                 // We can do this because SearchDirectionHint is set to the VK_*
                                 dir = (SearchDirectionHint)nmlvif->lvfi.vkDirection;
@@ -6633,14 +6964,15 @@ namespace System.Windows.Forms
                             OnSearchForVirtualItem(sviEvent);
                             if (sviEvent.Index != -1)
                             {
-                                m.Result = (IntPtr)sviEvent.Index;
+                                m.ResultInternal = (LRESULT)sviEvent.Index;
                             }
                             else
                             {
-                                m.Result = (IntPtr)(-1);
+                                m.ResultInternal = (LRESULT)(-1);
                             }
                         }
                     }
+
                     break;
             }
         }
@@ -6648,9 +6980,9 @@ namespace System.Windows.Forms
         private void WmPrint(ref Message m)
         {
             base.WndProc(ref m);
-            if (((User32.PRF)m.LParam & User32.PRF.NONCLIENT) != 0 && Application.RenderWithVisualStyles && BorderStyle == BorderStyle.Fixed3D)
+            if (((User32.PRF)(nint)m.LParamInternal & User32.PRF.NONCLIENT) != 0 && Application.RenderWithVisualStyles && BorderStyle == BorderStyle.Fixed3D)
             {
-                using Graphics g = Graphics.FromHdc(m.WParam);
+                using Graphics g = Graphics.FromHdc((HDC)m.WParamInternal);
                 Rectangle rect = new Rectangle(0, 0, Size.Width - 1, Size.Height - 1);
                 using var pen = VisualStyleInformation.TextControlBorder.GetCachedPenScope();
                 g.DrawRectangle(pen, rect);
@@ -6661,11 +6993,39 @@ namespace System.Windows.Forms
 
         protected override void WndProc(ref Message m)
         {
-            switch ((User32.WM)m.Msg)
+            switch (m.MsgInternal)
             {
                 case User32.WM.REFLECT_NOTIFY:
                     WmReflectNotify(ref m);
                     break;
+
+                case User32.WM.KEYUP:
+                    int key = (int)m.WParamInternal;
+
+                    // User can collapse/expand a group using the keyboard by focusing the group header and using left/right.
+                    if (GroupsDisplayed && (key is User32.VK.LEFT or User32.VK.RIGHT) && SelectedItems.Count > 0)
+                    {
+                        // User can select more than one group.
+                        HashSet<int> groups = new();
+                        foreach (ListViewItem selectedItem in SelectedItems)
+                        {
+                            ListViewGroup group = selectedItem.Group;
+                            if (group is null || group.CollapsedState is ListViewGroupCollapsedState.Default || !groups.Add(group.ID))
+                            {
+                                continue;
+                            }
+
+                            ListViewGroupCollapsedState nativeState = group.GetNativeCollapsedState();
+                            if (nativeState != group.CollapsedState)
+                            {
+                                group.SetCollapsedStateInternal(nativeState);
+                                OnGroupCollapsedStateChanged(new ListViewGroupEventArgs(Groups.IndexOf(group)));
+                            }
+                        }
+                    }
+
+                    break;
+
                 case User32.WM.LBUTTONDBLCLK:
 
                     // Ensure that the itemCollectionChangedInMouseDown is not set
@@ -6678,35 +7038,49 @@ namespace System.Windows.Forms
 
                 case User32.WM.LBUTTONDOWN:
 
+                    // Check that before click was handled by the ListView code
+                    // because otherwise item will always be selected.
+                    bool cancelLabelEdit =
+                        LabelEdit &&
+                        View == View.Details &&
+                        HitTest(PARAM.ToPoint(m.LParamInternal)) is { SubItem.Index: > 0, Item.Selected: true };
+
                     // Ensure that the itemCollectionChangedInMouseDown is not set
                     // before processing the mousedown event.
                     ItemCollectionChangedInMouseDown = false;
                     WmMouseDown(ref m, MouseButtons.Left, 1);
-                    downButton = MouseButtons.Left;
+
+                    if (cancelLabelEdit)
+                    {
+                        CancelPendingLabelEdit();
+                    }
+
+                    _downButton = MouseButtons.Left;
                     break;
 
                 case User32.WM.LBUTTONUP:
                 case User32.WM.RBUTTONUP:
                 case User32.WM.MBUTTONUP:
 
-                    // see the mouse is on item
+                    // See if the mouse is on the item.
                     int index = UpdateGroupCollapse(User32.WM.LBUTTONUP);
 
-                    if (!ValidationCancelled && listViewState[LISTVIEWSTATE_doubleclickFired] && index != -1)
+                    if (!ValidationCancelled && _listViewState[LISTVIEWSTATE_doubleclickFired] && index != -1)
                     {
-                        listViewState[LISTVIEWSTATE_doubleclickFired] = false;
+                        _listViewState[LISTVIEWSTATE_doubleclickFired] = false;
                         OnDoubleClick(EventArgs.Empty);
-                        OnMouseDoubleClick(new MouseEventArgs(downButton, 2, PARAM.SignedLOWORD(m.LParam), PARAM.SignedHIWORD(m.LParam), 0));
+                        OnMouseDoubleClick(new MouseEventArgs(_downButton, 2, PARAM.ToPoint(m.LParamInternal)));
                     }
-                    if (!listViewState[LISTVIEWSTATE_mouseUpFired])
+
+                    if (!_listViewState[LISTVIEWSTATE_mouseUpFired])
                     {
-                        OnMouseUp(new MouseEventArgs(downButton, 1, PARAM.SignedLOWORD(m.LParam), PARAM.SignedHIWORD(m.LParam), 0));
-                        listViewState[LISTVIEWSTATE_expectingMouseUp] = false;
+                        OnMouseUp(new MouseEventArgs(_downButton, 1, PARAM.ToPoint(m.LParamInternal)));
+                        _listViewState[LISTVIEWSTATE_expectingMouseUp] = false;
                     }
 
                     ItemCollectionChangedInMouseDown = false;
 
-                    listViewState[LISTVIEWSTATE_mouseUpFired] = true;
+                    _listViewState[LISTVIEWSTATE_mouseUpFired] = true;
                     Capture = false;
                     break;
                 case User32.WM.MBUTTONDBLCLK:
@@ -6714,21 +7088,22 @@ namespace System.Windows.Forms
                     break;
                 case User32.WM.MBUTTONDOWN:
                     WmMouseDown(ref m, MouseButtons.Middle, 1);
-                    downButton = MouseButtons.Middle;
+                    _downButton = MouseButtons.Middle;
                     break;
                 case User32.WM.RBUTTONDBLCLK:
                     WmMouseDown(ref m, MouseButtons.Right, 2);
                     break;
                 case User32.WM.RBUTTONDOWN:
                     WmMouseDown(ref m, MouseButtons.Right, 1);
-                    downButton = MouseButtons.Right;
+                    _downButton = MouseButtons.Right;
                     break;
                 case User32.WM.MOUSEMOVE:
-                    if (listViewState[LISTVIEWSTATE_expectingMouseUp] && !listViewState[LISTVIEWSTATE_mouseUpFired] && MouseButtons == MouseButtons.None)
+                    if (_listViewState[LISTVIEWSTATE_expectingMouseUp] && !_listViewState[LISTVIEWSTATE_mouseUpFired] && MouseButtons == MouseButtons.None)
                     {
-                        OnMouseUp(new MouseEventArgs(downButton, 1, PARAM.SignedLOWORD(m.LParam), PARAM.SignedHIWORD(m.LParam), 0));
-                        listViewState[LISTVIEWSTATE_mouseUpFired] = true;
+                        OnMouseUp(new MouseEventArgs(_downButton, 1, PARAM.ToPoint(m.LParamInternal)));
+                        _listViewState[LISTVIEWSTATE_mouseUpFired] = true;
                     }
+
                     Capture = false;
                     base.WndProc(ref m);
                     break;
@@ -6752,6 +7127,7 @@ namespace System.Windows.Forms
                     {
                         goto default;  //default handling needed
                     }
+
                 case User32.WM.SETFOCUS:
                     base.WndProc(ref m);
 
@@ -6768,11 +7144,12 @@ namespace System.Windows.Forms
                             Items[0].Focused = true;
                         }
                     }
+
                     break;
                 case User32.WM.MOUSELEAVE:
                     // if the mouse leaves and then re-enters the ListView
                     // ItemHovered events should be raised.
-                    prevHoveredItem = null;
+                    _prevHoveredItem = null;
                     base.WndProc(ref m);
                     break;
 
@@ -6786,15 +7163,16 @@ namespace System.Windows.Forms
                     WmPrint(ref m);
                     break;
                 case User32.WM.TIMER:
-                    if (unchecked((int)(long)m.WParam) != LVTOOLTIPTRACKING || !Application.ComCtlSupportsVisualStyles)
+                    if (m.WParamInternal != (uint)LVTOOLTIPTRACKING || !Application.ComCtlSupportsVisualStyles)
                     {
                         base.WndProc(ref m);
                     }
+
                     break;
                 default:
                     base.WndProc(ref m);
                     break;
-            };
+            }
         }
 
         /// <summary>

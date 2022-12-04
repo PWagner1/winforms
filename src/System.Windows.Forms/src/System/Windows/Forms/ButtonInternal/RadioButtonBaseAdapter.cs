@@ -2,11 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Diagnostics;
 using System.Drawing;
-using static Interop;
 
 namespace System.Windows.Forms.ButtonInternal
 {
@@ -24,7 +21,7 @@ namespace System.Windows.Forms.ButtonInternal
             Color checkBorder)
         {
             DrawCheckBackgroundFlat(e, layout.CheckBounds, checkBorder, checkBackground);
-            DrawCheckOnly(e, layout, checkColor, checkBackground, true);
+            DrawCheckOnly(e, layout, checkColor, true);
         }
 
         protected void DrawCheckBackground3DLite(
@@ -79,9 +76,9 @@ namespace System.Windows.Forms.ButtonInternal
 
             double scale = GetDpiScaleRatio();
 
-            using var hdc = new DeviceContextHdcScope(e);
-            using var borderPen = new Gdi32.CreatePenScope(border);
-            using var fieldBrush = new Gdi32.CreateBrushScope(field);
+            using DeviceContextHdcScope hdc = new(e);
+            using PInvoke.CreatePenScope borderPen = new(border);
+            using PInvoke.CreateBrushScope fieldBrush = new(field);
 
             if (scale > 1.1)
             {
@@ -99,7 +96,7 @@ namespace System.Windows.Forms.ButtonInternal
         }
 
         // Helper method to overcome the poor GDI ellipse drawing routine
-        private static void DrawAndFillEllipse(Gdi32.HDC hdc, Gdi32.HPEN borderPen, Gdi32.HBRUSH fieldBrush, Rectangle bounds)
+        private static void DrawAndFillEllipse(HDC hdc, HPEN borderPen, HBRUSH fieldBrush, Rectangle bounds)
         {
             Debug.Assert(!hdc.IsNull, "Calling DrawAndFillEllipse with null wg");
             if (hdc.IsNull)
@@ -135,7 +132,7 @@ namespace System.Windows.Forms.ButtonInternal
             return (int)(n * scale);
         }
 
-        protected void DrawCheckOnly(PaintEventArgs e, LayoutData layout, Color checkColor, Color checkBackground, bool disabledColors)
+        protected void DrawCheckOnly(PaintEventArgs e, LayoutData layout, Color checkColor, bool disabledColors)
         {
             if (!Control.Checked)
             {
@@ -148,8 +145,8 @@ namespace System.Windows.Forms.ButtonInternal
             }
 
             double scale = GetDpiScaleRatio();
-            using var hdc = new DeviceContextHdcScope(e);
-            using var brush = new Gdi32.CreateBrushScope(checkColor);
+            using DeviceContextHdcScope hdc = new(e);
+            using PInvoke.CreateBrushScope brush = new(checkColor);
 
             // Circle drawing doesn't work at this size
             int offset = 5;
@@ -211,7 +208,7 @@ namespace System.Windows.Forms.ButtonInternal
                     hdc,
                     new Point(check.Left, check.Top),
                     RadioButtonRenderer.ConvertFromButtonState(style, Control.MouseIsOver),
-                    Control.HandleInternal);
+                    Control.HWNDInternal);
             }
             else
             {

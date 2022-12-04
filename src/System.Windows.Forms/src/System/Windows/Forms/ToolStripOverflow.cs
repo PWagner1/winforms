@@ -2,30 +2,27 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms.Layout;
 
 namespace System.Windows.Forms
 {
-    public class ToolStripOverflow : ToolStripDropDown, IArrangedElement
+    public partial class ToolStripOverflow : ToolStripDropDown, IArrangedElement
     {
 #if DEBUG
         internal static readonly TraceSwitch PopupLayoutDebug = new TraceSwitch("PopupLayoutDebug", "Debug ToolStripPopup Layout code");
 #else
-        internal static readonly TraceSwitch PopupLayoutDebug;
+        internal static readonly TraceSwitch? PopupLayoutDebug;
 #endif
 
-        private readonly ToolStripOverflowButton ownerItem;
+        private readonly ToolStripOverflowButton? ownerItem;
 
-        public ToolStripOverflow(ToolStripItem parentItem) : base(parentItem)
+        public ToolStripOverflow(ToolStripItem parentItem)
+            : base(parentItem)
         {
-            if (parentItem is null)
-            {
-                throw new ArgumentNullException(nameof(parentItem));
-            }
+            ArgumentNullException.ThrowIfNull(parentItem);
+
             ownerItem = parentItem as ToolStripOverflowButton;
         }
 
@@ -33,12 +30,13 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (ParentToolStrip != null)
+                if (ParentToolStrip is not null)
                 {
                     ToolStripItemCollection items = ParentToolStrip.OverflowItems;
                     return items;
                 }
-                return new ToolStripItemCollection(null, false);
+
+                return new ToolStripItemCollection(owner: null, itemsCollection: false);
             }
         }
 
@@ -46,18 +44,19 @@ namespace System.Windows.Forms
         {
             get
             {
-                return new ToolStripItemCollection(null, /*ownedCollection=*/false, /*readonly=*/true);
+                return new ToolStripItemCollection(owner: null, itemsCollection: false, isReadOnly: true);
             }
         }
 
-        private ToolStrip ParentToolStrip
+        private ToolStrip? ParentToolStrip
         {
             get
             {
-                if (ownerItem != null)
+                if (ownerItem is not null)
                 {
                     return ownerItem.ParentToolStrip;
                 }
+
                 return null;
             }
         }
@@ -67,7 +66,7 @@ namespace System.Windows.Forms
             get { return DisplayedItems; }
         }
 
-        IArrangedElement IArrangedElement.Container
+        IArrangedElement? IArrangedElement.Container
         {
             get { return ParentInternal; }
         }
@@ -105,14 +104,16 @@ namespace System.Windows.Forms
             constrainingSize.Width = 200;
             return base.GetPreferredSize(constrainingSize);
         }
+
         protected override void OnLayout(LayoutEventArgs e)
         {
-            if (ParentToolStrip != null && ParentToolStrip.IsInDesignMode)
+            if (ParentToolStrip is not null && ParentToolStrip.IsInDesignMode)
             {
                 if (FlowLayout.GetFlowDirection(this) != FlowDirection.TopDown)
                 {
                     FlowLayout.SetFlowDirection(this, FlowDirection.TopDown);
                 }
+
                 if (FlowLayout.GetWrapContents(this))
                 {
                     FlowLayout.SetWrapContents(this, false);
@@ -124,11 +125,13 @@ namespace System.Windows.Forms
                 {
                     FlowLayout.SetFlowDirection(this, FlowDirection.LeftToRight);
                 }
+
                 if (!FlowLayout.GetWrapContents(this))
                 {
                     FlowLayout.SetWrapContents(this, true);
                 }
             }
+
             base.OnLayout(e);
         }
 
@@ -147,25 +150,8 @@ namespace System.Windows.Forms
                     biggestItemSize = LayoutUtils.UnionSizes(biggestItemSize, item.Bounds.Size);
                 }
             }
+
             SetLargestItemSize(biggestItemSize);
-        }
-
-        internal class ToolStripOverflowAccessibleObject : ToolStripAccessibleObject
-        {
-            public ToolStripOverflowAccessibleObject(ToolStripOverflow owner)
-                : base(owner)
-            {
-            }
-
-            public override AccessibleObject GetChild(int index)
-            {
-                return ((ToolStripOverflow)Owner).DisplayedItems[index].AccessibilityObject;
-            }
-
-            public override int GetChildCount()
-            {
-                return ((ToolStripOverflow)Owner).DisplayedItems.Count;
-            }
         }
     }
 }

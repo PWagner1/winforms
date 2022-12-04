@@ -14,31 +14,32 @@ namespace System.Windows.Forms
     public partial class Control
     {
         /// <summary>
-        ///  An implementation of AccessibleChild for use with Controls
+        ///  An implementation of AccessibleChild for use with Controls.
         /// </summary>
         public class ControlAccessibleObject : AccessibleObject
         {
-            private static IntPtr s_oleAccAvailable = NativeMethods.InvalidIntPtr;
+            /// <summary>
+            ///  Associated window handle (if any).
+            /// </summary>
+            private IntPtr _handle = IntPtr.Zero;
 
-            private IntPtr _handle = IntPtr.Zero;   // Associated window handle (if any)
-            private int[]? _runtimeId;              // Used by UIAutomation
+            /// <summary>
+            ///  Used to lazily grab the owner control handle, if it hasn't been created yet.
+            /// </summary>
             private bool _getOwnerControlHandle;
 
             public ControlAccessibleObject(Control ownerControl)
+                : this(ownerControl, User32.OBJID.CLIENT)
             {
-                Owner = ownerControl ?? throw new ArgumentNullException(nameof(ownerControl));
-                InitHandle(ownerControl);
             }
 
             internal ControlAccessibleObject(Control ownerControl, int accObjId)
             {
-                AccessibleObjectId = accObjId; // ...must set this *before* setting the Handle property
-                Owner = ownerControl ?? throw new ArgumentNullException(nameof(ownerControl));
-                InitHandle(ownerControl);
-            }
+                // Must set AccesibleObjectId *before* setting the Handle property as it calls UseStdAccessibleObjects()
+                // which needs the Id.
+                AccessibleObjectId = accObjId;
+                Owner = ownerControl.OrThrowIfNull();
 
-            private void InitHandle(Control ownerControl)
-            {
                 if (ownerControl.IsHandleCreated)
                 {
                     Handle = ownerControl.Handle;
@@ -50,6 +51,28 @@ namespace System.Windows.Forms
                     // be set via Handle property.
                     _getOwnerControlHandle = true;
                 }
+            }
+
+            private protected override string AutomationId => Owner.Name;
+
+            // If the control is used as an item of a ToolStrip via ToolStripControlHost,
+            // its accessible object should provide info about the owning ToolStrip and items-siblings
+            // to build a correct ToolStrip accessibility tree.
+            internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
+            {
+                if (Owner.ToolStripControlHost is not ToolStripControlHost host)
+                {
+                    return base.FragmentNavigate(direction);
+                }
+
+                if (direction == UiaCore.NavigateDirection.Parent
+                    || direction == UiaCore.NavigateDirection.PreviousSibling
+                    || direction == UiaCore.NavigateDirection.NextSibling)
+                {
+                    return host.AccessibilityObject.FragmentNavigate(direction);
+                }
+
+                return base.FragmentNavigate(direction);
             }
 
             /// <summary>
@@ -88,7 +111,7 @@ namespace System.Windows.Forms
             ///  We need to intercept first-child / last-child navigation from the container's
             ///  client object, and next-sibling / previous-sibling navigation from each child's
             ///  non-client object. All other navigation operations must be allowed to fall back
-            ///  on the system's deafult behavior (provided by OLEACC.DLL).
+            ///  on the system's default behavior (provided by OLEACC.DLL).
             ///
             ///  When combined with the re-ordering behavior of GetSysChildOrder() above, this
             ///  allows us to present the end user with the illusion of accessible objects in
@@ -100,7 +123,7 @@ namespace System.Windows.Forms
                 accessibleObject = null;
 
                 // Get the owning control's parent, if it has one
-                Control parentControl = Owner.ParentInternal;
+                Control? parentControl = Owner.ParentInternal;
 
                 // ctrls[index] will indicate the control at the destination of this navigation operation
                 int index = -1;
@@ -115,6 +138,7 @@ namespace System.Windows.Forms
                             ctrls = Owner.GetChildControlsInTabOrder(true);
                             index = 0;
                         }
+
                         break;
                     case AccessibleNavigation.LastChild:
                         if (IsClientObject)
@@ -122,9 +146,10 @@ namespace System.Windows.Forms
                             ctrls = Owner.GetChildControlsInTabOrder(true);
                             index = ctrls.Length - 1;
                         }
+
                         break;
                     case AccessibleNavigation.Previous:
-                        if (IsNonClientObject && parentControl != null)
+                        if (IsNonClientObject && parentControl is not null)
                         {
                             ctrls = parentControl.GetChildControlsInTabOrder(true);
                             index = Array.IndexOf(ctrls, Owner);
@@ -133,9 +158,10 @@ namespace System.Windows.Forms
                                 --index;
                             }
                         }
+
                         break;
                     case AccessibleNavigation.Next:
-                        if (IsNonClientObject && parentControl != null)
+                        if (IsNonClientObject && parentControl is not null)
                         {
                             ctrls = parentControl.GetChildControlsInTabOrder(true);
                             index = Array.IndexOf(ctrls, Owner);
@@ -144,6 +170,7 @@ namespace System.Windows.Forms
                                 ++index;
                             }
                         }
+
                         break;
                 }
 
@@ -167,28 +194,32 @@ namespace System.Windows.Forms
 
             public override string? DefaultAction => Owner.AccessibleDefaultActionDescription ?? base.DefaultAction;
 
-            // This is used only if control supports IAccessibleEx
-            internal override int[]? RuntimeId
-            {
-                get
-                {
-                    if (_runtimeId is null)
-                    {
-                        _runtimeId = new int[] { 0x2a, (int)(long)HandleInternal };
-                    }
-
-                    return _runtimeId;
-                }
-            }
+            // This is used only if control supports IAccessibleEx. We need to provide a unique ID. Others are implementing this in the same manner.
+            // First item is static - 0x2a (RuntimeIDFirstItem). Second item can be anything, but it's good to supply HWND.
+            internal override int[] RuntimeId => new int[] { RuntimeIDFirstItem, PARAM.ToInt(HandleInternal) };
 
             public override string? Description => Owner.AccessibleDescription ?? base.Description;
 
+            /// <summary>
+            ///  Gets or sets the handle of the accessible object's associated <see cref="Owner"/> control.
+            /// </summary>
+            /// <value>
+            ///  An <see cref="IntPtr"/> that represents the handle of the associated <see cref="Owner"/> control.
+            /// </value>
+            /// <remarks>
+            ///  <para>
+            ///   The value of the <see cref="Handle"/> property for the <see cref="ControlAccessibleObject"/> is equal to
+            ///   the <see cref="Control.Handle"/> property of the <see cref="Owner"/> it is associated with.
+            ///  </para>
+            /// </remarks>
             public IntPtr Handle
             {
                 get
                 {
                     if (_getOwnerControlHandle)
                     {
+                        // We haven't gotten the associated Control handle yet, grab it now (this will create the
+                        // Control's handle if it hasn't been created yet).
                         _getOwnerControlHandle = false;
                         _handle = Owner.Handle;
                     }
@@ -205,33 +236,13 @@ namespace System.Windows.Forms
                     _handle = value;
                     _getOwnerControlHandle = false;
 
-                    if (s_oleAccAvailable == IntPtr.Zero || _handle == IntPtr.Zero)
+                    if (_handle == IntPtr.Zero)
                     {
                         return;
                     }
 
-                    bool freeLib = false;
-
-                    if (s_oleAccAvailable == NativeMethods.InvalidIntPtr)
-                    {
-                        s_oleAccAvailable = Kernel32.LoadLibraryFromSystemPathIfAvailable(Libraries.Oleacc);
-                        freeLib = (s_oleAccAvailable != IntPtr.Zero);
-                    }
-
-                    // Update systemIAccessible
-                    //
-                    // We need to store internally the system provided
-                    // IAccessible, because some windows forms controls use it
-                    // as the default IAccessible implementation.
-                    if (s_oleAccAvailable != IntPtr.Zero)
-                    {
-                        UseStdAccessibleObjects(_handle);
-                    }
-
-                    if (freeLib)
-                    {
-                        Kernel32.FreeLibrary(s_oleAccAvailable);
-                    }
+                    // Create the Win32 standard accessible objects. We fall back to these in a number of code paths.
+                    UseStdAccessibleObjects(_handle);
                 }
             }
 
@@ -242,7 +253,7 @@ namespace System.Windows.Forms
                 get
                 {
                     QueryAccessibilityHelpEventHandler? handler = (QueryAccessibilityHelpEventHandler?)Owner.Events[s_queryAccessibilityHelpEvent];
-                    if (handler != null)
+                    if (handler is not null)
                     {
                         QueryAccessibilityHelpEventArgs args = new QueryAccessibilityHelpEventArgs();
                         handler(Owner, args);
@@ -272,7 +283,7 @@ namespace System.Windows.Forms
                     // Note: Any non-null value in AccessibleName overrides the default accessible name logic,
                     // even an empty string (this is the only way to *force* the accessible name to be blank).
                     string? name = Owner.AccessibleName;
-                    if (name != null)
+                    if (name is not null)
                     {
                         return name;
                     }
@@ -313,7 +324,7 @@ namespace System.Windows.Forms
 
                     // Otherwise use the text of the preceding Label control, if there is one
                     Label? previousLabel = PreviousLabel;
-                    if (previousLabel != null)
+                    if (previousLabel is not null)
                     {
                         string text = previousLabel.Text;
                         if (!string.IsNullOrEmpty(text))
@@ -322,7 +333,7 @@ namespace System.Windows.Forms
                         }
                     }
 
-                    // This control has no discernable MSAA name - return an empty string to indiciate 'nameless'.
+                    // This control has no discernable MSAA name - return an empty string to indicate 'nameless'.
                     return null;
                 }
             }
@@ -339,7 +350,7 @@ namespace System.Windows.Forms
                 get
                 {
                     // Try to get to the parent of this control.
-                    Control parent = Owner.ParentInternal;
+                    Control? parent = Owner.ParentInternal;
 
                     if (parent is null)
                     {
@@ -353,8 +364,8 @@ namespace System.Windows.Forms
                     }
 
                     // Walk backwards through peer controls...
-                    for (Control previous = container.GetNextControl(Owner, false);
-                         previous != null;
+                    for (Control? previous = container.GetNextControl(Owner, false);
+                         previous is not null;
                          previous = container.GetNextControl(previous, false))
                     {
                         // Stop when we hit a Label (whether visible or invisible)
@@ -399,20 +410,14 @@ namespace System.Windows.Forms
 
                 fileName = args.HelpNamespace;
 
-                try
-                {
-                    topic = int.Parse(args.HelpKeyword, CultureInfo.InvariantCulture);
-                }
-                catch (Exception e) when (!ClientUtils.IsCriticalException(e))
-                {
-                }
+                int.TryParse(args.HelpKeyword, NumberStyles.Integer, CultureInfo.InvariantCulture, out topic);
 
                 return topic;
             }
 
             public void NotifyClients(AccessibleEvents accEvent)
             {
-                if (HandleInternal == IntPtr.Zero)
+                if (HandleInternal == IntPtr.Zero || !CanNotifyClients)
                 {
                     return;
                 }
@@ -425,7 +430,7 @@ namespace System.Windows.Forms
 
             public void NotifyClients(AccessibleEvents accEvent, int childID)
             {
-                if (HandleInternal == IntPtr.Zero)
+                if (HandleInternal == IntPtr.Zero || !CanNotifyClients)
                 {
                     return;
                 }
@@ -438,7 +443,7 @@ namespace System.Windows.Forms
 
             public void NotifyClients(AccessibleEvents accEvent, int objectID, int childID)
             {
-                if (HandleInternal == IntPtr.Zero)
+                if (HandleInternal == IntPtr.Zero || !CanNotifyClients)
                 {
                     return;
                 }
@@ -478,36 +483,23 @@ namespace System.Windows.Forms
             internal override bool IsIAccessibleExSupported()
                 => Owner is IAutomationLiveRegion ? true : base.IsIAccessibleExSupported();
 
-            internal override object? GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                switch (propertyID)
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+                propertyID switch
                 {
-                    case UiaCore.UIA.LiveSettingPropertyId:
-                        return Owner is IAutomationLiveRegion owner ? owner.LiveSetting : base.GetPropertyValue(propertyID);
-                    case UiaCore.UIA.ControlTypePropertyId:
+                    UiaCore.UIA.ControlTypePropertyId =>
                         // "ControlType" value depends on owner's AccessibleRole value.
                         // See: docs/accessibility/accessible-role-controltype.md
-                        return AccessibleRoleControlTypeMap.GetControlType(Role);
-                }
-
-                if (Owner.SupportsUiaProviders)
-                {
-                    switch (propertyID)
-                    {
-                        case UiaCore.UIA.IsKeyboardFocusablePropertyId:
-                            return Owner.CanSelect;
-                        case UiaCore.UIA.IsOffscreenPropertyId:
-                        case UiaCore.UIA.IsPasswordPropertyId:
-                            return false;
-                        case UiaCore.UIA.AccessKeyPropertyId:
-                            return string.Empty;
-                        case UiaCore.UIA.HelpTextPropertyId:
-                            return Help ?? string.Empty;
-                    }
-                }
-
-                return base.GetPropertyValue(propertyID);
-            }
+                        AccessibleRoleControlTypeMap.GetControlType(Role),
+                    UiaCore.UIA.IsEnabledPropertyId => Owner.Enabled,
+                    UiaCore.UIA.IsKeyboardFocusablePropertyId when
+                        Owner.SupportsUiaProviders
+                        => Owner.CanSelect,
+                    UiaCore.UIA.LiveSettingPropertyId => Owner is IAutomationLiveRegion owner
+                        ? owner.LiveSetting
+                        : base.GetPropertyValue(propertyID),
+                    UiaCore.UIA.NativeWindowHandlePropertyId => Owner.InternalHandle,
+                    _ => base.GetPropertyValue(propertyID)
+                };
 
             internal override bool RaiseAutomationEvent(UiaCore.UIA eventId)
             {
@@ -519,7 +511,7 @@ namespace System.Windows.Forms
                 return base.RaiseAutomationEvent(eventId);
             }
 
-            internal override bool RaiseAutomationPropertyChangedEvent(UiaCore.UIA propertyId, object oldValue, object newValue)
+            internal override bool RaiseAutomationPropertyChangedEvent(UiaCore.UIA propertyId, object? oldValue, object? newValue)
             {
                 if (!Owner.IsHandleCreated)
                 {
@@ -542,6 +534,12 @@ namespace System.Windows.Forms
                     return provider;
                 }
             }
+
+            // If the control is used as an item of a ToolStrip via ToolStripControlHost,
+            // its accessible object should provide info about the owning ToolStrip
+            // to build a correct ToolStrip accessibility tree.
+            private protected override UiaCore.IRawElementProviderFragmentRoot? ToolStripFragmentRoot
+                => Owner.ToolStripControlHost?.Owner?.AccessibilityObject;
 
             public override string ToString()
                 => $"{nameof(ControlAccessibleObject)}: Owner = {Owner?.ToString() ?? "null"}";

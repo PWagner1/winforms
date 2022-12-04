@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using Xunit;
 using static Interop;
 
@@ -56,7 +55,7 @@ namespace System.Windows.Forms.Tests
         {
             Type type = Type.GetTypeFromCLSID(CLSID_WebBrowser);
             object source = Activator.CreateInstance(type);
-            Assert.Throws<ArgumentException>(null, () => new AxHost.ConnectionPointCookie(source, null, eventInterface));
+            Assert.Throws<ArgumentException>(() => new AxHost.ConnectionPointCookie(source, null, eventInterface));
         }
 
         public static IEnumerable<object[]> Ctor_InvalidSink_TestData()

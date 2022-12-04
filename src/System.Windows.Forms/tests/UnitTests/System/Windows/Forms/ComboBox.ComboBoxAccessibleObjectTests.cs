@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using Xunit;
 using static Interop;
 
@@ -104,6 +103,23 @@ namespace System.Windows.Forms.Tests
             control.CreateControl(false);
             object editAccessibleName = control.ChildEditAccessibleObject.GetPropertyValue(UiaCore.UIA.NamePropertyId);
             Assert.NotNull(editAccessibleName);
+        }
+
+        [WinFormsFact]
+        public void ComboBoxEditAccessibleObject_GetPropertyValue_Name_ReturnsExpected()
+        {
+            const string name = "Test text";
+            using ComboBox comboBox = new();
+
+            Assert.Null(comboBox.AccessibilityObject.GetPropertyValue(UiaCore.UIA.NamePropertyId));
+            Assert.Null(comboBox.AccessibilityObject.GetPropertyValue(UiaCore.UIA.LegacyIAccessibleNamePropertyId));
+
+            comboBox.AccessibleName = name;
+            comboBox.CreateControl(false);
+
+            Assert.Equal(name, comboBox.AccessibilityObject.GetPropertyValue(UiaCore.UIA.NamePropertyId));
+            Assert.Equal(name, comboBox.AccessibilityObject.GetPropertyValue(UiaCore.UIA.LegacyIAccessibleNamePropertyId));
+            Assert.True(comboBox.IsHandleCreated);
         }
 
         public static IEnumerable<object[]> ComboBoxAccessibleObject_FragmentNavigate_FirstChild_ReturnsExpected_TestData()
@@ -210,7 +226,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsFact]
-        public void ComboBoxAccessibleObject_ControlType_IsComboBox_IfAccessibeRoleIsDefault()
+        public void ComboBoxAccessibleObject_ControlType_IsComboBox_IfAccessibleRoleIsDefault()
         {
             using ComboBox control = new ComboBox();
             // AccessibleRole is not set = Default
@@ -248,6 +264,252 @@ namespace System.Windows.Forms.Tests
 
             Assert.Equal(expected, actual);
             Assert.False(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ComboBoxEditAccessibleObject_GetPropertyValue_NativeWindowHandle_ReturnsExpected()
+        {
+            using ComboBox comboBox = new();
+            comboBox.CreateControl(false);
+            object actual = comboBox.AccessibilityObject.GetPropertyValue(UiaCore.UIA.NativeWindowHandlePropertyId);
+
+            Assert.True(comboBox.IsHandleCreated);
+            Assert.Equal(comboBox.InternalHandle, actual);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true, ((int)UiaCore.UIA.IsExpandCollapsePatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsGridItemPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsGridPatternAvailablePropertyId))]
+        [InlineData(true, ((int)UiaCore.UIA.IsLegacyIAccessiblePatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsMultipleViewPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsScrollItemPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsScrollPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsSelectionItemPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsSelectionPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsTableItemPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsTablePatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsTextPattern2AvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsTextPatternAvailablePropertyId))]
+        [InlineData(false, ((int)UiaCore.UIA.IsTogglePatternAvailablePropertyId))]
+        [InlineData(true, ((int)UiaCore.UIA.IsValuePatternAvailablePropertyId))]
+        public void ComboBoxAccessibleObject_GetPropertyValue_Pattern_ReturnsExpected(bool expected, int propertyId)
+        {
+            using ComboBox comboBox = new();
+            comboBox.CreateControl(false);
+            ComboBox.ComboBoxAccessibleObject accessibleObject = (ComboBox.ComboBoxAccessibleObject)comboBox.AccessibilityObject;
+
+            Assert.Equal(expected, accessibleObject.GetPropertyValue((UiaCore.UIA)propertyId) ?? false);
+            Assert.True(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ComboBoxAccessibleObject_DefaultAction_IfAccessibleDefaultActionDescriptionIsNotNull_ReturnsAccessibleDefaultActionDescription()
+        {
+            using ComboBox comboBox = new() { AccessibleDefaultActionDescription = "Test" };
+
+            Assert.Equal(comboBox.AccessibleDefaultActionDescription, comboBox.AccessibilityObject.DefaultAction);
+            Assert.False(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ComboBoxAccessibleObject_DefaultAction_IfHandleIsNotCreated_ReturnsNull()
+        {
+            using ComboBox comboBox = new();
+
+            Assert.Empty(comboBox.AccessibilityObject.DefaultAction);
+            Assert.False(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ComboBoxAccessibleObject_DefaultAction_IfHandleIsCreatedAndDropDownStyleIsSimple_ReturnsNull()
+        {
+            using ComboBox comboBox = new() { DropDownStyle = ComboBoxStyle.Simple };
+            comboBox.CreateControl();
+
+            Assert.True(comboBox.IsHandleCreated);
+            Assert.Empty(comboBox.AccessibilityObject.DefaultAction);
+        }
+
+        public static IEnumerable<object[]> ComboBoxAccessibleObject_DefaultAction_IfHandleIsCreated_ReturnsExpected_TestData()
+        {
+            yield return new object[] { ComboBoxStyle.DropDown, false, SR.AccessibleActionExpand };
+            yield return new object[] { ComboBoxStyle.DropDown, true, SR.AccessibleActionCollapse };
+            yield return new object[] { ComboBoxStyle.DropDownList, false, SR.AccessibleActionExpand };
+            yield return new object[] { ComboBoxStyle.DropDownList, true, SR.AccessibleActionCollapse };
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(ComboBoxAccessibleObject_DefaultAction_IfHandleIsCreated_ReturnsExpected_TestData))]
+        public void ComboBoxAccessibleObject_DefaultAction_IfHandleIsCreated_ReturnsExpected(ComboBoxStyle style, bool droppedDown, string expectedAction)
+        {
+            using ComboBox comboBox = new() { DropDownStyle = style };
+            comboBox.CreateControl();
+            comboBox.DroppedDown = droppedDown;
+
+            Assert.True(comboBox.IsHandleCreated);
+            Assert.Equal(expectedAction, comboBox.AccessibilityObject.DefaultAction);
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(ComboBoxAccessibleObject_DefaultAction_IfHandleIsCreated_ReturnsExpected_TestData))]
+        public void ComboBoxAccessibleObject_GetPropertyValue_IfHandleIsCreated_ReturnsExpected(ComboBoxStyle style, bool droppedDown, string expectedAction)
+        {
+            using ComboBox comboBox = new() { DropDownStyle = style };
+            comboBox.CreateControl();
+            comboBox.DroppedDown = droppedDown;
+
+            Assert.Equal(expectedAction, comboBox.AccessibilityObject.GetPropertyValue(UiaCore.UIA.LegacyIAccessibleDefaultActionPropertyId));
+            Assert.True(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ComboBoxAccessibleObject_DoDefaultAction_IfHandleIsNotCreated_DoesNotExpand()
+        {
+            using ComboBox comboBox = new();
+
+            Assert.False(comboBox.DroppedDown);
+
+            comboBox.AccessibilityObject.DoDefaultAction();
+
+            Assert.False(comboBox.DroppedDown);
+            Assert.False(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ComboBoxAccessibleObject_DoDefaultAction_IfHandleIsCreatedAndDropDownStyleIsSimple_DoesNotCollapse()
+        {
+            using ComboBox comboBox = new() { DropDownStyle = ComboBoxStyle.Simple };
+            comboBox.CreateControl();
+
+            Assert.True(comboBox.IsHandleCreated);
+            Assert.True(comboBox.DroppedDown);
+
+            comboBox.AccessibilityObject.DoDefaultAction();
+
+            Assert.True(comboBox.DroppedDown);
+        }
+
+        [WinFormsTheory]
+        [InlineData(ComboBoxStyle.DropDown, false, true)]
+        [InlineData(ComboBoxStyle.DropDown, true, false)]
+        [InlineData(ComboBoxStyle.DropDownList, false, true)]
+        [InlineData(ComboBoxStyle.DropDownList, true, false)]
+        public void ComboBoxAccessibleObject_DoDefaultAction_IfHandleIsCreated_DoesExpected(ComboBoxStyle style, bool droppedDown, bool expectedDroppedDown)
+        {
+            using ComboBox comboBox = new() { DropDownStyle = style };
+            comboBox.CreateControl();
+            comboBox.DroppedDown = droppedDown;
+
+            Assert.True(comboBox.IsHandleCreated);
+
+            comboBox.AccessibilityObject.DoDefaultAction();
+
+            Assert.Equal(expectedDroppedDown, comboBox.DroppedDown);
+        }
+
+        [WinFormsFact]
+        public void ComboBox_ReleaseUiaProvider_ClearsItemsAccessibleObjects()
+        {
+            using ComboBox comboBox = CreateComboBoxWithItems();
+            comboBox.CreateControl();
+            InitComboBoxItemsAccessibleObjects(comboBox);
+            var accessibleObject = (ComboBox.ComboBoxAccessibleObject)comboBox.AccessibilityObject;
+
+            Assert.Equal(comboBox.Items.Count, accessibleObject.ItemAccessibleObjects.Count);
+
+            comboBox.ReleaseUiaProvider(comboBox.Handle);
+
+            Assert.Equal(0, accessibleObject.ItemAccessibleObjects.Count);
+            Assert.True(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ComboBoxItems_Clear_ClearsItemsAccessibleObjects()
+        {
+            using ComboBox comboBox = CreateComboBoxWithItems();
+            comboBox.CreateControl();
+            InitComboBoxItemsAccessibleObjects(comboBox);
+            var accessibleObject = (ComboBox.ComboBoxAccessibleObject)comboBox.AccessibilityObject;
+
+            Assert.Equal(comboBox.Items.Count, accessibleObject.ItemAccessibleObjects.Count);
+
+            comboBox.Items.Clear();
+
+            Assert.Equal(0, accessibleObject.ItemAccessibleObjects.Count);
+            Assert.True(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ComboBoxItems_Remove_RemovesItemAccessibleObject()
+        {
+            using ComboBox comboBox = CreateComboBoxWithItems();
+            comboBox.CreateControl();
+            InitComboBoxItemsAccessibleObjects(comboBox);
+            var accessibleObject = (ComboBox.ComboBoxAccessibleObject)comboBox.AccessibilityObject;
+            ComboBox.ObjectCollection.Entry item = comboBox.Items.InnerList[0];
+
+            Assert.True(accessibleObject.ItemAccessibleObjects.ContainsKey(item));
+            Assert.Equal(comboBox.Items.Count, accessibleObject.ItemAccessibleObjects.Count);
+
+            comboBox.Items.Remove(item);
+
+            Assert.False(accessibleObject.ItemAccessibleObjects.ContainsKey(item));
+            Assert.True(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void ComboBoxItems_Remove_RemovesItemAccessibleObjectCorrectly_IfOneIsNotCreated()
+        {
+            using ComboBox comboBox = CreateComboBoxWithItems();
+            comboBox.CreateControl();
+            InitComboBoxItemsAccessibleObjects(comboBox);
+
+            // Add a new item, but don't create an accessible object for it.
+            comboBox.Items.Insert(0, "h");
+
+            var accessibleObject = (ComboBox.ComboBoxAccessibleObject)comboBox.AccessibilityObject;
+            ComboBox.ObjectCollection.Entry item = comboBox.Items.InnerList[0];
+
+            Assert.False(accessibleObject.ItemAccessibleObjects.ContainsKey(item));
+            // One item's accessible object is not created.
+            Assert.Equal(comboBox.Items.Count - 1, accessibleObject.ItemAccessibleObjects.Count);
+
+            // It shouldn't throw an exception when trying to remove the item's accessible object,
+            // that is not created for the tested item, from the ItemAccessibleObjects collection.
+            comboBox.Items.Remove(item);
+
+            Assert.Equal(comboBox.Items.Count, accessibleObject.ItemAccessibleObjects.Count);
+            Assert.True(comboBox.IsHandleCreated);
+        }
+
+        private ComboBox CreateComboBoxWithItems()
+        {
+            ComboBox comboBox = new();
+            comboBox.Items.AddRange(new object[]
+            {
+                "a",
+                "b",
+                "c",
+                "d",
+                "e",
+                "f",
+                "g"
+            });
+
+            return comboBox;
+        }
+
+        private void InitComboBoxItemsAccessibleObjects(ComboBox comboBox)
+        {
+            var listAccessibleObject = (ComboBox.ComboBoxChildListUiaProvider)comboBox.ChildListAccessibleObject;
+            int childCount = listAccessibleObject.GetChildFragmentCount();
+
+            // Force items accessiblity objects creation
+            for (int i = 0; i < childCount; i++)
+            {
+                listAccessibleObject.GetChildFragment(i);
+            }
         }
     }
 }

@@ -2,13 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using static Interop;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms
 {
@@ -17,12 +14,12 @@ namespace System.Windows.Forms
         [ListBindable(false)]
         public class SelectedIndexCollection : IList
         {
-            private readonly ListView owner;
+            private readonly ListView _owner;
 
             /* C#r: protected */
             public SelectedIndexCollection(ListView owner)
             {
-                this.owner = owner;
+                _owner = owner;
             }
 
             /// <summary>
@@ -33,16 +30,17 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (owner.IsHandleCreated)
+                    if (_owner.IsHandleCreated)
                     {
-                        return unchecked((int)(long)User32.SendMessageW(owner, (User32.WM)LVM.GETSELECTEDCOUNT));
+                        return (int)PInvoke.SendMessage(_owner, (User32.WM)PInvoke.LVM_GETSELECTEDCOUNT);
                     }
                     else
                     {
-                        if (owner.savedSelectedItems != null)
+                        if (_owner._savedSelectedItems is not null)
                         {
-                            return owner.savedSelectedItems.Count;
+                            return _owner._savedSelectedItems.Count;
                         }
+
                         return 0;
                     }
                 }
@@ -55,12 +53,16 @@ namespace System.Windows.Forms
                     int count = Count;
                     int[] indices = new int[count];
 
-                    if (owner.IsHandleCreated)
+                    if (_owner.IsHandleCreated)
                     {
                         int displayIndex = -1;
                         for (int i = 0; i < count; i++)
                         {
-                            int fidx = unchecked((int)(long)User32.SendMessageW(owner, (User32.WM)LVM.GETNEXTITEM, (IntPtr)displayIndex, (IntPtr)LVNI.SELECTED));
+                            int fidx = (int)PInvoke.SendMessage(
+                                _owner,
+                                (User32.WM)PInvoke.LVM_GETNEXTITEM,
+                                (WPARAM)displayIndex,
+                                (LPARAM)(uint)PInvoke.LVNI_SELECTED);
                             if (fidx > -1)
                             {
                                 indices[i] = fidx;
@@ -74,10 +76,13 @@ namespace System.Windows.Forms
                     }
                     else
                     {
-                        Debug.Assert(owner.savedSelectedItems != null || count == 0, "if the count of selectedItems is greater than 0 then the selectedItems should have been saved by now");
-                        for (int i = 0; i < count; i++)
+                        Debug.Assert(_owner._savedSelectedItems is not null || count == 0, "if the count of selectedItems is greater than 0 then the selectedItems should have been saved by now");
+                        if (_owner._savedSelectedItems is not null)
                         {
-                            indices[i] = owner.savedSelectedItems[i].Index;
+                            for (int i = 0; i < count; i++)
+                            {
+                                indices[i] = _owner._savedSelectedItems[i].Index;
+                            }
                         }
                     }
 
@@ -97,15 +102,17 @@ namespace System.Windows.Forms
                         throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
                     }
 
-                    if (owner.IsHandleCreated)
+                    if (_owner.IsHandleCreated)
                     {
-                        // Count through the selected items in the ListView, until
-                        // we reach the 'index'th selected item.
-                        //
+                        // Count through the selected items in the ListView, until we reach the 'index'th selected item.
                         int fidx = -1;
                         for (int count = 0; count <= index; count++)
                         {
-                            fidx = unchecked((int)(long)User32.SendMessageW(owner, (User32.WM)LVM.GETNEXTITEM, (IntPtr)fidx, (IntPtr)LVNI.SELECTED));
+                            fidx = (int)PInvoke.SendMessage(
+                                _owner,
+                                (User32.WM)PInvoke.LVM_GETNEXTITEM,
+                                (WPARAM)fidx,
+                                (LPARAM)(uint)PInvoke.LVNI_SELECTED);
                             Debug.Assert(fidx != -1, "Invalid index returned from LVM_GETNEXTITEM");
                         }
 
@@ -113,13 +120,13 @@ namespace System.Windows.Forms
                     }
                     else
                     {
-                        Debug.Assert(owner.savedSelectedItems != null, "Null selected items collection");
-                        return owner.savedSelectedItems[index].Index;
+                        Debug.Assert(_owner._savedSelectedItems is not null, "Null selected items collection");
+                        return _owner._savedSelectedItems[index].Index;
                     }
                 }
             }
 
-            object IList.this[int index]
+            object? IList.this[int index]
             {
                 get
                 {
@@ -165,19 +172,19 @@ namespace System.Windows.Forms
 
             public bool Contains(int selectedIndex)
             {
-                if (selectedIndex < 0 || selectedIndex >= owner.Items.Count)
+                if (selectedIndex < 0 || selectedIndex >= _owner.Items.Count)
                 {
                     return false;
                 }
 
-                return owner.Items[selectedIndex].Selected;
+                return _owner.Items[selectedIndex].Selected;
             }
 
-            bool IList.Contains(object selectedIndex)
+            bool IList.Contains(object? selectedIndex)
             {
-                if (selectedIndex is int)
+                if (selectedIndex is int selectedIndexAsInt)
                 {
-                    return Contains((int)selectedIndex);
+                    return Contains(selectedIndexAsInt);
                 }
                 else
                 {
@@ -195,14 +202,15 @@ namespace System.Windows.Forms
                         return index;
                     }
                 }
+
                 return -1;
             }
 
-            int IList.IndexOf(object selectedIndex)
+            int IList.IndexOf(object? selectedIndex)
             {
-                if (selectedIndex is int)
+                if (selectedIndex is int selectedIndexAsInt)
                 {
-                    return IndexOf((int)selectedIndex);
+                    return IndexOf(selectedIndexAsInt);
                 }
                 else
                 {
@@ -210,11 +218,11 @@ namespace System.Windows.Forms
                 }
             }
 
-            int IList.Add(object value)
+            int IList.Add(object? value)
             {
-                if (value is int)
+                if (value is int valueAsInt)
                 {
-                    return Add((int)value);
+                    return Add(valueAsInt);
                 }
                 else
                 {
@@ -227,16 +235,16 @@ namespace System.Windows.Forms
                 Clear();
             }
 
-            void IList.Insert(int index, object value)
+            void IList.Insert(int index, object? value)
             {
                 throw new NotSupportedException();
             }
 
-            void IList.Remove(object value)
+            void IList.Remove(object? value)
             {
-                if (value is int)
+                if (value is int valueAsInt)
                 {
-                    Remove((int)value);
+                    Remove(valueAsInt);
                 }
                 else
                 {
@@ -251,15 +259,16 @@ namespace System.Windows.Forms
 
             public int Add(int itemIndex)
             {
-                if (owner.VirtualMode)
+                if (_owner.VirtualMode)
                 {
-                    if (itemIndex < 0 || itemIndex >= owner.VirtualListSize)
+                    if (itemIndex < 0 || itemIndex >= _owner.VirtualListSize)
                     {
                         throw new ArgumentOutOfRangeException(nameof(itemIndex), itemIndex, string.Format(SR.InvalidArgument, nameof(itemIndex), itemIndex));
                     }
-                    if (owner.IsHandleCreated)
+
+                    if (_owner.IsHandleCreated)
                     {
-                        owner.SetItemState(itemIndex, LVIS.SELECTED, LVIS.SELECTED);
+                        _owner.SetItemState(itemIndex, LIST_VIEW_ITEM_STATE_FLAGS.LVIS_SELECTED, LIST_VIEW_ITEM_STATE_FLAGS.LVIS_SELECTED);
                         return Count;
                     }
                     else
@@ -269,24 +278,26 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-                    if (itemIndex < 0 || itemIndex >= owner.Items.Count)
+                    if (itemIndex < 0 || itemIndex >= _owner.Items.Count)
                     {
                         throw new ArgumentOutOfRangeException(nameof(itemIndex), itemIndex, string.Format(SR.InvalidArgument, nameof(itemIndex), itemIndex));
                     }
-                    owner.Items[itemIndex].Selected = true;
+
+                    _owner.Items[itemIndex].Selected = true;
                     return Count;
                 }
             }
 
             public void Clear()
             {
-                if (!owner.VirtualMode)
+                if (!_owner.VirtualMode)
                 {
-                    owner.savedSelectedItems = null;
+                    _owner._savedSelectedItems = null;
                 }
-                if (owner.IsHandleCreated)
+
+                if (_owner.IsHandleCreated)
                 {
-                    owner.SetItemState(-1, 0, LVIS.SELECTED);
+                    _owner.SetItemState(-1, 0, LIST_VIEW_ITEM_STATE_FLAGS.LVIS_SELECTED);
                 }
             }
 
@@ -301,7 +312,7 @@ namespace System.Windows.Forms
             public IEnumerator GetEnumerator()
             {
                 int[] indices = IndicesArray;
-                if (indices != null)
+                if (indices is not null)
                 {
                     return indices.GetEnumerator();
                 }
@@ -313,24 +324,26 @@ namespace System.Windows.Forms
 
             public void Remove(int itemIndex)
             {
-                if (owner.VirtualMode)
+                if (_owner.VirtualMode)
                 {
-                    if (itemIndex < 0 || itemIndex >= owner.VirtualListSize)
+                    if (itemIndex < 0 || itemIndex >= _owner.VirtualListSize)
                     {
                         throw new ArgumentOutOfRangeException(nameof(itemIndex), itemIndex, string.Format(SR.InvalidArgument, nameof(itemIndex), itemIndex));
                     }
-                    if (owner.IsHandleCreated)
+
+                    if (_owner.IsHandleCreated)
                     {
-                        owner.SetItemState(itemIndex, 0, LVIS.SELECTED);
+                        _owner.SetItemState(itemIndex, 0, LIST_VIEW_ITEM_STATE_FLAGS.LVIS_SELECTED);
                     }
                 }
                 else
                 {
-                    if (itemIndex < 0 || itemIndex >= owner.Items.Count)
+                    if (itemIndex < 0 || itemIndex >= _owner.Items.Count)
                     {
                         throw new ArgumentOutOfRangeException(nameof(itemIndex), itemIndex, string.Format(SR.InvalidArgument, nameof(itemIndex), itemIndex));
                     }
-                    owner.Items[itemIndex].Selected = false;
+
+                    _owner.Items[itemIndex].Selected = false;
                 }
             }
         }

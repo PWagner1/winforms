@@ -13,7 +13,7 @@ namespace System.Windows.Forms.Design
     {
         private DesignerOptions _options;
 
-        public virtual DesignerOptions CompatibilityOptions => _options ?? (_options = new DesignerOptions());
+        public virtual DesignerOptions CompatibilityOptions => _options ??= new DesignerOptions();
 
         /// <summary>
         ///  This method is called on demand the first time a user asks for child options or
@@ -21,13 +21,13 @@ namespace System.Windows.Forms.Design
         /// </summary>
         protected override void PopulateOptionCollection(DesignerOptionCollection options)
         {
-            if (options is null || options.Parent != null)
+            if (options is null || options.Parent is not null)
             {
                 return;
             }
 
             DesignerOptions designerOptions = CompatibilityOptions;
-            if (designerOptions != null)
+            if (designerOptions is not null)
             {
                 CreateOptionCollection(options, "DesignerOptions", designerOptions);
             }

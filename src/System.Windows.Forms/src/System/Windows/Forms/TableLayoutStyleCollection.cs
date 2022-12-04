@@ -15,7 +15,7 @@ namespace System.Windows.Forms
     public abstract class TableLayoutStyleCollection : IList
     {
         private IArrangedElement _owner;
-        private readonly ArrayList _innerList = new ArrayList();
+        private readonly List<TableLayoutStyle> _innerList = new();
 
         internal TableLayoutStyleCollection(IArrangedElement owner)
         {
@@ -28,33 +28,28 @@ namespace System.Windows.Forms
 
         int IList.Add(object style)
         {
-            if (style is null)
-            {
-                throw new ArgumentNullException(nameof(style));
-            }
-
-            EnsureNotOwned((TableLayoutStyle)style);
-            ((TableLayoutStyle)style).Owner = Owner;
-            int index = _innerList.Add(style);
-            PerformLayoutIfOwned();
-            return index;
+            return Add((TableLayoutStyle)style);
         }
 
         public int Add(TableLayoutStyle style)
         {
-            return ((IList)this).Add(style);
+            ArgumentNullException.ThrowIfNull(style);
+
+            EnsureNotOwned(style);
+            style.Owner = Owner;
+            int index = ((IList)_innerList).Add(style);
+            PerformLayoutIfOwned();
+            return index;
         }
 
         void IList.Insert(int index, object style)
         {
-            if (style is null)
-            {
-                throw new ArgumentNullException(nameof(style));
-            }
+            ArgumentNullException.ThrowIfNull(style);
 
-            EnsureNotOwned((TableLayoutStyle)style);
-            ((TableLayoutStyle)style).Owner = Owner;
-            _innerList.Insert(index, style);
+            TableLayoutStyle tableLayoutStyle = (TableLayoutStyle)style;
+            EnsureNotOwned(tableLayoutStyle);
+            tableLayoutStyle.Owner = Owner;
+            _innerList.Insert(index, tableLayoutStyle);
             PerformLayoutIfOwned();
         }
 
@@ -63,10 +58,7 @@ namespace System.Windows.Forms
             get => _innerList[index];
             set
             {
-                if (value is null)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
+                ArgumentNullException.ThrowIfNull(value);
 
                 TableLayoutStyle style = (TableLayoutStyle)value;
                 EnsureNotOwned(style);
@@ -89,8 +81,9 @@ namespace System.Windows.Forms
                 return;
             }
 
-            ((TableLayoutStyle)style).Owner = null;
-            _innerList.Remove(style);
+            TableLayoutStyle tableLayoutStyle = (TableLayoutStyle)style;
+            tableLayoutStyle.Owner = null;
+            _innerList.Remove(tableLayoutStyle);
             PerformLayoutIfOwned();
         }
 
@@ -107,37 +100,38 @@ namespace System.Windows.Forms
 
         public void RemoveAt(int index)
         {
-            TableLayoutStyle style = (TableLayoutStyle)_innerList[index];
+            TableLayoutStyle style = _innerList[index];
             style.Owner = null;
             _innerList.RemoveAt(index);
             PerformLayoutIfOwned();
         }
 
-        bool IList.Contains(object style) => _innerList.Contains(style);
+        bool IList.Contains(object style) => ((IList)_innerList).Contains(style);
 
-        int IList.IndexOf(object style) => _innerList.IndexOf(style);
+        int IList.IndexOf(object style) => ((IList)_innerList).IndexOf(style);
 
-        bool IList.IsFixedSize => _innerList.IsFixedSize;
+        bool IList.IsFixedSize => ((IList)_innerList).IsFixedSize;
 
-        bool IList.IsReadOnly => _innerList.IsReadOnly;
+        bool IList.IsReadOnly => ((IList)_innerList).IsReadOnly;
 
-        void ICollection.CopyTo(Array array, int startIndex) => _innerList.CopyTo(array, startIndex);
+        void ICollection.CopyTo(Array array, int startIndex) => ((ICollection)_innerList).CopyTo(array, startIndex);
 
         public int Count => _innerList.Count;
 
-        bool ICollection.IsSynchronized => _innerList.IsSynchronized;
+        bool ICollection.IsSynchronized => ((ICollection)_innerList).IsSynchronized;
 
-        object ICollection.SyncRoot => _innerList.SyncRoot;
+        object ICollection.SyncRoot => ((ICollection)_innerList).SyncRoot;
 
         IEnumerator IEnumerable.GetEnumerator() => _innerList.GetEnumerator();
 
-        private void EnsureNotOwned(TableLayoutStyle style)
+        private static void EnsureNotOwned(TableLayoutStyle style)
         {
-            if (style.Owner != null)
+            if (style.Owner is not null)
             {
                 throw new ArgumentException(string.Format(SR.OnlyOneControl, style.GetType().Name), nameof(style));
             }
         }
+
         internal void EnsureOwnership(IArrangedElement owner)
         {
             _owner = owner;
@@ -146,9 +140,10 @@ namespace System.Windows.Forms
                 this[i].Owner = owner;
             }
         }
+
         private void PerformLayoutIfOwned()
         {
-            if (Owner != null)
+            if (Owner is not null)
             {
                 LayoutTransaction.DoLayout(Owner, Owner, PropertyName);
             }

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Runtime.InteropServices;
 
 internal static partial class Interop
@@ -12,11 +11,11 @@ internal static partial class Interop
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         public unsafe struct LVITEMW
         {
-            public LVIF mask;
+            public LIST_VIEW_ITEM_FLAGS mask;
             public int iItem;
             public int iSubItem;
-            public LVIS state;
-            public LVIS stateMask;
+            public LIST_VIEW_ITEM_STATE_FLAGS state;
+            public LIST_VIEW_ITEM_STATE_FLAGS stateMask;
             public char* /* LPWSTR */ pszText;
             public int cchTextMax;
             public int iImage;
@@ -25,7 +24,7 @@ internal static partial class Interop
             public int iGroupId;
             public int cColumns; // tile view columns
             public IntPtr puColumns;
-            public LVCFMT* piColFmt;
+            public LVCOLUMNW_FORMAT* piColFmt;
             public int iGroup; // readonly. only valid for owner data.
 
             /// <summary>

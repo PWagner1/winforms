@@ -2,9 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
+using Windows.Win32.System.Ole;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -13,11 +14,11 @@ namespace System.Windows.Forms
     {
         private class AxSourcingSite : ISite
         {
-            private readonly Ole32.IOleClientSite _clientSite;
-            private string _name;
-            private HtmlShimManager _shimManager;
+            private readonly IOleClientSite.Interface _clientSite;
+            private string? _name;
+            private HtmlShimManager? _shimManager;
 
-            internal AxSourcingSite(IComponent component, Ole32.IOleClientSite clientSite, string name)
+            internal AxSourcingSite(IComponent component, IOleClientSite.Interface clientSite, string? name)
             {
                 Component = component;
                 _clientSite = clientSite;
@@ -32,13 +33,15 @@ namespace System.Windows.Forms
             /// <summary>
             ///  The container in which the component is sited.
             /// </summary>
-            public IContainer Container => null;
+            public IContainer? Container => null;
 
-            public object GetService(Type service)
+            public unsafe object? GetService(Type service)
             {
                 if (service == typeof(HtmlDocument))
                 {
-                    if (_clientSite.GetContainer() is Mshtml.IHTMLDocument document)
+                    IOleContainer* container;
+                    _clientSite.GetContainer(&container);
+                    if (Marshal.GetObjectForIUnknown((nint)container) is Mshtml.IHTMLDocument document)
                     {
                         _shimManager ??= new HtmlShimManager();
                         return new HtmlDocument(_shimManager, document);
@@ -60,9 +63,11 @@ namespace System.Windows.Forms
             /// <summary>
             ///  The name of the component.
             /// </summary>
-            public string Name
+            public string? Name
             {
                 get => _name;
+
+                [RequiresUnreferencedCode(TrimmingConstants.SiteNameMessage)]
                 set
                 {
                     if (value is null || _name is null)

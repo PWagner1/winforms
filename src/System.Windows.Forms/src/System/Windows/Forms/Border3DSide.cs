@@ -2,9 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Runtime.InteropServices;
-using static Interop;
-
 namespace System.Windows.Forms
 {
     /// <summary>
@@ -16,32 +13,32 @@ namespace System.Windows.Forms
         /// <summary>
         ///  A three-dimensional border on the left edge of the control.
         /// </summary>
-        Left = (int)User32.BF.LEFT,
+        Left = (int)DRAW_EDGE_FLAGS.BF_LEFT,
 
         /// <summary>
         ///  A three-dimensional border on the top edge of the rectangle.
         /// </summary>
-        Top = (int)User32.BF.TOP,
+        Top = (int)DRAW_EDGE_FLAGS.BF_TOP,
 
         /// <summary>
         ///  A three-dimensional border on the right side of the rectangle.
         /// </summary>
-        Right = (int)User32.BF.RIGHT,
+        Right = (int)DRAW_EDGE_FLAGS.BF_RIGHT,
 
         /// <summary>
         ///  A three-dimensional border on the bottom side of the rectangle.
         /// </summary>
-        Bottom = (int)User32.BF.BOTTOM,
+        Bottom = (int)DRAW_EDGE_FLAGS.BF_BOTTOM,
 
         /// <summary>
         ///  The interior of the rectangle is filled with the color defined for
         ///  three-dimensional controls instead of the background color for the form.
         /// </summary>
-        Middle = (int)User32.BF.MIDDLE,
+        Middle = (int)DRAW_EDGE_FLAGS.BF_MIDDLE,
 
         /// <summary>
         ///  A three-dimensional border on all four edges and fill the middle of
-        ///  the rectangle with the color defeined for three-dimensional controls.
+        ///  the rectangle with the color defined for three-dimensional controls.
         /// </summary>
         All = Left | Top | Right | Bottom | Middle,
     }

@@ -2,9 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -50,7 +48,7 @@ namespace System.Windows.Forms
         private TaskDialogFootnote? _footnote;
         private TaskDialogProgressBar? _progressBar;
 
-        private ComCtl32.TDF _flags;
+        private TASKDIALOG_FLAGS _flags;
         private TaskDialogIcon? _icon;
         private string? _caption;
         private string? _heading;
@@ -135,7 +133,7 @@ namespace System.Windows.Forms
                 // access the controls from the task dialog's callback.
                 DenyIfBound();
 
-                _buttons = value ?? throw new ArgumentNullException(nameof(value));
+                _buttons = value.OrThrowIfNull();
             }
         }
 
@@ -166,7 +164,7 @@ namespace System.Windows.Forms
                 // access the controls from the task dialog's callback.
                 DenyIfBound();
 
-                _radioButtons = value ?? throw new ArgumentNullException(nameof(value));
+                _radioButtons = value.OrThrowIfNull();
             }
         }
 
@@ -317,7 +315,7 @@ namespace System.Windows.Forms
             get => _heading;
             set
             {
-                if (BoundDialog != null)
+                if (BoundDialog is not null)
                 {
                     // If we are bound but waiting for initialization (e.g. immediately after
                     // starting a navigation), we buffer the change until we apply the
@@ -328,7 +326,7 @@ namespace System.Windows.Forms
                     }
                     else
                     {
-                        BoundDialog.UpdateTextElement(ComCtl32.TDE.MAIN_INSTRUCTION, value);
+                        BoundDialog.UpdateTextElement(TASKDIALOG_ELEMENTS.TDE_MAIN_INSTRUCTION, value);
                     }
                 }
 
@@ -353,7 +351,7 @@ namespace System.Windows.Forms
             get => _text;
             set
             {
-                if (BoundDialog != null)
+                if (BoundDialog is not null)
                 {
                     if (WaitingForInitialization)
                     {
@@ -361,7 +359,7 @@ namespace System.Windows.Forms
                     }
                     else
                     {
-                        BoundDialog.UpdateTextElement(ComCtl32.TDE.CONTENT, value);
+                        BoundDialog.UpdateTextElement(TASKDIALOG_ELEMENTS.TDE_CONTENT, value);
                     }
                 }
 
@@ -402,7 +400,7 @@ namespace System.Windows.Forms
                 // that seems like an overkill.
                 DenyIfWaitingForInitialization();
 
-                if (BoundDialog != null)
+                if (BoundDialog is not null)
                 {
                     (ComCtl32.TASKDIALOGCONFIG.IconUnion icon, bool? iconIsFromHandle) =
                         GetIconValue(value);
@@ -410,13 +408,13 @@ namespace System.Windows.Forms
                     // The native task dialog icon cannot be updated from a handle
                     // type to a non-handle type and vice versa, so we need to throw
                     // throw in such a case.
-                    if (iconIsFromHandle != null && iconIsFromHandle != _boundIconIsFromHandle)
+                    if (iconIsFromHandle is not null && iconIsFromHandle != _boundIconIsFromHandle)
                     {
                         throw new InvalidOperationException(SR.TaskDialogCannotUpdateIconType);
                     }
 
                     BoundDialog.UpdateIconElement(
-                        ComCtl32.TDIE.ICON_MAIN,
+                         TASKDIALOG_ICON_ELEMENTS.TDIE_ICON_MAIN,
                         _boundIconIsFromHandle ? icon.hIcon : (IntPtr)icon.pszIcon);
                 }
 
@@ -446,8 +444,8 @@ namespace System.Windows.Forms
         /// </exception>
         public bool AllowCancel
         {
-            get => GetFlag(ComCtl32.TDF.ALLOW_DIALOG_CANCELLATION);
-            set => SetFlag(ComCtl32.TDF.ALLOW_DIALOG_CANCELLATION, value);
+            get => GetFlag(TASKDIALOG_FLAGS.TDF_ALLOW_DIALOG_CANCELLATION);
+            set => SetFlag(TASKDIALOG_FLAGS.TDF_ALLOW_DIALOG_CANCELLATION, value);
         }
 
         /// <summary>
@@ -471,8 +469,8 @@ namespace System.Windows.Forms
         /// </exception>
         public bool RightToLeftLayout
         {
-            get => GetFlag(ComCtl32.TDF.RTL_LAYOUT);
-            set => SetFlag(ComCtl32.TDF.RTL_LAYOUT, value);
+            get => GetFlag(TASKDIALOG_FLAGS.TDF_RTL_LAYOUT);
+            set => SetFlag(TASKDIALOG_FLAGS.TDF_RTL_LAYOUT, value);
         }
 
         /// <summary>
@@ -494,8 +492,8 @@ namespace System.Windows.Forms
         /// </exception>
         public bool AllowMinimize
         {
-            get => GetFlag(ComCtl32.TDF.CAN_BE_MINIMIZED);
-            set => SetFlag(ComCtl32.TDF.CAN_BE_MINIMIZED, value);
+            get => GetFlag(TASKDIALOG_FLAGS.TDF_CAN_BE_MINIMIZED);
+            set => SetFlag(TASKDIALOG_FLAGS.TDF_CAN_BE_MINIMIZED, value);
         }
 
         /// <summary>
@@ -511,8 +509,8 @@ namespace System.Windows.Forms
         /// </exception>
         public bool SizeToContent
         {
-            get => GetFlag(ComCtl32.TDF.SIZE_TO_CONTENT);
-            set => SetFlag(ComCtl32.TDF.SIZE_TO_CONTENT, value);
+            get => GetFlag(TASKDIALOG_FLAGS.TDF_SIZE_TO_CONTENT);
+            set => SetFlag(TASKDIALOG_FLAGS.TDF_SIZE_TO_CONTENT, value);
         }
 
         /// <summary>
@@ -540,7 +538,7 @@ namespace System.Windows.Forms
         ///   started navigation to this page but navigation did not yet complete
         ///   (in which case we cannot modify the dialog even though we are bound).
         /// </summary>
-        internal bool WaitingForInitialization => BoundDialog != null && !_appliedInitialization;
+        internal bool WaitingForInitialization => BoundDialog is not null && !_appliedInitialization;
 
         /// <summary>
         ///  Shows the new content in the current task dialog.
@@ -577,10 +575,7 @@ namespace System.Windows.Forms
         /// </exception>
         public void Navigate(TaskDialogPage page)
         {
-            if (page is null)
-            {
-                throw new ArgumentNullException(nameof(page));
-            }
+            ArgumentNullException.ThrowIfNull(page);
 
             if (BoundDialog is null)
             {
@@ -624,7 +619,7 @@ namespace System.Windows.Forms
 
         internal void DenyIfBound()
         {
-            if (BoundDialog != null)
+            if (BoundDialog is not null)
             {
                 throw new InvalidOperationException(SR.TaskDialogCannotSetPropertyOfBoundPage);
             }
@@ -680,7 +675,7 @@ namespace System.Windows.Forms
         internal void Validate()
         {
             // Check that this page instance is not already bound to a TaskDialog instance.
-            if (BoundDialog != null)
+            if (BoundDialog is not null)
             {
                 throw new InvalidOperationException(string.Format(
                     SR.TaskDialogPageIsAlreadyBound,
@@ -690,8 +685,8 @@ namespace System.Windows.Forms
 
             // We also need to check the controls (and collections) since they could also be
             // bound to a TaskDialogPage at the same time.
-            if (_buttons.BoundPage != null ||
-                _radioButtons.BoundPage != null)
+            if (_buttons.BoundPage is not null ||
+                _radioButtons.BoundPage is not null)
             {
                 throw new InvalidOperationException(string.Format(
                     SR.TaskDialogCollectionAlreadyBound,
@@ -704,7 +699,7 @@ namespace System.Windows.Forms
                 .Append(_expander)
                 .Append(_footnote)
                 .Append(_progressBar)
-                .Any(c => c?.BoundPage != null))
+                .Any(c => c?.BoundPage is not null))
             {
                 throw new InvalidOperationException(string.Format(
                     SR.TaskDialogControlAlreadyBound,
@@ -761,7 +756,7 @@ namespace System.Windows.Forms
             }
 
             // Ensure the default button is part of the button collection.
-            if (DefaultButton != null && !_buttons.Contains(DefaultButton))
+            if (DefaultButton is not null && !_buttons.Contains(DefaultButton))
             {
                 throw new InvalidOperationException(SR.TaskDialogDefaultButtonMustExistInCollection);
             }
@@ -769,7 +764,7 @@ namespace System.Windows.Forms
 
         internal void Bind(
             TaskDialog owner,
-            out ComCtl32.TDF flags,
+            out TASKDIALOG_FLAGS flags,
             out ComCtl32.TDCBF buttonFlags,
             out IEnumerable<(int buttonID, string text)> customButtonElements,
             out IEnumerable<(int buttonID, string text)> radioButtonElements,
@@ -778,7 +773,7 @@ namespace System.Windows.Forms
             out int defaultButtonID,
             out int defaultRadioButtonID)
         {
-            if (BoundDialog != null)
+            if (BoundDialog is not null)
             {
                 throw new InvalidOperationException();
             }
@@ -796,7 +791,7 @@ namespace System.Windows.Forms
 
             if (_boundIconIsFromHandle)
             {
-                flags |= ComCtl32.TDF.USE_HICON_MAIN;
+                flags |= TASKDIALOG_FLAGS.TDF_USE_HICON_MAIN;
             }
 
             TaskDialogButtonCollection buttons = _buttons;
@@ -830,7 +825,7 @@ namespace System.Windows.Forms
                 flags |= customButton.Bind(this, CustomButtonStartID + i);
             }
 
-            if (DefaultButton != null)
+            if (DefaultButton is not null)
             {
                 // Retrieve the button from the collection, to handle the case for standard buttons
                 // when the user set an equal (but not same) instance as default button.
@@ -856,7 +851,7 @@ namespace System.Windows.Forms
 
             if (defaultRadioButtonID == 0)
             {
-                flags |= ComCtl32.TDF.NO_DEFAULT_RADIO_BUTTON;
+                flags |= TASKDIALOG_FLAGS.TDF_NO_DEFAULT_RADIO_BUTTON;
             }
 
             customButtonElements = _boundCustomButtons.Where(e => e.IsCreated).Select(e => (e.ButtonID, e.GetResultingText()!));
@@ -865,19 +860,19 @@ namespace System.Windows.Forms
             // If we have command links, specify the TDF_USE_COMMAND_LINKS flag.
             // Note: The USE_COMMAND_LINKS_NO_ICON is currently not used.
             if (_boundCustomButtons.Any(e => e.IsCreated && e is TaskDialogCommandLinkButton))
-                flags |= ComCtl32.TDF.USE_COMMAND_LINKS;
+                flags |= TASKDIALOG_FLAGS.TDF_USE_COMMAND_LINKS;
 
-            if (_checkBox != null)
+            if (_checkBox is not null)
             {
                 flags |= _checkBox.Bind(this);
             }
 
-            if (_expander != null)
+            if (_expander is not null)
             {
                 flags |= _expander.Bind(this);
             }
 
-            if (_footnote != null)
+            if (_footnote is not null)
             {
                 flags |= _footnote.Bind(this, out footnoteIcon);
             }
@@ -886,7 +881,7 @@ namespace System.Windows.Forms
                 footnoteIcon = default;
             }
 
-            if (_progressBar != null)
+            if (_progressBar is not null)
             {
                 flags |= _progressBar.Bind(this);
             }
@@ -973,23 +968,23 @@ namespace System.Windows.Forms
         ///   Raises the <see cref="Created"/> event.
         /// </summary>
         /// <param name="e">An <see cref="EventArgs"/> that contains the event data.</param>
-        internal protected void OnCreated(EventArgs e) => Created?.Invoke(this, e);
+        protected internal void OnCreated(EventArgs e) => Created?.Invoke(this, e);
 
         /// <summary>
         ///   Raises the <see cref="Destroyed"/> event.
         /// </summary>
         /// <param name="e">An <see cref="EventArgs"/> that contains the event data.</param>
-        internal protected void OnDestroyed(EventArgs e) => Destroyed?.Invoke(this, e);
+        protected internal void OnDestroyed(EventArgs e) => Destroyed?.Invoke(this, e);
 
         /// <summary>
         ///   Raises the <see cref="HelpRequest"/> event.
         /// </summary>
         /// <param name="e">An <see cref="EventArgs"/> that contains the event data.</param>
-        internal protected void OnHelpRequest(EventArgs e) => HelpRequest?.Invoke(this, e);
+        protected internal void OnHelpRequest(EventArgs e) => HelpRequest?.Invoke(this, e);
 
-        private bool GetFlag(ComCtl32.TDF flag) => (_flags & flag) == flag;
+        private bool GetFlag(TASKDIALOG_FLAGS flag) => (_flags & flag) == flag;
 
-        private void SetFlag(ComCtl32.TDF flag, bool value)
+        private void SetFlag(TASKDIALOG_FLAGS flag, bool value)
         {
             DenyIfBound();
 

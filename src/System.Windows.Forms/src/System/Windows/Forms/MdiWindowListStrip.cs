@@ -2,9 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
-using System.Diagnostics;
 using System.Globalization;
 
 namespace System.Windows.Forms
@@ -14,9 +11,9 @@ namespace System.Windows.Forms
     /// </summary>
     internal class MdiWindowListStrip : MenuStrip
     {
-        private Form mdiParent;
-        private ToolStripMenuItem mergeItem;
-        private MenuStrip mergedMenu;
+        private Form? _mdiParent;
+        private ToolStripMenuItem? _mergeItem;
+        private MenuStrip? _mergedMenu;
 
         public MdiWindowListStrip()
         {
@@ -26,8 +23,9 @@ namespace System.Windows.Forms
         {
             if (disposing)
             {
-                mdiParent = null;
+                _mdiParent = null;
             }
+
             base.Dispose(disposing);
         }
 
@@ -35,31 +33,29 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (mergeItem is null)
-                {
-                    mergeItem = new ToolStripMenuItem
+                _mergeItem ??= new ToolStripMenuItem
                     {
                         MergeAction = MergeAction.MatchOnly
                     };
+
+                if (_mergeItem.Owner is null)
+                {
+                    Items.Add(_mergeItem);
                 }
 
-                if (mergeItem.Owner is null)
-                {
-                    Items.Add(mergeItem);
-                }
-                return mergeItem;
+                return _mergeItem;
             }
         }
 
-        internal MenuStrip MergedMenu
+        internal MenuStrip? MergedMenu
         {
             get
             {
-                return mergedMenu;
+                return _mergedMenu;
             }
             set
             {
-                mergedMenu = value;
+                _mergedMenu = value;
             }
         }
 
@@ -73,7 +69,7 @@ namespace System.Windows.Forms
         /// </summary>
         public void PopulateItems(Form mdiParent, ToolStripMenuItem mdiMergeItem, bool includeSeparator)
         {
-            this.mdiParent = mdiParent;
+            _mdiParent = mdiParent;
             SuspendLayout();
             MergeItem.DropDown.SuspendLayout();
             try
@@ -83,7 +79,7 @@ namespace System.Windows.Forms
                 mergeItem.Text = mdiMergeItem.Text;
 
                 Form[] forms = mdiParent.MdiChildren;
-                if (forms != null && forms.Length != 0)
+                if (forms is not null && forms.Length != 0)
                 {
                     if (includeSeparator)
                     {
@@ -95,7 +91,7 @@ namespace System.Windows.Forms
                         mergeItem.DropDownItems.Add(separator);
                     }
 
-                    Form activeMdiChild = mdiParent.ActiveMdiChild;
+                    Form? activeMdiChild = mdiParent.ActiveMdiChild;
 
                     const int maxMenuForms = 9;  // max number of Window menu items for forms
                     int visibleChildren = 0;     // number of visible child forms (so we know if we need to show More Windows...
@@ -111,14 +107,12 @@ namespace System.Windows.Forms
                         {
                             visibleChildren++;
                             if ((activeFormAdded && (formsAddedToMenu < maxMenuForms)) ||   // don't exceed max
-#pragma warning disable SA1408 // Conditional expressions should declare precedence
-                                (!activeFormAdded && (formsAddedToMenu < (maxMenuForms - 1)) ||   // save room for active if it's not in yet
-#pragma warning restore SA1408 // Conditional expressions should declare precedence
-                                (forms[i].Equals(activeMdiChild))))
+                                (!activeFormAdded && (formsAddedToMenu < (maxMenuForms - 1))) ||   // save room for active if it's not in yet
+                                forms[i].Equals(activeMdiChild))
                             {
                                 // there's always room for activeMdiChild
-                                string text = WindowsFormsUtils.EscapeTextWithAmpersands(mdiParent.MdiChildren[i].Text);
-                                text = text ?? string.Empty;
+                                string? text = WindowsFormsUtils.EscapeTextWithAmpersands(mdiParent.MdiChildren[i].Text);
+                                text ??= string.Empty;
                                 ToolStripMenuItem windowListItem = new ToolStripMenuItem(mdiParent.MdiChildren[i])
                                 {
                                     Text = string.Format(CultureInfo.CurrentCulture, "&{0} {1}", accel, text),
@@ -131,9 +125,10 @@ namespace System.Windows.Forms
                                     windowListItem.Checked = true;
                                     activeFormAdded = true;
                                 }
+
                                 accel++;
                                 formsAddedToMenu++;
-                                Debug.WriteLineIf(ToolStrip.s_mdiMergeDebug.TraceVerbose, "\tPopulateItems: Added " + windowListItem.Text);
+                                ToolStrip.s_mdiMergeDebug.TraceVerbose($"\tPopulateItems: Added {windowListItem.Text}");
                                 mergeItem.DropDownItems.Add(windowListItem);
                             }
                         }
@@ -146,7 +141,7 @@ namespace System.Windows.Forms
                         {
                             Text = SR.MDIMenuMoreWindows
                         };
-                        Debug.WriteLineIf(ToolStrip.s_mdiMergeDebug.TraceVerbose, "\tPopulateItems: Added " + moreWindowsMenuItem.Text);
+                        ToolStrip.s_mdiMergeDebug.TraceVerbose($"\tPopulateItems: Added {moreWindowsMenuItem.Text}");
                         moreWindowsMenuItem.Click += new EventHandler(OnMoreWindowsMenuItemClick);
                         moreWindowsMenuItem.MergeAction = MergeAction.Append;
                         mergeItem.DropDownItems.Add(moreWindowsMenuItem);
@@ -155,29 +150,28 @@ namespace System.Windows.Forms
             }
             finally
             {
-                // this is an invisible toolstrip dont even bother doing layout.
+                // this is an invisible toolstrip don't even bother doing layout.
                 ResumeLayout(false);
                 MergeItem.DropDown.ResumeLayout(false);
             }
         }
 
         /// <summary> handler for More Windows... This is similar to MenuItem.cs</summary>
-        private void OnMoreWindowsMenuItemClick(object sender, EventArgs e)
+        private void OnMoreWindowsMenuItemClick(object? sender, EventArgs e)
         {
-            Form[] forms = mdiParent.MdiChildren;
+            Form[]? forms = _mdiParent?.MdiChildren;
 
-            if (forms != null)
+            if (forms is not null)
             {
                 using (MdiWindowDialog dialog = new MdiWindowDialog())
                 {
-                    dialog.SetItems(mdiParent.ActiveMdiChild, forms);
+                    dialog.SetItems(_mdiParent?.ActiveMdiChild, forms);
                     DialogResult result = dialog.ShowDialog();
                     if (result == DialogResult.OK)
                     {
                         // AllWindows Assert above allows this...
-                        //
-                        dialog.ActiveChildForm.Activate();
-                        if (dialog.ActiveChildForm.ActiveControl != null && !dialog.ActiveChildForm.ActiveControl.Focused)
+                        dialog.ActiveChildForm?.Activate();
+                        if (dialog.ActiveChildForm?.ActiveControl is not null && !dialog.ActiveChildForm.ActiveControl.Focused)
                         {
                             dialog.ActiveChildForm.ActiveControl.Focus();
                         }
@@ -187,16 +181,16 @@ namespace System.Windows.Forms
         }
 
         /// <summary> handler for 1 - 9.  This is similar to MenuItem.cs</summary>
-        private void OnWindowListItemClick(object sender, EventArgs e)
+        private void OnWindowListItemClick(object? sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem windowListItem)
             {
-                Form boundForm = windowListItem.MdiForm;
+                Form? boundForm = windowListItem.MdiForm;
 
-                if (boundForm != null)
+                if (boundForm is not null)
                 {
                     boundForm.Activate();
-                    if (boundForm.ActiveControl != null && !boundForm.ActiveControl.Focused)
+                    if (boundForm.ActiveControl is not null && !boundForm.ActiveControl.Focused)
                     {
                         boundForm.ActiveControl.Focus();
                     }

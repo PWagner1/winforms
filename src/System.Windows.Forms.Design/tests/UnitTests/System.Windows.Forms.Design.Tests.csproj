@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpPackageVersion)" />
     <PackageReference Include="Moq" Version="$(MoqPackageVersion)" />
     <PackageReference Include="xunit.stafact" Version="$(XUnitStaFactPackageVersion)" />
     <PackageReference Include="coverlet.msbuild" Version="$(CoverletMSBuildPackageVersion)" />
@@ -19,6 +20,11 @@
     <ProjectReference Include="..\..\src\System.Windows.Forms.Design.csproj" />
     <ProjectReference Include="..\..\..\System.Design\src\System.Design.Facade.csproj" />
     <ProjectReference Include="..\..\..\System.Drawing.Design\src\System.Drawing.Design.Facade.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- workaround for https://github.com/dotnet/sdk/issues/3254 -->
+    <Reference Include="$(BaseOutputPath)..\System.Design.Facade\$(Configuration)\$(TargetFramework)\System.Design.dll" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +43,21 @@
     <EmbeddedResource Include="Resources\16x24.bmp">
       <LogicalName>System.Drawing.Design.Tests.16x24.bmp</LogicalName>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Resources\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="AxInterop.WMPLib">
+      <HintPath>$(ArtifactsBinDir)\AxHosts\$(Configuration)\net472\AxInterop.WMPLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.WMPLib">
+      <HintPath>$(ArtifactsBinDir)\AxHosts\$(Configuration)\net472\Interop.WMPLib.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

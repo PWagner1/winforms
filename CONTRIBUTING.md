@@ -8,7 +8,7 @@ You can contribute to Windows Forms with issues, pull-requests, and general revi
 
 Project maintainers will merge changes that improve the product significantly and broadly and that align with the our [Roadmap](docs/roadmap.md).
 
-Maintainers will not merge changes that have narrowly-defined benefits, due to compatibility risk. The Windows Forms .NET codebase is used by a significant number of internal and exteranl customers world-wide. We may revert changes if they are found to be breaking.
+Maintainers will not merge changes that have narrowly-defined benefits, due to compatibility risk. The Windows Forms .NET codebase is used by a significant number of internal and external customers world-wide. We may revert changes if they are found to be breaking.
 
 Whilst most .NET Core/.NET components are cross-platform Windows Forms implementations remain tightly coupled with Win32 API. With this we will typically not accept contributions that provide cross-platform implementations.
 
@@ -16,7 +16,8 @@ Whilst most .NET Core/.NET components are cross-platform Windows Forms implement
 
 Please do:
 
-* **DO** follow our [coding style][coding-style] (C# code-specific)
+* **DO** follow our [coding style][coding-style] (C# code-specific)<br/>
+  We strive to wrap the lines around 120 mark, and it's acceptable to stretch to no more than 150 chars (with some exceptions being URLs). [EditorGuidelines VS extension](https://marketplace.visualstudio.com/items?itemName=PaulHarrington.EditorGuidelines) makes it easier to visualise (see https://github.com/dotnet/winforms/pull/4836).
 * **DO** give priority to the current style of the project or file you're changing even if it diverges from the general guidelines.
 * **DO** include tests when adding new features. When fixing bugs, start with
   adding a test that highlights how the current behavior is broken.
@@ -40,7 +41,7 @@ Contributions must maintain [API signature][breaking-changes-public-contract] an
 
 ## Up for Grabs
 
-The team marks the most straightforward issues as [up for grabs](https://github.com/dotnet/winforms/labels/up-for-grabs). This set of issues is the place to start if you are interested in contributing but new to the codebase.
+The team marks the most straightforward issues as [good first issue](https://github.com/dotnet/winforms/labels/good%20first%20issue) and  [help wanted](https://github.com/dotnet/winforms/labels/help%20wanted). This set of issues is the place to start if you are interested in contributing but new to the codebase.
 
 ## PR Feedback
 

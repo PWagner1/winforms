@@ -2,9 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
-using Xunit;
-
 namespace System.Windows.Forms.Tests
 {
     public class SinglyLinkedListTests
@@ -180,11 +177,12 @@ namespace System.Windows.Forms.Tests
         {
             List<T> list = new List<T>(linkedList.Count);
             var node = linkedList.First;
-            while (node != null)
+            while (node is not null)
             {
                 list.Add(node);
                 node = node.Next;
             }
+
             return list;
         }
 
@@ -196,6 +194,7 @@ namespace System.Windows.Forms.Tests
             {
                 list.Add(enumerator.Current);
             }
+
             return list;
         }
     }

@@ -2,10 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Windows.Forms;
 
-namespace AccessibilityTests
+namespace Accessibility_Core_App
 {
     public partial class MenuForm : Form
     {
@@ -16,7 +15,7 @@ namespace AccessibilityTests
 
         private void Button1_Click(object sender, EventArgs e)
         {
-            StripControls stripControls = new StripControls();
+            Menu_Toolbars_controls stripControls = new Menu_Toolbars_controls();
             stripControls.Show();
         }
 

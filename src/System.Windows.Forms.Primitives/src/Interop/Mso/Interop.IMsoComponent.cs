@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Runtime.InteropServices;
 
 internal static partial class Interop
@@ -15,7 +14,7 @@ internal static partial class Interop
         }
 
         /// <remarks>
-        ///  WM_MOUSEACTIVATE Note (for top level compoenents and host)
+        ///  WM_MOUSEACTIVATE Note (for top level components and host)
         ///
         ///  If the active (or tracking) comp's reg info indicates that it wants mouse
         ///  messages, then no MA_xxxANDEAT value should be returned  from WM_MOUSEACTIVATE,
@@ -25,7 +24,7 @@ internal static partial class Interop
         ///  can query the reg info  of the active (or tracking) component at any time via
         ///  <see cref="IMsoComponentManager.FGetActiveComponent"/>.
         /// </remarks>
-        [ComImport()]
+        [ComImport]
         [Guid(ComponentIds.IID_IMsoComponent)]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         public unsafe interface IMsoComponent
@@ -54,7 +53,7 @@ internal static partial class Interop
             ///  <see cref="BOOL.FALSE"/> otherwise.
             /// </returns>
             [PreserveSig]
-            BOOL FPreTranslateMessage(User32.MSG* msg);
+            BOOL FPreTranslateMessage(MSG* msg);
 
             /// <summary>
             ///  Notify component when app enters or exits (as indicated by <paramref name="fEnter"/>)
@@ -206,7 +205,7 @@ internal static partial class Interop
             BOOL FContinueMessageLoop(
                 msoloop uReason,
                 void* pvLoopData,
-                User32.MSG* pMsgPeeked);
+                MSG* pMsgPeeked);
 
             /// <summary>
             ///  Called when component manager wishes to know if the component is in a

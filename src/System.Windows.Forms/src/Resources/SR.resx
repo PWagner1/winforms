@@ -1,5 +1,64 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -781,7 +840,7 @@
   <data name="ContextMenuStripSourceControlDescr" xml:space="preserve">
     <value>The last control that caused this context menu strip to be displayed.</value>
   </data>
-  <data name="ControlAccessibileObjectInvalid" xml:space="preserve">
+  <data name="ControlAccessibleObjectInvalid" xml:space="preserve">
     <value>Control's accessible object is in an invalid state.</value>
   </data>
   <data name="ControlAccessibilityObjectDescr" xml:space="preserve">
@@ -2863,12 +2922,12 @@ just-in-time (JIT) debugging instead of this dialog box.
   <data name="ExDlgMsgLoadedAssembliesSection" xml:space="preserve">
     <value>Loaded Assemblies</value>
   </data>
-  <data name="ExDlgMsgSectionSeperator" xml:space="preserve">
+  <data name="ExDlgMsgSectionSeparator" xml:space="preserve">
     <value>
 ************** {0} **************
 </value>
   </data>
-  <data name="ExDlgMsgSeperator" xml:space="preserve">
+  <data name="ExDlgMsgSeparator" xml:space="preserve">
     <value>----------------------------------------
 </value>
   </data>
@@ -3126,6 +3185,9 @@ Do you want to replace it?</value>
   <data name="FormMDIChildrenDescr" xml:space="preserve">
     <value>Retrieves the MDI children of this form.</value>
   </data>
+  <data name="FormMdiChildrenMinimizedAnchorBottomDescr" xml:space="preserve">
+    <value>Gets or sets the anchoring for minimized MDI children.</value>
+  </data>
   <data name="FormMDIParentAndChild" xml:space="preserve">
     <value>Form cannot be both an MDI child and MDI parent.</value>
   </data>
@@ -3230,9 +3292,6 @@ Do you want to replace it?</value>
   </data>
   <data name="FormWindowStateDescr" xml:space="preserve">
     <value>Determines the initial visual state of the form.</value>
-  </data>
-  <data name="GridItemDisposed" xml:space="preserve">
-    <value>The GridItem has been disposed and is no longer usable.</value>
   </data>
   <data name="GridItemNotExpandable" xml:space="preserve">
     <value>The GridItem cannot be expanded.</value>
@@ -3481,9 +3540,6 @@ Stack trace where the illegal operation occurred was:
   </data>
   <data name="KeysConverterInvalidKeyCombination" xml:space="preserve">
     <value>Key combination is not valid.</value>
-  </data>
-  <data name="KeysConverterInvalidKeyName" xml:space="preserve">
-    <value>Key name is not valid.</value>
   </data>
   <data name="LabelAutoEllipsisDescr" xml:space="preserve">
     <value>Enables the automatic handling of text that extends beyond the width of the label control.</value>
@@ -4304,9 +4360,6 @@ Stack trace where the illegal operation occurred was:
   <data name="NumericUpDownValueDescr" xml:space="preserve">
     <value>The current value of the numeric up-down control.</value>
   </data>
-  <data name="ObjectDisposed" xml:space="preserve">
-    <value>Disposed '{0}' can no longer be used.</value>
-  </data>
   <data name="ObjectHasParent" xml:space="preserve">
     <value>Object already has a parent.</value>
   </data>
@@ -4358,7 +4411,7 @@ Stack trace where the illegal operation occurred was:
   <data name="PanelBorderStyleDescr" xml:space="preserve">
     <value>Indicates whether the panel should have a border.</value>
   </data>
-  <data name="PBRSDocCommentPaneTitle" xml:space="preserve">
+  <data name="PropertyGridHelpPaneTitle" xml:space="preserve">
     <value>Description</value>
   </data>
   <data name="PBRSErrorInvalidPropertyValue" xml:space="preserve">
@@ -4471,6 +4524,9 @@ Stack trace where the illegal operation occurred was:
   </data>
   <data name="PictureBoxWaitOnLoadDescr" xml:space="preserve">
     <value>Controls whether processing will stop until the image is loaded.</value>
+  </data>
+  <data name="PictureBoxRemoteLocationNotSupported" xml:space="preserve">
+    <value>Loading from remote location not supported.</value>
   </data>
   <data name="PopupControlBadParentArgument" xml:space="preserve">
     <value>Cannot set the ParentPopup to be yourself.</value>
@@ -4799,7 +4855,7 @@ Stack trace where the illegal operation occurred was:
   <data name="PropertyGridDefaultAccessibleNameTemplate" xml:space="preserve">
     <value>{0} Properties Window</value>
   </data>
-  <data name="PropertyGridDocCommentAccessibleNameTemplate" xml:space="preserve">
+  <data name="PropertyGridHelpPaneAccessibleNameTemplate" xml:space="preserve">
     <value>{0} Description</value>
   </data>
   <data name="PropertyGridDisabledItemForeColorDesc" xml:space="preserve">
@@ -5131,6 +5187,9 @@ Stack trace where the illegal operation occurred was:
   </data>
   <data name="ScrollableControlHorizontalScrollDescr" xml:space="preserve">
     <value>Gets the horizontal scroll bar for this ScrollableControl.</value>
+  </data>
+  <data name="ScrollableControlActiveControlParentNull" xml:space="preserve">
+    <value>Parent property of the active control cannot be null.</value>
   </data>
   <data name="ScrollableControlRaiseMouseEnterLeaveEventsForScrollBarsDescr" xml:space="preserve">
     <value>Property being set to false will not raise MouseEnter and MouseLeave events until the mouse leaves the client area and the scrollbars.</value>
@@ -5942,6 +6001,12 @@ Stack trace where the illegal operation occurred was:
   <data name="ToolStripSaveSettingsDescr" xml:space="preserve">
     <value>Specifies whether the ToolStrip should persist user settings via IPersistComponentSettings.</value>
   </data>
+  <data name="ToolStripScrollButtonDownAccessibleName" xml:space="preserve">
+    <value>Line down</value>
+  </data>
+  <data name="ToolStripScrollButtonUpAccessibleName" xml:space="preserve">
+    <value>Line up</value>
+  </data>
   <data name="ToolStripSettingsKeyDescr" xml:space="preserve">
     <value>Specifies the settings key to use to save settings.</value>
   </data>
@@ -6495,7 +6560,7 @@ Stack trace where the illegal operation occurred was:
     <value>Width must be greater than MinWidth.</value>
   </data>
   <data name="Win32WindowAlreadyCreated" xml:space="preserve">
-    <value>SetCompatibleTextRenderingDefault must be called before the first IWin32Window object is created in the application.</value>
+    <value>{0} must be called before the first IWin32Window object is created in the application.</value>
   </data>
   <data name="WindowsFormsSetEvent" xml:space="preserve">
     <value>Setting event '{0}'</value>
@@ -6739,5 +6804,143 @@ Stack trace where the illegal operation occurred was:
   </data>
   <data name="TreeNodeBoundToAnotherTreeView" xml:space="preserve">
     <value>The TreeNode is already bound to another TreeView. You must first remove it from its current location or clone it.</value>
+  </data>
+  <data name="ComboboxDropDownButtonCloseName" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="ComboboxDropDownButtonOpenName" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="CalendarPreviousButtonAccessibleObjectDescription" xml:space="preserve">
+    <value>Go to previous time frame</value>
+  </data>
+  <data name="CalendarNextButtonAccessibleObjectDescription" xml:space="preserve">
+    <value>Go to next time frame</value>
+  </data>
+  <data name="CalendarTodayLinkAccessibleObjectDescription" xml:space="preserve">
+    <value>Go to and select today's date</value>
+  </data>
+  <data name="MonthCalendarWeekNumberDescription" xml:space="preserve">
+    <value>Week {0}</value>
+  </data>
+  <data name="ListViewItemAccessibilityObjectInvalidViewException" xml:space="preserve">
+    <value>The current accessibility object is only for the ListView in {0} view</value>
+  </data>
+  <data name="TrackBarLargeDecreaseButtonName" xml:space="preserve">
+    <value>Large decrease</value>
+  </data>
+  <data name="TrackBarLargeIncreaseButtonName" xml:space="preserve">
+    <value>Large increase</value>
+  </data>
+  <data name="TrackBarPositionButtonName" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="ProfessionalColorsStatusStripBorderDescr" xml:space="preserve">
+    <value>Border color to use on the top edge of the StatusStrip.</value>
+  </data>
+  <data name="ListViewCannotAddGroupsToVirtualListView" xml:space="preserve">
+    <value>You cannot add groups to the ListView groups collection when the ListView is in virtual mode.</value>
+  </data>
+  <data name="ParentPropertyNotSetInGetNextControl" xml:space="preserve">
+    <value>{0} property should be set for {1}.</value>
+  </data>
+  <data name="ControlsPropertyNotSetInGetNextControl" xml:space="preserve">
+    <value>{0} property should be set for {1}.</value>
+  </data>
+  <data name="ControlsCollectionShouldNotBeEmptyInGetNextControl" xml:space="preserve">
+    <value>{0} collection shouldn't be empty for {1}.</value>
+  </data>
+  <data name="AccessibleObjectRuntimeIdNotSupported" xml:space="preserve">
+    <value>{0} doesn't support {1} property. It must be overriden in the derived class.</value>
+  </data>
+  <data name="ListViewGroupCollapsedStateName" xml:space="preserve">
+    <value>{0}, group, collapsed</value>
+  </data>
+  <data name="ListViewGroupExpandedStateName" xml:space="preserve">
+    <value>{0}, group, expanded</value>
+  </data>
+  <data name="CategoryPropertyGridLocalizedControlType" xml:space="preserve">
+    <value>PropertyGrid category</value>
+  </data>
+  <data name="FileDialogAddToRecentDescr" xml:space="preserve">
+    <value>Controls whether to add the file being opened or saved to the recent list.</value>
+  </data>
+  <data name="FileDialogShowHiddenFilesDescr" xml:space="preserve">
+    <value>Controls whether the dialog box displays hidden and system files.</value>
+  </data>
+  <data name="SaveFileDialogCheckWriteAccess" xml:space="preserve">
+    <value>Controls whether the dialog box verifies if the creation of the specified file will be successful.</value>
+  </data>
+  <data name="SaveFileDialogExpandedMode" xml:space="preserve">
+    <value>Controls whether the dialog box is always opened in the expanded mode.</value>
+  </data>
+  <data name="FileDialogOkRequiresInteractionDescr" xml:space="preserve">
+    <value>Controls whether the OK button of the dialog box is disabled until the user navigates the view or edits the filename (if applicable). Note: Disabling of the OK button does not prevent the dialog from being submitted by the Enter key.</value>
+  </data>
+  <data name="OpenFileDialogSelectReadOnlyDescr" xml:space="preserve">
+    <value>Controls whether the dialog box allows to select read-only files.</value>
+  </data>
+  <data name="FileDialogShowPinnedPlacesDescr" xml:space="preserve">
+    <value>Controls whether the items shown by default in the view's navigation pane are shown.</value>
+  </data>
+  <data name="OpenFileDialogShowPreviewDescr" xml:space="preserve">
+    <value>Controls whether the dialog box shows a preview for selected files.</value>
+  </data>
+  <data name="FolderBrowserDialogAddToRecent" xml:space="preserve">
+    <value>Controls whether the dialog box adds the folder being selected to the recent list.</value>
+  </data>
+  <data name="FolderBrowserDialogOkRequiresInteraction" xml:space="preserve">
+    <value>Controls whether the OK button of the dialog box is disabled until the user navigates the view or edits the filename (if applicable). Note: Disabling of the OK button does not prevent the dialog from being submitted by the Enter key.</value>
+  </data>
+  <data name="FolderBrowserDialogShowHiddenFiles" xml:space="preserve">
+    <value>Controls whether the dialog box displays hidden and system files.</value>
+  </data>
+  <data name="FolderBrowserDialogShowPinnedPlaces" xml:space="preserve">
+    <value>Controls whether the items shown by default in the view's navigation pane are shown.</value>
+  </data>
+  <data name="EditDefaultAccessibleName" xml:space="preserve">
+    <value>Spinner</value>
+  </data>
+  <data name="ExpandedStateName" xml:space="preserve">
+    <value>Expanded</value>
+  </data>
+  <data name="ToolStripItemOnCommandChangedDescr" xml:space="preserve">
+    <value>Occurs whenever the bindable command changes.</value>
+  </data>
+  <data name="ToolStripItemOnBindingContextChangedDescr" xml:space="preserve">
+    <value>Occurs whenever the binding context changes.</value>
+  </data>
+  <data name="CommandComponentCommandDescr" xml:space="preserve">
+    <value>Gets or sets the ICommand object whose Execute delegate gets executed whenever the Click event of this component gets invoked.</value>
+  </data>
+  <data name="ToolStripItemBindingContextDescr" xml:space="preserve">
+    <value>Gets or sets the BindingContext for this toolstrip item.</value>
+  </data>
+  <data name="ListViewItemAccessibilityObjectRequiresListView" xml:space="preserve">
+    <value>Cannot get accessiblity object when ListViewItem is not attached to a ListView.</value>
+  </data>
+  <data name="BindableComponentBindingContextChangedDescr" xml:space="preserve">
+    <value>Occurs when the binding context has changed.</value>
+  </data>
+  <data name="BindingComponentBindingContextDescr" xml:space="preserve">
+    <value>Gets or sets the BindingContext for this bindable Component.</value>
+  </data>
+  <data name="CommandCanExecuteChangedEventDescr" xml:space="preserve">
+    <value>Occurs when the ICommand.CanExecute(object?) status of the command which is assigned to the Command property has changed.</value>
+  </data>
+  <data name="CommandChangedEventDescr" xml:space="preserve">
+    <value>Occurs when the assigned ICommand object of the Command property has changed.</value>
+  </data>
+  <data name="CommandParameterChangedEventDescr" xml:space="preserve">
+    <value>Occurs when the value of the CommandParameter property has changed.</value>
+  </data>
+  <data name="ControlDataContextChangedDescr" xml:space="preserve">
+    <value>Occurs when the value of the DataContext property changes.</value>
+  </data>
+  <data name="CommandComponentCommandParameterDescr" xml:space="preserve">
+    <value>Gets or sets the parameter that is passed to the Command property's object on execution or on execution context request.</value>
+  </data>
+  <data name="AccessDenied" xml:space="preserve">
+    <value>Access denied</value>
   </data>
 </root>

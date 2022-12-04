@@ -6,6 +6,14 @@
   <Import Project="$(RepositoryEngineeringDir)versioning.targets" />
   <Import Project="$(RepositoryEngineeringDir)ApiCompatibility\PublicApiAnalyzer.targets" />
 
+  <!-- CA1416 Validate platform compatibility. Do not apply to netstandard as it does not have the attribute. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatform" Condition="!$(TargetFramework.StartsWith('netstandard'))">
+      <!-- This tells the analyzer that we are targeting windows6.1 (windows 7). -->
+      <_Parameter1>windows6.1</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  
   <!-- to prevent using MS.NC.Platforms from SDK, which is lagging behind the version that WinForms gets from the CoreFx packages -->
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.Platforms" Version="$(MicrosoftNETCorePlatformsPackageVersion)" />
@@ -16,10 +24,23 @@
     <CoverletOutput>$(TargetDir)coverage\$(MSBuildProjectName).coverage</CoverletOutput>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
-    <Platforms Condition="'$(Platform)' == 'x86'">AnyCPU;x86</Platforms>
-    <TestArchitectures Condition="'$(Platform)' == 'x86'">x86</TestArchitectures>
-    <TestArchitectures Condition="'$(Platform)' != 'x86'">x64;x86</TestArchitectures>
+  <!-- Turn on single-file publishing analysis for everything except the test projects -->
+  <PropertyGroup Condition="'$(IsTestProject)' != 'true'">
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+  </PropertyGroup>
+
+  <!-- Mark all projects located under **\tests\* folders as non-shipping -->
+  <PropertyGroup>
+    <_ProjectDirectoryRelativePath>$([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectDirectory)))</_ProjectDirectoryRelativePath>
+    <_IsUnderTestsFolder>$(_ProjectDirectoryRelativePath.Contains("\tests\"))</_IsUnderTestsFolder>
+    <IsShipping Condition="$(_IsUnderTestsFolder)">false</IsShipping>
+	<RedistTargetFrameworkName>$(TargetFrameworkName)$(TargetFrameworkMajorVersion).</RedistTargetFrameworkName>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true' ">
+    <TargetArchitecture Condition="'$(TargetArchitecture)' == ''">x64</TargetArchitecture>
+    <Platform Condition="'$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'">$(TargetArchitecture)</Platform>
+    <TestArchitectures>$(TargetArchitecture)</TestArchitectures>
   </PropertyGroup>
 
   <Target Name="InstrumentModulesNoBuild" BeforeTargets="RunTests" Condition="'$(IsUnitTestProject)' == 'true'">
@@ -52,18 +73,18 @@
 
   <ItemGroup>
     <!-- Set TargetingPackVersion -->
-    <FrameworkReference Update="Microsoft.NETCore.App" 
-      Condition=" '$(VSRedistCommonNetCoreSharedFrameworkx6460PackageVersion)'!='' And $(TargetFramework.StartsWith('netcoreapp5.')) ">
-    <TargetingPackVersion>$(VSRedistCommonNetCoreSharedFrameworkx6460PackageVersion)</TargetingPackVersion>
+    <FrameworkReference Update="Microsoft.NETCore.App"
+      Condition=" '$(VSRedistCommonNetCoreSharedFrameworkx6480PackageVersion)'!='' And $(TargetFramework.StartsWith('$(RedistTargetFrameworkName)')) ">
+    <TargetingPackVersion>$(VSRedistCommonNetCoreSharedFrameworkx6480PackageVersion)</TargetingPackVersion>
     </FrameworkReference>
   </ItemGroup>
 
   <PropertyGroup>
-    <!-- Set RuntimeFrameworkVersion to VSRedistCommonNetCoreSharedFrameworkx6460PackageVersion from Core Setup to prevent large SDK cycle -->
-    <RuntimeFrameworkVersion Condition="'$(VSRedistCommonNetCoreSharedFrameworkx6460PackageVersion)'!='' And $(TargetFramework.StartsWith('netcoreapp5.')) ">$(VSRedistCommonNetCoreSharedFrameworkx6460PackageVersion)</RuntimeFrameworkVersion>
+    <!-- Set RuntimeFrameworkVersion to VSRedistCommonNetCoreSharedFrameworkx6480PackageVersion from Core Setup to prevent large SDK cycle -->
+    <RuntimeFrameworkVersion Condition="'$(VSRedistCommonNetCoreSharedFrameworkx6480PackageVersion)'!='' And $(TargetFramework.StartsWith('$(RedistTargetFrameworkName)')) ">$(VSRedistCommonNetCoreSharedFrameworkx6480PackageVersion)</RuntimeFrameworkVersion>
 
-    <!-- If TargetFramework is not netcoreapp5.x, then reset RuntimeFrameworkVersion -->
-    <RuntimeFrameworkVersion Condition="!$(TargetFramework.StartsWith('netcoreapp5.'))" />
+    <!-- If TargetFramework is not net8.x, then reset RuntimeFrameworkVersion -->
+    <RuntimeFrameworkVersion Condition="!$(TargetFramework.StartsWith('$(RedistTargetFrameworkName)'))" />
   </PropertyGroup>
 
 </Project>

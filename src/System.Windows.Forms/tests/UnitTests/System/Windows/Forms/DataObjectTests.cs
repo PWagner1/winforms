@@ -2,27 +2,21 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization;
 using Moq;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
-using static Interop;
-using static Interop.Shell32;
 using static Interop.User32;
 using IComDataObject = System.Runtime.InteropServices.ComTypes.IDataObject;
+using Point = System.Drawing.Point;
 
 namespace System.Windows.Forms.Tests
 {
-    using Point = System.Drawing.Point;
-
     // NB: doesn't require thread affinity
     public class DataObjectTests : IClassFixture<ThreadExceptionFixture>
     {
@@ -66,7 +60,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataObject_ContainsAudio_InvokeMocked_CallsGetDataPresent(bool result)
         {
             var mockDataObject = new Mock<DataObject>(MockBehavior.Strict);
@@ -89,7 +83,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataObject_ContainsFileDropList_InvokeMocked_CallsGetDataPresent(bool result)
         {
             var mockDataObject = new Mock<DataObject>(MockBehavior.Strict);
@@ -112,7 +106,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataObject_ContainsImage_InvokeMocked_CallsGetDataPresent(bool result)
         {
             var mockDataObject = new Mock<DataObject>(MockBehavior.Strict);
@@ -135,7 +129,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataObject_ContainsText_InvokeMocked_CallsGetDataPresent(bool result)
         {
             var mockDataObject = new Mock<DataObject>(MockBehavior.Strict);
@@ -151,7 +145,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TextDataFormat))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TextDataFormat))]
         public void DataObject_ContainsText_InvokeTextDataFormat_ReturnsFalse(TextDataFormat format)
         {
             var dataObject = new DataObject();
@@ -187,7 +181,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TextDataFormat))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TextDataFormat))]
         public void DataObject_ContainsText_InvokeInvalidTextDataFormat_ThrowsInvalidEnumArgumentException(TextDataFormat format)
         {
             var dataObject = new DataObject();
@@ -241,6 +235,7 @@ namespace System.Windows.Forms.Tests
             {
                 yield return new object[] { format };
             }
+
             foreach (string format in s_mappedFormats)
             {
                 yield return new object[] { format };
@@ -319,6 +314,7 @@ namespace System.Windows.Forms.Tests
                 {
                     yield return new object[] { format, autoConvert };
                 }
+
                 foreach (string format in s_mappedFormats)
                 {
                     yield return new object[] { format, autoConvert };
@@ -407,6 +403,7 @@ namespace System.Windows.Forms.Tests
             {
                 yield return new object[] { format };
             }
+
             foreach (string format in s_mappedFormats)
             {
                 yield return new object[] { format };
@@ -485,6 +482,7 @@ namespace System.Windows.Forms.Tests
                 {
                     yield return new object[] { format, autoConvert };
                 }
+
                 foreach (string format in s_mappedFormats)
                 {
                     yield return new object[] { format, autoConvert };
@@ -679,7 +677,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataObject_GetFormats_InvokeBoolDefault_ReturnsEmpty(bool autoConvert)
         {
             var dataObject = new DataObject();
@@ -799,7 +797,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void DataObject_GetText_InvokeMocked_ReturnsExpected(string result)
         {
             var mockDataObject = new Mock<DataObject>(MockBehavior.Strict);
@@ -815,7 +813,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TextDataFormat))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TextDataFormat))]
         public void DataObject_GetText_InvokeTextDataFormatDefault_ReturnsEmpty(TextDataFormat format)
         {
             var dataObject = new DataObject();
@@ -881,7 +879,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TextDataFormat))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TextDataFormat))]
         public void DataObject_GetText_InvokeInvalidFormat_ThrowsInvalidEnumArgumentException(TextDataFormat format)
         {
             var dataObject = new DataObject();
@@ -1538,18 +1536,18 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedCsvText, dataObject.GetData(DataFormats.CommaSeparatedValue, autoConvert: false));
 
             Assert.True(dataObject.ContainsText(format));
-            Assert.Equal(expectedUnicodeText != null, dataObject.GetDataPresent(DataFormats.UnicodeText, autoConvert: true));
-            Assert.Equal(expectedUnicodeText != null, dataObject.GetDataPresent(DataFormats.UnicodeText, autoConvert: false));
+            Assert.Equal(expectedUnicodeText is not null, dataObject.GetDataPresent(DataFormats.UnicodeText, autoConvert: true));
+            Assert.Equal(expectedUnicodeText is not null, dataObject.GetDataPresent(DataFormats.UnicodeText, autoConvert: false));
             Assert.False(dataObject.GetDataPresent(DataFormats.Text, autoConvert: true));
             Assert.False(dataObject.GetDataPresent(DataFormats.Text, autoConvert: false));
             Assert.False(dataObject.GetDataPresent(DataFormats.StringFormat, autoConvert: true));
             Assert.False(dataObject.GetDataPresent(DataFormats.StringFormat, autoConvert: false));
-            Assert.Equal(expectedRtfText != null, dataObject.GetDataPresent(DataFormats.Rtf, autoConvert: true));
-            Assert.Equal(expectedRtfText != null, dataObject.GetDataPresent(DataFormats.Rtf, autoConvert: false));
-            Assert.Equal(expectedHtmlText != null, dataObject.GetDataPresent(DataFormats.Html, autoConvert: true));
-            Assert.Equal(expectedHtmlText != null, dataObject.GetDataPresent(DataFormats.Html, autoConvert: false));
-            Assert.Equal(expectedCsvText != null, dataObject.GetDataPresent(DataFormats.CommaSeparatedValue, autoConvert: true));
-            Assert.Equal(expectedCsvText != null, dataObject.GetDataPresent(DataFormats.CommaSeparatedValue, autoConvert: false));
+            Assert.Equal(expectedRtfText is not null, dataObject.GetDataPresent(DataFormats.Rtf, autoConvert: true));
+            Assert.Equal(expectedRtfText is not null, dataObject.GetDataPresent(DataFormats.Rtf, autoConvert: false));
+            Assert.Equal(expectedHtmlText is not null, dataObject.GetDataPresent(DataFormats.Html, autoConvert: true));
+            Assert.Equal(expectedHtmlText is not null, dataObject.GetDataPresent(DataFormats.Html, autoConvert: false));
+            Assert.Equal(expectedCsvText is not null, dataObject.GetDataPresent(DataFormats.CommaSeparatedValue, autoConvert: true));
+            Assert.Equal(expectedCsvText is not null, dataObject.GetDataPresent(DataFormats.CommaSeparatedValue, autoConvert: false));
         }
 
         public static IEnumerable<object[]> SetText_StringTextDataFormatMocked_TestData()
@@ -1593,7 +1591,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetNullOrEmptyStringTheoryData))]
         public void DataObject_SetText_NullOrEmptyTextData_ThrowsArgumentNullException(string textData)
         {
             var dataObject = new DataObject();
@@ -1602,7 +1600,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [Theory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TextDataFormat))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TextDataFormat))]
         public void DataObject_SetText_InvalidFormat_ThrowsInvalidEnumArgumentException(TextDataFormat format)
         {
             var dataObject = new DataObject();
@@ -2159,8 +2157,8 @@ namespace System.Windows.Forms.Tests
             {
                 tymed = TYMED.TYMED_HGLOBAL
             };
-            IntPtr handle = Kernel32.GlobalAlloc(
-                Kernel32.GMEM.MOVEABLE | Kernel32.GMEM.DDESHARE | Kernel32.GMEM.ZEROINIT,
+            nint handle = PInvoke.GlobalAlloc(
+                GLOBAL_ALLOC_FLAGS.GMEM_MOVEABLE | GLOBAL_ALLOC_FLAGS.GMEM_ZEROINIT,
                 1);
             try
             {
@@ -2172,7 +2170,7 @@ namespace System.Windows.Forms.Tests
             }
             finally
             {
-                Kernel32.GlobalFree(handle);
+                PInvoke.GlobalFree(handle);
             }
         }
 
@@ -2199,8 +2197,8 @@ namespace System.Windows.Forms.Tests
             {
                 tymed = TYMED.TYMED_HGLOBAL
             };
-            IntPtr handle = Kernel32.GlobalAlloc(
-                Kernel32.GMEM.MOVEABLE | Kernel32.GMEM.DDESHARE | Kernel32.GMEM.ZEROINIT,
+            nint handle = PInvoke.GlobalAlloc(
+                GLOBAL_ALLOC_FLAGS.GMEM_MOVEABLE | GLOBAL_ALLOC_FLAGS.GMEM_ZEROINIT,
                 1);
             try
             {
@@ -2212,7 +2210,7 @@ namespace System.Windows.Forms.Tests
             }
             finally
             {
-                Kernel32.GlobalFree(handle);
+                PInvoke.GlobalFree(handle);
             }
         }
 
@@ -2233,7 +2231,7 @@ namespace System.Windows.Forms.Tests
             {
                 tymed = TYMED.TYMED_HGLOBAL
             };
-            Assert.Throws<ArgumentException>(null, () => iComDataObject.GetDataHere(ref formatetc, ref stgMedium));
+            Assert.Throws<ArgumentException>(() => iComDataObject.GetDataHere(ref formatetc, ref stgMedium));
         }
 
         [WinFormsTheory]
@@ -2253,7 +2251,7 @@ namespace System.Windows.Forms.Tests
             {
                 tymed = TYMED.TYMED_HGLOBAL
             };
-            Assert.Throws<ArgumentException>(null, () => iComDataObject.GetDataHere(ref formatetc, ref stgMedium));
+            Assert.Throws<ArgumentException>(() => iComDataObject.GetDataHere(ref formatetc, ref stgMedium));
         }
 
         [WinFormsFact]
@@ -2272,8 +2270,8 @@ namespace System.Windows.Forms.Tests
             {
                 tymed = TYMED.TYMED_HGLOBAL
             };
-            IntPtr handle = Kernel32.GlobalAlloc(
-                Kernel32.GMEM.MOVEABLE | Kernel32.GMEM.DDESHARE | Kernel32.GMEM.ZEROINIT,
+            nint handle = PInvoke.GlobalAlloc(
+                GLOBAL_ALLOC_FLAGS.GMEM_MOVEABLE | GLOBAL_ALLOC_FLAGS.GMEM_ZEROINIT,
                 1);
             try
             {
@@ -2283,14 +2281,14 @@ namespace System.Windows.Forms.Tests
                 DROPFILES* pDropFiles = *(DROPFILES**)stgMedium.unionmember;
                 Assert.Equal(20u, pDropFiles->pFiles);
                 Assert.Equal(Point.Empty, pDropFiles->pt);
-                Assert.Equal(BOOL.FALSE, pDropFiles->fNC);
-                Assert.Equal(BOOL.TRUE, pDropFiles->fWide);
+                Assert.False(pDropFiles->fNC);
+                Assert.True(pDropFiles->fWide);
                 char* text = (char*)IntPtr.Add((IntPtr)pDropFiles, (int)pDropFiles->pFiles);
                 Assert.Equal("Path1\0Path2\0\0", new string(text, 0, "Path1".Length + 1 + "Path2".Length + 1 + 1));
             }
             finally
             {
-                Kernel32.GlobalFree(handle);
+                PInvoke.GlobalFree(handle);
             }
         }
 
@@ -2310,8 +2308,8 @@ namespace System.Windows.Forms.Tests
             {
                 tymed = TYMED.TYMED_HGLOBAL
             };
-            IntPtr handle = Kernel32.GlobalAlloc(
-                Kernel32.GMEM.MOVEABLE | Kernel32.GMEM.DDESHARE | Kernel32.GMEM.ZEROINIT,
+            nint handle = PInvoke.GlobalAlloc(
+               GLOBAL_ALLOC_FLAGS.GMEM_MOVEABLE | GLOBAL_ALLOC_FLAGS.GMEM_ZEROINIT,
                 (uint)sizeof(DROPFILES));
             try
             {
@@ -2321,12 +2319,12 @@ namespace System.Windows.Forms.Tests
                 DROPFILES* pDropFiles = *(DROPFILES**)stgMedium.unionmember;
                 Assert.Equal(0u, pDropFiles->pFiles);
                 Assert.Equal(Point.Empty, pDropFiles->pt);
-                Assert.Equal(BOOL.FALSE, pDropFiles->fNC);
-                Assert.Equal(BOOL.FALSE, pDropFiles->fWide);
+                Assert.False(pDropFiles->fNC);
+                Assert.False(pDropFiles->fWide);
             }
             finally
             {
-                Kernel32.GlobalFree(handle);
+                PInvoke.GlobalFree(handle);
             }
         }
 
@@ -2346,7 +2344,7 @@ namespace System.Windows.Forms.Tests
             {
                 tymed = TYMED.TYMED_HGLOBAL
             };
-            Assert.Throws<ArgumentException>(null, () => iComDataObject.GetDataHere(ref formatetc, ref stgMedium));
+            Assert.Throws<ArgumentException>(() => iComDataObject.GetDataHere(ref formatetc, ref stgMedium));
         }
 
         [WinFormsFact]

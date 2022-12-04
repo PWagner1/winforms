@@ -20,7 +20,7 @@ namespace System.Windows.Forms.Design
         private readonly string _name;
         private readonly MenuCommand _menuCommand;
 
-        // Ok to call MenuService.FindComand to find the menuCommand mapping to the appropriated menuID.
+        // Ok to call MenuService.FindCommand to find the menuCommand mapping to the appropriated menuID.
         public StandardCommandToolStripMenuItem(CommandID menuID, string text, string imageName, IServiceProvider serviceProvider)
         {
             _menuID = menuID;
@@ -43,7 +43,7 @@ namespace System.Windows.Forms.Design
 
         public void RefreshItem()
         {
-            if (_menuCommand != null)
+            if (_menuCommand is not null)
             {
                 Visible = _menuCommand.Visible;
                 Enabled = _menuCommand.Enabled;
@@ -58,10 +58,8 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (_menuCommandService is null)
-                {
-                    _menuCommandService = (IMenuCommandService)_serviceProvider.GetService(typeof(IMenuCommandService));
-                }
+                _menuCommandService ??= (IMenuCommandService)_serviceProvider.GetService(typeof(IMenuCommandService));
+
                 return _menuCommandService;
             }
         }
@@ -77,10 +75,11 @@ namespace System.Windows.Forms.Design
                     _cachedImage = true;
                     try
                     {
-                        if (_name != null)
+                        if (_name is not null)
                         {
                             _image = new Icon(typeof(ToolStripMenuItem), _name).ToBitmap();
                         }
+
                         ImageTransparentColor = Color.Magenta;
                     }
                     catch (Exception ex)
@@ -91,6 +90,7 @@ namespace System.Windows.Forms.Design
                         }
                     }
                 }
+
                 return _image;
             }
             set
@@ -100,13 +100,13 @@ namespace System.Windows.Forms.Design
             }
         }
 
-        protected override void OnClick(System.EventArgs e)
+        protected override void OnClick(EventArgs e)
         {
-            if (_menuCommand != null)
+            if (_menuCommand is not null)
             {
                 _menuCommand.Invoke();
             }
-            else if (MenuService != null)
+            else if (MenuService is not null)
             {
                 if (MenuService.GlobalInvoke(_menuID))
                 {

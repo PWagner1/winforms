@@ -5,7 +5,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
-using static Interop;
 
 namespace System.ComponentModel.Design
 {
@@ -98,11 +97,11 @@ namespace System.ComponentModel.Design
                         // in the AttachPerf context we should see which module is already loaded
                         if (_regroot is null)
                         {
-                            _shouldUseTestDll = Kernel32.GetModuleHandleW(ProductDllName) == IntPtr.Zero;
+                            _shouldUseTestDll = PInvoke.GetModuleHandle(ProductDllName) == 0;
                         }
                         else
                         {
-                            // if CodeMarkers are explictly enabled in the registry then try to use the test DLL, otherwise fall back to trying to use the product DLL
+                            // if CodeMarkers are explicitly enabled in the registry then try to use the test DLL, otherwise fall back to trying to use the product DLL
                             _shouldUseTestDll = UsePrivateCodeMarkers(_regroot, _registryView);
                         }
                     }
@@ -172,10 +171,7 @@ namespace System.ComponentModel.Design
 
             // Check the arguments only after checking whether code markers are enabled
             // This allows the calling code to pass null value and avoid calculation of data if nothing is to be logged
-            if (aBuff is null)
-            {
-                throw new ArgumentNullException(nameof(aBuff));
-            }
+            ArgumentNullException.ThrowIfNull(aBuff);
 
             try
             {
@@ -233,10 +229,7 @@ namespace System.ComponentModel.Design
 
             // Check the arguments only after checking whether code markers are enabled
             // This allows the calling code to pass null value and avoid calculation of data if nothing is to be logged
-            if (stringData is null)
-            {
-                throw new ArgumentNullException(nameof(stringData));
-            }
+            ArgumentNullException.ThrowIfNull(stringData);
 
             try
             {
@@ -281,13 +274,10 @@ namespace System.ComponentModel.Design
             }
 
             byte[] correlationIdBytes = correlationId.ToByteArray();
-            byte[] bufferWithCorrelation = new byte[s_correlationMarkBytes.Length + correlationIdBytes.Length + (buffer != null ? buffer.Length : 0)];
+            byte[] bufferWithCorrelation = new byte[s_correlationMarkBytes.Length + correlationIdBytes.Length + (buffer is not null ? buffer.Length : 0)];
             s_correlationMarkBytes.CopyTo(bufferWithCorrelation, 0);
             correlationIdBytes.CopyTo(bufferWithCorrelation, s_correlationMarkBytes.Length);
-            if (buffer != null)
-            {
-                buffer.CopyTo(bufferWithCorrelation, s_correlationMarkBytes.Length + correlationIdBytes.Length);
-            }
+            buffer?.CopyTo(bufferWithCorrelation, s_correlationMarkBytes.Length + correlationIdBytes.Length);
 
             return bufferWithCorrelation;
         }
@@ -322,16 +312,13 @@ namespace System.ComponentModel.Design
         /// <returns>Whether CodeMarkers are enabled in the registry</returns>
         private static bool UsePrivateCodeMarkers(string regRoot, RegistryView registryView)
         {
-            if (regRoot is null)
-            {
-                throw new ArgumentNullException(nameof(regRoot));
-            }
+            ArgumentNullException.ThrowIfNull(regRoot);
 
             // Reads the Performance subkey from the given registry key
             using (RegistryKey baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
             using (RegistryKey key = baseKey.OpenSubKey(regRoot + "\\Performance"))
             {
-                if (key != null)
+                if (key is not null)
                 {
                     // Read the default value
                     // It doesn't matter what the value is, if it's present and not empty, code markers are enabled

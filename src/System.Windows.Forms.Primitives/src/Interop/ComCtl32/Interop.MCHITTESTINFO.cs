@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Drawing;
-using System.Runtime.InteropServices;
 
 internal static partial class Interop
 {
@@ -16,8 +15,8 @@ internal static partial class Interop
         {
             public uint cbSize;
             public Point pt;
-            public MCHT uHit;
-            public Kernel32.SYSTEMTIME st;
+            public MCHITTESTINFO_HIT_FLAGS uHit;
+            public SYSTEMTIME st;
             public RECT rc;
             public int iOffset;
             public int iRow;

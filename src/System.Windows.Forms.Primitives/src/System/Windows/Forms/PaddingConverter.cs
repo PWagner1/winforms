@@ -1,10 +1,11 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Windows.Forms.Primitives.Resources;
 
@@ -26,7 +27,7 @@ namespace System.Windows.Forms
             return base.CanConvertFrom(context, sourceType);
         }
 
-        public override bool CanConvertTo(ITypeDescriptorContext? context, Type destinationType)
+        public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType)
         {
             if (destinationType == typeof(InstanceDescriptor))
             {
@@ -39,7 +40,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Converts the given object to the converter's native type.
         /// </summary>
-        public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object? value)
+        public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
         {
             if (value is string stringValue)
             {
@@ -50,10 +51,7 @@ namespace System.Windows.Forms
                 }
 
                 // Parse 4 integer values.
-                if (culture is null)
-                {
-                    culture = CultureInfo.CurrentCulture;
-                }
+                culture ??= CultureInfo.CurrentCulture;
 
                 string[] tokens = stringValue.Split(new char[] { culture.TextInfo.ListSeparator[0] });
                 int[] values = new int[tokens.Length];
@@ -61,7 +59,7 @@ namespace System.Windows.Forms
                 for (int i = 0; i < values.Length; i++)
                 {
                     // Note: ConvertFromString will raise exception if value cannot be converted.
-                    values[i] = (int)intConverter.ConvertFromString(context, culture, tokens[i]);
+                    values[i] = (int)intConverter.ConvertFromString(context, culture, tokens[i])!;
                 }
 
                 if (values.Length != 4)
@@ -81,20 +79,17 @@ namespace System.Windows.Forms
             {
                 if (destinationType == typeof(string))
                 {
-                    if (culture is null)
-                    {
-                        culture = CultureInfo.CurrentCulture;
-                    }
+                    culture ??= CultureInfo.CurrentCulture;
 
                     string sep = culture.TextInfo.ListSeparator + " ";
                     TypeConverter intConverter = TypeDescriptor.GetConverter(typeof(int));
                     // Note: ConvertToString will raise exception if value cannot be converted.
                     string[] args = new string[]
                     {
-                        intConverter.ConvertToString(context, culture, padding.Left),
-                        intConverter.ConvertToString(context, culture, padding.Top),
-                        intConverter.ConvertToString(context, culture, padding.Right),
-                        intConverter.ConvertToString(context, culture, padding.Bottom)
+                        intConverter.ConvertToString(context, culture, padding.Left)!,
+                        intConverter.ConvertToString(context, culture, padding.Top)!,
+                        intConverter.ConvertToString(context, culture, padding.Right)!,
+                        intConverter.ConvertToString(context, culture, padding.Bottom)!
                     };
                     return string.Join(sep, args);
                 }
@@ -104,15 +99,13 @@ namespace System.Windows.Forms
                     {
                         return new InstanceDescriptor(
                             typeof(Padding).GetConstructor(new Type[] { typeof(int) }),
-                            new object[] { padding.All }
-                        );
+                            new object[] { padding.All });
                     }
                     else
                     {
                         return new InstanceDescriptor(
                             typeof(Padding).GetConstructor(new Type[] { typeof(int), typeof(int), typeof(int), typeof(int) }),
-                            new object[] { padding.Left, padding.Top, padding.Right, padding.Bottom }
-                        );
+                            new object[] { padding.Left, padding.Top, padding.Right, padding.Bottom });
                     }
                 }
             }
@@ -122,10 +115,7 @@ namespace System.Windows.Forms
 
         public override object CreateInstance(ITypeDescriptorContext? context, IDictionary propertyValues)
         {
-            if (propertyValues is null)
-            {
-                throw new ArgumentNullException(nameof(propertyValues));
-            }
+            ArgumentNullException.ThrowIfNull(propertyValues);
 
             var original = context?.PropertyDescriptor?.GetValue(context.Instance);
             try
@@ -151,8 +141,7 @@ namespace System.Windows.Forms
                     (int)propertyValues[nameof(Padding.Left)]!,
                     (int)propertyValues[nameof(Padding.Top)]!,
                     (int)propertyValues[nameof(Padding.Right)]!,
-                    (int)propertyValues[nameof(Padding.Bottom)]!
-                );
+                    (int)propertyValues[nameof(Padding.Bottom)]!);
             }
             catch (InvalidCastException invalidCast)
             {
@@ -166,7 +155,8 @@ namespace System.Windows.Forms
 
         public override bool GetCreateInstanceSupported(ITypeDescriptorContext? context) => true;
 
-        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext? context, object value, Attribute[] attributes)
+        [RequiresUnreferencedCode(TrimmingConstants.TypeConverterGetPropertiesMessage)]
+        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext? context, object value, Attribute[]? attributes)
         {
             PropertyDescriptorCollection props = TypeDescriptor.GetProperties(typeof(Padding), attributes);
             return props.Sort(new string[] { nameof(Padding.All), nameof(Padding.Left), nameof(Padding.Top), nameof(Padding.Right), nameof(Padding.Bottom) });

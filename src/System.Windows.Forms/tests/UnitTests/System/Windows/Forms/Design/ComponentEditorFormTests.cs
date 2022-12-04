@@ -4,14 +4,13 @@
 
 using System.ComponentModel;
 using System.Drawing;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
+using Point = System.Drawing.Point;
+using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Design.Tests
 {
-    using Point = System.Drawing.Point;
-    using Size = System.Drawing.Size;
-
     public class ComponentEditorFormTests : IClassFixture<ThreadExceptionFixture>
     {
         [WinFormsFact]
@@ -253,37 +252,37 @@ namespace System.Windows.Forms.Design.Tests
             Assert.True(control.GetTopLevel());
         }
 
-/*
+        /*
+                [WinFormsTheory]
+                [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
+                public void ComponentEditorForm_OnHandleCreated_Invoke_CallsHandleCreated(EventArgs eventArgs)
+                {
+                    using var component = new Component();
+                    using var control = new SubComponentEditorForm(component, new Type[0]);
+                    int callCount = 0;
+                    EventHandler handler = (sender, e) =>
+                    {
+                        Assert.Same(control, sender);
+                        Assert.Same(eventArgs, e);
+                        callCount++;
+                    };
+
+                    // Call with handler.
+                    control.HandleCreated += handler;
+                    control.OnHandleCreated(eventArgs);
+                    Assert.Equal(1, callCount);
+                    Assert.False(control.IsHandleCreated);
+
+                    // Remove handler.
+                    control.HandleCreated -= handler;
+                    control.OnHandleCreated(eventArgs);
+                    Assert.Equal(1, callCount);
+                    Assert.False(control.IsHandleCreated);
+                }
+        */
+
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
-        public void ComponentEditorForm_OnHandleCreated_Invoke_CallsHandleCreated(EventArgs eventArgs)
-        {
-            using var component = new Component();
-            using var control = new SubComponentEditorForm(component, new Type[0]);
-            int callCount = 0;
-            EventHandler handler = (sender, e) =>
-            {
-                Assert.Same(control, sender);
-                Assert.Same(eventArgs, e);
-                callCount++;
-            };
-
-            // Call with handler.
-            control.HandleCreated += handler;
-            control.OnHandleCreated(eventArgs);
-            Assert.Equal(1, callCount);
-            Assert.False(control.IsHandleCreated);
-
-            // Remove handler.
-            control.HandleCreated -= handler;
-            control.OnHandleCreated(eventArgs);
-            Assert.Equal(1, callCount);
-            Assert.False(control.IsHandleCreated);
-        }
-*/
-
-        [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void ComponentEditorForm_OnHandleCreated_InvokeWithHandle_CallsHandleCreated(EventArgs eventArgs)
         {
             using var component = new Component();
@@ -309,8 +308,9 @@ namespace System.Windows.Forms.Design.Tests
             Assert.Equal(1, callCount);
             Assert.True(control.IsHandleCreated);
         }
+
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void ComponentEditorForm_OnHandleDestroyed_Invoke_CallsHandleDestroyed(EventArgs eventArgs)
         {
             using var component = new Component();
@@ -337,7 +337,7 @@ namespace System.Windows.Forms.Design.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void ComponentEditorForm_OnHandleDestroyed_InvokeWithHandle_CallsHandleDestroyed(EventArgs eventArgs)
         {
             using var component = new Component();

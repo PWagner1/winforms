@@ -2,12 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 
 namespace System.Windows.Forms
 {
@@ -16,7 +13,7 @@ namespace System.Windows.Forms
     ///  objects for a Win Form.
     /// </summary>
     [DefaultEvent(nameof(CollectionChanged))]
-    public class BindingContext : ICollection
+    public partial class BindingContext : ICollection
     {
         private readonly Hashtable _listManagers;
 
@@ -84,7 +81,7 @@ namespace System.Windows.Forms
         ///  Gets the System.Windows.Forms.BindingManagerBase associated with the specified
         ///  data source and data member.
         /// </summary>
-        public BindingManagerBase this[object dataSource, string dataMember]
+        public BindingManagerBase this[object dataSource, string? dataMember]
         {
             get => EnsureListManager(dataSource, dataMember);
         }
@@ -110,14 +107,8 @@ namespace System.Windows.Forms
         /// </remarks>
         protected virtual void AddCore(object dataSource, BindingManagerBase listManager)
         {
-            if (dataSource is null)
-            {
-                throw new ArgumentNullException(nameof(dataSource));
-            }
-            if (listManager is null)
-            {
-                throw new ArgumentNullException(nameof(listManager));
-            }
+            ArgumentNullException.ThrowIfNull(dataSource);
+            ArgumentNullException.ThrowIfNull(listManager);
 
             _listManagers[GetKey(dataSource, string.Empty)] = new WeakReference(listManager, false);
         }
@@ -131,7 +122,7 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.collectionChangedEventDescr))]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [Browsable(false)]
-        public event CollectionChangeEventHandler CollectionChanged
+        public event CollectionChangeEventHandler? CollectionChanged
         {
             add
             {
@@ -173,51 +164,14 @@ namespace System.Windows.Forms
         ///  Gets a value indicating whether the System.Windows.Forms.BindingContext
         ///  contains the specified data source and data member.
         /// </summary>
-        public bool Contains(object dataSource, string dataMember)
+        public bool Contains(object dataSource, string? dataMember)
         {
             return _listManagers.ContainsKey(GetKey(dataSource, dataMember));
         }
 
-        private HashKey GetKey(object dataSource, string dataMember)
+        private static HashKey GetKey(object dataSource, string? dataMember)
         {
             return new HashKey(dataSource, dataMember);
-        }
-
-        private class HashKey
-        {
-            private readonly WeakReference _wRef;
-            private readonly int _dataSourceHashCode;
-            private readonly string _dataMember;
-
-            internal HashKey(object dataSource, string dataMember)
-            {
-                if (dataSource is null)
-                {
-                    throw new ArgumentNullException(nameof(dataSource));
-                }
-                if (dataMember is null)
-                {
-                    dataMember = string.Empty;
-                }
-
-                // The dataMember should be case insensitive, so convert the
-                // dataMember to lower case
-                _wRef = new WeakReference(dataSource, false);
-                _dataSourceHashCode = dataSource.GetHashCode();
-                _dataMember = dataMember.ToLower(CultureInfo.InvariantCulture);
-            }
-
-            public override int GetHashCode() => HashCode.Combine(_dataSourceHashCode, _dataMember);
-
-            public override bool Equals(object target)
-            {
-                if (!(target is HashKey keyTarget))
-                {
-                    return false;
-                }
-
-                return _wRef.Target == keyTarget._wRef.Target && _dataMember == keyTarget._dataMember;
-            }
         }
 
         /// <summary>
@@ -258,21 +212,18 @@ namespace System.Windows.Forms
         ///  - If the data source is an ICurrencyManagerProvider, just delegate to the data
         ///  source.
         /// </summary>
-        private BindingManagerBase EnsureListManager(object dataSource, string dataMember)
+        private BindingManagerBase EnsureListManager(object dataSource, string? dataMember)
         {
-            BindingManagerBase bindingManagerBase = null;
+            BindingManagerBase? bindingManagerBase = null;
 
-            if (dataMember is null)
-            {
-                dataMember = string.Empty;
-            }
+            dataMember ??= string.Empty;
 
             // Check whether data source wants to provide its own binding managers
             // (but fall through to old logic if it fails to provide us with one)
             if (dataSource is ICurrencyManagerProvider currencyManagerProvider)
             {
                 bindingManagerBase = currencyManagerProvider.GetRelatedCurrencyManager(dataMember);
-                if (bindingManagerBase != null)
+                if (bindingManagerBase is not null)
                 {
                     return bindingManagerBase;
                 }
@@ -280,12 +231,13 @@ namespace System.Windows.Forms
 
             // Check for previously created binding manager
             HashKey key = GetKey(dataSource, dataMember);
-            WeakReference wRef = _listManagers[key] as WeakReference;
-            if (wRef != null)
+            WeakReference? wRef = _listManagers[key] as WeakReference;
+            if (wRef is not null)
             {
-                bindingManagerBase = (BindingManagerBase)wRef.Target;
+                bindingManagerBase = (BindingManagerBase?)wRef.Target;
             }
-            if (bindingManagerBase != null)
+
+            if (bindingManagerBase is not null)
             {
                 return bindingManagerBase;
             }
@@ -313,7 +265,7 @@ namespace System.Windows.Forms
 
                 BindingManagerBase formerManager = EnsureListManager(dataSource, dataPath);
 
-                PropertyDescriptor prop = formerManager.GetItemProperties().Find(dataField, true);
+                PropertyDescriptor? prop = formerManager.GetItemProperties().Find(dataField, true);
                 if (prop is null)
                 {
                     throw new ArgumentException(string.Format(SR.RelatedListManagerChild, dataField));
@@ -330,7 +282,7 @@ namespace System.Windows.Forms
             }
 
             // if wRef is null, then it is the first time we want this bindingManagerBase: so add it
-            // if wRef != null, then the bindingManagerBase was GC'ed at some point: keep the old wRef and change its target
+            // if wRef is not null, then the bindingManagerBase was GC'd at some point: keep the old wRef and change its target
             if (wRef is null)
             {
                 _listManagers.Add(key, new WeakReference(bindingManagerBase, false));
@@ -347,10 +299,10 @@ namespace System.Windows.Forms
 
         private static void CheckPropertyBindingCycles(BindingContext newBindingContext, Binding propBinding)
         {
-            Debug.Assert(newBindingContext != null, "Always called with a non-null BindingContext");
-            Debug.Assert(propBinding != null, "Always called with a non-null Binding.");
+            Debug.Assert(newBindingContext is not null, "Always called with a non-null BindingContext");
+            Debug.Assert(propBinding is not null, "Always called with a non-null Binding.");
 
-            if (propBinding.BindableComponent != null && newBindingContext.Contains(propBinding.BindableComponent, string.Empty))
+            if (propBinding.BindableComponent is not null && newBindingContext.Contains(propBinding.BindableComponent, string.Empty))
             {
                 // this way we do not add a bindingManagerBase to the
                 // bindingContext if there isn't one already
@@ -375,21 +327,19 @@ namespace System.Windows.Forms
 
         private void ScrubWeakRefs()
         {
-            ArrayList cleanupList = null;
+            ArrayList? cleanupList = null;
             foreach (DictionaryEntry de in _listManagers)
             {
-                WeakReference wRef = (WeakReference)de.Value;
+                WeakReference wRef = (WeakReference)de.Value!;
                 if (wRef.Target is null)
                 {
-                    if (cleanupList is null)
-                    {
-                        cleanupList = new ArrayList();
-                    }
+                    cleanupList ??= new ArrayList();
+
                     cleanupList.Add(de.Key);
                 }
             }
 
-            if (cleanupList != null)
+            if (cleanupList is not null)
             {
                 foreach (object o in cleanupList)
                 {
@@ -403,20 +353,14 @@ namespace System.Windows.Forms
         ///  that support IBindableComponent, to update their Bindings when the value of
         ///  IBindableComponent.BindingContext is changed.
         /// </summary>
-        public static void UpdateBinding(BindingContext newBindingContext, Binding binding)
+        public static void UpdateBinding(BindingContext? newBindingContext, Binding binding)
         {
-            if (binding is null)
-            {
-                throw new ArgumentNullException(nameof(binding));
-            }
+            ArgumentNullException.ThrowIfNull(binding);
 
             BindingManagerBase oldManager = binding.BindingManagerBase;
-            if (oldManager != null)
-            {
-                oldManager.Bindings.Remove(binding);
-            }
+            oldManager?.Bindings.Remove(binding);
 
-            if (newBindingContext != null)
+            if (newBindingContext is not null)
             {
                 // we need to first check for cycles before adding this binding to the collection
                 // of bindings.

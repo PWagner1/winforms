@@ -13,15 +13,15 @@ using System.Globalization;
 namespace System.Windows.Forms
 {
     /// <summary>
-    ///  Represents a collection of <see cref='DataGridViewColumn'/> objects in the
-    ///  <see cref='DataGridView'/> control.
+    ///  Represents a collection of <see cref="DataGridViewColumn"/> objects in the
+    ///  <see cref="DataGridView"/> control.
     /// </summary>
     [ListBindable(false)]
-    public class DataGridViewColumnCollection : BaseCollection, IList
+    public partial class DataGridViewColumnCollection : BaseCollection, IList
     {
         private CollectionChangeEventHandler _onCollectionChanged;
-        private readonly ArrayList _items = new ArrayList();
-        private ArrayList _itemsSorted;
+        private readonly List<DataGridViewColumn> _items = new();
+        private List<DataGridViewColumn> _itemsSorted;
         private int _lastAccessedSortedIndex = -1;
         private int _columnCountsVisible, _columnCountsVisibleSelected;
         private int _columnsWidthVisible, _columnsWidthVisibleFrozen;
@@ -29,15 +29,9 @@ namespace System.Windows.Forms
 
         /* IList interface implementation */
 
-        bool IList.IsFixedSize
-        {
-            get { return false; }
-        }
+        bool IList.IsFixedSize => false;
 
-        bool IList.IsReadOnly
-        {
-            get { return false; }
-        }
+        bool IList.IsReadOnly => false;
 
         object IList.this[int index]
         {
@@ -62,7 +56,7 @@ namespace System.Windows.Forms
 
         int IList.IndexOf(object value)
         {
-            return _items.IndexOf(value);
+            return _items.IndexOf((DataGridViewColumn)value);
         }
 
         void IList.Insert(int index, object value)
@@ -82,33 +76,15 @@ namespace System.Windows.Forms
 
         /* ICollection interface implementation */
 
-        int ICollection.Count
-        {
-            get
-            {
-                return _items.Count;
-            }
-        }
+        int ICollection.Count => _items.Count;
 
-        bool ICollection.IsSynchronized
-        {
-            get
-            {
-                return false;
-            }
-        }
+        bool ICollection.IsSynchronized => false;
 
-        object ICollection.SyncRoot
-        {
-            get
-            {
-                return this;
-            }
-        }
+        object ICollection.SyncRoot => this;
 
         void ICollection.CopyTo(Array array, int index)
         {
-            _items.CopyTo(array, index);
+            ((ICollection)_items).CopyTo(array, index);
         }
 
         /* IEnumerable interface implementation */
@@ -125,21 +101,9 @@ namespace System.Windows.Forms
             this.DataGridView = dataGridView;
         }
 
-        internal static IComparer ColumnCollectionOrderComparer
-        {
-            get
-            {
-                return System.Windows.Forms.DataGridViewColumnCollection.s_columnOrderComparer;
-            }
-        }
+        internal static IComparer<DataGridViewColumn> ColumnCollectionOrderComparer => System.Windows.Forms.DataGridViewColumnCollection.s_columnOrderComparer;
 
-        protected override ArrayList List
-        {
-            get
-            {
-                return _items;
-            }
-        }
+        protected override ArrayList List => ArrayList.Adapter(_items);
 
         protected DataGridView DataGridView { get; }
 
@@ -150,7 +114,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return (DataGridViewColumn)_items[index];
+                return _items[index];
             }
         }
 
@@ -161,20 +125,19 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (columnName is null)
-                {
-                    throw new ArgumentNullException(nameof(columnName));
-                }
+                ArgumentNullException.ThrowIfNull(columnName);
+
                 int itemCount = _items.Count;
                 for (int i = 0; i < itemCount; ++i)
                 {
-                    DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)_items[i];
+                    DataGridViewColumn dataGridViewColumn = _items[i];
                     // NOTE: case-insensitive
                     if (string.Equals(dataGridViewColumn.Name, columnName, StringComparison.OrdinalIgnoreCase))
                     {
                         return dataGridViewColumn;
                     }
                 }
+
                 return null;
             }
         }
@@ -193,11 +156,12 @@ namespace System.Windows.Forms
             {
                 dataGridViewColumn = GetNextColumn(dataGridViewColumn, includeFilter, DataGridViewElementStates.None);
             }
-            return dataGridViewColumn.Index;
+
+            return dataGridViewColumn?.Index ?? -1;
         }
 
         /// <summary>
-        ///  Adds a <see cref='DataGridViewColumn'/> to this collection.
+        ///  Adds a <see cref="DataGridViewColumn"/> to this collection.
         /// </summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual int Add(string columnName, string headerText)
@@ -212,15 +176,16 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Adds a <see cref='DataGridViewColumn'/> to this collection.
+        ///  Adds a <see cref="DataGridViewColumn"/> to this collection.
         /// </summary>
         public virtual int Add(DataGridViewColumn dataGridViewColumn)
         {
-            Debug.Assert(DataGridView != null);
+            Debug.Assert(DataGridView is not null);
             if (DataGridView.NoDimensionChangeAllowed)
             {
                 throw new InvalidOperationException(SR.DataGridView_ForbiddenOperationInEventHandler);
             }
+
             if (DataGridView.InDisplayIndexAdjustments)
             {
                 // We are within columns display indexes adjustments. We do not allow changing the column collection while adjusting display indexes.
@@ -230,7 +195,8 @@ namespace System.Windows.Forms
             DataGridView.OnAddingColumn(dataGridViewColumn);   // will throw an exception if the addition is illegal
 
             InvalidateCachedColumnsOrder();
-            int index = _items.Add(dataGridViewColumn);
+            _items.Add(dataGridViewColumn);
+            int index = _items.IndexOf(dataGridViewColumn);
             dataGridViewColumn.Index = index;
             dataGridViewColumn.DataGridView = DataGridView;
             UpdateColumnCaches(dataGridViewColumn, true);
@@ -244,16 +210,14 @@ namespace System.Windows.Forms
 
         public virtual void AddRange(params DataGridViewColumn[] dataGridViewColumns)
         {
-            if (dataGridViewColumns is null)
-            {
-                throw new ArgumentNullException(nameof(dataGridViewColumns));
-            }
+            ArgumentNullException.ThrowIfNull(dataGridViewColumns);
 
-            Debug.Assert(DataGridView != null);
+            Debug.Assert(DataGridView is not null);
             if (DataGridView.NoDimensionChangeAllowed)
             {
                 throw new InvalidOperationException(SR.DataGridView_ForbiddenOperationInEventHandler);
             }
+
             if (DataGridView.InDisplayIndexAdjustments)
             {
                 // We are within columns display indexes adjustments. We do not allow changing the column collection while adjusting display indexes.
@@ -262,8 +226,8 @@ namespace System.Windows.Forms
 
             // Order the columns by ascending DisplayIndex so that their display indexes are not altered by the operation.
             // The columns with DisplayIndex == -1 are left untouched relative to each other and put at the end of the array.
-            ArrayList initialColumns = new ArrayList(dataGridViewColumns.Length);
-            ArrayList sortedColumns = new ArrayList(dataGridViewColumns.Length);
+            List<DataGridViewColumn> initialColumns = new(dataGridViewColumns.Length);
+            List<DataGridViewColumn> sortedColumns = new(dataGridViewColumns.Length);
 
             // All columns with DisplayIndex != -1 are put into the initialColumns array
             foreach (DataGridViewColumn dataGridViewColumn in dataGridViewColumns)
@@ -284,13 +248,14 @@ namespace System.Windows.Forms
                 smallestIndex = -1;
                 for (index = 0; index < initialColumns.Count; index++)
                 {
-                    DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)initialColumns[index];
+                    DataGridViewColumn dataGridViewColumn = initialColumns[index];
                     if (dataGridViewColumn.DisplayIndex < smallestDisplayIndex)
                     {
                         smallestDisplayIndex = dataGridViewColumn.DisplayIndex;
                         smallestIndex = index;
                     }
                 }
+
                 Debug.Assert(smallestIndex >= 0);
                 sortedColumns.Add(initialColumns[smallestIndex]);
                 initialColumns.RemoveAt(smallestIndex);
@@ -319,7 +284,8 @@ namespace System.Windows.Forms
             foreach (DataGridViewColumn dataGridViewColumn in dataGridViewColumns)
             {
                 InvalidateCachedColumnsOrder();
-                index = _items.Add(dataGridViewColumn);
+                _items.Add(dataGridViewColumn);
+                index = _items.IndexOf(dataGridViewColumn);
                 dataGridViewColumn.Index = index;
                 dataGridViewColumn.DataGridView = DataGridView;
                 UpdateColumnCaches(dataGridViewColumn, true);
@@ -340,6 +306,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridView_ForbiddenOperationInEventHandler);
                 }
+
                 if (DataGridView.InDisplayIndexAdjustments)
                 {
                     // We are within columns display indexes adjustments. We do not allow changing the column collection while adjusting display indexes.
@@ -371,6 +338,7 @@ namespace System.Windows.Forms
                     DataGridView.OnColumnRemoved(dataGridViewColumn);
                     DataGridView.OnColumnHidden(dataGridViewColumn);
                 }
+
                 OnCollectionChanged(new CollectionChangeEventArgs(CollectionChangeAction.Refresh, null), false /*changeIsInsertion*/, new Point(-1, -1));
 #if DEBUG
                 Debug.Assert(_itemsSorted is null || VerifyColumnOrderCache());
@@ -383,11 +351,12 @@ namespace System.Windows.Forms
             // map the column index to the actual display index
             DataGridViewColumn dataGridViewColumn = GetFirstColumn(includeFilter);
             int actualDisplayIndex = 0;
-            while (dataGridViewColumn != null && dataGridViewColumn.Index != columnIndex)
+            while (dataGridViewColumn is not null && dataGridViewColumn.Index != columnIndex)
             {
                 dataGridViewColumn = GetNextColumn(dataGridViewColumn, includeFilter, DataGridViewElementStates.None);
                 actualDisplayIndex++;
             }
+
             return actualDisplayIndex;
         }
 
@@ -401,20 +370,19 @@ namespace System.Windows.Forms
 
         public virtual bool Contains(string columnName)
         {
-            if (columnName is null)
-            {
-                throw new ArgumentNullException(nameof(columnName));
-            }
+            ArgumentNullException.ThrowIfNull(columnName);
+
             int itemCount = _items.Count;
             for (int i = 0; i < itemCount; ++i)
             {
-                DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)_items[i];
+                DataGridViewColumn dataGridViewColumn = _items[i];
                 // NOTE: case-insensitive
                 if (0 == string.Compare(dataGridViewColumn.Name, columnName, true, CultureInfo.InvariantCulture))
                 {
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -425,8 +393,8 @@ namespace System.Windows.Forms
 
         internal bool DisplayInOrder(int columnIndex1, int columnIndex2)
         {
-            int displayIndex1 = ((DataGridViewColumn)_items[columnIndex1]).DisplayIndex;
-            int displayIndex2 = ((DataGridViewColumn)_items[columnIndex2]).DisplayIndex;
+            int displayIndex1 = _items[columnIndex1].DisplayIndex;
+            int displayIndex2 = _items[columnIndex2].DisplayIndex;
             return displayIndex1 < displayIndex2;
         }
 
@@ -436,22 +404,43 @@ namespace System.Windows.Forms
             {
                 return null;
             }
-            DataGridViewColumn dataGridViewColumn = ((DataGridViewColumn)_items[displayIndex]);
+
+            DataGridViewColumn dataGridViewColumn = _items[displayIndex];
             if (dataGridViewColumn.DisplayIndex == displayIndex)
             {
                 // Performance gain if display indexes coincide with indexes.
                 return dataGridViewColumn;
             }
+
             for (int columnIndex = 0; columnIndex < _items.Count; columnIndex++)
             {
-                dataGridViewColumn = ((DataGridViewColumn)_items[columnIndex]);
+                dataGridViewColumn = _items[columnIndex];
                 if (dataGridViewColumn.DisplayIndex == displayIndex)
                 {
                     return dataGridViewColumn;
                 }
             }
+
             Debug.Fail("no column found in GetColumnAtDisplayIndex");
             return null;
+        }
+
+        /// <summary>
+        ///  Returns the index of a column, taking into account DisplayIndex properties
+        ///  and the invisibility of other columns
+        /// </summary>
+        internal int GetVisibleIndex(DataGridViewColumn column)
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                int index = ActualDisplayIndexToColumnIndex(i, DataGridViewElementStates.Visible);
+                if (index != -1 && _items[index] == column)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         public int GetColumnCount(DataGridViewElementStates includeFilter)
@@ -471,12 +460,14 @@ namespace System.Windows.Forms
                     {
                         return _columnCountsVisible;
                     }
+
                     break;
                 case DataGridViewElementStates.Visible | DataGridViewElementStates.Selected:
                     if (_columnCountsVisibleSelected != -1)
                     {
                         return _columnCountsVisibleSelected;
                     }
+
                     break;
             }
 
@@ -485,11 +476,12 @@ namespace System.Windows.Forms
             {
                 for (int columnIndex = 0; columnIndex < _items.Count; columnIndex++)
                 {
-                    if (((DataGridViewColumn)_items[columnIndex]).StateIncludes(includeFilter))
+                    if (_items[columnIndex].StateIncludes(includeFilter))
                     {
                         columnCount++;
                     }
                 }
+
                 switch (includeFilter)
                 {
                     case DataGridViewElementStates.Visible:
@@ -505,13 +497,14 @@ namespace System.Windows.Forms
                 DataGridViewElementStates correctedIncludeFilter = includeFilter & ~DataGridViewElementStates.Resizable;
                 for (int columnIndex = 0; columnIndex < _items.Count; columnIndex++)
                 {
-                    if (((DataGridViewColumn)_items[columnIndex]).StateIncludes(correctedIncludeFilter) &&
-                        ((DataGridViewColumn)_items[columnIndex]).Resizable == DataGridViewTriState.True)
+                    if (_items[columnIndex].StateIncludes(correctedIncludeFilter) &&
+                        _items[columnIndex].Resizable == DataGridViewTriState.True)
                     {
                         columnCount++;
                     }
                 }
             }
+
             return columnCount;
         }
 
@@ -521,28 +514,29 @@ namespace System.Windows.Forms
                          DataGridViewElementStates.ReadOnly | DataGridViewElementStates.Selected | DataGridViewElementStates.Visible)) == 0);
             Debug.Assert((includeFilter & DataGridViewElementStates.Resizable) == 0);
             Debug.Assert(DisplayInOrder(fromColumnIndex, toColumnIndex));
-            Debug.Assert(((DataGridViewColumn)_items[toColumnIndex]).StateIncludes(includeFilter));
+            Debug.Assert(_items[toColumnIndex].StateIncludes(includeFilter));
 
             int jumpColumns = 0;
-            DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)_items[fromColumnIndex];
+            DataGridViewColumn dataGridViewColumn = _items[fromColumnIndex];
 
-            while (dataGridViewColumn != (DataGridViewColumn)_items[toColumnIndex])
+            while (dataGridViewColumn != _items[toColumnIndex])
             {
                 dataGridViewColumn = GetNextColumn(dataGridViewColumn, includeFilter,
                     DataGridViewElementStates.None);
-                Debug.Assert(dataGridViewColumn != null);
+                Debug.Assert(dataGridViewColumn is not null);
                 if (dataGridViewColumn.StateIncludes(includeFilter))
                 {
                     jumpColumns++;
                 }
             }
+
             return jumpColumns;
         }
 
         private int GetColumnSortedIndex(DataGridViewColumn dataGridViewColumn)
         {
-            Debug.Assert(dataGridViewColumn != null);
-            Debug.Assert(_itemsSorted != null);
+            Debug.Assert(dataGridViewColumn is not null);
+            Debug.Assert(_itemsSorted is not null);
             Debug.Assert(_lastAccessedSortedIndex == -1 ||
                 _lastAccessedSortedIndex < Count);
 
@@ -558,13 +552,15 @@ namespace System.Windows.Forms
             int index = 0;
             while (index < _itemsSorted.Count)
             {
-                if (dataGridViewColumn.Index == ((DataGridViewColumn)_itemsSorted[index]).Index)
+                if (dataGridViewColumn.Index == _itemsSorted[index].Index)
                 {
                     _lastAccessedSortedIndex = index;
                     return index;
                 }
+
                 index++;
             }
+
             return -1;
         }
 
@@ -576,11 +572,12 @@ namespace System.Windows.Forms
             float weightSum = 0F;
             for (int columnIndex = 0; columnIndex < _items.Count; columnIndex++)
             {
-                if (((DataGridViewColumn)_items[columnIndex]).StateIncludes(includeFilter))
+                if (_items[columnIndex].StateIncludes(includeFilter))
                 {
-                    weightSum += ((DataGridViewColumn)_items[columnIndex]).FillWeight;
+                    weightSum += _items[columnIndex].FillWeight;
                 }
             }
+
             return weightSum;
         }
 
@@ -601,21 +598,23 @@ namespace System.Windows.Forms
                     {
                         return _columnsWidthVisible;
                     }
+
                     break;
                 case DataGridViewElementStates.Visible | DataGridViewElementStates.Frozen:
                     if (_columnsWidthVisibleFrozen != -1)
                     {
                         return _columnsWidthVisibleFrozen;
                     }
+
                     break;
             }
 
             int columnsWidth = 0;
             for (int columnIndex = 0; columnIndex < _items.Count; columnIndex++)
             {
-                if (((DataGridViewColumn)_items[columnIndex]).StateIncludes(includeFilter))
+                if (_items[columnIndex].StateIncludes(includeFilter))
                 {
-                    columnsWidth += ((DataGridViewColumn)_items[columnIndex]).Thickness;
+                    columnsWidth += _items[columnIndex].Thickness;
                 }
             }
 
@@ -628,6 +627,7 @@ namespace System.Windows.Forms
                     _columnsWidthVisibleFrozen = columnsWidth;
                     break;
             }
+
             return columnsWidth;
         }
 
@@ -649,14 +649,16 @@ namespace System.Windows.Forms
             int index = 0;
             while (index < _itemsSorted.Count)
             {
-                DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)_itemsSorted[index];
+                DataGridViewColumn dataGridViewColumn = _itemsSorted[index];
                 if (dataGridViewColumn.StateIncludes(includeFilter))
                 {
                     _lastAccessedSortedIndex = index;
                     return dataGridViewColumn;
                 }
+
                 index++;
             }
+
             return null;
         }
 
@@ -667,11 +669,13 @@ namespace System.Windows.Forms
             {
                 return GetFirstColumn(includeFilter);
             }
+
             if ((includeFilter & ~(DataGridViewElementStates.Displayed | DataGridViewElementStates.Frozen | DataGridViewElementStates.Resizable |
                 DataGridViewElementStates.ReadOnly | DataGridViewElementStates.Selected | DataGridViewElementStates.Visible)) != 0)
             {
                 throw new ArgumentException(string.Format(SR.DataGridView_InvalidDataGridViewElementStateCombination, nameof(includeFilter)));
             }
+
             if ((excludeFilter & ~(DataGridViewElementStates.Displayed | DataGridViewElementStates.Frozen | DataGridViewElementStates.Resizable |
                 DataGridViewElementStates.ReadOnly | DataGridViewElementStates.Selected | DataGridViewElementStates.Visible)) != 0)
             {
@@ -688,15 +692,17 @@ namespace System.Windows.Forms
             int index = 0;
             while (index < _itemsSorted.Count)
             {
-                DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)_itemsSorted[index];
+                DataGridViewColumn dataGridViewColumn = _itemsSorted[index];
                 if (dataGridViewColumn.StateIncludes(includeFilter) &&
                     dataGridViewColumn.StateExcludes(excludeFilter))
                 {
                     _lastAccessedSortedIndex = index;
                     return dataGridViewColumn;
                 }
+
                 index++;
             }
+
             return null;
         }
 
@@ -708,6 +714,7 @@ namespace System.Windows.Forms
             {
                 throw new ArgumentException(string.Format(SR.DataGridView_InvalidDataGridViewElementStateCombination, nameof(includeFilter)));
             }
+
             if ((excludeFilter & ~(DataGridViewElementStates.Displayed | DataGridViewElementStates.Frozen | DataGridViewElementStates.Resizable |
                 DataGridViewElementStates.ReadOnly | DataGridViewElementStates.Selected | DataGridViewElementStates.Visible)) != 0)
             {
@@ -724,15 +731,17 @@ namespace System.Windows.Forms
             int index = _itemsSorted.Count - 1;
             while (index >= 0)
             {
-                DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)_itemsSorted[index];
+                DataGridViewColumn dataGridViewColumn = _itemsSorted[index];
                 if (dataGridViewColumn.StateIncludes(includeFilter) &&
                     dataGridViewColumn.StateExcludes(excludeFilter))
                 {
                     _lastAccessedSortedIndex = index;
                     return dataGridViewColumn;
                 }
+
                 index--;
             }
+
             return null;
         }
 
@@ -740,15 +749,14 @@ namespace System.Windows.Forms
                                                 DataGridViewElementStates includeFilter,
                                                 DataGridViewElementStates excludeFilter)
         {
-            if (dataGridViewColumnStart is null)
-            {
-                throw new ArgumentNullException(nameof(dataGridViewColumnStart));
-            }
+            ArgumentNullException.ThrowIfNull(dataGridViewColumnStart);
+
             if ((includeFilter & ~(DataGridViewElementStates.Displayed | DataGridViewElementStates.Frozen | DataGridViewElementStates.Resizable |
                 DataGridViewElementStates.ReadOnly | DataGridViewElementStates.Selected | DataGridViewElementStates.Visible)) != 0)
             {
                 throw new ArgumentException(string.Format(SR.DataGridView_InvalidDataGridViewElementStateCombination, nameof(includeFilter)));
             }
+
             if ((excludeFilter & ~(DataGridViewElementStates.Displayed | DataGridViewElementStates.Frozen | DataGridViewElementStates.Resizable |
                 DataGridViewElementStates.ReadOnly | DataGridViewElementStates.Selected | DataGridViewElementStates.Visible)) != 0)
             {
@@ -769,7 +777,7 @@ namespace System.Windows.Forms
                 int indexMin = int.MaxValue, displayIndexMin = int.MaxValue;
                 for (index = 0; index < _items.Count; index++)
                 {
-                    DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)_items[index];
+                    DataGridViewColumn dataGridViewColumn = _items[index];
                     if (dataGridViewColumn.StateIncludes(includeFilter) &&
                         dataGridViewColumn.StateExcludes(excludeFilter) &&
                         (dataGridViewColumn.DisplayIndex > dataGridViewColumnStart.DisplayIndex ||
@@ -786,14 +794,15 @@ namespace System.Windows.Forms
                         }
                     }
                 }
-                return columnFound ? ((DataGridViewColumn)_items[indexMin]) : null;
+
+                return columnFound ? _items[indexMin] : null;
             }
             else
             {
                 index++;
                 while (index < _itemsSorted.Count)
                 {
-                    DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)_itemsSorted[index];
+                    DataGridViewColumn dataGridViewColumn = _itemsSorted[index];
 
                     if (dataGridViewColumn.StateIncludes(includeFilter) && dataGridViewColumn.StateExcludes(excludeFilter))
                     {
@@ -804,6 +813,7 @@ namespace System.Windows.Forms
                     index++;
                 }
             }
+
             return null;
         }
 
@@ -811,15 +821,14 @@ namespace System.Windows.Forms
                                                              DataGridViewElementStates includeFilter,
                                                              DataGridViewElementStates excludeFilter)
         {
-            if (dataGridViewColumnStart is null)
-            {
-                throw new ArgumentNullException(nameof(dataGridViewColumnStart));
-            }
+            ArgumentNullException.ThrowIfNull(dataGridViewColumnStart);
+
             if ((includeFilter & ~(DataGridViewElementStates.Displayed | DataGridViewElementStates.Frozen | DataGridViewElementStates.Resizable |
                 DataGridViewElementStates.ReadOnly | DataGridViewElementStates.Selected | DataGridViewElementStates.Visible)) != 0)
             {
                 throw new ArgumentException(string.Format(SR.DataGridView_InvalidDataGridViewElementStateCombination, nameof(includeFilter)));
             }
+
             if ((excludeFilter & ~(DataGridViewElementStates.Displayed | DataGridViewElementStates.Frozen | DataGridViewElementStates.Resizable |
                 DataGridViewElementStates.ReadOnly | DataGridViewElementStates.Selected | DataGridViewElementStates.Visible)) != 0)
             {
@@ -840,7 +849,7 @@ namespace System.Windows.Forms
                 int indexMax = -1, displayIndexMax = -1;
                 for (index = 0; index < _items.Count; index++)
                 {
-                    DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)_items[index];
+                    DataGridViewColumn dataGridViewColumn = _items[index];
                     if (dataGridViewColumn.StateIncludes(includeFilter) &&
                         dataGridViewColumn.StateExcludes(excludeFilter) &&
                         (dataGridViewColumn.DisplayIndex < dataGridViewColumnStart.DisplayIndex ||
@@ -857,23 +866,26 @@ namespace System.Windows.Forms
                         }
                     }
                 }
-                return columnFound ? ((DataGridViewColumn)_items[indexMax]) : null;
+
+                return columnFound ? _items[indexMax] : null;
             }
             else
             {
                 index--;
                 while (index >= 0)
                 {
-                    DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)_itemsSorted[index];
+                    DataGridViewColumn dataGridViewColumn = _itemsSorted[index];
                     if (dataGridViewColumn.StateIncludes(includeFilter) &&
                         dataGridViewColumn.StateExcludes(excludeFilter))
                     {
                         _lastAccessedSortedIndex = index;
                         return dataGridViewColumn;
                     }
+
                     index--;
                 }
             }
+
             return null;
         }
 
@@ -883,29 +895,30 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Inserts a <see cref='DataGridViewColumn'/> in this collection.
+        ///  Inserts a <see cref="DataGridViewColumn"/> in this collection.
         /// </summary>
         public virtual void Insert(int columnIndex, DataGridViewColumn dataGridViewColumn)
         {
-            Debug.Assert(DataGridView != null);
+            Debug.Assert(DataGridView is not null);
             if (DataGridView.NoDimensionChangeAllowed)
             {
                 throw new InvalidOperationException(SR.DataGridView_ForbiddenOperationInEventHandler);
             }
+
             if (DataGridView.InDisplayIndexAdjustments)
             {
                 // We are within columns display indexes adjustments. We do not allow changing the column collection while adjusting display indexes.
                 throw new InvalidOperationException(SR.DataGridView_CannotAlterDisplayIndexWithinAdjustments);
             }
-            if (dataGridViewColumn is null)
-            {
-                throw new ArgumentNullException(nameof(dataGridViewColumn));
-            }
+
+            ArgumentNullException.ThrowIfNull(dataGridViewColumn);
+
             int originalDisplayIndex = dataGridViewColumn.DisplayIndex;
             if (originalDisplayIndex == -1)
             {
                 dataGridViewColumn.DisplayIndex = columnIndex;
             }
+
             Point newCurrentCell;
             try
             {
@@ -915,6 +928,7 @@ namespace System.Windows.Forms
             {
                 dataGridViewColumn.DisplayIndexInternal = originalDisplayIndex;
             }
+
             InvalidateCachedColumnsOrder();
             _items.Insert(columnIndex, dataGridViewColumn);
             dataGridViewColumn.Index = columnIndex;
@@ -997,13 +1011,13 @@ namespace System.Windows.Forms
 
         private void OnCollectionChanged_PreNotification(CollectionChangeEventArgs ccea)
         {
-            Debug.Assert(DataGridView != null);
+            Debug.Assert(DataGridView is not null);
             DataGridView.OnColumnCollectionChanged_PreNotification(ccea);
         }
 
         private void OnCollectionChanged_PostNotification(CollectionChangeEventArgs ccea, bool changeIsInsertion, Point newCurrentCell)
         {
-            Debug.Assert(DataGridView != null);
+            Debug.Assert(DataGridView is not null);
             DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)ccea.Element;
             if (ccea.Action == CollectionChangeAction.Add && changeIsInsertion)
             {
@@ -1019,10 +1033,7 @@ namespace System.Windows.Forms
 
         public virtual void Remove(DataGridViewColumn dataGridViewColumn)
         {
-            if (dataGridViewColumn is null)
-            {
-                throw new ArgumentNullException(nameof(dataGridViewColumn));
-            }
+            ArgumentNullException.ThrowIfNull(dataGridViewColumn);
 
             if (dataGridViewColumn.DataGridView != DataGridView)
             {
@@ -1047,15 +1058,12 @@ namespace System.Windows.Forms
 
         public virtual void Remove(string columnName)
         {
-            if (columnName is null)
-            {
-                throw new ArgumentNullException(nameof(columnName));
-            }
+            ArgumentNullException.ThrowIfNull(columnName);
 
             int itemsCount = _items.Count;
             for (int i = 0; i < itemsCount; ++i)
             {
-                DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)_items[i];
+                DataGridViewColumn dataGridViewColumn = _items[i];
                 // NOTE: case-insensitive
                 if (0 == string.Compare(dataGridViewColumn.Name, columnName, true, CultureInfo.InvariantCulture))
                 {
@@ -1096,11 +1104,22 @@ namespace System.Windows.Forms
             // If force is true, the underlying data is gone and can't be accessed anymore.
 
             Debug.Assert(index >= 0 && index < Count);
-            Debug.Assert(DataGridView != null);
+            Debug.Assert(DataGridView is not null);
             Debug.Assert(!DataGridView.NoDimensionChangeAllowed);
             Debug.Assert(!DataGridView.InDisplayIndexAdjustments);
 
-            DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)_items[index];
+            DataGridViewColumn dataGridViewColumn = _items[index];
+
+            if (DataGridView.IsAccessibilityObjectCreated && OsVersion.IsWindows8OrGreater())
+            {
+                foreach (DataGridViewRow row in DataGridView.Rows)
+                {
+                    row.Cells[index].ReleaseUiaProvider();
+                }
+
+                dataGridViewColumn.HeaderCell.ReleaseUiaProvider();
+            }
+
             DataGridView.OnRemovingColumn(dataGridViewColumn, out Point newCurrentCell, force);
             InvalidateCachedColumnsOrder();
             _items.RemoveAt(index);
@@ -1131,6 +1150,7 @@ namespace System.Windows.Forms
                     {
                         _columnCountsVisible += columnCountIncrement;
                     }
+
                     if (_columnsWidthVisible != -1)
                     {
                         Debug.Assert(columnWidthIncrement != 0);
@@ -1159,7 +1179,7 @@ namespace System.Windows.Forms
 
         private void UpdateColumnOrderCache()
         {
-            _itemsSorted = (ArrayList)_items.Clone();
+            _itemsSorted = _items.ToList();
             _itemsSorted.Sort(s_columnOrderComparer);
             _lastAccessedSortedIndex = -1;
         }
@@ -1174,6 +1194,7 @@ namespace System.Windows.Forms
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -1192,37 +1213,18 @@ namespace System.Windows.Forms
             int index = 0;
             while (index < _itemsSorted.Count - 1)
             {
-                if (((DataGridViewColumn)_itemsSorted[index + 1]).DisplayIndex !=
-                    ((DataGridViewColumn)_itemsSorted[index]).DisplayIndex + 1)
+                if (_itemsSorted[index + 1].DisplayIndex !=
+                    _itemsSorted[index].DisplayIndex + 1)
                 {
                     return false;
                 }
 
                 index++;
             }
+
             return true;
         }
 #endif
 
-        private class ColumnOrderComparer : IComparer
-        {
-            public ColumnOrderComparer()
-            {
-            }
-
-            public int Compare(object x, object y)
-            {
-                Debug.Assert(x != null);
-                Debug.Assert(y != null);
-
-                DataGridViewColumn dataGridViewColumn1 = x as DataGridViewColumn;
-                DataGridViewColumn dataGridViewColumn2 = y as DataGridViewColumn;
-
-                Debug.Assert(dataGridViewColumn1 != null);
-                Debug.Assert(dataGridViewColumn2 != null);
-
-                return dataGridViewColumn1.DisplayIndex - dataGridViewColumn2.DisplayIndex;
-            }
-        }
     }
 }

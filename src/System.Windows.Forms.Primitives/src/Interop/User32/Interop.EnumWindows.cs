@@ -2,17 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Runtime.InteropServices;
 
 internal static partial class Interop
 {
     internal static partial class User32
     {
-        public delegate BOOL EnumWindowsCallback(IntPtr hWnd);
+        public delegate BOOL EnumWindowsCallback(HWND hWnd);
 
-        [DllImport(Libraries.User32, ExactSpelling = true, SetLastError = true)]
-        private static extern unsafe BOOL EnumWindows(delegate* unmanaged<IntPtr, IntPtr, BOOL> lpEnumFunc, IntPtr lParam);
+        [DllImport(Libraries.User32, SetLastError = true)]
+        private static extern unsafe BOOL EnumWindows(delegate* unmanaged<HWND, IntPtr, BOOL> lpEnumFunc, IntPtr lParam);
 
         public static unsafe BOOL EnumWindows(EnumWindowsCallback lpEnumFunc)
         {
@@ -31,7 +30,7 @@ internal static partial class Interop
         }
 
         [UnmanagedCallersOnly]
-        private static BOOL HandleEnumWindowsNativeCallback(IntPtr hWnd, IntPtr lParam)
+        private static BOOL HandleEnumWindowsNativeCallback(HWND hWnd, IntPtr lParam)
         {
             return ((EnumWindowsCallback)((GCHandle)lParam).Target!)(hWnd);
         }

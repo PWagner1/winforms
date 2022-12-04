@@ -2,13 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.VisualStyles;
-using static Interop;
 
 namespace System.Windows.Forms
 {
@@ -20,7 +16,7 @@ namespace System.Windows.Forms
         ///  handled. The control sends UpDownEventArgss to the parent UpDownBase class when a button is pressed, or
         ///  when the acceleration determines that another event should be generated.
         /// </summary>
-        internal class UpDownButtons : Control
+        internal partial class UpDownButtons : Control
         {
             private readonly UpDownBase _parent;
 
@@ -29,9 +25,9 @@ namespace System.Windows.Forms
             private ButtonID _captured = ButtonID.None;
             private ButtonID _mouseOver = ButtonID.None;
 
-            private UpDownEventHandler _upDownEventHandler;
+            private UpDownEventHandler? _upDownEventHandler;
 
-            private Timer _timer; // generates UpDown events
+            private Timer? _timer; // generates UpDown events
             private int _timerInterval; // milliseconds between events
 
             private bool _doubleClickFired;
@@ -47,7 +43,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Adds a handler for the updown button event.
             /// </summary>
-            public event UpDownEventHandler UpDown
+            public event UpDownEventHandler? UpDown
             {
                 add => _upDownEventHandler += value;
                 remove => _upDownEventHandler -= value;
@@ -156,7 +152,6 @@ namespace System.Windows.Forms
                     if (rect.Contains(e.X, e.Y))
                     {
                         // Inside button, repush the button if necessary
-
                         if (_pushed != _captured)
                         {
                             // Restart the timer
@@ -223,13 +218,10 @@ namespace System.Windows.Forms
                     !(_pushed != ButtonID.None && _captured == ButtonID.None),
                     "Invalid button pushed/captured combination");
 
-                Point pt = new Point(e.X, e.Y);
-                pt = PointToScreen(pt);
-
                 MouseEventArgs me = _parent.TranslateMouseEvent(this, e);
                 if (e.Button == MouseButtons.Left)
                 {
-                    if (!_parent.ValidationCancelled && User32.WindowFromPoint(pt) == Handle)
+                    if (!_parent.ValidationCancelled && PInvoke.WindowFromPoint(PointToScreen(e.Location)) == HWND)
                     {
                         if (!_doubleClickFired)
                         {
@@ -284,7 +276,7 @@ namespace System.Windows.Forms
                     vsr.DrawBackground(
                         hdc,
                         new Rectangle(0, 0, _parent._defaultButtonsWidth, half_height),
-                        HandleInternal);
+                        HWNDInternal);
 
                     if (!Enabled)
                     {
@@ -304,7 +296,7 @@ namespace System.Windows.Forms
                     vsr.DrawBackground(
                         hdc,
                         new Rectangle(0, half_height, _parent._defaultButtonsWidth, half_height),
-                        HandleInternal);
+                        HWNDInternal);
                 }
                 else
                 {
@@ -324,15 +316,14 @@ namespace System.Windows.Forms
                 if (half_height != (ClientSize.Height + 1) / 2)
                 {
                     // When control has odd height, a line needs to be drawn below the buttons with the backcolor.
-
                     Color color = _parent.BackColor;
 
                     Rectangle clientRect = ClientRectangle;
                     Point pt1 = new Point(clientRect.Left, clientRect.Bottom - 1);
                     Point pt2 = new Point(clientRect.Right, clientRect.Bottom - 1);
 
-                    using var hdc = new DeviceContextHdcScope(e);
-                    using var hpen = new Gdi32.CreatePenScope(color);
+                    using DeviceContextHdcScope hdc = new(e);
+                    using PInvoke.CreatePenScope hpen = new(color);
                     hdc.DrawLine(hpen, pt1, pt2);
                 }
 
@@ -346,6 +337,18 @@ namespace System.Windows.Forms
             protected virtual void OnUpDown(UpDownEventArgs upevent)
                 => _upDownEventHandler?.Invoke(this, upevent);
 
+            internal override void ReleaseUiaProvider(IntPtr handle)
+            {
+                if (IsAccessibilityObjectCreated
+                    && OsVersion.IsWindows8OrGreater()
+                    && AccessibilityObject is UpDownButtonsAccessibleObject buttonsAccessibilityObject)
+                {
+                    buttonsAccessibilityObject.ReleaseChildUiaProviders();
+                }
+
+                base.ReleaseUiaProvider(handle);
+            }
+
             /// <summary>
             ///  Starts the timer for generating updown events
             /// </summary>
@@ -356,6 +359,7 @@ namespace System.Windows.Forms
                 {
                     // Generates UpDown events
                     _timer = new Timer();
+
                     // Add the timer handler
                     _timer.Tick += new EventHandler(TimerHandler);
                 }
@@ -371,7 +375,7 @@ namespace System.Windows.Forms
             /// </summary>
             protected void StopTimer()
             {
-                if (_timer != null)
+                if (_timer is not null)
                 {
                     _timer.Stop();
                     _timer.Dispose();
@@ -386,7 +390,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Generates updown events when the timer calls this function.
             /// </summary>
-            private void TimerHandler(object source, EventArgs args)
+            private void TimerHandler(object? source, EventArgs args)
             {
                 // Make sure we've got mouse capture
                 if (!Capture)
@@ -399,7 +403,7 @@ namespace System.Windows.Forms
                 // process the mouse button up event, which results in timer being disposed
                 OnUpDown(new UpDownEventArgs((int)_pushed));
 
-                if (_timer != null)
+                if (_timer is not null)
                 {
                     // Accelerate timer.
                     _timerInterval *= 7;
@@ -411,228 +415,6 @@ namespace System.Windows.Forms
                     }
 
                     _timer.Interval = _timerInterval;
-                }
-            }
-
-            internal class UpDownButtonsAccessibleObject : ControlAccessibleObject
-            {
-                private DirectionButtonAccessibleObject upButton;
-                private DirectionButtonAccessibleObject downButton;
-
-                private UpDownButtons _owner;
-
-                public UpDownButtonsAccessibleObject(UpDownButtons owner) : base(owner)
-                {
-                    _owner = owner;
-                }
-
-                internal override UiaCore.IRawElementProviderFragment ElementProviderFromPoint(double x, double y)
-                {
-                    AccessibleObject element = HitTest((int)x, (int)y);
-
-                    if (element != null)
-                    {
-                        return element;
-                    }
-
-                    return base.ElementProviderFromPoint(x, y);
-                }
-
-                internal override UiaCore.IRawElementProviderFragment FragmentNavigate(
-                    UiaCore.NavigateDirection direction) => direction switch
-                    {
-                        UiaCore.NavigateDirection.FirstChild => GetChild(0),
-                        UiaCore.NavigateDirection.LastChild => GetChild(1),
-                        _ => base.FragmentNavigate(direction),
-                    };
-
-                internal override UiaCore.IRawElementProviderFragmentRoot FragmentRoot => this;
-
-                private DirectionButtonAccessibleObject UpButton
-                    => upButton ??= new DirectionButtonAccessibleObject(this, true);
-
-                private DirectionButtonAccessibleObject DownButton
-                    => downButton ??= new DirectionButtonAccessibleObject(this, false);
-
-                public override AccessibleObject GetChild(int index) => index switch
-                {
-                    0 => UpButton,
-                    1 => DownButton,
-                    _ => null,
-                };
-
-                public override int GetChildCount() => 2;
-
-                internal override object GetPropertyValue(UiaCore.UIA propertyID) => propertyID switch
-                {
-                    UiaCore.UIA.NamePropertyId => Name,
-                    UiaCore.UIA.RuntimeIdPropertyId => RuntimeId,
-                    UiaCore.UIA.BoundingRectanglePropertyId => Bounds,
-                    UiaCore.UIA.LegacyIAccessibleStatePropertyId => State,
-                    UiaCore.UIA.LegacyIAccessibleRolePropertyId => Role,
-                    _ => base.GetPropertyValue(propertyID),
-                };
-
-                public override AccessibleObject HitTest(int x, int y)
-                {
-                    if (UpButton.Bounds.Contains(x, y))
-                    {
-                        return UpButton;
-                    }
-
-                    if (DownButton.Bounds.Contains(x, y))
-                    {
-                        return DownButton;
-                    }
-
-                    return null;
-                }
-
-                internal override UiaCore.IRawElementProviderSimple HostRawElementProvider
-                {
-                    get
-                    {
-                        if (HandleInternal == IntPtr.Zero)
-                        {
-                            return null;
-                        }
-
-                        UiaCore.UiaHostProviderFromHwnd(new HandleRef(this, HandleInternal), out UiaCore.IRawElementProviderSimple provider);
-                        return provider;
-                    }
-                }
-
-                public override string Name
-                {
-                    get
-                    {
-                        string baseName = base.Name;
-                        if (string.IsNullOrEmpty(baseName))
-                        {
-                            return SR.DefaultUpDownButtonsAccessibleName;
-                        }
-
-                        return baseName;
-                    }
-                    set => base.Name = value;
-                }
-
-                public override AccessibleObject Parent => _owner.AccessibilityObject;
-
-                public override AccessibleRole Role
-                {
-                    get
-                    {
-                        AccessibleRole role = Owner.AccessibleRole;
-                        if (role != AccessibleRole.Default)
-                        {
-                            return role;
-                        }
-
-                        return AccessibleRole.SpinButton;
-                    }
-                }
-
-                /// <summary>
-                ///  Gets the runtime ID.
-                /// </summary>
-                internal override int[] RuntimeId
-                {
-                    get
-                    {
-                        if (_owner is null)
-                        {
-                            return base.RuntimeId;
-                        }
-
-                        // We need to provide a unique ID others are implementing this in the same manner first item
-                        // is static - 0x2a (RuntimeIDFirstItem) second item can be anything, but here it is a hash.
-
-                        var runtimeId = new int[3];
-                        runtimeId[0] = RuntimeIDFirstItem;
-                        runtimeId[1] = (int)(long)_owner.InternalHandle;
-                        runtimeId[2] = _owner.GetHashCode();
-
-                        return runtimeId;
-                    }
-                }
-
-                internal class DirectionButtonAccessibleObject : AccessibleObject
-                {
-                    private readonly bool _up;
-                    private readonly UpDownButtonsAccessibleObject _parent;
-
-                    public DirectionButtonAccessibleObject(UpDownButtonsAccessibleObject parent, bool up)
-                    {
-                        _parent = parent;
-                        _up = up;
-                    }
-
-                    /// <summary>
-                    ///  Gets the runtime ID.
-                    /// </summary>
-                    internal override int[] RuntimeId => new int[]
-                    {
-                        _parent.RuntimeId[0],
-                        _parent.RuntimeId[1],
-                        _parent.RuntimeId[2],
-                        _up ? 1 : 0
-                    };
-
-                    internal override object GetPropertyValue(UiaCore.UIA propertyID) => propertyID switch
-                    {
-                        UiaCore.UIA.NamePropertyId => Name,
-                        UiaCore.UIA.RuntimeIdPropertyId => RuntimeId,
-                        UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.ButtonControlTypeId,
-                        UiaCore.UIA.BoundingRectanglePropertyId => Bounds,
-                        UiaCore.UIA.LegacyIAccessibleStatePropertyId => State,
-                        UiaCore.UIA.LegacyIAccessibleRolePropertyId => Role,
-                        _ => base.GetPropertyValue(propertyID),
-                    };
-
-                    internal override UiaCore.IRawElementProviderFragment FragmentNavigate(
-                        UiaCore.NavigateDirection direction) => direction switch
-                        {
-                            UiaCore.NavigateDirection.Parent => Parent,
-                            UiaCore.NavigateDirection.NextSibling => _up ? Parent.GetChild(1) : null,
-                            UiaCore.NavigateDirection.PreviousSibling => _up ? null : Parent.GetChild(0),
-                            _ => base.FragmentNavigate(direction),
-                        };
-
-                    internal override UiaCore.IRawElementProviderFragmentRoot FragmentRoot => Parent;
-
-                    public override Rectangle Bounds
-                    {
-                        get
-                        {
-                            if (!_parent.Owner.IsHandleCreated)
-                            {
-                                return Rectangle.Empty;
-                            }
-
-                            // Get button bounds
-                            Rectangle bounds = ((UpDownButtons)_parent.Owner).Bounds;
-                            bounds.Height /= 2;
-
-                            if (!_up)
-                            {
-                                bounds.Y += bounds.Height;
-                            }
-
-                            // Convert to screen co-ords
-                            return (((UpDownButtons)_parent.Owner).ParentInternal).RectangleToScreen(bounds);
-                        }
-                    }
-
-                    public override string Name
-                    {
-                        get => _up ? SR.UpDownBaseUpButtonAccName : SR.UpDownBaseDownButtonAccName;
-                        set { }
-                    }
-
-                    public override AccessibleObject Parent => _parent;
-
-                    public override AccessibleRole Role => AccessibleRole.PushButton;
                 }
             }
         }

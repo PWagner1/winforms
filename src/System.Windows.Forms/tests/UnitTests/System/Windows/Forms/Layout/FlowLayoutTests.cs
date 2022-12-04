@@ -1,14 +1,13 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using Xunit;
+using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Layout.Tests
 {
-    using Size = System.Drawing.Size;
-
     public partial class FlowLayoutTests : IClassFixture<ThreadExceptionFixture>
     {
         [WinFormsFact]

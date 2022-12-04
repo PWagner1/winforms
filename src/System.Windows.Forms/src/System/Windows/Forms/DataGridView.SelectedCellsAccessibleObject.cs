@@ -55,6 +55,8 @@ namespace System.Windows.Forms
                 }
             }
 
+            internal override int[] RuntimeId => new int[] { RuntimeIDFirstItem, Parent.GetHashCode(), GetHashCode() };
+
             public override AccessibleObject? GetChild(int index)
             {
                 if (index >= 0 && index < _ownerDataGridView.GetCellCount(DataGridViewElementStates.Selected))
@@ -79,7 +81,7 @@ namespace System.Windows.Forms
 
             public override AccessibleObject? GetFocused()
             {
-                if (_ownerDataGridView.CurrentCell != null && _ownerDataGridView.CurrentCell.Selected)
+                if (_ownerDataGridView.CurrentCell is not null && _ownerDataGridView.CurrentCell.Selected)
                 {
                     return _ownerDataGridView.CurrentCell.AccessibilityObject;
                 }
@@ -102,6 +104,7 @@ namespace System.Windows.Forms
                         {
                             return null;
                         }
+
                     case AccessibleNavigation.LastChild:
                         if (_ownerDataGridView.GetCellCount(DataGridViewElementStates.Selected) > 0)
                         {
@@ -111,6 +114,7 @@ namespace System.Windows.Forms
                         {
                             return null;
                         }
+
                     default:
                         {
                             return null;

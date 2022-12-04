@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using static Interop;
 
 namespace System.Windows.Forms
@@ -16,7 +14,7 @@ namespace System.Windows.Forms
             {
             }
 
-            private ProgressBar OwningProgressBar => Owner as ProgressBar;
+            private ProgressBar OwningProgressBar => (ProgressBar)Owner;
 
             internal override bool IsIAccessibleExSupported() => true;
 
@@ -31,34 +29,26 @@ namespace System.Windows.Forms
                 return base.IsPatternSupported(patternId);
             }
 
-            internal override object GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                switch (propertyID)
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+                propertyID switch
                 {
-                    case UiaCore.UIA.NamePropertyId:
-                        return Name;
-                    case UiaCore.UIA.ControlTypePropertyId:
+                    UiaCore.UIA.ControlTypePropertyId when
                         // If we don't set a default role for the accessible object
                         // it will be retrieved from Windows.
                         // And we don't have a 100% guarantee it will be correct, hence set it ourselves.
-                        return Owner.AccessibleRole == AccessibleRole.Default
-                               ? UiaCore.UIA.ProgressBarControlTypeId
-                               : base.GetPropertyValue(propertyID);
-                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
+                        Owner.AccessibleRole == AccessibleRole.Default
+                        => UiaCore.UIA.ProgressBarControlTypeId,
+                    UiaCore.UIA.IsKeyboardFocusablePropertyId =>
                         // This is necessary for compatibility with MSAA proxy:
                         // IsKeyboardFocusable = true regardless the control is enabled/disabled.
-                        return true;
-                    case UiaCore.UIA.IsRangeValuePatternAvailablePropertyId:
-                    case UiaCore.UIA.IsValuePatternAvailablePropertyId:
-                    case UiaCore.UIA.RangeValueIsReadOnlyPropertyId:
-                        return true;
-                    case UiaCore.UIA.RangeValueLargeChangePropertyId:
-                    case UiaCore.UIA.RangeValueSmallChangePropertyId:
-                        return double.NaN;
-                }
-
-                return base.GetPropertyValue(propertyID);
-            }
+                        true,
+                    UiaCore.UIA.IsRangeValuePatternAvailablePropertyId => true,
+                    UiaCore.UIA.IsValuePatternAvailablePropertyId => true,
+                    UiaCore.UIA.RangeValueIsReadOnlyPropertyId => true,
+                    UiaCore.UIA.RangeValueLargeChangePropertyId => double.NaN,
+                    UiaCore.UIA.RangeValueSmallChangePropertyId => double.NaN,
+                    _ => base.GetPropertyValue(propertyID)
+                };
 
             internal override void SetValue(double newValue)
             {
@@ -67,13 +57,13 @@ namespace System.Windows.Forms
 
             internal override double LargeChange => double.NaN;
 
-            internal override double Maximum => OwningProgressBar?.Maximum ?? double.NaN;
+            internal override double Maximum => OwningProgressBar.Maximum;
 
-            internal override double Minimum => OwningProgressBar?.Minimum ?? double.NaN;
+            internal override double Minimum => OwningProgressBar.Minimum;
 
             internal override double SmallChange => double.NaN;
 
-            internal override double RangeValue => OwningProgressBar?.Value ?? double.NaN;
+            internal override double RangeValue => OwningProgressBar.Value;
 
             internal override bool IsReadOnly => true;
         }

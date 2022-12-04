@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
@@ -40,7 +38,7 @@ namespace System.Windows.Forms
         internal int _flatSystemStyleMinimumHeight = FlatSystemStyleMinimumHeight;
 
         /// <summary>
-        ///  Initializes a new instance of the <see cref='CheckBox'/> class.
+        ///  Initializes a new instance of the <see cref="CheckBox"/> class.
         /// </summary>
         public CheckBox() : base()
         {
@@ -96,6 +94,7 @@ namespace System.Windows.Forms
                         {
                             UpdateStyles();
                         }
+
                         OnAppearanceChanged(EventArgs.Empty);
                     }
                 }
@@ -104,14 +103,14 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.CheckBoxOnAppearanceChangedDescr))]
-        public event EventHandler AppearanceChanged
+        public event EventHandler? AppearanceChanged
         {
             add => Events.AddHandler(EVENT_APPEARANCECHANGED, value);
             remove => Events.RemoveHandler(EVENT_APPEARANCECHANGED, value);
         }
 
         /// <summary>
-        ///  Gets or sets a value indicating whether the <see cref='Checked'/> or <see cref='CheckState'/>
+        ///  Gets or sets a value indicating whether the <see cref="Checked"/> or <see cref="CheckState"/>
         ///  value and the check box's appearance are automatically
         ///  changed when it is clicked.
         /// </summary>
@@ -138,10 +137,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (!WindowsFormsUtils.EnumValidator.IsValidContentAlignment(value))
-                {
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(ContentAlignment));
-                }
+                SourceGenerated.EnumValidator.Validate(value);
 
                 if (_checkAlign != value)
                 {
@@ -216,13 +212,14 @@ namespace System.Windows.Forms
 
                     if (IsHandleCreated)
                     {
-                        User32.SendMessageW(this, (User32.WM)User32.BM.SETCHECK, (IntPtr)_checkState);
+                        PInvoke.SendMessage(this, (User32.WM)User32.BM.SETCHECK, (WPARAM)(int)_checkState);
                     }
 
                     if (oldChecked != Checked)
                     {
                         OnCheckedChanged(EventArgs.Empty);
                     }
+
                     OnCheckStateChanged(EventArgs.Empty);
                 }
             }
@@ -231,7 +228,7 @@ namespace System.Windows.Forms
         /// <hideinheritance/>
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler DoubleClick
+        public new event EventHandler? DoubleClick
         {
             add => base.DoubleClick += value;
             remove => base.DoubleClick -= value;
@@ -240,7 +237,7 @@ namespace System.Windows.Forms
         /// <hideinheritance/>
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event MouseEventHandler MouseDoubleClick
+        public new event MouseEventHandler? MouseDoubleClick
         {
             add => base.MouseDoubleClick += value;
             remove => base.MouseDoubleClick -= value;
@@ -248,7 +245,7 @@ namespace System.Windows.Forms
 
         /// <summary>
         ///  Gets the information used to create the handle for the
-        ///  <see cref='CheckBox'/>
+        ///  <see cref="CheckBox"/>
         ///  control.
         /// </summary>
         protected override CreateParams CreateParams
@@ -256,7 +253,7 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = ComCtl32.WindowClasses.WC_BUTTON;
+                cp.ClassName = PInvoke.WC_BUTTON;
                 if (OwnerDraw)
                 {
                     cp.Style |= (int)User32.BS.OWNERDRAW;
@@ -397,11 +394,11 @@ namespace System.Windows.Forms
 
         /// <summary>
         ///  Occurs when the
-        ///  value of the <see cref='Checked'/>
+        ///  value of the <see cref="Checked"/>
         ///  property changes.
         /// </summary>
         [SRDescription(nameof(SR.CheckBoxOnCheckedChangedDescr))]
-        public event EventHandler CheckedChanged
+        public event EventHandler? CheckedChanged
         {
             add => Events.AddHandler(EVENT_CHECKEDCHANGED, value);
             remove => Events.RemoveHandler(EVENT_CHECKEDCHANGED, value);
@@ -409,11 +406,11 @@ namespace System.Windows.Forms
 
         /// <summary>
         ///  Occurs when the
-        ///  value of the <see cref='CheckState'/>
+        ///  value of the <see cref="CheckState"/>
         ///  property changes.
         /// </summary>
         [SRDescription(nameof(SR.CheckBoxOnCheckStateChangedDescr))]
-        public event EventHandler CheckStateChanged
+        public event EventHandler? CheckStateChanged
         {
             add => Events.AddHandler(EVENT_CHECKSTATECHANGED, value);
             remove => Events.RemoveHandler(EVENT_CHECKSTATECHANGED, value);
@@ -437,7 +434,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Raises the <see cref='CheckedChanged'/>
+        ///  Raises the <see cref="CheckedChanged"/>
         ///  event.
         /// </summary>
         protected virtual void OnCheckedChanged(EventArgs e)
@@ -453,19 +450,22 @@ namespace System.Windows.Forms
             AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
 
             // UIA events:
-            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.NamePropertyId, Name, Name);
-            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId);
+            if (IsAccessibilityObjectCreated)
+            {
+                AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.NamePropertyId, Name, Name);
+                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId);
+            }
 
             if (FlatStyle == FlatStyle.System)
             {
                 AccessibilityNotifyClients(AccessibleEvents.SystemCaptureEnd, -1);
             }
 
-            ((EventHandler)Events[EVENT_CHECKEDCHANGED])?.Invoke(this, e);
+            ((EventHandler?)Events[EVENT_CHECKEDCHANGED])?.Invoke(this, e);
         }
 
         /// <summary>
-        ///  Raises the <see cref='CheckStateChanged'/> event.
+        ///  Raises the <see cref="CheckStateChanged"/> event.
         /// </summary>
         protected virtual void OnCheckStateChanged(EventArgs e)
         {
@@ -474,7 +474,7 @@ namespace System.Windows.Forms
                 Refresh();
             }
 
-            ((EventHandler)Events[EVENT_CHECKSTATECHANGED])?.Invoke(this, e);
+            ((EventHandler?)Events[EVENT_CHECKSTATECHANGED])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -509,12 +509,14 @@ namespace System.Windows.Forms
                         {
                             CheckState = CheckState.Unchecked;
                         }
+
                         break;
                     default:
                         CheckState = CheckState.Unchecked;
                         break;
                 }
             }
+
             base.OnClick(e);
         }
 
@@ -528,36 +530,34 @@ namespace System.Windows.Forms
 
             if (IsHandleCreated)
             {
-                User32.SendMessageW(this, (User32.WM)User32.BM.SETCHECK, (IntPtr)_checkState);
+                PInvoke.SendMessage(this, (User32.WM)User32.BM.SETCHECK, (WPARAM)(int)_checkState);
             }
         }
 
         /// <summary>
-        ///  Raises the <see cref='ButtonBase.OnMouseUp'/> event.
+        ///  Raises the <see cref="ButtonBase.OnMouseUp"/> event.
         /// </summary>
         protected override void OnMouseUp(MouseEventArgs mevent)
         {
-            if (mevent.Button == MouseButtons.Left && MouseIsPressed)
+            // It's best not to have the mouse captured while running Click events
+            if (mevent.Button == MouseButtons.Left
+                && MouseIsPressed
+                && MouseIsDown
+                && PInvoke.WindowFromPoint(PointToScreen(mevent.Location)) == HWND)
             {
-                // It's best not to have the mouse captured while running Click events
-                if (base.MouseIsDown)
+                // Paint in raised state.
+                ResetFlagsandPaint();
+                if (!ValidationCancelled)
                 {
-                    Point pt = PointToScreen(new Point(mevent.X, mevent.Y));
-                    if (User32.WindowFromPoint(pt) == Handle)
+                    if (Capture)
                     {
-                        //Paint in raised state...
-                        ResetFlagsandPaint();
-                        if (!ValidationCancelled)
-                        {
-                            if (Capture)
-                            {
-                                OnClick(mevent);
-                            }
-                            OnMouseClick(mevent);
-                        }
+                        OnClick(mevent);
                     }
+
+                    OnMouseClick(mevent);
                 }
             }
+
             base.OnMouseUp(mevent);
         }
 
@@ -586,15 +586,16 @@ namespace System.Windows.Forms
                 if (Focus())
                 {
                     //Paint in raised state...
-                    //
                     ResetFlagsandPaint();
                     if (!ValidationCancelled)
                     {
                         OnClick(EventArgs.Empty);
                     }
                 }
+
                 return true;
             }
+
             return false;
         }
 

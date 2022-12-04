@@ -4,7 +4,6 @@
 
 #nullable disable
 
-using System.Collections.Generic;
 using System.ComponentModel;
 using static Interop.Mshtml;
 
@@ -13,7 +12,7 @@ namespace System.Windows.Forms
     ///  This is essentially a proxy object between the native
     ///  html objects and our managed ones.  We want the managed
     ///  HtmlDocument, HtmlWindow and HtmlElement to be super-lightweight,
-    ///  which means that we shouldnt have things that tie up their lifetimes
+    ///  which means that we shouldn't have things that tie up their lifetimes
     ///  contained within them.  The "Shim" is essentially the object that
     ///  manages events coming out of the HtmlDocument, HtmlElement and HtmlWindow
     ///  and serves them back up to the user.
@@ -28,19 +27,12 @@ namespace System.Windows.Forms
         {
         }
 
-        ~HtmlShim()
-        {
-            Dispose(false);
-        }
-
         private EventHandlerList Events
         {
             get
             {
-                if (events is null)
-                {
-                    events = new EventHandlerList();
-                }
+                events ??= new EventHandlerList();
+
                 return events;
             }
         }
@@ -57,10 +49,8 @@ namespace System.Windows.Forms
 
         protected HtmlToClrEventProxy AddEventProxy(string eventName, EventHandler eventHandler)
         {
-            if (attachedEventList is null)
-            {
-                attachedEventList = new Dictionary<EventHandler, HtmlToClrEventProxy>();
-            }
+            attachedEventList ??= new Dictionary<EventHandler, HtmlToClrEventProxy>();
+
             HtmlToClrEventProxy proxy = new HtmlToClrEventProxy(this, eventName, eventHandler);
             attachedEventList[eventHandler] = proxy;
             return proxy;
@@ -81,7 +71,7 @@ namespace System.Windows.Forms
         ///  inheriting classes should override to disconnect from ConnectionPoint and call base.
         public virtual void DisconnectFromEvents()
         {
-            if (attachedEventList != null)
+            if (attachedEventList is not null)
             {
                 EventHandler[] events = new EventHandler[attachedEventList.Count];
                 attachedEventList.Keys.CopyTo(events, 0);
@@ -108,7 +98,7 @@ namespace System.Windows.Forms
             if (disposing)
             {
                 DisconnectFromEvents();
-                if (events != null)
+                if (events is not null)
                 {
                     events.Dispose();
                     events = null;
@@ -120,7 +110,7 @@ namespace System.Windows.Forms
         {
             Delegate delegateToInvoke = (Delegate)Events[key];
 
-            if (delegateToInvoke != null)
+            if (delegateToInvoke is not null)
             {
                 try
                 {
@@ -141,6 +131,7 @@ namespace System.Windows.Forms
                 }
             }
         }
+
         protected virtual void OnEventHandlerAdded()
         {
             ConnectToEvents();
@@ -169,12 +160,12 @@ namespace System.Windows.Forms
                 return null;
             }
 
-            if (attachedEventList.ContainsKey(eventHandler))
+            if (attachedEventList.TryGetValue(eventHandler, out HtmlToClrEventProxy proxy))
             {
-                HtmlToClrEventProxy proxy = attachedEventList[eventHandler] as HtmlToClrEventProxy;
                 attachedEventList.Remove(eventHandler);
                 return proxy;
             }
+
             return null;
         }
     }

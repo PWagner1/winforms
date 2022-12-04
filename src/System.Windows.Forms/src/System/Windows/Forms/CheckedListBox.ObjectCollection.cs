@@ -2,13 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 namespace System.Windows.Forms
 {
     public partial class CheckedListBox
     {
-        new public class ObjectCollection : ListBox.ObjectCollection
+        public new class ObjectCollection : ListBox.ObjectCollection
         {
             private readonly CheckedListBox _owner;
 

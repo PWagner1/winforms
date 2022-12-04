@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Drawing;
 using System.Runtime.InteropServices;
 using static System.Windows.Forms.ComboBox.ObjectCollection;
 using static Interop;
@@ -26,6 +27,17 @@ namespace System.Windows.Forms
                 _childListControlhandle = childListControlhandle;
             }
 
+            private protected override string AutomationId => COMBO_BOX_LIST_AUTOMATION_ID;
+
+            internal override Rectangle BoundingRectangle
+            {
+                get
+                {
+                    PInvoke.GetWindowRect(_owningComboBox.GetListNativeWindow(), out var rect);
+                    return rect;
+                }
+            }
+
             /// <summary>
             ///  Return the child object at the given screen coordinates.
             /// </summary>
@@ -35,7 +47,7 @@ namespace System.Windows.Forms
             internal override UiaCore.IRawElementProviderFragment? ElementProviderFromPoint(double x, double y)
             {
                 var systemIAccessible = GetSystemIAccessibleInternal();
-                if (systemIAccessible != null)
+                if (systemIAccessible is not null)
                 {
                     object result = systemIAccessible.accHitTest((int)x, (int)y);
                     if (result is int childId)
@@ -58,7 +70,10 @@ namespace System.Windows.Forms
             /// <returns>Returns the element in the specified direction.</returns>
             internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
             {
-                if (!_owningComboBox.IsHandleCreated)
+                if (!_owningComboBox.IsHandleCreated ||
+                    // Created is set to false in WM_DESTROY, but the window Handle is released on NCDESTROY, which comes after DESTROY.
+                    // But between these calls, AccessibleObject can be recreated and might cause memory leaks.
+                    !_owningComboBox.Created)
                 {
                     return null;
                 }
@@ -109,7 +124,7 @@ namespace System.Windows.Forms
                     return null;
                 }
 
-                if (_owningComboBox.AccessibilityObject is not  ComboBoxAccessibleObject comboBoxAccessibleObject)
+                if (_owningComboBox.AccessibilityObject is not ComboBoxAccessibleObject comboBoxAccessibleObject)
                 {
                     return null;
                 }
@@ -129,47 +144,20 @@ namespace System.Windows.Forms
             /// </summary>
             /// <param name="propertyID">The accessible property ID.</param>
             /// <returns>The accessible property value.</returns>
-            internal override object? GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                switch (propertyID)
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+                propertyID switch
                 {
-                    case UiaCore.UIA.RuntimeIdPropertyId:
-                        return RuntimeId;
-                    case UiaCore.UIA.BoundingRectanglePropertyId:
-                        return Bounds;
-                    case UiaCore.UIA.ControlTypePropertyId:
-                        return UiaCore.UIA.ListControlTypeId;
-                    case UiaCore.UIA.NamePropertyId:
-                        return Name;
-                    case UiaCore.UIA.AccessKeyPropertyId:
-                        return string.Empty;
-                    case UiaCore.UIA.HasKeyboardFocusPropertyId:
-                        return false; // Narrator should keep the keyboard focus on th ComboBox itself but not on the DropDown.
-                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
-                        return (State & AccessibleStates.Focusable) == AccessibleStates.Focusable;
-                    case UiaCore.UIA.IsEnabledPropertyId:
-                        return _owningComboBox.Enabled;
-                    case UiaCore.UIA.AutomationIdPropertyId:
-                        return COMBO_BOX_LIST_AUTOMATION_ID;
-                    case UiaCore.UIA.HelpTextPropertyId:
-                        return Help ?? string.Empty;
-                    case UiaCore.UIA.IsPasswordPropertyId:
-                        return false;
-                    case UiaCore.UIA.NativeWindowHandlePropertyId:
-                        return _childListControlhandle;
-                    case UiaCore.UIA.IsOffscreenPropertyId:
-                        return false;
-                    case UiaCore.UIA.IsSelectionPatternAvailablePropertyId:
-                        return true;
-                    case UiaCore.UIA.SelectionCanSelectMultiplePropertyId:
-                        return CanSelectMultiple;
-                    case UiaCore.UIA.SelectionIsSelectionRequiredPropertyId:
-                        return IsSelectionRequired;
-
-                    default:
-                        return base.GetPropertyValue(propertyID);
-                }
-            }
+                    UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.ListControlTypeId,
+                    UiaCore.UIA.HasKeyboardFocusPropertyId =>
+                        // Narrator should keep the keyboard focus on th ComboBox itself but not on the DropDown.
+                        false,
+                    UiaCore.UIA.IsEnabledPropertyId => _owningComboBox.Enabled,
+                    UiaCore.UIA.IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
+                    UiaCore.UIA.IsOffscreenPropertyId => false,
+                    UiaCore.UIA.IsSelectionPatternAvailablePropertyId => true,
+                    UiaCore.UIA.NativeWindowHandlePropertyId => _childListControlhandle,
+                    _ => base.GetPropertyValue(propertyID)
+                };
 
             internal override UiaCore.IRawElementProviderFragment? GetFocus()
             {
@@ -198,9 +186,10 @@ namespace System.Windows.Forms
 
                 AccessibleObject? itemAccessibleObject = GetChildFragment(selectedIndex);
 
-                if (itemAccessibleObject != null)
+                if (itemAccessibleObject is not null)
                 {
-                    return new UiaCore.IRawElementProviderSimple[] {
+                    return new UiaCore.IRawElementProviderSimple[]
+                    {
                         itemAccessibleObject
                     };
                 }
@@ -253,17 +242,12 @@ namespace System.Windows.Forms
             ///  Gets the runtime ID.
             /// </summary>
             internal override int[] RuntimeId
-            {
-                get
+                => new int[]
                 {
-                    var runtimeId = new int[3];
-                    runtimeId[0] = RuntimeIDFirstItem;
-                    runtimeId[1] = (int)(long)_owningComboBox.InternalHandle;
-                    runtimeId[2] = _owningComboBox.GetListNativeWindowRuntimeIdPart();
-
-                    return runtimeId;
-                }
-            }
+                    RuntimeIDFirstItem,
+                    PARAM.ToInt(_owningComboBox.InternalHandle),
+                    _owningComboBox.GetListNativeWindowRuntimeIdPart()
+                };
 
             /// <summary>
             ///  Gets the accessible state.

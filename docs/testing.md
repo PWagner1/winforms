@@ -27,6 +27,7 @@ This document describes our approach to testing.
     * [Adding new functional tests](#adding-new-functional-tests)
         - [Test placement](#therefore-you-just-need-to-put-your-tests-in-the-right-place-in-order-for-them-to-run-1)
  * [Testing for Accessibility](#testing-for-accessibility)
+ * [Running and debugging crashed tests](#running-and-debugging-crashed-tests)
     
 
 # Building tests
@@ -44,8 +45,8 @@ To execute unit tests, run `.\build -test`
 If all the tests are successful, you should see something like this:
 
 ```console
-  Running tests: E:\src\repos\github\winforms\artifacts\bin\System.Windows.Forms.Tests\Debug\netcoreapp5.0\System.Windows.Forms.Tests.dll [netcoreapp5.0|x64]
-  Tests succeeded: E:\src\repos\github\winforms\artifacts\bin\System.Windows.Forms.Tests\Debug\netcoreapp5.0\System.Windows.Forms.Tests.dll [netcoreapp5.0|x64]
+  Running tests: E:\src\repos\github\winforms\artifacts\bin\System.Windows.Forms.Tests\Debug\net6.0\System.Windows.Forms.Tests.dll [net6.0|x64]
+  Tests succeeded: E:\src\repos\github\winforms\artifacts\bin\System.Windows.Forms.Tests\Debug\net6.0\System.Windows.Forms.Tests.dll [net6.0|x64]
 
 Build succeeded.
     0 Warning(s)
@@ -57,9 +58,9 @@ Build succeeded.
 When testing from the command line, a failed test should look something like this:
 
 ```console
-Running tests: E:\src\repos\github\winforms\artifacts\bin\System.Windows.Forms.Tests\Debug\netcoreapp5.0\System.Windows.Forms.Tests.dll [netcoreapp5.0|x64]
-XUnit : error : Tests failed: E:\src\repos\github\winforms\artifacts\TestResults\Debug\System.Windows.Forms.Tests_netcoreapp5.0_x64.html [netcoreapp5.0|x64] [E:\src\repos\github\winforms\src\System.Windows.Forms\tests\UnitTests\System.Windows.Forms.Tests.csproj]
-XUnit : error : Tests failed: E:\src\repos\github\winforms\artifacts\TestResults\Debug\System.Windows.Forms.Tests_netcoreapp5.0_x64.html [netcoreapp5.0|x64] [E:\src\repos\github\winforms\src\System.Windows.Forms\tests\UnitTests\System.Windows.Forms.Tests.csproj]
+Running tests: E:\src\repos\github\winforms\artifacts\bin\System.Windows.Forms.Tests\Debug\net6.0\System.Windows.Forms.Tests.dll [net6.0|x64]
+XUnit : error : Tests failed: E:\src\repos\github\winforms\artifacts\TestResults\Debug\System.Windows.Forms.Tests_net6.0_x64.html [net6.0|x64] [E:\src\repos\github\winforms\src\System.Windows.Forms\tests\UnitTests\System.Windows.Forms.Tests.csproj]
+XUnit : error : Tests failed: E:\src\repos\github\winforms\artifacts\TestResults\Debug\System.Windows.Forms.Tests_net6.0_x64.html [net6.0|x64] [E:\src\repos\github\winforms\src\System.Windows.Forms\tests\UnitTests\System.Windows.Forms.Tests.csproj]
 
 Build FAILED.
 ```
@@ -132,7 +133,7 @@ Tests are built and executed by file name convention
   
 #### Theory tests
 
-Quite often there may be multiple tests that test exectly the same functionality but with different input parameters (e.g. `null`, `""`, `" "` for a `string` argument). 
+Quite often there may be multiple tests that test exactly the same functionality but with different input parameters (e.g. `null`, `""`, `" "` for a `string` argument). 
 In such cases instead of creating multiple tests it is preferred to have a theory test, which is in another words a data-driven test.
 
 When writing theories note the following:
@@ -169,7 +170,7 @@ When writing theories note the following:
     ```
   
 3. theories must not reuse disposable components.<br />
-  In situations where following the above recommentation could be impractical, it is maybe acceptable to create disposable controls for each theory data, e.g.:
+  In situations where following the above recommendation could be impractical, it is maybe acceptable to create disposable controls for each theory data, e.g.:
     ```cs
     public static IEnumerable<object[]> GetButton_TestData()
     {
@@ -207,7 +208,7 @@ Each test class must implement the `IClassFixture<ThreadExceptionFixture>` inter
 ##### Unit tests should be part of the same PR as code changes
 
 * Unit tests must be added for any change to public APIs. 
-* We will accept unit tests for internal/private methods as well. Some non-public API can be accessed directly (e.g. `internal`), some via subclassing (e.g. `virtual`) or via the public surface. However there are plenty of instances where a non-public API can't be easily accessed or arranged for. In this cases we use [`TestAccessor` pattern](https://github.com/dotnet/winforms/blob/master/src/System.Windows.Forms.Primitives/tests/TestUtilities/TestAccessor.cs) to arrange, act and assert.
+* We will accept unit tests for internal/private methods as well. Some non-public API can be accessed directly (e.g. `internal`), some via subclassing (e.g. `virtual`) or via the public surface. However there are plenty of instances where a non-public API can't be easily accessed or arranged for. In this cases we use [`TestAccessor` pattern](https://github.com/dotnet/winforms/blob/main/src/System.Windows.Forms.Primitives/tests/TestUtilities/TestAccessor.cs) to arrange, act and assert.
 
 ##### Code Coverage
 
@@ -233,7 +234,7 @@ Each test class must implement the `IClassFixture<ThreadExceptionFixture>` inter
 
 We use [Enhance Metafiles](https://docs.microsoft.com/windows/win32/gdi/enhanced-format-metafiles) (or EMF for short) to validate rendering operations, i.e. assert that correct shapes were drawn with expected colours and brushes.
 
-A typical "rendering" assersion test would looks something like this:
+A typical "rendering" assertion test would looks something like this:
 ```cs
 [WinFormsFact]
 public void MyControl_Rendering()
@@ -279,8 +280,8 @@ To execute functional tests, run `.\build -integrationTest`
 You will see various windows open and close very quickly. If all the tests are successful, you should see something like this:
 
 ```console
-  Running tests: E:\src\repos\github\winforms\artifacts\bin\System.Windows.Forms.IntegrationTests\Debug\netcoreapp5.0\System.Windows.Forms.IntegrationTests.dll [netcoreapp5.0|x64]
-  Tests succeeded: E:\src\repos\github\winforms\artifacts\bin\System.Windows.Forms.IntegrationTests\Debug\netcoreapp5.0\System.Windows.Forms.IntegrationTests.dll [netcoreapp5.0|x64]
+  Running tests: E:\src\repos\github\winforms\artifacts\bin\System.Windows.Forms.IntegrationTests\Debug\net6.0\System.Windows.Forms.IntegrationTests.dll [net6.0|x64]
+  Tests succeeded: E:\src\repos\github\winforms\artifacts\bin\System.Windows.Forms.IntegrationTests\Debug\net6.0\System.Windows.Forms.IntegrationTests.dll [net6.0|x64]
 
 Build succeeded.
     0 Warning(s)
@@ -323,4 +324,21 @@ Functional tests are built and executed by file name convention
   
 # Testing for Accessibility
 
-Our goal is to make writing accessible WinForms applications easy. Specifically, all default property values should yield accessible experience. To test that controls are accessible, find or add the changed control to [AccessibilityTests application](https://github.com/dotnet/winforms/tree/master/src/System.Windows.Forms/tests/AccessibilityTests) and run [Accessibility Insights for Windows](https://accessibilityinsights.io/docs/en/windows/overview) on it. 
+Our goal is to make writing accessible WinForms applications easy. Specifically, all default property values should yield accessible experience. To test that controls are accessible, find or add the changed control to [AccessibilityTests application](https://github.com/dotnet/winforms/tree/main/src/System.Windows.Forms/tests/AccessibilityTests) and run [Accessibility Insights for Windows](https://accessibilityinsights.io/docs/en/windows/overview) on it. 
+
+
+# Running and debugging crashed tests
+
+At times tests may fail in way that makes it difficult to debug (e.g., the [test runner process crashes](https://github.com/dotnet/runtime/issues/76219)). In this case, it's good to replicate the issue locally and collect a memory dump to have a better understanding whether the issue is caused by the change in Windows Forms SDK, or, for example, by the .NET runtime.
+
+* Configure your workstation to automatically collect memory dumps following [Collecting User-Mode Dumps guide](https://learn.microsoft.com/windows/win32/wer/collecting-user-mode-dumps) guide.
+* Run `.\start-code.cmd`
+* In the VS Code terminal run the following commands to run the tests:
+    ```
+    .\restore.cmd
+    pushd .\src\System.Windows.Forms\tests\UnitTests
+    dotnet test 
+    ```
+* Upon the test process crash, navigate to the collected memory dump and inspect it in [WinDbg](https://learn.microsoft.com/windows-hardware/drivers/debugger/debugger-download-tools) (or [MSFT internal](https://www.osgwiki.com/wiki/WinDbg)) (or another tool of your choice).
+
+❕If you need to debug an x86-related issue, run tests with `-a x86` argument, e.g., `dotnet test -a x86`, and then use the 32-bit version of WinDbg to open the dump.

@@ -2,384 +2,374 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
+using Windows.Win32.System.Com;
+using Windows.Win32.System.Com.StructuredStorage;
 using static Interop;
+using static Windows.Win32.System.Memory.GLOBAL_ALLOC_FLAGS;
 
 namespace System.Windows.Forms
 {
     public abstract partial class AxHost
     {
         /// <summary>
-        ///  The class which encapsulates the persisted state of the underlying activeX control
-        ///  An instance of this class my be obtained either by calling getOcxState on an
+        ///  The class which encapsulates the persisted state of the underlying activeX control.
+        ///  An instance of this class my be obtained either by calling <see cref="OcxState"/> on an
         ///  AxHost object, or by reading in from a stream.
         /// </summary>
-        [TypeConverterAttribute(typeof(TypeConverter))]
+        [TypeConverter(typeof(TypeConverter))]
         [Serializable] // This exchanges with the native code.
-        public class State : ISerializable
+        public class State : ISerializable, IDisposable
         {
-            private readonly int VERSION = 1;
-            private int length;
-            private byte[] buffer;
-            internal int type;
-            private MemoryStream ms;
-            private Ole32.IStorage storage;
-            private Ole32.ILockBytes iLockBytes;
-            private bool manualUpdate;
-            private string licenseKey;
-#pragma warning disable IDE1006
-            private readonly PropertyBagStream PropertyBagBinary; // Do NOT rename (binary serialization).
-#pragma warning restore IDE1006
+            private const int VERSION = 1;
+            private int _length;
+            private byte[]? _buffer;
+            private MemoryStream? _memoryStream;
+            private AgileComPointer<IStorage>? _storage;
+            private AgileComPointer<ILockBytes>? _lockBytes;
+            private bool _manualUpdate;
+            private string? _licenseKey;
+            private readonly PropertyBagStream? _propertyBag;
+            private const string PropertyBagSerializationName = "PropertyBagBinary";
+            private const string DataSerializationName = "Data";
 
-            // create on save from ipersist stream
-            internal State(MemoryStream ms, int storageType, AxHost ctl, PropertyBagStream propBag)
+            // Create on save from IPersistStream.
+            internal State(MemoryStream memoryStream, int storageType, AxHost control, PropertyBagStream propertyBag)
             {
-                type = storageType;
-                PropertyBagBinary = propBag;
+                Type = storageType;
+                _propertyBag = propertyBag;
                 // dangerous?
-                length = (int)ms.Length;
-                this.ms = ms;
-                manualUpdate = ctl.GetAxState(AxHost.manualUpdate);
-                licenseKey = ctl.GetLicenseKey();
+                _length = (int)memoryStream.Length;
+                _memoryStream = memoryStream;
+                _manualUpdate = control.GetAxState(s_manualUpdate);
+                _licenseKey = control.GetLicenseKey();
             }
 
-            internal State(PropertyBagStream propBag)
-            {
-                PropertyBagBinary = propBag;
-            }
+            internal State(PropertyBagStream propertyBag) => _propertyBag = propertyBag;
 
-            internal State(MemoryStream ms)
-            {
-                this.ms = ms;
-                length = (int)ms.Length;
-                InitializeFromStream(ms);
-            }
+            // Construct State using StateConverter information.
+            // We do not want to save the memoryStream since it contains
+            // extra information to construct the State. This same scenario
+            // occurs in deserialization constructor.
+            internal State(MemoryStream memoryStream) => InitializeFromStream(memoryStream);
 
-            // create on init new w/ storage...
-            internal State(AxHost ctl)
+            // Create on init new with storage.
+            internal State(AxHost control)
             {
                 CreateStorage();
-                manualUpdate = ctl.GetAxState(AxHost.manualUpdate);
-                licenseKey = ctl.GetLicenseKey();
-                type = STG_STORAGE;
+                _manualUpdate = control.GetAxState(s_manualUpdate);
+                _licenseKey = control.GetLicenseKey();
+                Type = STG_STORAGE;
             }
 
-            public State(Stream ms, int storageType, bool manualUpdate, string licKey)
+            public State(Stream ms, int storageType, bool manualUpdate, string? licKey)
             {
-                type = storageType;
+                Type = storageType;
                 // dangerous?
-                length = (int)ms.Length;
-                this.manualUpdate = manualUpdate;
-                licenseKey = licKey;
+                _length = (int)ms.Length;
+                _manualUpdate = manualUpdate;
+                _licenseKey = licKey;
 
-                InitializeBufferFromStream(ms);
+                InitializeFromStream(ms, initializeBufferOnly: true);
             }
 
-            /**
-             * Constructor used in deserialization
-             */
+            /// <summary>
+            ///  Constructor used in deserialization.
+            /// </summary>
             protected State(SerializationInfo info, StreamingContext context)
             {
-                SerializationInfoEnumerator sie = info.GetEnumerator();
-                if (sie is null)
+                SerializationInfoEnumerator enumerator = info.GetEnumerator();
+                if (enumerator is null)
                 {
                     return;
                 }
-                for (; sie.MoveNext();)
+
+                while (enumerator.MoveNext())
                 {
-                    if (string.Compare(sie.Name, "Data", true, CultureInfo.InvariantCulture) == 0)
+                    if (string.Equals(enumerator.Name, DataSerializationName, StringComparison.InvariantCultureIgnoreCase))
                     {
                         try
                         {
-                            byte[] dat = (byte[])sie.Value;
-                            if (dat != null)
+                            byte[]? data = enumerator.Value as byte[];
+                            if (data is not null)
                             {
-                                using var datMemoryStream = new MemoryStream(dat);
-                                InitializeFromStream(datMemoryStream);
+                                using MemoryStream memoryStream = new(data);
+                                InitializeFromStream(memoryStream);
                             }
                         }
                         catch (Exception e)
                         {
-                            Debug.Fail("failure: " + e.ToString());
+                            Debug.Fail($"failure: {e}");
                         }
                     }
-                    else if (string.Compare(sie.Name, nameof(PropertyBagBinary), true, CultureInfo.InvariantCulture) == 0)
+                    else if (string.Equals(enumerator.Name, PropertyBagSerializationName, StringComparison.InvariantCultureIgnoreCase))
                     {
                         try
                         {
-                            Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "Loading up property bag from stream...");
-                            byte[] dat = (byte[])sie.Value;
-                            if (dat != null)
+                            s_axHTraceSwitch.TraceVerbose("Loading up property bag from stream...");
+                            byte[]? data = enumerator.Value as byte[];
+                            if (data is not null)
                             {
-                                PropertyBagBinary = new PropertyBagStream();
-                                using var datMemoryStream = new MemoryStream(dat);
-                                PropertyBagBinary.Read(datMemoryStream);
+                                _propertyBag = new PropertyBagStream();
+                                using MemoryStream memoryStream = new(data);
+                                _propertyBag.Read(memoryStream);
                             }
                         }
                         catch (Exception e)
                         {
-                            Debug.Fail("failure: " + e.ToString());
+                            Debug.Fail($"failure: {e}");
                         }
                     }
                 }
             }
 
-            internal int Type
-            {
-                get
-                {
-                    return type;
-                }
-                set
-                {
-                    type = value;
-                }
-            }
+            internal int Type { get; set; }
 
-            internal bool _GetManualUpdate()
-            {
-                return manualUpdate;
-            }
+            internal bool _GetManualUpdate() => _manualUpdate;
 
-            internal string _GetLicenseKey()
-            {
-                return licenseKey;
-            }
+            internal string? _GetLicenseKey() => _licenseKey;
 
-            private void CreateStorage()
+            private unsafe void CreateStorage()
             {
-                Debug.Assert(storage is null, "but we already have a storage!!!");
-                IntPtr hglobal = IntPtr.Zero;
-                if (buffer != null)
+                Debug.Assert(_storage is null, "but we already have a storage!");
+                nint hglobal = 0;
+                if (_buffer is not null)
                 {
-                    hglobal = Kernel32.GlobalAlloc(Kernel32.GMEM.MOVEABLE, (uint)length);
-                    IntPtr pointer = Kernel32.GlobalLock(hglobal);
+                    hglobal = PInvoke.GlobalAlloc(GMEM_MOVEABLE, (uint)_length);
+                    void* pointer = PInvoke.GlobalLock(hglobal);
                     try
                     {
-                        if (pointer != IntPtr.Zero)
+                        if (pointer is not null)
                         {
-                            Marshal.Copy(buffer, 0, pointer, length);
+                            Marshal.Copy(_buffer, 0, (nint)pointer, _length);
                         }
                     }
                     finally
                     {
-                        Kernel32.GlobalUnlock(hglobal);
+                        PInvoke.GlobalUnlock(hglobal);
                     }
                 }
 
-                try
+                ILockBytes* lockBytes;
+                if (PInvoke.CreateILockBytesOnHGlobal(hglobal, true, &lockBytes).Failed)
                 {
-                    iLockBytes = Ole32.CreateILockBytesOnHGlobal(hglobal, BOOL.TRUE);
-                    if (buffer is null)
-                    {
-                        storage = Ole32.StgCreateDocfileOnILockBytes(
-                            iLockBytes,
-                            Ole32.STGM.CREATE | Ole32.STGM.READWRITE | Ole32.STGM.SHARE_EXCLUSIVE,
-                            0);
-                    }
-                    else
-                    {
-                        storage = Ole32.StgOpenStorageOnILockBytes(
-                            iLockBytes,
-                            null,
-                            Ole32.STGM.READWRITE | Ole32.STGM.SHARE_EXCLUSIVE,
-                            IntPtr.Zero,
-                            0);
-                    }
+                    PInvoke.GlobalFree(hglobal);
+                    return;
                 }
-                catch (Exception)
-                {
-                    if (iLockBytes is null && hglobal != IntPtr.Zero)
-                    {
-                        Kernel32.GlobalFree(hglobal);
-                    }
-                    else
-                    {
-                        iLockBytes = null;
-                    }
 
-                    storage = null;
+                IStorage* storage;
+
+                HRESULT hr = _buffer is null
+                    ? PInvoke.StgCreateDocfileOnILockBytes(
+                        lockBytes,
+                        STGM.STGM_CREATE | STGM.STGM_READWRITE | STGM.STGM_SHARE_EXCLUSIVE,
+                        reserved: 0,
+                        &storage)
+                    : PInvoke.StgOpenStorageOnILockBytes(
+                        lockBytes,
+                        pstgPriority: null,
+                        STGM.STGM_READWRITE | STGM.STGM_SHARE_EXCLUSIVE,
+                        snbExclude: null,
+                        reserved: 0,
+                        &storage);
+
+                if (hr.Failed)
+                {
+                    lockBytes->Release();
+                    PInvoke.GlobalFree(hglobal);
                 }
+
+                _lockBytes = new(lockBytes);
+                _storage = new(storage);
             }
 
-            internal Oleaut32.IPropertyBag GetPropBag()
-            {
-                return PropertyBagBinary;
-            }
+            internal IPropertyBag.Interface? GetPropBag() => _propertyBag;
 
-            internal Ole32.IStorage GetStorage()
+            internal unsafe ComScope<IStorage> GetStorage()
             {
-                if (storage is null)
+                if (_storage is null)
                 {
                     CreateStorage();
                 }
 
-                return storage;
+                return _storage is null ? default : _storage.GetInterface();
             }
 
-            internal Ole32.IStream GetStream()
+            internal IStream.Interface? GetStream()
             {
-                if (ms is null)
+                if (_memoryStream is null)
                 {
-                    Debug.Assert(buffer != null, "gotta have the buffer already...");
-                    if (buffer is null)
+                    Debug.Assert(_buffer is not null, "gotta have the buffer already...");
+                    if (_buffer is null)
                     {
                         return null;
                     }
 
-                    ms = new MemoryStream(buffer);
+                    _memoryStream = new MemoryStream(_buffer);
                 }
                 else
                 {
-                    ms.Seek(0, SeekOrigin.Begin);
+                    _memoryStream.Seek(0, SeekOrigin.Begin);
                 }
-                return new Ole32.GPStream(ms);
+
+                return new Ole32.GPStream(_memoryStream);
             }
 
-            private void InitializeFromStream(Stream ids)
+            private void InitializeFromStream(Stream dataStream, bool initializeBufferOnly = false)
             {
-                using var br = new BinaryReader(ids);
+                using BinaryReader binaryReader = new(dataStream);
 
-                type = br.ReadInt32();
-                int version = br.ReadInt32();
-                manualUpdate = br.ReadBoolean();
-                int cc = br.ReadInt32();
-                if (cc != 0)
+                if (!initializeBufferOnly)
                 {
-                    licenseKey = new string(br.ReadChars(cc));
+                    Type = binaryReader.ReadInt32();
+                    int version = binaryReader.ReadInt32();
+                    _manualUpdate = binaryReader.ReadBoolean();
+                    int cc = binaryReader.ReadInt32();
+                    if (cc != 0)
+                    {
+                        _licenseKey = new string(binaryReader.ReadChars(cc));
+                    }
+
+                    for (int skipUnits = binaryReader.ReadInt32(); skipUnits > 0; skipUnits--)
+                    {
+                        int lengthRead = binaryReader.ReadInt32();
+                        dataStream.Position += lengthRead;
+                    }
                 }
-                for (int skipUnits = br.ReadInt32(); skipUnits > 0; skipUnits--)
-                {
-                    int len = br.ReadInt32();
-                    ids.Position += len;
-                }
 
-                length = br.ReadInt32();
-                if (length > 0)
+                _length = binaryReader.ReadInt32();
+                if (_length > 0)
                 {
-                    buffer = br.ReadBytes(length);
-                }
-            }
-
-            private void InitializeBufferFromStream(Stream ids)
-            {
-                using var br = new BinaryReader(ids);
-
-                length = br.ReadInt32();
-                if (length > 0)
-                {
-                    buffer = br.ReadBytes(length);
+                    _buffer = binaryReader.ReadBytes(_length);
                 }
             }
 
-            internal State RefreshStorage(Ole32.IPersistStorage iPersistStorage)
+            internal unsafe State? RefreshStorage(IPersistStorage.Interface iPersistStorage)
             {
-                Debug.Assert(storage != null, "how can we not have a storage object?");
-                Debug.Assert(iLockBytes != null, "how can we have a storage w/o ILockBytes?");
-                if (storage is null || iLockBytes is null)
+                Debug.Assert(_storage is not null, "how can we not have a storage object?");
+                Debug.Assert(_lockBytes is not null, "how can we have a storage w/o ILockBytes?");
+                if (_storage is null || _lockBytes is null)
                 {
                     return null;
                 }
 
-                iPersistStorage.Save(storage, BOOL.TRUE);
-                storage.Commit(0);
-                iPersistStorage.HandsOffStorage();
+                using var storage = _storage.GetInterface();
+                iPersistStorage.Save(storage, fSameAsLoad: true).ThrowOnFailure();
+                storage.Value->Commit(0);
+                iPersistStorage.HandsOffStorage().ThrowOnFailure();
                 try
                 {
-                    buffer = null;
-                    ms = null;
-                    iLockBytes.Stat(out Ole32.STATSTG stat, Ole32.STATFLAG.NONAME);
-                    length = (int)stat.cbSize;
-                    buffer = new byte[length];
-                    IntPtr hglobal = Ole32.GetHGlobalFromILockBytes(iLockBytes);
-                    IntPtr pointer = Kernel32.GlobalLock(hglobal);
-                    try
+                    _buffer = null;
+                    _memoryStream = null;
+                    using var lockBytes = _lockBytes.GetInterface();
+                    lockBytes.Value->Stat(out STATSTG stat, STATFLAG.STATFLAG_NONAME);
+                    _length = (int)stat.cbSize;
+                    _buffer = new byte[_length];
+                    PInvoke.GetHGlobalFromILockBytes(lockBytes, out nint hglobal).ThrowOnFailure();
+                    void* pointer = PInvoke.GlobalLock(hglobal);
+
+                    if (pointer is not null)
                     {
-                        if (pointer != IntPtr.Zero)
+                        try
                         {
-                            Marshal.Copy(pointer, buffer, 0, length);
+                            Marshal.Copy((nint)pointer, _buffer, 0, _length);
                         }
-                        else
+                        finally
                         {
-                            length = 0;
-                            buffer = null;
+                            PInvoke.GlobalUnlock(hglobal);
                         }
                     }
-                    finally
+                    else
                     {
-                        Kernel32.GlobalUnlock(hglobal);
+                        _length = 0;
+                        _buffer = null;
                     }
                 }
                 finally
                 {
-                    iPersistStorage.SaveCompleted(storage);
+                    iPersistStorage.SaveCompleted(storage).ThrowOnFailure();
                 }
+
                 return this;
             }
 
             internal void Save(MemoryStream stream)
             {
-                using var bw = new BinaryWriter(stream);
+                using BinaryWriter binaryWriter = new(stream);
 
-                bw.Write(type);
-                bw.Write(VERSION);
-                bw.Write(manualUpdate);
-                if (licenseKey != null)
+                binaryWriter.Write(Type);
+                binaryWriter.Write(VERSION);
+                binaryWriter.Write(_manualUpdate);
+                if (_licenseKey is not null)
                 {
-                    bw.Write(licenseKey.Length);
-                    bw.Write(licenseKey.ToCharArray());
+                    binaryWriter.Write(_licenseKey.Length);
+                    binaryWriter.Write(_licenseKey.ToCharArray());
                 }
                 else
                 {
-                    bw.Write((int)0);
+                    binaryWriter.Write(0);
                 }
-                bw.Write((int)0); // skip units
-                bw.Write(length);
-                if (buffer != null)
+
+                binaryWriter.Write(0); // skip units
+                binaryWriter.Write(_length);
+                if (_buffer is not null)
                 {
-                    bw.Write(buffer);
+                    binaryWriter.Write(_buffer);
                 }
-                else if (ms != null)
+                else if (_memoryStream is not null)
                 {
-                    ms.Position = 0;
-                    ms.WriteTo(stream);
+                    _memoryStream.Position = 0;
+                    _memoryStream.WriteTo(stream);
                 }
                 else
                 {
-                    Debug.Assert(length == 0, "if we have no data, then our length has to be 0");
+                    Debug.Assert(_length == 0, "if we have no data, then our length has to be 0");
                 }
             }
 
             /// <summary>
             ///  ISerializable private implementation
             /// </summary>
-            void ISerializable.GetObjectData(SerializationInfo si, StreamingContext context)
+            void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
             {
-                using var stream = new MemoryStream();
+                using MemoryStream stream = new();
                 Save(stream);
 
-                si.AddValue("Data", stream.ToArray());
+                info.AddValue(DataSerializationName, stream.ToArray());
 
-                if (PropertyBagBinary != null)
+                if (_propertyBag is not null)
                 {
                     try
                     {
-                        using var propertyBagBinaryStream = new MemoryStream();
-                        PropertyBagBinary.Write(propertyBagBinaryStream);
-                        si.AddValue(nameof(PropertyBagBinary), propertyBagBinaryStream.ToArray());
+                        using MemoryStream propertyBagBinaryStream = new();
+                        _propertyBag.Write(propertyBagBinaryStream);
+                        info.AddValue(PropertyBagSerializationName, propertyBagBinaryStream.ToArray());
                     }
                     catch (Exception e)
                     {
-                        Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "Failed to serialize the property bag into ResX : " + e.ToString());
+                        s_axHTraceSwitch.TraceVerbose($"Failed to serialize the property bag into ResX : {e}");
                     }
                 }
+            }
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    _lockBytes?.Dispose();
+                    _storage?.Dispose();
+                    _lockBytes = null;
+                    _storage = null;
+                }
+            }
+
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
             }
         }
     }

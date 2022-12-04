@@ -31,12 +31,13 @@ namespace System.Windows.Forms.Design
             if (prop is null)
             {
                 prop = TypeDescriptor.GetDefaultProperty(designer.Component);
-                if (prop != null && typeof(ICollection).IsAssignableFrom(prop.PropertyType))
+                if (prop is not null && typeof(ICollection).IsAssignableFrom(prop.PropertyType))
                 {
                     _targetProperty = prop;
                 }
             }
-            Debug.Assert(_targetProperty != null, "Need PropertyDescriptor for ICollection property to associate collectoin edtior with.");
+
+            Debug.Assert(_targetProperty is not null, "Need PropertyDescriptor for ICollection property to associate collection editor with.");
         }
 
         internal EditorServiceContext(ComponentDesigner designer, PropertyDescriptor prop, string newVerbText) : this(designer, prop)
@@ -68,6 +69,7 @@ namespace System.Windows.Forms.Design
                 {
                 }
             }
+
             return newValue;
         }
 
@@ -78,66 +80,47 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (_componentChangeSvc is null)
-                {
-                    _componentChangeSvc = (IComponentChangeService)((IServiceProvider)this).GetService(typeof(IComponentChangeService));
-                }
+                _componentChangeSvc ??= (IComponentChangeService)((IServiceProvider)this).GetService(typeof(IComponentChangeService));
+
                 return _componentChangeSvc;
             }
         }
 
-        /// <summary>
-        ///  Self-explanitory interface impl.
-        /// </summary>
+        /// <inheritdoc />
         IContainer ITypeDescriptorContext.Container
         {
             get
             {
-                if (_designer.Component.Site != null)
+                if (_designer.Component.Site is not null)
                 {
                     return _designer.Component.Site.Container;
                 }
+
                 return null;
             }
         }
 
-        /// <summary>
-        ///  Self-explanitory interface impl.
-        /// </summary>
+        /// <inheritdoc />
         void ITypeDescriptorContext.OnComponentChanged()
-        {
-            ChangeService.OnComponentChanged(_designer.Component, _targetProperty, null, null);
-        }
+            => ChangeService.OnComponentChanged(_designer.Component, _targetProperty);
 
-        /// <summary>
-        ///  Self-explanitory interface impl.
-        /// </summary>
+        /// <inheritdoc />
         bool ITypeDescriptorContext.OnComponentChanging()
         {
             try
             {
                 ChangeService.OnComponentChanging(_designer.Component, _targetProperty);
+                return true;
             }
-            catch (CheckoutException checkoutException)
+            catch (CheckoutException checkoutException) when (checkoutException == CheckoutException.Canceled)
             {
-                if (checkoutException == CheckoutException.Canceled)
-                {
-                    return false;
-                }
-                throw;
+                return false;
             }
-            return true;
         }
 
-        object ITypeDescriptorContext.Instance
-        {
-            get => _designer.Component;
-        }
+        object ITypeDescriptorContext.Instance => _designer.Component;
 
-        PropertyDescriptor ITypeDescriptorContext.PropertyDescriptor
-        {
-            get => _targetProperty;
-        }
+        PropertyDescriptor ITypeDescriptorContext.PropertyDescriptor => _targetProperty;
 
         object IServiceProvider.GetService(Type serviceType)
         {
@@ -145,10 +128,12 @@ namespace System.Windows.Forms.Design
             {
                 return this;
             }
-            if (_designer.Component != null && _designer.Component.Site != null)
+
+            if (_designer.Component is not null && _designer.Component.Site is not null)
             {
                 return _designer.Component.Site.GetService(serviceType);
             }
+
             return null;
         }
 
@@ -165,10 +150,10 @@ namespace System.Windows.Forms.Design
             return;
         }
 
-        System.Windows.Forms.DialogResult IWindowsFormsEditorService.ShowDialog(Form dialog)
+        DialogResult IWindowsFormsEditorService.ShowDialog(Form dialog)
         {
             IUIService uiSvc = (IUIService)((IServiceProvider)this).GetService(typeof(IUIService));
-            if (uiSvc != null)
+            if (uiSvc is not null)
             {
                 return uiSvc.ShowDialog(dialog);
             }
@@ -188,13 +173,11 @@ namespace System.Windows.Forms.Design
             {
                 return;
             }
+
             CollectionEditor itemsEditor = TypeDescriptor.GetEditor(propertyValue, typeof(UITypeEditor)) as CollectionEditor;
 
-            Debug.Assert(itemsEditor != null, "Didn't get a collection editor for type '" + _targetProperty.PropertyType.FullName + "'");
-            if (itemsEditor != null)
-            {
-                itemsEditor.EditValue(this, this, propertyValue);
-            }
+            Debug.Assert(itemsEditor is not null, "Didn't get a collection editor for type '" + _targetProperty.PropertyType.FullName + "'");
+            itemsEditor?.EditValue(this, this, propertyValue);
         }
     }
 }

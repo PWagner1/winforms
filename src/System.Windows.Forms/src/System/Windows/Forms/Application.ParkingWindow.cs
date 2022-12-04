@@ -2,10 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.Layout;
 using static Interop;
 
@@ -41,9 +38,8 @@ namespace System.Windows.Forms
                 {
                     CreateParams cp = base.CreateParams;
 
-                    // Message only windows are cheaper and have fewer issues than
-                    // full blown invisible windows.
-                    cp.Parent = User32.HWND_MESSAGE;
+                    // Message only windows are cheaper and have fewer issues than full blown invisible windows.
+                    cp.Parent = HWND.HWND_MESSAGE;
                     return cp;
                 }
             }
@@ -55,6 +51,7 @@ namespace System.Windows.Forms
                     Debug.Fail("How did parkingwindow childcount go negative???");
                     _childCount = 0;
                 }
+
                 _childCount++;
             }
 
@@ -77,9 +74,8 @@ namespace System.Windows.Forms
                 // This is important for scenarios where apps leak controls until after the
                 // messagepump is gone and then decide to clean them up.  We should clean
                 // up the parkingwindow in this case and a postmessage won't do it.
-
-                uint id = User32.GetWindowThreadProcessId(HandleInternal, out _);
-                ThreadContext context = ThreadContext.FromId(id);
+                uint id = PInvoke.GetWindowThreadProcessId(HWNDInternal, out _);
+                ThreadContext? context = ThreadContext.FromId(id);
 
                 // We only do this if the ThreadContext tells us that we are currently
                 // handling a window message.
@@ -98,8 +94,8 @@ namespace System.Windows.Forms
                 if (_childCount != 0)
                     return;
 
-                IntPtr hwndChild = User32.GetWindow(new HandleRef(this, Handle), User32.GW.CHILD);
-                if (hwndChild == IntPtr.Zero)
+                HWND hwndChild = PInvoke.GetWindow(this, GET_WINDOW_CMD.GW_CHILD);
+                if (hwndChild.IsNull)
                 {
                     DestroyHandle();
                 }
@@ -111,24 +107,22 @@ namespace System.Windows.Forms
             }
 
             /// <summary>
-            ///  "Parks" the given HWND to a temporary HWND.  This allows WS_CHILD windows to
-            ///  be parked.
+            ///  "Parks" the given HWND to a temporary HWND. This allows WS_CHILD windows to be parked.
             /// </summary>
-            internal void ParkHandle(HandleRef handle)
+            internal void ParkHandle<T>(T handle) where T : IHandle<HWND>
             {
                 if (!IsHandleCreated)
                 {
                     CreateHandle();
                 }
 
-                User32.SetParent(handle, new HandleRef(this, Handle));
+                PInvoke.SetParent(handle, (IHandle<HWND>)this);
             }
 
             /// <summary>
-            ///  "Unparks" the given HWND to a temporary HWND.  This allows WS_CHILD windows to
-            ///  be parked.
+            ///  "Unparks" the given HWND to a temporary HWND. This allows WS_CHILD windows to be parked.
             /// </summary>
-            internal void UnparkHandle(HandleRef handle)
+            internal void UnparkHandle<T>(T handle) where T : IHandle<HWND>
             {
                 if (!IsHandleCreated)
                 {
@@ -136,7 +130,7 @@ namespace System.Windows.Forms
                 }
 
                 Debug.Assert(
-                    User32.GetParent(handle) != Handle,
+                    PInvoke.GetParent(handle) != HWND,
                     "Always set the handle's parent to someone else before calling UnparkHandle");
 
                 // If there are no child windows in this handle any longer, destroy the parking window.
@@ -145,24 +139,24 @@ namespace System.Windows.Forms
 
             // Do nothing on layout to reduce the calls into the LayoutEngine while debugging.
             protected override void OnLayout(LayoutEventArgs levent) { }
-            void IArrangedElement.PerformLayout(IArrangedElement affectedElement, string affectedProperty) { }
+            void IArrangedElement.PerformLayout(IArrangedElement affectedElement, string? affectedProperty) { }
 
             protected override void WndProc(ref Message m)
             {
-                if (m.Msg == (int)User32.WM.SHOWWINDOW)
+                if (m.MsgInternal == User32.WM.SHOWWINDOW)
                     return;
 
                 base.WndProc(ref m);
-                switch (m.Msg)
+                switch (m.MsgInternal)
                 {
-                    case (int)User32.WM.PARENTNOTIFY:
-                        if (PARAM.LOWORD(m.WParam) == (int)User32.WM.DESTROY)
+                    case User32.WM.PARENTNOTIFY:
+                        if ((User32.WM)m.WParamInternal.LOWORD == User32.WM.DESTROY)
                         {
                             User32.PostMessageW(this, (User32.WM)WM_CHECKDESTROY);
                         }
 
                         break;
-                    case WM_CHECKDESTROY:
+                    case (User32.WM)WM_CHECKDESTROY:
                         CheckDestroy();
                         break;
                 }

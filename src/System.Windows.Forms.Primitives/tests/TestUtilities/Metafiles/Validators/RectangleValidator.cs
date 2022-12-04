@@ -6,7 +6,6 @@
 
 using System.Drawing;
 using Xunit;
-using static Interop;
 
 namespace System.Windows.Forms.Metafiles
 {
@@ -18,12 +17,12 @@ namespace System.Windows.Forms.Metafiles
         /// <param name="stateValidators">Optional device context state validation to perform.</param>
         public RectangleValidator(
             RECT? bounds,
-            params IStateValidator[] stateValidators) : base (stateValidators)
+            params IStateValidator[] stateValidators) : base(stateValidators)
         {
             _bounds = bounds;
         }
 
-        public override bool ShouldValidate(Gdi32.EMR recordType) => recordType == Gdi32.EMR.RECTANGLE;
+        public override bool ShouldValidate(ENHANCED_METAFILE_RECORD_TYPE recordType) => recordType == ENHANCED_METAFILE_RECORD_TYPE.EMR_RECTANGLE;
 
         public override unsafe void Validate(ref EmfRecord record, DeviceContextState state, out bool complete)
         {

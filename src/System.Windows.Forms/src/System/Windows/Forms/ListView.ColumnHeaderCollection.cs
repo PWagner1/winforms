@@ -2,13 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using static Interop;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms
 {
@@ -17,11 +14,11 @@ namespace System.Windows.Forms
         [ListBindable(false)]
         public class ColumnHeaderCollection : IList
         {
-            private readonly ListView owner;
+            private readonly ListView _owner;
 
             public ColumnHeaderCollection(ListView owner)
             {
-                this.owner = owner ?? throw new ArgumentNullException(nameof(owner));
+                _owner = owner.OrThrowIfNull();
             }
 
             /// <summary>
@@ -32,16 +29,16 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (owner.columnHeaders is null || index < 0 || index >= owner.columnHeaders.Length)
+                    if (_owner._columnHeaders is null || index < 0 || index >= _owner._columnHeaders.Length)
                     {
                         throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
                     }
 
-                    return owner.columnHeaders[index];
+                    return _owner._columnHeaders[index];
                 }
             }
 
-            object IList.this[int index]
+            object? IList.this[int index]
             {
                 get
                 {
@@ -56,7 +53,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Retrieves the child control with the specified key.
             /// </summary>
-            public virtual ColumnHeader this[string key]
+            public virtual ColumnHeader? this[string? key]
             {
                 get
                 {
@@ -87,7 +84,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    return owner.columnHeaders is null ? 0 : owner.columnHeaders.Length;
+                    return _owner._columnHeaders is null ? 0 : _owner._columnHeaders.Length;
                 }
             }
 
@@ -126,7 +123,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Removes the child control with the specified key.
             /// </summary>
-            public virtual void RemoveByKey(string key)
+            public virtual void RemoveByKey(string? key)
             {
                 int index = IndexOfKey(key);
                 if (IsValidIndex(index))
@@ -144,12 +141,12 @@ namespace System.Windows.Forms
             /// <summary>
             ///  The zero-based index of the first occurrence of value within the entire CollectionBase, if found; otherwise, -1.
             /// </summary>
-            public virtual int IndexOfKey(string key)
+            public virtual int IndexOfKey(string? key)
             {
                 // Step 0 - Arg validation
                 if (string.IsNullOrEmpty(key))
                 {
-                    return -1; // we dont support empty or null keys.
+                    return -1; // we don't support empty or null keys.
                 }
 
                 // step 1 - check the last cached item
@@ -187,7 +184,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Adds a column to the end of the Column list
             /// </summary>
-            public virtual ColumnHeader Add(string text, int width, HorizontalAlignment textAlign)
+            public virtual ColumnHeader Add(string? text, int width, HorizontalAlignment textAlign)
             {
                 ColumnHeader columnHeader = new ColumnHeader
                 {
@@ -195,48 +192,48 @@ namespace System.Windows.Forms
                     Width = width,
                     TextAlign = textAlign
                 };
-                return owner.InsertColumn(Count, columnHeader);
+                return _owner.InsertColumn(Count, columnHeader);
             }
 
             public virtual int Add(ColumnHeader value)
             {
                 int index = Count;
-                owner.InsertColumn(index, value);
+                _owner.InsertColumn(index, value);
                 return index;
             }
 
-            public virtual ColumnHeader Add(string text)
+            public virtual ColumnHeader Add(string? text)
             {
                 ColumnHeader columnHeader = new ColumnHeader
                 {
                     Text = text
                 };
-                return owner.InsertColumn(Count, columnHeader);
+                return _owner.InsertColumn(Count, columnHeader);
             }
 
             // <-- NEW ADD OVERLOADS IN WHIDBEY
 
-            public virtual ColumnHeader Add(string text, int width)
+            public virtual ColumnHeader Add(string? text, int width)
             {
                 ColumnHeader columnHeader = new ColumnHeader
                 {
                     Text = text,
                     Width = width
                 };
-                return owner.InsertColumn(Count, columnHeader);
+                return _owner.InsertColumn(Count, columnHeader);
             }
 
-            public virtual ColumnHeader Add(string key, string text)
+            public virtual ColumnHeader Add(string? key, string? text)
             {
                 ColumnHeader columnHeader = new ColumnHeader
                 {
                     Name = key,
                     Text = text
                 };
-                return owner.InsertColumn(Count, columnHeader);
+                return _owner.InsertColumn(Count, columnHeader);
             }
 
-            public virtual ColumnHeader Add(string key, string text, int width)
+            public virtual ColumnHeader Add(string? key, string? text, int width)
             {
                 ColumnHeader columnHeader = new ColumnHeader
                 {
@@ -244,10 +241,10 @@ namespace System.Windows.Forms
                     Text = text,
                     Width = width
                 };
-                return owner.InsertColumn(Count, columnHeader);
+                return _owner.InsertColumn(Count, columnHeader);
             }
 
-            public virtual ColumnHeader Add(string key, string text, int width, HorizontalAlignment textAlign, string imageKey)
+            public virtual ColumnHeader Add(string? key, string? text, int width, HorizontalAlignment textAlign, string imageKey)
             {
                 ColumnHeader columnHeader = new ColumnHeader(imageKey)
                 {
@@ -256,10 +253,10 @@ namespace System.Windows.Forms
                     Width = width,
                     TextAlign = textAlign
                 };
-                return owner.InsertColumn(Count, columnHeader);
+                return _owner.InsertColumn(Count, columnHeader);
             }
 
-            public virtual ColumnHeader Add(string key, string text, int width, HorizontalAlignment textAlign, int imageIndex)
+            public virtual ColumnHeader Add(string? key, string? text, int width, HorizontalAlignment textAlign, int imageIndex)
             {
                 ColumnHeader columnHeader = new ColumnHeader(imageIndex)
                 {
@@ -268,53 +265,48 @@ namespace System.Windows.Forms
                     Width = width,
                     TextAlign = textAlign
                 };
-                return owner.InsertColumn(Count, columnHeader);
+                return _owner.InsertColumn(Count, columnHeader);
             }
 
             // END - NEW ADD OVERLOADS IN WHIDBEY  -->
 
             public virtual void AddRange(ColumnHeader[] values)
             {
-                if (values is null)
-                {
-                    throw new ArgumentNullException(nameof(values));
-                }
+                ArgumentNullException.ThrowIfNull(values);
 
-                Hashtable usedIndices = new Hashtable();
+                HashSet<int> usedIndices = new();
                 int[] indices = new int[values.Length];
 
                 for (int i = 0; i < values.Length; i++)
                 {
-                    if (values[i] is null)
+                    ColumnHeader? header = values[i];
+                    ArgumentNullException.ThrowIfNull(header, nameof(values));
+
+                    if (header.DisplayIndex == -1)
                     {
-                        throw new ArgumentNullException(nameof(values));
+                        header.DisplayIndexInternal = i;
                     }
 
-                    if (values[i].DisplayIndex == -1)
+                    if (!usedIndices.Contains(header.DisplayIndex) && header.DisplayIndex >= 0 && header.DisplayIndex < values.Length)
                     {
-                        values[i].DisplayIndexInternal = i;
+                        usedIndices.Add(header.DisplayIndex);
                     }
 
-                    if (!usedIndices.ContainsKey(values[i].DisplayIndex) && values[i].DisplayIndex >= 0 && values[i].DisplayIndex < values.Length)
-                    {
-                        usedIndices.Add(values[i].DisplayIndex, i);
-                    }
-
-                    indices[i] = values[i].DisplayIndex;
-                    Add(values[i]);
+                    indices[i] = header.DisplayIndex;
+                    Add(header);
                 }
 
                 if (usedIndices.Count == values.Length)
                 {
-                    owner.SetDisplayIndices(indices);
+                    _owner.SetDisplayIndices(indices);
                 }
             }
 
-            int IList.Add(object value)
+            int IList.Add(object? value)
             {
-                if (value is ColumnHeader)
+                if (value is ColumnHeader columnHeader)
                 {
-                    return Add((ColumnHeader)value);
+                    return Add(columnHeader);
                 }
                 else
                 {
@@ -328,56 +320,62 @@ namespace System.Windows.Forms
             public virtual void Clear()
             {
                 // Delete the columns
-                if (owner.columnHeaders != null)
+                if (_owner._columnHeaders is not null)
                 {
-                    if (owner.View == View.Tile)
+                    if (_owner.View == View.Tile)
                     {
                         // in Tile view our ListView uses the column header collection to update the Tile Information
-                        for (int colIdx = owner.columnHeaders.Length - 1; colIdx >= 0; colIdx--)
+                        for (int colIdx = _owner._columnHeaders.Length - 1; colIdx >= 0; colIdx--)
                         {
-                            int w = owner.columnHeaders[colIdx].Width; // Update width before detaching from ListView
-                            owner.columnHeaders[colIdx].OwnerListview = null;
+                            int w = _owner._columnHeaders[colIdx].Width; // Update width before detaching from ListView
+                            _owner._columnHeaders[colIdx].OwnerListview = null;
+                            _owner._columnHeaders[colIdx].ReleaseUiaProvider();
                         }
-                        owner.columnHeaders = null;
-                        if (owner.IsHandleCreated)
+
+                        _owner._columnHeaders = null;
+                        if (_owner.IsHandleCreated)
                         {
-                            owner.RecreateHandleInternal();
+                            _owner.RecreateHandleInternal();
                         }
                     }
                     else
                     {
-                        for (int colIdx = owner.columnHeaders.Length - 1; colIdx >= 0; colIdx--)
+                        for (int colIdx = _owner._columnHeaders.Length - 1; colIdx >= 0; colIdx--)
                         {
-                            int w = owner.columnHeaders[colIdx].Width; // Update width before detaching from ListView
-                            if (owner.IsHandleCreated)
+                            int w = _owner._columnHeaders[colIdx].Width; // Update width before detaching from ListView
+                            if (_owner.IsHandleCreated)
                             {
-                                User32.SendMessageW(owner, (User32.WM)LVM.DELETECOLUMN, (IntPtr)colIdx);
+                                PInvoke.SendMessage(_owner, (User32.WM)PInvoke.LVM_DELETECOLUMN, (WPARAM)colIdx);
                             }
-                            owner.columnHeaders[colIdx].OwnerListview = null;
+
+                            _owner._columnHeaders[colIdx].OwnerListview = null;
+                            _owner._columnHeaders[colIdx].ReleaseUiaProvider();
                         }
-                        owner.columnHeaders = null;
+
+                        _owner._columnHeaders = null;
                     }
                 }
             }
 
-            public bool Contains(ColumnHeader value)
+            public bool Contains(ColumnHeader? value)
             {
                 return IndexOf(value) != -1;
             }
 
-            bool IList.Contains(object value)
+            bool IList.Contains(object? value)
             {
-                if (value is ColumnHeader)
+                if (value is ColumnHeader columnHeader)
                 {
-                    return Contains((ColumnHeader)value);
+                    return Contains(columnHeader);
                 }
+
                 return false;
             }
 
             /// <summary>
             ///  Returns true if the collection contains an item with the specified key, false otherwise.
             /// </summary>
-            public virtual bool ContainsKey(string key)
+            public virtual bool ContainsKey(string? key)
             {
                 return IsValidIndex(IndexOfKey(key));
             }
@@ -386,11 +384,11 @@ namespace System.Windows.Forms
             {
                 if (Count > 0)
                 {
-                    System.Array.Copy(owner.columnHeaders, 0, dest, index, Count);
+                    Array.Copy(_owner._columnHeaders!, 0, dest, index, Count);
                 }
             }
 
-            public int IndexOf(ColumnHeader value)
+            public int IndexOf(ColumnHeader? value)
             {
                 for (int index = 0; index < Count; ++index)
                 {
@@ -399,15 +397,17 @@ namespace System.Windows.Forms
                         return index;
                     }
                 }
+
                 return -1;
             }
 
-            int IList.IndexOf(object value)
+            int IList.IndexOf(object? value)
             {
-                if (value is ColumnHeader)
+                if (value is ColumnHeader columnHeader)
                 {
-                    return IndexOf((ColumnHeader)value);
+                    return IndexOf(columnHeader);
                 }
+
                 return -1;
             }
 
@@ -417,18 +417,19 @@ namespace System.Windows.Forms
                 {
                     throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
                 }
-                owner.InsertColumn(index, value);
+
+                _owner.InsertColumn(index, value);
             }
 
-            void IList.Insert(int index, object value)
+            void IList.Insert(int index, object? value)
             {
-                if (value is ColumnHeader)
+                if (value is ColumnHeader columnHeader)
                 {
-                    Insert(index, (ColumnHeader)value);
+                    Insert(index, columnHeader);
                 }
             }
 
-            public void Insert(int index, string text, int width, HorizontalAlignment textAlign)
+            public void Insert(int index, string? text, int width, HorizontalAlignment textAlign)
             {
                 ColumnHeader columnHeader = new ColumnHeader
                 {
@@ -441,7 +442,7 @@ namespace System.Windows.Forms
 
             // <-- NEW INSERT OVERLOADS IN WHIDBEY
 
-            public void Insert(int index, string text)
+            public void Insert(int index, string? text)
             {
                 ColumnHeader columnHeader = new ColumnHeader
                 {
@@ -450,7 +451,7 @@ namespace System.Windows.Forms
                 Insert(index, columnHeader);
             }
 
-            public void Insert(int index, string text, int width)
+            public void Insert(int index, string? text, int width)
             {
                 ColumnHeader columnHeader = new ColumnHeader
                 {
@@ -460,7 +461,7 @@ namespace System.Windows.Forms
                 Insert(index, columnHeader);
             }
 
-            public void Insert(int index, string key, string text)
+            public void Insert(int index, string? key, string? text)
             {
                 ColumnHeader columnHeader = new ColumnHeader
                 {
@@ -470,7 +471,7 @@ namespace System.Windows.Forms
                 Insert(index, columnHeader);
             }
 
-            public void Insert(int index, string key, string text, int width)
+            public void Insert(int index, string? key, string? text, int width)
             {
                 ColumnHeader columnHeader = new ColumnHeader
                 {
@@ -481,7 +482,7 @@ namespace System.Windows.Forms
                 Insert(index, columnHeader);
             }
 
-            public void Insert(int index, string key, string text, int width, HorizontalAlignment textAlign, string imageKey)
+            public void Insert(int index, string? key, string? text, int width, HorizontalAlignment textAlign, string imageKey)
             {
                 ColumnHeader columnHeader = new ColumnHeader(imageKey)
                 {
@@ -493,7 +494,7 @@ namespace System.Windows.Forms
                 Insert(index, columnHeader);
             }
 
-            public void Insert(int index, string key, string text, int width, HorizontalAlignment textAlign, int imageIndex)
+            public void Insert(int index, string? key, string? text, int width, HorizontalAlignment textAlign, int imageIndex)
             {
                 ColumnHeader columnHeader = new ColumnHeader(imageIndex)
                 {
@@ -512,17 +513,17 @@ namespace System.Windows.Forms
             /// </summary>
             public virtual void RemoveAt(int index)
             {
-                if (owner.columnHeaders is null || index < 0 || index >= owner.columnHeaders.Length)
+                if (_owner._columnHeaders is null || index < 0 || index >= _owner._columnHeaders.Length)
                 {
                     throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
                 }
 
-                int w = owner.columnHeaders[index].Width; // Update width before detaching from ListView
+                int w = _owner._columnHeaders[index].Width; // Update width before detaching from ListView
 
                 // in Tile view our ListView uses the column header collection to update the Tile Information
-                if (owner.IsHandleCreated && owner.View != View.Tile)
+                if (_owner.IsHandleCreated && _owner.View != View.Tile)
                 {
-                    int retval = unchecked((int)(long)User32.SendMessageW(owner, (User32.WM)LVM.DELETECOLUMN, (IntPtr)index));
+                    int retval = (int)PInvoke.SendMessage(_owner, (User32.WM)PInvoke.LVM_DELETECOLUMN, (WPARAM)index);
                     if (0 == retval)
                     {
                         throw new ArgumentOutOfRangeException(nameof(index), index, string.Format(SR.InvalidArgument, nameof(index), index));
@@ -542,42 +543,44 @@ namespace System.Windows.Forms
                         {
                             hdr.DisplayIndexInternal--;
                         }
+
                         indices[i > index ? i - 1 : i] = hdr.DisplayIndexInternal;
                     }
                 }
 
                 removeHdr.DisplayIndexInternal = -1;
+                removeHdr.ReleaseUiaProvider();
 
-                owner.columnHeaders[index].OwnerListview = null;
-                int columnCount = owner.columnHeaders.Length;
+                _owner._columnHeaders[index].OwnerListview = null;
+                int columnCount = _owner._columnHeaders.Length;
                 Debug.Assert(columnCount >= 1, "Column mismatch");
                 if (columnCount == 1)
                 {
-                    owner.columnHeaders = null;
+                    _owner._columnHeaders = null;
                 }
                 else
                 {
                     ColumnHeader[] newHeaders = new ColumnHeader[--columnCount];
                     if (index > 0)
                     {
-                        System.Array.Copy(owner.columnHeaders, 0, newHeaders, 0, index);
+                        Array.Copy(_owner._columnHeaders, 0, newHeaders, 0, index);
                     }
 
                     if (index < columnCount)
                     {
-                        System.Array.Copy(owner.columnHeaders, index + 1, newHeaders, index, columnCount - index);
+                        Array.Copy(_owner._columnHeaders, index + 1, newHeaders, index, columnCount - index);
                     }
 
-                    owner.columnHeaders = newHeaders;
+                    _owner._columnHeaders = newHeaders;
                 }
 
                 // in Tile view our ListView uses the column header collection to update the Tile Information
-                if (owner.IsHandleCreated && owner.View == View.Tile)
+                if (_owner.IsHandleCreated && _owner.View == View.Tile)
                 {
-                    owner.RecreateHandleInternal();
+                    _owner.RecreateHandleInternal();
                 }
 
-                owner.SetDisplayIndices(indices);
+                _owner.SetDisplayIndices(indices);
             }
 
             public virtual void Remove(ColumnHeader column)
@@ -589,19 +592,19 @@ namespace System.Windows.Forms
                 }
             }
 
-            void IList.Remove(object value)
+            void IList.Remove(object? value)
             {
-                if (value is ColumnHeader)
+                if (value is ColumnHeader columnHeader)
                 {
-                    Remove((ColumnHeader)value);
+                    Remove(columnHeader);
                 }
             }
 
             public IEnumerator GetEnumerator()
             {
-                if (owner.columnHeaders != null)
+                if (_owner._columnHeaders is not null)
                 {
-                    return owner.columnHeaders.GetEnumerator();
+                    return _owner._columnHeaders.GetEnumerator();
                 }
                 else
                 {

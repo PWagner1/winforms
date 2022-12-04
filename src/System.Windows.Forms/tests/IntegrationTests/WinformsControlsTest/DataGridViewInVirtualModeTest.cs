@@ -2,9 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Windows.Forms;
 
 namespace WinformsControlsTest
@@ -108,6 +105,7 @@ namespace WinformsControlsTest
                     {
                         _customerInEdit.Age = result;
                     }
+
                     break;
                 case "hasAJobColumn":
                     _customerInEdit.HasAJob = (bool)newValue;
@@ -137,7 +135,7 @@ namespace WinformsControlsTest
                 _customerInEdit = null;
                 _rowInEdit = -1;
             }
-            else if (_customerInEdit != null && e.RowIndex < _customers.Count)
+            else if (_customerInEdit is not null && e.RowIndex < _customers.Count)
             {
                 // Save the modified TestCustomer object in the data store
                 _customers[e.RowIndex] = _customerInEdit;

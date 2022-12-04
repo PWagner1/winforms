@@ -5,12 +5,14 @@
 #nullable disable
 
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.Text;
 
 namespace System.Windows.Forms
 {
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     [ToolboxBitmap(typeof(DataGridViewButtonColumn), "DataGridViewButtonColumn")]
     public class DataGridViewButtonColumn : DataGridViewColumn
     {
@@ -34,10 +36,11 @@ namespace System.Windows.Forms
             get => base.CellTemplate;
             set
             {
-                if (value != null && !(value is DataGridViewButtonCell))
+                if (value is not null && !(value is DataGridViewButtonCell))
                 {
                     throw new InvalidCastException(string.Format(SR.DataGridViewTypeColumn_WrongCellTemplateType, "System.Windows.Forms.DataGridViewButtonCell"));
                 }
+
                 base.CellTemplate = value;
             }
         }
@@ -62,6 +65,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
+
                 return ((DataGridViewButtonCell)CellTemplate).FlatStyle;
             }
             set
@@ -69,7 +73,7 @@ namespace System.Windows.Forms
                 if (FlatStyle != value)
                 {
                     ((DataGridViewButtonCell)CellTemplate).FlatStyle = value;
-                    if (DataGridView != null)
+                    if (DataGridView is not null)
                     {
                         DataGridViewRowCollection dataGridViewRows = DataGridView.Rows;
                         int rowCount = dataGridViewRows.Count;
@@ -81,6 +85,7 @@ namespace System.Windows.Forms
                                 dataGridViewCell.FlatStyleInternal = value;
                             }
                         }
+
                         DataGridView.OnColumnCommonChange(Index);
                     }
                 }
@@ -101,7 +106,7 @@ namespace System.Windows.Forms
                 if (!string.Equals(value, _text, StringComparison.Ordinal))
                 {
                     _text = value;
-                    if (DataGridView != null)
+                    if (DataGridView is not null)
                     {
                         if (UseColumnTextForButtonValue)
                         {
@@ -120,6 +125,7 @@ namespace System.Windows.Forms
                                     return;
                                 }
                             }
+
                             DataGridView.InvalidateColumn(Index);
                         }
                     }
@@ -138,6 +144,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
+
                 return ((DataGridViewButtonCell)CellTemplate).UseColumnTextForButtonValue;
             }
             set
@@ -145,7 +152,7 @@ namespace System.Windows.Forms
                 if (UseColumnTextForButtonValue != value)
                 {
                     ((DataGridViewButtonCell)CellTemplate).UseColumnTextForButtonValueInternal = value;
-                    if (DataGridView != null)
+                    if (DataGridView is not null)
                     {
                         DataGridViewRowCollection dataGridViewRows = DataGridView.Rows;
                         int rowCount = dataGridViewRows.Count;
@@ -157,6 +164,7 @@ namespace System.Windows.Forms
                                 dataGridViewCell.UseColumnTextForButtonValueInternal = value;
                             }
                         }
+
                         DataGridView.OnColumnCommonChange(Index);
                     }
                 }
@@ -176,11 +184,13 @@ namespace System.Windows.Forms
             {
                 dataGridViewColumn = (DataGridViewButtonColumn)System.Activator.CreateInstance(thisType);
             }
-            if (dataGridViewColumn != null)
+
+            if (dataGridViewColumn is not null)
             {
                 base.CloneInternal(dataGridViewColumn);
                 dataGridViewColumn.Text = _text;
             }
+
             return dataGridViewColumn;
         }
 
@@ -197,14 +207,14 @@ namespace System.Windows.Forms
                     !defaultCellStyle.ForeColor.IsEmpty ||
                     !defaultCellStyle.SelectionBackColor.IsEmpty ||
                     !defaultCellStyle.SelectionForeColor.IsEmpty ||
-                    defaultCellStyle.Font != null ||
+                    defaultCellStyle.Font is not null ||
                     !defaultCellStyle.IsNullValueDefault ||
                     !defaultCellStyle.IsDataSourceNullValueDefault ||
                     !string.IsNullOrEmpty(defaultCellStyle.Format) ||
                     !defaultCellStyle.FormatProvider.Equals(System.Globalization.CultureInfo.CurrentCulture) ||
                     defaultCellStyle.Alignment != DataGridViewContentAlignment.MiddleCenter ||
                     defaultCellStyle.WrapMode != DataGridViewTriState.NotSet ||
-                    defaultCellStyle.Tag != null ||
+                    defaultCellStyle.Tag is not null ||
                     !defaultCellStyle.Padding.Equals(Padding.Empty));
         }
 

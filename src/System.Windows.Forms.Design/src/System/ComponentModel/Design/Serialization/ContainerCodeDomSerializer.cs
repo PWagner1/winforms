@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -18,14 +18,11 @@ namespace System.ComponentModel.Design.Serialization
         /// <summary>
         ///  Retrieves a default static instance of this serializer.
         /// </summary>
-        internal new static ContainerCodeDomSerializer Default
+        internal static new ContainerCodeDomSerializer Default
         {
             get
             {
-                if (s_defaultSerializer is null)
-                {
-                    s_defaultSerializer = new ContainerCodeDomSerializer();
-                }
+                s_defaultSerializer ??= new ContainerCodeDomSerializer();
 
                 return s_defaultSerializer;
             }
@@ -40,7 +37,7 @@ namespace System.ComponentModel.Design.Serialization
             {
                 object obj = manager.GetService(typeof(IContainer));
 
-                if (obj != null)
+                if (obj is not null)
                 {
                     Trace("Returning IContainer service as container");
                     manager.SetName(obj, name);
@@ -61,14 +58,14 @@ namespace System.ComponentModel.Design.Serialization
             CodeStatementCollection statements = new CodeStatementCollection();
             CodeExpression lhs;
 
-            if (manager.Context[typeof(CodeTypeDeclaration)] is CodeTypeDeclaration typeDecl && manager.Context[typeof(RootContext)] is RootContext rootCxt)
+            if (manager.Context[typeof(CodeTypeDeclaration)] is CodeTypeDeclaration typeDecl && manager.Context[typeof(RootContext)] is RootContext rootCtx)
             {
                 CodeMemberField field = new CodeMemberField(typeof(IContainer), _containerName)
                 {
                     Attributes = MemberAttributes.Private
                 };
                 typeDecl.Members.Add(field);
-                lhs = new CodeFieldReferenceExpression(rootCxt.Expression, _containerName);
+                lhs = new CodeFieldReferenceExpression(rootCtx.Expression, _containerName);
             }
             else
             {
@@ -90,4 +87,3 @@ namespace System.ComponentModel.Design.Serialization
         }
     }
 }
-

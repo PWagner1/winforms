@@ -2,19 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.Drawing;
-using System.Runtime.InteropServices;
+using System.Windows.Forms.TestUtilities;
 using Microsoft.DotNet.RemoteExecutor;
-using WinForms.Common.Tests;
 using Xunit;
 using static Interop;
-using static Interop.ComCtl32;
+using Point = System.Drawing.Point;
 
 namespace System.Windows.Forms.Tests
 {
-    using Point = System.Drawing.Point;
-
     public class ListViewInsertionMarkTests : IClassFixture<ThreadExceptionFixture>
     {
         [WinFormsFact]
@@ -27,7 +23,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ListViewInsertionMark_AppearsAfterItem_Set_GetReturnsExpected(bool value)
         {
             using var control = new ListView();
@@ -49,7 +45,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void ListViewInsertionMark_AppearsAfterItem_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var control = new ListView();
@@ -104,11 +100,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
                 Assert.Equal(-1, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
 
                 // Set true.
                 control.InsertionMark.AppearsAfterItem = true;
@@ -116,11 +112,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)1, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(1, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000001, (uint)insertMark.dwFlags);
                 Assert.Equal(0, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
 
                 // Set false.
                 control.InsertionMark.AppearsAfterItem = false;
@@ -128,11 +124,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)1, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(1, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
                 Assert.Equal(0, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
             }).Dispose();
         }
 
@@ -155,11 +151,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
                 Assert.Equal(-1, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
 
                 // Set true.
                 control.InsertionMark.AppearsAfterItem = true;
@@ -167,11 +163,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)1, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(1, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000001, (uint)insertMark.dwFlags);
                 Assert.Equal(0, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0x785634, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0x785634, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
 
                 // Set false.
                 control.InsertionMark.AppearsAfterItem = false;
@@ -179,11 +175,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)1, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(1, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
                 Assert.Equal(0, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0x785634, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0x785634, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
             }).Dispose();
         }
 
@@ -241,9 +237,9 @@ namespace System.Windows.Forms.Tests
         {
             public RECT GetInsertMarkRectResult { get; set; }
 
-            protected unsafe override void WndProc(ref Message m)
+            protected override unsafe void WndProc(ref Message m)
             {
-                if (m.Msg == (int)ComCtl32.LVM.GETINSERTMARKRECT)
+                if (m.Msg == (int)PInvoke.LVM_GETINSERTMARKRECT)
                 {
                     RECT* pRect = (RECT*)m.LParam;
                     *pRect = GetInsertMarkRectResult;
@@ -270,9 +266,9 @@ namespace System.Windows.Forms.Tests
         {
             public bool MakeInvalid { get; set; }
 
-            protected unsafe override void WndProc(ref Message m)
+            protected override unsafe void WndProc(ref Message m)
             {
-                if (MakeInvalid && m.Msg == (int)ComCtl32.LVM.GETINSERTMARKRECT)
+                if (MakeInvalid && m.Msg == (int)PInvoke.LVM_GETINSERTMARKRECT)
                 {
                     RECT* pRect = (RECT*)m.LParam;
                     *pRect = new RECT(1, 2, 3, 4);
@@ -316,7 +312,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetColorTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetColorTheoryData))]
         public void ListViewInsertionMark_Color_SetWithoutHandle_ReturnsExpected(Color value)
         {
             using var control = new ListView();
@@ -333,7 +329,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetColorTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetColorTheoryData))]
         public void ListViewInsertionMark_Color_SetWithHandle_ReturnsExpected(Color value)
         {
             using var control = new ListView();
@@ -380,11 +376,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
                 Assert.Equal(-1, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
 
                 // Set different.
                 control.InsertionMark.Color = Color.FromArgb(0x12, 0x34, 0x56, 0x78);
@@ -392,11 +388,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
                 Assert.Equal(-1, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0x785634, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0x785634, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
             }).Dispose();
         }
 
@@ -410,7 +406,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetIntTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetIntTheoryData))]
         public void ListViewInsertionMark_Index_SetWithoutHandle_GetReturnsExpected(int value)
         {
             using var control = new ListView();
@@ -427,7 +423,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetIntTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetIntTheoryData))]
         public void ListViewInsertionMark_Index_SetWithHandle_GetReturnsExpected(int value)
         {
             using var control = new ListView();
@@ -477,11 +473,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
                 Assert.Equal(-1, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
 
                 // Set negative one.
                 Assert.NotEqual(IntPtr.Zero, control.Handle);
@@ -490,11 +486,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
                 Assert.Equal(-1, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
 
                 // Set different.
                 control.InsertionMark.Index = index;
@@ -502,11 +498,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)1, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(1, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
                 Assert.Equal(index, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
             }, indexParam.ToString()).Dispose();
         }
 
@@ -532,11 +528,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
                 Assert.Equal(-1, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
 
                 // Set negative one.
                 Assert.NotEqual(IntPtr.Zero, control.Handle);
@@ -545,11 +541,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
                 Assert.Equal(-1, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0x785634, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0x785634, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
 
                 // Set different.
                 control.InsertionMark.Index = index;
@@ -557,11 +553,11 @@ namespace System.Windows.Forms.Tests
                 {
                     cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
                 };
-                Assert.Equal((IntPtr)1, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARK, IntPtr.Zero, ref insertMark));
+                Assert.Equal(1, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
                 Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
                 Assert.Equal(index, insertMark.iItem);
                 Assert.Equal(0u, insertMark.dwReserved);
-                Assert.Equal((IntPtr)0x785634, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.LVM.GETINSERTMARKCOLOR, IntPtr.Zero, IntPtr.Zero));
+                Assert.Equal(0x785634, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.LVM_GETINSERTMARKCOLOR));
             }, indexParam.ToString()).Dispose();
         }
 
@@ -614,9 +610,9 @@ namespace System.Windows.Forms.Tests
         {
             public int InsertMarkHitTestResult { get; set; }
 
-            protected unsafe override void WndProc(ref Message m)
+            protected override unsafe void WndProc(ref Message m)
             {
-                if (m.Msg == (int)ComCtl32.LVM.INSERTMARKHITTEST)
+                if (m.Msg == (int)PInvoke.LVM_INSERTMARKHITTEST)
                 {
                     Point* pPt = (Point*)m.WParam;
                     Assert.Equal(1, pPt->X);

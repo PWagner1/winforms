@@ -20,7 +20,7 @@ namespace System.Windows.Forms.Design
 
         // static because we want this value to be the same across a
         // VS session
-        private static DateTime s_dateTimeFormatValue = DateTime.Now;
+        private static readonly DateTime s_dateTimeFormatValue = DateTime.Now;
         private bool _loaded;
 
         public FormatControl()
@@ -36,7 +36,7 @@ namespace System.Windows.Forms.Design
             {
                 FormatTypeClass formatType = formatTypeListBox.SelectedItem as FormatTypeClass;
 
-                if (formatType != null)
+                if (formatType is not null)
                 {
                     return formatType.ToString();
                 }
@@ -83,9 +83,9 @@ namespace System.Windows.Forms.Design
             }
             set
             {
-                nullValueTextBox.TextChanged -= new System.EventHandler(nullValueTextBox_TextChanged);
+                nullValueTextBox.TextChanged -= new EventHandler(nullValueTextBox_TextChanged);
                 nullValueTextBox.Text = value;
-                nullValueTextBox.TextChanged += new System.EventHandler(nullValueTextBox_TextChanged);
+                nullValueTextBox.TextChanged += new EventHandler(nullValueTextBox_TextChanged);
             }
         }
 
@@ -104,7 +104,7 @@ namespace System.Windows.Forms.Design
             Dirty = true;
         }
 
-        private void dateTimeFormatsListBox_SelectedIndexChanged(object sender, System.EventArgs e)
+        private void dateTimeFormatsListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             // recompute the SampleLabel
             FormatTypeClass item = formatTypeListBox.SelectedItem as FormatTypeClass;
@@ -141,6 +141,7 @@ namespace System.Windows.Forms.Design
             {
                 return SR.BindingFormattingDialogFormatTypeNoFormatting;
             }
+
             if (NumericFormatType.ParseStatic(formatString))
             {
                 return SR.BindingFormattingDialogFormatTypeNumeric;
@@ -197,6 +198,7 @@ namespace System.Windows.Forms.Design
                     {
                         return false;
                     }
+
                 case DateTimeIndex:
                     Debug.Assert(dateTimeFormatsListBox.Visible);
                     if (IsMnemonic(charCode, secondRowLabel.Text))
@@ -208,6 +210,7 @@ namespace System.Windows.Forms.Design
                     {
                         return false;
                     }
+
                 case CustomIndex:
                     Debug.Assert(customStringTextBox.Visible);
                     if (IsMnemonic(charCode, secondRowLabel.Text))
@@ -339,7 +342,7 @@ namespace System.Windows.Forms.Design
 
         private void UpdateFormatTypeListBoxItems()
         {
-            dateTimeFormatsListBox.SelectedIndexChanged -= new System.EventHandler(dateTimeFormatsListBox_SelectedIndexChanged);
+            dateTimeFormatsListBox.SelectedIndexChanged -= new EventHandler(dateTimeFormatsListBox_SelectedIndexChanged);
             dateTimeFormatsListBox.Items.Clear();
             dateTimeFormatsListBox.Items.Add(new DateTimeFormatsListBoxItem(s_dateTimeFormatValue, "d"));
             dateTimeFormatsListBox.Items.Add(new DateTimeFormatsListBoxItem(s_dateTimeFormatValue, "D"));
@@ -351,7 +354,7 @@ namespace System.Windows.Forms.Design
             dateTimeFormatsListBox.Items.Add(new DateTimeFormatsListBoxItem(s_dateTimeFormatValue, "T"));
             dateTimeFormatsListBox.Items.Add(new DateTimeFormatsListBoxItem(s_dateTimeFormatValue, "M"));
             dateTimeFormatsListBox.SelectedIndex = 0;
-            dateTimeFormatsListBox.SelectedIndexChanged += new System.EventHandler(dateTimeFormatsListBox_SelectedIndexChanged);
+            dateTimeFormatsListBox.SelectedIndexChanged += new EventHandler(dateTimeFormatsListBox_SelectedIndexChanged);
         }
 
         private void UpdateTBLHeight()
@@ -417,7 +420,7 @@ namespace System.Windows.Forms.Design
 
             UpdateControlVisibility(formatTypeListBox.SelectedItem as FormatTypeClass);
             sampleLabel.Text = ((formatTypeListBox.SelectedItem) as FormatTypeClass).SampleString;
-            explanationLabel.Size = new System.Drawing.Size(formatGroupBox.Width - 10, 30);
+            explanationLabel.Size = new Drawing.Size(formatGroupBox.Width - 10, 30);
             explanationLabel.Text = ((formatTypeListBox.SelectedItem) as FormatTypeClass).TopLabelString;
 
             Dirty = false;
@@ -433,11 +436,11 @@ namespace System.Windows.Forms.Design
             FormatStringDialog fsd = null;
             Control ctl = Parent;
 
-            while (ctl != null)
+            while (ctl is not null)
             {
                 fsd = ctl as FormatStringDialog;
 
-                if (fsd != null)
+                if (fsd is not null)
                 {
                     break;
                 }
@@ -445,16 +448,13 @@ namespace System.Windows.Forms.Design
                 ctl = ctl.Parent;
             }
 
-            if (fsd != null)
-            {
-                fsd.FormatControlFinishedLoading();
-            }
+            fsd?.FormatControlFinishedLoading();
         }
 
         private class DateTimeFormatsListBoxItem
         {
-            DateTime value;
-            string formatString;
+            readonly DateTime value;
+            readonly string formatString;
             public DateTimeFormatsListBoxItem(DateTime value, string formatString)
             {
                 this.value = value;
@@ -497,6 +497,7 @@ namespace System.Windows.Forms.Design
                     return SR.BindingFormattingDialogFormatTypeNoFormattingExplanation;
                 }
             }
+
             public override string SampleString
             {
                 get
@@ -504,6 +505,7 @@ namespace System.Windows.Forms.Design
                     return "-1234.5";
                 }
             }
+
             public override bool DropDownVisible
             {
                 get
@@ -511,6 +513,7 @@ namespace System.Windows.Forms.Design
                     return false;
                 }
             }
+
             public override bool ListBoxVisible
             {
                 get
@@ -561,7 +564,7 @@ namespace System.Windows.Forms.Design
 
         private class NumericFormatType : FormatTypeClass
         {
-            FormatControl _owner;
+            readonly FormatControl _owner;
 
             public NumericFormatType(FormatControl owner)
             {
@@ -575,6 +578,7 @@ namespace System.Windows.Forms.Design
                     return SR.BindingFormattingDialogFormatTypeNumericExplanation;
                 }
             }
+
             public override string SampleString
             {
                 get
@@ -582,6 +586,7 @@ namespace System.Windows.Forms.Design
                     return (-1234.5678).ToString(FormatString, CultureInfo.CurrentCulture);
                 }
             }
+
             public override bool DropDownVisible
             {
                 get
@@ -589,6 +594,7 @@ namespace System.Windows.Forms.Design
                     return true;
                 }
             }
+
             public override bool ListBoxVisible
             {
                 get
@@ -699,11 +705,11 @@ namespace System.Windows.Forms.Design
 
         private class CurrencyFormatType : FormatTypeClass
         {
-            FormatControl _owner;
+            readonly FormatControl _owner;
 
             public CurrencyFormatType(FormatControl owner)
             {
-                this._owner = owner;
+                _owner = owner;
             }
 
             public override string TopLabelString
@@ -840,7 +846,7 @@ namespace System.Windows.Forms.Design
 
         private class DateTimeFormatType : FormatTypeClass
         {
-            FormatControl _owner;
+            readonly FormatControl _owner;
 
             public DateTimeFormatType(FormatControl owner)
             {
@@ -973,6 +979,7 @@ namespace System.Windows.Forms.Design
 
                 _owner.dateTimeFormatsListBox.SelectedIndex = selectedIndex;
             }
+
             public override string ToString()
             {
                 return SR.BindingFormattingDialogFormatTypeDateTime;
@@ -981,7 +988,7 @@ namespace System.Windows.Forms.Design
 
         private class ScientificFormatType : FormatTypeClass
         {
-            FormatControl _owner;
+            readonly FormatControl _owner;
 
             public ScientificFormatType(FormatControl owner)
             {
@@ -1122,7 +1129,7 @@ namespace System.Windows.Forms.Design
 
         private class CustomFormatType : FormatTypeClass
         {
-            FormatControl _owner;
+            readonly FormatControl _owner;
 
             public CustomFormatType(FormatControl owner)
             {
@@ -1230,6 +1237,7 @@ namespace System.Windows.Forms.Design
                     return true;
                 }
             }
+
             public override bool FormatLabelVisible
             {
                 get
@@ -1237,6 +1245,7 @@ namespace System.Windows.Forms.Design
                     return false;
                 }
             }
+
             public override string FormatString
             {
                 get

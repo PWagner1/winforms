@@ -177,6 +177,11 @@
         <target state="translated">부모 행</target>
         <note />
       </trans-unit>
+      <trans-unit id="AccessDenied">
+        <source>Access denied</source>
+        <target state="translated">액세스 거부됨</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AccessibleActionCheck">
         <source>Check</source>
         <target state="translated">선택</target>
@@ -217,6 +222,11 @@
         <target state="translated">해당 UI 요소는 라이브 영역이 아닙니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AccessibleObjectRuntimeIdNotSupported">
+        <source>{0} doesn't support {1} property. It must be overriden in the derived class.</source>
+        <target state="translated">{0}에서 {1} 속성을 지원하지 않습니다. 파생 클래스에서 재정의해야 합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AddDifferentThreads">
         <source>Controls created on one thread cannot be parented to a control on a different thread.</source>
         <target state="translated">한 스레드에 만든 컨트롤은 다른 스레드에 있는 컨트롤의 부모가 될 수 없습니다.</target>
@@ -255,6 +265,16 @@
       <trans-unit id="BadDataSourceForComplexBinding">
         <source>Complex DataBinding accepts as a data source either an IList or an IListSource.</source>
         <target state="translated">IList 또는 IListSource를 복합 DataBinding의 데이터 소스로 사용할 수 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BindableComponentBindingContextChangedDescr">
+        <source>Occurs when the binding context has changed.</source>
+        <target state="translated">바인딩 컨텍스트가 변경될 때 발생합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BindingComponentBindingContextDescr">
+        <source>Gets or sets the BindingContext for this bindable Component.</source>
+        <target state="translated">이 바인딩 가능한 구성 요소에 대한 BindingContext를 가져오거나 설정합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="BindingManagerBadIndex">
@@ -677,6 +697,21 @@
         <target state="translated">처리되지 않은 VT입니다. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="CalendarNextButtonAccessibleObjectDescription">
+        <source>Go to next time frame</source>
+        <target state="translated">다음 기간으로 이동</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CalendarPreviousButtonAccessibleObjectDescription">
+        <source>Go to previous time frame</source>
+        <target state="translated">이전 기간으로 이동</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CalendarTodayLinkAccessibleObjectDescription">
+        <source>Go to and select today's date</source>
+        <target state="translated">오늘 날짜로 이동하여 선택합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CancelCaption">
         <source>Cancel</source>
         <target state="translated">취소</target>
@@ -800,6 +835,11 @@
       <trans-unit id="CatWindowStyle">
         <source>Window Style</source>
         <target state="translated">창 스타일</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CategoryPropertyGridLocalizedControlType">
+        <source>PropertyGrid category</source>
+        <target state="translated">PropertyGrid 범주</target>
         <note />
       </trans-unit>
       <trans-unit id="CheckBoxAppearanceDescr">
@@ -1112,9 +1152,44 @@
         <target state="translated">{0}이(가) 선택됨</target>
         <note />
       </trans-unit>
+      <trans-unit id="ComboboxDropDownButtonCloseName">
+        <source>Close</source>
+        <target state="translated">닫기</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ComboboxDropDownButtonOpenName">
+        <source>Open</source>
+        <target state="translated">열기</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandCanExecuteChangedEventDescr">
+        <source>Occurs when the ICommand.CanExecute(object?) status of the command which is assigned to the Command property has changed.</source>
+        <target state="translated">Command 속성에 할당된 명령의 ICommand.CanExecute(object?) 상태가 변경될 때 발생합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandChangedEventDescr">
+        <source>Occurs when the assigned ICommand object of the Command property has changed.</source>
+        <target state="translated">Command 속성의 할당된 ICommand 개체가 변경될 때 발생합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandComponentCommandDescr">
+        <source>Gets or sets the ICommand object whose Execute delegate gets executed whenever the Click event of this component gets invoked.</source>
+        <target state="translated">이 구성 요소의 Click 이벤트가 호출될 때마다 Execute 대리자가 실행되는 ICommand 개체를 가져오거나 설정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandComponentCommandParameterDescr">
+        <source>Gets or sets the parameter that is passed to the Command property's object on execution or on execution context request.</source>
+        <target state="translated">실행 또는 실행 컨텍스트 요청 시 Command 속성의 개체에 전달되는 매개 변수를 가져오거나 설정합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandIdNotAllocated">
         <source>New command ID cannot be allocated.</source>
         <target state="translated">새 명령 ID를 할당할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandParameterChangedEventDescr">
+        <source>Occurs when the value of the CommandParameter property has changed.</source>
+        <target state="translated">CommandParameter 속성의 값이 변경될 때 발생합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommonDialogHelpRequested">
@@ -1217,7 +1292,7 @@
         <target state="translated">상황에 맞는 메뉴 스트립을 표시한 마지막 컨트롤입니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="ControlAccessibileObjectInvalid">
+      <trans-unit id="ControlAccessibleObjectInvalid">
         <source>Control's accessible object is in an invalid state.</source>
         <target state="translated">컨트롤의 액세스 가능한 개체가 잘못된 상태입니다.</target>
         <note />
@@ -1420,6 +1495,11 @@
       <trans-unit id="ControlCursorDescr">
         <source>The cursor that appears when the pointer moves over the control.</source>
         <target state="translated">포인터가 컨트롤 위로 이동할 때 나타나는 커서입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ControlDataContextChangedDescr">
+        <source>Occurs when the value of the DataContext property changes.</source>
+        <target state="translated">DataContext 속성의 값이 변경되면 발생합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ControlDisplayRectangleDescr">
@@ -2035,6 +2115,16 @@
       <trans-unit id="ControlWithScrollbarsVirtualSizeDescr">
         <source>The size of the control if the screen were infinitely large.</source>
         <target state="translated">화면 크기에 제한이 없는 경우 컨트롤의 크기입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ControlsCollectionShouldNotBeEmptyInGetNextControl">
+        <source>{0} collection shouldn't be empty for {1}.</source>
+        <target state="translated">{0} 컬렉션은 {1}에 대해 비어있을 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ControlsPropertyNotSetInGetNextControl">
+        <source>{0} property should be set for {1}.</source>
+        <target state="translated">{0} 속성은 {1}에 대해 설정해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CurrencyManagerCantAddNew">
@@ -4549,6 +4639,11 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">DragDrop을 등록하지 못했습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="EditDefaultAccessibleName">
+        <source>Spinner</source>
+        <target state="translated">회전자</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ErrorBadInputLanguage">
         <source>inputLanguage is not recognized by the system.</source>
         <target state="translated">시스템에서 inputLanguage를 인식할 수 없습니다.</target>
@@ -4739,7 +4834,7 @@ just-in-time (JIT) debugging instead of this dialog box.
         <target state="translated">로드된 어셈블리</target>
         <note />
       </trans-unit>
-      <trans-unit id="ExDlgMsgSectionSeperator">
+      <trans-unit id="ExDlgMsgSectionSeparator">
         <source>
 ************** {0} **************
 </source>
@@ -4748,7 +4843,7 @@ just-in-time (JIT) debugging instead of this dialog box.
 </target>
         <note />
       </trans-unit>
-      <trans-unit id="ExDlgMsgSeperator">
+      <trans-unit id="ExDlgMsgSeparator">
         <source>----------------------------------------
 </source>
         <target state="translated">----------------------------------------
@@ -4809,6 +4904,11 @@ If you click Continue, the application will ignore this error and attempt to con
       <trans-unit id="ExceptionCreatingObject">
         <source>Exception occurred while trying to create an instance of {0}. The exception was "{1}".</source>
         <target state="translated">{0}의 인스턴스를 만드는 동안 예외가 발생했습니다. 예외는 "{1}"입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExpandedStateName">
+        <source>Expanded</source>
+        <target state="translated">확장</target>
         <note />
       </trans-unit>
       <trans-unit id="ExternalException">
@@ -4896,6 +4996,11 @@ If you click Continue, the application will ignore this error and attempt to con
         <target state="translated">대화 상자에서 파일 이름에 잘못된 문자나 시퀀스가 없는지 확인할지 여부를 제어합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="FileDialogAddToRecentDescr">
+        <source>Controls whether to add the file being opened or saved to the recent list.</source>
+        <target state="translated">연 파일 또는 저장한 파일을 최근 목록에 추가할지를 제어합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FileDialogBufferTooSmall">
         <source>Too many files selected. Select fewer files and try again.</source>
         <target state="translated">파일을 너무 많이 선택했습니다. 현재 선택한 파일에서 몇 개를 빼고 다시 시도하십시오.</target>
@@ -4930,11 +5035,26 @@ Verify that the correct file name was given.</source>
         <target state="translated">필터 인덱스가 잘못되었습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="FileDialogOkRequiresInteractionDescr">
+        <source>Controls whether the OK button of the dialog box is disabled until the user navigates the view or edits the filename (if applicable). Note: Disabling of the OK button does not prevent the dialog from being submitted by the Enter key.</source>
+        <target state="translated">사용자가 파일 이름 보기 또는 편집으로 이동할 때까지 대화 상자의 확인 버튼을 사용하지 않을지를 제어합니다(해당하는 경우). 참고: 확인 버튼을 사용하지 않아도 Enter 키로 대화 상자를 제출할 수 있습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FileDialogOverwritePrompt">
         <source>File {0} already exists.
 Do you want to replace it?</source>
         <target state="translated">{0} 파일이 이미 있습니다.
 바꾸시겠습니까?</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FileDialogShowHiddenFilesDescr">
+        <source>Controls whether the dialog box displays hidden and system files.</source>
+        <target state="translated">대화 상자에서 숨겨진 파일과 시스템 파일을 표시할지를 제어합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FileDialogShowPinnedPlacesDescr">
+        <source>Controls whether the items shown by default in the view's navigation pane are shown.</source>
+        <target state="translated">기본적으로 보기의 탐색 창에 표시된 항목을 표시할지를 제어합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="FileDialogSubLassFailure">
@@ -5042,6 +5162,11 @@ Do you want to replace it?</source>
         <target state="translated">[도움말] 단추의 표시 여부를 제어합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="FolderBrowserDialogAddToRecent">
+        <source>Controls whether the dialog box adds the folder being selected to the recent list.</source>
+        <target state="translated">대화 상자에서 선택한 폴더를 최근 목록에 추가할지를 제어합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FolderBrowserDialogDescription">
         <source>The string that is displayed above the tree view control in the dialog box. This string can be used to specify instructions to the user.</source>
         <target state="translated">대화 상자의 tree view 컨트롤 위에 표시되는 문자열입니다. 이 문자열을 사용하여 사용자에게 표시될 지시 사항을 지정할 수 있습니다.</target>
@@ -5050,6 +5175,11 @@ Do you want to replace it?</source>
       <trans-unit id="FolderBrowserDialogNoRootFolder">
         <source>Unable to retrieve the root folder.</source>
         <target state="translated">루트 폴더를 검색할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FolderBrowserDialogOkRequiresInteraction">
+        <source>Controls whether the OK button of the dialog box is disabled until the user navigates the view or edits the filename (if applicable). Note: Disabling of the OK button does not prevent the dialog from being submitted by the Enter key.</source>
+        <target state="translated">사용자가 파일 이름 보기 또는 편집으로 이동할 때까지 대화 상자의 확인 버튼을 사용하지 않을지를 제어합니다(해당하는 경우). 참고: 확인 버튼을 사용하지 않아도 Enter 키로 대화 상자를 제출할 수 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="FolderBrowserDialogRootFolder">
@@ -5062,9 +5192,19 @@ Do you want to replace it?</source>
         <target state="translated">대화 상자에 처음 선택되어 있거나 사용자가 마지막에 선택한 폴더의 경로입니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="FolderBrowserDialogShowHiddenFiles">
+        <source>Controls whether the dialog box displays hidden and system files.</source>
+        <target state="translated">대화 상자에서 숨겨진 파일과 시스템 파일을 표시할지를 제어합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FolderBrowserDialogShowNewFolderButton">
         <source>Include the New Folder button in the dialog box.</source>
         <target state="translated">대화 상자에 새 폴더 단추를 넣습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FolderBrowserDialogShowPinnedPlaces">
+        <source>Controls whether the items shown by default in the view's navigation pane are shown.</source>
+        <target state="translated">기본적으로 보기의 탐색 창에 표시된 항목을 표시할지를 제어합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="FolderBrowserDialogUseDescriptionForTitle">
@@ -5195,6 +5335,11 @@ Do you want to replace it?</source>
       <trans-unit id="FormMaximumSizeDescr">
         <source>The maximum size the form can be resized to.</source>
         <target state="translated">조정할 수 있는 폼의 최대 크기입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FormMdiChildrenMinimizedAnchorBottomDescr">
+        <source>Gets or sets the anchoring for minimized MDI children.</source>
+        <target state="translated">최소화된 MDI 자식에 대한 앵커링을 가져오거나 설정합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="FormMenuStripDescr">
@@ -5375,11 +5520,6 @@ Do you want to replace it?</source>
       <trans-unit id="Formatter_CantConvertNull">
         <source>Null value cannot be converted to type '{1}'.</source>
         <target state="translated">null 값을 '{1}' 형식으로 변환할 수 없습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="GridItemDisposed">
-        <source>The GridItem has been disposed and is no longer usable.</source>
-        <target state="translated">GridItem은 삭제되었으며 더 이상 사용할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="GridItemNotExpandable">
@@ -5814,11 +5954,6 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="KeysConverterInvalidKeyCombination">
         <source>Key combination is not valid.</source>
         <target state="translated">키 조합이 잘못되었습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="KeysConverterInvalidKeyName">
-        <source>Key name is not valid.</source>
-        <target state="translated">키 이름이 잘못되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="LabelAutoEllipsisDescr">
@@ -6261,6 +6396,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">가상 ListView 컨트롤의 사용자에게 캐시를 준비해야 함을 알립니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ListViewCannotAddGroupsToVirtualListView">
+        <source>You cannot add groups to the ListView groups collection when the ListView is in virtual mode.</source>
+        <target state="translated">ListView가 가상 모드에 있는 경우 ListView 그룹 컬렉션에 그룹을 추가할 수 없습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ListViewCantAccessCheckedItemsCollectionWhenInVirtualMode">
         <source>Cannot access the checked items collection when the ListView is in virtual mode.</source>
         <target state="translated">ListView가 가상 모드에 있으면 선택한 항목 컬렉션에 액세스할 수 없습니다.</target>
@@ -6386,6 +6526,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">ListViewGroup의 CollapsedState 속성이 변경되면 이벤트가 발생합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ListViewGroupCollapsedStateName">
+        <source>{0}, group, collapsed</source>
+        <target state="translated">{0}, 그룹, 축소됨</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ListViewGroupCollectionBadListViewGroup">
         <source>Parameter must be of type ListViewGroup.</source>
         <target state="translated">매개 변수는 ListViewGroup 형식이어야 합니다.</target>
@@ -6399,6 +6544,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="ListViewGroupDefaultHeader">
         <source>ListViewGroup</source>
         <target state="translated">ListViewGroup</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewGroupExpandedStateName">
+        <source>{0}, group, expanded</source>
+        <target state="translated">{0}, 그룹, 확장됨</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewGroupImageListDescr">
@@ -6454,6 +6604,16 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="ListViewInsertionMarkDescr">
         <source>Allows insertion mark attributes to be changed.</source>
         <target state="translated">삽입 표시 특성의 변경을 허용합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewItemAccessibilityObjectInvalidViewException">
+        <source>The current accessibility object is only for the ListView in {0} view</source>
+        <target state="translated">현재 접근성 개체는 {0} 보기의 ListView에만 해당됩니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewItemAccessibilityObjectRequiresListView">
+        <source>Cannot get accessiblity object when ListViewItem is not attached to a ListView.</source>
+        <target state="translated">ListView 항목이 ListView에 연결되어 있지 않으면 접근성 개체를 가져올 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewItemCheckedDescr">
@@ -7066,6 +7226,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">달력에 나타나는 이전 달과 다음 달을 표시하는 데 사용할 색입니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="MonthCalendarWeekNumberDescription">
+        <source>Week {0}</source>
+        <target state="translated">{0}주</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MonthCalendarYearRangeSelected">
         <source>Year {0} to {1} selected.</source>
         <target state="translated">{0}년~{1}년이 선택되었습니다.</target>
@@ -7261,11 +7426,6 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">확인</target>
         <note />
       </trans-unit>
-      <trans-unit id="ObjectDisposed">
-        <source>Disposed '{0}' can no longer be used.</source>
-        <target state="translated">삭제된 '{0}'은(는) 더 이상 사용할 수 없습니다.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ObjectHasParent">
         <source>Object already has a parent.</source>
         <target state="translated">개체에 이미 부모가 있습니다.</target>
@@ -7274,6 +7434,16 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="OnlyOneControl">
         <source>Cannot add or insert the item '{0}' in more than one place. You must first remove it from its current location or clone it.</source>
         <target state="translated">두 개 이상의 위치에 '{0}' 항목을 추가하거나 삽입할 수 없습니다. 먼저 항목의 현재 위치에서 항목을 제거하거나 복제해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OpenFileDialogSelectReadOnlyDescr">
+        <source>Controls whether the dialog box allows to select read-only files.</source>
+        <target state="translated">대화 상자에서 읽기 전용 파일을 선택할 수 있도록 허용할지를 제어합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OpenFileDialogShowPreviewDescr">
+        <source>Controls whether the dialog box shows a preview for selected files.</source>
+        <target state="translated">대화 상자에서 선택한 파일의 미리 보기를 표시할지를 제어합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="OperationRequiresIBindingList">
@@ -7299,11 +7469,6 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="OwnsSelfOrOwner">
         <source>Form {0} tried to set an ineligible form as its owner. Forms cannot own themselves or their owners.</source>
         <target state="translated">{0} 폼이 자격이 없는 폼을 소유자로 설정하려고 했습니다. 폼은 자신 또는 자신의 소유자를 소유할 수 없습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PBRSDocCommentPaneTitle">
-        <source>Description</source>
-        <target state="translated">설명</target>
         <note />
       </trans-unit>
       <trans-unit id="PBRSErrorInvalidPropertyValue">
@@ -7491,6 +7656,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">패널에 테두리를 표시할지 여부를 나타냅니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ParentPropertyNotSetInGetNextControl">
+        <source>{0} property should be set for {1}.</source>
+        <target state="translated">{0} 속성은 {1}에 대해 설정해야 합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PictureBoxBorderStyleDescr">
         <source>Controls what type of border the PictureBox should have.</source>
         <target state="translated">PictureBox의 테두리 형식을 제어합니다.</target>
@@ -7564,6 +7734,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="PictureBoxOnSizeModeChangedDescr">
         <source>Event raised when the value of the SizeMode property is changed on the PictureBox.</source>
         <target state="translated">SizeMode 속성 값이 PictureBox에서 변경되면 이벤트가 발생합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PictureBoxRemoteLocationNotSupported">
+        <source>Loading from remote location not supported.</source>
+        <target state="translated">원격 위치에서 로드할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PictureBoxSizeModeDescr">
@@ -7896,6 +8071,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">구분 기호에 대한 강조 효과에 사용할 색입니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ProfessionalColorsStatusStripBorderDescr">
+        <source>Border color to use on the top edge of the StatusStrip.</source>
+        <target state="translated">StatusStrip 상단 모서리에 사용할 테두리 색입니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProfessionalColorsStatusStripGradientBeginDescr">
         <source>Starting color of the gradient used in the StatusStrip.</source>
         <target state="translated">StatusStrip에 사용하는 그라데이션의 시작 색입니다.</target>
@@ -8126,11 +8306,6 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">표 영역에 있는 비활성 텍스트의 전경색입니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PropertyGridDocCommentAccessibleNameTemplate">
-        <source>{0} Description</source>
-        <target state="translated">{0} 설명</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PropertyGridDropDownButtonAccessibleName">
         <source>Browse...</source>
         <target state="translated">찾아보기...</target>
@@ -8169,6 +8344,16 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="PropertyGridHelpForeColorDesc">
         <source>The foreground color of the description pane.</source>
         <target state="translated">설명 창의 전경색입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PropertyGridHelpPaneAccessibleNameTemplate">
+        <source>{0} Description</source>
+        <target state="translated">{0} 설명</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PropertyGridHelpPaneTitle">
+        <source>Description</source>
+        <target state="translated">설명</target>
         <note />
       </trans-unit>
       <trans-unit id="PropertyGridHelpVisibleDesc">
@@ -8621,9 +8806,19 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">{1} - {0} - {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="SaveFileDialogCheckWriteAccess">
+        <source>Controls whether the dialog box verifies if the creation of the specified file will be successful.</source>
+        <target state="translated">대화 상자에서 지정한 파일 생성의 성공 여부를 확인할지를 제어합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="SaveFileDialogCreatePrompt">
         <source>Controls whether to prompt the user when a new file is about to be created. It is only applicable if 'ValidateNames' is set to true.</source>
         <target state="translated">새 파일을 만들려고 할 때 사용자에게 프롬프트를 표시할지 여부를 제어합니다. 'ValidateNames'를 true로 설정한 경우에만 적용됩니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SaveFileDialogExpandedMode">
+        <source>Controls whether the dialog box is always opened in the expanded mode.</source>
+        <target state="translated">확장 모드에서 대화 상자를 항상 열어둘지를 제어합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="SaveFileDialogOverWritePrompt">
@@ -8674,6 +8869,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="ScrollBarVisibleDescr">
         <source>Gets or sets a Boolean value controlling whether the scrollbar is showing.</source>
         <target state="translated">스크롤 막대의 표시 여부를 제어하는 부울 값을 가져오거나 설정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ScrollableControlActiveControlParentNull">
+        <source>Parent property of the active control cannot be null.</source>
+        <target state="translated">활성 컨트롤의 부모 속성은 Null일 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ScrollableControlHorizontalScrollDescr">
@@ -9746,6 +9946,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">컨트롤의 텍스트와 그래픽을 표시하는 데 사용할 배경색입니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ToolStripItemBindingContextDescr">
+        <source>Gets or sets the BindingContext for this toolstrip item.</source>
+        <target state="translated">이 toolstrip 항목에 대한 BindingContext를 가져오거나 설정합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ToolStripItemCircularReference">
         <source>Cannot add owner item to the drop-down items collection.</source>
         <target state="translated">드롭다운 항목 컬렉션에 소유자 항목을 추가할 수 없습니다.</target>
@@ -9839,6 +10044,16 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="ToolStripItemOnBackColorChangedDescr">
         <source>Occurs when the value of the BackColor property is changed on the item.</source>
         <target state="translated">항목에서 BackColor 속성 값이 변경될 때 발생합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripItemOnCommandChangedDescr">
+        <source>Occurs whenever the bindable command changes.</source>
+        <target state="translated">바인딩 가능한 명령이 변경될 때마다 발생합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripItemOnBindingContextChangedDescr">
+        <source>Occurs whenever the binding context changes.</source>
+        <target state="translated">바인딩 컨텍스트가 변경될 때마다 발생합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ToolStripItemOnClickDescr">
@@ -10156,6 +10371,16 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">ToolStrip이 IPersistComponentSettings를 통해 사용자 설정을 유지할지 여부를 지정합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ToolStripScrollButtonDownAccessibleName">
+        <source>Line down</source>
+        <target state="translated">줄 아래로</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripScrollButtonUpAccessibleName">
+        <source>Line up</source>
+        <target state="translated">줄 위로</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ToolStripSettingsKeyDescr">
         <source>Specifies the settings key to use to save settings.</source>
         <target state="translated">설정을 저장하는 데 사용할 설정 키를 지정합니다.</target>
@@ -10361,6 +10586,16 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">LargeChange: '{0}' 값은 0보다 크거나 같아야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TrackBarLargeDecreaseButtonName">
+        <source>Large decrease</source>
+        <target state="translated">크게 감소</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrackBarLargeIncreaseButtonName">
+        <source>Large increase</source>
+        <target state="translated">크게 증가</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TrackBarMaximumDescr">
         <source>The maximum value for the position of the slider on the TrackBar.</source>
         <target state="translated">TrackBar에서 슬라이더 위치의 최대값입니다.</target>
@@ -10379,6 +10614,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="TrackBarOrientationDescr">
         <source>The orientation of the control.</source>
         <target state="translated">컨트롤의 방향입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrackBarPositionButtonName">
+        <source>Position</source>
+        <target state="translated">위치</target>
         <note />
       </trans-unit>
       <trans-unit id="TrackBarSmallChangeDescr">
@@ -11022,8 +11262,8 @@ Stack trace where the illegal operation occurred was:
         <note />
       </trans-unit>
       <trans-unit id="Win32WindowAlreadyCreated">
-        <source>SetCompatibleTextRenderingDefault must be called before the first IWin32Window object is created in the application.</source>
-        <target state="translated">SetCompatibleTextRenderingDefault는 애플리케이션에 첫 번째 IWin32Window 개체가 만들어지기 전에 호출해야 합니다.</target>
+        <source>{0} must be called before the first IWin32Window object is created in the application.</source>
+        <target state="translated">{0}은(는) 응용 프로그램에 첫 번째 IWin32Window 개체가 만들어지기 전에 호출해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="WindowSubclassHandlerWndProcIsNotExceptedOne">

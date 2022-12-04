@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.Reflection;
 using Xunit;
 using static System.Windows.Forms.Control;
@@ -19,7 +18,7 @@ namespace System.Windows.Forms.Tests
             TextBox textBox = toolStripTextBox.TextBox;
             Type type = toolStripTextBox.GetType().GetNestedType("ToolStripTextBoxControlAccessibleObject", BindingFlags.NonPublic);
             Assert.NotNull(type);
-            ControlAccessibleObject accessibleObject = (ControlAccessibleObject)Activator.CreateInstance(type, textBox, toolStripTextBox);
+            ControlAccessibleObject accessibleObject = (ControlAccessibleObject)Activator.CreateInstance(type, textBox);
             Assert.Equal(textBox, accessibleObject.Owner);
         }
 
@@ -30,7 +29,7 @@ namespace System.Windows.Forms.Tests
             TextBox textBox = toolStripTextBox.TextBox;
             Type type = toolStripTextBox.GetType().GetNestedType("ToolStripTextBoxControlAccessibleObject", BindingFlags.NonPublic);
             Assert.NotNull(type);
-            Assert.Throws<TargetInvocationException>(() => Activator.CreateInstance(type, (Control)null, toolStripTextBox));
+            Assert.Throws<TargetInvocationException>(() => Activator.CreateInstance(type, (Control)null));
         }
 
         [WinFormsTheory]

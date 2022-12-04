@@ -2,15 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
-using static Interop;
 using static Interop.Mshtml;
 
 namespace System.Windows.Forms.Tests
@@ -212,7 +208,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public async Task HtmlElement_Enabled_GetCustomValueSet_ReturnsExpected(bool disabled)
         {
             using var parent = new Control();
@@ -230,7 +226,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public async Task HtmlElement_Enabled_Set_GetReturnsExpected(bool value)
         {
             using var parent = new Control();
@@ -618,7 +614,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public async Task HtmlElement_Name_GetCustomValueSet_ReturnsExpected(string id, string expected)
         {
             using var parent = new Control();
@@ -1459,6 +1455,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(EventArgs.Empty, e);
                 callCount++;
             }
+
             element.AttachEventHandler(eventName, handler);
             Assert.Equal(0, callCount);
 
@@ -1491,6 +1488,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(EventArgs.Empty, e);
                 callCount++;
             }
+
             element.AttachEventHandler(eventName, handler);
             Assert.Equal(0, callCount);
 
@@ -1522,6 +1520,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(EventArgs.Empty, e);
                 callCount++;
             }
+
             element.AttachEventHandler(eventName, handler);
             Assert.Equal(0, callCount);
 
@@ -1748,7 +1747,7 @@ namespace System.Windows.Forms.Tests
             const string Html = "<html><body><div id=\"id\"></div></body></html>";
             HtmlDocument document = await GetDocument(control, Html);
             HtmlElement element = document.GetElementById("id");
-            Assert.Throws<ArgumentException>(null, () => element.GetAttribute(null));
+            Assert.Throws<ArgumentException>(() => element.GetAttribute(null));
         }
 
         [WinFormsFact]
@@ -1788,7 +1787,7 @@ namespace System.Windows.Forms.Tests
             const string Html = "<html><body><div id=\"id\"></div></body></html>";
             HtmlDocument document = await GetDocument(control, Html);
             HtmlElement element = document.GetElementById("id");
-            Assert.Throws<ArgumentException>(null, () => element.GetElementsByTagName(null));
+            Assert.Throws<ArgumentException>(() => element.GetElementsByTagName(null));
         }
 
         [WinFormsFact]
@@ -2151,7 +2150,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(HtmlElementInsertionOrientation))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(HtmlElementInsertionOrientation))]
         public async Task HtmlElement_InsertAdjacentElement_InvalidOrient_ThrowsArgumentException(HtmlElementInsertionOrientation orient)
         {
             using var parent = new Control();
@@ -2164,7 +2163,7 @@ namespace System.Windows.Forms.Tests
             HtmlDocument document = await GetDocument(control, Html);
             HtmlElement element = document.GetElementById("id");
             HtmlElement newElement = document.CreateElement("H1");
-            Assert.Throws<ArgumentException>(null, () => element.InsertAdjacentElement(orient, newElement));
+            Assert.Throws<ArgumentException>(() => element.InsertAdjacentElement(orient, newElement));
         }
 
         [WinFormsFact]
@@ -2245,7 +2244,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public async Task HtmlElement_ScrollIntoView_Invoke_Success(bool alignWithTop)
         {
             using var parent = new Control();
@@ -2264,7 +2263,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringTheoryData))]
         public async Task HtmlElement_SetAttribute_Invoke_GetAttributeReturnsExpected(string value)
         {
             using var parent = new Control();
@@ -2301,7 +2300,7 @@ namespace System.Windows.Forms.Tests
             const string Html = "<html><body><div id=\"id\"></div></body></html>";
             HtmlDocument document = await GetDocument(control, Html);
             HtmlElement element = document.GetElementById("id");
-            Assert.Throws<ArgumentException>(null, () => element.SetAttribute(null, "value"));
+            Assert.Throws<ArgumentException>(() => element.SetAttribute(null, "value"));
         }
 
         [WinFormsFact]
@@ -2320,7 +2319,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(HRESULT.DISP_E_UNKNOWNNAME, (HRESULT)ex.HResult);
         }
 
-#pragma warning disable CS1718 // Disable "Comparison made to same variable" warning.
+#pragma warning disable CS1718, CSIsNull001, CSIsNull002 // Disable "Comparison made to same variable" warning.
         [WinFormsFact]
         public async Task HtmlElement_OperatorEquals_Invoke_ReturnsExpected()
         {
@@ -2366,7 +2365,7 @@ namespace System.Windows.Forms.Tests
             Assert.True(element1 != (HtmlElement)null);
             Assert.False((HtmlElement)null != (HtmlElement)null);
         }
-#pragma warning restore CS1718
+#pragma warning restore CS1718, CSIsNull001, CSIsNull002
 
         [WinFormsFact]
         public async Task HtmlElement_Click_InvokeEvent_Success()
@@ -2976,7 +2975,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, callCount);
         }
 
-        private async static Task<HtmlDocument> GetDocument(WebBrowser control, string html)
+        private static async Task<HtmlDocument> GetDocument(WebBrowser control, string html)
         {
             var source = new TaskCompletionSource<bool>();
             control.DocumentCompleted += (sender, e) => source.SetResult(true);

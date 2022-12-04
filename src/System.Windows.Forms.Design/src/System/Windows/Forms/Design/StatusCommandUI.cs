@@ -9,9 +9,10 @@ using System.Drawing;
 namespace System.Windows.Forms.Design
 {
     /// <summary>
-    ///  This class provides a single entrypoint used by the Behaviors, KeySize and KeyMoves (in CommandSets) and SelectionService to update the StatusBar Information.
+    ///  This class provides a single entrypoint used by the Behaviors, KeySize and KeyMoves (in CommandSets) and
+    ///  SelectionService to update the StatusBar Information.
     /// </summary>
-    internal class StatusCommandUI
+    internal sealed class StatusCommandUI
     {
         private MenuCommand _statusRectCommand;
         private IMenuCommandService _menuService;
@@ -29,10 +30,8 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (_menuService is null)
-                {
-                    _menuService = (IMenuCommandService)_serviceProvider.GetService(typeof(IMenuCommandService));
-                }
+                _menuService ??= (IMenuCommandService)_serviceProvider.GetService(typeof(IMenuCommandService));
+
                 return _menuService;
             }
         }
@@ -46,11 +45,12 @@ namespace System.Windows.Forms.Design
             {
                 if (_statusRectCommand is null)
                 {
-                    if (MenuService != null)
+                    if (MenuService is not null)
                     {
                         _statusRectCommand = MenuService.FindCommand(MenuCommands.SetStatusRectangle);
                     }
                 }
+
                 return _statusRectCommand;
             }
         }
@@ -64,6 +64,7 @@ namespace System.Windows.Forms.Design
             {
                 return;
             }
+
             Rectangle bounds = Rectangle.Empty;
             if (selectedComponent is Control c)
             {
@@ -72,20 +73,19 @@ namespace System.Windows.Forms.Design
             else
             {
                 PropertyDescriptor BoundsProp = TypeDescriptor.GetProperties(selectedComponent)["Bounds"];
-                if (BoundsProp != null && typeof(Rectangle).IsAssignableFrom(BoundsProp.PropertyType))
+                if (BoundsProp is not null && typeof(Rectangle).IsAssignableFrom(BoundsProp.PropertyType))
                 {
                     bounds = (Rectangle)BoundsProp.GetValue(selectedComponent);
                 }
             }
+
             if (location != Point.Empty)
             {
                 bounds.X = location.X;
                 bounds.Y = location.Y;
             }
-            if (StatusRectCommand != null)
-            {
-                StatusRectCommand.Invoke(bounds);
-            }
+
+            StatusRectCommand?.Invoke(bounds);
         }
 
         /// <summary>
@@ -97,6 +97,7 @@ namespace System.Windows.Forms.Design
             {
                 return;
             }
+
             Rectangle bounds = Rectangle.Empty;
             if (selectedComponent is Control c)
             {
@@ -105,15 +106,13 @@ namespace System.Windows.Forms.Design
             else
             {
                 PropertyDescriptor BoundsProp = TypeDescriptor.GetProperties(selectedComponent)["Bounds"];
-                if (BoundsProp != null && typeof(Rectangle).IsAssignableFrom(BoundsProp.PropertyType))
+                if (BoundsProp is not null && typeof(Rectangle).IsAssignableFrom(BoundsProp.PropertyType))
                 {
                     bounds = (Rectangle)BoundsProp.GetValue(selectedComponent);
                 }
             }
-            if (StatusRectCommand != null)
-            {
-                StatusRectCommand.Invoke(bounds);
-            }
+
+            StatusRectCommand?.Invoke(bounds);
         }
 
         /// <summary>
@@ -121,10 +120,7 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public void SetStatusInformation(Rectangle bounds)
         {
-            if (StatusRectCommand != null)
-            {
-                StatusRectCommand.Invoke(bounds);
-            }
+            StatusRectCommand?.Invoke(bounds);
         }
     }
 }

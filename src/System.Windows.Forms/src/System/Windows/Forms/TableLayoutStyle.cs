@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Forms.Layout;
@@ -13,7 +11,7 @@ namespace System.Windows.Forms
     [TypeConverter(typeof(TableLayoutSettings.StyleConverter))]
     public abstract class TableLayoutStyle
     {
-        private IArrangedElement _owner;
+        private IArrangedElement? _owner;
         private SizeType _sizeType = SizeType.AutoSize;
         private float _size;
 
@@ -26,7 +24,7 @@ namespace System.Windows.Forms
                 if (_sizeType != value)
                 {
                     _sizeType = value;
-                    if (Owner != null)
+                    if (Owner is not null)
                     {
                         LayoutTransaction.DoLayout(Owner, Owner, PropertyNames.Style);
                         if (Owner is Control owner)
@@ -47,10 +45,11 @@ namespace System.Windows.Forms
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(Size), value, 0));
                 }
+
                 if (_size != value)
                 {
                     _size = value;
-                    if (Owner != null)
+                    if (Owner is not null)
                     {
                         LayoutTransaction.DoLayout(Owner, Owner, PropertyNames.Style);
                         if (Owner is Control owner)
@@ -67,7 +66,7 @@ namespace System.Windows.Forms
             return SizeType != SizeType.AutoSize;
         }
 
-        internal IArrangedElement Owner
+        internal IArrangedElement? Owner
         {
             get { return _owner; }
             set { _owner = value; }

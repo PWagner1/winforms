@@ -1,8 +1,7 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Drawing;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -101,7 +100,7 @@ namespace System.Windows.Forms
                     return;
                 }
 
-                if (!dataGridViewCell.ReadOnly && dataGridViewCell.OwningColumn != null && dataGridViewCell.OwningRow != null)
+                if (!dataGridViewCell.ReadOnly && dataGridViewCell.OwningColumn is not null && dataGridViewCell.OwningRow is not null)
                 {
                     dataGridView.CurrentCell = dataGridViewCell;
                     bool endEditMode = false;
@@ -110,6 +109,7 @@ namespace System.Windows.Forms
                         endEditMode = true;
                         dataGridView.BeginEdit(selectAll: false);
                     }
+
                     if (dataGridView.IsCurrentCellInEditMode)
                     {
                         if (dataGridViewCell.SwitchFormattedValue())
@@ -123,6 +123,7 @@ namespace System.Windows.Forms
                                 checkBoxCell.NotifyUiaClient();
                             }
                         }
+
                         if (endEditMode)
                         {
                             dataGridView.EndEdit();
@@ -135,25 +136,11 @@ namespace System.Windows.Forms
 
             internal override bool IsIAccessibleExSupported() => true;
 
-            internal override int[] RuntimeId
-            {
-                get
-                {
-                    if (runtimeId is null)
-                    {
-                        runtimeId = new int[2];
-                        runtimeId[0] = RuntimeIDFirstItem; // first item is static - 0x2a
-                        runtimeId[1] = GetHashCode();
-                    }
-
-                    return runtimeId;
-                }
-            }
+            internal override int[] RuntimeId => runtimeId ??= new int[] { RuntimeIDFirstItem, GetHashCode() };
 
             internal override object? GetPropertyValue(UiaCore.UIA propertyID)
                 => propertyID switch
                 {
-                    UiaCore.UIA.IsTogglePatternAvailablePropertyId => (object)IsPatternSupported(UiaCore.UIA.TogglePatternId),
                     UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.CheckBoxControlTypeId,
                     _ => base.GetPropertyValue(propertyID)
                 };
@@ -175,10 +162,10 @@ namespace System.Windows.Forms
                     switch (Owner.FormattedValue)
                     {
                         case CheckState checkState:
-                            toggledState = checkState == CheckState.Unchecked;
+                            toggledState = checkState == CheckState.Checked;
                             break;
                         case bool boolState:
-                            toggledState = !boolState;
+                            toggledState = boolState;
                             break;
                         default:
                             return UiaCore.ToggleState.Indeterminate;

@@ -2,9 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Drawing;
-
 internal static partial class Interop
 {
     internal static partial class ComCtl32
@@ -15,7 +12,7 @@ internal static partial class Interop
             public int clrText;
             public int clrTextBk;
             public int iSubItem;
-            public ComCtl32.LVCDI dwItemType;
+            public NMLVCUSTOMDRAW_ITEM_TYPE dwItemType;
             public int clrFace;
             public int iIconEffect;
             public int iIconPhase;

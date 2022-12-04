@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.Serialization;
+using static Interop;
 
 namespace System.Windows.Forms
 {
@@ -48,7 +49,7 @@ namespace System.Windows.Forms
         /// </summary>
         private ListViewGroup(SerializationInfo info, StreamingContext context) : this()
         {
-            Deserialize(info, context);
+            Deserialize(info);
         }
 
         /// <summary>
@@ -77,24 +78,15 @@ namespace System.Windows.Forms
             _headerAlignment = headerAlignment;
         }
 
-        internal AccessibleObject? AccessibilityObject
-        {
-            get
-            {
-                if (_accessibilityObject is null)
-                {
-                    _accessibilityObject = new ListViewGroupAccessibleObject(this, ListView?.Groups.Contains(this) == false);
-                }
-
-                return _accessibilityObject;
-            }
-        }
+        internal AccessibleObject AccessibilityObject
+            => _accessibilityObject ??= new ListViewGroupAccessibleObject(this, ListView?.Groups.Contains(this) == false);
 
         /// <summary>
         ///  The text displayed in the group header.
         /// </summary>
-        [SRCategory(nameof(SR.CatAppearance))]
         [AllowNull]
+        [DefaultValue("")]
+        [SRCategory(nameof(SR.CatAppearance))]
         public string Header
         {
             get => _header ?? string.Empty;
@@ -135,8 +127,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The text displayed in the group footer.
         /// </summary>
-        [SRCategory(nameof(SR.CatAppearance))]
         [AllowNull]
+        [DefaultValue("")]
+        [SRCategory(nameof(SR.CatAppearance))]
         public string Footer
         {
             get => _footer ?? string.Empty;
@@ -214,8 +207,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The text displayed in the group subtitle.
         /// </summary>
-        [SRCategory(nameof(SR.CatAppearance))]
         [AllowNull]
+        [DefaultValue("")]
+        [SRCategory(nameof(SR.CatAppearance))]
         public string Subtitle
         {
             get => _subtitle ?? string.Empty;
@@ -234,8 +228,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The name of the task link displayed in the group header.
         /// </summary>
-        [SRCategory(nameof(SR.CatAppearance))]
         [AllowNull]
+        [DefaultValue("")]
+        [SRCategory(nameof(SR.CatAppearance))]
         public string TaskLink
         {
             get => _taskLink ?? string.Empty;
@@ -352,7 +347,7 @@ namespace System.Windows.Forms
         [TypeConverter(typeof(StringConverter))]
         public object? Tag { get; set; }
 
-        private void Deserialize(SerializationInfo info, StreamingContext context)
+        private void Deserialize(SerializationInfo info)
         {
             int count = 0;
 
@@ -387,6 +382,7 @@ namespace System.Windows.Forms
                     Name = (string)entry.Value!;
                 }
             }
+
             if (count > 0)
             {
                 ListViewItem[] items = new ListViewItem[count];
@@ -394,15 +390,66 @@ namespace System.Windows.Forms
                 {
                     items[i] = (ListViewItem)info.GetValue("Item" + i, typeof(ListViewItem))!;
                 }
+
                 Items.AddRange(items);
             }
+        }
+
+        internal ListViewGroupCollapsedState GetNativeCollapsedState()
+        {
+            if (ListView is null)
+            {
+                throw new InvalidOperationException(nameof(ListView));
+            }
+
+            if (!ListView.GroupsEnabled)
+            {
+                return ListViewGroupCollapsedState.Default;
+            }
+
+            LIST_VIEW_GROUP_STATE_FLAGS state = (LIST_VIEW_GROUP_STATE_FLAGS)(uint)PInvoke.SendMessage(
+                ListView,
+                (User32.WM)PInvoke.LVM_GETGROUPSTATE,
+                (WPARAM)ID,
+                (LPARAM)(uint)(LIST_VIEW_GROUP_STATE_FLAGS.LVGS_COLLAPSIBLE | LIST_VIEW_GROUP_STATE_FLAGS.LVGS_COLLAPSED));
+
+            if (!state.HasFlag(LIST_VIEW_GROUP_STATE_FLAGS.LVGS_COLLAPSIBLE))
+            {
+                return ListViewGroupCollapsedState.Default;
+            }
+
+            return state.HasFlag(LIST_VIEW_GROUP_STATE_FLAGS.LVGS_COLLAPSED) ? ListViewGroupCollapsedState.Collapsed : ListViewGroupCollapsedState.Expanded;
+        }
+
+        internal void ReleaseUiaProvider()
+        {
+            if (OsVersion.IsWindows8OrGreater() && _accessibilityObject is ListViewGroupAccessibleObject accessibleObject)
+            {
+                UiaCore.UiaDisconnectProvider(accessibleObject);
+            }
+
+            _accessibilityObject = null;
+        }
+
+        // Should be used for the cases when sending the message `PInvoke.LVM_SETGROUPINFO` isn't required
+        // (for example, collapsing/expanding groups with keyboard is performed inside the native control already, so this message isn't needed)
+        internal void SetCollapsedStateInternal(ListViewGroupCollapsedState state)
+        {
+            SourceGenerated.EnumValidator.Validate(state);
+
+            if (_collapsedState == state)
+            {
+                return;
+            }
+
+            _collapsedState = state;
         }
 
         public override string ToString() => Header;
 
         private void UpdateListView()
         {
-            if (ListView != null && ListView.IsHandleCreated)
+            if (ListView is not null && ListView.IsHandleCreated)
             {
                 ListView.UpdateGroupNative(this);
             }
@@ -410,10 +457,7 @@ namespace System.Windows.Forms
 
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            if (info is null)
-            {
-                throw new ArgumentNullException(nameof(info));
-            }
+            ArgumentNullException.ThrowIfNull(info);
 
             info.AddValue(nameof(Header), Header);
             info.AddValue(nameof(HeaderAlignment), HeaderAlignment);
@@ -424,7 +468,8 @@ namespace System.Windows.Forms
             {
                 info.AddValue(nameof(Name), Name);
             }
-            if (_items != null && _items.Count > 0)
+
+            if (_items is not null && _items.Count > 0)
             {
                 info.AddValue("ItemsCount", Items.Count);
                 for (int i = 0; i < Items.Count; i++)

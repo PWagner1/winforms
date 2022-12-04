@@ -5,7 +5,6 @@
 #nullable enable
 
 using System.Runtime.InteropServices;
-using static Interop;
 
 namespace System.Windows.Forms.Metafiles
 {
@@ -23,23 +22,21 @@ namespace System.Windows.Forms.Metafiles
         public EXTLOGPEN32 elp;         // The extended pen with the style array.
 
         public override string ToString()
-            => $@"[{nameof(EMREXTCREATEPEN)}] Index: {ihPen} Style: {elp.elpPenStyle} Width: {
-                elp.elpWidth} BrushStyle: {elp.elpBrushStyle} Color: {
-                elp.elpColor.ToSystemColorString()}";
+            => $@"[{nameof(EMREXTCREATEPEN)}] Index: {ihPen} Style: {elp.elpPenStyle} Width: {elp.elpWidth}BrushStyle: {elp.elpBrushStyle} Color: {elp.elpColor.ToSystemColorString()}";
     }
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct EXTLOGPEN32
     {
-        public Gdi32.PS elpPenStyle;
+        public PEN_STYLE elpPenStyle;
         public uint elpWidth;
-        public Gdi32.BS elpBrushStyle;
+        public BRUSH_STYLE elpBrushStyle;
         public COLORREF elpColor;
         public uint elpHatch;
         public uint elpNumEntries;
         public uint elpStyleEntry;
 
-        public static implicit operator EXTLOGPEN32(Gdi32.LOGPEN logPen) => new EXTLOGPEN32
+        public static implicit operator EXTLOGPEN32(LOGPEN logPen) => new()
         {
             elpPenStyle = logPen.lopnStyle,
             elpWidth = (uint)logPen.lopnWidth.X,

@@ -1,14 +1,12 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Globalization;
-using WinForms.Common.Tests;
-using Xunit;
 using System.ComponentModel;
+using System.Drawing;
+using System.Globalization;
+using System.Windows.Forms.TestUtilities;
+using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
@@ -983,7 +981,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void DataGridViewRow_ErrorText_Set_GetReturnsExpected(string value, string expected)
         {
             using var row = new DataGridViewRow
@@ -998,7 +996,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void DataGridViewRow_ErrorText_SetWithNonNullOldValue_GetReturnsExpected(string value, string expected)
         {
             using var row = new DataGridViewRow
@@ -1015,7 +1013,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void DataGridViewRow_ErrorText_SetWithDataGridView_GetReturnsExpected(string value, string expected)
         {
             using var control = new DataGridView
@@ -1036,7 +1034,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void DataGridViewRow_ErrorText_SetWithDataGridViewWithNonNullOldValue_GetReturnsExpected(string value, string expected)
         {
             using var control = new DataGridView
@@ -1190,7 +1188,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataGridViewRow_Frozen_SetWithDataGridView_GetReturnsExpected(bool value)
         {
             using var control = new DataGridView
@@ -1265,7 +1263,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataGridViewRow_Frozen_SetWithPreviousRows_SetsToFrozen(bool previousVisible)
         {
             using var control = new DataGridView
@@ -1360,7 +1358,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataGridViewRow_Frozen_SetShared_ThrowsInvalidOperationException(bool value)
         {
             using var control = new DataGridView();
@@ -1482,7 +1480,7 @@ namespace System.Windows.Forms.Tests
             {
                 HeaderCell = value
             };
-            if (value != null)
+            if (value is not null)
             {
                 Assert.Same(value, row.HeaderCell);
             }
@@ -1490,11 +1488,12 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.NotNull(row.HeaderCell);
             }
+
             Assert.Equal(row, row.HeaderCell.OwningRow);
 
             // Set same.
             row.HeaderCell = value;
-            if (value != null)
+            if (value is not null)
             {
                 Assert.Same(value, row.HeaderCell);
             }
@@ -1502,6 +1501,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.NotNull(row.HeaderCell);
             }
+
             Assert.Equal(row, row.HeaderCell.OwningRow);
         }
 
@@ -1516,7 +1516,7 @@ namespace System.Windows.Forms.Tests
             };
             row.HeaderCell = value;
 
-            if (value != null)
+            if (value is not null)
             {
                 Assert.Same(value, row.HeaderCell);
             }
@@ -1524,11 +1524,12 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.NotNull(row.HeaderCell);
             }
+
             Assert.Equal(row, row.HeaderCell.OwningRow);
 
             // Set same.
             row.HeaderCell = value;
-            if (value != null)
+            if (value is not null)
             {
                 Assert.Same(value, row.HeaderCell);
             }
@@ -1536,6 +1537,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.NotNull(row.HeaderCell);
             }
+
             Assert.Equal(row, row.HeaderCell.OwningRow);
         }
 
@@ -1574,7 +1576,7 @@ namespace System.Windows.Forms.Tests
             DataGridViewRow row = control.Rows[0];
 
             row.HeaderCell = value;
-            if (value != null)
+            if (value is not null)
             {
                 Assert.Same(value, row.HeaderCell);
             }
@@ -1582,11 +1584,12 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.NotNull(row.HeaderCell);
             }
+
             Assert.Equal(row, row.HeaderCell.OwningRow);
 
             // Set same.
             row.HeaderCell = value;
-            if (value != null)
+            if (value is not null)
             {
                 Assert.Same(value, row.HeaderCell);
             }
@@ -1594,6 +1597,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.NotNull(row.HeaderCell);
             }
+
             Assert.Equal(row, row.HeaderCell.OwningRow);
         }
 
@@ -1612,7 +1616,7 @@ namespace System.Windows.Forms.Tests
 
             row.HeaderCell = value;
 
-            if (value != null)
+            if (value is not null)
             {
                 Assert.Same(value, row.HeaderCell);
             }
@@ -1620,11 +1624,12 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.NotNull(row.HeaderCell);
             }
+
             Assert.Equal(row, row.HeaderCell.OwningRow);
 
             // Set same.
             row.HeaderCell = value;
-            if (value != null)
+            if (value is not null)
             {
                 Assert.Same(value, row.HeaderCell);
             }
@@ -1632,6 +1637,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.NotNull(row.HeaderCell);
             }
+
             Assert.Equal(row, row.HeaderCell.OwningRow);
         }
 
@@ -1647,7 +1653,7 @@ namespace System.Windows.Forms.Tests
             DataGridViewRow row = control.Rows.SharedRow(0);
 
             row.HeaderCell = value;
-            if (value != null)
+            if (value is not null)
             {
                 Assert.Same(value, row.HeaderCell);
             }
@@ -1655,11 +1661,12 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.NotNull(row.HeaderCell);
             }
+
             Assert.Equal(row, row.HeaderCell.OwningRow);
 
             // Set same.
             row.HeaderCell = value;
-            if (value != null)
+            if (value is not null)
             {
                 Assert.Same(value, row.HeaderCell);
             }
@@ -1667,6 +1674,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.NotNull(row.HeaderCell);
             }
+
             Assert.Equal(row, row.HeaderCell.OwningRow);
         }
 
@@ -1685,7 +1693,7 @@ namespace System.Windows.Forms.Tests
 
             row.HeaderCell = value;
 
-            if (value != null)
+            if (value is not null)
             {
                 Assert.Same(value, row.HeaderCell);
             }
@@ -1693,11 +1701,12 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.NotNull(row.HeaderCell);
             }
+
             Assert.Equal(row, row.HeaderCell.OwningRow);
 
             // Set same.
             row.HeaderCell = value;
-            if (value != null)
+            if (value is not null)
             {
                 Assert.Same(value, row.HeaderCell);
             }
@@ -1705,6 +1714,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.NotNull(row.HeaderCell);
             }
+
             Assert.Equal(row, row.HeaderCell.OwningRow);
         }
 
@@ -1771,7 +1781,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewAutoSizeRowsMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewAutoSizeRowsMode))]
         public void DataGridViewRow_Height_GetWithDataGridView_ReturnsExpected(DataGridViewAutoSizeRowsMode autoSizeRowsMode)
         {
             using var control = new DataGridView
@@ -1788,7 +1798,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewAutoSizeRowsMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewAutoSizeRowsMode))]
         public void DataGridViewRow_Height_GetShared_ReturnsExpected(DataGridViewAutoSizeRowsMode autoSizeRowsMode)
         {
             using var control = new DataGridView
@@ -1915,7 +1925,7 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> Height_SetWithDataGridView_TestData()
         {
-            foreach (DataGridViewAutoSizeRowsMode autoSizeRowsMode  in Enum.GetValues(typeof(DataGridViewAutoSizeRowsMode)))
+            foreach (DataGridViewAutoSizeRowsMode autoSizeRowsMode in Enum.GetValues(typeof(DataGridViewAutoSizeRowsMode)))
             {
                 if (autoSizeRowsMode == DataGridViewAutoSizeRowsMode.None)
                 {
@@ -2121,27 +2131,30 @@ namespace System.Windows.Forms.Tests
                 ColumnCount = 2
             };
 
-            if (rowsDefaultCellStyle != null)
+            if (rowsDefaultCellStyle is not null)
             {
                 control.RowsDefaultCellStyle = rowsDefaultCellStyle;
             }
-            if (alternatingRowsDefaultCellStyle != null)
+
+            if (alternatingRowsDefaultCellStyle is not null)
             {
                 control.AlternatingRowsDefaultCellStyle = alternatingRowsDefaultCellStyle;
             }
-            if (gridDefaultCellStyle != null)
+
+            if (gridDefaultCellStyle is not null)
             {
                 control.DefaultCellStyle = gridDefaultCellStyle;
-            };
+            }
 
             control.Rows.Add(new SubDataGridViewRow());
             control.Rows.Add(new SubDataGridViewRow());
 
             DataGridViewRow row = control.Rows[index];
-            if (rowDefaultCellStyle != null)
+            if (rowDefaultCellStyle is not null)
             {
                 row.DefaultCellStyle = rowDefaultCellStyle;
             }
+
             Assert.Equal(expected, row.InheritedStyle);
         }
 
@@ -2213,7 +2226,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewAutoSizeRowsMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewAutoSizeRowsMode))]
         public void DataGridViewRow_MinimumHeight_GetWithDataGridView_ReturnsExpected(DataGridViewAutoSizeRowsMode autoSizeRowsMode)
         {
             using var control = new DataGridView
@@ -2230,7 +2243,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewAutoSizeRowsMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewAutoSizeRowsMode))]
         public void DataGridViewRow_MinimumHeight_GetShared_ReturnsExpected(DataGridViewAutoSizeRowsMode autoSizeRowsMode)
         {
             using var control = new DataGridView
@@ -2357,7 +2370,7 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> MinimumHeight_SetWithDataGridView_TestData()
         {
-            foreach (DataGridViewAutoSizeRowsMode autoSizeRowsMode  in Enum.GetValues(typeof(DataGridViewAutoSizeRowsMode)))
+            foreach (DataGridViewAutoSizeRowsMode autoSizeRowsMode in Enum.GetValues(typeof(DataGridViewAutoSizeRowsMode)))
             {
                 if (autoSizeRowsMode == DataGridViewAutoSizeRowsMode.None)
                 {
@@ -2481,7 +2494,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataGridViewRow_ReadOnly_GetWithDataGridView_ReturnsExpected(bool dataGridViewReadOnly)
         {
             using var control = new DataGridView
@@ -2495,7 +2508,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataGridViewRow_ReadOnly_GetShared_ThrowsInvalidOperationException(bool dataGridViewReadOnly)
         {
             using var control = new DataGridView
@@ -2509,7 +2522,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataGridViewRow_ReadOnly_Set_GetReturnsExpected(bool value)
         {
             using var row = new DataGridViewRow
@@ -2551,12 +2564,12 @@ namespace System.Windows.Forms.Tests
 
             // Set same.
             row.ReadOnly = value;
-            Assert.Equal(dataGridViewReadOnly ||value, row.ReadOnly);
+            Assert.Equal(dataGridViewReadOnly || value, row.ReadOnly);
             Assert.False(control.IsHandleCreated);
 
             // Set different.
             row.ReadOnly = !value;
-            Assert.Equal(dataGridViewReadOnly ||!value, row.ReadOnly);
+            Assert.Equal(dataGridViewReadOnly || !value, row.ReadOnly);
             Assert.False(control.IsHandleCreated);
         }
 
@@ -2706,7 +2719,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataGridViewRow_Resizable_GetShared_ReturnsExpected(bool allowUserToResizeRows)
         {
             using var control = new DataGridView
@@ -2732,7 +2745,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewTriState))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewTriState))]
         public void DataGridViewRow_Resizable_Set_GetReturnsExpected(DataGridViewTriState value)
         {
             using var row = new DataGridViewRow
@@ -2747,7 +2760,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewTriState))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DataGridViewTriState))]
         public void DataGridViewRow_Resizable_SetWithCustomOldValue_GetReturnsExpected(DataGridViewTriState value)
         {
             using var row = new DataGridViewRow
@@ -2860,7 +2873,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(DataGridViewTriState))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(DataGridViewTriState))]
         public void DataGridViewRow_Resizable_SetInvalid_ThrowsInvalidEnumArgumentException(DataGridViewTriState value)
         {
             using var row = new DataGridViewRow();
@@ -3004,7 +3017,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void DataGridViewRow_Selected_SetShared_ThrowsInvalidOperationException(bool value)
         {
             using var control = new DataGridView
@@ -3065,7 +3078,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void DataGridViewRow_Tag_Set_GetReturnsExpected(string value)
         {
             using var row = new DataGridViewRow
@@ -3080,7 +3093,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void DataGridViewRow_Tag_SetWithNonNullOldValue_GetReturnsExpected(string value)
         {
             using var row = new DataGridViewRow
@@ -3097,7 +3110,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void DataGridViewRow_Tag_SetWithDataGridView_GetReturnsExpected(string value)
         {
             using var control = new DataGridView
@@ -3118,7 +3131,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void DataGridViewRow_Tag_SetWithDataGridViewWithNonNullOldValue_GetReturnsExpected(string value)
         {
             using var control = new DataGridView
@@ -3140,7 +3153,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void DataGridViewRow_Tag_SetShared_GetReturnsExpected(string value)
         {
             using var control = new DataGridView
@@ -3161,7 +3174,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void DataGridViewRow_Tag_SetSharedWithNonNullOldValue_GetReturnsExpected(string value)
         {
             using var control = new DataGridView
@@ -3349,6 +3362,7 @@ namespace System.Windows.Forms.Tests
                     true, DataGridViewAdvancedCellBorderStyle.Inset, DataGridViewAdvancedCellBorderStyle.Inset, DataGridViewAdvancedCellBorderStyle.None, DataGridViewAdvancedCellBorderStyle.None
                 };
             }
+
             yield return new object[]
             {
                 false, true, RightToLeft.No, DataGridViewAdvancedCellBorderStyle.Inset, true, true, true, true,
@@ -3404,6 +3418,7 @@ namespace System.Windows.Forms.Tests
                     true, DataGridViewAdvancedCellBorderStyle.Inset, DataGridViewAdvancedCellBorderStyle.InsetDouble, DataGridViewAdvancedCellBorderStyle.Inset, DataGridViewAdvancedCellBorderStyle.Inset
                 };
             }
+
             yield return new object[]
             {
                 true, false, RightToLeft.No, DataGridViewAdvancedCellBorderStyle.InsetDouble, true, true, false, true,
@@ -3444,6 +3459,7 @@ namespace System.Windows.Forms.Tests
                     true, DataGridViewAdvancedCellBorderStyle.Outset, DataGridViewAdvancedCellBorderStyle.Outset, DataGridViewAdvancedCellBorderStyle.None, DataGridViewAdvancedCellBorderStyle.None
                 };
             }
+
             yield return new object[]
             {
                 false, true, RightToLeft.No, DataGridViewAdvancedCellBorderStyle.Outset, true, true, true, true,
@@ -3499,6 +3515,7 @@ namespace System.Windows.Forms.Tests
                     true, DataGridViewAdvancedCellBorderStyle.Outset, DataGridViewAdvancedCellBorderStyle.OutsetDouble, DataGridViewAdvancedCellBorderStyle.Outset, DataGridViewAdvancedCellBorderStyle.Outset
                 };
             }
+
             yield return new object[]
             {
                 true, false, RightToLeft.No, DataGridViewAdvancedCellBorderStyle.OutsetDouble, true, true, false, true,
@@ -3547,6 +3564,7 @@ namespace System.Windows.Forms.Tests
                     };
                 }
             }
+
             foreach (bool isLastVisibleRow in new bool[] { true, false })
             {
                 yield return new object[]
@@ -3560,6 +3578,7 @@ namespace System.Windows.Forms.Tests
                     true, DataGridViewAdvancedCellBorderStyle.Outset, DataGridViewAdvancedCellBorderStyle.Outset, DataGridViewAdvancedCellBorderStyle.OutsetDouble, DataGridViewAdvancedCellBorderStyle.None
                 };
             }
+
             yield return new object[]
             {
                 false, true, RightToLeft.No, DataGridViewAdvancedCellBorderStyle.OutsetPartial, true, true, true, true,
@@ -3635,6 +3654,7 @@ namespace System.Windows.Forms.Tests
                     true, DataGridViewAdvancedCellBorderStyle.Single, DataGridViewAdvancedCellBorderStyle.Single, DataGridViewAdvancedCellBorderStyle.None, DataGridViewAdvancedCellBorderStyle.Single
                 };
             }
+
             yield return new object[]
             {
                 true, false, RightToLeft.No, DataGridViewAdvancedCellBorderStyle.Single, true, true, true, true,
@@ -3671,7 +3691,7 @@ namespace System.Windows.Forms.Tests
 
         [WinFormsTheory]
         [MemberData(nameof(AdjustRowHeaderBorderStyle_WithDataGridView_TestData))]
-        public void DataGridViewRow_AdjustRowHeaderBorderStyle_InvokeWithDataGridVew_ReturnsExpected(bool enableHeadersVisualStyles, bool rowHeadersVisible, RightToLeft rightToLeft, DataGridViewAdvancedCellBorderStyle all, bool singleVerticalBorderAdded, bool singleHorizontalBorderAdded, bool isFirstDisplayedColumn, bool isFirstDisplayedRow, bool returnsAdvanced, DataGridViewAdvancedCellBorderStyle expectedLeft, DataGridViewAdvancedCellBorderStyle expectedRight, DataGridViewAdvancedCellBorderStyle expectedTop, DataGridViewAdvancedCellBorderStyle expectedBottom)
+        public void DataGridViewRow_AdjustRowHeaderBorderStyle_InvokeWithDataGridView_ReturnsExpected(bool enableHeadersVisualStyles, bool rowHeadersVisible, RightToLeft rightToLeft, DataGridViewAdvancedCellBorderStyle all, bool singleVerticalBorderAdded, bool singleHorizontalBorderAdded, bool isFirstDisplayedColumn, bool isFirstDisplayedRow, bool returnsAdvanced, DataGridViewAdvancedCellBorderStyle expectedLeft, DataGridViewAdvancedCellBorderStyle expectedRight, DataGridViewAdvancedCellBorderStyle expectedTop, DataGridViewAdvancedCellBorderStyle expectedBottom)
         {
             using var control = new DataGridView
             {
@@ -5294,7 +5314,7 @@ namespace System.Windows.Forms.Tests
                 RowCount = 2
             };
             SubDataGridViewRow row = (SubDataGridViewRow)control.Rows[0];
-            Assert.Throws<ArgumentException>(null, () => row.PaintCells(graphics, Rectangle.Empty, Rectangle.Empty, -1, DataGridViewElementStates.None, true, true, paintParts));
+            Assert.Throws<ArgumentException>(() => row.PaintCells(graphics, Rectangle.Empty, Rectangle.Empty, -1, DataGridViewElementStates.None, true, true, paintParts));
         }
 
         [WinFormsTheory]

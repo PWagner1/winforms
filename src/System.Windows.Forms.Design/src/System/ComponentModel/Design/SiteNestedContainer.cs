@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -71,10 +71,7 @@ namespace System.ComponentModel.Design
         /// </summary>
         protected override ISite CreateSite(IComponent component, string name)
         {
-            if (component is null)
-            {
-                throw new ArgumentNullException(nameof(component));
-            }
+            ArgumentNullException.ThrowIfNull(component);
 
             return new NestedSite(component, _host, name, this);
         }
@@ -96,17 +93,17 @@ namespace System.ComponentModel.Design
         protected override object GetService(Type serviceType)
         {
             object service = base.GetService(serviceType);
-            if (service != null)
+            if (service is not null)
             {
                 return service;
             }
 
             if (serviceType == typeof(IServiceContainer))
             {
-                return _services ?? (_services = new ServiceContainer(_host));
+                return _services ??= new ServiceContainer(_host);
             }
 
-            if (_services != null)
+            if (_services is not null)
             {
                 return _services.GetService(serviceType);
             }

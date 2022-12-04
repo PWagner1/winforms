@@ -8,11 +8,8 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms.Layout;
 using static Interop;
 
@@ -29,6 +26,8 @@ namespace System.Windows.Forms
     [SRDescription(nameof(SR.DescriptionPictureBox))]
     public partial class PictureBox : Control, ISupportInitialize
     {
+        private static readonly bool s_useWebRequest = AppContext.TryGetSwitch("System.Windows.Forms.PictureBox.UseWebRequest", out bool useWebRequest) ? useWebRequest : true;
+
         /// <summary>
         ///  The type of border this control will have.
         /// </summary>
@@ -51,6 +50,7 @@ namespace System.Windows.Forms
         // Instance members for asynchronous behavior
         private AsyncOperation _currentAsyncLoadOperation;
 
+        private FileStream _fileStream;
         private string _imageLocation;
         private Image _initialImage;
         private Image errorImage;
@@ -149,7 +149,7 @@ namespace System.Windows.Forms
         ///  Try to build a URI, but if that fails, that means it's a relative path, and we treat it as
         ///  relative to the working directory (which is what GetFullPath uses).
         /// </summary>
-        private Uri CalculateUri(string path)
+        private static Uri CalculateUri(string path)
         {
             try
             {
@@ -198,10 +198,10 @@ namespace System.Windows.Forms
                 switch (_borderStyle)
                 {
                     case BorderStyle.Fixed3D:
-                        cp.ExStyle |= (int)User32.WS_EX.CLIENTEDGE;
+                        cp.ExStyle |= (int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
                         break;
                     case BorderStyle.FixedSingle:
-                        cp.Style |= (int)User32.WS.BORDER;
+                        cp.Style |= (int)WINDOW_STYLE.WS_BORDER;
                         break;
                 }
 
@@ -233,10 +233,7 @@ namespace System.Windows.Forms
                     if (_defaultErrorImage is null)
                     {
                         // Can't share images across threads.
-                        if (t_defaultErrorImageForThread is null)
-                        {
-                            t_defaultErrorImageForThread = DpiHelper.GetBitmapFromIcon(typeof(PictureBox), "ImageInError");
-                        }
+                        t_defaultErrorImageForThread ??= DpiHelper.GetBitmapFromIcon(typeof(PictureBox), "ImageInError");
 
                         _defaultErrorImage = t_defaultErrorImageForThread;
                     }
@@ -290,7 +287,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Retrieves the Image that the <see cref='PictureBox'/> is currently displaying.
+        ///  Retrieves the Image that the <see cref="PictureBox"/> is currently displaying.
         /// </summary>
         [SRCategory(nameof(SR.CatAppearance))]
         [Localizable(true)]
@@ -339,7 +336,7 @@ namespace System.Windows.Forms
         private Rectangle ImageRectangleFromSizeMode(PictureBoxSizeMode mode)
         {
             Rectangle result = LayoutUtils.DeflateRect(ClientRectangle, Padding);
-            if (_image != null)
+            if (_image is not null)
             {
                 switch (mode)
                 {
@@ -394,10 +391,7 @@ namespace System.Windows.Forms
                     if (_defaultInitialImage is null)
                     {
                         // Can't share images across threads.
-                        if (t_defaultInitialImageForThread is null)
-                        {
-                            t_defaultInitialImageForThread = DpiHelper.GetBitmapFromIcon(typeof(PictureBox), "PictureBox.Loading");
-                        }
+                        t_defaultInitialImageForThread ??= DpiHelper.GetBitmapFromIcon(typeof(PictureBox), "PictureBox.Loading");
 
                         _defaultInitialImage = t_defaultInitialImageForThread;
                     }
@@ -469,26 +463,25 @@ namespace System.Windows.Forms
             // false to prevent subsequent attempts.
             _pictureBoxState[NeedToLoadImageLocationState] = false;
 
-            Image img;
-            ImageInstallationType installType = ImageInstallationType.FromUrl;
             try
             {
                 DisposeImageStream();
-
-                Uri uri = CalculateUri(_imageLocation);
-                if (uri.IsFile)
+                if (UseWebRequest())
                 {
-                    _localImageStreamReader = new StreamReader(uri.LocalPath);
-                    img = Image.FromStream(_localImageStreamReader.BaseStream);
+                    LoadImageViaWebClient();
                 }
                 else
                 {
-#pragma warning disable SYSLIB0014 // Type or member is obsolete
-                    using (WebClient wc = new WebClient())
-#pragma warning restore SYSLIB0014 // Type or member is obsolete
+                    Uri uri = CalculateUri(_imageLocation);
+                    if (uri.IsFile)
                     {
-                        _uriImageStream = wc.OpenRead(uri.ToString());
-                        img = Image.FromStream(_uriImageStream);
+                        _localImageStreamReader = new StreamReader(uri.LocalPath);
+                        Image img = Image.FromStream(_localImageStreamReader.BaseStream);
+                        InstallNewImage(img, ImageInstallationType.FromUrl);
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(SR.PictureBoxRemoteLocationNotSupported);
                     }
                 }
             }
@@ -501,12 +494,32 @@ namespace System.Windows.Forms
                 else
                 {
                     // In design mode, just replace with Error bitmap.
-                    img = ErrorImage;
-                    installType = ImageInstallationType.ErrorOrInitial;
+                    InstallNewImage(ErrorImage, ImageInstallationType.ErrorOrInitial);
+                }
+            }
+        }
+
+        private void LoadImageViaWebClient()
+        {
+            Image img;
+            Uri uri = CalculateUri(_imageLocation);
+            if (uri.IsFile)
+            {
+                _localImageStreamReader = new StreamReader(uri.LocalPath);
+                img = Image.FromStream(_localImageStreamReader.BaseStream);
+            }
+            else
+            {
+#pragma warning disable SYSLIB0014 // Type or member is obsolete
+                using (WebClient wc = new WebClient())
+#pragma warning restore SYSLIB0014 // Type or member is obsolete
+                {
+                    _uriImageStream = wc.OpenRead(uri.ToString());
+                    img = Image.FromStream(_uriImageStream);
                 }
             }
 
-            InstallNewImage(img, installType);
+            InstallNewImage(img, ImageInstallationType.FromUrl);
         }
 
         [SRCategory(nameof(SR.CatAsynchronous))]
@@ -534,7 +547,7 @@ namespace System.Windows.Forms
 
             _pictureBoxState[AsyncOperationInProgressState] = true;
 
-            if ((Image is null || (_imageInstallationType == ImageInstallationType.ErrorOrInitial)) && InitialImage != null)
+            if ((Image is null || (_imageInstallationType == ImageInstallationType.ErrorOrInitial)) && InitialImage is not null)
             {
                 InstallNewImage(InitialImage, ImageInstallationType.ErrorOrInitial);
             }
@@ -552,7 +565,47 @@ namespace System.Windows.Forms
             _pictureBoxState[CancellationPendingState] = false;
             _contentLength = -1;
             _tempDownloadStream = new MemoryStream();
+            if (UseWebRequest())
+            {
+                StartLoadViaWebRequest();
+            }
+            else
+            {
+                var uri = CalculateUri(_imageLocation);
+                if (uri.IsFile)
+                {
+                    LoadFromFileAsync();
+                }
+                else
+                {
+                    throw new NotSupportedException(SR.PictureBoxRemoteLocationNotSupported);
+                }
+            }
+        }
 
+        private void LoadFromFileAsync()
+        {
+            try
+            {
+                _fileStream = File.OpenRead(_imageLocation);
+                _contentLength = (int)_fileStream.Length;
+                _totalBytesRead = 0;
+
+                _fileStream.BeginRead(
+                    _readBuffer,
+                    0,
+                    ReadBlockSize,
+                    new AsyncCallback(ReadCallBack),
+                    _fileStream);
+            }
+            catch (Exception error)
+            {
+                PostCompleted(error, cancelled: false);
+            }
+        }
+
+        private void StartLoadViaWebRequest()
+        {
 #pragma warning disable SYSLIB0014 // Type or member is obsolete
             WebRequest req = WebRequest.Create(CalculateUri(_imageLocation));
 #pragma warning restore SYSLIB0014 // Type or member is obsolete
@@ -568,10 +621,7 @@ namespace System.Windows.Forms
         {
             AsyncOperation temp = _currentAsyncLoadOperation;
             _currentAsyncLoadOperation = null;
-            if (temp != null)
-            {
-                temp.PostOperationCompleted(_loadCompletedDelegate, new AsyncCompletedEventArgs(error, cancelled, null));
-            }
+            temp?.PostOperationCompleted(_loadCompletedDelegate, new AsyncCompletedEventArgs(error, cancelled, null));
         }
 
         private void LoadCompletedDelegate(object arg)
@@ -600,6 +650,8 @@ namespace System.Windows.Forms
                 InstallNewImage(img, installType);
             }
 
+            _fileStream?.Dispose();
+            _fileStream = null;
             _tempDownloadStream = null;
             _pictureBoxState[CancellationPendingState] = false;
             _pictureBoxState[AsyncOperationInProgressState] = false;
@@ -671,21 +723,16 @@ namespace System.Windows.Forms
                     if (_contentLength != -1)
                     {
                         int progress = (int)(100 * (((float)_totalBytesRead) / ((float)_contentLength)));
-                        if (_currentAsyncLoadOperation != null)
-                        {
-                            _currentAsyncLoadOperation.Post(_loadProgressDelegate,
+                        _currentAsyncLoadOperation?.Post(_loadProgressDelegate,
                                     new ProgressChangedEventArgs(progress, null));
-                        }
                     }
                 }
                 else
                 {
                     _tempDownloadStream.Seek(0, SeekOrigin.Begin);
-                    if (_currentAsyncLoadOperation != null)
-                    {
-                        _currentAsyncLoadOperation.Post(_loadProgressDelegate,
+                    _currentAsyncLoadOperation?.Post(_loadProgressDelegate,
                                     new ProgressChangedEventArgs(100, null));
-                    }
+
                     PostCompleted(null, false);
 
                     // Do this so any exception that Close() throws will be
@@ -784,7 +831,7 @@ namespace System.Windows.Forms
         /// </summary>
         private bool ShouldSerializeImage()
         {
-            return (_imageInstallationType == ImageInstallationType.DirectlySpecified) && (Image != null);
+            return (_imageInstallationType == ImageInstallationType.DirectlySpecified) && (Image is not null);
         }
 
         /// <summary>
@@ -809,6 +856,7 @@ namespace System.Windows.Forms
                         AutoSize = true;
                         SetStyle(ControlStyles.FixedHeight | ControlStyles.FixedWidth, true);
                     }
+
                     if (value != PictureBoxSizeMode.AutoSize)
                     {
                         AutoSize = false;
@@ -942,7 +990,7 @@ namespace System.Windows.Forms
             }
         }
 
-        private void Animate() => Animate(animate: !DesignMode && Visible && Enabled && ParentInternal != null);
+        private void Animate() => Animate(animate: !DesignMode && Visible && Enabled && ParentInternal is not null);
 
         private void StopAnimate() => Animate(animate: false);
 
@@ -952,7 +1000,7 @@ namespace System.Windows.Forms
             {
                 if (animate)
                 {
-                    if (_image != null)
+                    if (_image is not null)
                     {
                         ImageAnimator.Animate(_image, new EventHandler(OnFrameChanged));
                         _currentlyAnimating = animate;
@@ -960,7 +1008,7 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-                    if (_image != null)
+                    if (_image is not null)
                     {
                         ImageAnimator.StopAnimate(_image, new EventHandler(OnFrameChanged));
                         _currentlyAnimating = animate;
@@ -985,12 +1033,13 @@ namespace System.Windows.Forms
 
         private void DisposeImageStream()
         {
-            if (_localImageStreamReader != null)
+            if (_localImageStreamReader is not null)
             {
                 _localImageStreamReader.Dispose();
                 _localImageStreamReader = null;
             }
-            if (_uriImageStream != null)
+
+            if (_uriImageStream is not null)
             {
                 _uriImageStream.Dispose();
                 _localImageStreamReader = null;
@@ -1036,6 +1085,7 @@ namespace System.Windows.Forms
                     {
                         BeginInvoke(new EventHandler(OnFrameChanged), o, e);
                     }
+
                     return;
                 }
             }
@@ -1099,7 +1149,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            if (_image != null && pe != null)
+            if (_image is not null && pe is not null)
             {
                 Animate();
                 ImageAnimator.UpdateFrames(Image);
@@ -1135,7 +1185,7 @@ namespace System.Windows.Forms
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            if (_sizeMode == PictureBoxSizeMode.Zoom || _sizeMode == PictureBoxSizeMode.StretchImage || _sizeMode == PictureBoxSizeMode.CenterImage || BackgroundImage != null)
+            if (_sizeMode == PictureBoxSizeMode.Zoom || _sizeMode == PictureBoxSizeMode.StretchImage || _sizeMode == PictureBoxSizeMode.CenterImage || BackgroundImage is not null)
             {
                 Invalidate();
             }
@@ -1184,7 +1234,7 @@ namespace System.Windows.Forms
 
             // Need to do this in EndInit since there's no guarantee of the
             // order in which ImageLocation and WaitOnLoad will be set.
-            if (ImageLocation != null && ImageLocation.Length != 0 && WaitOnLoad)
+            if (ImageLocation is not null && ImageLocation.Length != 0 && WaitOnLoad)
             {
                 // Load when initialization completes, so any error will occur synchronously
                 Load();
@@ -1193,11 +1243,7 @@ namespace System.Windows.Forms
             _pictureBoxState[InInitializationState] = false;
         }
 
-        private enum ImageInstallationType
-        {
-            DirectlySpecified,
-            ErrorOrInitial,
-            FromUrl
-        }
+        // The Linker is also capable of replacing the value of this method when the application is being trimmed.
+        private static bool UseWebRequest() => s_useWebRequest;
     }
 }

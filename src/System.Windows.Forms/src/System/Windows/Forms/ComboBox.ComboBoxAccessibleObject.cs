@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics;
 using static System.Windows.Forms.ComboBox.ObjectCollection;
 using static Interop;
 
@@ -41,7 +42,7 @@ namespace System.Windows.Forms
 
             internal override bool IsIAccessibleExSupported()
             {
-                if (_owningComboBox != null)
+                if (_owningComboBox is not null)
                 {
                     return true;
                 }
@@ -69,28 +70,15 @@ namespace System.Windows.Forms
                 return base.IsPatternSupported(patternId);
             }
 
-            internal override int[]? RuntimeId
-            {
-                get
+            // We need to provide a unique ID. Others are implementing this in the same manner. First item is static - 0x2a (RuntimeIDFirstItem).
+            // Second item can be anything, but it's good to supply HWND.
+            internal override int[] RuntimeId
+                => new int[]
                 {
-                    if (_owningComboBox != null)
-                    {
-                        // we need to provide a unique ID
-                        // others are implementing this in the same manner
-                        // first item is static - 0x2a (RuntimeIDFirstItem)
-                        // second item can be anything, but here it is a hash
-
-                        var runtimeId = new int[3];
-                        runtimeId[0] = RuntimeIDFirstItem;
-                        runtimeId[1] = (int)(long)_owningComboBox.InternalHandle;
-                        runtimeId[2] = _owningComboBox.GetHashCode();
-
-                        return runtimeId;
-                    }
-
-                    return base.RuntimeId;
-                }
-            }
+                    RuntimeIDFirstItem,
+                    PARAM.ToInt(_owningComboBox.InternalHandle),
+                    _owningComboBox.GetHashCode()
+                };
 
             internal override void Expand()
             {
@@ -145,10 +133,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (_dropDownButtonUiaProvider is null)
-                    {
-                        _dropDownButtonUiaProvider = new ComboBoxChildDropDownButtonUiaProvider(_owningComboBox, _owningComboBox.InternalHandle);
-                    }
+                    _dropDownButtonUiaProvider ??= new ComboBoxChildDropDownButtonUiaProvider(_owningComboBox, _owningComboBox.InternalHandle);
 
                     return _dropDownButtonUiaProvider;
                 }
@@ -177,11 +162,30 @@ namespace System.Windows.Forms
                 }
             }
 
-            internal override UiaCore.IRawElementProviderFragmentRoot FragmentRoot
+            internal override UiaCore.IRawElementProviderFragmentRoot? FragmentRoot
             {
                 get
                 {
                     return this;
+                }
+            }
+
+            public override string DefaultAction
+            {
+                get
+                {
+                    string? defaultAction = _owningComboBox.AccessibleDefaultActionDescription;
+                    if (defaultAction is not null)
+                    {
+                        return defaultAction;
+                    }
+
+                    if (!_owningComboBox.IsHandleCreated || _owningComboBox.DropDownStyle == ComboBoxStyle.Simple)
+                    {
+                        return string.Empty;
+                    }
+
+                    return _owningComboBox.DroppedDown ? SR.AccessibleActionCollapse : SR.AccessibleActionExpand;
                 }
             }
 
@@ -190,35 +194,59 @@ namespace System.Windows.Forms
             /// </summary>
             /// <param name="propertyID">The accessible property ID.</param>
             /// <returns>The accessible property value.</returns>
-            internal override object? GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                switch (propertyID)
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+                propertyID switch
                 {
-                    case UiaCore.UIA.ControlTypePropertyId:
+                    UiaCore.UIA.ControlTypePropertyId =>
                         // If we don't set a default role for the accessible object
                         // it will be retrieved from Windows.
                         // And we don't have a 100% guarantee it will be correct, hence set it ourselves.
-                        return _owningComboBox.AccessibleRole == AccessibleRole.Default
-                               ? UiaCore.UIA.ComboBoxControlTypeId
-                               : base.GetPropertyValue(propertyID);
-                    case UiaCore.UIA.NamePropertyId:
-                        return Name;
-                    case UiaCore.UIA.HasKeyboardFocusPropertyId:
-                        return _owningComboBox.Focused;
-                    case UiaCore.UIA.NativeWindowHandlePropertyId:
-                        return _owningComboBox.InternalHandle;
-                    case UiaCore.UIA.IsExpandCollapsePatternAvailablePropertyId:
-                        return IsPatternSupported(UiaCore.UIA.ExpandCollapsePatternId);
-                    case UiaCore.UIA.IsValuePatternAvailablePropertyId:
-                        return IsPatternSupported(UiaCore.UIA.ValuePatternId);
+                        _owningComboBox.AccessibleRole == AccessibleRole.Default
+                            ? UiaCore.UIA.ComboBoxControlTypeId
+                            : base.GetPropertyValue(propertyID),
+                    UiaCore.UIA.HasKeyboardFocusPropertyId => _owningComboBox.Focused,
+                    _ => base.GetPropertyValue(propertyID)
+                };
 
-                    default:
-                        return base.GetPropertyValue(propertyID);
+            internal void RemoveListItemAccessibleObjectAt(int index)
+            {
+                IReadOnlyList<Entry> entries = _owningComboBox.Items.InnerList;
+                Debug.Assert(index < entries.Count);
+
+                Entry item = entries[index];
+                if (!ItemAccessibleObjects.ContainsKey(item))
+                {
+                    return;
                 }
+
+                if (OsVersion.IsWindows8OrGreater())
+                {
+                    UiaCore.UiaDisconnectProvider(ItemAccessibleObjects[item]);
+                }
+
+                ItemAccessibleObjects.Remove(item);
+            }
+
+            internal void ReleaseDropDownButtonUiaProvider()
+            {
+                if (OsVersion.IsWindows8OrGreater())
+                {
+                    UiaCore.UiaDisconnectProvider(_dropDownButtonUiaProvider);
+                }
+
+                _dropDownButtonUiaProvider = null;
             }
 
             internal void ResetListItemAccessibleObjects()
             {
+                if (OsVersion.IsWindows8OrGreater())
+                {
+                    foreach (ComboBoxItemAccessibleObject itemAccessibleObject in ItemAccessibleObjects.Values)
+                    {
+                        UiaCore.UiaDisconnectProvider(itemAccessibleObject);
+                    }
+                }
+
                 ItemAccessibleObjects.Clear();
             }
 
@@ -289,6 +317,16 @@ namespace System.Windows.Forms
                 _owningComboBox.DropDownStyle == ComboBoxStyle.Simple
                     ? _owningComboBox.ChildEditAccessibleObject
                     : DropDownButtonUiaProvider;
+
+            public override void DoDefaultAction()
+            {
+                if (!_owningComboBox.IsHandleCreated || _owningComboBox.DropDownStyle == ComboBoxStyle.Simple)
+                {
+                    return;
+                }
+
+                _owningComboBox.DroppedDown = !_owningComboBox.DroppedDown;
+            }
         }
     }
 }

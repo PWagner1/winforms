@@ -2,18 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
 using static Interop;
+using Point = System.Drawing.Point;
+using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Tests
 {
-    using Point = System.Drawing.Point;
-    using Size = System.Drawing.Size;
-
     public class TrackBarTests : IClassFixture<ThreadExceptionFixture>
     {
         public static readonly int s_dimension = (SystemInformation.HorizontalScrollBarHeight * 8) / 3;
@@ -221,7 +219,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TrackBar_AutoSize_Set_GetReturnsExpected(bool value)
         {
             using var control = new SubTrackBar();
@@ -256,7 +254,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TrackBar_AutoSize_SetWithOrientation_GetReturnsExpected(bool value)
         {
             using var control = new SubTrackBar
@@ -294,7 +292,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TrackBar_AutoSize_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var control = new SubTrackBar();
@@ -345,7 +343,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TrackBar_AutoSize_SetWithOrientationWithHandle_GetReturnsExpected(bool value)
         {
             using var control = new SubTrackBar
@@ -437,7 +435,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void TrackBar_BackgroundImage_Set_GetReturnsExpected(Image value)
         {
             using var control = new TrackBar
@@ -496,7 +494,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ImageLayout))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ImageLayout))]
         public void TrackBar_BackgroundImageLayout_Set_GetReturnsExpected(ImageLayout value)
         {
             using var control = new SubTrackBar
@@ -550,7 +548,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TrackBar_DoubleBuffered_Get_ReturnsExpected(bool value)
         {
             using var control = new SubTrackBar();
@@ -559,7 +557,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TrackBar_DoubleBuffered_Set_GetReturnsExpected(bool value)
         {
             using var control = new SubTrackBar
@@ -584,7 +582,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TrackBar_DoubleBuffered_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var control = new SubTrackBar();
@@ -624,7 +622,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetFontTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetFontTheoryData))]
         public void TrackBar_Font_Set_GetReturnsExpected(Font value)
         {
             using var control = new SubTrackBar
@@ -782,7 +780,7 @@ namespace System.Windows.Forms.Tests
                 Maximum = 11
             };
             Assert.NotEqual(IntPtr.Zero, control.Handle);
-            Assert.Equal((IntPtr)11, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMAX, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(11, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMAX));
         }
 
         [WinFormsFact]
@@ -793,7 +791,7 @@ namespace System.Windows.Forms.Tests
                 Minimum = 11
             };
             Assert.NotEqual(IntPtr.Zero, control.Handle);
-            Assert.Equal((IntPtr)11, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMIN, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(11, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMIN));
         }
 
         [WinFormsTheory]
@@ -812,7 +810,7 @@ namespace System.Windows.Forms.Tests
                 RightToLeftLayout = rightToLeftLayout
             };
             Assert.NotEqual(IntPtr.Zero, control.Handle);
-            Assert.Equal((IntPtr)expected, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPOS));
+            Assert.Equal(expected, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPOS));
         }
 
         [WinFormsFact]
@@ -824,7 +822,7 @@ namespace System.Windows.Forms.Tests
                 Value = 5
             };
             Assert.NotEqual(IntPtr.Zero, control.Handle);
-            Assert.Equal((IntPtr)5, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPOS));
+            Assert.Equal(5, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPOS));
         }
 
         [WinFormsFact]
@@ -835,7 +833,7 @@ namespace System.Windows.Forms.Tests
                 LargeChange = 11
             };
             Assert.NotEqual(IntPtr.Zero, control.Handle);
-            Assert.Equal((IntPtr)11, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPAGESIZE, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(11, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPAGESIZE));
         }
 
         [WinFormsFact]
@@ -846,7 +844,7 @@ namespace System.Windows.Forms.Tests
                 SmallChange = 11
             };
             Assert.NotEqual(IntPtr.Zero, control.Handle);
-            Assert.Equal((IntPtr)11, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETLINESIZE, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(11, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETLINESIZE));
         }
 
         public static IEnumerable<object[]> Handle_GetSize_TestData()
@@ -970,7 +968,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImeMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImeMode))]
         public void TrackBar_ImeMode_SetInvalid_ThrowsInvalidEnumArgumentException(ImeMode value)
         {
             using var control = new TrackBar();
@@ -1015,7 +1013,7 @@ namespace System.Windows.Forms.Tests
 
             control.LargeChange = value;
             Assert.Equal(value, control.LargeChange);
-            Assert.Equal((IntPtr)value, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPAGESIZE, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(value, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPAGESIZE));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1024,7 +1022,7 @@ namespace System.Windows.Forms.Tests
             // Set same.
             control.LargeChange = value;
             Assert.Equal(value, control.LargeChange);
-            Assert.Equal((IntPtr)value, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPAGESIZE, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(value, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPAGESIZE));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1089,9 +1087,9 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, control.Value);
             Assert.Equal(5, control.LargeChange);
             Assert.Equal(1, control.SmallChange);
-            Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMIN, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)value, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMAX, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPOS, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMIN));
+            Assert.Equal(value, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMAX));
+            Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPOS));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(expectedInvalidatedCallCount, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1104,9 +1102,9 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, control.Value);
             Assert.Equal(5, control.LargeChange);
             Assert.Equal(1, control.SmallChange);
-            Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMIN, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)value, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMAX, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPOS, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMIN));
+            Assert.Equal(value, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMAX));
+            Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPOS));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(expectedInvalidatedCallCount, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1152,9 +1150,9 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(5, control.Value);
             Assert.Equal(5, control.LargeChange);
             Assert.Equal(1, control.SmallChange);
-            Assert.Equal((IntPtr)5, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMIN, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)5, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMAX, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)5, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPOS, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(5, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMIN));
+            Assert.Equal(5, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMAX));
+            Assert.Equal(5, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPOS));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(1, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1228,9 +1226,9 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(5, control.Value);
             Assert.Equal(5, control.LargeChange);
             Assert.Equal(1, control.SmallChange);
-            Assert.Equal((IntPtr)value, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMIN, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)10, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMAX, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)5, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPOS, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(value, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMIN));
+            Assert.Equal(10, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMAX));
+            Assert.Equal(5, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPOS));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(expectedInvalidatedCallCount, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1242,9 +1240,9 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value, control.Minimum);
             Assert.Equal(5, control.Value);
             Assert.Equal(5, control.LargeChange);
-            Assert.Equal((IntPtr)value, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMIN, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)10, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMAX, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)5, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPOS, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(value, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMIN));
+            Assert.Equal(10, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMAX));
+            Assert.Equal(5, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPOS));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(expectedInvalidatedCallCount, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1290,9 +1288,9 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(12, control.Value);
             Assert.Equal(5, control.LargeChange);
             Assert.Equal(1, control.SmallChange);
-            Assert.Equal((IntPtr)12, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMIN, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)12, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMAX, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)12, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPOS, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(12, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMIN));
+            Assert.Equal(12, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMAX));
+            Assert.Equal(12, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPOS));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(1, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1459,7 +1457,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(Orientation))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(Orientation))]
         public void TrackBar_Orientation_SetInvalidValue_ThrowsInvalidEnumArgumentException(Orientation value)
         {
             using var control = new TrackBar();
@@ -1467,7 +1465,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetPaddingNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetPaddingNormalizedTheoryData))]
         public void TrackBar_Padding_Set_GetReturnsExpected(Padding value, Padding expected)
         {
             using var control = new TrackBar
@@ -1484,7 +1482,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetPaddingNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetPaddingNormalizedTheoryData))]
         public void TrackBar_Padding_SetWithHandle_GetReturnsExpected(Padding value, Padding expected)
         {
             using var control = new TrackBar();
@@ -1749,7 +1747,7 @@ namespace System.Windows.Forms.Tests
 
             control.SmallChange = value;
             Assert.Equal(value, control.SmallChange);
-            Assert.Equal((IntPtr)value, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETLINESIZE, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(value, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETLINESIZE));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1758,7 +1756,7 @@ namespace System.Windows.Forms.Tests
             // Set same.
             control.SmallChange = value;
             Assert.Equal(value, control.SmallChange);
-            Assert.Equal((IntPtr)value, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETLINESIZE, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(value, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETLINESIZE));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1774,7 +1772,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TrackBar_Text_Set_GetReturnsExpected(string value, string expected)
         {
             using var control = new TrackBar
@@ -1791,7 +1789,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TrackBar_Text_SetWithHandle_GetReturnsExpected(string value, string expected)
         {
             using var control = new TrackBar();
@@ -1909,7 +1907,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TickStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TickStyle))]
         public void TrackBar_TickStyle_Set_GetReturnsExpected(TickStyle value)
         {
             using var control = new TrackBar
@@ -1958,7 +1956,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TickStyle))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TickStyle))]
         public void TrackBar_TickStyle_SetInvalidValue_ThrowsInvalidEnumArgumentException(TickStyle value)
         {
             using var control = new TrackBar();
@@ -2134,7 +2132,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value, control.Value);
             Assert.Equal(5, control.LargeChange);
             Assert.Equal(1, control.SmallChange);
-            Assert.Equal((IntPtr)expectedPos, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPOS, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(expectedPos, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPOS));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -2147,7 +2145,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value, control.Value);
             Assert.Equal(5, control.LargeChange);
             Assert.Equal(1, control.SmallChange);
-            Assert.Equal((IntPtr)expectedPos, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPOS, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(expectedPos, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPOS));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -2326,7 +2324,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TrackBar_OnBackColorChanged_Invoke_CallsBackColorChanged(EventArgs eventArgs)
         {
             using var control = new SubTrackBar();
@@ -2352,7 +2350,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TrackBar_OnBackColorChanged_InvokeWithHandle_CallsBackColorChanged(EventArgs eventArgs)
         {
             using var control = new SubTrackBar();
@@ -2392,7 +2390,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TrackBar_OnClick_Invoke_CallsClick(EventArgs eventArgs)
         {
             using var control = new SubTrackBar();
@@ -2416,7 +2414,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TrackBar_OnDoubleClick_Invoke_CallsDoubleClick(EventArgs eventArgs)
         {
             using var control = new SubTrackBar();
@@ -2440,7 +2438,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TrackBar_OnHandleCreated_Invoke_CallsHandleCreated(EventArgs eventArgs)
         {
             using var control = new SubTrackBar();
@@ -2466,7 +2464,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TrackBar_OnHandleCreated_InvokeWithHandle_CallsHandleCreated(EventArgs eventArgs)
         {
             using var control = new SubTrackBar();
@@ -2493,7 +2491,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetMouseEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetMouseEventArgsTheoryData))]
         public void TrackBar_OnMouseClick_Invoke_CallsMouseClick(MouseEventArgs eventArgs)
         {
             using var control = new SubTrackBar();
@@ -2517,7 +2515,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetMouseEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetMouseEventArgsTheoryData))]
         public void TrackBar_OnMouseDoubleClick_Invoke_CallsMouseDoubleClick(MouseEventArgs eventArgs)
         {
             using var control = new SubTrackBar();
@@ -2578,7 +2576,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TrackBar_OnMouseWheel_InvokeHandledMouseEventArgs_SetsHandled(bool handled)
         {
             using var control = new SubTrackBar();
@@ -2724,7 +2722,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TrackBar_OnScroll_Invoke_CallsScroll(EventArgs eventArgs)
         {
             using var control = new SubTrackBar();
@@ -2746,8 +2744,9 @@ namespace System.Windows.Forms.Tests
             control.OnScroll(eventArgs);
             Assert.Equal(1, callCount);
         }
+
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TrackBar_OnSystemColorsChanged_Invoke_CallsSystemColorsChanged(EventArgs eventArgs)
         {
             using var control = new SubTrackBar();
@@ -2773,7 +2772,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TrackBar_OnSystemColorsChanged_InvokeWithHandle_CallsSystemColorsChanged(EventArgs eventArgs)
         {
             using var control = new SubTrackBar();
@@ -2812,7 +2811,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TrackBar_OnValueChanged_Invoke_CallsValueChanged(EventArgs eventArgs)
         {
             using var control = new SubTrackBar();
@@ -3100,9 +3099,9 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedMinimum, control.Minimum);
             Assert.Equal(expectedMaximum, control.Maximum);
             Assert.Equal(expectedValue, control.Value);
-            Assert.Equal((IntPtr)expectedMinimum, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMIN, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)expectedMaximum, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETRANGEMAX, IntPtr.Zero, IntPtr.Zero));
-            Assert.Equal((IntPtr)expectedValue, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TBM.GETPOS, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(expectedMinimum, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMIN));
+            Assert.Equal(expectedMaximum, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETRANGEMAX));
+            Assert.Equal(expectedValue, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TBM_GETPOS));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(expectedInvalidatedCallCount, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);

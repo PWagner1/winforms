@@ -2,12 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
-using System.Collections;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using static Interop;
 using static Interop.User32;
 
 namespace System.Windows.Forms
@@ -21,30 +17,30 @@ namespace System.Windows.Forms
         {
             internal static int s_inWndProcCnt;
 
-            // This hashtable can contain null for those ACWindows we find, but are sure are not ours.
-            private static readonly Hashtable s_ACWindows = new Hashtable();
+            // This dictionary can contain null for those ACWindows we find, but are sure are not ours.
+            private static readonly Dictionary<IntPtr, ACNativeWindow?> s_ACWindows = new();
 
             internal ACNativeWindow(IntPtr acHandle)
             {
                 Debug.Assert(!s_ACWindows.ContainsKey(acHandle));
                 AssignHandle(acHandle);
                 s_ACWindows.Add(acHandle, this);
-                EnumChildWindows(new HandleRef(this, acHandle),
-                    ACNativeWindow.RegisterACWindowRecursive);
+                EnumChildWindows(new HandleRef(this, acHandle), RegisterACWindowRecursive);
             }
 
-            private static BOOL RegisterACWindowRecursive(IntPtr handle)
+            private static BOOL RegisterACWindowRecursive(HWND handle)
             {
                 if (!s_ACWindows.ContainsKey(handle))
                 {
                     ACNativeWindow newAC = new ACNativeWindow(handle);
                 }
-                return BOOL.TRUE;
+
+                return true;
             }
 
-            internal bool Visible => IsWindowVisible(this).IsTrue();
+            internal bool Visible => PInvoke.IsWindowVisible(this);
 
-            static internal bool AutoCompleteActive
+            internal static bool AutoCompleteActive
             {
                 get
                 {
@@ -52,13 +48,15 @@ namespace System.Windows.Forms
                     {
                         return true;
                     }
-                    foreach (object o in s_ACWindows.Values)
+
+                    foreach (ACNativeWindow? window in s_ACWindows.Values)
                     {
-                        if (o is ACNativeWindow window && window.Visible)
+                        if (window is not null && window.Visible)
                         {
                             return true;
                         }
                     }
+
                     return false;
                 }
             }
@@ -88,7 +86,7 @@ namespace System.Windows.Forms
                 {
                     if (s_ACWindows[acHandle] is null)
                     {
-                        s_ACWindows.Remove(acHandle); //if an external handle got destroyed, dont let it stop us.
+                        s_ACWindows.Remove(acHandle); //if an external handle got destroyed, don't let it stop us.
                     }
                 }
 
@@ -111,15 +109,16 @@ namespace System.Windows.Forms
             /// </summary>
             internal static void ClearNullACWindows()
             {
-                ArrayList nulllist = new ArrayList();
-                foreach (DictionaryEntry e in s_ACWindows)
+                List<IntPtr> toRemove = new();
+                foreach (KeyValuePair<IntPtr, ACNativeWindow?> acNativeWindowByHandle in s_ACWindows)
                 {
-                    if (e.Value is null)
+                    if (acNativeWindowByHandle.Value is null)
                     {
-                        nulllist.Add(e.Key);
+                        toRemove.Add(acNativeWindowByHandle.Key);
                     }
                 }
-                foreach (IntPtr handle in nulllist)
+
+                foreach (IntPtr handle in toRemove)
                 {
                     s_ACWindows.Remove(handle);
                 }

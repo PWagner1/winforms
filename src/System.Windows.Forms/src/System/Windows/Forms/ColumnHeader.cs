@@ -2,22 +2,20 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing.Design;
 using static Interop;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms
 {
     /// <summary>
-    ///  Displays a single column header in a <see cref='Forms.ListView'/> control.
+    ///  Displays a single column header in a <see cref="Forms.ListView"/> control.
     /// </summary>
-    [ToolboxItem(false)]
     [DesignTimeVisible(false)]
     [DefaultProperty(nameof(Text))]
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+    [ToolboxItem(false)]
     [TypeConverter(typeof(ColumnHeaderConverter))]
     public partial class ColumnHeader : Component, ICloneable
     {
@@ -25,18 +23,18 @@ namespace System.Windows.Forms
 #pragma warning disable 0414
         internal int _index = -1;
 #pragma warning restore 0414
-        internal string _text;
+        internal string? _text;
         internal string _name;
         internal int _width = 60;
 
         // Use TextAlign property instead of this member variable, always
         private HorizontalAlignment _textAlign = HorizontalAlignment.Left;
         private bool _textAlignInitialized;
-        private AccessibleObject _accessibilityObject;
+        private AccessibleObject? _accessibilityObject;
         private readonly ColumnHeaderImageListIndexer _imageIndexer;
 
         // We need to send some messages to ListView when it gets initialized.
-        internal ListView OwnerListview
+        internal ListView? OwnerListview
         {
             get
             {
@@ -59,6 +57,7 @@ namespace System.Windows.Forms
         public ColumnHeader()
         {
             _imageIndexer = new ColumnHeaderImageListIndexer(this);
+            _name = string.Empty;
         }
 
         /// <summary>
@@ -81,10 +80,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (_accessibilityObject is null)
-                {
-                    _accessibilityObject = new ListViewColumnHeaderAccessibleObject(this);
-                }
+                _accessibilityObject ??= new ListViewColumnHeaderAccessibleObject(this);
 
                 return _accessibilityObject;
             }
@@ -141,7 +137,7 @@ namespace System.Windows.Forms
                 // set the display indices. This is not an expensive operation because
                 // we only set an integer in the column header class
                 bool hdrMovedForward = value > DisplayIndexInternal;
-                ColumnHeader movedHdr = null;
+                ColumnHeader? movedHdr = null;
                 for (int i = 0; i < ListView.Columns.Count; i++)
                 {
                     ColumnHeader hdr = ListView.Columns[i];
@@ -153,14 +149,19 @@ namespace System.Windows.Forms
                     {
                         hdr.DisplayIndexInternal -= hdrMovedForward ? 1 : -1;
                     }
+
                     if (i != Index)
                     {
                         colsOrder[hdr.DisplayIndexInternal] = i;
                     }
                 }
 
-                movedHdr.DisplayIndexInternal = value;
-                colsOrder[movedHdr.DisplayIndexInternal] = movedHdr.Index;
+                if (movedHdr is not null)
+                {
+                    movedHdr.DisplayIndexInternal = value;
+                    colsOrder[movedHdr.DisplayIndexInternal] = movedHdr.Index;
+                }
+
                 SetDisplayIndices(colsOrder);
             }
         }
@@ -170,14 +171,14 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The index of this column.  This index does not necessarily correspond
         ///  to the current visual position of the column in the ListView, because the
-        ///  user may orerder columns if the allowColumnReorder property is true.
+        ///  user may order columns if the allowColumnReorder property is true.
         /// </summary>
         [Browsable(false)]
         public int Index
         {
             get
             {
-                if (ListView != null)
+                if (ListView is not null)
                 {
                     return ListView.GetColumnIndex(this);
                 }
@@ -195,10 +196,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (_imageIndexer.Index != ImageList.Indexer.DefaultIndex && ImageList != null && _imageIndexer.Index >= ImageList.Images.Count)
+                if (_imageIndexer.Index != ImageList.Indexer.DefaultIndex && ImageList is not null && _imageIndexer.Index >= ImageList.Images.Count)
                 {
                     return ImageList.Images.Count - 1;
                 }
+
                 return _imageIndexer.Index;
             }
             set
@@ -215,15 +217,15 @@ namespace System.Windows.Forms
 
                 _imageIndexer.Index = value;
 
-                if (ListView != null && ListView.IsHandleCreated)
+                if (ListView is not null && ListView.IsHandleCreated)
                 {
-                    ListView.SetColumnInfo(LVCF.IMAGE, this);
+                    ListView.SetColumnInfo(LVCOLUMNW_MASK.LVCF_IMAGE, this);
                 }
             }
         }
 
         [Browsable(false)]
-        public ImageList ImageList
+        public ImageList? ImageList
         {
             // we added the ImageList property so that the ImageIndexConverter can find our image list
             get
@@ -252,9 +254,9 @@ namespace System.Windows.Forms
 
                 _imageIndexer.Key = value;
 
-                if (ListView != null && ListView.IsHandleCreated)
+                if (ListView is not null && ListView.IsHandleCreated)
                 {
-                    ListView.SetColumnInfo(LVCF.IMAGE, this);
+                    ListView.SetColumnInfo(LVCOLUMNW_MASK.LVCF_IMAGE, this);
                 }
             }
         }
@@ -263,14 +265,14 @@ namespace System.Windows.Forms
         ///  Returns the ListView control that this column is displayed in.  May be null
         /// </summary>
         [Browsable(false)]
-        public ListView ListView { get; private set; }
+        public ListView? ListView { get; private set; }
 
         /// <summary>
         ///  The Name of the column header
         /// </summary>
         [Browsable(false)]
         [SRDescription(nameof(SR.ColumnHeaderNameDescr))]
-        public string Name
+        public string? Name
         {
             get
             {
@@ -286,7 +288,8 @@ namespace System.Windows.Forms
                 {
                     _name = value;
                 }
-                if (Site != null)
+
+                if (Site is not null)
                 {
                     Site.Name = value;
                 }
@@ -298,6 +301,7 @@ namespace System.Windows.Forms
         /// </summary>
         [Localizable(true)]
         [SRDescription(nameof(SR.ColumnCaption))]
+        [AllowNull]
         public string Text
         {
             get
@@ -314,10 +318,8 @@ namespace System.Windows.Forms
                 {
                     _text = value;
                 }
-                if (ListView != null)
-                {
-                    ListView.SetColumnInfo(LVCF.TEXT, this);
-                }
+
+                ListView?.SetColumnInfo(LVCOLUMNW_MASK.LVCF_TEXT, this);
             }
         }
 
@@ -331,7 +333,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (!_textAlignInitialized && (ListView != null))
+                if (!_textAlignInitialized && (ListView is not null))
                 {
                     _textAlignInitialized = true;
                     // See below for an explanation of (Index != 0)
@@ -341,6 +343,7 @@ namespace System.Windows.Forms
                         _textAlign = HorizontalAlignment.Right;
                     }
                 }
+
                 return _textAlign;
             }
             set
@@ -356,9 +359,9 @@ namespace System.Windows.Forms
                     _textAlign = HorizontalAlignment.Left;
                 }
 
-                if (ListView != null)
+                if (ListView is not null)
                 {
-                    ListView.SetColumnInfo(LVCF.FMT, this);
+                    ListView.SetColumnInfo(LVCOLUMNW_MASK.LVCF_FMT, this);
                     ListView.Invalidate();
                 }
             }
@@ -370,7 +373,7 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.ControlTagDescr))]
         [DefaultValue(null)]
         [TypeConverter(typeof(StringConverter))]
-        public object Tag { get; set; }
+        public object? Tag { get; set; }
 
         internal int WidthInternal
         {
@@ -394,16 +397,16 @@ namespace System.Windows.Forms
                 // we don't get notified when the user changes it, we need to get this info
                 // from the underlying control every time we're asked.
                 // The underlying control will only report the correct width if it's in Report view
-                if (ListView != null && ListView.IsHandleCreated && !ListView.Disposing && ListView.View == View.Details)
+                if (ListView is not null && ListView.IsHandleCreated && !ListView.Disposing && ListView.View == View.Details)
                 {
                     // Make sure this column has already been added to the ListView, else just return width
-                    IntPtr hwndHdr = User32.SendMessageW(ListView, (User32.WM)LVM.GETHEADER);
-                    if (hwndHdr != IntPtr.Zero)
+                    HWND hwndHdr = (HWND)PInvoke.SendMessage(ListView, (User32.WM)PInvoke.LVM_GETHEADER);
+                    if (!hwndHdr.IsNull)
                     {
-                        int nativeColumnCount = (int)User32.SendMessageW(hwndHdr, (User32.WM)HDM.GETITEMCOUNT);
+                        int nativeColumnCount = (int)PInvoke.SendMessage(hwndHdr, (User32.WM)PInvoke.HDM_GETITEMCOUNT);
                         if (Index < nativeColumnCount)
                         {
-                            _width = (int)User32.SendMessageW(ListView, (User32.WM)LVM.GETCOLUMNWIDTH, (IntPtr)Index);
+                            _width = (int)PInvoke.SendMessage(ListView, (User32.WM)PInvoke.LVM_GETCOLUMNWIDTH, (WPARAM)Index);
                         }
                     }
                 }
@@ -413,10 +416,7 @@ namespace System.Windows.Forms
             set
             {
                 _width = value;
-                if (ListView != null)
-                {
-                    ListView.SetColumnWidth(Index, ColumnHeaderAutoResizeStyle.None);
-                }
+                ListView?.SetColumnWidth(Index, ColumnHeaderAutoResizeStyle.None);
             }
         }
 
@@ -427,10 +427,7 @@ namespace System.Windows.Forms
                 throw new InvalidEnumArgumentException(nameof(headerAutoResize), (int)headerAutoResize, typeof(ColumnHeaderAutoResizeStyle));
             }
 
-            if (ListView != null)
-            {
-                ListView.AutoResizeColumn(Index, headerAutoResize);
-            }
+            ListView?.AutoResizeColumn(Index, headerAutoResize);
         }
 
         /// <summary>
@@ -439,7 +436,7 @@ namespace System.Windows.Forms
         public object Clone()
         {
             Type clonedType = GetType();
-            ColumnHeader columnHeader = null;
+            ColumnHeader columnHeader;
 
             if (clonedType == typeof(ColumnHeader))
             {
@@ -447,7 +444,7 @@ namespace System.Windows.Forms
             }
             else
             {
-                columnHeader = (ColumnHeader)Activator.CreateInstance(clonedType);
+                columnHeader = (ColumnHeader)Activator.CreateInstance(clonedType)!;
             }
 
             columnHeader._text = _text;
@@ -460,7 +457,7 @@ namespace System.Windows.Forms
         {
             if (disposing)
             {
-                if (ListView != null)
+                if (ListView is not null)
                 {
                     int index = Index;
                     if (index != -1)
@@ -469,7 +466,17 @@ namespace System.Windows.Forms
                     }
                 }
             }
+
             base.Dispose(disposing);
+        }
+
+        internal void ReleaseUiaProvider()
+        {
+            if (OsVersion.IsWindows8OrGreater() && _accessibilityObject is not null)
+            {
+                UiaCore.UiaDisconnectProvider(_accessibilityObject);
+                _accessibilityObject = null;
+            }
         }
 
         private void ResetText()
@@ -480,11 +487,11 @@ namespace System.Windows.Forms
         // Set the display indices of the listview columns
         private unsafe void SetDisplayIndices(int[] cols)
         {
-            if (ListView.IsHandleCreated && !ListView.Disposing)
+            if (ListView is not null && ListView.IsHandleCreated && !ListView.Disposing)
             {
                 fixed (int* pCols = cols)
                 {
-                    User32.SendMessageW(ListView, (User32.WM)LVM.SETCOLUMNORDERARRAY, (IntPtr)cols.Length, (IntPtr)pCols);
+                    PInvoke.SendMessage(ListView, (User32.WM)PInvoke.LVM_SETCOLUMNORDERARRAY, (WPARAM)cols.Length, (LPARAM)pCols);
                 }
             }
         }
@@ -501,7 +508,7 @@ namespace System.Windows.Forms
 
         internal bool ShouldSerializeText()
         {
-            return _text != null;
+            return _text is not null;
         }
 
         /// <summary>
@@ -510,28 +517,6 @@ namespace System.Windows.Forms
         public override string ToString()
         {
             return $"{nameof(ColumnHeader)}: Text: {Text}";
-        }
-
-        internal class ColumnHeaderImageListIndexer : ImageList.Indexer
-        {
-            private readonly ColumnHeader _owner;
-
-            public ColumnHeaderImageListIndexer(ColumnHeader ch)
-            {
-                _owner = ch;
-            }
-
-            public override ImageList ImageList
-            {
-                get
-                {
-                    return _owner.ListView?.SmallImageList;
-                }
-                set
-                {
-                    Debug.Assert(false, "We should never set the image list");
-                }
-            }
         }
     }
 }

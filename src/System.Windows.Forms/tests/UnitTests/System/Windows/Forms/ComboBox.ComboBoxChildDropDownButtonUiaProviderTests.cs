@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using Xunit;
 using static Interop;
 
@@ -88,7 +87,7 @@ namespace System.Windows.Forms.Tests
         [InlineData(ComboBoxStyle.Simple)]
         [InlineData(ComboBoxStyle.DropDownList)]
         [InlineData(ComboBoxStyle.DropDown)]
-        public void DropDownButtonUiaProvider_FragmentNavigate_PreviousSibling_ReturnsExpected_IfHanleIsNotCreated(
+        public void DropDownButtonUiaProvider_FragmentNavigate_PreviousSibling_ReturnsExpected_IfHandleIsNotCreated(
             ComboBoxStyle comboBoxStyle)
         {
             using ComboBox comboBox = new ComboBox
@@ -101,6 +100,24 @@ namespace System.Windows.Forms.Tests
 
             Assert.Null(previousItem);
             Assert.False(comboBox.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [InlineData(ComboBoxStyle.DropDownList)]
+        [InlineData(ComboBoxStyle.DropDown)]
+        public void DropDownButtonUiaProvider_Name_ReturnsExpected(ComboBoxStyle comboBoxStyle)
+        {
+            using ComboBox comboBox = new ComboBox
+            {
+                DropDownStyle = comboBoxStyle
+            };
+
+            Assert.Equal(SR.ComboboxDropDownButtonOpenName, GetComboBoxAccessibleObject(comboBox).DropDownButtonUiaProvider.Name);
+
+            // Open the dropdown list
+            comboBox.DroppedDown = true;
+
+            Assert.Equal(SR.ComboboxDropDownButtonCloseName, GetComboBoxAccessibleObject(comboBox).DropDownButtonUiaProvider.Name);
         }
 
         private ComboBox.ComboBoxAccessibleObject GetComboBoxAccessibleObject(ComboBox comboBox)

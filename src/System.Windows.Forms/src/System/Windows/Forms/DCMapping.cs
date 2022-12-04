@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Diagnostics;
 using System.Drawing;
 using static Interop;
@@ -11,7 +9,7 @@ using static Interop;
 namespace System.Windows.Forms
 {
     /// <summary>
-    ///  DCMapping is used to change the mapping and clip region of the the specified device context to the given
+    ///  DCMapping is used to change the mapping and clip region of the specified device context to the given
     ///  bounds. When the DCMapping is disposed, the original mapping and clip rectangle are restored.
     ///
     ///  Example:
@@ -28,27 +26,23 @@ namespace System.Windows.Forms
     /// </summary>
     internal struct DCMapping : IDisposable
     {
-        private Gdi32.HDC _hdc;
+        private HDC _hdc;
         private int _savedState;
 
-        public unsafe DCMapping(Gdi32.HDC hdc, Rectangle bounds)
+        public unsafe DCMapping(HDC hdc, Rectangle bounds)
         {
-            if (hdc.IsNull)
-            {
-                throw new ArgumentNullException(nameof(hdc));
-            }
-
-            bool success;
+            ArgumentNullException.ThrowIfNull(hdc);
 
             _hdc = hdc;
-            _savedState = Gdi32.SaveDC(hdc);
+            _savedState = PInvoke.SaveDC(hdc);
 
             // Retrieve the x-coordinates and y-coordinates of the viewport origin for the specified device context.
-            success = Gdi32.GetViewportOrgEx(hdc, out Point viewportOrg).IsTrue();
+            Point viewportOrg = default;
+            bool success = PInvoke.GetViewportOrgEx(hdc, &viewportOrg);
             Debug.Assert(success, "GetViewportOrgEx() failed.");
 
             // Create a new rectangular clipping region based off of the bounds specified, shifted over by the x & y specified in the viewport origin.
-            var hClippingRegion = new Gdi32.RegionScope(
+            PInvoke.RegionScope hClippingRegion = new(
                 viewportOrg.X + bounds.Left,
                 viewportOrg.Y + bounds.Top,
                 viewportOrg.X + bounds.Right,
@@ -57,23 +51,22 @@ namespace System.Windows.Forms
 
             try
             {
-                var hOriginalClippingRegion = new Gdi32.RegionScope(hdc);
+                PInvoke.RegionScope hOriginalClippingRegion = new(hdc);
 
-                // Shift the viewpoint origint by coordinates specified in "bounds".
-                var lastViewPort = new Point();
-                success = Gdi32.SetViewportOrgEx(
+                // Shift the viewpoint origin by coordinates specified in "bounds".
+                success = PInvoke.SetViewportOrgEx(
                     hdc,
                     viewportOrg.X + bounds.Left,
                     viewportOrg.Y + bounds.Top,
-                    &lastViewPort).IsTrue();
+                    lppt: null);
                 Debug.Assert(success, "SetViewportOrgEx() failed.");
 
                 RegionType originalRegionType;
                 if (!hOriginalClippingRegion.IsNull)
                 {
-                    // Get the origninal clipping region so we can determine its type (we'll check later if we've restored the region back properly.)
-                    RECT originalClipRect = new RECT();
-                    originalRegionType = Gdi32.GetRgnBox(hOriginalClippingRegion, ref originalClipRect);
+                    // Get the original clipping region so we can determine its type (we'll check later if we've restored the region back properly.)
+                    RECT originalClipRect = default;
+                    originalRegionType = (RegionType)PInvoke.GetRgnBox(hOriginalClippingRegion, &originalClipRect);
                     Debug.Assert(
                         originalRegionType != RegionType.ERROR,
                         "ERROR returned from SelectClipRgn while selecting the original clipping region..");
@@ -82,11 +75,11 @@ namespace System.Windows.Forms
                     {
                         // Find the intersection of our clipping region and the current clipping region (our parent's)
 
-                        RegionType combineResult = Gdi32.CombineRgn(
+                        RegionType combineResult = (RegionType)PInvoke.CombineRgn(
                             hClippingRegion,
                             hClippingRegion,
                             hOriginalClippingRegion,
-                            Gdi32.RGN.AND);
+                            RGN_COMBINE_MODE.RGN_AND);
 
                         Debug.Assert(
                             (combineResult == RegionType.SIMPLEREGION) || (combineResult == RegionType.NULLREGION),
@@ -100,7 +93,7 @@ namespace System.Windows.Forms
                 }
 
                 // Select the new clipping region; make sure it's a SIMPLEREGION or NULLREGION
-                RegionType selectResult = Gdi32.SelectClipRgn(hdc, hClippingRegion);
+                RegionType selectResult = (RegionType)PInvoke.SelectClipRgn(hdc, hClippingRegion);
                 Debug.Assert(
                     selectResult == RegionType.SIMPLEREGION || selectResult == RegionType.NULLREGION,
                     "SIMPLEREGION or NULLLREGION expected.");
@@ -114,7 +107,7 @@ namespace System.Windows.Forms
         {
             if (!_hdc.IsNull)
             {
-                Gdi32.RestoreDC(_hdc, _savedState);
+                PInvoke.RestoreDC(_hdc, _savedState);
             }
         }
     }

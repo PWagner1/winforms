@@ -5,7 +5,6 @@
 #nullable enable
 
 using System.Runtime.InteropServices;
-using static Interop;
 
 namespace System.Windows.Forms.Metafiles
 {
@@ -17,22 +16,21 @@ namespace System.Windows.Forms.Metafiles
         public LOGBRUSH32 lb;
 
         public override string ToString()
-            => $@"[{nameof(EMRCREATEBRUSHINDIRECT)}] Index: {ihBrush} Style: {lb.lbStyle} Color: {
-                lb.lbColor.ToSystemColorString()}";
+            => $@"[{nameof(EMRCREATEBRUSHINDIRECT)}] Index: {ihBrush} Style: {lb.lbStyle} Color: {lb.lbColor.ToSystemColorString()}";
 
         // This structure is used exclusively in EMRCREATEBRUSHINDIRECT
         [StructLayout(LayoutKind.Sequential)]
         internal struct LOGBRUSH32
         {
-            public Gdi32.BS lbStyle;
+            public BRUSH_STYLE lbStyle;
             public COLORREF lbColor;
             public uint lbHatch;
 
-            public static implicit operator Gdi32.LOGBRUSH(LOGBRUSH32 logbrush) => new Gdi32.LOGBRUSH
+            public static implicit operator LOGBRUSH(LOGBRUSH32 logbrush) => new()
             {
                 lbStyle = logbrush.lbStyle,
                 lbColor = logbrush.lbColor,
-                lbHatch = (IntPtr)logbrush.lbHatch
+                lbHatch = logbrush.lbHatch
             };
         }
     }

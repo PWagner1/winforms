@@ -6,7 +6,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Accessibility;
-using static Interop;
 
 namespace System.Windows.Forms
 {
@@ -25,7 +24,7 @@ namespace System.Windows.Forms
             public SystemIAccessibleWrapper(IAccessible? systemIAccessible)
             {
                 _systemIAccessible = systemIAccessible;
-                IsIAccessibleCreated = systemIAccessible != null;
+                IsIAccessibleCreated = systemIAccessible is not null;
             }
 
             internal IAccessible? SystemIAccessibleInternal => _systemIAccessible;

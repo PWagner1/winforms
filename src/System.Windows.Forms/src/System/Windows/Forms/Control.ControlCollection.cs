@@ -2,10 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -19,7 +16,7 @@ namespace System.Windows.Forms
         ///  Collection of controls...
         /// </summary>
         [ListBindable(false)]
-        public class ControlCollection : ArrangedElementCollection, IList, ICloneable
+        public partial class ControlCollection : ArrangedElementCollection, IList, ICloneable
         {
             ///  A caching mechanism for key accessor
             ///  We use an index here rather than control so that we don't have lifetime
@@ -29,13 +26,13 @@ namespace System.Windows.Forms
 
             public ControlCollection(Control owner)
             {
-                Owner = owner ?? throw new ArgumentNullException(nameof(owner));
+                Owner = owner.OrThrowIfNull();
             }
 
             /// <summary>
             ///  Returns true if the collection contains an item with the specified key, false otherwise.
             /// </summary>
-            public virtual bool ContainsKey(string key)
+            public virtual bool ContainsKey(string? key)
             {
                 return IsValidIndex(IndexOfKey(key));
             }
@@ -45,7 +42,7 @@ namespace System.Windows.Forms
             ///  the child control list. If the control is already a child of another control it
             ///  is first removed from that control.
             /// </summary>
-            public virtual void Add(Control value)
+            public virtual void Add(Control? value)
             {
                 if (value is null)
                 {
@@ -73,10 +70,7 @@ namespace System.Windows.Forms
                 }
 
                 // Remove the new control from its old parent (if any)
-                if (value._parent != null)
-                {
-                    value._parent.Controls.Remove(value);
-                }
+                value._parent?.Controls.Remove(value);
 
                 // Add the control
                 InnerList.Add(value);
@@ -93,6 +87,7 @@ namespace System.Windows.Forms
                             nextTabIndex = t + 1;
                         }
                     }
+
                     value._tabIndex = nextTabIndex;
                 }
 
@@ -105,7 +100,7 @@ namespace System.Windows.Forms
 
                 try
                 {
-                    Control oldParent = value._parent;
+                    Control? oldParent = value._parent;
                     try
                     {
                         // AssignParent calls into user code - this could throw, which
@@ -141,12 +136,12 @@ namespace System.Windows.Forms
                 Owner.OnControlAdded(new ControlEventArgs(value));
             }
 
-            int IList.Add(object control)
+            int IList.Add(object? control)
             {
-                if (control is Control)
+                if (control is Control c)
                 {
-                    Add((Control)control);
-                    return IndexOf((Control)control);
+                    Add(c);
+                    return IndexOf(c);
                 }
                 else
                 {
@@ -157,10 +152,8 @@ namespace System.Windows.Forms
             [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             public virtual void AddRange(Control[] controls)
             {
-                if (controls is null)
-                {
-                    throw new ArgumentNullException(nameof(controls));
-                }
+                ArgumentNullException.ThrowIfNull(controls);
+
                 if (controls.Length > 0)
                 {
 #if DEBUG
@@ -191,14 +184,11 @@ namespace System.Windows.Forms
                 ControlCollection ccOther = Owner.CreateControlsInstance();
 
                 // We add using InnerList to prevent unnecessary parent cycle checks, etc.
-                ccOther.InnerList.AddRange(this);
+                ccOther.InnerList.AddRange(InnerList);
                 return ccOther;
             }
 
-            public bool Contains(Control control)
-            {
-                return InnerList.Contains(control);
-            }
+            public bool Contains(Control? control) => ((IList)InnerList).Contains(control);
 
             /// <summary>
             ///  Searches for Controls by their Name property, builds up an array
@@ -206,10 +196,7 @@ namespace System.Windows.Forms
             /// </summary>
             public Control[] Find(string key, bool searchAllChildren)
             {
-                if (string.IsNullOrEmpty(key))
-                {
-                    throw new ArgumentNullException(nameof(key), SR.FindKeyMayNotBeEmptyOrNull);
-                }
+                key.ThrowIfNullOrEmptyWithMessage(SR.FindKeyMayNotBeEmptyOrNull);
 
                 List<Control> foundControls = new();
                 FindInternal(key, searchAllChildren, this, foundControls);
@@ -267,20 +254,17 @@ namespace System.Windows.Forms
                 return new ControlCollectionEnumerator(this);
             }
 
-            public int IndexOf(Control control)
-            {
-                return InnerList.IndexOf(control);
-            }
+            public int IndexOf(Control? control) => ((IList)InnerList).IndexOf(control);
 
             /// <summary>
             ///  The zero-based index of the first occurrence of value within the entire CollectionBase, if found; otherwise, -1.
             /// </summary>
-            public virtual int IndexOfKey(string key)
+            public virtual int IndexOfKey(string? key)
             {
                 // Step 0 - Arg validation
                 if (string.IsNullOrEmpty(key))
                 {
-                    return -1; // we dont support empty or null keys.
+                    return -1; // we don't support empty or null keys.
                 }
 
                 // step 1 - check the last cached item
@@ -324,7 +308,7 @@ namespace System.Windows.Forms
             ///  Removes control from this control. Inheriting controls should call
             ///  base.remove to ensure that the control is removed.
             /// </summary>
-            public virtual void Remove(Control value)
+            public virtual void Remove(Control? value)
             {
                 // Sanity check parameter
                 if (value is null)
@@ -334,7 +318,7 @@ namespace System.Windows.Forms
 
                 if (value.ParentInternal == Owner)
                 {
-                    value.SetParentHandle(IntPtr.Zero);
+                    value.SetParentHandle(default);
 
                     // Remove the control from the internal control array
                     InnerList.Remove(value);
@@ -350,11 +334,11 @@ namespace System.Windows.Forms
                 }
             }
 
-            void IList.Remove(object control)
+            void IList.Remove(object? control)
             {
-                if (control is Control)
+                if (control is Control c)
                 {
-                    Remove((Control)control);
+                    Remove(c);
                 }
             }
 
@@ -366,7 +350,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Removes the child control with the specified key.
             /// </summary>
-            public virtual void RemoveByKey(string key)
+            public virtual void RemoveByKey(string? key)
             {
                 int index = IndexOfKey(key);
                 if (IsValidIndex(index))
@@ -390,8 +374,8 @@ namespace System.Windows.Forms
                             string.Format(SR.IndexOutOfRange, index.ToString(CultureInfo.CurrentCulture)));
                     }
 
-                    Control control = (Control)InnerList[index];
-                    Debug.Assert(control != null, "Why are we returning null controls from a valid index?");
+                    Control control = (Control)InnerList[index]!;
+                    Debug.Assert(control is not null, "Why are we returning null controls from a valid index?");
                     return control;
                 }
             }
@@ -399,7 +383,7 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Retrieves the child control with the specified key.
             /// </summary>
-            public virtual Control this[string key]
+            public virtual Control? this[string? key]
             {
                 get
                 {
@@ -472,6 +456,7 @@ namespace System.Windows.Forms
                 {
                     throw new ArgumentException(SR.ControlNotChild);
                 }
+
                 return index;
             }
 
@@ -482,10 +467,7 @@ namespace System.Windows.Forms
             internal virtual void SetChildIndexInternal(Control child, int newIndex)
             {
                 // Sanity check parameters
-                if (child is null)
-                {
-                    throw new ArgumentNullException(nameof(child));
-                }
+                ArgumentNullException.ThrowIfNull(child);
 
                 int currentIndex = GetChildIndex(child);
 
@@ -514,67 +496,6 @@ namespace System.Windows.Forms
             public virtual void SetChildIndex(Control child, int newIndex)
             {
                 SetChildIndexInternal(child, newIndex);
-            }
-
-            // This is the same as WinformsUtils.ArraySubsetEnumerator
-            // however since we're no longer an array, we've gotta employ a
-            // special version of this.
-            private class ControlCollectionEnumerator : IEnumerator
-            {
-                private readonly ControlCollection controls;
-                private int current;
-                private readonly int originalCount;
-
-                public ControlCollectionEnumerator(ControlCollection controls)
-                {
-                    this.controls = controls;
-                    originalCount = controls.Count;
-                    current = -1;
-                }
-
-                public bool MoveNext()
-                {
-                    // We have to use Controls.Count here because someone could have deleted
-                    // an item from the array.
-                    //
-                    // this can happen if someone does:
-                    //     foreach (Control c in Controls) { c.Dispose(); }
-                    //
-                    // We also dont want to iterate past the original size of the collection
-                    //
-                    // this can happen if someone does
-                    //     foreach (Control c in Controls) { c.Controls.Add(new Label()); }
-
-                    if (current < controls.Count - 1 && current < originalCount - 1)
-                    {
-                        current++;
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-
-                public void Reset()
-                {
-                    current = -1;
-                }
-
-                public object Current
-                {
-                    get
-                    {
-                        if (current == -1)
-                        {
-                            return null;
-                        }
-                        else
-                        {
-                            return controls[current];
-                        }
-                    }
-                }
             }
         }
     }

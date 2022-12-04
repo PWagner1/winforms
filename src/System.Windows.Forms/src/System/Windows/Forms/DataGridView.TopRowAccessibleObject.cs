@@ -16,7 +16,7 @@ namespace System.Windows.Forms
             private int[]? runtimeId;
             private DataGridView? _ownerDataGridView;
 
-            public DataGridViewTopRowAccessibleObject() : base()
+            public DataGridViewTopRowAccessibleObject()
             {
             }
 
@@ -39,6 +39,7 @@ namespace System.Windows.Forms
                         Rectangle rect = Rectangle.Union(_ownerDataGridView._layout.ColumnHeaders, _ownerDataGridView._layout.TopLeftHeader);
                         return _ownerDataGridView.RectangleToScreen(rect);
                     }
+
                     return Rectangle.Empty;
                 }
             }
@@ -59,7 +60,7 @@ namespace System.Windows.Forms
                 }
                 set
                 {
-                    if (_ownerDataGridView != null)
+                    if (_ownerDataGridView is not null)
                     {
                         throw new InvalidOperationException(SR.DataGridViewTopRowAccessibleObject_OwnerAlreadySet);
                     }
@@ -89,21 +90,13 @@ namespace System.Windows.Forms
                 }
             }
 
-            internal override int[]? RuntimeId
-            {
-                get
+            internal override int[] RuntimeId
+                => runtimeId ??= new int[]
                 {
-                    if (runtimeId is null)
-                    {
-                        runtimeId = new int[3];
-                        runtimeId[0] = RuntimeIDFirstItem; // first item is static - 0x2a
-                        runtimeId[1] = Parent.GetHashCode();
-                        runtimeId[2] = GetHashCode();
-                    }
-
-                    return runtimeId;
-                }
-            }
+                    RuntimeIDFirstItem, // first item is static - 0x2a
+                    Parent.GetHashCode(),
+                    GetHashCode()
+                };
 
             public override string Value
             {
@@ -123,6 +116,11 @@ namespace System.Windows.Forms
                 if (index < 0)
                 {
                     throw new ArgumentOutOfRangeException(nameof(index));
+                }
+
+                if (index > GetChildCount() - 1)
+                {
+                    return null;
                 }
 
                 if (index == 0 && _ownerDataGridView.RowHeadersVisible)
@@ -155,6 +153,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewTopRowAccessibleObject_OwnerNotSet);
                 }
+
                 int result = _ownerDataGridView.Columns.GetColumnCount(DataGridViewElementStates.Visible);
                 if (_ownerDataGridView.RowHeadersVisible)
                 {
@@ -171,6 +170,7 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidOperationException(SR.DataGridViewTopRowAccessibleObject_OwnerNotSet);
                 }
+
                 switch (navigationDirection)
                 {
                     case AccessibleNavigation.Down:
@@ -183,24 +183,22 @@ namespace System.Windows.Forms
                         {
                             return null;
                         }
+
                     case AccessibleNavigation.FirstChild:
-                        return GetChild(0);
+                        return GetChildCount() > 0
+                            ? GetChild(0)
+                            : null;
                     case AccessibleNavigation.LastChild:
-                        return GetChild(GetChildCount() - 1);
+                        int childCount = GetChildCount();
+                        return childCount > 0
+                            ? GetChild(childCount - 1)
+                            : null;
                     default:
                         return null;
                 }
             }
 
             #region IRawElementProviderFragment Implementation
-
-            internal override Rectangle BoundingRectangle
-            {
-                get
-                {
-                    return Bounds;
-                }
-            }
 
             internal override UiaCore.IRawElementProviderFragmentRoot FragmentRoot
             {
@@ -225,20 +223,28 @@ namespace System.Windows.Forms
                     case UiaCore.NavigateDirection.NextSibling:
                         if (Parent.GetChildCount() > 1)
                         {
-                            return Parent.GetChild(1);
+                            if (_ownerDataGridView is null)
+                            {
+                                throw new InvalidOperationException(SR.DataGridViewTopRowAccessibleObject_OwnerNotSet);
+                            }
+
+                            return _ownerDataGridView.Rows.Count == 0 ? null : Parent.GetChild(1);
                         }
+
                         break;
                     case UiaCore.NavigateDirection.FirstChild:
                         if (GetChildCount() > 0)
                         {
                             return GetChild(0);
                         }
+
                         break;
                     case UiaCore.NavigateDirection.LastChild:
                         if (GetChildCount() > 0)
                         {
                             return GetChild(GetChildCount() - 1);
                         }
+
                         break;
                 }
 
@@ -259,32 +265,18 @@ namespace System.Windows.Forms
                 return base.IsPatternSupported(patternId);
             }
 
-            internal override object? GetPropertyValue(UiaCore.UIA propertyId)
-            {
-                switch (propertyId)
+            internal override object? GetPropertyValue(UiaCore.UIA propertyId) =>
+                propertyId switch
                 {
-                    case UiaCore.UIA.NamePropertyId:
-                        return SR.DataGridView_AccTopRow;
-                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
-                    case UiaCore.UIA.HasKeyboardFocusPropertyId:
-                        return false;
-                    case UiaCore.UIA.IsEnabledPropertyId:
-                        return _ownerDataGridView is null ? throw new InvalidOperationException(SR.DataGridViewTopRowAccessibleObject_OwnerNotSet) : _ownerDataGridView.Enabled;
-                    case UiaCore.UIA.IsOffscreenPropertyId:
-                        return false;
-                    case UiaCore.UIA.IsContentElementPropertyId:
-                        return true;
-                    case UiaCore.UIA.IsPasswordPropertyId:
-                        return false;
-                    case UiaCore.UIA.AccessKeyPropertyId:
-                    case UiaCore.UIA.HelpTextPropertyId:
-                        return string.Empty;
-                    case UiaCore.UIA.IsLegacyIAccessiblePatternAvailablePropertyId:
-                        return true;
-                }
-
-                return base.GetPropertyValue(propertyId);
-            }
+                    UiaCore.UIA.HasKeyboardFocusPropertyId => false,
+                    UiaCore.UIA.IsContentElementPropertyId => true,
+                    UiaCore.UIA.IsEnabledPropertyId => _ownerDataGridView is null
+                        ? throw new InvalidOperationException(SR.DataGridViewTopRowAccessibleObject_OwnerNotSet)
+                        : _ownerDataGridView.Enabled,
+                    UiaCore.UIA.IsKeyboardFocusablePropertyId => false,
+                    UiaCore.UIA.IsOffscreenPropertyId => false,
+                    _ => base.GetPropertyValue(propertyId)
+                };
 
             #endregion
         }

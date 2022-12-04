@@ -2,18 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
-using static Interop;
 
 namespace System.Windows.Forms
 {
     /// <summary>
-    ///  Provides data for the <see cref='Control.Paint'/> event.
+    ///  Provides data for the <see cref="Control.Paint"/> event.
     /// </summary>
     /// <remarks>
     ///  Please keep this class consistent with <see cref="PrintPageEventArgs"/>.
@@ -31,7 +28,7 @@ namespace System.Windows.Forms
         ///  We can potentially optimize further by skipping the save when we only use <see cref="GraphicsInternal"/>
         ///  as we shouldn't have messed with the clipping there.
         /// </remarks>
-        private GraphicsState _savedGraphicsState;
+        private GraphicsState? _savedGraphicsState;
 
         public PaintEventArgs(Graphics graphics, Rectangle clipRect) : this(
             graphics,
@@ -45,7 +42,7 @@ namespace System.Windows.Forms
             PaintEventArgs e,
             Rectangle clipRect)
         {
-            Gdi32.HDC hdc = e.HDC;
+            HDC hdc = e.HDC;
             _event = hdc.IsNull
                 ? new DrawingEventArgs(e.GraphicsInternal, clipRect, e._event.Flags)
                 : new DrawingEventArgs(hdc, clipRect, e._event.Flags);
@@ -64,7 +61,7 @@ namespace System.Windows.Forms
         ///  Internal version of constructor for performance. We try to avoid getting the graphics object until needed.
         /// </summary>
         internal PaintEventArgs(
-            Gdi32.HDC hdc,
+            HDC hdc,
             Rectangle clipRect,
             DrawingEventFlags flags = DrawingEventFlags.CheckState)
         {
@@ -79,12 +76,12 @@ namespace System.Windows.Forms
         public Rectangle ClipRectangle => _event.ClipRectangle;
 
         /// <summary>
-        ///  Gets the <see cref='Drawing.Graphics'/> object used to paint.
+        ///  Gets the <see cref="Drawing.Graphics"/> object used to paint.
         /// </summary>
         public Graphics Graphics => _event.Graphics;
 
         /// <summary>
-        ///  Disposes of the resources (other than memory) used by the <see cref='PaintEventArgs'/>.
+        ///  Disposes of the resources (other than memory) used by the <see cref="PaintEventArgs"/>.
         /// </summary>
         public void Dispose()
         {
@@ -102,10 +99,10 @@ namespace System.Windows.Forms
         /// </summary>
         internal void ResetGraphics()
         {
-            Graphics graphics = _event.GetGraphics(create: false);
-            if (_event.Flags.HasFlag(DrawingEventFlags.SaveState) && graphics != null)
+            Graphics? graphics = _event.GetGraphics(create: false);
+            if (_event.Flags.HasFlag(DrawingEventFlags.SaveState) && graphics is not null)
             {
-                if (_savedGraphicsState != null)
+                if (_savedGraphicsState is not null)
                 {
                     graphics.Restore(_savedGraphicsState);
                     _savedGraphicsState = null;
@@ -126,14 +123,14 @@ namespace System.Windows.Forms
         internal Graphics GraphicsInternal => _event.GetOrCreateGraphicsInternal(SaveStateIfNeeded);
 
         /// <summary>
-        ///  Returns the <see cref="Gdi32.HDC"/> the event was created off of, if any.
+        ///  Returns the <see cref="HDC"/> the event was created off of, if any.
         /// </summary>
-        internal Gdi32.HDC HDC => _event.HDC;
+        internal HDC HDC => _event.HDC;
 
         IntPtr IDeviceContext.GetHdc() => Graphics?.GetHdc() ?? IntPtr.Zero;
         void IDeviceContext.ReleaseHdc() => Graphics?.ReleaseHdc();
-        Gdi32.HDC IGraphicsHdcProvider.GetHDC() => _event.GetHDC();
-        Graphics IGraphicsHdcProvider.GetGraphics(bool create) => _event.GetGraphics(create);
+        HDC IGraphicsHdcProvider.GetHDC() => _event.GetHDC();
+        Graphics? IGraphicsHdcProvider.GetGraphics(bool create) => _event.GetGraphics(create);
         bool IGraphicsHdcProvider.IsGraphicsStateClean => _event.IsStateClean;
     }
 }

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using Xunit;
 using static Interop;
 using static Interop.UiaCore;
@@ -66,6 +65,7 @@ namespace System.Windows.Forms.Tests
 
         [WinFormsTheory]
         [InlineData((int)UIA.NamePropertyId, "TestName")]
+        [InlineData((int)UIA.LegacyIAccessibleNamePropertyId, "TestName")]
         [InlineData((int)UIA.ControlTypePropertyId, UIA.ButtonControlTypeId)] // If AccessibleRole is Default
         [InlineData((int)UIA.IsKeyboardFocusablePropertyId, true)]
         [InlineData((int)UIA.AutomationIdPropertyId, "Button1")]

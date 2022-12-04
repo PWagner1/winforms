@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Collections;
 using System.ComponentModel;
 
@@ -11,13 +9,13 @@ namespace System.Windows.Forms
 {
     public partial class ListBox
     {
-        public class SelectedIndexCollection : IList
+        public partial class SelectedIndexCollection : IList
         {
             private readonly ListBox _owner;
 
             public SelectedIndexCollection(ListBox owner)
             {
-                _owner = owner ?? throw new ArgumentNullException(nameof(owner));
+                _owner = owner.OrThrowIfNull();
             }
 
             /// <summary>
@@ -69,11 +67,11 @@ namespace System.Windows.Forms
                 return IndexOf(selectedIndex) != -1;
             }
 
-            bool IList.Contains(object selectedIndex)
+            bool IList.Contains(object? selectedIndex)
             {
-                if (selectedIndex is int)
+                if (selectedIndex is int selectedIndexAsInt)
                 {
-                    return Contains((int)selectedIndex);
+                    return Contains(selectedIndexAsInt);
                 }
                 else
                 {
@@ -97,11 +95,11 @@ namespace System.Windows.Forms
                 return -1;
             }
 
-            int IList.IndexOf(object selectedIndex)
+            int IList.IndexOf(object? selectedIndex)
             {
-                if (selectedIndex is int)
+                if (selectedIndex is int selectedIndexAsInt)
                 {
-                    return IndexOf((int)selectedIndex);
+                    return IndexOf(selectedIndexAsInt);
                 }
                 else
                 {
@@ -109,7 +107,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            int IList.Add(object value)
+            int IList.Add(object? value)
             {
                 throw new NotSupportedException(SR.ListBoxSelectedIndexCollectionIsReadOnly);
             }
@@ -119,12 +117,12 @@ namespace System.Windows.Forms
                 throw new NotSupportedException(SR.ListBoxSelectedIndexCollectionIsReadOnly);
             }
 
-            void IList.Insert(int index, object value)
+            void IList.Insert(int index, object? value)
             {
                 throw new NotSupportedException(SR.ListBoxSelectedIndexCollectionIsReadOnly);
             }
 
-            void IList.Remove(object value)
+            void IList.Remove(object? value)
             {
                 throw new NotSupportedException(SR.ListBoxSelectedIndexCollectionIsReadOnly);
             }
@@ -146,7 +144,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            object IList.this[int index]
+            object? IList.this[int index]
             {
                 get
                 {
@@ -182,18 +180,15 @@ namespace System.Windows.Forms
 
             public void Clear()
             {
-                if (_owner != null)
-                {
-                    _owner.ClearSelected();
-                }
+                _owner?.ClearSelected();
             }
 
             public void Add(int index)
             {
-                if (_owner != null)
+                if (_owner is not null)
                 {
                     ObjectCollection items = _owner.Items;
-                    if (items != null)
+                    if (items is not null)
                     {
                         if (index != -1 && !Contains(index))
                         {
@@ -205,10 +200,10 @@ namespace System.Windows.Forms
 
             public void Remove(int index)
             {
-                if (_owner != null)
+                if (_owner is not null)
                 {
                     ObjectCollection items = _owner.Items;
-                    if (items != null)
+                    if (items is not null)
                     {
                         if (index != -1 && Contains(index))
                         {
@@ -221,66 +216,6 @@ namespace System.Windows.Forms
             public IEnumerator GetEnumerator()
             {
                 return new SelectedIndexEnumerator(this);
-            }
-
-            /// <summary>
-            ///  EntryEnumerator is an enumerator that will enumerate over
-            ///  a given state mask.
-            /// </summary>
-            private class SelectedIndexEnumerator : IEnumerator
-            {
-                private readonly SelectedIndexCollection items;
-                private int current;
-
-                /// <summary>
-                ///  Creates a new enumerator that will enumerate over the given state.
-                /// </summary>
-                public SelectedIndexEnumerator(SelectedIndexCollection items)
-                {
-                    this.items = items;
-                    current = -1;
-                }
-
-                /// <summary>
-                ///  Moves to the next element, or returns false if at the end.
-                /// </summary>
-                bool IEnumerator.MoveNext()
-                {
-                    if (current < items.Count - 1)
-                    {
-                        current++;
-                        return true;
-                    }
-                    else
-                    {
-                        current = items.Count;
-                        return false;
-                    }
-                }
-
-                /// <summary>
-                ///  Resets the enumeration back to the beginning.
-                /// </summary>
-                void IEnumerator.Reset()
-                {
-                    current = -1;
-                }
-
-                /// <summary>
-                ///  Retrieves the current value in the enumerator.
-                /// </summary>
-                object IEnumerator.Current
-                {
-                    get
-                    {
-                        if (current == -1 || current == items.Count)
-                        {
-                            throw new InvalidOperationException(SR.ListEnumCurrentOutOfRange);
-                        }
-
-                        return items[current];
-                    }
-                }
             }
         }
     }

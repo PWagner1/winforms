@@ -2,20 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
 using Moq;
-using WinForms.Common.Tests;
+using System.Windows.Forms.TestUtilities;
 using Xunit;
 using static Interop;
+using Point = System.Drawing.Point;
+using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Tests
 {
-    using Point = System.Drawing.Point;
-    using Size = System.Drawing.Size;
-
     public class TabControlTests : IClassFixture<ThreadExceptionFixture>
     {
         [WinFormsFact]
@@ -445,7 +442,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TabAlignment))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TabAlignment))]
         public void TabControl_Alignment_SetInvalidValue_ThrowsInvalidEnumArgumentException(TabAlignment value)
         {
             using var control = new TabControl();
@@ -474,7 +471,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TabAppearance))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TabAppearance))]
         public void TabControl_Appearance_Set_GetReturnsExpected(TabAppearance value)
         {
             using var control = new TabControl
@@ -522,7 +519,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TabAppearance))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TabAppearance))]
         public void TabControl_Appearance_SetInvalidValue_ThrowsInvalidEnumArgumentException(TabAppearance value)
         {
             using var control = new TabControl();
@@ -593,6 +590,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(EventArgs.Empty, e);
                 callCount++;
             }
+
             control.BackColorChanged += handler;
 
             // Set different.
@@ -618,7 +616,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetImageTheoryData))]
         public void TabControl_BackgroundImage_Set_GetReturnsExpected(Image value)
         {
             using var control = new TabControl
@@ -645,6 +643,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(EventArgs.Empty, e);
                 callCount++;
             }
+
             control.BackgroundImageChanged += handler;
 
             // Set different.
@@ -677,7 +676,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ImageLayout))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ImageLayout))]
         public void TabControl_BackgroundImageLayout_Set_GetReturnsExpected(ImageLayout value)
         {
             using var control = new SubTabControl
@@ -706,6 +705,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(EventArgs.Empty, e);
                 callCount++;
             }
+
             control.BackgroundImageLayoutChanged += handler;
 
             // Set different.
@@ -731,7 +731,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImageLayout))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImageLayout))]
         public void TabControl_BackgroundImageLayout_SetInvalid_ThrowsInvalidEnumArgumentException(ImageLayout value)
         {
             using var control = new TabControl();
@@ -792,7 +792,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TabControl_DoubleBuffered_Get_ReturnsExpected(bool value)
         {
             using var control = new SubTabControl();
@@ -801,7 +801,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TabControl_DoubleBuffered_Set_GetReturnsExpected(bool value)
         {
             using var control = new SubTabControl
@@ -826,7 +826,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TabControl_DoubleBuffered_SetWithHandle_GetReturnsExpected(bool value)
         {
             using var control = new SubTabControl();
@@ -866,7 +866,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TabDrawMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TabDrawMode))]
         public void TabControl_DrawMode_Set_GetReturnsExpected(TabDrawMode value)
         {
             using var control = new TabControl
@@ -913,7 +913,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TabDrawMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TabDrawMode))]
         public void TabControl_DrawMode_SetInvalidValue_ThrowsInvalidEnumArgumentException(TabDrawMode value)
         {
             using var control = new TabControl();
@@ -921,7 +921,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetForeColorTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetForeColorTheoryData))]
         public void TabControl_ForeColor_Set_GetReturnsExpected(Color value, Color expected)
         {
             using var control = new TabControl
@@ -984,6 +984,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(EventArgs.Empty, e);
                 callCount++;
             }
+
             control.ForeColorChanged += handler;
 
             // Set different.
@@ -1013,7 +1014,7 @@ namespace System.Windows.Forms.Tests
         {
             using var control = new TabControl();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
-            Assert.Equal(IntPtr.Zero, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETIMAGELIST, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETIMAGELIST));
         }
 
         [WinFormsFact]
@@ -1025,7 +1026,7 @@ namespace System.Windows.Forms.Tests
                 ImageList = imageList
             };
             Assert.NotEqual(IntPtr.Zero, control.Handle);
-            Assert.Equal(imageList.Handle, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETIMAGELIST, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal((nint)imageList.Handle, (nint)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETIMAGELIST));
         }
 
         [WinFormsFact]
@@ -1033,7 +1034,7 @@ namespace System.Windows.Forms.Tests
         {
             using var control = new TabControl();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
-            Assert.Equal(IntPtr.Zero, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
         }
 
         [WinFormsTheory]
@@ -1055,34 +1056,34 @@ namespace System.Windows.Forms.Tests
             control.TabPages.Add(page2);
             control.TabPages.Add(page3);
             Assert.NotEqual(IntPtr.Zero, control.Handle);
-            Assert.Equal((IntPtr)3, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(3, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
 
             char* buffer = stackalloc char[256];
             ComCtl32.TCITEMW item = default;
             item.cchTextMax = int.MaxValue;
             item.pszText = buffer;
-            item.dwStateMask = (ComCtl32.TCIS)uint.MaxValue;
-            item.mask = (ComCtl32.TCIF)uint.MaxValue;
+            item.dwStateMask = (TAB_CONTROL_ITEM_STATE)uint.MaxValue;
+            item.mask = (TCITEMHEADERA_MASK)uint.MaxValue;
 
             // Get item 0.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)0, ref item));
-            Assert.Equal(ComCtl32.TCIS.BUTTONPRESSED, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETITEMW, 0, ref item));
+            Assert.Equal(TAB_CONTROL_ITEM_STATE.TCIS_BUTTONPRESSED, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
             Assert.Equal(-1, item.iImage);
 
             // Get item 1.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)1, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETITEMW, 1, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Equal(expectedText, new string(item.pszText));
             Assert.Equal(1, item.iImage);
 
             // Get item 2.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)2, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETITEMW, 2, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
@@ -1090,7 +1091,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TabControl_HotTrack_Set_GetReturnsExpected(bool value)
         {
             using var control = new SubTabControl
@@ -1284,7 +1285,7 @@ namespace System.Windows.Forms.Tests
         public void TabControl_ImageList_Set_CreatesImageHandle()
         {
             using var control = new TabControl();
-            using var imageList =  new ImageList();
+            using var imageList = new ImageList();
             control.ImageList = imageList;
             Assert.True(imageList.HandleCreated);
             Assert.False(control.IsHandleCreated);
@@ -1297,14 +1298,14 @@ namespace System.Windows.Forms.Tests
             Assert.NotEqual(IntPtr.Zero, control.Handle);
 
             // Set non-null.
-            using var imageList =  new ImageList();
+            using var imageList = new ImageList();
             control.ImageList = imageList;
             Assert.True(imageList.HandleCreated);
-            Assert.Equal(imageList.Handle, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETIMAGELIST, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal((nint)imageList.Handle, (nint)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETIMAGELIST));
 
             // Set null.
             control.ImageList = null;
-            Assert.Equal(IntPtr.Zero, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETIMAGELIST, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETIMAGELIST));
         }
 
         [WinFormsFact]
@@ -1421,7 +1422,7 @@ namespace System.Windows.Forms.Tests
             imageList1.ImageSize = new Size(1, 2);
             Assert.Equal(1, recreateCallCount1);
             Assert.Same(imageList1, control.ImageList);
-            Assert.Equal(imageList1.Handle, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETIMAGELIST, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal((nint)imageList1.Handle, (nint)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETIMAGELIST));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1432,7 +1433,7 @@ namespace System.Windows.Forms.Tests
             imageList1.ImageSize = new Size(2, 3);
             Assert.Equal(2, recreateCallCount1);
             Assert.Same(imageList2, control.ImageList);
-            Assert.Equal(imageList2.Handle, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETIMAGELIST, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal((nint)imageList2.Handle, (nint)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETIMAGELIST));
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -2235,6 +2236,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(deselectingCallCount, selectedIndexChangedCallCount);
                 deselectingCallCount++;
             }
+
             void deselectedHandler(object sender, TabControlEventArgs e)
             {
                 Assert.Same(control, sender);
@@ -2246,6 +2248,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(deselectedCallCount, selectedIndexChangedCallCount);
                 deselectedCallCount++;
             }
+
             void selectingHandler(object sender, TabControlCancelEventArgs e)
             {
                 Assert.Same(control, sender);
@@ -2257,6 +2260,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(selectingCallCount, selectedIndexChangedCallCount);
                 selectingCallCount++;
             }
+
             void selectedHandler(object sender, TabControlEventArgs e)
             {
                 Assert.Same(control, sender);
@@ -2266,12 +2270,14 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(selectedCallCount, selectedIndexChangedCallCount);
                 selectedCallCount++;
             }
+
             void selectedIndexChangedHandler(object sender, EventArgs e)
             {
                 Assert.Same(control, sender);
                 Assert.Same(EventArgs.Empty, e);
                 selectedIndexChangedCallCount++;
             }
+
             control.Deselecting += deselectingHandler;
             control.Deselected += deselectedHandler;
             control.Selecting += selectingHandler;
@@ -2345,6 +2351,7 @@ namespace System.Windows.Forms.Tests
 
                 e.Cancel = true;
             }
+
             void deselectedHandler(object sender, TabControlEventArgs e) => deselectedCallCount++;
             void selectingHandler(object sender, TabControlCancelEventArgs e) => selectingCallCount++;
             void selectedHandler(object sender, TabControlEventArgs e) => selectedCallCount++;
@@ -2420,6 +2427,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(0, selectedIndexChangedCallCount);
                 deselectingCallCount++;
             }
+
             void deselectedHandler(object sender, TabControlEventArgs e)
             {
                 Assert.Same(control, sender);
@@ -2431,6 +2439,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(0, selectedIndexChangedCallCount);
                 deselectedCallCount++;
             }
+
             void selectingHandler(object sender, TabControlCancelEventArgs e)
             {
                 Assert.Same(control, sender);
@@ -2444,6 +2453,7 @@ namespace System.Windows.Forms.Tests
 
                 e.Cancel = true;
             }
+
             void selectedHandler(object sender, TabControlEventArgs e) => selectedCallCount++;
             void selectedIndexChangedHandler(object sender, EventArgs e) => selectedIndexChangedCallCount++;
             control.Deselecting += deselectingHandler;
@@ -2784,7 +2794,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TabSizeMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(TabSizeMode))]
         public void TabControl_SizeMode_Set_GetReturnsExpected(TabSizeMode value)
         {
             using var control = new TabControl
@@ -2832,7 +2842,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TabSizeMode))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(TabSizeMode))]
         public void TabControl_SizeMode_SetInvalidValue_ThrowsInvalidEnumArgumentException(TabSizeMode value)
         {
             using var control = new TabControl();
@@ -2840,7 +2850,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetBoolTheoryData))]
         public void TabControl_ShowToolTips_Set_GetReturnsExpected(bool value)
         {
             using var control = new SubTabControl
@@ -2900,7 +2910,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TabControl_Text_Set_GetReturnsExpected(string value, string expected)
         {
             using var control = new TabControl
@@ -2917,7 +2927,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void TabControl_Text_SetWithHandle_GetReturnsExpected(string value, string expected)
         {
             using var control = new TabControl();
@@ -2956,6 +2966,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(EventArgs.Empty, e);
                 callCount++;
             }
+
             control.TextChanged += handler;
 
             // Set different.
@@ -3725,9 +3736,9 @@ namespace System.Windows.Forms.Tests
         {
             public RECT GetItemRectResult { get; set; }
 
-            protected unsafe override void WndProc(ref Message m)
+            protected override unsafe void WndProc(ref Message m)
             {
-                if (m.Msg == (int)ComCtl32.TCM.GETITEMRECT)
+                if (m.Msg == (int)PInvoke.TCM_GETITEMRECT)
                 {
                     RECT* pRect = (RECT*)m.LParam;
                     *pRect = GetItemRectResult;
@@ -3755,9 +3766,9 @@ namespace System.Windows.Forms.Tests
         {
             public bool MakeInvalid { get; set; }
 
-            protected unsafe override void WndProc(ref Message m)
+            protected override unsafe void WndProc(ref Message m)
             {
-                if (MakeInvalid && m.Msg == (int)ComCtl32.TCM.GETITEMRECT)
+                if (MakeInvalid && m.Msg == (int)PInvoke.TCM_GETITEMRECT)
                 {
                     RECT* pRect = (RECT*)m.LParam;
                     *pRect = new RECT(1, 2, 3, 4);
@@ -3947,7 +3958,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsFact]
-        public void TabControl_GetToolTipText_Invoke_ReturnsExpectd()
+        public void TabControl_GetToolTipText_Invoke_ReturnsExpected()
         {
             using var control = new SubTabControl();
             using var item = new TabPage
@@ -4138,12 +4149,14 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(callCount, leaveCallCount1);
                 callCount++;
             }
+
             void leaveHandler1(object sender, EventArgs e)
             {
                 Assert.Same(page1, sender);
                 Assert.Same(EventArgs.Empty, e);
                 leaveCallCount1++;
             }
+
             void leaveHandler2(object sender, EventArgs e) => leaveCallCount2++;
 
             // Call with handler.
@@ -4194,11 +4207,13 @@ namespace System.Windows.Forms.Tests
             control.OnDeselecting(eventArgs);
             Assert.Equal(1, callCount);
         }
+
         public static IEnumerable<object[]> DrawItemEventArgs_TestData()
         {
-            using var bitmap = new Bitmap(10, 10);
-            using Graphics graphics = Graphics.FromImage(bitmap);
             yield return new object[] { null };
+
+            var bitmap = new Bitmap(10, 10);
+            Graphics graphics = Graphics.FromImage(bitmap);
             yield return new object[] { new DrawItemEventArgs(graphics, null, new Rectangle(1, 2, 3, 4), 0, DrawItemState.Checked) };
         }
 
@@ -4227,7 +4242,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TabControl_OnEnter_Invoke_CallsEnter(EventArgs eventArgs)
         {
             using var control = new SubTabControl();
@@ -4251,7 +4266,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TabControl_OnEnter_InvokeWithSelectedTab_CallsEnter(EventArgs eventArgs)
         {
             using var control = new SubTabControl();
@@ -4296,7 +4311,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TabControl_OnHandleCreated_Invoke_CallsHandleCreated(EventArgs eventArgs)
         {
             using var control = new SubTabControl();
@@ -4322,7 +4337,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TabControl_OnHandleCreated_InvokeWithHandle_CallsHandleCreated(EventArgs eventArgs)
         {
             using var control = new SubTabControl();
@@ -4349,7 +4364,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TabControl_OnHandleDestroyed_Invoke_CallsHandleDestroyed(EventArgs eventArgs)
         {
             using var control = new SubTabControl();
@@ -4375,7 +4390,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TabControl_OnHandleDestroyed_InvokeWithHandle_CallsHandleDestroyed(EventArgs eventArgs)
         {
             using var control = new SubTabControl();
@@ -4402,7 +4417,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TabControl_OnLeave_Invoke_CallsLeave(EventArgs eventArgs)
         {
             using var control = new SubTabControl();
@@ -4426,7 +4441,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TabControl_OnLeave_InvokeWithSelectedTab_CallsLeave(EventArgs eventArgs)
         {
             using var control = new SubTabControl();
@@ -4608,12 +4623,14 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal(callCount, enterCallCount1);
                 callCount++;
             }
+
             void enterHandler1(object sender, EventArgs e)
             {
                 Assert.Same(page1, sender);
                 Assert.Same(EventArgs.Empty, e);
                 enterCallCount1++;
             }
+
             void enterHandler2(object sender, EventArgs e) => enterCallCount2++;
 
             // Call with handler.
@@ -4636,7 +4653,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TabControl_OnSelectedIndexChanged_Invoke_CallsSelectedIndexChanged(EventArgs eventArgs)
         {
             using var control = new SubTabControl();
@@ -4662,7 +4679,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TabControl_OnSelectedIndexChanged_InvokeWithPages_CallsSelectedIndexChanged(EventArgs eventArgs)
         {
             using var control = new SubTabControl();
@@ -4696,7 +4713,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TabControl_OnSelectedIndexChanged_InvokeWithHandle_CallsSelectedIndexChanged(EventArgs eventArgs)
         {
             using var control = new SubTabControl();
@@ -4743,7 +4760,7 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetEventArgsTheoryData))]
+        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetEventArgsTheoryData))]
         public void TabControl_OnSelectedIndexChanged_InvokeWithHandleWithPages_CallsSelectedIndexChanged(EventArgs eventArgs)
         {
             using var control = new SubTabControl();
@@ -4906,34 +4923,34 @@ namespace System.Windows.Forms.Tests
             control.TabPages.Add(page3);
 
             control.RecreateHandle();
-            Assert.Equal((IntPtr)3, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(3, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
 
             char* buffer = stackalloc char[256];
             ComCtl32.TCITEMW item = default;
             item.cchTextMax = int.MaxValue;
             item.pszText = buffer;
-            item.dwStateMask = (ComCtl32.TCIS)uint.MaxValue;
-            item.mask = (ComCtl32.TCIF)uint.MaxValue;
+            item.dwStateMask = (TAB_CONTROL_ITEM_STATE)uint.MaxValue;
+            item.mask = (TCITEMHEADERA_MASK)uint.MaxValue;
 
             // Get item 0.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)0, ref item));
-            Assert.Equal(ComCtl32.TCIS.BUTTONPRESSED, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETITEMW, 0, ref item));
+            Assert.Equal(TAB_CONTROL_ITEM_STATE.TCIS_BUTTONPRESSED, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
             Assert.Equal(-1, item.iImage);
 
             // Get item 1.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)1, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETITEMW, 1, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Equal(expectedText, new string(item.pszText));
             Assert.Equal(1, item.iImage);
 
             // Get item 2.
-            Assert.Equal((IntPtr)1, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETITEMW, (IntPtr)2, ref item));
-            Assert.Equal((ComCtl32.TCIS)0, item.dwState);
+            Assert.Equal(1, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETITEMW, 2, ref item));
+            Assert.Equal((TAB_CONTROL_ITEM_STATE)0, item.dwState);
             Assert.Equal(IntPtr.Zero, item.lParam);
             Assert.Equal(int.MaxValue, item.cchTextMax);
             Assert.Empty(new string(item.pszText));
@@ -4991,6 +5008,7 @@ namespace System.Windows.Forms.Tests
                 Assert.Equal("Parent", e.AffectedProperty);
                 layoutCallCount++;
             }
+
             control.Layout += layoutHandler;
             int controlRemovedCallCount = 0;
             control.ControlRemoved += (sender, e) => controlRemovedCallCount++;
@@ -5104,7 +5122,8 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(child3, e.AffectedControl);
                 Assert.Equal("Parent", e.AffectedProperty);
                 layoutCallCount++;
-            };
+            }
+
             control.Layout += layoutHandler;
 
             try
@@ -5161,7 +5180,7 @@ namespace System.Windows.Forms.Tests
 
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             control.RemoveAll();
-            Assert.Equal((IntPtr)0, User32.SendMessageW(control.Handle, (User32.WM)ComCtl32.TCM.GETITEMCOUNT, IntPtr.Zero, IntPtr.Zero));
+            Assert.Equal(0, (int)PInvoke.SendMessage(control, (User32.WM)PInvoke.TCM_GETITEMCOUNT));
         }
 
         [WinFormsFact]
@@ -5657,6 +5676,26 @@ namespace System.Windows.Forms.Tests
             control.TabPages.Add(page1);
             control.TabPages.Add(page2);
             Assert.Equal("System.Windows.Forms.TabControl, TabPages.Count: 2, TabPages[0]: TabPage: {text1}", control.ToString());
+        }
+
+        [WinFormsFact]
+        public void TabControl_Invokes_SetToolTip_IfExternalToolTipIsSet()
+        {
+            using TabControl control = new TabControl() { ShowToolTips = true };
+            using ToolTip toolTip = new ToolTip();
+            control.CreateControl();
+
+            dynamic tabControl = control.TestAccessor().Dynamic;
+            string actual = tabControl._controlTipText;
+
+            Assert.Empty(actual);
+            Assert.NotEqual(IntPtr.Zero, toolTip.Handle); // A workaround to create the toolTip native window Handle
+
+            string text = "Some test text";
+            toolTip.SetToolTip(control, text); // Invokes TabControl's SetToolTip inside
+            actual = tabControl._controlTipText;
+
+            Assert.Equal(text, actual);
         }
 
         private class SubTabPage : TabPage

@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms.Layout;
@@ -44,11 +42,15 @@ namespace System.Windows.Forms.ButtonInternal
                 state != CheckState.Indeterminate && IsHighContrastHighlighted() ? SystemColors.HighlightText : colors.WindowText,
                 drawFocus: true);
 
-            DrawDefaultBorder(e, r, colors.Options.HighContrast ? colors.WindowText : colors.ButtonShadow, Control.IsDefault);
+            Color borderColor = colors.Options.HighContrast
+                ? colors.WindowText
+                : GetContrastingBorderColor(colors.ButtonShadow);
+
+            DrawDefaultBorder(e, r, borderColor, Control.IsDefault);
 
             if (state == CheckState.Unchecked)
             {
-                ControlPaint.DrawBorderSimple(e, r, colors.Options.HighContrast ? colors.WindowText : colors.ButtonShadow);
+                ControlPaint.DrawBorderSimple(e, r, borderColor);
             }
             else
             {
@@ -125,6 +127,7 @@ namespace System.Windows.Forms.ButtonInternal
             {
                 r.Inflate(-1, -1);
             }
+
             r.Inflate(-1, -1);
 
             PaintImage(e, layout);
@@ -132,7 +135,7 @@ namespace System.Windows.Forms.ButtonInternal
 
             r.Inflate(1, 1);
             DrawDefaultBorder(e, r, colors.Options.HighContrast ? colors.WindowText : colors.WindowFrame, Control.IsDefault);
-            ControlPaint.DrawBorderSimple(e, r, colors.Options.HighContrast ? colors.WindowText : colors.ButtonShadow);
+            ControlPaint.DrawBorderSimple(e, r, colors.Options.HighContrast ? colors.WindowText : GetContrastingBorderColor(colors.ButtonShadow));
         }
 
         #region Layout
@@ -140,8 +143,8 @@ namespace System.Windows.Forms.ButtonInternal
         protected override LayoutOptions Layout(PaintEventArgs e)
         {
             LayoutOptions layout = PaintPopupLayout(e, up: false, 0);
-            Debug.Assert(layout.GetPreferredSizeCore(LayoutUtils.MaxSize)
-                == PaintPopupLayout(e, up: true, 2).GetPreferredSizeCore(LayoutUtils.MaxSize),
+            Debug.Assert(layout.GetPreferredSizeCore(LayoutUtils.s_maxSize)
+                == PaintPopupLayout(e, up: true, 2).GetPreferredSizeCore(LayoutUtils.s_maxSize),
                 "The state of up should not effect PreferredSize");
             return layout;
         }
@@ -167,7 +170,7 @@ namespace System.Windows.Forms.ButtonInternal
             layout.ShadowedText = SystemInformation.HighContrast;
 
             Debug.Assert(layout.BorderSize + layout.PaddingSize == 2,
-                "It is assemed borderSize + paddingSize will always be 2. Bad value for paintedBorder?");
+                "It is assumed borderSize + paddingSize will always be 2. Bad value for paintedBorder?");
 
             return layout;
         }
@@ -176,7 +179,7 @@ namespace System.Windows.Forms.ButtonInternal
         {
             LayoutOptions layout = CommonLayout();
             layout.BorderSize = paintedBorder;
-            layout.PaddingSize = 2 - paintedBorder;//3 - paintedBorder - (Control.IsDefault ? 1 : 0);
+            layout.PaddingSize = 2 - paintedBorder; //3 - paintedBorder - (Control.IsDefault ? 1 : 0);
             layout.HintTextUp = false;
             layout.TextOffset = !up;
             layout.ShadowedText = SystemInformation.HighContrast;

@@ -2,9 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Runtime.InteropServices;
@@ -30,9 +29,10 @@ namespace System.Windows.Forms
         private Padding _scaledDefaultMargin = s_defaultMargin;
         private Padding _scaledDefaultDropDownMargin = s_defaultDropDownMargin;
 
-        public ToolStripTextBox() : base(CreateControlInstance())
+        public ToolStripTextBox()
+            : base(CreateControlInstance())
         {
-            ToolStripTextBoxControl textBox = Control as ToolStripTextBoxControl;
+            ToolStripTextBoxControl textBox = (ToolStripTextBoxControl)Control;
             textBox.Owner = this;
 
             if (DpiHelper.IsScalingRequirementMet)
@@ -42,13 +42,15 @@ namespace System.Windows.Forms
             }
         }
 
-        public ToolStripTextBox(string name) : this()
+        public ToolStripTextBox(string? name)
+            : this()
         {
             Name = name;
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public ToolStripTextBox(Control c) : base(c)
+        public ToolStripTextBox(Control c)
+            : base(c)
         {
             throw new NotSupportedException(SR.ToolStripMustSupplyItsOwnTextBox);
         }
@@ -56,7 +58,7 @@ namespace System.Windows.Forms
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public override Image BackgroundImage
+        public override Image? BackgroundImage
         {
             get => base.BackgroundImage;
             set => base.BackgroundImage = value;
@@ -97,13 +99,14 @@ namespace System.Windows.Forms
                 return new Size(100, 22);
             }
         }
+
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TextBox TextBox
         {
             get
             {
-                return Control as TextBox;
+                return (TextBox)Control;
             }
         }
 
@@ -119,69 +122,83 @@ namespace System.Windows.Forms
 
         public override Size GetPreferredSize(Size constrainingSize)
         {
-            // dont call TextBox.GPS because it will grow and shrink as the text changes.
+            // don't call TextBox.GPS because it will grow and shrink as the text changes.
             Rectangle bounds = CommonProperties.GetSpecifiedBounds(TextBox);
             return new Size(bounds.Width, TextBox.PreferredHeight);
         }
-        private void HandleAcceptsTabChanged(object sender, EventArgs e)
+
+        private void HandleAcceptsTabChanged(object? sender, EventArgs e)
         {
             OnAcceptsTabChanged(e);
         }
-        private void HandleBorderStyleChanged(object sender, EventArgs e)
+
+        private void HandleBorderStyleChanged(object? sender, EventArgs e)
         {
             OnBorderStyleChanged(e);
         }
-        private void HandleHideSelectionChanged(object sender, EventArgs e)
+
+        private void HandleHideSelectionChanged(object? sender, EventArgs e)
         {
             OnHideSelectionChanged(e);
         }
-        private void HandleModifiedChanged(object sender, EventArgs e)
+
+        private void HandleModifiedChanged(object? sender, EventArgs e)
         {
             OnModifiedChanged(e);
         }
-        private void HandleMultilineChanged(object sender, EventArgs e)
+
+        private void HandleMultilineChanged(object? sender, EventArgs e)
         {
             OnMultilineChanged(e);
         }
-        private void HandleReadOnlyChanged(object sender, EventArgs e)
+
+        private void HandleReadOnlyChanged(object? sender, EventArgs e)
         {
             OnReadOnlyChanged(e);
         }
-        private void HandleTextBoxTextAlignChanged(object sender, EventArgs e)
+
+#pragma warning disable CA2252 // Suppress 'Opt in to preview features' (https://aka.ms/dotnet-warnings/preview-features)
+        private void HandleTextBoxTextAlignChanged(object? sender, EventArgs e)
         {
             RaiseEvent(s_eventTextBoxTextAlignChanged, e);
         }
+
         protected virtual void OnAcceptsTabChanged(EventArgs e)
         {
             RaiseEvent(s_eventAcceptsTabChanged, e);
         }
+
         protected virtual void OnBorderStyleChanged(EventArgs e)
         {
             RaiseEvent(s_eventBorderStyleChanged, e);
         }
+
         protected virtual void OnHideSelectionChanged(EventArgs e)
         {
             RaiseEvent(s_eventHideSelectionChanged, e);
         }
+
         protected virtual void OnModifiedChanged(EventArgs e)
         {
             RaiseEvent(s_eventModifiedChanged, e);
         }
+
         protected virtual void OnMultilineChanged(EventArgs e)
         {
             RaiseEvent(s_eventMultilineChanged, e);
         }
+
         protected virtual void OnReadOnlyChanged(EventArgs e)
         {
             RaiseEvent(s_eventReadOnlyChanged, e);
         }
+#pragma warning restore CA2252
 
-        protected override void OnSubscribeControlEvents(Control control)
+        protected override void OnSubscribeControlEvents(Control? control)
         {
             if (control is TextBox textBox)
             {
-                // Please keep this alphabetized and in sync with Unsubscribe
-                //
+                // Please keep this alphabetized and in sync with Unsubscribe.
                 textBox.AcceptsTabChanged += new EventHandler(HandleAcceptsTabChanged);
                 textBox.BorderStyleChanged += new EventHandler(HandleBorderStyleChanged);
                 textBox.HideSelectionChanged += new EventHandler(HandleHideSelectionChanged);
@@ -194,12 +211,11 @@ namespace System.Windows.Forms
             base.OnSubscribeControlEvents(control);
         }
 
-        protected override void OnUnsubscribeControlEvents(Control control)
+        protected override void OnUnsubscribeControlEvents(Control? control)
         {
             if (control is TextBox textBox)
             {
-                // Please keep this alphabetized and in sync with Subscribe
-                //
+                // Please keep this alphabetized and in sync with Subscribe.
                 textBox.AcceptsTabChanged -= new EventHandler(HandleAcceptsTabChanged);
                 textBox.BorderStyleChanged -= new EventHandler(HandleBorderStyleChanged);
                 textBox.HideSelectionChanged -= new EventHandler(HandleHideSelectionChanged);
@@ -208,6 +224,7 @@ namespace System.Windows.Forms
                 textBox.ReadOnlyChanged -= new EventHandler(HandleReadOnlyChanged);
                 textBox.TextAlignChanged -= new EventHandler(HandleTextBoxTextAlignChanged);
             }
+
             base.OnUnsubscribeControlEvents(control);
         }
 
@@ -241,6 +258,7 @@ namespace System.Windows.Forms
         [Editor("System.Windows.Forms.Design.ListControlStringCollectionEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
         [Browsable(true)]
         [EditorBrowsable(EditorBrowsableState.Always)]
+        [AllowNull]
         public AutoCompleteStringCollection AutoCompleteCustomSource
         {
             get { return TextBox.AutoCompleteCustomSource; }
@@ -309,6 +327,7 @@ namespace System.Windows.Forms
         [Localizable(true)]
         [SRDescription(nameof(SR.TextBoxLinesDescr))]
         [Editor("System.Windows.Forms.Design.StringArrayEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [AllowNull]
         public string[] Lines
         {
             get { return TextBox.Lines; }
@@ -356,10 +375,12 @@ namespace System.Windows.Forms
             get { return TextBox.ReadOnly; }
             set { TextBox.ReadOnly = value; }
         }
+
         [SRCategory(nameof(SR.CatAppearance))]
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [SRDescription(nameof(SR.TextBoxSelectedTextDescr))]
+        [AllowNull]
         public string SelectedText
         {
             get { return TextBox.SelectedText; }
@@ -375,6 +396,7 @@ namespace System.Windows.Forms
             get { return TextBox.SelectionLength; }
             set { TextBox.SelectionLength = value; }
         }
+
         [SRCategory(nameof(SR.CatAppearance))]
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -384,6 +406,7 @@ namespace System.Windows.Forms
             get { return TextBox.SelectionStart; }
             set { TextBox.SelectionStart = value; }
         }
+
         [SRCategory(nameof(SR.CatBehavior))]
         [DefaultValue(true)]
         [SRDescription(nameof(SR.TextBoxShortcutsEnabledDescr))]
@@ -392,6 +415,7 @@ namespace System.Windows.Forms
             get { return TextBox.ShortcutsEnabled; }
             set { TextBox.ShortcutsEnabled = value; }
         }
+
         [Browsable(false)]
         public int TextLength
         {
@@ -425,7 +449,7 @@ namespace System.Windows.Forms
         #region WrappedEvents
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.TextBoxBaseOnAcceptsTabChangedDescr))]
-        public event EventHandler AcceptsTabChanged
+        public event EventHandler? AcceptsTabChanged
         {
             add => Events.AddHandler(s_eventAcceptsTabChanged, value);
             remove => Events.RemoveHandler(s_eventAcceptsTabChanged, value);
@@ -433,7 +457,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.TextBoxBaseOnBorderStyleChangedDescr))]
-        public event EventHandler BorderStyleChanged
+        public event EventHandler? BorderStyleChanged
         {
             add => Events.AddHandler(s_eventBorderStyleChanged, value);
             remove => Events.RemoveHandler(s_eventBorderStyleChanged, value);
@@ -441,7 +465,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.TextBoxBaseOnHideSelectionChangedDescr))]
-        public event EventHandler HideSelectionChanged
+        public event EventHandler? HideSelectionChanged
         {
             add => Events.AddHandler(s_eventHideSelectionChanged, value);
             remove => Events.RemoveHandler(s_eventHideSelectionChanged, value);
@@ -449,7 +473,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.TextBoxBaseOnModifiedChangedDescr))]
-        public event EventHandler ModifiedChanged
+        public event EventHandler? ModifiedChanged
         {
             add => Events.AddHandler(s_eventModifiedChanged, value);
             remove => Events.RemoveHandler(s_eventModifiedChanged, value);
@@ -459,7 +483,7 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.TextBoxBaseOnMultilineChangedDescr))]
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public event EventHandler MultilineChanged
+        public event EventHandler? MultilineChanged
         {
             add => Events.AddHandler(s_eventMultilineChanged, value);
             remove => Events.RemoveHandler(s_eventMultilineChanged, value);
@@ -467,7 +491,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.TextBoxBaseOnReadOnlyChangedDescr))]
-        public event EventHandler ReadOnlyChanged
+        public event EventHandler? ReadOnlyChanged
         {
             add => Events.AddHandler(s_eventReadOnlyChanged, value);
             remove => Events.RemoveHandler(s_eventReadOnlyChanged, value);
@@ -475,7 +499,7 @@ namespace System.Windows.Forms
 
         [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.ToolStripTextBoxTextBoxTextAlignChangedDescr))]
-        public event EventHandler TextBoxTextAlignChanged
+        public event EventHandler? TextBoxTextAlignChanged
         {
             add => Events.AddHandler(s_eventTextBoxTextAlignChanged, value);
             remove => Events.RemoveHandler(s_eventTextBoxTextAlignChanged, value);
@@ -483,11 +507,11 @@ namespace System.Windows.Forms
         #endregion WrappedEvents
 
         #region WrappedMethods
-        public void AppendText(string text) { TextBox.AppendText(text); }
+        public void AppendText(string? text) { TextBox.AppendText(text); }
         public void Clear() { TextBox.Clear(); }
         public void ClearUndo() { TextBox.ClearUndo(); }
         public void Copy() { TextBox.Copy(); }
-        public void Cut() { TextBox.Copy(); }
+        public void Cut() { TextBox.Cut(); }
         public void DeselectAll() { TextBox.DeselectAll(); }
         public char GetCharFromPosition(Point pt) { return TextBox.GetCharFromPosition(pt); }
         public int GetCharIndexFromPosition(Point pt) { return TextBox.GetCharIndexFromPosition(pt); }

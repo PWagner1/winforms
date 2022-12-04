@@ -2,9 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace System.Drawing.Design
 {
@@ -13,75 +12,38 @@ namespace System.Drawing.Design
     /// </summary>
     internal class Com2ExtendedUITypeEditor : UITypeEditor
     {
-        private readonly UITypeEditor innerEditor;
+        private readonly UITypeEditor? _innerEditor;
 
-        public Com2ExtendedUITypeEditor(UITypeEditor baseTypeEditor)
+        public Com2ExtendedUITypeEditor(UITypeEditor? baseTypeEditor)
         {
-            innerEditor = baseTypeEditor;
+            _innerEditor = baseTypeEditor;
         }
 
-        public Com2ExtendedUITypeEditor(Type baseType)
+        public Com2ExtendedUITypeEditor([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type baseType)
         {
-            innerEditor = (UITypeEditor)TypeDescriptor.GetEditor(baseType, typeof(UITypeEditor));
+            _innerEditor = (UITypeEditor?)TypeDescriptor.GetEditor(baseType, typeof(UITypeEditor));
         }
 
-        public UITypeEditor InnerEditor
-        {
-            get
-            {
-                return innerEditor;
-            }
-        }
+        public UITypeEditor? InnerEditor => _innerEditor;
 
-        public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
-        {
-            if (innerEditor is not null)
-            {
-                return innerEditor.EditValue(context, provider, value);
-            }
-            else
-            {
-                return base.EditValue(context, provider, value);
-            }
-        }
+        public override object? EditValue(ITypeDescriptorContext? context, IServiceProvider provider, object? value)
+            => _innerEditor is not null
+                ? _innerEditor?.EditValue(context, provider, value)
+                : base.EditValue(context, provider, value);
 
-        /// <summary>
-        ///  Determines if this editor supports the painting of a representation
-        ///  of an object's value.
-        /// </summary>
-        public override bool GetPaintValueSupported(ITypeDescriptorContext context)
-        {
-            if (innerEditor is not null)
-            {
-                return innerEditor.GetPaintValueSupported(context);
-            }
-            return base.GetPaintValueSupported(context);
-        }
+        public override bool GetPaintValueSupported(ITypeDescriptorContext? context)
+            => _innerEditor is not null
+                ? _innerEditor.GetPaintValueSupported(context)
+                : base.GetPaintValueSupported(context);
 
-        /// <summary>
-        ///  Retrieves the editing style of the Edit method.  If the method
-        ///  is not supported, this will return None.
-        /// </summary>
-        public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
-        {
-            if (innerEditor is not null)
-            {
-                return innerEditor.GetEditStyle(context);
-            }
-            return base.GetEditStyle(context);
-        }
+        public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext? context)
+            => _innerEditor is not null
+                ? _innerEditor.GetEditStyle(context)
+                : base.GetEditStyle(context);
 
-        /// <summary>
-        ///  Paints a representative value of the given object to the provided
-        ///  canvas.  Painting should be done within the boundaries of the
-        ///  provided rectangle.
-        /// </summary>
         public override void PaintValue(PaintValueEventArgs e)
         {
-            if (innerEditor is not null)
-            {
-                innerEditor.PaintValue(e);
-            }
+            _innerEditor?.PaintValue(e);
             base.PaintValue(e);
         }
     }

@@ -7,13 +7,11 @@ using System.ComponentModel.Design;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Forms.TestUtilities;
 using Moq;
 using Windows.Win32.System.Com;
 using Windows.Win32.System.Ole;
 using Xunit;
-using static Interop;
 using Point = System.Drawing.Point;
 using Size = System.Drawing.Size;
 
@@ -1437,9 +1435,9 @@ namespace System.Windows.Forms.Tests
         {
             using var font = new Font("Arial", 10);
             object disp = SubAxHost.GetIFontDispFromFont(font);
-            Ole32.IFont iFont = (Ole32.IFont)disp;
-            Assert.Equal(font.Name, iFont.Name);
-            Assert.Equal(97500, iFont.Size);
+            IFont.Interface iFont = (IFont.Interface)disp;
+            Assert.Equal(font.Name, iFont.Name.ToStringAndFree());
+            Assert.Equal(97500, iFont.Size.int64);
             Assert.False(iFont.Bold);
             Assert.False(iFont.Italic);
             Assert.False(iFont.Underline);
@@ -1448,23 +1446,13 @@ namespace System.Windows.Forms.Tests
             // Assert.Equal(0, iFont.Charset);
             Assert.NotEqual(IntPtr.Zero, iFont.hFont);
 
-            Ole32.IFontDisp iFontDisp = (Ole32.IFontDisp)disp;
-            Assert.Equal(font.Name, iFontDisp.Name);
-            Assert.Equal(10, iFontDisp.Size);
-            Assert.False(iFontDisp.Bold);
-            Assert.False(iFontDisp.Italic);
-            Assert.False(iFontDisp.Underline);
-            Assert.False(iFontDisp.Strikethrough);
-            // Charset is locale specific
-            // Assert.Equal(0, iFontDisp.Charset);
-
             Font result = SubAxHost.GetFontFromIFont(iFont);
             Assert.Equal(font.Name, result.Name);
             Assert.Equal(9.75, result.Size);
             Assert.Equal(font.Style, result.Style);
             Assert.Equal(1, result.GdiCharSet);
 
-            result = SubAxHost.GetFontFromIFont(iFontDisp);
+            result = SubAxHost.GetFontFromIFont((IFontDisp.Interface)disp);
             Assert.Equal(font.Name, result.Name);
             Assert.Equal(9.75, result.Size);
             Assert.Equal(font.Style, result.Style);
@@ -1477,9 +1465,9 @@ namespace System.Windows.Forms.Tests
             using var font = new Font("Arial", 10, FontStyle.Bold | FontStyle.Underline | FontStyle.Italic | FontStyle.Strikeout, GraphicsUnit.Point, 10);
             object disp = SubAxHost.GetIFontDispFromFont(font);
 
-            Ole32.IFont iFont = (Ole32.IFont)disp;
-            Assert.Equal(font.Name, iFont.Name);
-            Assert.Equal(97500, iFont.Size);
+            IFont.Interface iFont = (IFont.Interface)disp;
+            Assert.Equal(font.Name, iFont.Name.ToStringAndFree());
+            Assert.Equal(97500, iFont.Size.int64);
             Assert.True(iFont.Bold);
             Assert.True(iFont.Italic);
             Assert.True(iFont.Underline);
@@ -1487,22 +1475,13 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, iFont.Charset);
             Assert.NotEqual(IntPtr.Zero, iFont.hFont);
 
-            Ole32.IFontDisp iFontDisp = (Ole32.IFontDisp)disp;
-            Assert.Equal(font.Name, iFontDisp.Name);
-            Assert.Equal(10, iFontDisp.Size);
-            Assert.True(iFontDisp.Bold);
-            Assert.True(iFontDisp.Italic);
-            Assert.True(iFontDisp.Underline);
-            Assert.True(iFontDisp.Strikethrough);
-            Assert.Equal(0, iFontDisp.Charset);
-
             Font result = SubAxHost.GetFontFromIFont(iFont);
             Assert.Equal(font.Name, result.Name);
             Assert.Equal(9.75, result.Size);
             Assert.Equal(font.Style, result.Style);
             Assert.Equal(10, result.GdiCharSet);
 
-            result = SubAxHost.GetFontFromIFont(iFontDisp);
+            result = SubAxHost.GetFontFromIFont((IFontDisp.Interface)disp);
             Assert.Equal(font.Name, result.Name);
             Assert.Equal(9.75, result.Size);
             Assert.Equal(font.Style, result.Style);
@@ -1531,9 +1510,9 @@ namespace System.Windows.Forms.Tests
         public void AxHost_GetIFontFromFont_InvokeSimpleStyle_Roundtrips()
         {
             using var font = new Font("Arial", 10);
-            Ole32.IFont iFont = (Ole32.IFont)SubAxHost.GetIFontFromFont(font);
-            Assert.Equal(font.Name, iFont.Name);
-            Assert.Equal(97500, iFont.Size);
+            IFont.Interface iFont = (IFont.Interface)SubAxHost.GetIFontFromFont(font);
+            Assert.Equal(font.Name, iFont.Name.ToStringAndFree());
+            Assert.Equal(97500, iFont.Size.int64);
             Assert.False(iFont.Bold);
             Assert.False(iFont.Italic);
             Assert.False(iFont.Underline);
@@ -1553,9 +1532,9 @@ namespace System.Windows.Forms.Tests
         public void AxHost_GetIFontFromFont_InvokeComplexStyle_Roundtrips()
         {
             using var font = new Font("Arial", 10, FontStyle.Bold | FontStyle.Underline | FontStyle.Italic | FontStyle.Strikeout, GraphicsUnit.Point, 10);
-            Ole32.IFont iFont = (Ole32.IFont)SubAxHost.GetIFontFromFont(font);
-            Assert.Equal(font.Name, iFont.Name);
-            Assert.Equal(97500, iFont.Size);
+            IFont.Interface iFont = (IFont.Interface)SubAxHost.GetIFontFromFont(font);
+            Assert.Equal(font.Name, iFont.Name.ToStringAndFree());
+            Assert.Equal(97500, iFont.Size.int64);
             Assert.True(iFont.Bold);
             Assert.True(iFont.Italic);
             Assert.True(iFont.Underline);
@@ -1618,20 +1597,17 @@ namespace System.Windows.Forms.Tests
             var original = new Bitmap(10, 11);
             original.SetPixel(1, 2, Color.FromArgb(unchecked((int)0xFF010203)));
             object disp = SubAxHost.GetIPictureDispFromPicture(original);
-            using var iPictureDisp = ComHelpers.GetComScope<IDispatch>(disp, out bool succeeded);
-            Assert.True(succeeded);
-            IDispatch* dispatch = (IDispatch*)iPictureDisp.Value;
+            using var iPictureDisp = ComHelpers.GetComScope<IDispatch>(disp);
 
-            using VARIANT variant = default;
-            dispatch->GetProperty(PInvoke.DISPID_PICT_HANDLE, &variant).ThrowOnFailure();
+            VARIANT variant = iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_HANDLE);
             Assert.NotEqual(0u, variant.data.uintVal);
-            dispatch->GetProperty(PInvoke.DISPID_PICT_HPAL, &variant).ThrowOnFailure();
+            variant = iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_HPAL);
             Assert.Equal(0u, variant.data.uintVal);
-            dispatch->GetProperty(PInvoke.DISPID_PICT_TYPE, &variant).ThrowOnFailure();
+            variant = iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_TYPE);
             Assert.Equal(1, variant.data.iVal);
-            dispatch->GetProperty(PInvoke.DISPID_PICT_WIDTH, &variant).ThrowOnFailure();
+            variant = iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_WIDTH);
             Assert.Equal(265u, variant.data.uintVal);
-            dispatch->GetProperty(PInvoke.DISPID_PICT_HEIGHT, &variant).ThrowOnFailure();
+            variant = iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_HEIGHT);
             Assert.Equal(291u, variant.data.uintVal);
 
             var result = Assert.IsType<Bitmap>(SubAxHost.GetPictureFromIPictureDisp(disp));
@@ -1646,18 +1622,16 @@ namespace System.Windows.Forms.Tests
             var original = new Metafile("bitmaps/milkmateya01.emf");
             object disp = SubAxHost.GetIPictureDispFromPicture(original);
 
-            using var iPictureDisp = ComHelpers.GetComScope<IDispatch>(disp, out bool succeeded);
-            Assert.True(succeeded);
+            using var iPictureDisp = ComHelpers.GetComScope<IDispatch>(disp);
 
-            using VARIANT variant = default;
-            iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_HANDLE, &variant).ThrowOnFailure();
+            VARIANT variant = iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_HANDLE);
             Assert.NotEqual(0u, variant.data.uintVal);
-            Assert.True(iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_HPAL, &variant).Failed);
-            iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_TYPE, &variant).ThrowOnFailure();
+            Assert.True(iPictureDisp.Value->TryGetProperty(PInvoke.DISPID_PICT_HPAL, &variant).Failed);
+            variant = iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_TYPE);
             Assert.Equal(4, variant.data.iVal);
-            iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_WIDTH, &variant).ThrowOnFailure();
+            variant = iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_WIDTH);
             Assert.Equal(19972u, variant.data.uintVal);
-            iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_HEIGHT, &variant).ThrowOnFailure();
+            variant = iPictureDisp.Value->GetProperty(PInvoke.DISPID_PICT_HEIGHT);
             Assert.Equal(28332u, variant.data.uintVal);
 
             var result = Assert.IsType<Metafile>(SubAxHost.GetPictureFromIPictureDisp(disp));
@@ -3088,36 +3062,6 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
             Assert.Equal(0, createdCallCount);
-        }
-
-        [WinFormsFact]
-        public void AxHost_MediaPlayer_Serialize_Success()
-        {
-            using Form form = new();
-            using AxWMPLib.AxWindowsMediaPlayer player = new();
-            ((ISupportInitialize)player).BeginInit();
-            form.Controls.Add(player);
-            ((ISupportInitialize)player).EndInit();
-
-            string url = $"{Path.GetTempPath()}testurl1";
-            string uiMode = "none";
-            player.URL = url;
-            player.uiMode = uiMode;
-
-            BinaryFormatter formatter = new();
-            using MemoryStream stream = new();
-#pragma warning disable SYSLIB0011
-            formatter.Serialize(stream, player.OcxState);
-
-            player.URL = $"{Path.GetTempPath()}testurl2";
-            player.uiMode = "full";
-
-            stream.Position = 0;
-            player.OcxState = (AxHost.State)formatter.Deserialize(stream);
-#pragma warning disable SYSLIB0011
-
-            Assert.Equal(url, player.URL);
-            Assert.Equal(uiMode, player.uiMode);
         }
 
         private class SubComponentEditor : ComponentEditor

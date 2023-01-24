@@ -427,7 +427,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatAppearance))]
         [DefaultValue(BorderStyle.Fixed3D)]
-        [DispId((int)Ole32.DispatchID.BORDERSTYLE)]
+        [DispId(PInvoke.DISPID_BORDERSTYLE)]
         [SRDescription(nameof(SR.borderStyleDescr))]
         public BorderStyle BorderStyle
         {
@@ -3921,7 +3921,7 @@ namespace System.Windows.Forms
 
             // First column must be left aligned
 
-            if (-1 == idx)
+            if (idx == -1)
             {
                 throw new InvalidOperationException(SR.ListViewAddColumnFailed);
             }
@@ -4298,7 +4298,7 @@ namespace System.Windows.Forms
                         _onItemCheck = oldOnItemCheck;
                     }
 
-                    if (-1 == insertIndex)
+                    if (insertIndex == -1)
                     {
                         throw new InvalidOperationException(SR.ListViewAddItemFailed);
                     }
@@ -5139,7 +5139,7 @@ namespace System.Windows.Forms
             }
         }
 
-        internal override void ReleaseUiaProvider(nint handle)
+        internal override void ReleaseUiaProvider(HWND handle)
         {
             if (!OsVersion.IsWindows8OrGreater() || !IsAccessibilityObjectCreated)
             {

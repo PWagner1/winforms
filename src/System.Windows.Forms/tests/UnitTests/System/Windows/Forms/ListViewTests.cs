@@ -4633,7 +4633,7 @@ namespace System.Windows.Forms.Tests
                 foreach (View view in Enum.GetValues(typeof(View)))
                 {
                     // View.Tile is not supported by ListView in virtual mode
-                    if (virtualMode && View.Tile == view)
+                    if (virtualMode && view == View.Tile)
                     {
                         continue;
                     }
@@ -4699,7 +4699,7 @@ namespace System.Windows.Forms.Tests
                 foreach (View view in Enum.GetValues(typeof(View)))
                 {
                     // View.Tile is not supported by ListView in virtual mode
-                    if (virtualMode && View.Tile == view)
+                    if (virtualMode && view == View.Tile)
                     {
                         continue;
                     }
@@ -5745,7 +5745,7 @@ namespace System.Windows.Forms.Tests
             using ListView listView = new();
             _ = listView.AccessibilityObject;
 
-            listView.ReleaseUiaProvider(listView.Handle);
+            listView.ReleaseUiaProvider(listView.HWND);
 
             Assert.Null(listView.TestAccessor().Dynamic._defaultGroup);
             Assert.True(listView.IsHandleCreated);

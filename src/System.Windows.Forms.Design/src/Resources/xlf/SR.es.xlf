@@ -1025,6 +1025,11 @@
         <target state="translated">Establezca el evento {0}.{1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExceptionCollectionInvalidArgument">
+        <source>Argument must only contain objects of type '{0}'.</source>
+        <target state="translated">El argumento solo debe contener objetos de tipo Excepción '{0}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExtenderProviderServiceDuplicateProvider">
         <source>The extender provider {0} has already been added as an extender.  Adding another would result in duplicate properties.</source>
         <target state="translated">El proveedor extensor {0} ya se ha agregado como extensor. Si agrega otro habría propiedades duplicadas.</target>

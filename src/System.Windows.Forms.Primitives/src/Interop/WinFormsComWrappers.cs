@@ -57,13 +57,6 @@ internal partial class Interop
                 return new ErrorInfoWrapper(errorInfoComObject);
             }
 
-            hr = Marshal.QueryInterface(externalComObject, ref IID.GetRef<IEnumFORMATETC>(), out IntPtr enumFormatEtcComObject);
-            if (hr == S_OK)
-            {
-                Marshal.Release(externalComObject);
-                return new EnumFORMATETCWrapper(enumFormatEtcComObject);
-            }
-
             hr = Marshal.QueryInterface(externalComObject, ref IID.GetRef<IEnumVARIANT>(), out IntPtr enumVariantComObject);
             if (hr == S_OK)
             {
@@ -96,6 +89,36 @@ internal partial class Interop
             {
                 TInterface? @object = ComInterfaceDispatch.GetInstance<TInterface>((ComInterfaceDispatch*)@this);
                 return @object is null ? HRESULT.COR_E_OBJECTDISPOSED : func(@object);
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+
+        /// <summary>
+        ///  For the given <paramref name="this"/> pointer unwrap the associated managed object and use it to
+        ///  invoke <paramref name="action"/>.
+        /// </summary>
+        /// <remarks>
+        ///  <para>
+        ///   Handles exceptions and converts to <see cref="HRESULT"/>.
+        ///  </para>
+        /// </remarks>
+        internal static HRESULT UnwrapAndInvoke<TThis, TInterface>(TThis* @this, Action<TInterface> action)
+            where TThis : unmanaged
+            where TInterface : class
+        {
+            try
+            {
+                TInterface? @object = ComInterfaceDispatch.GetInstance<TInterface>((ComInterfaceDispatch*)@this);
+                if (@object is null)
+                {
+                    return HRESULT.COR_E_OBJECTDISPOSED;
+                }
+
+                action(@object);
+                return HRESULT.S_OK;
             }
             catch (Exception ex)
             {

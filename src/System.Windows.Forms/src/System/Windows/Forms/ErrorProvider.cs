@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
@@ -64,7 +63,6 @@ namespace System.Windows.Forms
         /// </summary>
         public ErrorProvider()
         {
-            _icon = DefaultIcon;
             _blinkRate = DefaultBlinkRate;
             _blinkStyle = DefaultBlinkStyle;
             _currentChanged = new EventHandler(ErrorManager_CurrentChanged);
@@ -513,11 +511,9 @@ namespace System.Windows.Forms
                 controlError[dataBinding.Control] = outputError;
             }
 
-            IEnumerator enumerator = controlError.GetEnumerator();
-            while (enumerator.MoveNext())
+            foreach (KeyValuePair<Control, string> entry in controlError)
             {
-                DictionaryEntry entry = (DictionaryEntry)enumerator.Current;
-                SetError((Control)entry.Key, (string?)entry.Value);
+                SetError(entry.Key, entry.Value);
             }
         }
 
@@ -554,44 +550,20 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (t_defaultIcon is null)
+                lock (typeof(ErrorProvider))
                 {
-                    lock (typeof(ErrorProvider))
+                    if (t_defaultIcon is null)
                     {
-                        t_defaultIcon ??= GetDefaultIcon();
+                        // Error provider uses small Icon.
+                        int width = PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXSMICON);
+                        int height = PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYSMICON);
+                        using var defaultIcon = new Icon(typeof(ErrorProvider), "Error");
+
+                        t_defaultIcon = new Icon(defaultIcon, width, height);
                     }
                 }
 
                 return t_defaultIcon;
-
-                static unsafe Icon GetDefaultIcon()
-                {
-                    Icon? systemErrorIcon = null;
-
-                    Shell32.SHSTOCKICONINFO sii = new Shell32.SHSTOCKICONINFO()
-                    {
-                        cbSize = (uint)sizeof(Shell32.SHSTOCKICONINFO)
-                    };
-
-                    HRESULT hr = Shell32.SHGetStockIconInfo(Shell32.SHSTOCKICONID.ERROR,
-                                                            Shell32.SHGSI.ICON | Shell32.SHGSI.SMALLICON,
-                                                            &sii);
-
-                    if (hr.Succeeded)
-                    {
-                        try
-                        {
-                            // Icon.FromHandle does not take ownership of the handle.
-                            systemErrorIcon = (Icon)Icon.FromHandle(sii.hIcon).Clone();
-                        }
-                        finally
-                        {
-                            PInvoke.DestroyIcon((HICON)sii.hIcon);
-                        }
-                    }
-
-                    return systemErrorIcon ?? new Icon(typeof(ErrorProvider), "Error");
-                }
             }
         }
 
@@ -611,6 +583,7 @@ namespace System.Windows.Forms
             }
             set
             {
+                _icon.Dispose();
                 _icon = value.OrThrowIfNull();
                 DisposeRegion();
                 ErrorWindow[] array = _windows.Values.ToArray();

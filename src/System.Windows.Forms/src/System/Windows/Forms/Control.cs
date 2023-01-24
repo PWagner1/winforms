@@ -15,10 +15,8 @@ using System.Windows.Forms.Automation;
 using System.Windows.Forms.Layout;
 using System.Windows.Forms.Primitives;
 using Microsoft.Win32;
-using Windows.Win32.System.Com.StructuredStorage;
 using Windows.Win32.System.Ole;
 using static Interop;
-using Com = Windows.Win32.System.Com;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 using Encoding = System.Text.Encoding;
 
@@ -42,18 +40,6 @@ namespace System.Windows.Forms
     [ToolboxItemFilter("System.Windows.Forms")]
     public unsafe partial class Control :
         Component,
-        IOleControl.Interface,
-        IOleObject.Interface,
-        IOleInPlaceObject.Interface,
-        IOleInPlaceActiveObject.Interface,
-        IOleWindow.Interface,
-        Ole32.IViewObject,
-        Ole32.IViewObject2,
-        Com.IPersist.Interface,
-        Com.IPersistStreamInit.Interface,
-        IPersistPropertyBag.Interface,
-        IPersistStorage.Interface,
-        Ole32.IQuickActivate,
         ISupportOleDropSource,
         IDropTarget,
         ISynchronizeInvoke,
@@ -323,7 +309,6 @@ namespace System.Windows.Forms
         private ControlStyles _controlStyle;
         private int _tabIndex;
         private string? _text;                       // See ControlStyles.CacheText for usage notes
-        private byte _layoutSuspendCount;
         private byte _requiredScaling;              // bits 0-4: BoundsSpecified stored in RequiredScaling property.  Bit 5: RequiredScalingEnabled property.
         private User32.TRACKMOUSEEVENT _trackMouseEvent;
         private short _updateCount;
@@ -348,15 +333,12 @@ namespace System.Windows.Forms
         // Contains a collection of calculated fonts for various Dpi values of the control in the PerMonV2 mode.
         private Dictionary<int, Font>? _dpiFonts;
 
-#if DEBUG
-        internal int LayoutSuspendCount
-        {
-            get { return _layoutSuspendCount; }
-        }
+        internal byte LayoutSuspendCount { get; private set; }
 
+#if DEBUG
         internal void AssertLayoutSuspendCount(int value)
         {
-            Debug.Assert(value == _layoutSuspendCount, "Suspend/Resume layout mismatch!");
+            Debug.Assert(value == LayoutSuspendCount, "Suspend/Resume layout mismatch!");
         }
 
         /*
@@ -647,45 +629,6 @@ namespace System.Windows.Forms
             }
         }
 
-        // Helper methods for retrieving an ActiveX properties.
-        // We abstract these to another method so we do not force JIT the ActiveX codebase.
-
-        private Color ActiveXAmbientBackColor => ActiveXInstance.AmbientBackColor;
-        private Color ActiveXAmbientForeColor => ActiveXInstance.AmbientForeColor;
-        private Font? ActiveXAmbientFont => ActiveXInstance.AmbientFont;
-        private bool ActiveXEventsFrozen => ActiveXInstance.EventsFrozen;
-        private IntPtr ActiveXHWNDParent => ActiveXInstance.HWNDParent;
-
-        /// <summary>
-        ///  Retrieves the ActiveX control implementation for this control.
-        ///  This will demand create the implementation if it does not already exist.
-        /// </summary>
-        private ActiveXImpl ActiveXInstance
-        {
-            get
-            {
-                ActiveXImpl? activeXImpl = (ActiveXImpl?)Properties.GetObject(s_activeXImplProperty);
-                if (activeXImpl is null)
-                {
-                    // Don't allow top level objects to be hosted
-                    // as activeX controls.
-                    if (GetState(States.TopLevel))
-                    {
-                        throw new NotSupportedException(SR.AXTopLevelSource);
-                    }
-
-                    activeXImpl = new ActiveXImpl(this);
-
-                    // PERF: IsActiveX is called quite a bit - checked everywhere from sizing to event raising.  Using a state
-                    // bit to track PropActiveXImpl instead of fetching from the property store.
-                    SetExtendedState(ExtendedStates.IsActiveX, true);
-                    Properties.SetObject(s_activeXImplProperty, activeXImpl);
-                }
-
-                return activeXImpl;
-            }
-        }
-
         /// <summary>
         ///  The AllowDrop property. If AllowDrop is set to true then
         ///  this control will allow drag and drop operations and events to be used.
@@ -956,7 +899,7 @@ namespace System.Windows.Forms
         ///  will always return a non-null value.
         /// </summary>
         [SRCategory(nameof(SR.CatAppearance))]
-        [DispId((int)Ole32.DispatchID.BACKCOLOR)]
+        [DispId(PInvoke.DISPID_BACKCOLOR)]
         [SRDescription(nameof(SR.ControlBackColorDescr))]
         public virtual Color BackColor
         {
@@ -2059,7 +2002,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
         [Localizable(true)]
-        [DispId((int)Ole32.DispatchID.ENABLED)]
+        [DispId(PInvoke.DISPID_ENABLED)]
         [SRDescription(nameof(SR.ControlEnabledDescr))]
         public bool Enabled
         {
@@ -2123,7 +2066,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatAppearance))]
         [Localizable(true)]
-        [DispId((int)Ole32.DispatchID.FONT)]
+        [DispId(PInvoke.DISPID_FONT)]
         [AmbientValue(null)]
         [SRDescription(nameof(SR.ControlFontDescr))]
         [AllowNull]
@@ -2343,7 +2286,7 @@ namespace System.Windows.Forms
         ///  The foreground color of the control.
         /// </summary>
         [SRCategory(nameof(SR.CatAppearance))]
-        [DispId((int)Ole32.DispatchID.FORECOLOR)]
+        [DispId(PInvoke.DISPID_FORECOLOR)]
         [SRDescription(nameof(SR.ControlForeColorDescr))]
         public virtual Color ForeColor
         {
@@ -2489,7 +2432,7 @@ namespace System.Windows.Forms
         /// </summary>
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [DispId((int)Ole32.DispatchID.HWND)]
+        [DispId(PInvoke.DISPID_HWND)]
         [SRDescription(nameof(SR.ControlHandleDescr))]
         public IntPtr Handle
         {
@@ -2510,6 +2453,8 @@ namespace System.Windows.Forms
         }
 
         internal IntPtr HandleInternal => _window.Handle;
+
+        internal HWND HWNDInternal => _window.HWND;
 
         /// <summary>
         ///  True if this control has child controls in its collection.  This
@@ -2604,7 +2549,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Determines if layout is currently suspended.
         /// </summary>
-        internal bool IsLayoutSuspended => _layoutSuspendCount > 0;
+        internal bool IsLayoutSuspended => LayoutSuspendCount > 0;
 
         internal bool IsWindowObscured
         {
@@ -3040,7 +2985,9 @@ namespace System.Windows.Forms
                     value.Controls.Add(this);
                 }
                 else
+                {
                     _parent?.Controls.Remove(this);
+                }
             }
         }
 
@@ -3485,7 +3432,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatBehavior))]
         [DefaultValue(true)]
-        [DispId((int)Ole32.DispatchID.TABSTOP)]
+        [DispId(PInvoke.DISPID_TABSTOP)]
         [SRDescription(nameof(SR.ControlTabStopDescr))]
         public bool TabStop
         {
@@ -3544,7 +3491,7 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatAppearance))]
         [Localizable(true)]
         [Bindable(true)]
-        [DispId((int)Ole32.DispatchID.TEXT)]
+        [DispId(PInvoke.DISPID_TEXT)]
         [SRDescription(nameof(SR.ControlTextDescr))]
         [AllowNull]
         public virtual string Text
@@ -3871,12 +3818,7 @@ namespace System.Windows.Forms
                 }
 
                 // We are only visible if our parent is visible
-                if (ParentInternal is null)
-                {
-                    return true;
-                }
-
-                return ParentInternal.Visible;
+                return ParentInternal is null ? true : ParentInternal.Visible;
             }
             set => SetVisibleCore(value);
         }
@@ -4570,42 +4512,6 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Helper method for retrieving an ActiveX property.  We abstract these
-        ///  to another method so we do not force JIT the ActiveX codebase.
-        /// </summary>
-        private Region ActiveXMergeRegion(Region region)
-        {
-            return ActiveXInstance.MergeRegion(region);
-        }
-
-        /// <summary>
-        ///  Helper method for retrieving an ActiveX property.  We abstract these
-        ///  to another method so we do not force JIT the ActiveX codebase.
-        /// </summary>
-        private void ActiveXOnFocus(bool focus)
-        {
-            ActiveXInstance.OnFocus(focus);
-        }
-
-        /// <summary>
-        ///  Helper method for retrieving an ActiveX property.  We abstract these
-        ///  to another method so we do not force JIT the ActiveX codebase.
-        /// </summary>
-        private void ActiveXViewChanged()
-        {
-            ActiveXInstance.ViewChangedInternal();
-        }
-
-        /// <summary>
-        ///  Helper method for retrieving an ActiveX property.  We abstract these
-        ///  to another method so we do not force JIT the ActiveX codebase.
-        /// </summary>
-        private void ActiveXUpdateBounds(ref int x, ref int y, ref int width, ref int height, SET_WINDOW_POS_FLAGS flags)
-        {
-            ActiveXInstance.UpdateBounds(ref x, ref y, ref width, ref height, flags);
-        }
-
-        /// <summary>
         ///  Assigns a new parent control. Sends out the appropriate property change
         ///  notifications for properties that are affected by the change of parent.
         /// </summary>
@@ -5032,76 +4938,65 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Forces the creation of the control. This includes the creation of the handle,
+        ///  Forces the creation of the control if it is visible. This includes the creation of the handle,
         ///  and any child controls.
-        /// <param name="fIgnoreVisible">
-        ///  Determines whether we should create the handle after checking the Visible
-        ///  property of the control or not.
-        /// </param>
         /// </summary>
-        internal void CreateControl(bool fIgnoreVisible)
+        /// <param name="ignoreVisible">
+        ///  When <see langword="true"/> create even if the control is not visible.
+        /// </param>
+        internal void CreateControl(bool ignoreVisible)
         {
-            bool ready = !GetState(States.Created);
-
-            // PERF: Only "create" the control if it is
-            //     : visible. This has the effect of delayed handle creation of
-            //     : hidden controls.
-            ready = ready && Visible;
-
-            if (ready || fIgnoreVisible)
+            // Unless specified otherwise, only "create" the control if it is visible for performance. This has the
+            // effect of delayed handle creation of hidden controls.
+            if (!ignoreVisible && !GetState(States.Created) && !Visible)
             {
-                SetState(States.Created, true);
-                bool createdOK = false;
-                try
-                {
-                    if (!IsHandleCreated)
-                    {
-                        CreateHandle();
-                    }
-
-                    // must snapshot this array because
-                    // z-order updates from Windows may rearrange it!
-                    ControlCollection? controlsCollection = (ControlCollection?)Properties.GetObject(s_controlsCollectionProperty);
-
-                    if (controlsCollection is not null)
-                    {
-                        Control[] controlSnapshot = new Control[controlsCollection.Count];
-                        controlsCollection.CopyTo(controlSnapshot, 0);
-
-                        foreach (Control ctl in controlSnapshot)
-                        {
-                            if (ctl.IsHandleCreated)
-                            {
-                                ctl.SetParentHandle(HWND);
-                            }
-
-                            ctl.CreateControl(fIgnoreVisible);
-                        }
-                    }
-
-                    createdOK = true;
-                }
-                finally
-                {
-                    if (!createdOK)
-                    {
-                        SetState(States.Created, false);
-                    }
-                }
-
-                OnCreateControl();
+                return;
             }
+
+            SetState(States.Created, true);
+            bool createdOK = false;
+            try
+            {
+                if (!IsHandleCreated)
+                {
+                    CreateHandle();
+                }
+
+                if (Properties.GetObject(s_controlsCollectionProperty) is ControlCollection controlsCollection)
+                {
+                    // Snapshot this array because z-order updates from Windows may rearrange it.
+                    Control[] controlSnapshot = new Control[controlsCollection.Count];
+                    controlsCollection.CopyTo(controlSnapshot, 0);
+
+                    foreach (Control control in controlSnapshot)
+                    {
+                        if (control.IsHandleCreated)
+                        {
+                            control.SetParentHandle(HWND);
+                        }
+
+                        control.CreateControl(ignoreVisible);
+                    }
+                }
+
+                createdOK = true;
+            }
+            finally
+            {
+                if (!createdOK)
+                {
+                    SetState(States.Created, false);
+                }
+            }
+
+            OnCreateControl();
         }
 
         /// <summary>
-        ///  Sends the message to the default window proc.
+        ///  Sends the specified message to the default window procedure.
         /// </summary>
-        /// <remarks>Primarily here for Form to override.</remarks>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        protected virtual void DefWndProc(ref Message m)
-        {
-            _window.DefWndProc(ref m);
-        }
+        protected virtual void DefWndProc(ref Message m) => _window.DefWndProc(ref m);
 
         /// <summary>
         ///  Destroys the handle associated with this control. Inheriting classes should
@@ -5209,6 +5104,7 @@ namespace System.Windows.Forms
                 try
                 {
                     DisposeAxControls();
+                    ((ActiveXImpl?)Properties.GetObject(s_activeXImplProperty))?.Dispose();
 
                     ResetBindings();
 
@@ -5337,13 +5233,12 @@ namespace System.Windows.Forms
                 dataObject = iwdata;
             }
 
-            Ole32.DROPEFFECT finalEffect;
+            DROPEFFECT finalEffect;
 
             try
             {
-                Ole32.IDropSource dropSource = new DropSource(this, dataObject, dragImage, cursorOffset, useDefaultDragImage);
-                HRESULT hr = Ole32.DoDragDrop(dataObject, dropSource, (Ole32.DROPEFFECT)allowedEffects, out finalEffect);
-                if (!hr.Succeeded)
+                IDropSource.Interface dropSource = new DropSource(this, dataObject, dragImage, cursorOffset, useDefaultDragImage);
+                if (Ole32.DoDragDrop(dataObject, dropSource, (DROPEFFECT)(uint)allowedEffects, out finalEffect).Failed)
                 {
                     return DragDropEffects.None;
                 }
@@ -6126,7 +6021,7 @@ namespace System.Windows.Forms
                     if (parent is null)
                     {
                         throw new InvalidOperationException(
-                            string.Format(SR.ParentPropertyNotSetInGetNextControl, nameof(Control.Parent), ctl));
+                            string.Format(SR.ParentPropertyNotSetInGetNextControl, nameof(Parent), ctl));
                     }
 
                     ControlCollection? siblings = GetControlCollection(parent);
@@ -6135,7 +6030,7 @@ namespace System.Windows.Forms
                     {
                         throw new InvalidOperationException(
                             string.Format(SR.ControlsPropertyNotSetInGetNextControl,
-                                nameof(Control.Controls), parent));
+                                nameof(Controls), parent));
                     }
 
                     int siblingCount = siblings.Count;
@@ -9026,7 +8921,7 @@ namespace System.Windows.Forms
                 return;
             }
 
-            if (_layoutSuspendCount > 0)
+            if (LayoutSuspendCount > 0)
             {
                 SetState(States.LayoutDeferred, true);
                 if (_cachedLayoutEventArgs is null || GetExtendedState(ExtendedStates.ClearLayoutArgs))
@@ -9044,7 +8939,7 @@ namespace System.Windows.Forms
             }
 
             // (Essentially the same as suspending layout while we layout, but we clear differently below.)
-            _layoutSuspendCount = 1;
+            LayoutSuspendCount = 1;
 
             try
             {
@@ -9058,7 +8953,7 @@ namespace System.Windows.Forms
                 // the container we just finished laying out) we set layoutSuspendCount back to zero
                 // and clear the deferred and dirty flags.
                 SetState(States.LayoutDeferred | States.LayoutIsDirty, false);
-                _layoutSuspendCount = 0;
+                LayoutSuspendCount = 0;
 
                 // LayoutEngine.Layout can return true to request that our parent resize us because
                 // we did not have enough room for our contents.  Now that we are unsuspended,
@@ -10077,9 +9972,9 @@ namespace System.Windows.Forms
         ///  Releases UI Automation provider for specified window.
         /// </summary>
         /// <param name="handle">The window handle.</param>
-        internal virtual void ReleaseUiaProvider(IntPtr handle)
+        internal virtual void ReleaseUiaProvider(HWND handle)
         {
-            if (handle != IntPtr.Zero)
+            if (!handle.IsNull)
             {
                 // When a window that previously returned providers has been destroyed,
                 // you should notify UI Automation by calling the UiaReturnRawElementProvider
@@ -10146,28 +10041,28 @@ namespace System.Windows.Forms
 #if DEBUG
             if (CompModSwitches.LayoutSuspendResume.TraceInfo)
             {
-                Debug.WriteLine($"{GetType().Name}::ResumeLayout( preformLayout = {performLayout}, newCount = {Math.Max(0, _layoutSuspendCount - 1)})");
+                Debug.WriteLine($"{GetType().Name}::ResumeLayout( preformLayout = {performLayout}, newCount = {Math.Max(0, LayoutSuspendCount - 1)})");
             }
 #endif
 
             bool performedLayout = false;
-            if (_layoutSuspendCount > 0)
+            if (LayoutSuspendCount > 0)
             {
-                if (_layoutSuspendCount == 1)
+                if (LayoutSuspendCount == 1)
                 {
-                    _layoutSuspendCount++;
+                    LayoutSuspendCount++;
                     try
                     {
                         OnLayoutResuming(performLayout);
                     }
                     finally
                     {
-                        _layoutSuspendCount--;
+                        LayoutSuspendCount--;
                     }
                 }
 
-                _layoutSuspendCount--;
-                if (_layoutSuspendCount == 0
+                LayoutSuspendCount--;
+                if (LayoutSuspendCount == 0
                     && GetState(States.LayoutDeferred)
                     && performLayout)
                 {
@@ -10812,7 +10707,7 @@ namespace System.Windows.Forms
                 return;
             }
 
-            DefaultLayout.UpdateAnchorInfoV2(this);
+            DefaultLayout.UpdateAnchorInfoV2(this, recalculateAnchors: true);
         }
 
         /// <summary>
@@ -11360,13 +11255,13 @@ namespace System.Windows.Forms
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected HorizontalAlignment RtlTranslateHorizontal(HorizontalAlignment align)
         {
-            if (RightToLeft.Yes == RightToLeft)
+            if (RightToLeft == RightToLeft.Yes)
             {
-                if (HorizontalAlignment.Left == align)
+                if (align == HorizontalAlignment.Left)
                 {
                     return HorizontalAlignment.Right;
                 }
-                else if (HorizontalAlignment.Right == align)
+                else if (align == HorizontalAlignment.Right)
                 {
                     return HorizontalAlignment.Left;
                 }
@@ -11378,13 +11273,13 @@ namespace System.Windows.Forms
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected LeftRightAlignment RtlTranslateLeftRight(LeftRightAlignment align)
         {
-            if (RightToLeft.Yes == RightToLeft)
+            if (RightToLeft == RightToLeft.Yes)
             {
-                if (LeftRightAlignment.Left == align)
+                if (align == LeftRightAlignment.Left)
                 {
                     return LeftRightAlignment.Right;
                 }
-                else if (LeftRightAlignment.Right == align)
+                else if (align == LeftRightAlignment.Right)
                 {
                     return LeftRightAlignment.Left;
                 }
@@ -11396,7 +11291,7 @@ namespace System.Windows.Forms
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected internal ContentAlignment RtlTranslateContent(ContentAlignment align)
         {
-            if (RightToLeft.Yes == RightToLeft)
+            if (RightToLeft == RightToLeft.Yes)
             {
                 if ((align & WindowsFormsUtils.AnyTopAlign) != 0)
                 {
@@ -11504,17 +11399,17 @@ namespace System.Windows.Forms
         /// </summary>
         public void SuspendLayout()
         {
-            _layoutSuspendCount++;
-            if (_layoutSuspendCount == 1)
+            LayoutSuspendCount++;
+            if (LayoutSuspendCount == 1)
             {
                 OnLayoutSuspended();
             }
 
 #if DEBUG
-            Debug.Assert(_layoutSuspendCount > 0, "SuspendLayout: layoutSuspendCount overflowed.");
+            Debug.Assert(LayoutSuspendCount > 0, "SuspendLayout: layoutSuspendCount overflowed.");
             if (CompModSwitches.LayoutSuspendResume.TraceInfo)
             {
-                Debug.WriteLine(GetType().Name + "::SuspendLayout( newCount = " + _layoutSuspendCount + ")");
+                Debug.WriteLine($"{GetType().Name} ::SuspendLayout( newCount = {LayoutSuspendCount}");
             }
 #endif
         }
@@ -11719,7 +11614,9 @@ namespace System.Windows.Forms
         {
             // Don't reorder the child control array for tab controls. Implemented as a special case
             // in order to keep the method private.
-            if (GetType().IsAssignableFrom(typeof(TabControl)))
+            // Also short-circuit when the Control class is instantiated directly. This is to provide
+            // consistency with the behavior prior to bug fix https://github.com/dotnet/winforms/issues/7837
+            if (this is TabControl || GetType() == typeof(Control))
             {
                 return;
             }
@@ -12150,7 +12047,7 @@ namespace System.Windows.Forms
         private unsafe void WmHelp(ref Message m)
         {
             // if there's currently a message box open - grab the help info from it.
-            HelpInfo hpi = MessageBox.HelpInfo;
+            HelpInfo? hpi = MessageBox.HelpInfo;
             if (hpi is not null)
             {
                 switch (hpi.Option)
@@ -12190,7 +12087,6 @@ namespace System.Windows.Forms
             _parent?.UpdateChildZOrder(this);
 
             UpdateBounds();
-            UpdateAnchorsIfRequired();
 
             // Let any interested sites know that we've now created a handle
             OnHandleCreated(EventArgs.Empty);
@@ -12223,7 +12119,7 @@ namespace System.Windows.Forms
 
             if (SupportsUiaProviders)
             {
-                ReleaseUiaProvider(HandleInternal);
+                ReleaseUiaProvider(HWNDInternal);
             }
 
             OnHandleDestroyed(EventArgs.Empty);
@@ -13597,783 +13493,6 @@ namespace System.Windows.Forms
             OnQueryContinueDrag(queryContinueDragEventArgs);
         }
 
-        unsafe HRESULT IOleControl.Interface.GetControlInfo(CONTROLINFO* pCI)
-        {
-            if (pCI is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetControlInfo");
-            pCI->cb = (uint)sizeof(CONTROLINFO);
-            pCI->hAccel = HACCEL.Null;
-            pCI->cAccel = 0;
-            pCI->dwFlags = 0;
-
-            if (IsInputKey(Keys.Return))
-            {
-                pCI->dwFlags |= CTRLINFO.CTRLINFO_EATS_RETURN;
-            }
-
-            if (IsInputKey(Keys.Escape))
-            {
-                pCI->dwFlags |= CTRLINFO.CTRLINFO_EATS_ESCAPE;
-            }
-
-            return ActiveXInstance.GetControlInfo(pCI);
-        }
-
-        unsafe HRESULT IOleControl.Interface.OnMnemonic(MSG* pMsg)
-        {
-            if (pMsg is null)
-            {
-                return HRESULT.E_INVALIDARG;
-            }
-
-            // If we got a mnemonic here, then the appropriate control will focus itself which
-            // will cause us to become UI active.
-            bool processed = ProcessMnemonic((char)(nuint)pMsg->wParam);
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"AxSource:OnMnemonic processed: {processed}");
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IOleControl.Interface.OnAmbientPropertyChange(int dispID)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"AxSource:OnAmbientPropertyChange. Dispid: {dispID}");
-            Debug.Indent();
-            ActiveXInstance.OnAmbientPropertyChange((Ole32.DispatchID)dispID);
-            Debug.Unindent();
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IOleControl.Interface.FreezeEvents(BOOL bFreeze)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"AxSource:FreezeEvents. Freeze: {bFreeze}");
-            ActiveXInstance.EventsFrozen = bFreeze;
-            Debug.Assert(ActiveXInstance.EventsFrozen == bFreeze, "Failed to set EventsFrozen correctly");
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IOleInPlaceActiveObject.Interface.GetWindow(HWND* phwnd)
-        {
-            return ((IOleInPlaceObject.Interface)this).GetWindow(phwnd);
-        }
-
-        HRESULT IOleInPlaceActiveObject.Interface.ContextSensitiveHelp(BOOL fEnterMode)
-        {
-            return ((IOleInPlaceObject.Interface)this).ContextSensitiveHelp(fEnterMode);
-        }
-
-        unsafe HRESULT IOleInPlaceActiveObject.Interface.TranslateAccelerator(MSG* lpmsg)
-        {
-            return ActiveXInstance.TranslateAccelerator(lpmsg);
-        }
-
-        HRESULT IOleInPlaceActiveObject.Interface.OnFrameWindowActivate(BOOL fActivate)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:OnFrameWindowActivate");
-            OnFrameWindowActivate(fActivate);
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IOleInPlaceActiveObject.Interface.OnDocWindowActivate(BOOL fActivate)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"AxSource:OnDocWindowActivate.  Activate: {(bool)fActivate}");
-            Debug.Indent();
-            ActiveXInstance.OnDocWindowActivate(fActivate);
-            Debug.Unindent();
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IOleInPlaceActiveObject.Interface.ResizeBorder(RECT* prcBorder, IOleInPlaceUIWindow* pUIWindow, BOOL fFrameWindow)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:ResizesBorder");
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IOleInPlaceActiveObject.Interface.EnableModeless(BOOL fEnable)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:EnableModeless");
-            return HRESULT.E_NOTIMPL;
-        }
-
-        unsafe HRESULT IOleInPlaceObject.Interface.GetWindow(HWND* phwnd)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetWindow");
-            HRESULT hr = ActiveXInstance.GetWindow(phwnd);
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"\twin == {(phwnd is null ? HWND.Null : *phwnd)}");
-            return hr;
-        }
-
-        HRESULT IOleInPlaceObject.Interface.ContextSensitiveHelp(BOOL fEnterMode)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"AxSource:ContextSensitiveHelp.  Mode: {fEnterMode}");
-            if (fEnterMode)
-            {
-                OnHelpRequested(new HelpEventArgs(MousePosition));
-            }
-
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IOleInPlaceObject.Interface.InPlaceDeactivate()
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:InPlaceDeactivate");
-            Debug.Indent();
-            HRESULT hr = ActiveXInstance.InPlaceDeactivate();
-            Debug.Unindent();
-            return hr;
-        }
-
-        HRESULT IOleInPlaceObject.Interface.UIDeactivate()
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:UIDeactivate");
-            return ActiveXInstance.UIDeactivate();
-        }
-
-        unsafe HRESULT IOleInPlaceObject.Interface.SetObjectRects(RECT* lprcPosRect, RECT* lprcClipRect)
-        {
-            if (lprcClipRect is not null)
-            {
-                Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo,
-                    $"AxSource:SetObjectRects({lprcClipRect->left}, {lprcClipRect->top}, {lprcClipRect->right}, {lprcClipRect->bottom})");
-            }
-
-            Debug.Indent();
-            HRESULT hr = ActiveXInstance.SetObjectRects(lprcPosRect, lprcClipRect);
-            Debug.Unindent();
-            return hr;
-        }
-
-        HRESULT IOleInPlaceObject.Interface.ReactivateAndUndo()
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:ReactivateAndUndo");
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IOleObject.Interface.SetClientSite(IOleClientSite* pClientSite)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:SetClientSite");
-            ActiveXInstance.SetClientSite(pClientSite);
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IOleObject.Interface.GetClientSite(IOleClientSite** ppClientSite)
-        {
-            if (ppClientSite is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetClientSite");
-            var clientSite = ActiveXInstance.GetClientSite();
-            *ppClientSite = null;
-            if (clientSite is not null)
-            {
-                bool result = ComHelpers.TryGetComPointer(clientSite, out *ppClientSite);
-                Debug.Assert(result);
-            }
-
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IOleObject.Interface.SetHostNames(PCWSTR szContainerApp, PCWSTR szContainerObj)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:SetHostNames");
-
-            // Since ActiveX controls never "open" for editing, we shouldn't need to store these.
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IOleObject.Interface.Close(OLECLOSE dwSaveOption)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:Close. Save option: " + dwSaveOption);
-            ActiveXInstance.Close(dwSaveOption);
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IOleObject.Interface.SetMoniker(OLEWHICHMK dwWhichMoniker, Com.IMoniker* pmk)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:SetMoniker");
-            return HRESULT.E_NOTIMPL;
-        }
-
-        unsafe HRESULT IOleObject.Interface.GetMoniker(OLEGETMONIKER dwAssign, OLEWHICHMK dwWhichMoniker, Com.IMoniker** ppmk)
-        {
-            if (ppmk is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetMoniker");
-            *ppmk = null;
-            return HRESULT.E_NOTIMPL;
-        }
-
-        unsafe HRESULT IOleObject.Interface.InitFromData(Com.IDataObject* pDataObject, BOOL fCreation, uint dwReserved)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:InitFromData");
-            return HRESULT.E_NOTIMPL;
-        }
-
-        unsafe HRESULT IOleObject.Interface.GetClipboardData(uint dwReserved, Com.IDataObject** ppDataObject)
-        {
-            if (ppDataObject is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetClipboardData");
-            ppDataObject = null;
-            return HRESULT.E_NOTIMPL;
-        }
-
-        unsafe HRESULT IOleObject.Interface.DoVerb(
-            int iVerb,
-            MSG* lpmsg,
-            IOleClientSite* pActiveSite,
-            int lindex,
-            HWND hwndParent,
-            RECT* lprcPosRect)
-        {
-            // In Office they are internally casting an iVerb to a short and not doing the proper sign extension.
-            short sVerb = unchecked((short)iVerb);
-            iVerb = sVerb;
-
-#if DEBUG
-            if (CompModSwitches.ActiveX.TraceInfo)
-            {
-                Debug.WriteLine("AxSource:DoVerb {");
-                Debug.WriteLine($"     verb: {iVerb}");
-                Debug.WriteLine($"     msg: {*lpmsg}");
-                Debug.WriteLine($"     activeSite: {*pActiveSite}");
-                Debug.WriteLine($"     index: {lindex}");
-                Debug.WriteLine($"     hwndParent: {hwndParent}");
-                Debug.WriteLine($"     posRect: {(lprcPosRect is null ? "null" : lprcPosRect->ToString())}");
-            }
-#endif
-            Debug.Indent();
-            try
-            {
-                return ActiveXInstance.DoVerb((Ole32.OLEIVERB)iVerb, lpmsg, pActiveSite, lindex, hwndParent, lprcPosRect);
-            }
-            finally
-            {
-                Debug.Unindent();
-                Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "}");
-            }
-        }
-
-        unsafe HRESULT IOleObject.Interface.EnumVerbs(IEnumOLEVERB** ppEnumOleVerb)
-        {
-            if (ppEnumOleVerb is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:EnumVerbs");
-            HRESULT hr = ActiveXImpl.EnumVerbs(out Ole32.IEnumOLEVERB oleVerb);
-            bool result = ComHelpers.TryGetComPointer(oleVerb, out *ppEnumOleVerb);
-            Debug.Assert(result);
-            return hr;
-        }
-
-        HRESULT IOleObject.Interface.Update()
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:OleUpdate");
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IOleObject.Interface.IsUpToDate()
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:IsUpToDate");
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IOleObject.Interface.GetUserClassID(Guid* pClsid)
-        {
-            if (pClsid is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            *pClsid = GetType().GUID;
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetUserClassID.  ClassID: " + pClsid->ToString());
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IOleObject.Interface.GetUserType(USERCLASSTYPE dwFormOfType, PWSTR* pszUserType)
-        {
-            if (pszUserType is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetUserType");
-            *pszUserType = (char*)Marshal.StringToCoTaskMemUni(
-                dwFormOfType == USERCLASSTYPE.USERCLASSTYPE_FULL ? GetType().FullName : GetType().Name);
-
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IOleObject.Interface.SetExtent(Com.DVASPECT dwDrawAspect, SIZE* psizel)
-        {
-            if (psizel is null)
-            {
-                return HRESULT.E_INVALIDARG;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"AxSource:SetExtent({psizel->Width}, {psizel->Height}");
-            Debug.Indent();
-            ActiveXInstance.SetExtent((Ole32.DVASPECT)dwDrawAspect, (Size*)psizel);
-            Debug.Unindent();
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IOleObject.Interface.GetExtent(Com.DVASPECT dwDrawAspect, SIZE* psizel)
-        {
-            if (psizel is null)
-            {
-                return HRESULT.E_INVALIDARG;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"AxSource:GetExtent.  Aspect: {dwDrawAspect.ToString()}");
-            Debug.Indent();
-            ActiveXInstance.GetExtent((Ole32.DVASPECT)dwDrawAspect, (Size*)psizel);
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"value: {psizel->Width}, {psizel->Height}");
-            Debug.Unindent();
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IOleObject.Interface.Advise(Com.IAdviseSink* pAdvSink, uint* pdwConnection)
-        {
-            if (pdwConnection is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:Advise");
-            *pdwConnection = ActiveXInstance.Advise(pAdvSink);
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IOleObject.Interface.Unadvise(uint dwConnection)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:Unadvise");
-            Debug.Indent();
-            HRESULT hr = ActiveXInstance.Unadvise(dwConnection);
-            Debug.Unindent();
-            return hr;
-        }
-
-        unsafe HRESULT IOleObject.Interface.EnumAdvise(Com.IEnumSTATDATA** ppenumAdvise)
-        {
-            if (ppenumAdvise is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:EnumAdvise");
-            *ppenumAdvise = null;
-            return HRESULT.E_NOTIMPL;
-        }
-
-        unsafe HRESULT IOleObject.Interface.GetMiscStatus(Com.DVASPECT dwAspect, OLEMISC* pdwStatus)
-        {
-            if (pdwStatus is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            if (!dwAspect.HasFlag(Com.DVASPECT.DVASPECT_CONTENT))
-            {
-                Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetMiscStatus.  Status: ERROR, wrong aspect.");
-                *pdwStatus = 0;
-                return HRESULT.DV_E_DVASPECT;
-            }
-
-            OLEMISC status = OLEMISC.OLEMISC_ACTIVATEWHENVISIBLE | OLEMISC.OLEMISC_INSIDEOUT | OLEMISC.OLEMISC_SETCLIENTSITEFIRST;
-            if (GetStyle(ControlStyles.ResizeRedraw))
-            {
-                status |= OLEMISC.OLEMISC_RECOMPOSEONRESIZE;
-            }
-
-            if (this is IButtonControl)
-            {
-                status |= OLEMISC.OLEMISC_ACTSLIKEBUTTON;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"AxSource:GetMiscStatus. Status: {status}");
-            *pdwStatus = status;
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IOleObject.Interface.SetColorScheme(LOGPALETTE* pLogpal)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:SetColorScheme");
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IOleWindow.Interface.GetWindow(HWND* phwnd)
-        {
-            return ((IOleInPlaceObject.Interface)this).GetWindow(phwnd);
-        }
-
-        HRESULT IOleWindow.Interface.ContextSensitiveHelp(BOOL fEnterMode)
-        {
-            return ((IOleInPlaceObject.Interface)this).ContextSensitiveHelp(fEnterMode);
-        }
-
-        unsafe HRESULT Com.IPersist.Interface.GetClassID(Guid* pClassID)
-        {
-            if (pClassID is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            *pClassID = GetType().GUID;
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"AxSource:IPersist.GetClassID.  ClassID: {*pClassID}");
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IPersistPropertyBag.Interface.InitNew()
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:IPersistPropertyBag.InitNew");
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IPersistPropertyBag.Interface.GetClassID(Guid* pClassID)
-        {
-            if (pClassID is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            *pClassID = GetType().GUID;
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"AxSource:IPersistPropertyBag.GetClassID.  ClassID: {*pClassID}");
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IPersistPropertyBag.Interface.Load(IPropertyBag* pPropBag, Com.IErrorLog* pErrorLog)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:Load (IPersistPropertyBag)");
-            Debug.Indent();
-            ActiveXInstance.Load((IPropertyBag.Interface)Marshal.GetObjectForIUnknown((nint)pPropBag), pErrorLog);
-            Debug.Unindent();
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT IPersistPropertyBag.Interface.Save(IPropertyBag* pPropBag, BOOL fClearDirty, BOOL fSaveAllProperties)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:Save (IPersistPropertyBag)");
-            Debug.Indent();
-            ActiveXInstance.Save((IPropertyBag.Interface)Marshal.GetObjectForIUnknown((nint)pPropBag), fClearDirty, fSaveAllProperties);
-            Debug.Unindent();
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IPersistStorage.Interface.GetClassID(Guid* pClassID)
-        {
-            if (pClassID is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            *pClassID = GetType().GUID;
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"AxSource:IPersistStorage.GetClassID.  ClassID: {*pClassID}");
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IPersistStorage.Interface.IsDirty()
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:IPersistStorage.IsDirty");
-            return ActiveXInstance.IsDirty();
-        }
-
-        HRESULT IPersistStorage.Interface.InitNew(IStorage* pStg)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:IPersistStorage.InitNew");
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IPersistStorage.Interface.Load(IStorage* pStg)
-        {
-            if (pStg is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:IPersistStorage.Load");
-            Debug.Indent();
-            HRESULT result = ActiveXInstance.Load(pStg);
-            Debug.Unindent();
-            return result;
-        }
-
-        HRESULT IPersistStorage.Interface.Save(IStorage* pStgSave, BOOL fSameAsLoad)
-        {
-            if (pStgSave is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:IPersistStorage.Save");
-            Debug.Indent();
-            HRESULT result = ActiveXInstance.Save(pStgSave, fSameAsLoad);
-            Debug.Unindent();
-            return result;
-        }
-
-        HRESULT IPersistStorage.Interface.SaveCompleted(IStorage* pStgNew)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:IPersistStorage.SaveCompleted");
-            return HRESULT.S_OK;
-        }
-
-        HRESULT IPersistStorage.Interface.HandsOffStorage()
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:IPersistStorage.HandsOffStorage");
-            return HRESULT.S_OK;
-        }
-
-        HRESULT Com.IPersistStreamInit.Interface.GetClassID(Guid* pClassID)
-        {
-            if (pClassID is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            *pClassID = GetType().GUID;
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"AxSource:IPersistStreamInit.GetClassID.  ClassID: {*pClassID}");
-            return HRESULT.S_OK;
-        }
-
-        HRESULT Com.IPersistStreamInit.Interface.IsDirty()
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:IPersistStreamInit.IsDirty");
-            return ActiveXInstance.IsDirty();
-        }
-
-        HRESULT Com.IPersistStreamInit.Interface.Load(Com.IStream* pStm)
-        {
-            if (pStm is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:IPersistStreamInit.Load");
-            Debug.Indent();
-            ActiveXInstance.Load(pStm);
-            Debug.Unindent();
-            return HRESULT.S_OK;
-        }
-
-        HRESULT Com.IPersistStreamInit.Interface.Save(Com.IStream* pStm, BOOL fClearDirty)
-        {
-            if (pStm is null)
-            {
-                return HRESULT.E_POINTER;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:IPersistStreamInit.Save");
-            Debug.Indent();
-            ActiveXInstance.Save(pStm, fClearDirty);
-            Debug.Unindent();
-            return HRESULT.S_OK;
-        }
-
-        HRESULT Com.IPersistStreamInit.Interface.GetSizeMax(ulong* pCbSize)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetSizeMax");
-            return HRESULT.S_OK;
-        }
-
-        HRESULT Com.IPersistStreamInit.Interface.InitNew()
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:IPersistStreamInit.InitNew");
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT Ole32.IQuickActivate.QuickActivate(Ole32.QACONTAINER pQaContainer, Ole32.QACONTROL* pQaControl)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:QuickActivate");
-            Debug.Indent();
-            HRESULT hr = ActiveXInstance.QuickActivate(pQaContainer, pQaControl);
-            Debug.Unindent();
-            return hr;
-        }
-
-        unsafe HRESULT Ole32.IQuickActivate.SetContentExtent(Size* pSizel)
-        {
-            if (pSizel is null)
-            {
-                return HRESULT.E_INVALIDARG;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:SetContentExtent");
-            Debug.Indent();
-            ActiveXInstance.SetExtent(Ole32.DVASPECT.CONTENT, pSizel);
-            Debug.Unindent();
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT Ole32.IQuickActivate.GetContentExtent(Size* pSizel)
-        {
-            if (pSizel is null)
-            {
-                return HRESULT.E_INVALIDARG;
-            }
-
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetContentExtent");
-            Debug.Indent();
-            ActiveXInstance.GetExtent(Ole32.DVASPECT.CONTENT, pSizel);
-            Debug.Unindent();
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT Ole32.IViewObject.Draw(
-            Ole32.DVASPECT dwDrawAspect,
-            int lindex,
-            IntPtr pvAspect,
-            Ole32.DVTARGETDEVICE* ptd,
-            IntPtr hdcTargetDev,
-            IntPtr hdcDraw,
-            RECT* lprcBounds,
-            RECT* lprcWBounds,
-            IntPtr pfnContinue,
-            uint dwContinue)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:Draw");
-
-            Debug.Indent();
-            HRESULT hr = ActiveXInstance.Draw(
-                dwDrawAspect,
-                lindex,
-                pvAspect,
-                ptd,
-                hdcTargetDev,
-                hdcDraw,
-                lprcBounds,
-                lprcWBounds,
-                pfnContinue,
-                dwContinue);
-            Debug.Unindent();
-            return HRESULT.S_OK;
-        }
-
-        unsafe HRESULT Ole32.IViewObject.GetColorSet(
-            Ole32.DVASPECT dwDrawAspect,
-            int lindex,
-            IntPtr pvAspect,
-            Ole32.DVTARGETDEVICE* ptd,
-            IntPtr hicTargetDev,
-            LOGPALETTE* ppColorSet)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetColorSet");
-
-            // GDI+ doesn't do palettes.
-            return HRESULT.E_NOTIMPL;
-        }
-
-        unsafe HRESULT Ole32.IViewObject.Freeze(Ole32.DVASPECT dwDrawAspect, int lindex, IntPtr pvAspect, uint* pdwFreeze)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:Freezes");
-            return HRESULT.E_NOTIMPL;
-        }
-
-        HRESULT Ole32.IViewObject.Unfreeze(uint dwFreeze)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:Unfreeze");
-            return HRESULT.E_NOTIMPL;
-        }
-
-        HRESULT Ole32.IViewObject.SetAdvise(Ole32.DVASPECT aspects, Ole32.ADVF advf, ComTypes.IAdviseSink pAdvSink)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:SetAdvise");
-            return ActiveXInstance.SetAdvise(aspects, advf, pAdvSink);
-        }
-
-        unsafe HRESULT Ole32.IViewObject.GetAdvise(Ole32.DVASPECT* pAspects, Ole32.ADVF* pAdvf, ComTypes.IAdviseSink[] ppAdvSink)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetAdvise");
-            return ActiveXInstance.GetAdvise(pAspects, pAdvf, ppAdvSink);
-        }
-
-        unsafe HRESULT Ole32.IViewObject2.Draw(
-            Ole32.DVASPECT dwDrawAspect,
-            int lindex,
-            IntPtr pvAspect,
-            Ole32.DVTARGETDEVICE* ptd,
-            IntPtr hdcTargetDev,
-            IntPtr hdcDraw,
-            RECT* lprcBounds,
-            RECT* lprcWBounds,
-            IntPtr pfnContinue,
-            uint dwContinue)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:Draw");
-            Debug.Indent();
-            HRESULT hr = ActiveXInstance.Draw(
-                dwDrawAspect,
-                lindex,
-                pvAspect,
-                ptd,
-                hdcTargetDev,
-                hdcDraw,
-                lprcBounds,
-                lprcWBounds,
-                pfnContinue,
-                dwContinue);
-            Debug.Unindent();
-            return hr;
-        }
-
-        unsafe HRESULT Ole32.IViewObject2.GetColorSet(
-            Ole32.DVASPECT dwDrawAspect,
-            int lindex,
-            IntPtr pvAspect,
-            Ole32.DVTARGETDEVICE* ptd,
-            IntPtr hicTargetDev,
-            LOGPALETTE* ppColorSet)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetColorSet");
-
-            // GDI+ doesn't do palettes.
-            return HRESULT.E_NOTIMPL;
-        }
-
-        unsafe HRESULT Ole32.IViewObject2.Freeze(Ole32.DVASPECT dwDrawAspect, int lindex, IntPtr pvAspect, uint* pdwFreeze)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:Freezes");
-            return HRESULT.E_NOTIMPL;
-        }
-
-        HRESULT Ole32.IViewObject2.Unfreeze(int dwFreeze)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:Unfreeze");
-            return HRESULT.E_NOTIMPL;
-        }
-
-        HRESULT Ole32.IViewObject2.SetAdvise(Ole32.DVASPECT aspects, Ole32.ADVF advf, ComTypes.IAdviseSink pAdvSink)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:SetAdvise");
-            return ActiveXInstance.SetAdvise(aspects, advf, pAdvSink);
-        }
-
-        unsafe HRESULT Ole32.IViewObject2.GetAdvise(Ole32.DVASPECT* pAspects, Ole32.ADVF* pAdvf, ComTypes.IAdviseSink[] ppAdvSink)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetAdvise");
-            return ActiveXInstance.GetAdvise(pAspects, pAdvf, ppAdvSink);
-        }
-
-        unsafe HRESULT Ole32.IViewObject2.GetExtent(Ole32.DVASPECT dwDrawAspect, int lindex, Ole32.DVTARGETDEVICE* ptd, Size* lpsizel)
-        {
-            Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "AxSource:GetExtent (IViewObject2)");
-
-            // We already have an implementation of this [from IOleObject]
-            return ((IOleObject.Interface)this).GetExtent((Com.DVASPECT)dwDrawAspect, (SIZE*)lpsizel);
-        }
-
         #region IKeyboardToolTip implementation
 
         bool IKeyboardToolTip.CanShowToolTipsNow()
@@ -14526,7 +13645,6 @@ namespace System.Windows.Forms
         HWND IHandle<HWND>.Handle => HWND;
 
         internal HWND HWND => (HWND)Handle;
-        internal HWND HWNDInternal => (HWND)HandleInternal;
 
         internal virtual bool AllowsChildrenToShowToolTips() => true;
     }

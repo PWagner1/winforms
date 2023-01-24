@@ -17,13 +17,14 @@ using System.Windows.Forms.ComponentModel.Com2Interop;
 using System.Windows.Forms.Design;
 using System.Windows.Forms.PropertyGridInternal;
 using Microsoft.Win32;
+using Windows.Win32.System.Ole;
 using static Interop;
 
 namespace System.Windows.Forms
 {
     [Designer($"System.Windows.Forms.Design.PropertyGridDesigner, {AssemblyRef.SystemDesign}")]
     [SRDescription(nameof(SR.DescriptionPropertyGrid))]
-    public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, Ole32.IPropertyNotifySink
+    public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IPropertyNotifySink.Interface
     {
         private readonly HelpPane _helpPane;
         private int _helpPaneSizeRatio = -1;
@@ -603,7 +604,7 @@ namespace System.Windows.Forms
             {
                 if (value && IsHandleCreated && Visible)
                 {
-                    if (0 == _paintFrozen++)
+                    if (_paintFrozen++ == 0)
                     {
                         PInvoke.SendMessage(this, User32.WM.SETREDRAW, (WPARAM)(BOOL)false);
                     }
@@ -616,7 +617,7 @@ namespace System.Windows.Forms
                         return;
                     }
 
-                    if (0 == --_paintFrozen)
+                    if (--_paintFrozen == 0)
                     {
                         PInvoke.SendMessage(this, User32.WM.SETREDRAW, (WPARAM)(BOOL)true);
                         Invalidate(true);
@@ -1865,6 +1866,24 @@ namespace System.Windows.Forms
             base.Dispose(disposing);
         }
 
+        internal override void ReleaseUiaProvider(HWND handle)
+        {
+            if (_viewTabProperties?.Count > 0)
+            {
+                foreach (GridEntry gridEntry in _viewTabProperties.Values)
+                {
+                    gridEntry.ReleaseUiaProvider();
+                }
+            }
+
+            _helpPane?.ReleaseUiaProvider(HWND.Null);
+            _commandsPane?.ReleaseUiaProvider(HWND.Null);
+            _toolStrip?.ReleaseUiaProvider(HWND.Null);
+            _rootEntry?.ReleaseUiaProvider();
+
+            base.ReleaseUiaProvider(handle);
+        }
+
         private void DividerDraw(int y)
         {
             if (y == -1)
@@ -2336,7 +2355,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Called when a property on an Ole32 Object changes.
         /// </summary>
-        HRESULT Ole32.IPropertyNotifySink.OnChanged(Ole32.DispatchID dispID)
+        HRESULT IPropertyNotifySink.Interface.OnChanged(int dispID)
         {
             // We don't want the grid's own property sets doing this, but if we're getting
             // an OnChanged that isn't the DispID of the property we're currently changing,
@@ -2349,7 +2368,7 @@ namespace System.Windows.Forms
                 if (selectedEntry.PropertyDescriptor.TryGetAttribute(out DispIdAttribute dispIdAttribute)
                     && !dispIdAttribute.IsDefaultAttribute())
                 {
-                    fullRefresh = dispID != (Ole32.DispatchID)dispIdAttribute.Value;
+                    fullRefresh = dispID != dispIdAttribute.Value;
                 }
             }
 
@@ -2362,7 +2381,7 @@ namespace System.Windows.Forms
 
                 // This is so changes to names of native objects will be reflected in the combo box.
                 object obj = GetUnwrappedObject(0);
-                if (ComNativeDescriptor.IsNameDispId(obj, dispID) || dispID == Ole32.DispatchID.Name)
+                if (ComNativeDescriptor.IsNameDispId(obj, dispID) || dispID == PInvoke.DISPID_Name)
                 {
                     OnComComponentNameChanged(new ComponentRenameEventArgs(obj, null, TypeDescriptor.GetClassName(obj)));
                 }
@@ -2809,7 +2828,7 @@ namespace System.Windows.Forms
         ///  Called when a property on an Ole32 Object that is tagged with "requestedit" is
         ///  about to be edited. See IPropertyNotifySink::OnRequestEdit
         /// </summary>
-        HRESULT Ole32.IPropertyNotifySink.OnRequestEdit(Ole32.DispatchID dispID)
+        HRESULT IPropertyNotifySink.Interface.OnRequestEdit(int dispID)
         {
             // Don't do anything here.
             return HRESULT.S_OK;
@@ -3989,7 +4008,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Sinks the property notify events on all the COM objects we are currently browsing.
         ///
-        ///  <see cref="Ole32.IPropertyNotifySink"/>
+        ///  <see cref="IPropertyNotifySink"/>
         /// </summary>
         private void SinkPropertyNotifyEvents()
         {
@@ -4026,7 +4045,7 @@ namespace System.Windows.Forms
                         continue;
                     }
 
-                    _connectionPointCookies[i] = new(obj, this, typeof(Ole32.IPropertyNotifySink), throwException: false);
+                    _connectionPointCookies[i] = new(obj, this, typeof(IPropertyNotifySink.Interface), throwException: false);
                 }
                 catch
                 {

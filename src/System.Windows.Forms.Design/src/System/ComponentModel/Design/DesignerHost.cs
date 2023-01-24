@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel.Design.Serialization;
@@ -702,7 +704,7 @@ namespace System.ComponentModel.Design
             // Now remove all the designers and their components.  We save the root for last.  Note that we eat any exceptions that components or their designers generate.  A bad component or designer should not prevent an unload from happening.  We do all of this in a transaction to help reduce the number of events we generate.
             _state[s_stateUnloading] = true;
             DesignerTransaction t = ((IDesignerHost)this).CreateTransaction();
-            ArrayList exceptions = new ArrayList();
+            List<Exception> exceptions = new();
             try
             {
                 IComponent[] components = new IComponent[Components.Count];

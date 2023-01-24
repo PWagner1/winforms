@@ -1054,6 +1054,9 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                 _toolTip?.Dispose();
                 _toolTip = null;
+
+                _selectedGridEntry?.Dispose();
+                _selectedGridEntry = null;
             }
 
             base.Dispose(disposing);
@@ -1773,7 +1776,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                     // Check real values against string values.
                     itemTextValue = gridEntry.TypeConverter.ConvertToString(currentValue);
-                    if (value == currentValue || 0 == string.Compare(textValue, itemTextValue, true, CultureInfo.InvariantCulture))
+                    if (value == currentValue || string.Compare(textValue, itemTextValue, true, CultureInfo.InvariantCulture) == 0)
                     {
                         stringMatch = i;
                     }
@@ -2521,7 +2524,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                 if (!equal && value is string @string && currentValue is not null)
                 {
-                    equal = 0 == string.Compare(@string, currentValue.ToString(), true, CultureInfo.CurrentCulture);
+                    equal = string.Compare(@string, currentValue.ToString(), true, CultureInfo.CurrentCulture) == 0;
                 }
 
                 if (!equal)
@@ -4921,6 +4924,26 @@ namespace System.Windows.Forms.PropertyGridInternal
             return CommitValue(value);
         }
 
+        internal override void ReleaseUiaProvider(HWND handle)
+        {
+            if (_allGridEntries?.Count > 0)
+            {
+                foreach (GridEntry gridEntry in _allGridEntries)
+                {
+                    gridEntry.ReleaseUiaProvider();
+                }
+            }
+
+            _scrollBar?.ReleaseUiaProvider(HWND.Null);
+            _listBox?.ReleaseUiaProvider(HWND.Null);
+            _dropDownHolder?.ReleaseUiaProvider(HWND.Null);
+            _editTextBox?.ReleaseUiaProvider(HWND.Null);
+            _dropDownButton?.ReleaseUiaProvider(HWND.Null);
+            _dialogButton?.ReleaseUiaProvider(HWND.Null);
+
+            base.ReleaseUiaProvider(handle);
+        }
+
         internal void ReverseFocus()
         {
             if (_selectedGridEntry is null)
@@ -5097,11 +5120,11 @@ namespace System.Windows.Forms.PropertyGridInternal
 
             if (TryGetService(out IUIService uiService))
             {
-                revert = DialogResult.Cancel == uiService.ShowDialog(ErrorDialog);
+                revert = uiService.ShowDialog(ErrorDialog) == DialogResult.Cancel;
             }
             else
             {
-                revert = DialogResult.Cancel == ShowDialog(ErrorDialog);
+                revert = ShowDialog(ErrorDialog) == DialogResult.Cancel;
             }
 
             EditTextBox.DisableMouseHook = false;
@@ -5174,11 +5197,11 @@ namespace System.Windows.Forms.PropertyGridInternal
 
             if (TryGetService(out IUIService uiService))
             {
-                revert = DialogResult.Cancel == uiService.ShowDialog(ErrorDialog);
+                revert = uiService.ShowDialog(ErrorDialog) == DialogResult.Cancel;
             }
             else
             {
-                revert = DialogResult.Cancel == ShowDialog(ErrorDialog);
+                revert = ShowDialog(ErrorDialog) == DialogResult.Cancel;
             }
 
             EditTextBox.DisableMouseHook = false;

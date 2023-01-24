@@ -247,6 +247,31 @@
         <target state="translated">&amp;Použít</target>
         <note />
       </trans-unit>
+      <trans-unit id="Arg_ArrayPlusOffTooSmall">
+        <source>Destination array is not long enough to copy all the items in the collection. Check array index and length.</source>
+        <target state="translated">Cílové pole není dostatečně dlouhé, aby bylo možné zkopírovat všechny položky v kolekci. Zkontrolujte index a délku pole.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Arg_NonZeroLowerBound">
+        <source>The lower bound of target array must be zero.</source>
+        <target state="translated">Dolní mez cílového pole musí být nula.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Arg_RankMultiDimNotSupported">
+        <source>Only single dimensional arrays are supported for the requested action.</source>
+        <target state="translated">Pro požadovanou akci jsou podporována pouze jednorozměrná pole.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArgumentOutOfRange_NeedNonNegNum">
+        <source>Non-negative number required.</source>
+        <target state="translated">Vyžaduje se nezáporné číslo.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Argument_IncompatibleArrayType">
+        <source>Target array type is not compatible with the type of items in the collection.</source>
+        <target state="translated">Typ cílového pole není kompatibilní s typem položek v kolekci.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AutoCompleteFailure">
         <source>autoComplete cannot be initialized with given custom source.</source>
         <target state="translated">Funkci autoComplete nelze s daným vlastním zdrojem inicializovat.</target>
@@ -5804,6 +5829,11 @@ Trasování zásobníku, kde došlo k neplatné operaci:
       <trans-unit id="InvalidArgument">
         <source>InvalidArgument=Value of '{1}' is not valid for '{0}'.</source>
         <target state="translated">InvalidArgument=Hodnota {1} není platnou hodnotou pro argument {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidArgumentType">
+        <source>Argument '{0}' must be of type '{1}'.</source>
+        <target state="new">Argument '{0}' must be of type '{1}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidBoundArgument">

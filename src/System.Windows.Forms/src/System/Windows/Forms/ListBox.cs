@@ -224,7 +224,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatAppearance))]
         [DefaultValue(BorderStyle.Fixed3D)]
-        [DispId((int)Ole32.DispatchID.BORDERSTYLE)]
+        [DispId(PInvoke.DISPID_BORDERSTYLE)]
         [SRDescription(nameof(SR.ListBoxBorderDescr))]
         public BorderStyle BorderStyle
         {
@@ -450,7 +450,7 @@ namespace System.Windows.Forms
             {
                 base.Font = value;
 
-                if (false == _integralHeight)
+                if (_integralHeight == false)
                 {
                     // Refresh the list to force the scroll bars to display
                     // when the integral height is false.
@@ -2083,7 +2083,7 @@ namespace System.Windows.Forms
             Items.SetItemInternal(index, Items[index]);
         }
 
-        internal override void ReleaseUiaProvider(IntPtr handle)
+        internal override void ReleaseUiaProvider(HWND handle)
         {
             ClearListItemAccessibleObjects();
             base.ReleaseUiaProvider(handle);

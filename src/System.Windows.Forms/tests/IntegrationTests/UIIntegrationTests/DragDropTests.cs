@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using Windows.Win32.System.Com;
 using Windows.Win32.UI.WindowsAndMessaging;
 using Xunit;
 using Xunit.Abstractions;
@@ -106,8 +107,7 @@ public class DragDropTests : ControlTestBase
             };
 
             var startRect = form.DisplayRectangle;
-            var centerOfStartRect = new Point(startRect.Left, startRect.Top) + new Size(startRect.Width / 2, startRect.Height / 2);
-            var startCoordinates = form.PointToScreen(centerOfStartRect);
+            var startCoordinates = form.PointToScreen(GetCenter(startRect));
             var endCoordinates = new Point(startCoordinates.X + 5, startCoordinates.Y + 5);
             var virtualPointStart = ToVirtualPoint(startCoordinates);
             var virtualPointEnd = ToVirtualPoint(endCoordinates);
@@ -205,9 +205,7 @@ public class DragDropTests : ControlTestBase
 
                 Point startCoordinates = clickable;
                 Rectangle endRect = dragDropForm.RichTextBoxDropTarget.ClientRectangle;
-                Point centerOfEndtRect = new Point(endRect.Left + ((endRect.Right - endRect.Left) / 2),
-                    endRect.Top + ((endRect.Bottom - endRect.Top) / 2));
-                Point endCoordinates = dragDropForm.RichTextBoxDropTarget.PointToScreen(centerOfEndtRect);
+                Point endCoordinates = dragDropForm.RichTextBoxDropTarget.PointToScreen(GetCenter(endRect));
 
                 Rectangle vscreen = SystemInformation.VirtualScreen;
                 Point virtualPointStart = new()
@@ -341,8 +339,7 @@ public class DragDropTests : ControlTestBase
             };
 
             var startRect = form.DisplayRectangle;
-            var centerOfStartRect = new Point(startRect.Left, startRect.Top) + new Size(startRect.Width / 2, startRect.Height / 2);
-            var startCoordinates = form.PointToScreen(centerOfStartRect);
+            var startCoordinates = form.PointToScreen(GetCenter(startRect));
             var endCoordinates = new Point(startCoordinates.X + 5, startCoordinates.Y + 5);
             var virtualPointStart = ToVirtualPoint(startCoordinates);
             var virtualPointEnd = ToVirtualPoint(endCoordinates);
@@ -411,11 +408,9 @@ public class DragDropTests : ControlTestBase
             };
 
             var startRect = form.ListDragSource.DisplayRectangle;
-            var centerOfStartRect = new Point(startRect.Left, startRect.Top) + new Size(startRect.Width / 2, startRect.Height / 2);
-            var startCoordinates = form.ListDragSource.PointToScreen(centerOfStartRect);
+            var startCoordinates = form.ListDragSource.PointToScreen(GetCenter(startRect));
             var endRect = form.ListDragTarget.DisplayRectangle;
-            var centerOfEndtRect = new Point(endRect.Left, startRect.Top) + new Size(endRect.Width / 2, endRect.Height / 2);
-            var endCoordinates = form.ListDragTarget.PointToScreen(centerOfEndtRect);
+            var endCoordinates = form.ListDragTarget.PointToScreen(GetCenter(endRect));
             var virtualPointStart = ToVirtualPoint(startCoordinates);
             var virtualPointEnd = ToVirtualPoint(endCoordinates);
 
@@ -622,7 +617,7 @@ public class DragDropTests : ControlTestBase
         HRESULT hr = Ole32.CoCreateInstance(
             in CLSID_CUIAutomation,
             IntPtr.Zero,
-            Ole32.CLSCTX.INPROC_SERVER,
+            CLSCTX.CLSCTX_INPROC_SERVER,
             in IID_IUIAutomation,
             out object obj);
         if (hr.Succeeded)

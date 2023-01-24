@@ -50,8 +50,106 @@ namespace System.Windows.Forms
                 propertyID switch
                 {
                     UiaCore.UIA.AcceleratorKeyPropertyId => _owningToolStripMenuItem.GetShortcutText(),
+                    UiaCore.UIA.PositionInSetPropertyId => GetPositionInSet(),
+                    UiaCore.UIA.SizeOfSetPropertyId => GetSizeOfSet(),
                     _ => base.GetPropertyValue(propertyID)
                 };
+
+            /// <summary>
+            ///  Gets <see cref="UiaCore.UIA.PositionInSetPropertyId"/> property value.
+            /// </summary>
+            private int? GetPositionInSet()
+            {
+                ToolStripItemCollection? displayedItems = _owningToolStripMenuItem.ParentInternal?.DisplayedItems;
+
+                if (displayedItems is null)
+                {
+                    return null;
+                }
+
+                int index = displayedItems.IndexOf(_owningToolStripMenuItem);
+
+                if (index < 0)
+                {
+                    return null;
+                }
+
+                foreach (ToolStripItem item in displayedItems)
+                {
+                    if (item == _owningToolStripMenuItem)
+                    {
+                        break;
+                    }
+
+                    if (item is ToolStripSeparator)
+                    {
+                        index--;
+                    }
+                }
+
+                return index + 1; // UIA_PositionInSet is 1-based
+            }
+
+            /// <summary>
+            ///  Gets <see cref="UiaCore.UIA.SizeOfSetPropertyId"/> property value.
+            /// </summary>
+            private int? GetSizeOfSet()
+            {
+                ToolStripItemCollection? displayedItems = _owningToolStripMenuItem.ParentInternal?.DisplayedItems;
+
+                if (displayedItems is null)
+                {
+                    return null;
+                }
+
+                int sizeOfSet = displayedItems.Count;
+
+                foreach (ToolStripItem item in displayedItems)
+                {
+                    if (item is ToolStripSeparator)
+                    {
+                        sizeOfSet--;
+                    }
+                }
+
+                return sizeOfSet;
+            }
+
+            public override string DefaultAction
+            {
+                get
+                {
+                    return Owner.AccessibleDefaultActionDescription
+                        ?? (_owningToolStripMenuItem.CheckOnClick ? SR.AccessibleActionCheck : base.DefaultAction);
+                }
+            }
+
+            internal override bool IsPatternSupported(UiaCore.UIA patternId) =>
+                patternId switch
+                {
+                    UiaCore.UIA.TogglePatternId => _owningToolStripMenuItem.CheckOnClick || _owningToolStripMenuItem.Checked,
+                    _ => base.IsPatternSupported(patternId)
+                };
+
+            #region Toggle Pattern
+
+            internal override void Toggle()
+            {
+                if (_owningToolStripMenuItem.CheckOnClick)
+                {
+                    _owningToolStripMenuItem.Checked = !_owningToolStripMenuItem.Checked;
+                }
+            }
+
+            internal override UiaCore.ToggleState ToggleState =>
+                _owningToolStripMenuItem.CheckState switch
+                {
+                    CheckState.Checked => UiaCore.ToggleState.On,
+                    CheckState.Unchecked => UiaCore.ToggleState.Off,
+                    _ => UiaCore.ToggleState.Indeterminate
+                };
+
+            #endregion
         }
     }
 }

@@ -391,6 +391,8 @@ namespace System.Windows.Forms
         /// </summary>
         public static Color DarkDark(Color baseColor) => new HLSColor(baseColor).Darker(1.0f);
 
+        internal static bool IsDark(Color color) => color.GetBrightness() <= .5;
+
         /// <summary>
         ///  Returns true if the luminosity of <paramref name="c1"/> is less than <paramref name="c2"/>.
         /// </summary>
@@ -2119,87 +2121,6 @@ namespace System.Windows.Forms
                 font.GdiVerticalFont);
 
         /// <summary>
-        ///  Returns whether or not <paramref name="target"/> was changed.
-        /// </summary>
-        internal static bool FontToIFont(Font source, Ole32.IFont target)
-        {
-            bool changed = false;
-
-            // We need to go through all the pain of the diff here because it looks like setting them all has different
-            // results based on the order and each individual IFont implementor.
-
-            string fontName = target.Name;
-            if (!source.Name.Equals(fontName))
-            {
-                target.Name = source.Name;
-                changed = true;
-            }
-
-            // This always seems to come back as the point size * 10000 (HIMETRIC?), regardless or ratio or mapping
-            // mode despite what the documentation says.
-
-            float fontSize = (float)target.Size / 10000;
-
-            // Size must be in points
-            float winformsSize = source.SizeInPoints;
-            if (winformsSize != fontSize)
-            {
-                target.Size = (long)(winformsSize * 10000);
-                changed = true;
-            }
-
-            LOGFONTW logfont = LOGFONTW.FromFont(source);
-
-            short fontWeight = target.Weight;
-            if (fontWeight != (short)logfont.lfWeight)
-            {
-                target.Weight = (short)logfont.lfWeight;
-                changed = true;
-            }
-
-            bool fontBold = target.Bold;
-            bool isBold = logfont.lfWeight >= (int)FW.BOLD;
-            if (fontBold != isBold)
-            {
-                target.Bold = isBold;
-                changed = true;
-            }
-
-            bool fontItalic = target.Italic;
-            bool isItalic = logfont.lfItalic != 0;
-            if (fontItalic != isItalic)
-            {
-                target.Italic = isItalic;
-                changed = true;
-            }
-
-            bool fontUnderline = target.Underline;
-            bool isUnderline = logfont.lfUnderline != 0;
-            if (fontUnderline != isUnderline)
-            {
-                target.Underline = isUnderline;
-                changed = true;
-            }
-
-            bool fontStrike = target.Strikethrough;
-            bool isStrike = logfont.lfStrikeOut != 0;
-            if (fontStrike != isStrike)
-            {
-                target.Strikethrough = isStrike;
-                changed = true;
-            }
-
-            short fontCharset = target.Charset;
-            if (fontCharset != (short)logfont.lfCharSet)
-            {
-                target.Charset = (short)logfont.lfCharSet;
-                changed = true;
-            }
-
-            return changed;
-        }
-
-        /// <summary>
         ///  This makes a choice from a set of raster op codes, based on the color given. If the color is considered to
         ///  be "dark", the raster op provided by dark will be returned.
         /// </summary>
@@ -2297,7 +2218,7 @@ namespace System.Windows.Forms
                     // properly.
                     color2 = Color.Black;
 
-                    if (baseColor.GetBrightness() <= .5)
+                    if (IsDark(baseColor))
                     {
                         color1 = color2;
                         color2 = baseColor.InvertColor();
@@ -2541,7 +2462,7 @@ namespace System.Windows.Forms
 
         internal static void InvertForeColorIfNeeded(Bitmap bitmap, Color backgroundColor)
         {
-            ControlPaint.HLSColor backgroundColorWrapper = new(backgroundColor);
+            HLSColor backgroundColorWrapper = new(backgroundColor);
 
             for (int y = 0; y < bitmap.Height; ++y)
             {
@@ -2550,7 +2471,7 @@ namespace System.Windows.Forms
                     var pixel = bitmap.GetPixel(x, y);
                     if (pixel != backgroundColor)
                     {
-                        var pixelColorWrapper = new ControlPaint.HLSColor(pixel);
+                        var pixelColorWrapper = new HLSColor(pixel);
                         if (Math.Abs(pixelColorWrapper.Luminosity - backgroundColorWrapper.Luminosity) > MaximumLuminosityDifference)
                         {
                             bitmap.SetPixel(x, y, pixel.InvertColor());
@@ -2558,6 +2479,21 @@ namespace System.Windows.Forms
                     }
                 }
             }
+        }
+
+        internal static Bitmap CreateBitmapWithInvertedForeColor(Bitmap bitmap, Color backgroundColor)
+        {
+            Bitmap result = new(bitmap.Width, bitmap.Height, bitmap.PixelFormat);
+            for (int y = 0; y < bitmap.Height; ++y)
+            {
+                for (int x = 0; x < bitmap.Width; ++x)
+                {
+                    Color pixel = bitmap.GetPixel(x, y);
+                    result.SetPixel(x, y, pixel != backgroundColor ? pixel.InvertColor() : pixel);
+                }
+            }
+
+            return result;
         }
 
         /// <summary>

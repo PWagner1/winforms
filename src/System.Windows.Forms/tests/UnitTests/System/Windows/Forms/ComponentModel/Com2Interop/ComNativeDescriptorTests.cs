@@ -4,6 +4,9 @@
 
 using System.ComponentModel;
 using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Windows.Forms.Tests.TestResources;
+using Windows.Win32.System.Com;
 using Windows.Win32.System.Ole;
 using WMPLib;
 using Xunit;
@@ -73,8 +76,8 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop.Tests
             HRESULT hr = Ole32.CoCreateInstance(
                 in guid,
                 IntPtr.Zero,
-                Ole32.CLSCTX.INPROC_SERVER,
-                in NativeMethods.ActiveX.IID_IUnknown,
+                CLSCTX.CLSCTX_INPROC_SERVER,
+                in IID.GetRef<IUnknown>(),
                 out object mediaPlayer);
 
             Assert.Equal(HRESULT.S_OK, hr);
@@ -104,6 +107,31 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop.Tests
 
             var converter = (Com2ExtendedTypeConverter)urlProperty.Converter;
             Assert.IsAssignableFrom<StringConverter>(converter.InnerConverter);
+        }
+
+        [WinFormsFact(Skip = "Causes test run to abort, must be run manually.")]
+        public void ComNativeDescriptor_GetProperties_FromSimpleVBControl()
+        {
+            if (RuntimeInformation.ProcessArchitecture != Architecture.X86)
+            {
+                return;
+            }
+
+            // Not much to see with this control, but it does exercise a fair amount of code.
+            ComClasses.VisualBasicSimpleControl.CreateInstance(out object vbcontrol).ThrowOnFailure();
+
+            var properties = TypeDescriptor.GetProperties(vbcontrol);
+            Assert.Empty(properties);
+
+            var events = TypeDescriptor.GetEvents(vbcontrol);
+            Assert.Empty(events);
+
+            var attributes = TypeDescriptor.GetAttributes(vbcontrol);
+            Assert.Equal(2, attributes.Count);
+            BrowsableAttribute browsable = (BrowsableAttribute)attributes[0];
+            Assert.True(browsable.Browsable);
+            DesignTimeVisibleAttribute visible = (DesignTimeVisibleAttribute)attributes[1];
+            Assert.False(visible.Visible);
         }
     }
 }

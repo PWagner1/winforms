@@ -81,12 +81,20 @@ namespace System.Windows.Forms
         public Cursor(Stream stream)
         {
             ArgumentNullException.ThrowIfNull(stream);
+            MemoryStream memoryStream = new();
+            // reset stream position to start, there are no gaurantees it is at the start.
+            if (stream.CanSeek)
+            {
+                stream.Position = 0;
+            }
 
-            int length = checked((int)stream.Length);
-            _cursorData = new byte[length];
-            stream.Read(_cursorData, 0, length);
+            stream.CopyTo(memoryStream);
+            _cursorData = memoryStream.ToArray();
+
+            // stream.CopyTo causes both streams to advance. So reset it for LoadPicture.
+            memoryStream.Position = 0;
             LoadPicture(
-                new Ole32.GPStream(new MemoryStream(_cursorData)),
+                new Ole32.GPStream(memoryStream),
                 nameof(stream));
         }
 
@@ -403,8 +411,7 @@ namespace System.Windows.Forms
                 using ComScope<IPersistStream> persist = new(null);
                 picture.Value->QueryInterface(IID.Get<IPersistStream>(), persist).ThrowOnFailure();
 
-                using var pStream = ComHelpers.GetComScope<IStream>(stream, out bool result);
-                Debug.Assert(result);
+                using var pStream = ComHelpers.GetComScope<IStream>(stream);
                 persist.Value->Load(pStream);
 
                 if (picture.Value->Type == (short)PICTYPE.PICTYPE_ICON)

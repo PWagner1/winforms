@@ -4913,7 +4913,7 @@ Pokud kliknete na Pokračovat, aplikace bude tuto chybu ignorovat a pokusí se p
       </trans-unit>
       <trans-unit id="ExDlgShowDetails">
         <source>&amp;Details</source>
-        <target state="translated">&amp;Podrobnosti</target>
+        <target state="translated">Po&amp;drobnosti</target>
         <note />
       </trans-unit>
       <trans-unit id="ExDlgWarningText">
@@ -5833,7 +5833,7 @@ Trasování zásobníku, kde došlo k neplatné operaci:
       </trans-unit>
       <trans-unit id="InvalidArgumentType">
         <source>Argument '{0}' must be of type '{1}'.</source>
-        <target state="new">Argument '{0}' must be of type '{1}'.</target>
+        <target state="translated">Argument {0} musí být typu {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidBoundArgument">

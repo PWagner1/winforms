@@ -583,7 +583,6 @@ namespace System.Windows.Forms
             }
             set
             {
-                _icon.Dispose();
                 _icon = value.OrThrowIfNull();
                 DisposeRegion();
                 ErrorWindow[] array = _windows.Values.ToArray();
@@ -705,7 +704,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Helper to dispose the cached icon region.
         /// </summary>
-        void DisposeRegion()
+        private void DisposeRegion()
         {
             if (_region is not null)
             {

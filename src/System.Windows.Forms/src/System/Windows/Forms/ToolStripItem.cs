@@ -193,6 +193,11 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
+        ///  Indicates whether or not this control has an accessible object associated with it.
+        /// </summary>
+        internal bool IsAccessibilityObjectCreated => Properties.GetObject(s_accessibilityProperty) is AccessibleObject;
+
+        /// <summary>
         ///  The Accessibility Object for this Control
         /// </summary>
         [Browsable(false)]
@@ -516,16 +521,9 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.ControlBackgroundImageLayoutDescr))]
         public virtual ImageLayout BackgroundImageLayout
         {
-            get
-            {
-                bool found = Properties.ContainsObject(s_backgroundImageLayoutProperty);
-                if (!found)
-                {
-                    return ImageLayout.Tile;
-                }
-
-                return (ImageLayout)Properties.GetObject(s_backgroundImageLayoutProperty)!;
-            }
+            get => Properties.TryGetObject(s_backgroundImageLayoutProperty, out ImageLayout imageLayout)
+                ? imageLayout
+                : ImageLayout.Tile;
             set
             {
                 if (BackgroundImageLayout != value)
@@ -1891,15 +1889,7 @@ namespace System.Windows.Forms
         [TypeConverter(typeof(StringConverter))]
         public object? Tag
         {
-            get
-            {
-                if (Properties.ContainsObject(ToolStripItem.s_tagProperty))
-                {
-                    return Properties.GetObject(ToolStripItem.s_tagProperty);
-                }
-
-                return null;
-            }
+            get => Properties.TryGetObject(ToolStripItem.s_tagProperty, out object? tag) ? tag : null;
             set => Properties.SetObject(ToolStripItem.s_tagProperty, value);
         }
 
@@ -1912,15 +1902,9 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.ToolStripItemTextDescr))]
         public virtual string? Text
         {
-            get
-            {
-                if (Properties.ContainsObject(ToolStripItem.s_textProperty))
-                {
-                    return (string?)Properties.GetObject(ToolStripItem.s_textProperty);
-                }
-
-                return string.Empty;
-            }
+            get => Properties.TryGetObject(ToolStripItem.s_textProperty, out string? text)
+                ? text
+                : string.Empty;
             set
             {
                 if (value != Text)
@@ -1968,9 +1952,9 @@ namespace System.Windows.Forms
             get
             {
                 ToolStripTextDirection textDirection = ToolStripTextDirection.Inherit;
-                if (Properties.ContainsObject(ToolStripItem.s_textDirectionProperty))
+                if (Properties.TryGetObject(ToolStripItem.s_textDirectionProperty, out ToolStripTextDirection direction))
                 {
-                    textDirection = (ToolStripTextDirection)Properties.GetObject(ToolStripItem.s_textDirectionProperty)!;
+                    textDirection = direction;
                 }
 
                 if (textDirection == ToolStripTextDirection.Inherit)
@@ -3062,9 +3046,9 @@ namespace System.Windows.Forms
         internal void OnOwnerTextDirectionChanged()
         {
             ToolStripTextDirection textDirection = ToolStripTextDirection.Inherit;
-            if (Properties.ContainsObject(ToolStripItem.s_textDirectionProperty))
+            if (Properties.TryGetObject(ToolStripItem.s_textDirectionProperty, out ToolStripTextDirection direction))
             {
-                textDirection = (ToolStripTextDirection)Properties.GetObject(ToolStripItem.s_textDirectionProperty)!;
+                textDirection = direction;
             }
 
             if (textDirection == ToolStripTextDirection.Inherit)
@@ -3220,6 +3204,11 @@ namespace System.Windows.Forms
 
         public void Select()
         {
+            Select(forceRaiseAccessibilityFocusChanged: false);
+        }
+
+        internal void Select(bool forceRaiseAccessibilityFocusChanged)
+        {
 #if DEBUG
             // let's not snap the stack trace unless we're debugging selection.
             if (ToolStrip.s_selectionDebug.TraceVerbose)
@@ -3264,7 +3253,24 @@ namespace System.Windows.Forms
 
                 KeyboardToolTipStateMachine.Instance.NotifyAboutGotFocus(this);
 
-                if (IsParentAccessibilityObjectCreated && AccessibilityObject is ToolStripItemAccessibleObject accessibleObject)
+                forceRaiseAccessibilityFocusChanged = true;
+            }
+
+            if (forceRaiseAccessibilityFocusChanged)
+            {
+                bool accessibilityIsOn = IsAccessibilityObjectCreated ||
+                    // When ToolStripItem is selected automatically for the first time
+                    // (for example, when menu bar gets focus or a sub menu is opened, its first item is selected automatically),
+                    // ToolStripItem's and parent sub menu's AccessibilityObjects might not be created yet.
+                    // AO tree is going to be constructed just after this first selection, if any accessibility client is on.
+                    // In this case, to be able to notify Accessibility of focus event right now
+                    // we determine Accessibility status by checking if parent AO instance is created.
+                    // If so, then we can force child AO creation.
+                    (IsOnDropDown
+                        ? OwnerItem?.IsAccessibilityObjectCreated ?? false
+                        : IsParentAccessibilityObjectCreated);
+
+                if (accessibilityIsOn && AccessibilityObject is ToolStripItemAccessibleObject accessibleObject)
                 {
                     accessibleObject.RaiseFocusChanged();
                 }
@@ -3457,9 +3463,9 @@ namespace System.Windows.Forms
         private bool ShouldSerializeTextDirection()
         {
             ToolStripTextDirection textDirection = ToolStripTextDirection.Inherit;
-            if (Properties.ContainsObject(ToolStripItem.s_textDirectionProperty))
+            if (Properties.TryGetObject(ToolStripItem.s_textDirectionProperty, out ToolStripTextDirection direction))
             {
-                textDirection = (ToolStripTextDirection)Properties.GetObject(ToolStripItem.s_textDirectionProperty)!;
+                textDirection = direction;
             }
 
             return textDirection != ToolStripTextDirection.Inherit;

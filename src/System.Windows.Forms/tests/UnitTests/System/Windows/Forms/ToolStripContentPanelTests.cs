@@ -13,7 +13,7 @@ using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Tests
 {
-    public class ToolStripContentPanelTests : IClassFixture<ThreadExceptionFixture>
+    public class ToolStripContentPanelTests
     {
         [WinFormsFact]
         public void ToolStripContentPanel_Ctor_SplitContainer()
@@ -1854,7 +1854,7 @@ namespace System.Windows.Forms.Tests
         {
             using var image = new Bitmap(10, 10);
             using Graphics graphics = Graphics.FromImage(image);
-            var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
+            using var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
 
             var renderer = new SubToolStripRenderer();
             using var control = new SubToolStripContentPanel

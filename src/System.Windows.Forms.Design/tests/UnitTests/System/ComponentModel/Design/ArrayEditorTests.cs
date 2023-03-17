@@ -10,7 +10,7 @@ using Xunit;
 
 namespace System.ComponentModel.Design.Tests
 {
-    public class ArrayEditorTests : IClassFixture<ThreadExceptionFixture>
+    public class ArrayEditorTests
     {
         [Theory]
         [InlineData(typeof(object), null)]
@@ -77,7 +77,7 @@ namespace System.ComponentModel.Design.Tests
         [MemberData(nameof(CanRemoveInstance_InheritanceAttribute_TestData))]
         public void ArrayEditor_CanRemoveInstance_InheritanceAttribute_ReturnsExpected(InheritanceAttribute attribute, bool expected)
         {
-            var component = new Component();
+            using var component = new Component();
             TypeDescriptor.AddAttributes(component, attribute);
             var editor = new SubArrayEditor(null);
             Assert.Equal(expected, editor.CanRemoveInstance(component));

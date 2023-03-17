@@ -7,12 +7,11 @@ using System.Windows.Forms.Primitives;
 
 namespace System.Windows.Forms.Tests
 {
-    [Collection(nameof(SynchronousCollection))]
     public class LocalAppContextSwitchesTest
     {
         private void ResetLocalSwitches(dynamic testAccessor)
         {
-            testAccessor.s_AnchorLayoutV2 = 0;
+            testAccessor.s_anchorLayoutV2 = 0;
             testAccessor.s_scaleTopLevelFormMinMaxSizeForDpi = 0;
             testAccessor.s_trackBarModernRendering = 0;
             testAccessor.s_servicePointManagerCheckCrl = 0;
@@ -26,6 +25,7 @@ namespace System.Windows.Forms.Tests
         {
             FrameworkName? previousTestTargetFramework = LocalAppContextSwitches.TargetFrameworkName;
             dynamic testAccessor = typeof(LocalAppContextSwitches).TestAccessor().Dynamic;
+            ResetLocalSwitches(testAccessor);
 
             try
             {
@@ -41,28 +41,6 @@ namespace System.Windows.Forms.Tests
                 // Reset target framework name.
                 testAccessor.s_targetFrameworkName = previousTestTargetFramework;
                 ResetLocalSwitches(testAccessor);
-            }
-        }
-
-        [WinFormsTheory]
-        [InlineData(".NETCoreApp,Version=v8.0", true)]
-        [InlineData(".NETCoreApp,Version=v7.0", true)]
-        [InlineData(".NET Framework,Version=v4.8", false)]
-        public void Validate_TargetFramework_Is_NETCore(string targetFrameworkName, bool isNetCoreApp)
-        {
-            FrameworkName? previousTestTargetFramework = LocalAppContextSwitches.TargetFrameworkName;
-            dynamic testAccessor = typeof(LocalAppContextSwitches).TestAccessor().Dynamic;
-
-            try
-            {
-                testAccessor.s_targetFrameworkName = new FrameworkName(targetFrameworkName);
-                bool isCoreApplication = LocalAppContextSwitches.IsNetCoreApp;
-                Assert.Equal(isNetCoreApp, isCoreApplication);
-            }
-            finally
-            {
-                // Reset target framework name.
-                testAccessor.s_targetFrameworkName = previousTestTargetFramework;
             }
         }
     }

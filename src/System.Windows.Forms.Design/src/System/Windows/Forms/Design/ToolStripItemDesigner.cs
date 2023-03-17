@@ -707,7 +707,7 @@ namespace System.Windows.Forms.Design
                 PropertyDescriptor textProp = TypeDescriptor.GetProperties(Component)["Text"];
                 if (textProp is not null && textProp.PropertyType == typeof(string) && !textProp.IsReadOnly && textProp.IsBrowsable)
                 {
-                    textProp.SetValue(Component, "");
+                    textProp.SetValue(Component, string.Empty);
                 }
             }
         }
@@ -966,7 +966,7 @@ namespace System.Windows.Forms.Design
                     acc.AddState(AccessibleStates.Selected);
                     if (tool is not null)
                     {
-                        Debug.WriteLineIf(CompModSwitches.MSAA.TraceInfo, "MSAA: SelectionAdd, tool = " + tool.ToString());
+                        Debug.WriteLineIf(CompModSwitches.MSAA.TraceInfo, $"MSAA: SelectionAdd, tool = {tool}");
                         User32.NotifyWinEvent((uint)AccessibleEvents.SelectionAdd, new HandleRef(owner, owner.Handle), User32.OBJID.CLIENT, focusIndex + 1);
                     }
 
@@ -1108,7 +1108,7 @@ namespace System.Windows.Forms.Design
         // internal method called to select the next item from the current item.
         internal void SelectNextItem(ISelectionService service, bool enterKeyPressed, ToolStripDesigner designer)
         {
-            if (ToolStripItem is ToolStripDropDownItem dropDownItem)
+            if (ToolStripItem is ToolStripDropDownItem)
             {
                 SetSelection(enterKeyPressed);
             }

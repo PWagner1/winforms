@@ -8,7 +8,7 @@ using Xunit;
 
 namespace System.ComponentModel.Design.Tests
 {
-    public class SiteNestedContainerTests : IClassFixture<ThreadExceptionFixture>
+    public class SiteNestedContainerTests
     {
         public static IEnumerable<object[]> CreateNestedContainer_TestData()
         {
@@ -889,7 +889,7 @@ namespace System.ComponentModel.Design.Tests
             using var component2 = new Component();
             using INestedContainer container2 = surface.CreateNestedContainer(component2, "containerName");
 
-            var otherComponent = new RootDesignerComponent();
+            using var otherComponent = new RootDesignerComponent();
             using var component = new RootDesignerComponent();
             container1.Add(otherComponent);
             container2.Add(component);
@@ -908,7 +908,7 @@ namespace System.ComponentModel.Design.Tests
             using var component2 = new Component();
             using INestedContainer container2 = surface.CreateNestedContainer(component2, "containerName");
 
-            var otherComponent = new RootDesignerComponent();
+            using var otherComponent = new RootDesignerComponent();
             container1.Add(otherComponent);
             container2.Remove(otherComponent);
             container2.Remove(new Component());

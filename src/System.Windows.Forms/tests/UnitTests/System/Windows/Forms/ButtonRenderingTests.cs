@@ -8,7 +8,7 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class ButtonRenderingTests : IClassFixture<ThreadExceptionFixture>
+    public class ButtonRenderingTests
     {
         [WinFormsFact]
         public unsafe void CaptureButton()
@@ -73,8 +73,7 @@ namespace System.Windows.Forms.Tests
                     State.PenColor(SystemColors.ControlDark)));
         }
 
-        [WinFormsFact(Skip = "TODO, refer to https://github.com/dotnet/winforms/issues/4212")]
-        [ActiveIssue("https://github.com/dotnet/winforms/issues/4212")]
+        [WinFormsFact]
         public unsafe void Button_VisualStyles_on_Default_LineDrawing()
         {
             if (!Application.RenderWithVisualStyles)

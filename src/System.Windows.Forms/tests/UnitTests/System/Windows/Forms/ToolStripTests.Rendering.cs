@@ -8,7 +8,7 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public partial class ToolStripTests : IClassFixture<ThreadExceptionFixture>
+    public partial class ToolStripTests
     {
         [WinFormsFact]
         public void ToolStrip_RendersBackgroundCorrectly()
@@ -29,7 +29,7 @@ namespace System.Windows.Forms.Tests
             DeviceContextState state = new DeviceContextState(emf);
 
             Rectangle bounds = toolStrip.Bounds;
-            PaintEventArgs e = new PaintEventArgs(emf, bounds);
+            using var e = new PaintEventArgs(emf, bounds);
             toolStrip.TestAccessor().Dynamic.OnPaintBackground(e);
 
             Rectangle bitBltBounds = new Rectangle(bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);

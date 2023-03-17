@@ -11,7 +11,7 @@ using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Tests
 {
-    public partial class StatusStripTests : IClassFixture<ThreadExceptionFixture>
+    public partial class StatusStripTests
     {
         [WinFormsFact]
         public void StatusStrip_Ctor_Default()
@@ -1210,7 +1210,7 @@ namespace System.Windows.Forms.Tests
         {
             using var image = new Bitmap(10, 10);
             using Graphics graphics = Graphics.FromImage(image);
-            var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
+            using var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
 
             using var control = new SubStatusStrip
             {

@@ -12,7 +12,7 @@ using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Tests
 {
-    public partial class ToolStripButtonTests : IClassFixture<ThreadExceptionFixture>
+    public partial class ToolStripButtonTests
     {
         [WinFormsFact]
         public void ToolStripButton_Ctor_Default()
@@ -1284,7 +1284,7 @@ namespace System.Windows.Forms.Tests
         {
             using var image = new Bitmap(10, 10);
             using Graphics graphics = Graphics.FromImage(image);
-            var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
+            using var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
 
             var renderer = new SubToolStripRenderer();
             using var owner = new ToolStrip
@@ -1375,7 +1375,7 @@ namespace System.Windows.Forms.Tests
         {
             using var image = new Bitmap(10, 10);
             using Graphics graphics = Graphics.FromImage(image);
-            var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
+            using var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
 
             var renderer = new SubToolStripRenderer();
             using var owner = new ToolStrip

@@ -15,7 +15,7 @@ using Windows.Win32.System.Ole;
 
 namespace System.Windows.Forms.Tests
 {
-    public partial class ToolStripTests : IClassFixture<ThreadExceptionFixture>
+    public partial class ToolStripTests
     {
         [WinFormsFact]
         public void ToolStrip_Ctor_Default()
@@ -5833,7 +5833,7 @@ namespace System.Windows.Forms.Tests
         {
             using var image = new Bitmap(10, 10);
             using Graphics graphics = Graphics.FromImage(image);
-            var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
+            using var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
 
             using var control = new SubToolStrip
             {
@@ -5980,7 +5980,7 @@ namespace System.Windows.Forms.Tests
         {
             using var image = new Bitmap(10, 10);
             using Graphics graphics = Graphics.FromImage(image);
-            var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
+            using var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
 
             using var control = new SubToolStrip
             {
@@ -6031,7 +6031,7 @@ namespace System.Windows.Forms.Tests
         {
             using var image = new Bitmap(10, 10);
             using Graphics graphics = Graphics.FromImage(image);
-            var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
+            using var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
 
             using var control = new SubToolStrip
             {
@@ -6118,7 +6118,7 @@ namespace System.Windows.Forms.Tests
         {
             using var image = new Bitmap(10, 10);
             using Graphics graphics = Graphics.FromImage(image);
-            var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
+            using var eventArgs = new PaintEventArgs(graphics, new Rectangle(1, 2, 3, 4));
 
             using var parent = new Control
             {
@@ -6193,7 +6193,7 @@ namespace System.Windows.Forms.Tests
         {
             using var image = new Bitmap(10, 10);
             using Graphics graphics = Graphics.FromImage(image);
-            var eventArgs = new PaintEventArgs(graphics, Rectangle.Empty);
+            using var eventArgs = new PaintEventArgs(graphics, Rectangle.Empty);
 
             using var control = new SubToolStrip();
             int callCount = 0;
@@ -6222,7 +6222,7 @@ namespace System.Windows.Forms.Tests
         {
             using var image = new Bitmap(10, 10);
             using Graphics graphics = Graphics.FromImage(image);
-            var eventArgs = new PaintEventArgs(graphics, Rectangle.Empty);
+            using var eventArgs = new PaintEventArgs(graphics, Rectangle.Empty);
 
             using var control = new SubToolStrip();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
@@ -7103,8 +7103,7 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<NotSupportedException>(() => control.SetItemLocation(item, Point.Empty));
         }
 
-        [ActiveIssue("https://github.com/dotnet/winforms/issues/6610")]
-        [WinFormsFact(Skip = "Flaky tests, see: https://github.com/dotnet/winforms/issues/6610")]
+        [WinFormsFact]
         public void ToolStrip_WndProc_InvokeMouseActivate_Success()
         {
             using var control = new SubToolStrip();
@@ -7118,8 +7117,7 @@ namespace System.Windows.Forms.Tests
             Assert.True(control.IsHandleCreated);
         }
 
-        [ActiveIssue("https://github.com/dotnet/winforms/issues/6610")]
-        [WinFormsFact(Skip = "Flaky tests, see: https://github.com/dotnet/winforms/issues/6610")]
+        [WinFormsFact]
         public void ToolStrip_WndProc_InvokeMouseActivateWithHandle_Success()
         {
             using var control = new SubToolStrip();

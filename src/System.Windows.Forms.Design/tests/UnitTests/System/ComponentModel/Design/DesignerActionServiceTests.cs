@@ -11,7 +11,7 @@ using Xunit;
 
 namespace System.ComponentModel.Design.Tests
 {
-    public class DesignerActionServiceTests : IClassFixture<ThreadExceptionFixture>
+    public class DesignerActionServiceTests
     {
         [Fact]
         public void Ctor_IServiceProvider()
@@ -56,8 +56,7 @@ namespace System.ComponentModel.Design.Tests
         public void Add_ComponentDesignerActionList_Success(DesignerActionList actionList, DesignerActionListCollection expected)
         {
             var service = new SubDesignerActionService(null);
-            var component = new Component();
-            var component2 = new Component();
+            using var component = new Component();
             service.Add(component, actionList);
             Assert.True(service.Contains(component));
             Assert.Equal(expected, service.GetComponentActions(component));
@@ -79,7 +78,6 @@ namespace System.ComponentModel.Design.Tests
         {
             var service = new SubDesignerActionService(null);
             var component = new Component();
-            var component2 = new Component();
             var actionList1 = new CustomDesignerActionList(null);
             var actionList2 = new CustomDesignerActionList(null);
             service.Add(component, actionList1);
@@ -114,8 +112,7 @@ namespace System.ComponentModel.Design.Tests
         public void Add_ComponentDesignerActionListCollection_Success(DesignerActionList actionList, DesignerActionListCollection expected)
         {
             var service = new SubDesignerActionService(null);
-            var component = new Component();
-            var component2 = new Component();
+            using var component = new Component();
             service.Add(component, new DesignerActionListCollection { actionList });
             Assert.True(service.Contains(component));
             Assert.Equal(expected, service.GetComponentActions(component));
@@ -136,8 +133,7 @@ namespace System.ComponentModel.Design.Tests
         public void Add_ComponentDesignerActionListCollectionExisting_Success()
         {
             var service = new SubDesignerActionService(null);
-            var component = new Component();
-            var component2 = new Component();
+            using var component = new Component();
             var actionList1 = new CustomDesignerActionList(null);
             var actionList2 = new CustomDesignerActionList(null);
             service.Add(component, new DesignerActionListCollection { actionList1 });
@@ -199,8 +195,8 @@ namespace System.ComponentModel.Design.Tests
         public void Clear_InvokeWithDesignerActionListsChanged_CallsHandler()
         {
             var service = new SubDesignerActionService(null);
-            var component1 = new Component();
-            var component2 = new Component();
+            using var component1 = new Component();
+            using var component2 = new Component();
             var actionList = new CustomDesignerActionList(null);
             service.Add(component1, actionList);
             service.Add(component2, new DesignerActionListCollection());
@@ -359,7 +355,7 @@ namespace System.ComponentModel.Design.Tests
         public void GetComponentActions_NoSuchComponentNotEmpty_ReturnsEmpty(ComponentActionsType type)
         {
             var service = new SubDesignerActionService(null);
-            var component = new Component();
+            using var component = new Component();
             var actionList = new CustomDesignerActionList(null);
             service.Add(component, actionList);
             Assert.Empty(service.GetComponentActions(new Component(), type));
@@ -380,7 +376,7 @@ namespace System.ComponentModel.Design.Tests
         public void GetComponentActions_NoSuchAction_ReturnsEmpty(ComponentActionsType type)
         {
             var service = new SubDesignerActionService(null);
-            var component = new Component();
+            using var component = new Component();
             var actionList = new CustomDesignerActionList(null);
             service.Add(component, actionList);
             Assert.Empty(service.GetComponentActions(component, type));
@@ -665,7 +661,7 @@ namespace System.ComponentModel.Design.Tests
         public void Remove_InvokeComponent_Success()
         {
             var service = new DesignerActionService(null);
-            var component = new Component();
+            using var component = new Component();
             service.Add(component, new CustomDesignerActionList(null));
             Assert.NotEmpty(service.GetComponentActions(component));
             Assert.True(service.Contains(component));
@@ -684,8 +680,8 @@ namespace System.ComponentModel.Design.Tests
         public void Remove_InvokeComponentWithDesignerActionListsChanged_CallsHandler()
         {
             var service = new DesignerActionService(null);
-            var component1 = new Component();
-            var component2 = new Component();
+            using var component1 = new Component();
+            using var component2 = new Component();
             var actionList = new CustomDesignerActionList(null);
             service.Add(component1, actionList);
             service.Add(component2, new DesignerActionListCollection());
@@ -736,10 +732,10 @@ namespace System.ComponentModel.Design.Tests
         public void Remove_InvokeDesignerActionList_Success()
         {
             var service = new DesignerActionService(null);
-            var component1 = new Component();
-            var component2 = new Component();
-            var component3 = new Component();
-            var component4 = new Component();
+            using var component1 = new Component();
+            using var component2 = new Component();
+            using var component3 = new Component();
+            using var component4 = new Component();
             var actionList1 = new CustomDesignerActionList(null);
             var actionList2 = new CustomDesignerActionList(null);
             var actionList3 = new CustomDesignerActionList(null);
@@ -865,8 +861,8 @@ namespace System.ComponentModel.Design.Tests
         public void Remove_InvokeDesignerActionListWithDesignerActionListsChanged_CallsHandler()
         {
             var service = new DesignerActionService(null);
-            var component1 = new Component();
-            var component2 = new Component();
+            using var component1 = new Component();
+            using var component2 = new Component();
             var actionList1 = new CustomDesignerActionList(null);
             var actionList2 = new CustomDesignerActionList(null);
             service.Add(component1, actionList1);
@@ -903,10 +899,10 @@ namespace System.ComponentModel.Design.Tests
         public void Remove_InvokeComponentDesignerActionList_Success()
         {
             var service = new DesignerActionService(null);
-            var component1 = new Component();
-            var component2 = new Component();
-            var component3 = new Component();
-            var component4 = new Component();
+            using var component1 = new Component();
+            using var component2 = new Component();
+            using var component3 = new Component();
+            using var component4 = new Component();
             var actionList1 = new CustomDesignerActionList(null);
             var actionList2 = new CustomDesignerActionList(null);
             var actionList3 = new CustomDesignerActionList(null);
@@ -977,7 +973,7 @@ namespace System.ComponentModel.Design.Tests
         public void Remove_NoSuchComponentActionListNotEmpty_Nop()
         {
             var service = new DesignerActionService(null);
-            var component = new Component();
+            using var component = new Component();
             service.Add(component, new CustomDesignerActionList(null));
             service.Remove(new Component(), new CustomDesignerActionList(null));
             service.Remove(component, new CustomDesignerActionList(null));
@@ -995,8 +991,8 @@ namespace System.ComponentModel.Design.Tests
         public void Remove_InvokeComponentDesignerActionListWithDesignerActionListsChanged_CallsHandler()
         {
             var service = new DesignerActionService(null);
-            var component1 = new Component();
-            var component2 = new Component();
+            using var component1 = new Component();
+            using var component2 = new Component();
             var actionList1 = new CustomDesignerActionList(null);
             var actionList2 = new CustomDesignerActionList(null);
             service.Add(component1, actionList1);

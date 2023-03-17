@@ -11,7 +11,7 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class ClipboardTests : IClassFixture<ThreadExceptionFixture>
+    public class ClipboardTests
     {
         [WinFormsFact]
         public void Clipboard_Clear_InvokeMultipleTimes_Success()
@@ -268,8 +268,7 @@ namespace System.Windows.Forms.Tests
             Assert.True(Clipboard.ContainsData(data.GetType().FullName));
         }
 
-        [ActiveIssue("https://github.com/dotnet/winforms/issues/6729")]
-        [WinFormsTheory(Skip = "Flaky tests, see: https://github.com/dotnet/winforms/issues/6729")]
+        [WinFormsTheory]
         [InlineData(1, true)]
         [InlineData(1, false)]
         [InlineData("data", true)]

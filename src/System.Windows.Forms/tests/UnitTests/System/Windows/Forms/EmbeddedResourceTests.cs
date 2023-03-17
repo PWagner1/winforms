@@ -8,7 +8,7 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class EmbeddedResourceTests : IClassFixture<ThreadExceptionFixture>
+    public class EmbeddedResourceTests
     {
         // Get System.Windows.Forms assembly to verify that it contains all the resources that the code uses.
         private readonly Assembly assembly = Assembly.GetAssembly(typeof(AccessibleObject));
@@ -230,7 +230,7 @@ namespace System.Windows.Forms.Tests
         public static TheoryData ExpectedCursorNames()
              => (TheoryData)s_expectedCursorNames.Split(Environment.NewLine).ToTheoryData();
 
-        [Theory(Skip = "Flaky test being investigated. See: https://github.com/dotnet/winforms/issues/8601")]
+        [Theory]
         [MemberData(nameof(ExpectedCursorNames))]
         public void EmbeddedResource_ResourcesExist_Cursor(string resourceName)
         {

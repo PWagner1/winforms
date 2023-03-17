@@ -12,7 +12,7 @@ using Size = System.Drawing.Size;
 
 namespace System.Windows.Forms.Tests
 {
-    public class MenuStripTests : IClassFixture<ThreadExceptionFixture>
+    public class MenuStripTests
     {
         [WinFormsFact]
         public void MenuStrip_Ctor_Default()
@@ -746,7 +746,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [WinFormsFact(Skip = " Flaky test being investigated. See:https://github.com/dotnet/winforms/issues/8611")]
+        [WinFormsFact]
         public void MenuStrip_WndProc_InvokeMouseActivate_Success()
         {
             using var control = new SubMenuStrip();

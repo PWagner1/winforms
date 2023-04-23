@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using System.Runtime.InteropServices;
 #if NET7_0_OR_GREATER
 using System.Runtime.InteropServices.Marshalling;
@@ -54,42 +53,7 @@ internal static partial class Interop
 
             public override string ToString()
             {
-                return "[DEVMODE: "
-                + "dmDeviceName=" + dmDeviceName
-                + ", dmSpecVersion=" + dmSpecVersion
-                + ", dmDriverVersion=" + dmDriverVersion
-                + ", dmSize=" + dmSize
-                + ", dmDriverExtra=" + dmDriverExtra
-                + ", dmFields=" + dmFields
-                + ", dmOrientation=" + dmOrientation
-                + ", dmPaperSize=" + dmPaperSize
-                + ", dmPaperLength=" + dmPaperLength
-                + ", dmPaperWidth=" + dmPaperWidth
-                + ", dmScale=" + dmScale
-                + ", dmCopies=" + dmCopies
-                + ", dmDefaultSource=" + dmDefaultSource
-                + ", dmPrintQuality=" + dmPrintQuality
-                + ", dmColor=" + dmColor
-                + ", dmDuplex=" + dmDuplex
-                + ", dmYResolution=" + dmYResolution
-                + ", dmTTOption=" + dmTTOption
-                + ", dmCollate=" + dmCollate
-                + ", dmFormName=" + dmFormName
-                + ", dmLogPixels=" + dmLogPixels
-                + ", dmBitsPerPel=" + dmBitsPerPel
-                + ", dmPelsWidth=" + dmPelsWidth
-                + ", dmPelsHeight=" + dmPelsHeight
-                + ", dmDisplayFlags=" + dmDisplayFlags
-                + ", dmDisplayFrequency=" + dmDisplayFrequency
-                + ", dmICMMethod=" + dmICMMethod
-                + ", dmICMIntent=" + dmICMIntent
-                + ", dmMediaType=" + dmMediaType
-                + ", dmDitherType=" + dmDitherType
-                + ", dmICCManufacturer=" + dmICCManufacturer
-                + ", dmICCModel=" + dmICCModel
-                + ", dmPanningWidth=" + dmPanningWidth
-                + ", dmPanningHeight=" + dmPanningHeight
-                + "]";
+                return $"[DEVMODE: dmDeviceName={dmDeviceName}, dmSpecVersion={dmSpecVersion}, dmDriverVersion={dmDriverVersion}, dmSize={dmSize}, dmDriverExtra={dmDriverExtra}, dmFields={dmFields}, dmOrientation={dmOrientation}, dmPaperSize={dmPaperSize}, dmPaperLength={dmPaperLength}, dmPaperWidth={dmPaperWidth}, dmScale={dmScale}, dmCopies={dmCopies}, dmDefaultSource={dmDefaultSource}, dmPrintQuality={dmPrintQuality}, dmColor={dmColor}, dmDuplex={dmDuplex}, dmYResolution={dmYResolution}, dmTTOption={dmTTOption}, dmCollate={dmCollate}, dmFormName={dmFormName}, dmLogPixels={dmLogPixels}, dmBitsPerPel={dmBitsPerPel}, dmPelsWidth={dmPelsWidth}, dmPelsHeight={dmPelsHeight}, dmDisplayFlags={dmDisplayFlags}, dmDisplayFrequency={dmDisplayFrequency}, dmICMMethod={dmICMMethod}, dmICMIntent={dmICMIntent}, dmMediaType={dmMediaType}, dmDitherType={dmDitherType}, dmICCManufacturer={dmICCManufacturer}, dmICCModel={dmICCModel}, dmPanningWidth={dmPanningWidth}, dmPanningHeight={dmPanningHeight}]";
             }
         }
     }

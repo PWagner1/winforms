@@ -4,14 +4,11 @@
 
 #nullable enable
 
-using Xunit;
+namespace System.Windows.Forms.Metafiles;
 
-namespace System.Windows.Forms.Metafiles
+internal class PenStyleValidator : IStateValidator
 {
-    internal class PenStyleValidator : IStateValidator
-    {
-        private readonly PEN_STYLE _penStyle;
-        public PenStyleValidator(PEN_STYLE penStyle) => _penStyle = penStyle;
-        public void Validate(DeviceContextState state) => Assert.Equal(_penStyle, state.SelectedPen.elpPenStyle);
-    }
+    private readonly PEN_STYLE _penStyle;
+    public PenStyleValidator(PEN_STYLE penStyle) => _penStyle = penStyle;
+    public void Validate(DeviceContextState state) => Assert.Equal(_penStyle, state.SelectedPen.elpPenStyle);
 }

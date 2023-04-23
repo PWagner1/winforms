@@ -5,14 +5,12 @@
 #nullable enable
 
 using System.Drawing;
-using Xunit;
 
-namespace System.Windows.Forms.Metafiles
+namespace System.Windows.Forms.Metafiles;
+
+internal class PenColorValidator : IStateValidator
 {
-    internal class PenColorValidator : IStateValidator
-    {
-        private readonly Color _penColor;
-        public PenColorValidator(Color penColor) => _penColor = penColor;
-        public void Validate(DeviceContextState state) => Assert.Equal((COLORREF)_penColor, state.SelectedPen.elpColor);
-    }
+    private readonly Color _penColor;
+    public PenColorValidator(Color penColor) => _penColor = penColor;
+    public void Validate(DeviceContextState state) => Assert.Equal((COLORREF)_penColor, state.SelectedPen.elpColor);
 }

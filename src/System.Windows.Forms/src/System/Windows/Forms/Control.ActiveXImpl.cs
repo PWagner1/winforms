@@ -4,8 +4,6 @@
 
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -16,6 +14,7 @@ using System.Text;
 using Windows.Win32.System.Com;
 using Windows.Win32.System.Com.StructuredStorage;
 using Windows.Win32.System.Ole;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -374,7 +373,7 @@ public partial class Control
                     }
 #endif
 
-                    if (lpmsg->message == (uint)User32.WM.KEYDOWN && lpmsg->wParam == (WPARAM)(nuint)User32.VK.TAB)
+                    if (lpmsg->message == (uint)User32.WM.KEYDOWN && lpmsg->wParam == (WPARAM)(nuint)VIRTUAL_KEY.VK_TAB)
                     {
                         target.SelectNextControl(null, ModifierKeys != Keys.Shift, tabStopOnly: true, nested: true, wrap: true);
                     }
@@ -1188,9 +1187,8 @@ public partial class Control
                     // to a binary blob and then de-serialize.
                     byte[] bytes = Convert.FromBase64String(value);
                     using MemoryStream stream = new MemoryStream(bytes);
-                    BinaryFormatter formatter = new BinaryFormatter();
 #pragma warning disable SYSLIB0011 // Type or member is obsolete
-                    currentProperty.SetValue(_control, formatter.Deserialize(stream));
+                    currentProperty.SetValue(_control, new BinaryFormatter().Deserialize(stream));
 #pragma warning restore SYSLIB0011 // Type or member is obsolete
 
                     return true;
@@ -1567,15 +1565,14 @@ public partial class Control
 
                 Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"Saving property {currentProperty.Name}");
 
-                object? value = null;
+                string? value = null;
 
                 if (IsResourceProperty(currentProperty))
                 {
                     // Resource property.  Save this to the bag as a 64bit encoded string.
                     using MemoryStream stream = new MemoryStream();
-                    BinaryFormatter formatter = new BinaryFormatter();
 #pragma warning disable SYSLIB0011 // Type or member is obsolete
-                    formatter.Serialize(stream, props[i].GetValue(_control)!);
+                    new BinaryFormatter().Serialize(stream, props[i].GetValue(_control)!);
 #pragma warning restore SYSLIB0011 // Type or member is obsolete
                     byte[] bytes = new byte[(int)stream.Length];
                     stream.Position = 0;
@@ -1606,11 +1603,13 @@ public partial class Control
                     value = Convert.ToBase64String(data);
                 }
 
-                VARIANT variant = default;
-                Marshal.GetNativeVariantForObject(value, (nint)(void*)&variant);
-                fixed (char* pszPropName = props[i].Name)
+                if (value is not null)
                 {
-                    propertyBag->Write(pszPropName, &variant);
+                    using VARIANT variant = (VARIANT)(new BSTR(value));
+                    fixed (char* pszPropName = props[i].Name)
+                    {
+                        propertyBag->Write(pszPropName, &variant);
+                    }
                 }
             }
 
@@ -1721,7 +1720,7 @@ public partial class Control
             try
             {
                 Size size = new Size(HiMetricToPixel(pSizel->Width, pSizel->Height));
-                Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"SetExtent : new size:{size.ToString()}");
+                Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"SetExtent : new size:{size}");
 
                 // If we're in place active, let the in place site set our bounds.
                 // Otherwise, just set it on our control directly.
@@ -1821,7 +1820,7 @@ public partial class Control
             }
 #endif
 
-            Rectangle posRect = Rectangle.FromLTRB(lprcPosRect->left, lprcPosRect->top, lprcPosRect->right, lprcPosRect->bottom);
+            Rectangle posRect = *lprcPosRect;
 
             Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"Set control bounds: {posRect}");
 
@@ -1838,10 +1837,7 @@ public partial class Control
             Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, $"Old Control Bounds: {_control.Bounds}");
             if (_activeXState[s_adjustingRect])
             {
-                _adjustRect->left = posRect.X;
-                _adjustRect->top = posRect.Y;
-                _adjustRect->right = posRect.Right;
-                _adjustRect->bottom = posRect.Bottom;
+                *_adjustRect = posRect;
             }
             else
             {
@@ -2003,17 +1999,17 @@ public partial class Control
             }
 
             KEYMODIFIERS keyState = 0;
-            if (PInvoke.GetKeyState(User32.VK.SHIFT) < 0)
+            if (PInvoke.GetKeyState((int)VIRTUAL_KEY.VK_SHIFT) < 0)
             {
                 keyState |= KEYMODIFIERS.KEYMOD_SHIFT;
             }
 
-            if (PInvoke.GetKeyState(User32.VK.CONTROL) < 0)
+            if (PInvoke.GetKeyState((int)VIRTUAL_KEY.VK_CONTROL) < 0)
             {
                 keyState |= KEYMODIFIERS.KEYMOD_CONTROL;
             }
 
-            if (PInvoke.GetKeyState(User32.VK.MENU) < 0)
+            if (PInvoke.GetKeyState((int)VIRTUAL_KEY.VK_MENU) < 0)
             {
                 keyState |= KEYMODIFIERS.KEYMOD_ALT;
             }

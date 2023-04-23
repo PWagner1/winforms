@@ -2,20 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Xunit;
+namespace System.Windows.Forms.Tests;
 
-namespace System.Windows.Forms.Tests
+public class PropertyGridToolStripButtonTests
 {
-    public class PropertyGridToolStripButtonTests
+    [WinFormsFact]
+    public void PropertyGridToolStripButton_AccessibilityObject_ReturnsPropertyGridToolStripButtonAccessibleObject()
     {
-        [WinFormsFact]
-        public void PropertyGridToolStripButton_AccessibilityObject_ReturnsPropertyGridToolStripButtonAccessibleObject()
-        {
-            using PropertyGrid propertyGrid = new PropertyGrid();
-            ToolStripButton[] toolStripButtons = propertyGrid.TestAccessor().Dynamic._viewSortButtons;
+        using PropertyGrid propertyGrid = new PropertyGrid();
+        ToolStripButton[] toolStripButtons = propertyGrid.TestAccessor().Dynamic._viewSortButtons;
 
-            Assert.IsType<PropertyGridToolStripButton.PropertyGridToolStripButtonAccessibleObject>(toolStripButtons[0].AccessibilityObject);
-            Assert.IsType<PropertyGridToolStripButton.PropertyGridToolStripButtonAccessibleObject>(toolStripButtons[1].AccessibilityObject);
-        }
+        Assert.IsType<PropertyGridToolStripButton.PropertyGridToolStripButtonAccessibleObject>(toolStripButtons[0].AccessibilityObject);
+        Assert.IsType<PropertyGridToolStripButton.PropertyGridToolStripButtonAccessibleObject>(toolStripButtons[1].AccessibilityObject);
     }
 }

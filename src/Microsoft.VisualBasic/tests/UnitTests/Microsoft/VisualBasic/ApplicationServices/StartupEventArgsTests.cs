@@ -3,24 +3,22 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.ObjectModel;
-using Xunit;
 
-namespace Microsoft.VisualBasic.ApplicationServices.Tests
+namespace Microsoft.VisualBasic.ApplicationServices.Tests;
+
+public class StartupEventArgsTests
 {
-    public class StartupEventArgsTests
+    [Fact]
+    public void Ctor_ReadOnlyCollection()
     {
-        [Fact]
-        public void Ctor_ReadOnlyCollection()
-        {
-            var collection = new ReadOnlyCollection<string>(new string[] { "a" });
-            var args = new StartupEventArgs(collection);
-            Assert.Same(collection, args.CommandLine);
-        }
+        var collection = new ReadOnlyCollection<string>(new string[] { "a" });
+        var args = new StartupEventArgs(collection);
+        Assert.Same(collection, args.CommandLine);
+    }
 
-        [Fact]
-        public void Ctor_NullCommandLine_ThrowsArgumentNullException()
-        {
-            AssertExtensions.Throws<ArgumentNullException>("list", () => new StartupEventArgs(null));
-        }
+    [Fact]
+    public void Ctor_NullCommandLine_ThrowsArgumentNullException()
+    {
+        AssertExtensions.Throws<ArgumentNullException>("list", () => new StartupEventArgs(null));
     }
 }

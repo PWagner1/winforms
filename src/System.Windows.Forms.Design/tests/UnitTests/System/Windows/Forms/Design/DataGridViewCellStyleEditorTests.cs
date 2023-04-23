@@ -3,24 +3,22 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Drawing.Design;
-using Xunit;
 
-namespace System.Windows.Forms.Design.Tests
+namespace System.Windows.Forms.Design.Tests;
+
+public class DataGridViewCellStyleEditorTests
 {
-    public class DataGridViewCellStyleEditorTests
+    [Fact]
+    public void DataGridViewCellStyleEditor_Ctor_Default()
     {
-        [Fact]
-        public void DataGridViewCellStyleEditor_Ctor_Default()
-        {
-            var editor = new DataGridViewCellStyleEditor();
-            Assert.False(editor.IsDropDownResizable);
-        }
+        var editor = new DataGridViewCellStyleEditor();
+        Assert.False(editor.IsDropDownResizable);
+    }
 
-        [Fact]
-        public void DataGridViewCellStyleEditor_GetEditStyle_ReturnsModal()
-        {
-            var editor = new DataGridViewCellStyleEditor();
-            Assert.Equal(UITypeEditorEditStyle.Modal, editor.GetEditStyle(null));
-        }
+    [Fact]
+    public void DataGridViewCellStyleEditor_GetEditStyle_ReturnsModal()
+    {
+        var editor = new DataGridViewCellStyleEditor();
+        Assert.Equal(UITypeEditorEditStyle.Modal, editor.GetEditStyle(null));
     }
 }

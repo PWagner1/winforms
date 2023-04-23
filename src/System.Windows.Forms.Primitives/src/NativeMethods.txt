@@ -432,6 +432,8 @@ LVSCW_*
 LVSIL_*
 LVTILEVIEWINFO_FLAGS
 LVTILEVIEWINFO_MASK
+MapVirtualKey
+MAPVK_*
 MapWindowPoints
 MEMBERID_NIL
 MessageBeep
@@ -526,6 +528,7 @@ SelectClipRgn
 SelectObject
 SelectPalette
 SendDlgItemMessage
+SendInput
 SendMessage
 SetActiveWindow
 SetBkColor

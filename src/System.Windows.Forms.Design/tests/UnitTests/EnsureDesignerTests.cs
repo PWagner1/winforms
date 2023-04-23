@@ -3,26 +3,24 @@
 // See the LICENSE file in the project root for more information.
 
 using System.ComponentModel.Design;
-using Xunit;
 
-namespace System.Windows.Forms.Design.Editors.Tests
+namespace System.Windows.Forms.Design.Editors.Tests;
+
+public class EnsureDesignerTests
 {
-    public class EnsureDesignerTests
+    [WinFormsFact]
+    public void Ensure_designer_type_forwarded()
     {
-        [WinFormsFact]
-        public void Ensure_designer_type_forwarded()
-        {
-            SystemDesignMetadataReader metadataReader = new();
-            IReadOnlyList<string> forwardedTypes = metadataReader.GetExportedTypeNames();
+        SystemDesignMetadataReader metadataReader = new();
+        IReadOnlyList<string> forwardedTypes = metadataReader.GetExportedTypeNames();
 
-            IEnumerable<Type> designers = typeof(ComponentDesigner).Assembly
-                                .GetTypes()
-                                .Where(t => t.IsSubclassOf(typeof(ComponentDesigner))
-                                        && !t.IsPublic);
-            foreach (Type designer in designers)
-            {
-                Assert.True(forwardedTypes.Contains(designer.FullName), $"{designer.FullName} must be type forwarded");
-            }
+        IEnumerable<Type> designers = typeof(ComponentDesigner).Assembly
+                            .GetTypes()
+                            .Where(t => t.IsSubclassOf(typeof(ComponentDesigner))
+                                    && !t.IsPublic);
+        foreach (Type designer in designers)
+        {
+            Assert.True(forwardedTypes.Contains(designer.FullName), $"{designer.FullName} must be type forwarded");
         }
     }
 }

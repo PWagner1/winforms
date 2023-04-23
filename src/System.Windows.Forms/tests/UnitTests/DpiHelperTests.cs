@@ -4,36 +4,28 @@
 
 using System.Drawing;
 using System.Windows.Forms.TestUtilities;
-using Xunit;
 
-namespace System.Windows.Forms.Tests
+namespace System.Windows.Forms.Tests;
+
+// NB: doesn't require thread affinity
+public class DpiHelperTests
 {
-    // NB: doesn't require thread affinity
-    public class DpiHelperTests
+    [Theory]
+    [IntegerData<int>]
+    public void DpiHelper_LogicalToDeviceUnits(int value)
     {
-        /// <summary>
-        ///  Data for the LogicalToDeviceUnits test
-        /// </summary>
-        public static TheoryData<int> LogicalToDeviceUnitsData =>
-            CommonTestHelper.GetIntTheoryData();
+        var expected = Math.Round(value * (DpiHelper.DeviceDpi / DpiHelper.LogicalDpi));
 
-        [Theory]
-        [MemberData(nameof(LogicalToDeviceUnitsData))]
-        public void DpiHelper_LogicalToDeviceUnits(int value)
-        {
-            var expected = Math.Round(value * (DpiHelper.DeviceDpi / DpiHelper.LogicalDpi));
+        Assert.Equal(expected, DpiHelper.LogicalToDeviceUnits(value));
+    }
 
-            Assert.Equal(expected, DpiHelper.LogicalToDeviceUnits(value));
-        }
+    [Theory]
+    [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetSizeTheoryData))]
+    public void DpiHelper_LogicalToDeviceUnitsSize(Size value)
+    {
+        var expected = new Size((int)Math.Round(value.Width * (DpiHelper.DeviceDpi / DpiHelper.LogicalDpi)),
+                                 (int)Math.Round(value.Height * (DpiHelper.DeviceDpi / DpiHelper.LogicalDpi)));
 
-        [Theory]
-        [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetSizeTheoryData))]
-        public void DpiHelper_LogicalToDeviceUnitsSize(Size value)
-        {
-            var expected = new Size((int)Math.Round(value.Width * (DpiHelper.DeviceDpi / DpiHelper.LogicalDpi)),
-                                     (int)Math.Round(value.Height * (DpiHelper.DeviceDpi / DpiHelper.LogicalDpi)));
-
-            Assert.Equal(expected, DpiHelper.LogicalToDeviceUnits(value));
-        }
+        Assert.Equal(expected, DpiHelper.LogicalToDeviceUnits(value));
     }
 }

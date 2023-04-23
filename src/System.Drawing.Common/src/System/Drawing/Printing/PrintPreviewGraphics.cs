@@ -1,56 +1,56 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Drawing.Internal;
 using System.Drawing.Printing;
 using System.Runtime.InteropServices;
+using static Interop;
 
-namespace System.Drawing
+namespace System.Drawing;
+
+/// <summary>
+/// Retrieves the printer graphics during preview.
+/// </summary>
+internal sealed class PrintPreviewGraphics
 {
-    /// <summary>
-    /// Retrieves the printer graphics during preview.
-    /// </summary>
-    internal sealed class PrintPreviewGraphics
+    private readonly PrintPageEventArgs _printPageEventArgs;
+    private readonly PrintDocument _printDocument;
+
+    public PrintPreviewGraphics(PrintDocument document, PrintPageEventArgs e)
     {
-        private readonly PrintPageEventArgs _printPageEventArgs;
-        private readonly PrintDocument _printDocument;
+        _printPageEventArgs = e;
+        _printDocument = document;
+    }
 
-        public PrintPreviewGraphics(PrintDocument document, PrintPageEventArgs e)
+    /// <summary>
+    /// Gets the Visible bounds of this graphics object. Used during print preview.
+    /// </summary>
+    public RectangleF VisibleClipBounds
+    {
+        get
         {
-            _printPageEventArgs = e;
-            _printDocument = document;
-        }
+            IntPtr hdevMode = _printPageEventArgs.PageSettings.PrinterSettings.GetHdevmodeInternal();
 
-        /// <summary>
-        /// Gets the Visible bounds of this graphics object. Used during print preview.
-        /// </summary>
-        public RectangleF VisibleClipBounds
-        {
-            get
+            using (DeviceContext dc = _printPageEventArgs.PageSettings.PrinterSettings.CreateDeviceContext(hdevMode))
             {
-                IntPtr hdevMode = _printPageEventArgs.PageSettings.PrinterSettings.GetHdevmodeInternal();
-
-                using (DeviceContext dc = _printPageEventArgs.PageSettings.PrinterSettings.CreateDeviceContext(hdevMode))
+                using (Graphics graphics = Graphics.FromHdcInternal(dc.Hdc))
                 {
-                    using (Graphics graphics = Graphics.FromHdcInternal(dc.Hdc))
+                    if (_printDocument.OriginAtMargins)
                     {
-                        if (_printDocument.OriginAtMargins)
-                        {
-                            // Adjust the origin of the graphics object to be at the user-specified margin location
-                            // Note: Graphics.FromHdc internally calls SaveDC(hdc), we can still use the saved hdc to get the resolution.
-                            int dpiX = Interop.Gdi32.GetDeviceCaps(new HandleRef(dc, dc.Hdc), Interop.Gdi32.DeviceCapability.LOGPIXELSX);
-                            int dpiY = Interop.Gdi32.GetDeviceCaps(new HandleRef(dc, dc.Hdc), Interop.Gdi32.DeviceCapability.LOGPIXELSY);
-                            int hardMarginX_DU = Interop.Gdi32.GetDeviceCaps(new HandleRef(dc, dc.Hdc), Interop.Gdi32.DeviceCapability.PHYSICALOFFSETX);
-                            int hardMarginY_DU = Interop.Gdi32.GetDeviceCaps(new HandleRef(dc, dc.Hdc), Interop.Gdi32.DeviceCapability.PHYSICALOFFSETY);
-                            float hardMarginX = hardMarginX_DU * 100 / dpiX;
-                            float hardMarginY = hardMarginY_DU * 100 / dpiY;
+                        // Adjust the origin of the graphics object to be at the user-specified margin location
+                        // Note: Graphics.FromHdc internally calls SaveDC(hdc), we can still use the saved hdc to get the resolution.
+                        int dpiX = Gdi32.GetDeviceCaps(new HandleRef(dc, dc.Hdc), Gdi32.DeviceCapability.LOGPIXELSX);
+                        int dpiY = Gdi32.GetDeviceCaps(new HandleRef(dc, dc.Hdc), Gdi32.DeviceCapability.LOGPIXELSY);
+                        int hardMarginX_DU = Gdi32.GetDeviceCaps(new HandleRef(dc, dc.Hdc), Gdi32.DeviceCapability.PHYSICALOFFSETX);
+                        int hardMarginY_DU = Gdi32.GetDeviceCaps(new HandleRef(dc, dc.Hdc), Gdi32.DeviceCapability.PHYSICALOFFSETY);
+                        float hardMarginX = hardMarginX_DU * 100 / dpiX;
+                        float hardMarginY = hardMarginY_DU * 100 / dpiY;
 
-                            graphics.TranslateTransform(-hardMarginX, -hardMarginY);
-                            graphics.TranslateTransform(_printDocument.DefaultPageSettings.Margins.Left, _printDocument.DefaultPageSettings.Margins.Top);
-                        }
-
-                        return graphics.VisibleClipBounds;
+                        graphics.TranslateTransform(-hardMarginX, -hardMarginY);
+                        graphics.TranslateTransform(_printDocument.DefaultPageSettings.Margins.Left, _printDocument.DefaultPageSettings.Margins.Top);
                     }
+
+                    return graphics.VisibleClipBounds;
                 }
             }
         }

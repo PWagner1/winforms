@@ -1,9 +1,6 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Collections.Generic;
-using System.Diagnostics;
-using Xunit;
 
 #pragma warning disable CA1050 // Declare types in namespaces
 public class ClassWithNoNamespace { }
@@ -15,27 +12,12 @@ namespace System.Drawing.Tests
 
     public class Icon_toolboxBitmapAttributeTest { }
 
-    [ActiveIssue("https://github.com/dotnet/runtime/issues/34591", TestPlatforms.Windows, TargetFrameworkMonikers.Netcoreapp, TestRuntimes.Mono)]
     public class ToolboxBitmapAttributeTests
     {
         private static Size DefaultSize = new Size(16, 16);
         private void AssertDefaultSize(Image image)
         {
-            try
-            {
-                Assert.Equal(DefaultSize, image.Size);
-            }
-            catch (Exception ex)
-            {
-                // On .NET Framework sometimes the size might be default or it might
-                // be disposed in which case Size property throws an ArgumentException
-                // so allow both cases see https://github.com/dotnet/runtime/issues/25144.
-                if (PlatformDetection.IsNetFramework && ex is ArgumentException)
-                {
-                    return;
-                }
-                throw;
-            }
+            Assert.Equal(DefaultSize, image.Size);
         }
 
         public static IEnumerable<object[]> Ctor_FileName_TestData()
@@ -46,9 +28,8 @@ namespace System.Drawing.Tests
             yield return new object[] { Helpers.GetTestBitmapPath("invalid.ico"), new Size(0, 0) };
         }
 
-        [ConditionalTheory(Helpers.IsDrawingSupported)]
+        [Theory]
         [MemberData(nameof(Ctor_FileName_TestData))]
-        [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework)]
         public void Ctor_FileName(string fileName, Size size)
         {
             var attribute = new ToolboxBitmapAttribute(fileName);
@@ -66,7 +47,7 @@ namespace System.Drawing.Tests
             }
         }
 
-        [ConditionalTheory(Helpers.IsDrawingSupported)]
+        [Theory]
         [InlineData(null, -1, -1)]
         [InlineData(typeof(ClassWithNoNamespace), -1, -1)]
         [InlineData(typeof(bitmap_173x183_indexed_8bit), 173, 183)]
@@ -87,7 +68,7 @@ namespace System.Drawing.Tests
             }
         }
 
-        [ConditionalTheory(Helpers.IsDrawingSupported)]
+        [Theory]
         [InlineData(null, null, -1, -1)]
         [InlineData(null, "invalid.ico", -1, -1)]
         [InlineData(typeof(ClassWithNoNamespace), null, -1, -1)]
@@ -116,7 +97,7 @@ namespace System.Drawing.Tests
             }
         }
 
-        [ConditionalTheory(Helpers.IsDrawingSupported)]
+        [Theory]
         [InlineData("bitmap_173x183_indexed_8bit.bmp", 173, 183)]
         [InlineData("48x48_multiple_entries_4bit.ico", 16, 16)]
         public void GetImage_TypeFileNameBool_ReturnsExpected(string fileName, int width, int height)
@@ -133,7 +114,7 @@ namespace System.Drawing.Tests
             }
         }
 
-        [ConditionalFact(Helpers.IsDrawingSupported)]
+        [Fact]
         public void GetImage_NullComponent_ReturnsNull()
         {
             var attribute = new ToolboxBitmapAttribute((string)null);
@@ -141,7 +122,7 @@ namespace System.Drawing.Tests
             Assert.Null(attribute.GetImage((object)null, true));
         }
 
-        [ConditionalFact(Helpers.IsDrawingSupported)]
+        [Fact]
         public void GetImage_Component_ReturnsExpected()
         {
             ToolboxBitmapAttribute attribute = new ToolboxBitmapAttribute((string)null);
@@ -157,7 +138,7 @@ namespace System.Drawing.Tests
             }
         }
 
-        [ConditionalFact(Helpers.IsDrawingSupported)]
+        [Fact]
         public void GetImage_Default_ReturnsExpected()
         {
             ToolboxBitmapAttribute attribute = ToolboxBitmapAttribute.Default;
@@ -173,8 +154,7 @@ namespace System.Drawing.Tests
             }
         }
 
-        [ConditionalTheory(Helpers.IsDrawingSupported)]
-        [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "Logical name with no extension is not supported in .NET Framework")]
+        [Theory]
         [InlineData(typeof(Icon_toolboxBitmapAttributeTest), 256, 256)]
         public void GetImage_NoExtension(Type type, int width, int height)
         {
@@ -201,7 +181,7 @@ namespace System.Drawing.Tests
             yield return new object[] { ToolboxBitmapAttribute.Default, null, false };
         }
 
-        [ConditionalTheory(Helpers.IsDrawingSupported)]
+        [Theory]
         [MemberData(nameof(Equals_TestData))]
         public void Equals_Other_ReturnsExpected(ToolboxBitmapAttribute attribute, object other, bool expected)
         {

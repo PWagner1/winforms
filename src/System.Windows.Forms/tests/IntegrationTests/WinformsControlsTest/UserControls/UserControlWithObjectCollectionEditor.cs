@@ -6,39 +6,37 @@ using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Drawing.Design;
 using System.Globalization;
-using System.Windows.Forms;
 
-namespace WinformsControlsTest.UserControls
+namespace WinformsControlsTest.UserControls;
+
+internal class UserControlWithObjectCollectionEditor : UserControl
 {
-    internal class UserControlWithObjectCollectionEditor : UserControl
+    public UserControlWithObjectCollectionEditor()
     {
-        public UserControlWithObjectCollectionEditor()
-        {
-            AutoScaleMode = AutoScaleMode.Font;
-        }
-
-        [Editor(typeof(CollectionEditor), typeof(UITypeEditor))]
-        [Browsable(true)]
-        [EditorBrowsable(EditorBrowsableState.Always)]
-        [Category("Accessibility")]
-        [TypeConverter(typeof(SomeCollectionTypeConverter))]
-        public IList<int> AAAAAFirstCollection
-        {
-            get { return new List<int>(new int[] { 1, 2, 3 }); }
-            set { }
-        }
+        AutoScaleMode = AutoScaleMode.Font;
     }
 
-    internal class SomeCollectionTypeConverter : TypeConverter
+    [Editor(typeof(CollectionEditor), typeof(UITypeEditor))]
+    [Browsable(true)]
+    [EditorBrowsable(EditorBrowsableState.Always)]
+    [Category("Accessibility")]
+    [TypeConverter(typeof(SomeCollectionTypeConverter))]
+    public IList<int> AAAAAFirstCollection
     {
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-        {
-            if (destinationType is not null && destinationType.IsAssignableFrom(typeof(string)) && value is IList<int> list)
-            {
-                return string.Join(", ", list);
-            }
+        get { return new List<int>(new int[] { 1, 2, 3 }); }
+        set { }
+    }
+}
 
-            return base.ConvertTo(context, culture, value, destinationType);
+internal class SomeCollectionTypeConverter : TypeConverter
+{
+    public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+    {
+        if (destinationType is not null && destinationType.IsAssignableFrom(typeof(string)) && value is IList<int> list)
+        {
+            return string.Join(", ", list);
         }
+
+        return base.ConvertTo(context, culture, value, destinationType);
     }
 }

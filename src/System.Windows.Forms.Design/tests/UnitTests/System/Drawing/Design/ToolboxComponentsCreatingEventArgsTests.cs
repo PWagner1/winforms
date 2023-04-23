@@ -4,24 +4,22 @@
 
 using System.ComponentModel.Design;
 using Moq;
-using Xunit;
 
-namespace System.Drawing.Design.Tests
+namespace System.Drawing.Design.Tests;
+
+public class ToolboxComponentsCreatingEventArgsTests
 {
-    public class ToolboxComponentsCreatingEventArgsTests
+    public static IEnumerable<object[]> Ctor_IDesignerHost_TestData()
     {
-        public static IEnumerable<object[]> Ctor_IDesignerHost_TestData()
-        {
-            yield return new object[] { null };
-            yield return new object[] { new Mock<IDesignerHost>(MockBehavior.Strict).Object };
-        }
+        yield return new object[] { null };
+        yield return new object[] { new Mock<IDesignerHost>(MockBehavior.Strict).Object };
+    }
 
-        [Theory]
-        [MemberData(nameof(Ctor_IDesignerHost_TestData))]
-        public void Ctor_IDesignerHost(IDesignerHost host)
-        {
-            var e = new ToolboxComponentsCreatingEventArgs(host);
-            Assert.Equal(host, e.DesignerHost);
-        }
+    [Theory]
+    [MemberData(nameof(Ctor_IDesignerHost_TestData))]
+    public void Ctor_IDesignerHost(IDesignerHost host)
+    {
+        var e = new ToolboxComponentsCreatingEventArgs(host);
+        Assert.Equal(host, e.DesignerHost);
     }
 }

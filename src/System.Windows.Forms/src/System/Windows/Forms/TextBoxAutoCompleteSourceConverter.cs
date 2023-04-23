@@ -3,38 +3,36 @@
 // See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 
-namespace System.Windows.Forms
+namespace System.Windows.Forms;
+
+internal class TextBoxAutoCompleteSourceConverter : EnumConverter
 {
-    internal class TextBoxAutoCompleteSourceConverter : EnumConverter
+    public TextBoxAutoCompleteSourceConverter(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | DynamicallyAccessedMemberTypes.PublicFields)]
+        Type type) : base(type)
     {
-        public TextBoxAutoCompleteSourceConverter(
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | DynamicallyAccessedMemberTypes.PublicFields)]
-            Type type) : base(type)
-        {
-        }
+    }
 
-        /// <summary>
-        ///  Gets a collection of standard values for the data type this validator is
-        ///  designed for.
-        /// </summary>
-        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext? context)
+    /// <summary>
+    ///  Gets a collection of standard values for the data type this validator is
+    ///  designed for.
+    /// </summary>
+    public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext? context)
+    {
+        StandardValuesCollection values = base.GetStandardValues(context);
+        List<object> list = new();
+        for (int i = 0; i < values.Count; i++)
         {
-            StandardValuesCollection values = base.GetStandardValues(context);
-            List<object> list = new();
-            for (int i = 0; i < values.Count; i++)
+            if (values[i] is object currentItem)
             {
-                if (values[i] is object currentItem)
+                if (string.Equals(currentItem.ToString(), "ListItems"))
                 {
-                    if (string.Equals(currentItem.ToString(), "ListItems"))
-                    {
-                        list.Add(currentItem);
-                    }
+                    list.Add(currentItem);
                 }
             }
-
-            return new StandardValuesCollection(list);
         }
+
+        return new StandardValuesCollection(list);
     }
 }

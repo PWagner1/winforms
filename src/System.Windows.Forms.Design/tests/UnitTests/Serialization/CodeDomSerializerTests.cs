@@ -3,17 +3,15 @@
 // See the LICENSE file in the project root for more information.
 
 using System.ComponentModel.Design.Serialization;
-using Xunit;
 
-namespace System.Windows.Forms.Design.Serialization.Tests
+namespace System.Windows.Forms.Design.Serialization.Tests;
+
+public class CodeDomSerializerTests
 {
-    public class CodeDomSerializerTests
+    [Fact]
+    public void CodeDomSerializer_Constructor()
     {
-        [Fact]
-        public void CodeDomSerializer_Constructor()
-        {
-            var underTest = new CodeDomSerializer();
-            Assert.NotNull(underTest);
-        }
+        var underTest = new CodeDomSerializer();
+        Assert.NotNull(underTest);
     }
 }

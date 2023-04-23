@@ -3,40 +3,38 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using Xunit;
 
-namespace System.Resources.Tests
+namespace System.Resources.Tests;
+
+// NB: doesn't require thread affinity
+public class ResXResourceWriterTests
 {
-    // NB: doesn't require thread affinity
-    public class ResXResourceWriterTests
+    [Fact]
+    public void TestRoundTrip()
     {
-        [Fact]
-        public void TestRoundTrip()
+        var key = "Some.Key.Name";
+        var value = "Some.Key.Value";
+
+        using (var stream = new MemoryStream())
         {
-            var key = "Some.Key.Name";
-            var value = "Some.Key.Value";
-
-            using (var stream = new MemoryStream())
+            using (var writer = new ResXResourceWriter(stream))
             {
-                using (var writer = new ResXResourceWriter(stream))
+                writer.AddResource(key, value);
+            }
+
+            var buffer = stream.ToArray();
+            using (var reader = new ResXResourceReader(new MemoryStream(buffer)))
+            {
+                var dictionary = new Dictionary<object, object>();
+                IDictionaryEnumerator dictionaryEnumerator = reader.GetEnumerator();
+                while (dictionaryEnumerator.MoveNext())
                 {
-                    writer.AddResource(key, value);
+                    dictionary.Add(dictionaryEnumerator.Key, dictionaryEnumerator.Value);
                 }
 
-                var buffer = stream.ToArray();
-                using (var reader = new ResXResourceReader(new MemoryStream(buffer)))
-                {
-                    var dictionary = new Dictionary<object, object>();
-                    IDictionaryEnumerator dictionaryEnumerator = reader.GetEnumerator();
-                    while (dictionaryEnumerator.MoveNext())
-                    {
-                        dictionary.Add(dictionaryEnumerator.Key, dictionaryEnumerator.Value);
-                    }
-
-                    KeyValuePair<object, object> pair = Assert.Single(dictionary);
-                    Assert.Equal(key, pair.Key);
-                    Assert.Equal(value, pair.Value);
-                }
+                KeyValuePair<object, object> pair = Assert.Single(dictionary);
+                Assert.Equal(key, pair.Key);
+                Assert.Equal(value, pair.Value);
             }
         }
     }

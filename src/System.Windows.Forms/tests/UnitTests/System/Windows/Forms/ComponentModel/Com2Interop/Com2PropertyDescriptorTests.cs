@@ -3,21 +3,19 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Reflection;
-using Xunit;
 
-namespace System.Windows.Forms.ComponentModel.Com2Interop.Tests
+namespace System.Windows.Forms.ComponentModel.Com2Interop.Tests;
+
+// NB: doesn't require thread affinity
+public class Com2PropertyDescriptorTests
 {
-    // NB: doesn't require thread affinity
-    public class Com2PropertyDescriptorTests
-    {
-        private static MethodInfo s_miVersionInfo;
-        private static Type s_typeCom2PropertyDescriptor;
+    private static MethodInfo s_miVersionInfo;
+    private static Type s_typeCom2PropertyDescriptor;
 
-        static Com2PropertyDescriptorTests()
-        {
-            s_typeCom2PropertyDescriptor = typeof(Com2PropertyDescriptor);
-            s_miVersionInfo = s_typeCom2PropertyDescriptor.GetMethod("TrimNewline", BindingFlags.Static | BindingFlags.NonPublic);
-            Assert.NotNull(s_miVersionInfo);
-        }
+    static Com2PropertyDescriptorTests()
+    {
+        s_typeCom2PropertyDescriptor = typeof(Com2PropertyDescriptor);
+        s_miVersionInfo = s_typeCom2PropertyDescriptor.GetMethod("TrimNewline", BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.NotNull(s_miVersionInfo);
     }
 }

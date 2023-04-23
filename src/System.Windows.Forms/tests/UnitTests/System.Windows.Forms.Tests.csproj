@@ -3,10 +3,11 @@
   <PropertyGroup>
     <AssemblyName>System.Windows.Forms.Tests</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
 
   <PropertyGroup>
-    <NoWarn>$(NoWarn),1573,1591,1712,WFDEV001</NoWarn>
+    <NoWarn>$(NoWarn),1573,1591,1712,WFDEV001,SYSLIB0050,SYSLIB0051</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -73,10 +74,6 @@
     <Reference Include="Interop.WMPLib">
       <HintPath>$(ArtifactsBinDir)\AxHosts\$(Configuration)\net472\Interop.WMPLib.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Resources\" />
   </ItemGroup>
 
 </Project>

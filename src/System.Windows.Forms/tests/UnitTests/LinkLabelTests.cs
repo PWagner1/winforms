@@ -2,21 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Xunit;
+namespace System.Windows.Forms.Tests;
 
-namespace System.Windows.Forms.Tests
+public class LinkLabelTests
 {
-    public class LinkLabelTests
+    [WinFormsFact]
+    public void LinkLabel_Constructor()
     {
-        [WinFormsFact]
-        public void LinkLabel_Constructor()
-        {
-            using var label = new LinkLabel();
+        using var label = new LinkLabel();
 
-            Assert.NotNull(label);
-            Assert.True(label.LinkArea.IsEmpty);
-            Assert.Equal(0, label.LinkArea.Start);
-            Assert.Equal(0, label.LinkArea.Length);
-        }
+        Assert.NotNull(label);
+        Assert.True(label.LinkArea.IsEmpty);
+        Assert.Equal(0, label.LinkArea.Start);
+        Assert.Equal(0, label.LinkArea.Length);
     }
 }

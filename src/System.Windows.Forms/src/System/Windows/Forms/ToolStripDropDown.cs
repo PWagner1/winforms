@@ -7,7 +7,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms.Layout;
-using static Interop;
 
 namespace System.Windows.Forms;
 
@@ -1254,14 +1253,6 @@ public partial class ToolStripDropDown : ToolStrip
 
     protected virtual void OnClosed(ToolStripDropDownClosedEventArgs e)
     {
-        if (IsHandleCreated)
-        {
-            if (ownerItem is null || !ownerItem.IsInDesignMode)
-            {
-                AccessibilityNotifyClients(AccessibleEvents.SystemMenuPopupEnd, -1);
-            }
-        }
-
         ((ToolStripDropDownClosedEventHandler?)Events[EventClosed])?.Invoke(this, e);
     }
 
@@ -1316,14 +1307,6 @@ public partial class ToolStripDropDown : ToolStrip
 
     protected virtual void OnOpened(EventArgs e)
     {
-        if (IsHandleCreated)
-        {
-            if (ownerItem is null || !ownerItem.IsInDesignMode)
-            {
-                AccessibilityNotifyClients(AccessibleEvents.SystemMenuPopupStart, -1);
-            }
-        }
-
         ((EventHandler?)Events[EventOpened])?.Invoke(this, e);
     }
 
@@ -2089,21 +2072,21 @@ public partial class ToolStripDropDown : ToolStrip
     {
         switch (m.MsgInternal)
         {
-            case User32.WM.NCACTIVATE:
+            case PInvoke.WM_NCACTIVATE:
                 // if someone clicks on a child control of the toolstrip dropdown, we want
                 // the title bar to continue appearing active.  Normally we just show without
                 // taking window activation (ShowWindow(SHOWNOACTIVATE)) but we can't stop
                 // child controls from taking focus.
                 WmNCActivate(ref m);
                 return;
-            case User32.WM.ACTIVATE:
+            case PInvoke.WM_ACTIVATE:
                 // This is the Chrome Panel collection editor scenario
                 // we had focus, then the Chrome panel was activated and we never went away
                 // when we get focus again, we should reactivate our message filter.
                 s_snapFocusDebug.TraceVerbose(
-                    $"[ToolStripDropDown.WndProc] got a WM_ACTIVATE {((User32.WA)(nint)m.WParamInternal == User32.WA.ACTIVE ? "WA_ACTIVE" : "WA_INACTIVE")} - checking if we need to set the active toolstrip");
+                    $"[ToolStripDropDown.WndProc] got a WM_ACTIVATE {((nint)m.WParamInternal == PInvoke.WA_ACTIVE ? "WA_ACTIVE" : "WA_INACTIVE")} - checking if we need to set the active toolstrip");
 
-                if ((User32.WA)(nint)m.WParamInternal == User32.WA.ACTIVE)
+                if ((nint)m.WParamInternal == PInvoke.WA_ACTIVE)
                 {
                     if (Visible)
                     {
@@ -2190,7 +2173,7 @@ public partial class ToolStripDropDown : ToolStrip
                     // We're activating - notify the previous guy that we're activating.
                     HandleRef<HWND> activeWindow = ToolStripManager.ModalMenuFilter.ActiveHwnd;
 
-                    PInvoke.SendMessage(activeWindow, User32.WM.NCACTIVATE, (WPARAM)(BOOL)true, (LPARAM)(-1));
+                    PInvoke.SendMessage(activeWindow, PInvoke.WM_NCACTIVATE, (WPARAM)(BOOL)true, (LPARAM)(-1));
                     PInvoke.RedrawWindow(
                         activeWindow,
                         lprcUpdate: null,

@@ -62,7 +62,7 @@ public partial class TaskDialog : IWin32Window
     ///   that should be unlikely.
     /// </para>
     /// </remarks>
-    private const User32.WM ContinueButtonClickHandlingMessage = User32.WM.APP + 0x3FFF;
+    private const uint ContinueButtonClickHandlingMessage = PInvoke.WM_APP + 0x3FFF;
 
     private TaskDialogPage? _boundPage;
 
@@ -271,7 +271,8 @@ public partial class TaskDialog : IWin32Window
         (((GCHandle)lpRefData).Target as TaskDialog)!.HandleTaskDialogCallback(
             hwnd,
             msg,
-            wParam);
+            wParam,
+            lParam);
 
     private static bool IsTaskDialogButtonCommitting(TaskDialogButton? button)
     {
@@ -457,16 +458,16 @@ public partial class TaskDialog : IWin32Window
                 // Tick event, the application will crash with an
                 // AccessViolationException as soon as you close the MessageBox.
 
-                // Activate a theming scope so that the task dialog works without
-                // having to use an application manifest that enables common controls
-                // v6 (provided that Application.EnableVisualStyles() was called
-                // earlier). Otherwise, the "TaskDialogIndirect" entry point will
-                // not be available in comctl32.dll.
-                IntPtr themingCookie = ThemingScope.Activate(Application.UseVisualStyles);
                 HRESULT returnValue;
                 int resultButtonID;
                 try
                 {
+                    // Activate a theming scope so that the task dialog works without having to use an application
+                    // manifest that enables common controls v6 (provided that Application.EnableVisualStyles()
+                    // was called earlier). Otherwise, the "TaskDialogIndirect" entry point will not be available in
+                    // comctl32.dll.
+
+                    using ThemingScope scope = new(Application.UseVisualStyles);
                     returnValue = ComCtl32.TaskDialogIndirect(
                         ptrTaskDialogConfig,
                         out resultButtonID,
@@ -479,11 +480,6 @@ public partial class TaskDialog : IWin32Window
                         SR.TaskDialogVisualStylesNotEnabled,
                         $"{nameof(Application)}.{nameof(Application.EnableVisualStyles)}"),
                         ex);
-                }
-                finally
-                {
-                    // Revert the theming scope.
-                    ThemingScope.Deactivate(themingCookie);
                 }
 
                 // Marshal.ThrowExceptionForHR will use the IErrorInfo on the
@@ -779,13 +775,14 @@ public partial class TaskDialog : IWin32Window
             caption = Path.GetFileName(PInvoke.GetModuleFileNameLongPath(HINSTANCE.Null));
         }
 
-        User32.SetWindowTextW(_handle, caption);
+        PInvoke.SetWindowText(_handle, caption);
     }
 
     private HRESULT HandleTaskDialogCallback(
         HWND hWnd,
         TASKDIALOG_NOTIFICATIONS notification,
-        IntPtr wParam)
+        IntPtr wParam,
+        IntPtr lParam)
     {
         Debug.Assert(_boundPage is not null);
 
@@ -915,9 +912,7 @@ public partial class TaskDialog : IWin32Window
 
                         // Post the message, and then set the flag to ignore further
                         // notifications until we receive the posted message.
-                        if (User32.PostMessageW(
-                            hWnd,
-                            ContinueButtonClickHandlingMessage))
+                        if (PInvoke.PostMessage(hWnd, ContinueButtonClickHandlingMessage))
                         {
                             _ignoreButtonClickedNotifications = true;
                         }
@@ -1038,6 +1033,12 @@ public partial class TaskDialog : IWin32Window
 
                 case TASKDIALOG_NOTIFICATIONS.TDN_HELP:
                     _boundPage.OnHelpRequest(EventArgs.Empty);
+                    break;
+
+                case TASKDIALOG_NOTIFICATIONS.TDN_HYPERLINK_CLICKED:
+                    string? linkHref = Marshal.PtrToStringUni(lParam);
+                    Debug.Assert(linkHref is not null);
+                    _boundPage.OnLinkClicked(new TaskDialogLinkClickedEventArgs(linkHref));
                     break;
             }
         }
@@ -1538,7 +1539,7 @@ public partial class TaskDialog : IWin32Window
 
         PInvoke.SendMessage(
             _handle,
-            (User32.WM)message,
+            (uint)message,
             wParam,
             lParam);
     }

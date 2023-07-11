@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Runtime.Serialization;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms.Automation;
 using Accessibility;
 using static Interop;
@@ -1073,13 +1073,6 @@ public class Control_ControlAccessibleObjectTests
     }
 
     [WinFormsFact]
-    public void ControlAccessibleObject_ToString_InvokeNotInitialized_Success()
-    {
-        Control.ControlAccessibleObject accessibleObject = Assert.IsType<Control.ControlAccessibleObject>(FormatterServices.GetUninitializedObject(typeof(Control.ControlAccessibleObject)));
-        Assert.Equal("ControlAccessibleObject: Owner = null", accessibleObject.ToString());
-    }
-
-    [WinFormsFact]
     public void ControlAccessibleObject_IAccessibleaccFocus_InvokeDefault_ReturnsNull()
     {
         using var ownerControl = new Control();
@@ -1217,6 +1210,21 @@ public class Control_ControlAccessibleObjectTests
     public static IEnumerable<object[]> ControlAccessibleObject_TestData()
     {
         return ReflectionHelper.GetPublicNotAbstractClasses<Control>().Select(type => new object[] { type });
+    }
+
+    // The weak reference is still not referenced by the accessible object of the control below, thus preventing GC collect.
+    // After all field referencing owning control are removed, this method will be deprecated.
+    // See: https://github.com/dotnet/winforms/issues/9224.
+    public static IEnumerable<object[]> ControlAccessibleObject_UsingWeakReference_TestData()
+    {
+        var typesToIgnore = new[]
+        {
+           typeof(ListView), typeof(MonthCalendar), typeof(TreeView)
+        };
+
+        return ReflectionHelper.GetPublicNotAbstractClasses<Control>()
+           .Where(t => !typesToIgnore.Contains(t))
+           .Select(type => new object[] { type });
     }
 
     [WinFormsTheory]
@@ -1575,6 +1583,45 @@ public class Control_ControlAccessibleObjectTests
 
         Assert.Equal(expected, actual);
         Assert.False(ownerControl.IsHandleCreated);
+    }
+
+    [WinFormsFact]
+    public void ControlAccessibleObject_DoesNotRootControl()
+    {
+        Control.ControlAccessibleObject accessibleObject = CreateAndDisposeControl();
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true);
+        Assert.False(accessibleObject.TryGetOwnerAs(out Control _));
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static Control.ControlAccessibleObject CreateAndDisposeControl()
+        {
+            using Control control = new();
+            var accessibleObject = (Control.ControlAccessibleObject)control.AccessibilityObject;
+            Assert.NotNull(accessibleObject);
+            Assert.True(accessibleObject.TryGetOwnerAs(out Control _));
+
+            return accessibleObject;
+        }
+    }
+
+    [WinFormsTheory]
+    [MemberData(nameof(ControlAccessibleObject_UsingWeakReference_TestData))]
+    public void ControlAccessibleObject_DoesNotRootControls_AllPublicControl(Type type)
+    {
+        Control.ControlAccessibleObject accessibleObject = CreateAndDisposeControl(type);
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true);
+        Assert.False(accessibleObject.TryGetOwnerAs(out Control _));
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static Control.ControlAccessibleObject CreateAndDisposeControl(Type type)
+        {
+            using Control control = ReflectionHelper.InvokePublicConstructor<Control>(type);
+            var accessibleObject = (Control.ControlAccessibleObject)control.AccessibilityObject;
+            Assert.NotNull(accessibleObject);
+            Assert.True(accessibleObject.TryGetOwnerAs(out Control _));
+
+            return accessibleObject;
+        }
     }
 
     // ContextMenuStrip, From, ToolStripDropDown, ToolStripDropDownMenu

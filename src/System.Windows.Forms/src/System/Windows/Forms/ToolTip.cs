@@ -18,7 +18,7 @@ namespace System.Windows.Forms;
 [DefaultEvent(nameof(Popup))]
 [ToolboxItemFilter("System.Windows.Forms")]
 [SRDescription(nameof(SR.DescriptionToolTip))]
-public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HWND>
+public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
 {
     // The actual delay values are based on the user-set double click time.
     // These values are initialized using the default double-click time value.
@@ -118,7 +118,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
                 // Don't activate the tooltip if we're in the designer.
                 if (!DesignMode && GetHandleCreated())
                 {
-                    PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_ACTIVATE, (WPARAM)(BOOL)value);
+                    PInvoke.SendMessage(this, PInvoke.TTM_ACTIVATE, (WPARAM)(BOOL)value);
                 }
             }
         }
@@ -190,7 +190,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             _backColor = value;
             if (GetHandleCreated())
             {
-                PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_SETTIPBKCOLOR, (WPARAM)_backColor);
+                PInvoke.SendMessage(this, PInvoke.TTM_SETTIPBKCOLOR, (WPARAM)_backColor);
             }
         }
     }
@@ -259,12 +259,10 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             _foreColor = value;
             if (GetHandleCreated())
             {
-                PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_SETTIPTEXTCOLOR, (WPARAM)_foreColor);
+                PInvoke.SendMessage(this, PInvoke.TTM_SETTIPTEXTCOLOR, (WPARAM)_foreColor);
             }
         }
     }
-
-    IntPtr IHandle.Handle => Handle;
 
     HWND IHandle<HWND>.Handle => HWND;
 
@@ -452,11 +450,11 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
                 {
                     // If the title is null/empty, the icon won't display.
                     string title = !string.IsNullOrEmpty(_toolTipTitle) ? _toolTipTitle : " ";
-                    PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_SETTITLEW, (uint)_toolTipIcon, title);
+                    PInvoke.SendMessage(this, PInvoke.TTM_SETTITLEW, (uint)_toolTipIcon, title);
 
                     // Tooltip need to be updated to reflect the changes in the icon because
                     // this operation directly affects the size of the tooltip.
-                    PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_UPDATE);
+                    PInvoke.SendMessage(this, PInvoke.TTM_UPDATE);
                 }
             }
         }
@@ -480,11 +478,11 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
                 _toolTipTitle = value;
                 if (GetHandleCreated())
                 {
-                    PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_SETTITLEW, (uint)_toolTipIcon, _toolTipTitle);
+                    PInvoke.SendMessage(this, PInvoke.TTM_SETTITLEW, (uint)_toolTipIcon, _toolTipTitle);
 
                     // Tooltip need to be updated to reflect the changes in the title text because
                     // this operation directly affects the size of the tooltip.
-                    PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_UPDATE);
+                    PInvoke.SendMessage(this, PInvoke.TTM_UPDATE);
                 }
             }
         }
@@ -632,7 +630,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// <summary>
     ///  Screen reader announces ToolTip text for an element.
     /// </summary>
-    private void AnnounceText(Control tool, string text)
+    private void AnnounceText(Control? tool, string text)
     {
         if (tool is null || !tool.IsAccessibilityObjectCreated)
         {
@@ -645,22 +643,22 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             $"{ToolTipTitle} {text}");
     }
 
-    private void HandleCreated(object sender, EventArgs eventargs)
+    private void HandleCreated(object? sender, EventArgs eventargs)
     {
         // Reset the top level control when the owner's handle is recreated.
         ClearTopLevelControlEvents();
         _topLevelControl = null;
 
-        Control control = (Control)sender;
+        Control control = (Control)sender!;
         CreateRegion(control);
         SetToolTipToControl(control);
 
         KeyboardToolTipStateMachine.Instance.Hook(control, this);
     }
 
-    private void HandleDestroyed(object sender, EventArgs eventargs)
+    private void HandleDestroyed(object? sender, EventArgs eventargs)
     {
-        Control control = (Control)sender;
+        Control control = (Control)sender!;
         DestroyRegion(control);
 
         KeyboardToolTipStateMachine.Instance.Unhook(control, this);
@@ -708,21 +706,20 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// <summary>
     ///  Creates the handle for the control.
     /// </summary>
-    private void CreateHandle()
+    private unsafe void CreateHandle()
     {
         if (GetHandleCreated())
         {
             return;
         }
 
-        IntPtr userCookie = ThemingScope.Activate(Application.UseVisualStyles);
-        try
+        using (ThemingScope scope = new(Application.UseVisualStyles))
         {
-            var icc = new INITCOMMONCONTROLSEX
+            PInvoke.InitCommonControlsEx(new INITCOMMONCONTROLSEX
             {
+                dwSize = (uint)sizeof(INITCOMMONCONTROLSEX),
                 dwICC = INITCOMMONCONTROLSEX_ICC.ICC_TAB_CLASSES
-            };
-            InitCommonControlsEx(ref icc);
+            });
 
             // Avoid reentrant call to CreateHandle.
             CreateParams cp = CreateParams;
@@ -738,21 +735,17 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
                 PInvoke.SetWindowTheme(HWND, string.Empty, string.Empty);
             }
         }
-        finally
-        {
-            ThemingScope.Deactivate(userCookie);
-        }
 
         // If in OwnerDraw mode, we don't want the default border.
         if (OwnerDraw)
         {
             int style = unchecked((int)((long)PInvoke.GetWindowLong(this, WINDOW_LONG_PTR_INDEX.GWL_STYLE)));
             style &= ~(int)WINDOW_STYLE.WS_BORDER;
-            PInvoke.SetWindowLong(this, WINDOW_LONG_PTR_INDEX.GWL_STYLE, (IntPtr)style);
+            PInvoke.SetWindowLong(this, WINDOW_LONG_PTR_INDEX.GWL_STYLE, style);
         }
 
         // Setting the max width has the added benefit of enabling multiline tool tips.
-        PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_SETMAXTIPWIDTH, 0, SystemInformation.MaxWindowTrackSize.Width);
+        PInvoke.SendMessage(this, PInvoke.TTM_SETMAXTIPWIDTH, 0, SystemInformation.MaxWindowTrackSize.Width);
 
         if (_auto)
         {
@@ -791,23 +784,23 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         }
 
         // Set active status.
-        PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_ACTIVATE, (WPARAM)(BOOL)active);
+        PInvoke.SendMessage(this, PInvoke.TTM_ACTIVATE, (WPARAM)(BOOL)active);
 
         if (BackColor != SystemColors.Info)
         {
-            PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_SETTIPBKCOLOR, (WPARAM)BackColor);
+            PInvoke.SendMessage(this, PInvoke.TTM_SETTIPBKCOLOR, (WPARAM)BackColor);
         }
 
         if (ForeColor != SystemColors.InfoText)
         {
-            PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_SETTIPTEXTCOLOR, (WPARAM)ForeColor);
+            PInvoke.SendMessage(this, PInvoke.TTM_SETTIPTEXTCOLOR, (WPARAM)ForeColor);
         }
 
         if (_toolTipIcon > 0 || !string.IsNullOrEmpty(_toolTipTitle))
         {
             // If the title is null/empty, the icon won't display.
             string title = !string.IsNullOrEmpty(_toolTipTitle) ? _toolTipTitle : " ";
-            PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_SETTITLEW, (WPARAM)(int)_toolTipIcon, title);
+            PInvoke.SendMessage(this, PInvoke.TTM_SETTITLEW, (WPARAM)(int)_toolTipIcon, title);
         }
     }
 
@@ -835,7 +828,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         }
     }
 
-    private void SetToolInfo(Control control, string caption)
+    private void SetToolInfo(Control control, string? caption)
     {
         // Don't add a tool for the TabControl itself. It's not needed because:
         // 1. TabControl already relays all mouse events to its tooltip:
@@ -848,7 +841,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             return;
         }
 
-        IntPtr result = GetTOOLINFO(control, caption).SendMessage(this, (User32.WM)PInvoke.TTM_ADDTOOLW);
+        IntPtr result = GetTOOLINFO(control, caption).SendMessage(this, PInvoke.TTM_ADDTOOLW);
 
         if ((control is TreeView tv && tv.ShowNodeToolTips)
             || (control is ListView lv && lv.ShowItemToolTips))
@@ -864,7 +857,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
     private void CreateRegion(Control control)
     {
-        string caption = GetToolTip(control);
+        string? caption = GetToolTip(control);
         bool handlesCreated = control.IsHandleCreated
                               && TopLevelControl is not null
                               && TopLevelControl.IsHandleCreated;
@@ -932,12 +925,12 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
         if (_created.Contains(control) && handlesCreated && !DesignMode)
         {
-            new ToolInfoWrapper<Control>(control).SendMessage(this, (User32.WM)PInvoke.TTM_DELTOOLW);
+            new ToolInfoWrapper<Control>(control).SendMessage(this, PInvoke.TTM_DELTOOLW);
             _created.Remove(control);
             control.RemoveToolTip(this);
         }
     }
-#nullable disable
+
     /// <summary>
     ///  Disposes of the <see cref="ToolTip"/> component.
     /// </summary>
@@ -955,7 +948,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
                 DestroyHandle();
                 RemoveAll();
 
-                _window = null;
+                _window = null!;
 
                 // Unhook the DeactivateEvent. Find the Form for associated Control and hook
                 // up to the Deactivated event to Hide the Shown tooltip
@@ -983,7 +976,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             return _delayTimes[(int)type];
         }
 
-        return (int)PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_GETDELAYTIME, (WPARAM)(uint)type);
+        return (int)PInvoke.SendMessage(this, PInvoke.TTM_GETDELAYTIME, (WPARAM)(uint)type);
     }
 
     internal bool GetHandleCreated() => _window is not null && _window.Handle != IntPtr.Zero;
@@ -991,7 +984,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// <summary>
     ///  Returns a detailed TOOLINFO_TOOLTIP structure that represents the specified region.
     /// </summary>
-    private unsafe ToolInfoWrapper<Control> GetTOOLINFO(Control control, string caption)
+    private unsafe ToolInfoWrapper<Control> GetTOOLINFO(Control control, string? caption)
     {
         TOOLTIP_FLAGS flags = TOOLTIP_FLAGS.TTF_TRANSPARENT | TOOLTIP_FLAGS.TTF_SUBCLASS;
 
@@ -1031,14 +1024,16 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     [Localizable(true)]
     [SRDescription(nameof(SR.ToolTipToolTipDescr))]
     [Editor($"System.ComponentModel.Design.MultilineStringEditor, {AssemblyRef.SystemDesign}", typeof(Drawing.Design.UITypeEditor))]
-    public string GetToolTip(Control control)
+    public string? GetToolTip(Control? control)
     {
         if (control is null)
         {
             return string.Empty;
         }
 
-        return _tools.TryGetValue(control, out TipInfo tipInfo) ? tipInfo.Caption : string.Empty;
+        return _tools.TryGetValue(control, out TipInfo? tipInfo)
+            ? tipInfo.Caption
+            : string.Empty;
     }
 
     /// <summary>
@@ -1047,7 +1042,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// </summary>
     private HWND GetWindowFromPoint(Point screenCoords, ref bool success)
     {
-        Control current = TopLevelControl;
+        Control? current = TopLevelControl;
 
         // Special case ActiveX Controls.
         if (current is not null && current.IsActiveX)
@@ -1056,7 +1051,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             HWND hwndControl = PInvoke.WindowFromPoint(screenCoords);
             if (!hwndControl.IsNull)
             {
-                Control currentControl = Control.FromHandle(hwndControl);
+                Control? currentControl = Control.FromHandle(hwndControl);
                 if (currentControl is not null &&
                     _tools.ContainsKey(currentControl))
                 {
@@ -1110,7 +1105,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
         if (!hwnd.IsNull)
         {
-            Control control = Control.FromHandle(hwnd);
+            Control? control = Control.FromHandle(hwnd);
             if (control is not null)
             {
                 current = control;
@@ -1131,7 +1126,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         return hwnd;
     }
 
-    private void OnTopLevelPropertyChanged(object s, EventArgs e)
+    private void OnTopLevelPropertyChanged(object? s, EventArgs e)
     {
         ClearTopLevelControlEvents();
         _topLevelControl = null;
@@ -1198,7 +1193,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
         if (GetHandleCreated() && time >= 0)
         {
-            PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_SETDELAYTIME, (WPARAM)(uint)type, (LPARAM)time);
+            PInvoke.SendMessage(this, PInvoke.TTM_SETDELAYTIME, (WPARAM)(uint)type, (LPARAM)time);
             if (type == PInvoke.TTDT_AUTOPOP && time != InfiniteDelay)
             {
                 IsPersistent = false;
@@ -1222,7 +1217,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// <summary>
     ///  Associates <see cref="ToolTip"/> text with the specified control.
     /// </summary>
-    public void SetToolTip(Control control, string caption)
+    public void SetToolTip(Control control, string? caption)
     {
         TipInfo info = new(caption, TipInfo.Type.Auto);
         SetToolTipInternal(control, info);
@@ -1243,7 +1238,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         }
         else if (!empty)
         {
-            _tools[control] = info;
+            _tools[control] = info!;
         }
 
         if (!empty && !exists)
@@ -1264,8 +1259,8 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
             if (exists && !empty && handlesCreated && !DesignMode)
             {
-                ToolInfoWrapper<Control> toolInfo = GetTOOLINFO(control, info.Caption);
-                toolInfo.SendMessage(this, (User32.WM)PInvoke.TTM_SETTOOLINFOW);
+                ToolInfoWrapper<Control> toolInfo = GetTOOLINFO(control, info!.Caption);
+                toolInfo.SendMessage(this, PInvoke.TTM_SETTOOLINFOW);
                 SetToolTipToControl(control);
             }
             else if (empty && exists && !DesignMode)
@@ -1322,7 +1317,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// <summary>
     ///  Shows a tooltip for specified text, window, and hotspot
     /// </summary>
-    private void ShowTooltip(string text, IWin32Window window, int duration)
+    private void ShowTooltip(string? text, IWin32Window window, int duration)
     {
         ArgumentNullException.ThrowIfNull(window);
 
@@ -1363,7 +1358,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             }
             else
             {
-                if (!_tools.TryGetValue(associatedControl, out TipInfo tipInfo))
+                if (!_tools.TryGetValue(associatedControl, out TipInfo? tipInfo))
                 {
                     tipInfo = new TipInfo(text, TipInfo.Type.SemiAbsolute);
                 }
@@ -1392,7 +1387,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// <summary>
     ///  Associates <see cref="ToolTip"/> with the specified control and displays it.
     /// </summary>
-    public void Show(string text, IWin32Window window)
+    public void Show(string? text, IWin32Window window)
     {
         // Check if the foreground window is the TopLevelWindow
         if (IsWindowActive(window))
@@ -1405,7 +1400,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     ///  Associates <see cref="ToolTip"/> with the specified control and displays it for the
     ///  specified duration.
     /// </summary>
-    public void Show(string text, IWin32Window window, int duration)
+    public void Show(string? text, IWin32Window window, int duration)
     {
         ArgumentNullException.ThrowIfNull(window);
 
@@ -1423,7 +1418,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// <summary>
     ///  Associates <see cref="ToolTip"/> with the specified control and displays it.
     /// </summary>
-    public void Show(string text, IWin32Window window, Point point)
+    public void Show(string? text, IWin32Window window, Point point)
     {
         ArgumentNullException.ThrowIfNull(window);
 
@@ -1442,7 +1437,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// <summary>
     ///  Associates <see cref="ToolTip"/> with the specified control and displays it.
     /// </summary>
-    public void Show(string text, IWin32Window window, Point point, int duration)
+    public void Show(string? text, IWin32Window window, Point point, int duration)
     {
         ArgumentNullException.ThrowIfNull(window);
 
@@ -1469,7 +1464,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// <summary>
     ///  Associates <see cref="ToolTip"/> with the specified control and displays it.
     /// </summary>
-    public void Show(string text, IWin32Window window, int x, int y)
+    public void Show(string? text, IWin32Window window, int x, int y)
     {
         ArgumentNullException.ThrowIfNull(window);
 
@@ -1486,7 +1481,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// <summary>
     ///  Associates <see cref="ToolTip"/> with the specified control and displays it.
     /// </summary>
-    public void Show(string text, IWin32Window window, int x, int y, int duration)
+    public void Show(string? text, IWin32Window window, int x, int y, int duration)
     {
         ArgumentNullException.ThrowIfNull(window);
 
@@ -1509,7 +1504,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         }
     }
 
-    internal void ShowKeyboardToolTip(string text, IKeyboardToolTip tool, int duration)
+    internal void ShowKeyboardToolTip(string? text, IKeyboardToolTip tool, int duration)
     {
         ArgumentNullException.ThrowIfNull(tool);
 
@@ -1521,10 +1516,14 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         }
 
         Rectangle toolRectangle = tool.GetNativeScreenRectangle();
+
         // At first, place the tooltip at the middle of the tool (default location).
         int pointX = (toolRectangle.Left + toolRectangle.Right) / 2;
         int pointY = (toolRectangle.Top + toolRectangle.Bottom) / 2;
-        SetTool(tool.GetOwnerWindow(), text, TipInfo.Type.Absolute, new Point(pointX, pointY));
+        var ownerWindow = tool.GetOwnerWindow();
+        Debug.Assert(ownerWindow is not null);
+
+        SetTool(ownerWindow, text, TipInfo.Type.Absolute, new Point(pointX, pointY));
 
         // Then look for a better ToolTip location.
         if (TryGetBubbleSize(tool, out Size bubbleSize))
@@ -1538,9 +1537,9 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             // Update TipInfo for the tool with optimal position.
             if (tool is Control toolAsControl)
             {
-                if (!_tools.TryGetValue(toolAsControl, out TipInfo tipInfo))
+                if (!_tools.TryGetValue(toolAsControl, out TipInfo? tipInfo))
                 {
-                    if (tool.GetOwnerWindow() is Control ownerWindowAsControl
+                    if (ownerWindow is Control ownerWindowAsControl
                         && _tools.TryGetValue(ownerWindowAsControl, out tipInfo))
                     {
                         tipInfo.Position = new Point(pointX, pointY);
@@ -1561,7 +1560,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
         if (!IsPersistent)
         {
-            StartTimer(tool.GetOwnerWindow(), duration);
+            StartTimer(ownerWindow, duration);
         }
     }
 
@@ -1575,8 +1574,8 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
         if (!hwnd.IsNull)
         {
-            ToolInfoWrapper<HandleRef<HWND>> info = new(Control.GetSafeHandle(tool.GetOwnerWindow()));
-            result = info.SendMessage(this, (User32.WM)PInvoke.TTM_GETBUBBLESIZE);
+            ToolInfoWrapper<HandleRef<HWND>> info = new(Control.GetSafeHandle(tool.GetOwnerWindow()!));
+            result = info.SendMessage(this, PInvoke.TTM_GETBUBBLESIZE);
         }
 
         if (result == 0)
@@ -1636,7 +1635,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
         // Calculate area of possible locations within top level control rectangle
         long[] locationWithinTopControlAreas = new long[LocationTotal];
-        Rectangle topContainerBounds = ((IKeyboardToolTip)TopLevelControl)?.GetNativeScreenRectangle() ?? Rectangle.Empty;
+        Rectangle topContainerBounds = ((IKeyboardToolTip?)TopLevelControl)?.GetNativeScreenRectangle() ?? Rectangle.Empty;
         if (!topContainerBounds.IsEmpty)
         {
             for (int i = 0; i < possibleLocations.Length; i++)
@@ -1674,7 +1673,8 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         return new Point(optimalLocation.Left, optimalLocation.Top);
     }
 
-    private static bool IsCompetingLocationBetter(long originalLocationClippedArea,
+    private static bool IsCompetingLocationBetter(
+        long originalLocationClippedArea,
         long originalLocationWeight,
         long originalLocationAreaWithinTopControl,
         int originalIndex,
@@ -1749,7 +1749,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         try
         {
             _trackPosition = true;
-            PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_TRACKPOSITION, 0, PARAM.FromLowHigh(pointX, pointY));
+            PInvoke.SendMessage(this, PInvoke.TTM_TRACKPOSITION, 0, PARAM.FromLowHigh(pointX, pointY));
         }
         finally
         {
@@ -1772,8 +1772,8 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         if (GetHandleCreated())
         {
             ToolInfoWrapper<HandleRef<HWND>> info = new(Control.GetSafeHandle(win));
-            info.SendMessage(this, (User32.WM)PInvoke.TTM_TRACKACTIVATE);
-            info.SendMessage(this, (User32.WM)PInvoke.TTM_DELTOOLW);
+            info.SendMessage(this, PInvoke.TTM_TRACKACTIVATE);
+            info.SendMessage(this, PInvoke.TTM_DELTOOLW);
         }
 
         StopTimer();
@@ -1796,7 +1796,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
             // Find the Form for associated Control and hook up to the Deactivated event
             // to hide the shown tooltip.
-            Form baseFrom = tool.FindForm();
+            Form? baseFrom = tool.FindForm();
             if (baseFrom is not null)
             {
                 baseFrom.Deactivate -= BaseFormDeactivate;
@@ -1809,7 +1809,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         IsActivatedByKeyboard = false;
     }
 
-    private void BaseFormDeactivate(object sender, EventArgs e)
+    private void BaseFormDeactivate(object? sender, EventArgs e)
     {
         HideAllToolTips();
         KeyboardToolTipStateMachine.Instance.NotifyAboutFormDeactivation(this);
@@ -1824,13 +1824,13 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         }
     }
 
-    private void SetTool(IWin32Window window, string text, TipInfo.Type type, Point position)
+    private void SetTool(IWin32Window window, string? text, TipInfo.Type type, Point position)
     {
-        Control tool = window as Control;
+        Control? tool = window as Control;
         if (tool is not null && _tools.ContainsKey(tool))
         {
             var toolInfo = new ToolInfoWrapper<Control>(tool);
-            if (toolInfo.SendMessage(this, (User32.WM)PInvoke.TTM_GETTOOLINFOW) != IntPtr.Zero)
+            if (toolInfo.SendMessage(this, PInvoke.TTM_GETTOOLINFOW) != IntPtr.Zero)
             {
                 TOOLTIP_FLAGS flags = TOOLTIP_FLAGS.TTF_TRACK;
                 if (type == TipInfo.Type.Absolute || type == TipInfo.Type.SemiAbsolute)
@@ -1842,7 +1842,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
                 toolInfo.Text = text;
             }
 
-            if (!_tools.TryGetValue(tool, out TipInfo tipInfo))
+            if (!_tools.TryGetValue(tool, out TipInfo? tipInfo))
             {
                 tipInfo = new TipInfo(text, type);
             }
@@ -1855,8 +1855,8 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             tipInfo.Position = position;
             _tools[tool] = tipInfo;
 
-            IntPtr result = toolInfo.SendMessage(this, (User32.WM)PInvoke.TTM_SETTOOLINFOW);
-            result = toolInfo.SendMessage(this, (User32.WM)PInvoke.TTM_TRACKACTIVATE, true);
+            IntPtr result = toolInfo.SendMessage(this, PInvoke.TTM_SETTOOLINFOW);
+            result = toolInfo.SendMessage(this, PInvoke.TTM_TRACKACTIVATE, true);
         }
         else
         {
@@ -1866,7 +1866,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             // in order to find the top level parent.
             if (window is Control windowAsControl)
             {
-                if (!_tools.TryGetValue(windowAsControl, out TipInfo tipInfo))
+                if (!_tools.TryGetValue(windowAsControl, out TipInfo? tipInfo))
                 {
                     tipInfo = new TipInfo(text, type);
                 }
@@ -1891,15 +1891,15 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             }
 
             toolInfo.Text = text;
-            IntPtr result = toolInfo.SendMessage(this, (User32.WM)PInvoke.TTM_ADDTOOLW);
-            result = toolInfo.SendMessage(this, (User32.WM)PInvoke.TTM_TRACKACTIVATE, true);
+            IntPtr result = toolInfo.SendMessage(this, PInvoke.TTM_ADDTOOLW);
+            result = toolInfo.SendMessage(this, PInvoke.TTM_TRACKACTIVATE, true);
         }
 
         if (tool is not null)
         {
             // Lets find the Form for associated Control
             // and hook up to the Deactivated event to Hide the Shown tooltip.
-            Form baseFrom = tool.FindForm();
+            Form? baseFrom = tool.FindForm();
             if (baseFrom is not null)
             {
                 baseFrom.Deactivate += BaseFormDeactivate;
@@ -1929,7 +1929,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     protected void StopTimer()
     {
         // Hold a local ref to timer so that a posted message doesn't null this out during disposal.
-        ToolTipTimer timerRef = _timer;
+        ToolTipTimer? timerRef = _timer;
 
         if (timerRef is not null)
         {
@@ -1942,9 +1942,9 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// <summary>
     ///  Generates updown events when the timer calls this function.
     /// </summary>
-    private void TimerHandler(object source, EventArgs args)
+    private void TimerHandler(object? source, EventArgs args)
     {
-        Hide(((ToolTipTimer)source).Host);
+        Hide(((ToolTipTimer)source!).Host);
     }
 
     /// <summary>
@@ -1991,7 +1991,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     private HWND GetCurrentToolHwnd()
     {
         var toolInfo = default(ToolInfoWrapper<Control>);
-        if (toolInfo.SendMessage(this, (User32.WM)PInvoke.TTM_GETCURRENTTOOLW) != 0)
+        if (toolInfo.SendMessage(this, PInvoke.TTM_GETCURRENTTOOLW) != 0)
         {
             return (HWND)toolInfo.Info.hwnd;
         }
@@ -1999,10 +1999,10 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         return default;
     }
 
-    private IWin32Window GetCurrentToolWindow()
+    private IWin32Window? GetCurrentToolWindow()
     {
         HWND hwnd = GetCurrentToolHwnd();
-        return _owners.TryGetValue(hwnd, out Control control) ? control : Control.FromHandle(hwnd);
+        return _owners.TryGetValue(hwnd, out Control? control) ? control : Control.FromHandle(hwnd);
     }
 
     /// <summary>
@@ -2010,8 +2010,8 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// </summary>
     private void WmMove()
     {
-        IWin32Window window = GetCurrentToolWindow();
-        if (window is not Control windowAsControl || !_tools.TryGetValue(windowAsControl, out TipInfo tipInfo))
+        IWin32Window? window = GetCurrentToolWindow();
+        if (window is not Control windowAsControl || !_tools.TryGetValue(windowAsControl, out TipInfo? tipInfo))
         {
             return;
         }
@@ -2030,7 +2030,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// </summary>
     private void WmMouseActivate(ref Message message)
     {
-        IWin32Window window = GetCurrentToolWindow();
+        IWin32Window? window = GetCurrentToolWindow();
         if (window is null)
         {
             return;
@@ -2044,7 +2044,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         if (cursorLocation.X >= r.left && cursorLocation.X <= r.right &&
             cursorLocation.Y >= r.top && cursorLocation.Y <= r.bottom)
         {
-            message.ResultInternal = (LRESULT)(nint)User32.MA.NOACTIVATE;
+            message.ResultInternal = (LRESULT)(nint)PInvoke.MA_NOACTIVATE;
         }
     }
 
@@ -2063,7 +2063,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// </summary>
     private void WmShow()
     {
-        IWin32Window window = GetCurrentToolWindow();
+        IWin32Window? window = GetCurrentToolWindow();
         if (window is null)
         {
             return;
@@ -2072,7 +2072,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         // Get the bounds.
         PInvoke.GetWindowRect(this, out var rect);
 
-        Control toolControl = window as Control;
+        Control? toolControl = window as Control;
 
         Size currentTooltipSize = rect.Size;
         PopupEventArgs e = new PopupEventArgs(window, toolControl, IsBalloon, currentTooltipSize);
@@ -2087,8 +2087,9 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         if (!e.Cancel)
         {
             // Use GetWindowText instead of GetCaptionForTool to retrieve the actual caption.
-            // GetCaptionForTool doesn't work correctly when the text for a tool is retrieved by TTN_NEEDTEXT notification (e.g. TabPages of TabControl).
-            AnnounceText(toolControl, User32.GetWindowText(this));
+            // GetCaptionForTool doesn't work correctly when the text for a tool is retrieved
+            // by TTN_NEEDTEXT notification (e.g. TabPages of TabControl).
+            AnnounceText(toolControl, PInvoke.GetWindowText(this));
         }
 
         // We need to re-get the rectangle of the tooltip here because
@@ -2101,7 +2102,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         if (IsBalloon)
         {
             // Get the text display rectangle
-            PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_ADJUSTRECT, (WPARAM)(BOOL)true, ref rect);
+            PInvoke.SendMessage(this, PInvoke.TTM_ADJUSTRECT, (WPARAM)(BOOL)true, ref rect);
             if (rect.Height > currentTooltipSize.Height)
             {
                 currentTooltipSize.Height = rect.Height;
@@ -2118,7 +2119,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             int maxwidth = (IsBalloon)
                 ? Math.Min(currentTooltipSize.Width - 2 * BalloonOffsetX, screen.WorkingArea.Width)
                 : Math.Min(currentTooltipSize.Width, screen.WorkingArea.Width);
-            PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_SETMAXTIPWIDTH, 0, maxwidth);
+            PInvoke.SendMessage(this, PInvoke.TTM_SETMAXTIPWIDTH, 0, maxwidth);
         }
 
         if (e.Cancel)
@@ -2174,7 +2175,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
         WINDOWPOS* wp = (WINDOWPOS*)(nint)message.LParamInternal;
 
-        Cursor currentCursor = Cursor.Current;
+        Cursor? currentCursor = Cursor.Current;
         Point cursorPos = Cursor.Position;
 
         if (GetCurrentToolWindow() is not { } window)
@@ -2183,7 +2184,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             return;
         }
 
-        TipInfo tipInfo = null;
+        TipInfo? tipInfo = null;
 
         if (window is Control windowAsControl && !_tools.TryGetValue(windowAsControl, out tipInfo))
         {
@@ -2202,7 +2203,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
             return;
         }
 
-        if ((tipInfo.TipType & TipInfo.Type.Auto) != 0 && _window is not null)
+        if ((tipInfo!.TipType & TipInfo.Type.Auto) != 0 && _window is not null)
         {
             _window.DefWndProc(ref message);
             return;
@@ -2254,12 +2255,14 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     /// </summary>
     private void WmPop()
     {
-        IWin32Window window = GetCurrentToolWindow();
+        IWin32Window? window = GetCurrentToolWindow();
         if (window is null)
+        {
             return;
+        }
 
         var control = window as Control;
-        if (control is null || !_tools.TryGetValue(control, out TipInfo tipInfo))
+        if (control is null || !_tools.TryGetValue(control, out TipInfo? tipInfo))
         {
             return;
         }
@@ -2268,7 +2271,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
         if ((tipInfo.TipType & TipInfo.Type.Auto) != 0 || (tipInfo.TipType & TipInfo.Type.SemiAbsolute) != 0)
         {
             Screen screen = Screen.FromPoint(Cursor.Position);
-            PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_SETMAXTIPWIDTH, 0, screen.WorkingArea.Width);
+            PInvoke.SendMessage(this, PInvoke.TTM_SETMAXTIPWIDTH, 0, screen.WorkingArea.Width);
         }
 
         // For non-auto tips (those shown through the show(.) methods, we need to
@@ -2301,7 +2304,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
     {
         switch (message.Msg)
         {
-            case (int)(User32.WM.REFLECT_NOTIFY):
+            case (int)(MessageId.WM_REFLECT_NOTIFY):
                 var nmhdr = (NMHDR*)(nint)message.LParamInternal;
                 if ((int)nmhdr->code == (int)TTN.SHOW && !_trackPosition)
                 {
@@ -2315,11 +2318,11 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
                 break;
 
-            case (int)User32.WM.WINDOWPOSCHANGING:
+            case (int)PInvoke.WM_WINDOWPOSCHANGING:
                 WmWindowPosChanging(ref message);
                 break;
 
-            case (int)User32.WM.WINDOWPOSCHANGED:
+            case (int)PInvoke.WM_WINDOWPOSCHANGED:
                 if (!WmWindowPosChanged() && _window is not null)
                 {
                     _window.DefWndProc(ref message);
@@ -2327,11 +2330,11 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
                 break;
 
-            case (int)User32.WM.MOUSEACTIVATE:
+            case (int)PInvoke.WM_MOUSEACTIVATE:
                 WmMouseActivate(ref message);
                 break;
 
-            case (int)User32.WM.MOVE:
+            case (int)PInvoke.WM_MOVE:
                 WmMove();
                 break;
 
@@ -2339,10 +2342,10 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
                 WmWindowFromPoint(ref message);
                 break;
 
-            case (int)User32.WM.PRINTCLIENT:
-                goto case (int)User32.WM.PAINT;
+            case (int)PInvoke.WM_PRINTCLIENT:
+                goto case (int)PInvoke.WM_PAINT;
 
-            case (int)User32.WM.PAINT:
+            case (int)PInvoke.WM_PAINT:
                 if (OwnerDraw && !_isBalloon && !_trackPosition)
                 {
                     using var paintScope = new PInvoke.BeginPaintScope((HWND)Handle);
@@ -2354,13 +2357,13 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
 
                     using Graphics graphics = paintScope.HDC.CreateGraphics();
 
-                    IWin32Window window = GetCurrentToolWindow();
+                    IWin32Window? window = GetCurrentToolWindow();
                     if (window is not null)
                     {
                         Font font;
                         try
                         {
-                            font = Font.FromHfont(PInvoke.SendMessage(this, User32.WM.GETFONT));
+                            font = Font.FromHfont(PInvoke.SendMessage(this, PInvoke.WM_GETFONT));
                         }
                         catch (ArgumentException)
                         {
@@ -2369,9 +2372,17 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle, IHandle<HW
                             font = Control.DefaultFont;
                         }
 
-                        Control control = window as Control ?? Control.FromHandle(window.Handle);
-                        OnDraw(new DrawToolTipEventArgs(
-                            graphics, window, control, bounds, GetToolTip(control), BackColor, ForeColor, font));
+                        Control? control = window as Control ?? Control.FromHandle(window.Handle);
+                        OnDraw(
+                            new DrawToolTipEventArgs(
+                                graphics,
+                                window,
+                                control,
+                                bounds,
+                                GetToolTip(control),
+                                BackColor,
+                                ForeColor,
+                                font));
 
                         break;
                     }

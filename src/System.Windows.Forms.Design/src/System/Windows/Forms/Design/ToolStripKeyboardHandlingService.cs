@@ -8,9 +8,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.Design.Behavior;
-using static Interop;
 
 namespace System.Windows.Forms.Design;
 
@@ -170,8 +168,16 @@ internal class ToolStripKeyboardHandlingService
                                 focusIndex = owner.Items.IndexOf(curDesignerNode);
                             }
 
-                            User32.NotifyWinEvent((uint)AccessibleEvents.SelectionAdd, new HandleRef(owner, owner.Handle), User32.OBJID.CLIENT, focusIndex + 1);
-                            User32.NotifyWinEvent((uint)AccessibleEvents.Focus, new HandleRef(owner, owner.Handle), User32.OBJID.CLIENT, focusIndex + 1);
+                            PInvoke.NotifyWinEvent(
+                                (uint)AccessibleEvents.SelectionAdd,
+                                owner,
+                                (int)OBJECT_IDENTIFIER.OBJID_CLIENT,
+                                focusIndex + 1);
+                            PInvoke.NotifyWinEvent(
+                                (uint)AccessibleEvents.Focus,
+                                owner,
+                                (int)OBJECT_IDENTIFIER.OBJID_CLIENT,
+                                focusIndex + 1);
                         }
                     }
                 }
@@ -465,7 +471,7 @@ internal class ToolStripKeyboardHandlingService
         }
 
         // This has to be done since ToolStripTemplateNode is unsited component that supports its own contextMenu. When the Selection is null, templateNode can be selected.  So this block of code here checks if ToolStripKeyBoardHandlingService is present if so, tries to check if the templatenode is selected if so, then gets the templateNode and shows the ContextMenu.
-        if (SelectionService.PrimarySelection is not Component selComp)
+        if (SelectionService.PrimarySelection is not Component)
         {
             if (SelectedDesignerControl is DesignerToolStripControlHost controlHost)
             {
@@ -963,7 +969,7 @@ internal class ToolStripKeyboardHandlingService
                 || cmd.CommandID.Equals(MenuCommands.KeySizeHeightIncrease);
 
             // check for ContextMenu..
-            if (selSvc.PrimarySelection is ContextMenuStrip contextStrip)
+            if (selSvc.PrimarySelection is ContextMenuStrip)
             {
                 if (cmd.CommandID.Equals(MenuCommands.KeyMoveDown))
                 {

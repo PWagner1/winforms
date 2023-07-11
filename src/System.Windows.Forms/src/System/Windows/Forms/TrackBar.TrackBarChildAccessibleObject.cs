@@ -9,55 +9,52 @@ namespace System.Windows.Forms;
 
 public partial class TrackBar
 {
-    internal abstract class TrackBarChildAccessibleObject : AccessibleObject
+    internal abstract class TrackBarChildAccessibleObject : AccessibleObject, IOwnedObject<TrackBar>
     {
+        private readonly WeakReference<TrackBar> _owningTrackBar;
+        private int[]? _runtimeId;
+
         public TrackBarChildAccessibleObject(TrackBar owningTrackBar)
-        {
-            OwningTrackBar = owningTrackBar.OrThrowIfNull();
-        }
+            => _owningTrackBar = new(owningTrackBar.OrThrowIfNull());
 
         public override Rectangle Bounds
         {
             get
             {
-                if (!OwningTrackBar.IsHandleCreated || !IsDisplayed || ParentInternal.GetSystemIAccessibleInternal() is not Accessibility.IAccessible systemIAccessible)
+                if (!this.TryGetOwnerAs(out TrackBar? owner) || !owner.IsHandleCreated || !IsDisplayed)
                 {
                     return Rectangle.Empty;
                 }
 
                 // The "GetChildId" method returns to the id of the trackbar element,
                 // which allows to use the native "accLocation" method to get the "Bounds" property
-                systemIAccessible.accLocation(out int left, out int top, out int width, out int height, GetChildId());
-
-                return new(left, top, width, height);
+                return ParentInternal?.SystemIAccessible.TryGetLocation(GetChildId()) ?? Rectangle.Empty;
             }
         }
 
-        public override string? Help => ParentInternal.GetSystemIAccessibleInternal()?.get_accHelp(GetChildId());
+        public override string? Help => ParentInternal?.SystemIAccessible.TryGetHelp(GetChildId());
 
         public override AccessibleRole Role
-            => ParentInternal.GetSystemIAccessibleInternal()?.get_accRole(GetChildId()) is object accRole
-                ? (AccessibleRole)accRole
-                : AccessibleRole.None;
+            => ParentInternal?.SystemIAccessible.TryGetRole(GetChildId()) ?? AccessibleRole.None;
 
         public override AccessibleStates State
-            => ParentInternal.GetSystemIAccessibleInternal()?.get_accState(GetChildId()) is object accState
-                ? (AccessibleStates)accState
-                : AccessibleStates.None;
+            => ParentInternal?.SystemIAccessible.TryGetState(GetChildId()) ?? AccessibleStates.None;
 
         internal override UiaCore.IRawElementProviderFragmentRoot? FragmentRoot => ParentInternal;
 
-        internal virtual bool IsDisplayed => OwningTrackBar.Visible;
+        internal virtual bool IsDisplayed => this.TryGetOwnerAs(out TrackBar? trackbar) && trackbar.Visible;
 
-        internal TrackBar OwningTrackBar { get; private set; }
+        TrackBar? IOwnedObject<TrackBar>.Owner => _owningTrackBar.TryGetTarget(out TrackBar? target) ? target : null;
 
-        internal TrackBarAccessibleObject ParentInternal => (TrackBarAccessibleObject)OwningTrackBar.AccessibilityObject;
+        internal TrackBarAccessibleObject? ParentInternal => this.TryGetOwnerAs(out TrackBar? owner)
+            ? owner.AccessibilityObject as TrackBarAccessibleObject
+            : null;
 
         internal override int[] RuntimeId
-            => new int[]
+            => _runtimeId ??= new int[]
             {
                 RuntimeIDFirstItem,
-                PARAM.ToInt(OwningTrackBar.InternalHandle),
+                (int)(this.TryGetOwnerAs(out TrackBar? owner) ? owner.InternalHandle : HWND.Null),
                 GetChildId()
             };
 
@@ -73,7 +70,7 @@ public partial class TrackBar
             {
                 UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.ButtonControlTypeId,
                 UiaCore.UIA.HasKeyboardFocusPropertyId => false,
-                UiaCore.UIA.IsEnabledPropertyId => OwningTrackBar.Enabled,
+                UiaCore.UIA.IsEnabledPropertyId => this.TryGetOwnerAs(out TrackBar? owner) && owner.Enabled,
                 UiaCore.UIA.IsKeyboardFocusablePropertyId => false,
                 _ => base.GetPropertyValue(propertyID)
             };

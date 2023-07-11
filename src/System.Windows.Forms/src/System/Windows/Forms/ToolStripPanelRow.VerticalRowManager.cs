@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-#if DEBUG
-#endif
 using System.Drawing;
 using System.Windows.Forms.Layout;
 
@@ -454,7 +452,6 @@ public partial class ToolStripPanelRow
                             }
                         }
 
-                        Control controlToPushAside = Row.ControlsInternal[index];
                         // Plop the new control in the midst of the row in question.
                         if (index < Row.ControlsInternal.Count)
                         {

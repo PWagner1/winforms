@@ -1651,7 +1651,7 @@ internal abstract partial class GridEntry : GridItem, ITypeDescriptorContext
 
                 int planes = PInvoke.GetDeviceCaps(compatibleDC, GET_DEVICE_CAPS_INDEX.PLANES);
                 int bitsPixel = PInvoke.GetDeviceCaps(compatibleDC, GET_DEVICE_CAPS_INDEX.BITSPIXEL);
-                HBITMAP compatibleBitmap = PInvoke.CreateBitmap(rectangle.Width, rectangle.Height, (uint)planes, (uint)bitsPixel, lpBits: null);
+                using HBITMAP compatibleBitmap = PInvoke.CreateBitmap(rectangle.Width, rectangle.Height, (uint)planes, (uint)bitsPixel, lpBits: null);
                 using PInvoke.SelectObjectScope targetBitmapSelection = new(compatibleDC, compatibleBitmap);
 
                 using PInvoke.CreateBrushScope brush = new(backgroundColor);
@@ -1844,12 +1844,12 @@ internal abstract partial class GridEntry : GridItem, ITypeDescriptorContext
             ? OwnerGridView.SelectedItemWithFocusBackColor
             : OwnerGridView.BackColor;
 
-        User32.DT format = User32.DT.EDITCONTROL | User32.DT.EXPANDTABS | User32.DT.NOCLIP
-            | User32.DT.SINGLELINE | User32.DT.NOPREFIX;
+        DRAW_TEXT_FORMAT format = DRAW_TEXT_FORMAT.DT_EDITCONTROL | DRAW_TEXT_FORMAT.DT_EXPANDTABS | DRAW_TEXT_FORMAT.DT_NOCLIP
+            | DRAW_TEXT_FORMAT.DT_SINGLELINE | DRAW_TEXT_FORMAT.DT_NOPREFIX;
 
         if (ownerGrid.DrawValuesRightToLeft)
         {
-            format |= User32.DT.RIGHT | User32.DT.RTLREADING;
+            format |= DRAW_TEXT_FORMAT.DT_RIGHT | DRAW_TEXT_FORMAT.DT_RTLREADING;
         }
 
         // For password mode, replace the string value with a bullet.
@@ -1973,7 +1973,7 @@ internal abstract partial class GridEntry : GridItem, ITypeDescriptorContext
             OwnerGridView.SelectedGridEntry = this;
             return true;
         }
-        catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
+        catch (Exception ex) when (!ex.IsCriticalException())
         {
         }
 

@@ -7,7 +7,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms.Layout;
 using System.Windows.Forms.Primitives;
-using static Interop;
 
 namespace System.Windows.Forms;
 
@@ -46,11 +45,6 @@ public class ContainerControl : ScrollableControl, IContainerControl
     /// We use this flag to indicate it is top-level window and is already scaled.
     /// </summary>
     private bool _isScaledByDpiChangedEvent;
-
-    /// <summary>
-    ///  Indicates scaling, due to DPI changed event, of the container control is in progress.
-    /// </summary>
-    internal bool _dpiScalingInProgress;
 
     private BitVector32 _state;
 
@@ -413,14 +407,14 @@ public class ContainerControl : ScrollableControl, IContainerControl
         // Recursive function that makes sure that the chain of active controls is coherent.
         bool ret = true;
         bool updateContainerActiveControl = false;
-        ContainerControl? cc = null;
+        ContainerControl? containerControl = null;
         Control? parent = ParentInternal;
         if (parent is not null)
         {
-            cc = parent.GetContainerControl() as ContainerControl;
-            if (cc is not null)
+            containerControl = parent.GetContainerControl() as ContainerControl;
+            if (containerControl is not null)
             {
-                updateContainerActiveControl = (cc.ActiveControl != this);
+                updateContainerActiveControl = (containerControl.ActiveControl != this);
             }
         }
 
@@ -428,7 +422,7 @@ public class ContainerControl : ScrollableControl, IContainerControl
         {
             if (updateContainerActiveControl)
             {
-                if (cc is not null && !cc.ActivateControl(this, false))
+                if (containerControl is not null && !containerControl.ActivateControl(this, false))
                 {
                     return false;
                 }
@@ -644,7 +638,7 @@ public class ContainerControl : ScrollableControl, IContainerControl
     /// <summary>
     ///  Recursively enables required scaling from the given control
     /// </summary>
-    private void EnableRequiredScaling(Control start, bool enable)
+    private static void EnableRequiredScaling(Control start, bool enable)
     {
         start.RequiredScalingEnabled = enable;
         foreach (Control c in start.Controls)
@@ -680,13 +674,13 @@ public class ContainerControl : ScrollableControl, IContainerControl
         else
         {
             // Determine and focus closest visible parent
-            ContainerControl? cc = this;
-            while (cc is not null && !cc.Visible)
+            ContainerControl? containerControl = this;
+            while (containerControl is not null && !containerControl.Visible)
             {
-                Control? parent = cc.ParentInternal;
+                Control? parent = containerControl.ParentInternal;
                 if (parent is not null)
                 {
-                    cc = parent.GetContainerControl() as ContainerControl;
+                    containerControl = parent.GetContainerControl() as ContainerControl;
                 }
                 else
                 {
@@ -694,9 +688,9 @@ public class ContainerControl : ScrollableControl, IContainerControl
                 }
             }
 
-            if (cc is not null && cc.Visible)
+            if (containerControl is not null && containerControl.Visible)
             {
-                PInvoke.SetFocus(cc);
+                PInvoke.SetFocus(containerControl);
             }
         }
     }
@@ -1064,7 +1058,7 @@ public class ContainerControl : ScrollableControl, IContainerControl
     /// <summary>
     ///  Recursively resumes all layout.
     /// </summary>
-    internal void ResumeAllLayout(Control start, bool performLayout)
+    internal static void ResumeAllLayout(Control start, bool performLayout)
     {
         ControlCollection controlsCollection = start.Controls;
         // This may have changed the sizes of our children.
@@ -1082,7 +1076,7 @@ public class ContainerControl : ScrollableControl, IContainerControl
     /// <summary>
     ///  Recursively suspends all layout.
     /// </summary>
-    internal void SuspendAllLayout(Control start)
+    internal static void SuspendAllLayout(Control start)
     {
         start.SuspendLayout();
         CommonProperties.xClearPreferredSizeCache(start);
@@ -1441,8 +1435,6 @@ public class ContainerControl : ScrollableControl, IContainerControl
         SuspendAllLayout(this);
         try
         {
-            _dpiScalingInProgress = true;
-
             if (LocalAppContextSwitches.ScaleTopLevelFormMinMaxSizeForDpi)
             {
                 // AutoscaleFactor is not updated until after the OnFontChanged event is raised. Hence, computing
@@ -1459,21 +1451,7 @@ public class ContainerControl : ScrollableControl, IContainerControl
             // WM_DPICHANGED event. Failing to apply SuggestedRectangle will result in a circular WM_DPICHANGED
             // events on the control.
 
-            // Note: SuggestedRectangle supplied  by WM_DPICHANGED event is Dpi (not Font) scaled. if top-level window is
-            // Font scaled, we might see deviations in the expected bounds and may result in adding Scrollbars (horizontal/vertical)
-            if (IsHandleCreated)
-            {
-                PInvoke.SetWindowPos(
-                    this,
-                    HWND.HWND_TOP,
-                    suggestedRectangle.X,
-                    suggestedRectangle.Y,
-                    suggestedRectangle.Width,
-                    suggestedRectangle.Height,
-                    SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
-            }
-
-            // Bounds are already scaled for the top-level window. We would need to skip scaling of
+            // Bounds are being scaled for the top-level window via SuggestedRectangle. We would need to skip scaling of
             // this control further by the 'OnFontChanged' event.
             _isScaledByDpiChangedEvent = true;
 
@@ -1490,15 +1468,24 @@ public class ContainerControl : ScrollableControl, IContainerControl
                     OnFontChanged(EventArgs.Empty);
                 }
             }
+
+            if (IsHandleCreated)
+            {
+                PInvoke.SetWindowPos(
+                    this,
+                    HWND.HWND_TOP,
+                    suggestedRectangle.X,
+                    suggestedRectangle.Y,
+                    suggestedRectangle.Width,
+                    suggestedRectangle.Height,
+                    SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+            }
         }
         finally
         {
             // We want to perform layout for dpi-changed high Dpi improvements - setting the second parameter to 'true'
             ResumeAllLayout(this, true);
             _isScaledByDpiChangedEvent = false;
-
-            // Scaling and ResumeLayout, due to DPI changed event, should be finished by now for this container.
-            _dpiScalingInProgress = false;
         }
     }
 
@@ -1689,12 +1676,12 @@ public class ContainerControl : ScrollableControl, IContainerControl
                     // innerMostFCC.ParentInternal can be null when the ActiveControl is deleted.
                     if (innerMostFCC.ParentInternal is not null)
                     {
-                        ContainerControl? cc = innerMostFCC.ParentInternal.GetContainerControl() as ContainerControl;
-                        stopControl = cc;
-                        if (cc is not null && cc != this)
+                        ContainerControl? containerControl = innerMostFCC.ParentInternal.GetContainerControl() as ContainerControl;
+                        stopControl = containerControl;
+                        if (containerControl is not null && containerControl != this)
                         {
-                            cc._focusedControl = null;
-                            cc._activeControl = null;
+                            containerControl._focusedControl = null;
+                            containerControl._activeControl = null;
                         }
                     }
                 }
@@ -2127,9 +2114,9 @@ public class ContainerControl : ScrollableControl, IContainerControl
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     protected override void WndProc(ref Message m)
     {
-        switch ((User32.WM)m.Msg)
+        switch (m.MsgInternal)
         {
-            case User32.WM.SETFOCUS:
+            case PInvoke.WM_SETFOCUS:
                 WmSetFocus(ref m);
                 break;
             default:

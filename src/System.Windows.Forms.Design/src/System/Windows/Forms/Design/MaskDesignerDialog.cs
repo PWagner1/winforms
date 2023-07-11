@@ -2,13 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Globalization;
-using static Interop;
 
 namespace System.Windows.Forms.Design;
 
@@ -104,15 +101,31 @@ internal class MaskDesignerDialog : Form
         HelpButtonClicked += new CancelEventHandler(MaskDesignerDialog_HelpButtonClicked);
     }
 
+    [MemberNotNull(nameof(_components))]
+    [MemberNotNull(nameof(_lblHeader))]
+    [MemberNotNull(nameof(_listViewCannedMasks))]
+    [MemberNotNull(nameof(_maskDescriptionHeader))]
+    [MemberNotNull(nameof(_dataFormatHeader))]
+    [MemberNotNull(nameof(_validatingTypeHeader))]
+    [MemberNotNull(nameof(_btnOK))]
+    [MemberNotNull(nameof(_btnCancel))]
+    [MemberNotNull(nameof(_checkBoxUseValidatingType))]
+    [MemberNotNull(nameof(_maskTryItTable))]
+    [MemberNotNull(nameof(_lblMask))]
+    [MemberNotNull(nameof(_txtBoxMask))]
+    [MemberNotNull(nameof(_lblTryIt))]
+    [MemberNotNull(nameof(_overarchingTableLayoutPanel))]
+    [MemberNotNull(nameof(_okCancelTableLayoutPanel))]
+    [MemberNotNull(nameof(_errorProvider))]
     private void InitializeComponent()
     {
         _components = new Container();
         ComponentResourceManager resources = new ComponentResourceManager(typeof(MaskDesignerDialog));
         _lblHeader = new Label();
         _listViewCannedMasks = new ListView();
-        _maskDescriptionHeader = new ColumnHeader(resources.GetString("listViewCannedMasks.Columns"));
-        _dataFormatHeader = new ColumnHeader(resources.GetString("listViewCannedMasks.Columns1"));
-        _validatingTypeHeader = new ColumnHeader(resources.GetString("listViewCannedMasks.Columns2"));
+        _maskDescriptionHeader = new ColumnHeader(resources.GetString("listViewCannedMasks.Columns")!);
+        _dataFormatHeader = new ColumnHeader(resources.GetString("listViewCannedMasks.Columns1")!);
+        _validatingTypeHeader = new ColumnHeader(resources.GetString("listViewCannedMasks.Columns2")!);
         _btnOK = new Button();
         _btnCancel = new Button();
         _checkBoxUseValidatingType = new CheckBox();
@@ -293,7 +306,7 @@ internal class MaskDesignerDialog : Form
     /// <summary>
     /// The current text (mask) in the txtBoxMask control.
     /// </summary>
-    public Type ValidatingType { get; private set; }
+    public Type? ValidatingType { get; private set; }
 
     /// <summary>
     /// A collection of MaskDescriptor objects represented in the ListView with the canned mask
@@ -306,6 +319,7 @@ internal class MaskDesignerDialog : Form
     /// We need to add the default descriptors explicitly because the DiscoverMaskDescriptors method only adds
     /// public descriptors and these are internal.
     /// </summary>
+    [MemberNotNull(nameof(_customMaskDescriptor))]
     private void AddDefaultMaskDescriptors(CultureInfo culture)
     {
         _customMaskDescriptor = new MaskDescriptorTemplate(null, SR.MaskDesignerDialogCustomEntry, null, null, null, true);
@@ -367,15 +381,11 @@ internal class MaskDesignerDialog : Form
             // possible exceptions when accessing an external descriptor.
             try
             {
-                MaskDescriptor maskDescriptor = (MaskDescriptor)Activator.CreateInstance(t);
+                MaskDescriptor maskDescriptor = (MaskDescriptor)Activator.CreateInstance(t)!;
                 InsertMaskDescriptor(0, maskDescriptor);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!ex.IsCriticalException())
             {
-                if (ClientUtils.IsCriticalException(ex))
-                {
-                    throw;
-                }
             }
         }
     }
@@ -467,7 +477,7 @@ internal class MaskDesignerDialog : Form
             return;
         }
 
-        MaskDescriptor selectedMaskDex = null;
+        MaskDescriptor? selectedMaskDex = null;
 
         // Save current selected entry to restore it after sorting.
         if (_listViewCannedMasks.SelectedItems.Count > 0)
@@ -485,7 +495,7 @@ internal class MaskDesignerDialog : Form
         // Since we need to pre-process each item before inserting it in the ListView, it is better to remove all items
         // from it first and then add the sorted ones back (no replace).  Stop redrawing while we change the list.
 
-        PInvoke.SendMessage(_listViewCannedMasks, User32.WM.SETREDRAW, (WPARAM)(BOOL)false);
+        PInvoke.SendMessage(_listViewCannedMasks, PInvoke.WM_SETREDRAW, (WPARAM)(BOOL)false);
 
         try
         {
@@ -519,7 +529,7 @@ internal class MaskDesignerDialog : Form
         finally
         {
             // Resume redraw.
-            PInvoke.SendMessage(_listViewCannedMasks, User32.WM.SETREDRAW, (WPARAM)(BOOL)true);
+            PInvoke.SendMessage(_listViewCannedMasks, PInvoke.WM_SETREDRAW, (WPARAM)(BOOL)true);
             _listViewCannedMasks.Invalidate();
         }
     }
@@ -534,9 +544,7 @@ internal class MaskDesignerDialog : Form
 
     private void InsertMaskDescriptor(int index, MaskDescriptor maskDescriptor, bool validateDescriptor)
     {
-        string errorMessage;
-
-        if (validateDescriptor && !MaskDescriptor.IsValidMaskDescriptor(maskDescriptor, out errorMessage))
+        if (validateDescriptor && !MaskDescriptor.IsValidMaskDescriptor(maskDescriptor, out _))
         {
             return;
         }
@@ -550,7 +558,7 @@ internal class MaskDesignerDialog : Form
     /// <summary>
     /// Canned masks list view Column click event handler.  Sorts the items.
     /// </summary>
-    private void listViewCannedMasks_ColumnClick(object sender, ColumnClickEventArgs e)
+    private void listViewCannedMasks_ColumnClick(object? sender, ColumnClickEventArgs e)
     {
         // Switch sorting order.
         switch (_listViewSortOrder)
@@ -570,7 +578,7 @@ internal class MaskDesignerDialog : Form
     /// <summary>
     /// OK button Click event handler.  Updates the validating type.
     /// </summary>
-    private void btnOK_Click(object sender, EventArgs e)
+    private void btnOK_Click(object? sender, EventArgs e)
     {
         if (_checkBoxUseValidatingType.Checked)
         {
@@ -585,7 +593,7 @@ internal class MaskDesignerDialog : Form
     /// <summary>
     /// Canned masks list view Enter event handler.  Sets focus in the first item if none has it.
     /// </summary>
-    private void listViewCannedMasks_Enter(object sender, EventArgs e)
+    private void listViewCannedMasks_Enter(object? sender, EventArgs e)
     {
         if (_listViewCannedMasks.FocusedItem is not null || _listViewCannedMasks.Items.Count <= 0)
         {
@@ -599,7 +607,7 @@ internal class MaskDesignerDialog : Form
     /// Canned masks list view SelectedIndexChanged event handler.  Gets the selected canned mask
     /// information.
     /// </summary>
-    private void listViewCannedMasks_SelectedIndexChanged(object sender, EventArgs e)
+    private void listViewCannedMasks_SelectedIndexChanged(object? sender, EventArgs e)
     {
         if (_listViewCannedMasks.SelectedItems.Count == 0)
         {
@@ -622,14 +630,14 @@ internal class MaskDesignerDialog : Form
         }
     }
 
-    private void MaskDesignerDialog_Load(object sender, EventArgs e)
+    private void MaskDesignerDialog_Load(object? sender, EventArgs e)
     {
         UpdateSortedListView(MaskDescriptorComparer.SortType.ByName);
         SelectMtbMaskDescriptor();
         _btnCancel.Select();
     }
 
-    private void maskedTextBox_MaskInputRejected(object sender, MaskInputRejectedEventArgs e)
+    private void maskedTextBox_MaskInputRejected(object? sender, MaskInputRejectedEventArgs e)
     {
         _errorProvider.SetError(_maskedTextBox, MaskedTextBoxDesigner.GetMaskInputRejectedErrorMessage(e));
     }
@@ -659,13 +667,13 @@ internal class MaskDesignerDialog : Form
         }
     }
 
-    private void MaskDesignerDialog_HelpButtonClicked(object sender, CancelEventArgs e)
+    private void MaskDesignerDialog_HelpButtonClicked(object? sender, CancelEventArgs e)
     {
         e.Cancel = true;
         ShowHelp();
     }
 
-    private void maskedTextBox_KeyDown(object sender, KeyEventArgs e)
+    private void maskedTextBox_KeyDown(object? sender, KeyEventArgs e)
     {
         _errorProvider.Clear();
     }
@@ -673,7 +681,7 @@ internal class MaskDesignerDialog : Form
     /// <summary>
     /// Mask text box Leave event handler.
     /// </summary>
-    private void txtBoxMask_Validating(object sender, CancelEventArgs e)
+    private void txtBoxMask_Validating(object? sender, CancelEventArgs e)
     {
         try
         {
@@ -688,12 +696,12 @@ internal class MaskDesignerDialog : Form
     /// <summary>
     /// Mask text box TextChanged event handler.
     /// </summary>
-    private void txtBoxMask_TextChanged(object sender, EventArgs e)
+    private void txtBoxMask_TextChanged(object? sender, EventArgs e)
     {
         // If the change in the text box is performed by the user, we need to select the 'Custom' item in
         // the list view, which is the last item.
 
-        MaskDescriptor selectedMaskDex = null;
+        MaskDescriptor? selectedMaskDex = null;
 
         if (_listViewCannedMasks.SelectedItems.Count != 0)
         {

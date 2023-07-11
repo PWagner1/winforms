@@ -9,42 +9,33 @@ namespace System.Windows.Forms;
 
 public partial class TabControl
 {
-    internal class TabControlAccessibleObject : ControlAccessibleObject
+    internal sealed class TabControlAccessibleObject : ControlAccessibleObject
     {
-        private readonly TabControl _owningTabControl;
-
         public TabControlAccessibleObject(TabControl owningTabControl) : base(owningTabControl)
         {
-            _owningTabControl = owningTabControl;
         }
 
         public override Rectangle Bounds
         {
             get
             {
-                if (!_owningTabControl.IsHandleCreated || GetSystemIAccessibleInternal() is null)
+                if (!this.TryGetOwnerAs(out TabControl? owner) || !owner.IsHandleCreated)
                 {
                     return Rectangle.Empty;
                 }
 
-                // The "NativeMethods.CHILDID_SELF" constant returns to the id of the TabPage,
-                // which allows to use the native "accLocation" method to get the "Bounds" property
-                GetSystemIAccessibleInternal()!.accLocation(out int left, out int top, out int width, out int height, NativeMethods.CHILDID_SELF);
-                return new(left, top, width, height);
+                // The CHILDID_SELF constant returns to the id of the TabPage, which allows to use the native
+                // "accLocation" method to get the "Bounds" property
+                return SystemIAccessible.TryGetLocation(CHILDID_SELF);
             }
         }
 
-        public override AccessibleRole Role
-            => Owner.AccessibleRole != AccessibleRole.Default
-                ? Owner.AccessibleRole
-                : AccessibleRole.PageTabList;
+        public override AccessibleRole Role => this.GetOwnerAccessibleRole(AccessibleRole.PageTabList);
 
         public override AccessibleStates State
-            // The "NativeMethods.CHILDID_SELF" constant returns to the id of the trackbar,
-            // which allows to use the native "get_accState" method to get the "State" property
-            => GetSystemIAccessibleInternal()?.get_accState(NativeMethods.CHILDID_SELF) is object accState
-                ? (AccessibleStates)accState
-                : AccessibleStates.None;
+            // The CHILDID_SELF constant returns to the id of the trackbar, which allows to use the native
+            // "get_accState" method to get the "State" property
+            => SystemIAccessible.TryGetState(CHILDID_SELF);
 
         internal override IRawElementProviderFragmentRoot FragmentRoot => this;
 
@@ -52,22 +43,23 @@ public partial class TabControl
 
         public override AccessibleObject? GetChild(int index)
         {
-            if (!_owningTabControl.IsHandleCreated
-                || _owningTabControl.TabPages.Count == 0
+            if (!this.TryGetOwnerAs(out TabControl? owner)
+                || !owner.IsHandleCreated
+                || owner.TabPages.Count == 0
                 || index < 0
-                || index > _owningTabControl.TabPages.Count)
+                || index > owner.TabPages.Count)
             {
                 return null;
             }
 
             return index == 0
-                ? _owningTabControl.SelectedTab?.AccessibilityObject
-                : _owningTabControl.TabPages[index - 1].TabAccessibilityObject;
+                ? owner.SelectedTab?.AccessibilityObject
+                : owner.TabPages[index - 1].TabAccessibilityObject;
         }
 
         public override int GetChildCount()
         {
-            if (!_owningTabControl.IsHandleCreated)
+            if (!this.TryGetOwnerAs(out TabControl? owner) || !owner.IsHandleCreated)
             {
                 // We return -1 instead of 0 when the Handle has not been created,
                 // so that the user can distinguish between the situation
@@ -77,31 +69,31 @@ public partial class TabControl
                 return -1;
             }
 
-            if (_owningTabControl.TabPages.Count == 0)
+            if (owner.TabPages.Count == 0)
             {
                 return 0;
             }
 
             // We add 1 to the number of TabPages, since the TabControl, in addition to the elements
             // for the TabPages,contains an element for the Panel of the selected TabPage.
-            return _owningTabControl.TabPages.Count + 1;
+            return owner.TabPages.Count + 1;
         }
 
         public override AccessibleObject? HitTest(int x, int y)
         {
-            if (!_owningTabControl.IsHandleCreated)
+            if (!this.TryGetOwnerAs(out TabControl? owner) || !owner.IsHandleCreated)
             {
                 return null;
             }
 
             Point point = new(x, y);
-            if (_owningTabControl.SelectedTab is not null
-                && _owningTabControl.SelectedTab.AccessibilityObject.Bounds.Contains(point))
+            if (owner.SelectedTab is not null
+                && owner.SelectedTab.AccessibilityObject.Bounds.Contains(point))
             {
-                return _owningTabControl.SelectedTab.AccessibilityObject;
+                return owner.SelectedTab.AccessibilityObject;
             }
 
-            foreach (TabPage tabPage in _owningTabControl.TabPages)
+            foreach (TabPage tabPage in owner.TabPages)
             {
                 if (tabPage.TabAccessibilityObject.Bounds.Contains(point))
                 {
@@ -117,17 +109,17 @@ public partial class TabControl
 
         internal override IRawElementProviderFragment? FragmentNavigate(NavigateDirection direction)
         {
-            if (!_owningTabControl.IsHandleCreated)
+            if (!this.TryGetOwnerAs(out TabControl? owner) || !owner.IsHandleCreated)
             {
                 return null;
             }
 
             return direction switch
             {
-                NavigateDirection.FirstChild => _owningTabControl.SelectedTab?.AccessibilityObject,
-                NavigateDirection.LastChild => _owningTabControl.TabPages.Count > 0
-                                                        ? _owningTabControl.TabPages[^1].TabAccessibilityObject
-                                                        : null,
+                NavigateDirection.FirstChild => owner.SelectedTab?.AccessibilityObject,
+                NavigateDirection.LastChild => owner.TabPages.Count > 0
+                    ? owner.TabPages[^1].TabAccessibilityObject
+                    : null,
                 _ => base.FragmentNavigate(direction)
             };
         }
@@ -135,7 +127,7 @@ public partial class TabControl
         internal override object? GetPropertyValue(UIA propertyID)
             => propertyID switch
             {
-                UIA.HasKeyboardFocusPropertyId => _owningTabControl.Focused,
+                UIA.HasKeyboardFocusPropertyId => this.TryGetOwnerAs(out TabControl? owner) && owner.Focused,
                 UIA.IsKeyboardFocusablePropertyId
                     // This is necessary for compatibility with MSAA proxy:
                     // IsKeyboardFocusable = true regardless the control is enabled/disabled.
@@ -144,10 +136,11 @@ public partial class TabControl
             };
 
         internal override IRawElementProviderSimple[]? GetSelection()
-            => !_owningTabControl.IsHandleCreated
-                || _owningTabControl.SelectedTab is null
+            => !this.TryGetOwnerAs(out TabControl? owner)
+                || !owner.IsHandleCreated
+                || owner.SelectedTab is null
                     ? Array.Empty<IRawElementProviderSimple>()
-                    : new IRawElementProviderSimple[] { _owningTabControl.SelectedTab.TabAccessibilityObject };
+                    : new IRawElementProviderSimple[] { owner.SelectedTab.TabAccessibilityObject };
 
         internal override bool IsPatternSupported(UIA patternId)
             => patternId switch

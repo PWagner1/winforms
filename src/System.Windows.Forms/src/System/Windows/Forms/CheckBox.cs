@@ -36,6 +36,10 @@ public partial class CheckBox : ButtonBase
     internal int _flatSystemStylePaddingWidth = FlatSystemStylePaddingWidth;
     internal int _flatSystemStyleMinimumHeight = FlatSystemStyleMinimumHeight;
 
+    // A flag indicating if UIA StateChanged event needs to be triggered,
+    // to avoid double-triggering when Checked value changes.
+    private bool _notifyAccessibilityStateChangedNeeded;
+
     /// <summary>
     ///  Initializes a new instance of the <see cref="CheckBox"/> class.
     /// </summary>
@@ -211,15 +215,19 @@ public partial class CheckBox : ButtonBase
 
                 if (IsHandleCreated)
                 {
-                    PInvoke.SendMessage(this, (User32.WM)User32.BM.SETCHECK, (WPARAM)(int)_checkState);
+                    PInvoke.SendMessage(this, PInvoke.BM_SETCHECK, (WPARAM)(int)_checkState);
                 }
 
-                if (oldChecked != Checked)
+                bool checkedChanged = oldChecked != Checked;
+
+                if (checkedChanged)
                 {
                     OnCheckedChanged(EventArgs.Empty);
                 }
 
+                _notifyAccessibilityStateChangedNeeded = !checkedChanged;
                 OnCheckStateChanged(EventArgs.Empty);
+                _notifyAccessibilityStateChangedNeeded = false;
             }
         }
     }
@@ -242,11 +250,6 @@ public partial class CheckBox : ButtonBase
         remove => base.MouseDoubleClick -= value;
     }
 
-    /// <summary>
-    ///  Gets the information used to create the handle for the
-    ///  <see cref="CheckBox"/>
-    ///  control.
-    /// </summary>
     protected override CreateParams CreateParams
     {
         get
@@ -255,22 +258,21 @@ public partial class CheckBox : ButtonBase
             cp.ClassName = PInvoke.WC_BUTTON;
             if (OwnerDraw)
             {
-                cp.Style |= (int)User32.BS.OWNERDRAW;
+                cp.Style |= PInvoke.BS_OWNERDRAW;
             }
             else
             {
-                cp.Style |= (int)User32.BS.THREE_STATE;
+                cp.Style |= PInvoke.BS_3STATE;
                 if (Appearance == Appearance.Button)
                 {
-                    cp.Style |= (int)User32.BS.PUSHLIKE;
+                    cp.Style |= PInvoke.BS_PUSHLIKE;
                 }
 
                 // Determine the alignment of the check box
-                //
                 ContentAlignment align = RtlTranslateContent(CheckAlign);
-                if ((int)(align & AnyRight) != 0)
+                if ((align & AnyRight) != 0)
                 {
-                    cp.Style |= (int)User32.BS.RIGHTBUTTON;
+                    cp.Style |= PInvoke.BS_RIGHTBUTTON;
                 }
             }
 
@@ -278,17 +280,7 @@ public partial class CheckBox : ButtonBase
         }
     }
 
-    /// <summary>
-    ///  Deriving classes can override this to configure a default size for their control.
-    ///  This is more efficient than setting the size in the control's constructor.
-    /// </summary>
-    protected override Size DefaultSize
-    {
-        get
-        {
-            return new Size(104, 24);
-        }
-    }
+    protected override Size DefaultSize => new Size(104, 24);
 
     /// <summary>
     ///  When overridden in a derived class, handles rescaling of any magic numbers used in control painting.
@@ -439,6 +431,31 @@ public partial class CheckBox : ButtonBase
     protected virtual void OnCheckedChanged(EventArgs e)
     {
         // accessibility stuff
+        NotifyAccessibilityStateChanged();
+
+        ((EventHandler?)Events[EVENT_CHECKEDCHANGED])?.Invoke(this, e);
+    }
+
+    /// <summary>
+    ///  Raises the <see cref="CheckStateChanged"/> event.
+    /// </summary>
+    protected virtual void OnCheckStateChanged(EventArgs e)
+    {
+        if (OwnerDraw)
+        {
+            Refresh();
+        }
+
+        if (_notifyAccessibilityStateChangedNeeded)
+        {
+            NotifyAccessibilityStateChanged();
+        }
+
+        ((EventHandler?)Events[EVENT_CHECKSTATECHANGED])?.Invoke(this, e);
+    }
+
+    private void NotifyAccessibilityStateChanged()
+    {
         if (FlatStyle == FlatStyle.System)
         {
             AccessibilityNotifyClients(AccessibleEvents.SystemCaptureStart, -1);
@@ -459,21 +476,6 @@ public partial class CheckBox : ButtonBase
         {
             AccessibilityNotifyClients(AccessibleEvents.SystemCaptureEnd, -1);
         }
-
-        ((EventHandler?)Events[EVENT_CHECKEDCHANGED])?.Invoke(this, e);
-    }
-
-    /// <summary>
-    ///  Raises the <see cref="CheckStateChanged"/> event.
-    /// </summary>
-    protected virtual void OnCheckStateChanged(EventArgs e)
-    {
-        if (OwnerDraw)
-        {
-            Refresh();
-        }
-
-        ((EventHandler?)Events[EVENT_CHECKSTATECHANGED])?.Invoke(this, e);
     }
 
     /// <summary>
@@ -529,7 +531,7 @@ public partial class CheckBox : ButtonBase
 
         if (IsHandleCreated)
         {
-            PInvoke.SendMessage(this, (User32.WM)User32.BM.SETCHECK, (WPARAM)(int)_checkState);
+            PInvoke.SendMessage(this, PInvoke.BM_SETCHECK, (WPARAM)(int)_checkState);
         }
     }
 

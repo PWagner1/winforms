@@ -12,7 +12,6 @@ using System.Windows.Forms.Design.Behavior;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Collections;
-using static Interop;
 
 namespace System.Windows.Forms.Design;
 
@@ -379,7 +378,7 @@ internal class CommandSet : IDisposable
 
                 return true;
             }
-            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
+            catch (Exception ex) when (!ex.IsCriticalException())
             {
             }
         }
@@ -578,7 +577,7 @@ internal class CommandSet : IDisposable
         return selectedComponents;
     }
 
-    private void GetAssociatedComponents(IComponent component, IDesignerHost host, List<IComponent> list)
+    private static void GetAssociatedComponents(IComponent component, IDesignerHost host, List<IComponent> list)
     {
         if (host.GetDesigner(component) is not ComponentDesigner designer)
         {
@@ -608,13 +607,9 @@ internal class CommandSet : IDisposable
             {
                 return (Point)prop.GetValue(comp);
             }
-            catch (Exception e)
+            catch (Exception e) when (!e.IsCriticalException())
             {
                 Debug.Fail("Commands may be disabled, the location property was not accessible", e.ToString());
-                if (ClientUtils.IsCriticalException(e))
-                {
-                    throw;
-                }
             }
         }
 
@@ -750,7 +745,7 @@ internal class CommandSet : IDisposable
                 HWND hwnd = PInvoke.WindowFromPoint(p);
                 if (!hwnd.IsNull)
                 {
-                    PInvoke.SendMessage(hwnd, User32.WM.SETCURSOR, hwnd, (nint)User32.HT.CLIENT);
+                    PInvoke.SendMessage(hwnd, PInvoke.WM_SETCURSOR, hwnd, (nint)PInvoke.HTCLIENT);
                 }
                 else
                 {
@@ -3875,7 +3870,7 @@ internal class CommandSet : IDisposable
             {
                 uiService?.ShowError(e, string.Format(SR.CommandSetError, e.Message));
 
-                if (ClientUtils.IsCriticalException(e))
+                if (e.IsCriticalException())
                 {
                     throw;
                 }

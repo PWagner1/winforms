@@ -11,7 +11,6 @@ using System.Windows.Forms.VisualStyles;
 using Windows.Win32.Globalization;
 using Windows.Win32.UI.Input.Ime;
 using static Interop;
-using static Interop.User32;
 
 namespace System.Windows.Forms;
 
@@ -321,13 +320,13 @@ public partial class MaskedTextBox : TextBoxBase
             switch (align)
             {
                 case HorizontalAlignment.Left:
-                    cp.Style |= (int)ES.LEFT;
+                    cp.Style |= PInvoke.ES_LEFT;
                     break;
                 case HorizontalAlignment.Center:
-                    cp.Style |= (int)ES.CENTER;
+                    cp.Style |= PInvoke.ES_CENTER;
                     break;
                 case HorizontalAlignment.Right:
-                    cp.Style |= (int)ES.RIGHT;
+                    cp.Style |= PInvoke.ES_RIGHT;
                     break;
             }
 
@@ -1101,7 +1100,7 @@ public partial class MaskedTextBox : TextBoxBase
         if (IsHandleCreated)
         {
             // This message does not return a value.
-            PInvoke.SendMessage(this, (User32.WM)EM.SETPASSWORDCHAR, (WPARAM)pwdChar);
+            PInvoke.SendMessage(this, PInvoke.EM_SETPASSWORDCHAR, (WPARAM)pwdChar);
             Invalidate();
         }
     }
@@ -2356,15 +2355,11 @@ public partial class MaskedTextBox : TextBoxBase
                         formattedNullValue: null,
                         Formatter.GetDefaultDataSourceNullValue(_validatingType));
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!exception.IsCriticalException())
                 {
-                    if (ClientUtils.IsCriticalException(exception))
+                    if (exception.InnerException is not null)
                     {
-                        throw;
-                    }
-
-                    if (exception.InnerException is not null) // Outer exception is a generic TargetInvocationException.
-                    {
+                        // Outer exception is a generic TargetInvocationException.
                         exception = exception.InnerException;
                     }
 
@@ -2478,7 +2473,7 @@ public partial class MaskedTextBox : TextBoxBase
 
         // If this WM_CHAR message is sent after WM_IME_CHAR, we ignore it since we already processed
         // the corresponding WM_IME_CHAR message.
-        if (m.Msg == (int)WM.CHAR && base.ImeWmCharsToIgnore > 0)
+        if (m.Msg == PInvoke.WM_CHAR && base.ImeWmCharsToIgnore > 0)
         {
             return true;    // meaning, we handled the message so it is not passed to the default WndProc.
         }
@@ -2761,15 +2756,11 @@ public partial class MaskedTextBox : TextBoxBase
                 Clipboard.SetText(text);
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!ex.IsCriticalException())
         {
             // Note: Sometimes the above operation throws but it successfully sets the
             // data in the clipboard. This usually happens when the Application's Main
             // is not attributed with [STAThread].
-            if (ClientUtils.IsCriticalException(ex))
-            {
-                throw;
-            }
         }
 
         return true;
@@ -2904,13 +2895,8 @@ public partial class MaskedTextBox : TextBoxBase
         {
             text = Clipboard.GetText();
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!ex.IsCriticalException())
         {
-            if (ClientUtils.IsCriticalException(ex))
-            {
-                throw;
-            }
-
             Debug.Fail(ex.ToString());
             return;
         }
@@ -2921,7 +2907,7 @@ public partial class MaskedTextBox : TextBoxBase
     private void WmPrint(ref Message m)
     {
         base.WndProc(ref m);
-        if (((User32.PRF)(nint)m.LParamInternal & User32.PRF.NONCLIENT) != 0
+        if (((nint)m.LParamInternal & PInvoke.PRF_NONCLIENT) != 0
             && Application.RenderWithVisualStyles && BorderStyle == BorderStyle.Fixed3D)
         {
             using Graphics g = Graphics.FromHdc((HDC)m.WParamInternal);
@@ -2940,21 +2926,21 @@ public partial class MaskedTextBox : TextBoxBase
     protected override void WndProc(ref Message m)
     {
         // Handle messages for special cases (unsupported operations or cases where mask doesn not matter).
-        switch (m.Msg)
+        switch (m.MsgInternal)
         {
-            case (int)WM.PRINT:
+            case PInvoke.WM_PRINT:
                 WmPrint(ref m);
                 return;
-            case (int)WM.CONTEXTMENU:
-            case (int)EM.CANUNDO:
+            case PInvoke.WM_CONTEXTMENU:
+            case (int)PInvoke.EM_CANUNDO:
                 base.ClearUndo(); // resets undo buffer.
                 base.WndProc(ref m);
                 return;
 
-            case (int)EM.SCROLLCARET:  // No scroll for single-line control.
-            case (int)EM.LIMITTEXT:    // Max/Min text is defined by the mask.
-            case (int)EM.UNDO:
-            case (int)WM.UNDO:
+            case (int)PInvoke.EM_SCROLLCARET:  // No scroll for single-line control.
+            case (int)PInvoke.EM_LIMITTEXT:    // Max/Min text is defined by the mask.
+            case (int)PInvoke.EM_UNDO:
+            case PInvoke.WM_UNDO:
                 return;
 
             default:
@@ -2967,9 +2953,9 @@ public partial class MaskedTextBox : TextBoxBase
             return;
         }
 
-        switch (m.Msg)
+        switch (m.MsgInternal)
         {
-            case (int)WM.IME_STARTCOMPOSITION:
+            case PInvoke.WM_IME_STARTCOMPOSITION:
                 if (WmImeStartComposition())
                 {
                     break;
@@ -2977,11 +2963,11 @@ public partial class MaskedTextBox : TextBoxBase
 
                 goto default;
 
-            case (int)WM.IME_ENDCOMPOSITION:
+            case PInvoke.WM_IME_ENDCOMPOSITION:
                 _flagState[IME_ENDING_COMPOSITION] = true;
                 goto default;
 
-            case (int)WM.IME_COMPOSITION:
+            case PInvoke.WM_IME_COMPOSITION:
                 if (WmImeComposition(ref m))
                 {
                     break;
@@ -2989,7 +2975,7 @@ public partial class MaskedTextBox : TextBoxBase
 
                 goto default;
 
-            case (int)WM.CUT:
+            case PInvoke.WM_CUT:
                 if (!ReadOnly && WmCopy())
                 {
                     WmClear();
@@ -2997,24 +2983,24 @@ public partial class MaskedTextBox : TextBoxBase
 
                 break;
 
-            case (int)WM.COPY:
+            case PInvoke.WM_COPY:
                 WmCopy();
                 break;
 
-            case (int)WM.PASTE:
+            case PInvoke.WM_PASTE:
                 WmPaste();
                 break;
 
-            case (int)WM.CLEAR:
+            case PInvoke.WM_CLEAR:
                 WmClear();
                 break;
 
-            case (int)WM.KILLFOCUS:
+            case PInvoke.WM_KILLFOCUS:
                 base.WndProc(ref m);
                 WmKillFocus();
                 break;
 
-            case (int)WM.SETFOCUS:
+            case PInvoke.WM_SETFOCUS:
                 WmSetFocus();
                 base.WndProc(ref m);
                 break;

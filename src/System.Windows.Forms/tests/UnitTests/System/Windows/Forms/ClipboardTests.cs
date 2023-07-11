@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace System.Windows.Forms.Tests;
 
@@ -219,7 +220,6 @@ public class ClipboardTests
     [InlineData("format", 1)]
     public void Clipboard_SetData_Invoke_GetReturnsExpected(string format, object data)
     {
-        using var formatterScope = new BinaryFormatterScope(enable: data is int);
         Clipboard.SetData(format, data);
         Assert.Equal(data, Clipboard.GetData(format));
         Assert.True(Clipboard.ContainsData(format));
@@ -251,7 +251,6 @@ public class ClipboardTests
     [InlineData("data")]
     public void Clipboard_SetDataObject_InvokeObjectNotIComDataObject_GetReturnsExpected(object data)
     {
-        using var formatterScope = new BinaryFormatterScope(enable: data is int);
         Clipboard.SetDataObject(data);
         Assert.Equal(data, Clipboard.GetDataObject().GetData(data.GetType()));
         Assert.True(Clipboard.ContainsData(data.GetType().FullName));
@@ -262,7 +261,6 @@ public class ClipboardTests
     [InlineData("data")]
     public void Clipboard_SetDataObject_InvokeObjectIComDataObject_GetReturnsExpected(object data)
     {
-        using var formatterScope = new BinaryFormatterScope(enable: data is int);
         var dataObject = new DataObject(data);
         Clipboard.SetDataObject(dataObject);
         Assert.Equal(data, Clipboard.GetDataObject().GetData(data.GetType()));
@@ -276,7 +274,6 @@ public class ClipboardTests
     [InlineData("data", false)]
     public void Clipboard_SetDataObject_InvokeObjectBoolNotIComDataObject_GetReturnsExpected(object data, bool copy)
     {
-        using var formatterScope = new BinaryFormatterScope(enable: data is int);
         Clipboard.SetDataObject(data, copy);
         Assert.Equal(data, Clipboard.GetDataObject().GetData(data.GetType()));
         Assert.True(Clipboard.ContainsData(data.GetType().FullName));
@@ -289,7 +286,6 @@ public class ClipboardTests
     [InlineData("data", false, 1, 2)]
     public void Clipboard_SetDataObject_InvokeObjectBoolIComDataObject_GetReturnsExpected(object data, bool copy, int retryTimes, int retryDelay)
     {
-        using var formatterScope = new BinaryFormatterScope(enable: data is int);
         var dataObject = new DataObject(data);
         Clipboard.SetDataObject(dataObject, copy, retryTimes, retryDelay);
         Assert.Equal(data, Clipboard.GetDataObject().GetData(data.GetType()));
@@ -303,7 +299,6 @@ public class ClipboardTests
     [InlineData("data", false, 1, 2)]
     public void Clipboard_SetDataObject_InvokeObjectBoolIntIntNotIComDataObject_GetReturnsExpected(object data, bool copy, int retryTimes, int retryDelay)
     {
-        using var formatterScope = new BinaryFormatterScope(enable: data is int);
         Clipboard.SetDataObject(data, copy, retryTimes, retryDelay);
         Assert.Equal(data, Clipboard.GetDataObject().GetData(data.GetType()));
         Assert.True(Clipboard.ContainsData(data.GetType().FullName));
@@ -342,8 +337,10 @@ public class ClipboardTests
     {
         var filePaths = new StringCollection
         {
-            "filePath"
+            "filePath",
+            "filePath2"
         };
+
         Clipboard.SetFileDropList(filePaths);
         Assert.Equal(filePaths, Clipboard.GetFileDropList());
         Assert.True(Clipboard.ContainsFileDropList());
@@ -451,7 +448,6 @@ public class ClipboardTests
     [EnumData<TextDataFormat>]
     public void Clipboard_SetText_InvokeStringTextDataFormat_GetReturnsExpected(TextDataFormat format)
     {
-        using var formatterScope = new BinaryFormatterScope(enable: format == TextDataFormat.CommaSeparatedValue);
         Clipboard.SetText("text", format);
         Assert.Equal("text", Clipboard.GetText(format));
         Assert.True(Clipboard.ContainsText(format));
@@ -477,5 +473,44 @@ public class ClipboardTests
     {
         Assert.Throws<ThreadStateException>(() => Clipboard.SetText("text"));
         Assert.Throws<ThreadStateException>(() => Clipboard.SetText("text", TextDataFormat.Text));
+    }
+
+    [WinFormsFact]
+    public void ClipBoard_SetData_CustomFormat_Color()
+    {
+        using BinaryFormatterScope scope = new(enable: true);
+        string format = nameof(ClipBoard_SetData_CustomFormat_Color);
+        Clipboard.SetData(format, Color.Black);
+        Assert.True(Clipboard.ContainsData(format));
+        Assert.Equal(Color.Black, Clipboard.GetData(format));
+    }
+
+    [WinFormsFact]
+    public void ClipBoard_SetData_CustomFormat_Color_BinaryFormatterDisabled_SerializesException()
+    {
+        using BinaryFormatterScope scope = new(enable: false);
+        string format = nameof(ClipBoard_SetData_CustomFormat_Color);
+
+        // This will fail and NotSupportedException will be put on the Clipboard instead.
+        Clipboard.SetData(format, Color.Black);
+        Assert.True(Clipboard.ContainsData(format));
+
+        NotSupportedException value = (NotSupportedException)Clipboard.GetData(format);
+
+        using MemoryStream stream = new();
+#pragma warning disable SYSLIB0011 // Type or member is obsolete
+        BinaryFormatter formatter = new();
+#pragma warning restore SYSLIB0011
+        try
+        {
+            formatter.Serialize(stream, new object());
+        }
+        catch (NotSupportedException ex)
+        {
+            Assert.Equal(ex.Message, value.Message);
+            return;
+        }
+
+        Assert.Fail("Formatting should have failed.");
     }
 }

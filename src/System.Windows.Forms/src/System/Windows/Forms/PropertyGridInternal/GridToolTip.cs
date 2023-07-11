@@ -64,7 +64,7 @@ internal class GridToolTip : Control
                 for (int i = 0; i < _controls.Length; i++)
                 {
                     ComCtl32.ToolInfoWrapper<Control> info = GetTOOLINFO(_controls[i]);
-                    info.SendMessage(this, (User32.WM)PInvoke.TTM_UPDATETIPTEXTW);
+                    info.SendMessage(this, PInvoke.TTM_UPDATETIPTEXTW);
                 }
 
                 if (visible && !_dontShow)
@@ -75,30 +75,24 @@ internal class GridToolTip : Control
         }
     }
 
-    /// <summary>
-    ///  The createParams to create the window.
-    /// </summary>
-    protected override CreateParams CreateParams
+    protected override unsafe CreateParams CreateParams
     {
         get
         {
-            var icc = new ComCtl32.INITCOMMONCONTROLSEX
+            PInvoke.InitCommonControlsEx(new INITCOMMONCONTROLSEX
             {
+                dwSize = (uint)sizeof(INITCOMMONCONTROLSEX),
                 dwICC = INITCOMMONCONTROLSEX_ICC.ICC_TAB_CLASSES
-            };
+            });
 
-            ComCtl32.InitCommonControlsEx(ref icc);
-
-            var cp = new CreateParams
+            return new CreateParams()
             {
                 Parent = IntPtr.Zero,
-                ClassName = PInvoke.TOOLTIPS_CLASS
+                ClassName = PInvoke.TOOLTIPS_CLASS,
+                Style = (int)(PInvoke.TTS_ALWAYSTIP | PInvoke.TTS_NOPREFIX),
+                ExStyle = 0,
+                Caption = ToolTip,
             };
-
-            cp.Style |= (int)(PInvoke.TTS_ALWAYSTIP | PInvoke.TTS_NOPREFIX);
-            cp.ExStyle = 0;
-            cp.Caption = ToolTip;
-            return cp;
         }
     }
 
@@ -111,7 +105,7 @@ internal class GridToolTip : Control
     {
         if (IsHandleCreated && sender is not null)
         {
-            GetTOOLINFO((Control)sender).SendMessage(this, (User32.WM)PInvoke.TTM_DELTOOLW);
+            GetTOOLINFO((Control)sender).SendMessage(this, PInvoke.TTM_DELTOOLW);
         }
     }
 
@@ -138,7 +132,7 @@ internal class GridToolTip : Control
                 SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
 
             ComCtl32.ToolInfoWrapper<Control> info = GetTOOLINFO(control);
-            if (info.SendMessage(this, (User32.WM)PInvoke.TTM_ADDTOOLW) == 0)
+            if (info.SendMessage(this, PInvoke.TTM_ADDTOOLW) == 0)
             {
                 Debug.Fail($"TTM_ADDTOOL failed for {control.GetType().Name}");
             }
@@ -146,7 +140,7 @@ internal class GridToolTip : Control
             // Setting the max width has the added benefit of enabling multiline tool tips
             PInvoke.SendMessage(
                 this,
-                (User32.WM)PInvoke.TTM_SETMAXTIPWIDTH,
+                PInvoke.TTM_SETMAXTIPWIDTH,
                 (WPARAM)0,
                 (LPARAM)SystemInformation.MaxWindowTrackSize.Width);
         }
@@ -164,31 +158,31 @@ internal class GridToolTip : Control
         for (int i = 0; i < _controls.Length; i++)
         {
             ComCtl32.ToolInfoWrapper<Control> info = GetTOOLINFO(_controls[i]);
-            info.SendMessage(this, (User32.WM)PInvoke.TTM_UPDATETIPTEXTW);
+            info.SendMessage(this, PInvoke.TTM_UPDATETIPTEXTW);
         }
 
         _toolTipText = oldText;
-        PInvoke.SendMessage(this, (User32.WM)PInvoke.TTM_UPDATE);
+        PInvoke.SendMessage(this, PInvoke.TTM_UPDATE);
     }
 
     protected override void WndProc(ref Message msg)
     {
         switch (msg.MsgInternal)
         {
-            case User32.WM.SHOWWINDOW:
+            case PInvoke.WM_SHOWWINDOW:
                 if ((int)msg.WParamInternal != 0 && _dontShow)
                 {
                     msg.WParamInternal = 0u;
                 }
 
                 break;
-            case User32.WM.NCHITTEST:
+            case PInvoke.WM_NCHITTEST:
                 // When using v6 common controls, the native tooltip does not end up returning HTTRANSPARENT
                 // all the time, so its TTF_TRANSPARENT behavior does not work, ie. mouse events do not fall
                 // thru to controls underneath. This is due to a combination of old app-specific code in comctl32,
                 // functional changes between v5 and v6, and the specific way the property grid drives its tooltip.
                 // Workaround is to just force HTTRANSPARENT all the time.
-                msg.ResultInternal = (LRESULT)(nint)User32.HT.TRANSPARENT;
+                msg.ResultInternal = (LRESULT)(nint)PInvoke.HTTRANSPARENT;
                 return;
         }
 

@@ -9,62 +9,53 @@ namespace System.Windows.Forms;
 
 public partial class TabPage
 {
-    internal class TabPageAccessibleObject : ControlAccessibleObject
+    internal sealed class TabPageAccessibleObject : ControlAccessibleObject
     {
-        private readonly TabPage _owningTabPage;
-
-        public TabPageAccessibleObject(TabPage owningTabPage) : base(owningTabPage)
-        {
-            _owningTabPage = owningTabPage;
-        }
+        public TabPageAccessibleObject(TabPage owningTabPage) : base(owningTabPage) { }
 
         public override Rectangle Bounds
         {
             get
             {
-                if (!_owningTabPage.IsHandleCreated || GetSystemIAccessibleInternal() is null)
+                if (!this.TryGetOwnerAs(out TabPage? owningTabPage) || !owningTabPage.IsHandleCreated)
                 {
                     return Rectangle.Empty;
                 }
 
-                // The "NativeMethods.CHILDID_SELF" constant returns to the id of the TabPage,
-                // which allows to use the native "accLocation" method to get the "Bounds" property
-                GetSystemIAccessibleInternal()!.accLocation(out int left, out int top, out int width, out int height, NativeMethods.CHILDID_SELF);
-                return new(left, top, width, height);
+                // The CHILDID_SELF constant returns to the id of the TabPage, which allows to use the native
+                // "accLocation" method to get the "Bounds" property
+                return SystemIAccessible.TryGetLocation(CHILDID_SELF);
             }
         }
 
-        public override AccessibleStates State
-            => GetSystemIAccessibleInternal()?.get_accState(GetChildId()) is object accState
-                ? (AccessibleStates)accState
-                : AccessibleStates.None;
+        public override AccessibleStates State => SystemIAccessible.TryGetState(GetChildId());
 
         internal override UiaCore.IRawElementProviderFragmentRoot? FragmentRoot => OwningTabControl?.AccessibilityObject;
 
-        private TabControl? OwningTabControl => _owningTabPage.ParentInternal as TabControl;
+        private TabControl? OwningTabControl =>
+            this.TryGetOwnerAs(out TabPage? owningTabPage) ? owningTabPage.ParentInternal as TabControl : null;
 
         public override AccessibleObject? GetChild(int index)
         {
-            if (!_owningTabPage.IsHandleCreated)
+            if (!this.TryGetOwnerAs(out TabPage? owningTabPage) || !owningTabPage.IsHandleCreated)
             {
                 return null;
             }
 
-            if (index < 0 || index > _owningTabPage.Controls.Count - 1)
+            if (index < 0 || index > owningTabPage.Controls.Count - 1)
             {
                 return null;
             }
 
-            return _owningTabPage.Controls[index].AccessibilityObject;
+            return owningTabPage.Controls[index].AccessibilityObject;
         }
 
-        public override int GetChildCount() => _owningTabPage.IsHandleCreated
-                                                ? _owningTabPage.Controls.Count
-                                                : -1;
+        public override int GetChildCount()
+            => this.TryGetOwnerAs(out TabPage? owningTabPage) && owningTabPage.IsHandleCreated ? owningTabPage.Controls.Count : -1;
 
         internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
         {
-            if (!_owningTabPage.IsHandleCreated || OwningTabControl is null)
+            if (!this.TryGetOwnerAs(out TabPage? owningTabPage) || !owningTabPage.IsHandleCreated || OwningTabControl is null)
             {
                 return null;
             }
@@ -83,7 +74,7 @@ public partial class TabPage
         internal override object? GetPropertyValue(UiaCore.UIA propertyID)
             => propertyID switch
             {
-                UiaCore.UIA.HasKeyboardFocusPropertyId => _owningTabPage.Focused,
+                UiaCore.UIA.HasKeyboardFocusPropertyId => this.TryGetOwnerAs(out TabPage? owningTabPage) && owningTabPage.Focused,
                 UiaCore.UIA.IsKeyboardFocusablePropertyId
                     // This is necessary for compatibility with MSAA proxy:
                     // IsKeyboardFocusable = true regardless the control is enabled/disabled.
@@ -100,7 +91,7 @@ public partial class TabPage
 
         private UiaCore.IRawElementProviderFragment? GetNextSibling()
         {
-            if (OwningTabControl is null || _owningTabPage != OwningTabControl.SelectedTab)
+            if (!this.TryGetOwnerAs(out TabPage? owningTabPage) || OwningTabControl is null || owningTabPage != OwningTabControl.SelectedTab)
             {
                 return null;
             }

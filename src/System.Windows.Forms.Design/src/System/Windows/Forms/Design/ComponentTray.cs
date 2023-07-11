@@ -11,7 +11,6 @@ using System.ComponentModel.Design.Serialization;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Drawing.Drawing2D;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.Design.Behavior;
 using Microsoft.Win32;
 using static Interop;
@@ -251,7 +250,11 @@ public class ComponentTray : ScrollableControl, IExtenderProvider, ISelectionUIH
                 if (c is not null)
                 {
                     Debug.WriteLineIf(CompModSwitches.MSAA.TraceInfo, $"MSAA: SelectionAdd, traycontrol = {c}");
-                    User32.NotifyWinEvent((uint)AccessibleEvents.SelectionAdd, new HandleRef(c, c.Handle), User32.OBJID.CLIENT, 0);
+                    PInvoke.NotifyWinEvent(
+                        (uint)AccessibleEvents.SelectionAdd,
+                        c,
+                        (int)OBJECT_IDENTIFIER.OBJID_CLIENT,
+                        (int)PInvoke.CHILDID_SELF);
                 }
             }
         }
@@ -262,7 +265,11 @@ public class ComponentTray : ScrollableControl, IExtenderProvider, ISelectionUIH
             if (c is not null && IsHandleCreated)
             {
                 ScrollControlIntoView(c);
-                User32.NotifyWinEvent((uint)AccessibleEvents.Focus, new HandleRef(c, c.Handle), User32.OBJID.CLIENT, 0);
+                PInvoke.NotifyWinEvent(
+                    (uint)AccessibleEvents.Focus,
+                    c,
+                    (int)OBJECT_IDENTIFIER.OBJID_CLIENT,
+                    (int)PInvoke.CHILDID_SELF);
             }
 
             if (glyphManager is not null)
@@ -1074,7 +1081,7 @@ public class ComponentTray : ScrollableControl, IExtenderProvider, ISelectionUIH
             catch (Exception e)
             {
                 DisplayError(e);
-                if (ClientUtils.IsCriticalException(e))
+                if (e.IsCriticalException())
                 {
                     throw;
                 }
@@ -1229,7 +1236,7 @@ public class ComponentTray : ScrollableControl, IExtenderProvider, ISelectionUIH
                     catch (Exception ex)
                     {
                         DisplayError(ex);
-                        if (ClientUtils.IsCriticalException(ex))
+                        if (ex.IsCriticalException())
                         {
                             throw;
                         }
@@ -1255,13 +1262,9 @@ public class ComponentTray : ScrollableControl, IExtenderProvider, ISelectionUIH
                     Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (ss is not null), "ISelectionService not found");
                     ss?.SetSelectedComponents(new object[] { mainDesigner.Component });
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (!ex.IsCriticalException())
                 {
-                    // nothing we can really do here; just eat it.
-                    if (ClientUtils.IsCriticalException(ex))
-                    {
-                        throw;
-                    }
+                    // Nothing we can really do here; just eat it.
                 }
             }
         }
@@ -1347,13 +1350,9 @@ public class ComponentTray : ScrollableControl, IExtenderProvider, ISelectionUIH
                 Debug.Assert(!CompModSwitches.CommonDesignerServices.Enabled || (ss is not null), "ISelectionService not found");
                 ss?.SetSelectedComponents(comps);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!ex.IsCriticalException())
             {
-                // nothing we can really do here; just eat it.
-                if (ClientUtils.IsCriticalException(ex))
-                {
-                    throw;
-                }
+                // Nothing we can really do here; just eat it.
             }
 
             mouseDragStart = InvalidPoint;
@@ -1575,29 +1574,29 @@ public class ComponentTray : ScrollableControl, IExtenderProvider, ISelectionUIH
     /// </summary>
     protected override void WndProc(ref Message m)
     {
-        switch ((User32.WM)m.Msg)
+        switch (m.MsgInternal)
         {
-            case User32.WM.CANCELMODE:
+            case PInvoke.WM_CANCELMODE:
                 // When we get cancelmode (i.e. you tabbed away to another window) then we want to cancel
                 // any pending drag operation.
                 OnLostCapture();
                 break;
-            case User32.WM.SETCURSOR:
+            case PInvoke.WM_SETCURSOR:
                 OnSetCursor();
                 return;
-            case User32.WM.HSCROLL:
-            case User32.WM.VSCROLL:
+            case PInvoke.WM_HSCROLL:
+            case PInvoke.WM_VSCROLL:
                 // When we scroll, we reposition a control without causing a property change event.
                 // Therefore, we must tell the selection UI service to sync itself.
                 base.WndProc(ref m);
                 selectionUISvc?.SyncSelection();
 
                 return;
-            case User32.WM.STYLECHANGED:
+            case PInvoke.WM_STYLECHANGED:
                 // When the scroll bars first appear, we need to invalidate so we properly paint our grid.
                 Invalidate();
                 break;
-            case User32.WM.CONTEXTMENU:
+            case PInvoke.WM_CONTEXTMENU:
                 {
                     // Pop a context menu for the composition designer.
                     Point location = PARAM.ToPoint(m.LParamInternal);
@@ -1611,7 +1610,7 @@ public class ComponentTray : ScrollableControl, IExtenderProvider, ISelectionUIH
                     break;
                 }
 
-            case User32.WM.NCHITTEST:
+            case PInvoke.WM_NCHITTEST:
                 {
                     if (glyphManager is not null)
                     {
@@ -2503,13 +2502,13 @@ public class ComponentTray : ScrollableControl, IExtenderProvider, ISelectionUIH
         /// </summary>
         protected override void WndProc(ref Message m)
         {
-            switch ((User32.WM)m.Msg)
+            switch (m.MsgInternal)
             {
-                case User32.WM.SETCURSOR:
+                case PInvoke.WM_SETCURSOR:
                     // We always handle setting the cursor ourselves.
                     OnSetCursor();
                     break;
-                case User32.WM.CONTEXTMENU:
+                case PInvoke.WM_CONTEXTMENU:
                     // We must handle this ourselves.  Control only allows regular Windows Forms context menus, which
                     // doesn't do us much good.  Also, control's button up processing calls DefwndProc first, which
                     // causes a right mouse up to be routed as a WM_CONTEXTMENU.  If we don't respond to it here,
@@ -2525,7 +2524,7 @@ public class ComponentTray : ScrollableControl, IExtenderProvider, ISelectionUIH
 
                     OnContextMenu(location);
                     break;
-                case User32.WM.NCHITTEST:
+                case PInvoke.WM_NCHITTEST:
                     if (_tray.glyphManager is not null)
                     {
                         // Make sure tha we send our glyphs hit test messages over the TrayControls too
@@ -2903,14 +2902,9 @@ public class ComponentTray : ScrollableControl, IExtenderProvider, ISelectionUIH
 
                         comps = ds.Deserialize(serializationData);
                     }
-                    catch (Exception e)
+                    catch (Exception e) when (!e.IsCriticalException())
                     {
-                        if (ClientUtils.IsCriticalException(e))
-                        {
-                            throw;
-                        }
-
-                        // we return false on any exception
+                        // We return false on any exception.
                     }
                 }
             }

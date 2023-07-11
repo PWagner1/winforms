@@ -11,9 +11,11 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Windows.Forms.BinaryFormat;
 using Windows.Win32.System.Com;
 using Windows.Win32.System.Com.StructuredStorage;
 using Windows.Win32.System.Ole;
+using Windows.Win32.System.Variant;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Interop;
 
@@ -260,8 +262,7 @@ public partial class Control
         internal HWND HWNDParent { get; private set; }
 
         /// <summary>
-        ///  Retrieves the number of logical pixels per inch on the
-        ///  primary monitor.
+        ///  Retrieves the number of logical pixels per inch on the primary monitor.
         /// </summary>
         private static Point LogPixels
         {
@@ -270,7 +271,7 @@ public partial class Control
                 if (s_logPixels.IsEmpty)
                 {
                     s_logPixels = default;
-                    using var dc = User32.GetDcScope.ScreenDC;
+                    using var dc = GetDcScope.ScreenDC;
                     s_logPixels.X = PInvoke.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSX);
                     s_logPixels.Y = PInvoke.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSY);
                 }
@@ -373,13 +374,13 @@ public partial class Control
                     }
 #endif
 
-                    if (lpmsg->message == (uint)User32.WM.KEYDOWN && lpmsg->wParam == (WPARAM)(nuint)VIRTUAL_KEY.VK_TAB)
+                    if (lpmsg->message == PInvoke.WM_KEYDOWN && lpmsg->wParam == (WPARAM)(nuint)VIRTUAL_KEY.VK_TAB)
                     {
                         target.SelectNextControl(null, ModifierKeys != Keys.Shift, tabStopOnly: true, nested: true, wrap: true);
                     }
                     else
                     {
-                        PInvoke.SendMessage(target, (User32.WM)lpmsg->message, lpmsg->wParam, lpmsg->lParam);
+                        PInvoke.SendMessage(target, lpmsg->message, lpmsg->wParam, lpmsg->lParam);
                     }
 
                     break;
@@ -474,10 +475,10 @@ public partial class Control
             // Now do the actual drawing.  We must ask all of our children to draw as well.
             try
             {
-                nint flags = (nint)(User32.PRF.CHILDREN | User32.PRF.CLIENT | User32.PRF.ERASEBKGND | User32.PRF.NONCLIENT);
+                nint flags = PInvoke.PRF_CHILDREN | PInvoke.PRF_CLIENT | PInvoke.PRF_ERASEBKGND | PInvoke.PRF_NONCLIENT;
                 if (hdcType != OBJ_TYPE.OBJ_ENHMETADC)
                 {
-                    PInvoke.SendMessage(_control, User32.WM.PRINT, (WPARAM)hdcDraw, (LPARAM)flags);
+                    PInvoke.SendMessage(_control, PInvoke.WM_PRINT, (WPARAM)hdcDraw, (LPARAM)flags);
                 }
                 else
                 {
@@ -611,7 +612,7 @@ public partial class Control
             Debug.Indent();
             Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "clientSite implements IDispatch");
 
-            hr = dispatch.Value->TryGetProperty((uint)dispid, &property, PInvoke.LCID.USER_DEFAULT.RawValue);
+            hr = dispatch.Value->TryGetProperty(dispid, &property, PInvoke.LCID.USER_DEFAULT.RawValue);
 
             if (hr.Succeeded)
             {
@@ -739,7 +740,7 @@ public partial class Control
         ///  the mnemonics for each control to mnemonicList.  Each mnemonic
         ///  is added as a char to the list.
         /// </summary>
-        private void GetMnemonicList(Control control, List<char> mnemonicList)
+        private static void GetMnemonicList(Control control, List<char> mnemonicList)
         {
             // Get the mnemonic for our control
             char mnemonic = WindowsFormsUtils.GetMnemonic(control.Text, true);
@@ -1019,8 +1020,7 @@ public partial class Control
         internal HRESULT IsDirty() => _activeXState[s_isDirty] ? HRESULT.S_OK : HRESULT.S_FALSE;
 
         /// <summary>
-        ///  Looks at the property to see if it should be loaded / saved as a resource or
-        ///  through a type converter.
+        ///  Looks at the property to see if it should be loaded / saved as a resource or  through a type converter.
         /// </summary>
         private bool IsResourceProperty(PropertyDescriptor property)
         {
@@ -1033,8 +1033,15 @@ public partial class Control
                 return false;
             }
 
-            // Otherwise we require the type explicitly implements ISerializable.
-            return property.GetValue(_control) is ISerializable;
+            // Otherwise we require the type explicitly implements ISerializable. Strangely, in the past this only
+            // worked off of the current value. If the current value was null checking it for ISerializable would always
+            // fail. This means properties would never load into a reference type property if it's current value was null.
+            //
+            // While we could always just check the property type for serializable this would break derived class scenarios
+            // where it adds ISerializable but the property type doesn't have it. In this scenario it would still not work
+            // if the value is null on load. Not enabling that scenario for now as it would require more refactoring.
+            return property.PropertyType.IsAssignableTo(typeof(ISerializable))
+                || property.GetValue(_control) is ISerializable;
         }
 
         /// <summary>
@@ -1045,7 +1052,6 @@ public partial class Control
             using ComScope<IStream> stream = new(null);
             HRESULT hr = stg->OpenStream(
                 GetStreamName(),
-                null,
                 STGM.STGM_READ | STGM.STGM_SHARE_EXCLUSIVE,
                 0,
                 stream);
@@ -1056,7 +1062,6 @@ public partial class Control
                 // as the stream name in v1. Lets see if a stream by that name exists.
                 hr = stg->OpenStream(
                     GetType().FullName!,
-                    null,
                     STGM.STGM_READ | STGM.STGM_SHARE_EXCLUSIVE,
                     0,
                     stream);
@@ -1162,7 +1167,7 @@ public partial class Control
                 {
                     Debug.Fail("Unexpected failure reading property", ex.ToString());
 
-                    if (ClientUtils.IsCriticalException(ex))
+                    if (ex.IsCriticalException())
                     {
                         throw;
                     }
@@ -1185,12 +1190,27 @@ public partial class Control
 
                     // Resource property. We encode these as base 64 strings. To load them, we convert
                     // to a binary blob and then de-serialize.
-                    byte[] bytes = Convert.FromBase64String(value);
-                    using MemoryStream stream = new MemoryStream(bytes);
-#pragma warning disable SYSLIB0011 // Type or member is obsolete
-                    currentProperty.SetValue(_control, new BinaryFormatter().Deserialize(stream));
-#pragma warning restore SYSLIB0011 // Type or member is obsolete
+                    using MemoryStream stream = new(Convert.FromBase64String(value), writable: false);
+                    bool success = false;
+                    object? deserialized = null;
+                    try
+                    {
+                        BinaryFormattedObject format = new(stream, leaveOpen: true);
+                        success = format.TryGetFrameworkObject(out deserialized);
+                    }
+                    catch (Exception ex) when (!ex.IsCriticalException())
+                    {
+                    }
 
+#pragma warning disable SYSLIB0011 // Type or member is obsolete
+                    if (!success)
+                    {
+                        stream.Position = 0;
+                        deserialized = new BinaryFormatter().Deserialize(stream);
+                    }
+#pragma warning restore
+
+                    currentProperty.SetValue(_control, deserialized);
                     return true;
                 }
 
@@ -1421,7 +1441,7 @@ public partial class Control
                 {
                     prop.Value = Font.FromHfont(pQaContainer->pFont->hFont);
                 }
-                catch (Exception e) when (!ClientUtils.IsCriticalException(e))
+                catch (Exception e) when (!e.IsCriticalException())
                 {
                     // Do NULL, so we just defer to the default font
                     prop.Value = null;
@@ -1570,15 +1590,31 @@ public partial class Control
                 if (IsResourceProperty(currentProperty))
                 {
                     // Resource property.  Save this to the bag as a 64bit encoded string.
-                    using MemoryStream stream = new MemoryStream();
+                    using MemoryStream stream = new();
+                    object sourceValue = currentProperty.GetValue(_control)!;
+                    bool success = false;
+
+                    try
+                    {
+                        success = BinaryFormatWriter.TryWriteFrameworkObject(stream, sourceValue);
+                    }
+                    catch (Exception ex) when (!ex.IsCriticalException())
+                    {
+                        Debug.Fail($"Failed to write with BinaryFormatWriter: {ex.Message}");
+                    }
+
+                    if (!success)
+                    {
+                        stream.SetLength(0);
+
 #pragma warning disable SYSLIB0011 // Type or member is obsolete
-                    new BinaryFormatter().Serialize(stream, props[i].GetValue(_control)!);
-#pragma warning restore SYSLIB0011 // Type or member is obsolete
-                    byte[] bytes = new byte[(int)stream.Length];
-                    stream.Position = 0;
-                    stream.Read(bytes, 0, bytes.Length);
-                    using VARIANT data = (VARIANT)new BSTR(Convert.ToBase64String(bytes));
-                    propertyBag->Write(props[i].Name, data);
+                        new BinaryFormatter().Serialize(stream, sourceValue);
+#pragma warning restore
+                    }
+
+                    using VARIANT data = (VARIANT)new BSTR(Convert.ToBase64String(
+                        new ReadOnlySpan<byte>(stream.GetBuffer(), 0, (int)stream.Length)));
+                    propertyBag->Write(currentProperty.Name, data);
                     continue;
                 }
 
@@ -1597,7 +1633,7 @@ public partial class Control
                     byte[] data = (byte[])converter.ConvertTo(
                         context: null,
                         CultureInfo.InvariantCulture,
-                        props[i].GetValue(_control),
+                        currentProperty.GetValue(_control),
                         typeof(byte[]))!;
 
                     value = Convert.ToBase64String(data);
@@ -1606,7 +1642,7 @@ public partial class Control
                 if (value is not null)
                 {
                     using VARIANT variant = (VARIANT)(new BSTR(value));
-                    fixed (char* pszPropName = props[i].Name)
+                    fixed (char* pszPropName = currentProperty.Name)
                     {
                         propertyBag->Write(pszPropName, &variant);
                     }
@@ -1936,12 +1972,12 @@ public partial class Control
 #endif // DEBUG
 
             bool needPreProcess = false;
-            switch ((User32.WM)lpmsg->message)
+            switch (lpmsg->message)
             {
-                case User32.WM.KEYDOWN:
-                case User32.WM.SYSKEYDOWN:
-                case User32.WM.CHAR:
-                case User32.WM.SYSCHAR:
+                case PInvoke.WM_KEYDOWN:
+                case PInvoke.WM_SYSKEYDOWN:
+                case PInvoke.WM_CHAR:
+                case PInvoke.WM_SYSCHAR:
                     needPreProcess = true;
                     break;
             }
@@ -1967,14 +2003,14 @@ public partial class Control
                             // otherwise the host may never send the key to our wndproc.
 
                             // Someone returned true from IsInputKey or IsInputChar
-                            PInvoke.TranslateMessage(*lpmsg);
+                            PInvoke.TranslateMessage(lpmsg);
                             if (PInvoke.IsWindowUnicode(lpmsg->hwnd))
                             {
-                                User32.DispatchMessageW(ref *lpmsg);
+                                PInvoke.DispatchMessage(lpmsg);
                             }
                             else
                             {
-                                User32.DispatchMessageA(ref *lpmsg);
+                                PInvoke.DispatchMessageA(lpmsg);
                             }
 
                             return HRESULT.S_OK;
@@ -2208,7 +2244,7 @@ public partial class Control
                     return;
                 }
 
-                if (m.Msg is >= ((int)User32.WM.NCLBUTTONDOWN) and <= ((int)User32.WM.NCMBUTTONDBLCLK))
+                if (m.Msg is >= ((int)PInvoke.WM_NCLBUTTONDOWN) and <= ((int)PInvoke.WM_NCMBUTTONDBLCLK))
                 {
                     return;
                 }

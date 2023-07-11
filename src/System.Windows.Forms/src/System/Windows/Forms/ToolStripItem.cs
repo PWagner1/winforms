@@ -2611,7 +2611,6 @@ public abstract partial class ToolStripItem : BindableComponent,
                 Push(true);
             }
 
-            //
             OnMouseDown(e);
             RaiseMouseEvent(s_mouseDownEvent, e);
         }
@@ -3274,11 +3273,11 @@ public abstract partial class ToolStripItem : BindableComponent,
         }
     }
 
-    internal void SetOwner(ToolStrip newOwner)
+    internal void SetOwner(ToolStrip? newOwner)
     {
         if (_owner != newOwner)
         {
-            Font f = this.Font;
+            Font f = Font;
 
             if (_owner is not null)
             {
@@ -3295,7 +3294,7 @@ public abstract partial class ToolStripItem : BindableComponent,
             // clear the parent if the owner is null.
             if (newOwner is null)
             {
-                this.ParentInternal = null;
+                ParentInternal = null;
             }
 
             if (!_state[s_stateDisposing] && !IsDisposed)

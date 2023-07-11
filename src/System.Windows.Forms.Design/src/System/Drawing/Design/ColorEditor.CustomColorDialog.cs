@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
-
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -22,7 +20,7 @@ public partial class ColorEditor
         public CustomColorDialog()
         {
             // colordlg.data was copied from VB6's dlg-4300.dlg
-            using Stream stream = s_assembly.GetManifestResourceStream(s_resourceName);
+            using Stream stream = s_assembly.GetManifestResourceStream(s_resourceName)!;
 
             int size = (int)(stream.Length - stream.Position);
             byte[] buffer = new byte[size];
@@ -61,9 +59,9 @@ public partial class ColorEditor
 
         protected override unsafe IntPtr HookProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam)
         {
-            switch ((User32.WM)msg)
+            switch ((MessageId)msg)
             {
-                case User32.WM.INITDIALOG:
+                case PInvoke.WM_INITDIALOG:
                     PInvoke.SendDlgItemMessage(
                         (HWND)hwnd,
                         (int)PInvoke.COLOR_HUE,
@@ -107,7 +105,7 @@ public partial class ColorEditor
                         HWND.HWND_TOP,
                         0, 0, 0, 0,
                         SET_WINDOW_POS_FLAGS.SWP_HIDEWINDOW);
-                    hwndCtl = PInvoke.GetDlgItem((HWND)hwnd, (int)User32.ID.OK);
+                    hwndCtl = PInvoke.GetDlgItem((HWND)hwnd, (int)MESSAGEBOX_RESULT.IDOK);
                     PInvoke.EnableWindow(hwndCtl, false);
                     PInvoke.SetWindowPos(
                         hwndCtl,
@@ -117,7 +115,7 @@ public partial class ColorEditor
                     Color = Color.Empty;
                     break;
 
-                case User32.WM.COMMAND:
+                case PInvoke.WM_COMMAND:
                     if (PARAM.LOWORD(wParam) == (int)PInvoke.COLOR_ADD)
                     {
                         BOOL success = false;
@@ -131,11 +129,11 @@ public partial class ColorEditor
                         Debug.Assert(!success, "Couldn't find dialog member COLOR_BLUE");
 
                         Color = Color.FromArgb(red, green, blue);
-                        User32.PostMessageW(
-                            hwnd,
-                            User32.WM.COMMAND,
-                            PARAM.FromLowHigh((int)User32.ID.OK, 0),
-                            PInvoke.GetDlgItem((HWND)hwnd, (int)User32.ID.OK));
+                        PInvoke.PostMessage(
+                            (HWND)hwnd,
+                            PInvoke.WM_COMMAND,
+                            (WPARAM)PARAM.FromLowHigh((int)MESSAGEBOX_RESULT.IDOK, 0),
+                            (LPARAM)PInvoke.GetDlgItem((HWND)hwnd, (int)MESSAGEBOX_RESULT.IDOK));
                         break;
                     }
 

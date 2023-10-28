@@ -1,9 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms;
 
@@ -55,9 +53,9 @@ public sealed class ListViewInsertionMark
     {
         get
         {
-            var rect = default(RECT);
-            PInvoke.SendMessage(_listView, PInvoke.LVM_GETINSERTMARKRECT, (WPARAM)0, ref rect);
-            return rect;
+            RECT bounds = default;
+            PInvoke.SendMessage(_listView, PInvoke.LVM_GETINSERTMARKRECT, (WPARAM)0, ref bounds);
+            return bounds;
         }
     }
 
@@ -115,7 +113,7 @@ public sealed class ListViewInsertionMark
     /// </summary>
     public unsafe int NearestIndex(Point pt)
     {
-        var lvInsertMark = new LVINSERTMARK
+        LVINSERTMARK lvInsertMark = new()
         {
             cbSize = (uint)sizeof(LVINSERTMARK)
         };
@@ -128,10 +126,10 @@ public sealed class ListViewInsertionMark
     internal unsafe void UpdateListView()
     {
         Debug.Assert(_listView.IsHandleCreated, "ApplySavedState Precondition: List-view handle must be created");
-        var lvInsertMark = new LVINSERTMARK
+        LVINSERTMARK lvInsertMark = new()
         {
             cbSize = (uint)sizeof(LVINSERTMARK),
-            dwFlags = _appearsAfterItem ? LVIM.AFTER : LVIM.BEFORE,
+            dwFlags = (LIST_VIEW_INSERT_MARK_FLAGS)(_appearsAfterItem ? PInvoke.LVIM_AFTER : PInvoke.LVIM_BEFORE),
             iItem = _index
         };
 

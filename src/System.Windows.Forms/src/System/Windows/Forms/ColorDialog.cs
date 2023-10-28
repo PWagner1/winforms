@@ -1,10 +1,10 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using Windows.Win32.UI.Controls.Dialogs;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -40,8 +40,8 @@ public class ColorDialog : CommonDialog
     [SRDescription(nameof(SR.CDallowFullOpenDescr))]
     public virtual bool AllowFullOpen
     {
-        get => !GetOption((int)Comdlg32.CC.PREVENTFULLOPEN);
-        set => SetOption((int)Comdlg32.CC.PREVENTFULLOPEN, !value);
+        get => !GetOption((int)CHOOSECOLOR_FLAGS.CC_PREVENTFULLOPEN);
+        set => SetOption((int)CHOOSECOLOR_FLAGS.CC_PREVENTFULLOPEN, !value);
     }
 
     /// <summary>
@@ -53,8 +53,8 @@ public class ColorDialog : CommonDialog
     [SRDescription(nameof(SR.CDanyColorDescr))]
     public virtual bool AnyColor
     {
-        get => GetOption((int)Comdlg32.CC.ANYCOLOR);
-        set => SetOption((int)Comdlg32.CC.ANYCOLOR, value);
+        get => GetOption((int)CHOOSECOLOR_FLAGS.CC_ANYCOLOR);
+        set => SetOption((int)CHOOSECOLOR_FLAGS.CC_ANYCOLOR, value);
     }
 
     /// <summary>
@@ -102,8 +102,8 @@ public class ColorDialog : CommonDialog
     [SRDescription(nameof(SR.CDfullOpenDescr))]
     public virtual bool FullOpen
     {
-        get => GetOption((int)Comdlg32.CC.FULLOPEN);
-        set => SetOption((int)Comdlg32.CC.FULLOPEN, value);
+        get => GetOption((int)CHOOSECOLOR_FLAGS.CC_FULLOPEN);
+        set => SetOption((int)CHOOSECOLOR_FLAGS.CC_FULLOPEN, value);
     }
 
     /// <summary>
@@ -124,8 +124,8 @@ public class ColorDialog : CommonDialog
     [SRDescription(nameof(SR.CDshowHelpDescr))]
     public virtual bool ShowHelp
     {
-        get => GetOption((int)Comdlg32.CC.SHOWHELP);
-        set => SetOption((int)Comdlg32.CC.SHOWHELP, value);
+        get => GetOption((int)CHOOSECOLOR_FLAGS.CC_SHOWHELP);
+        set => SetOption((int)CHOOSECOLOR_FLAGS.CC_SHOWHELP, value);
     }
 
     /// <summary>
@@ -136,8 +136,8 @@ public class ColorDialog : CommonDialog
     [SRDescription(nameof(SR.CDsolidColorOnlyDescr))]
     public virtual bool SolidColorOnly
     {
-        get => GetOption((int)Comdlg32.CC.SOLIDCOLOR);
-        set => SetOption((int)Comdlg32.CC.SOLIDCOLOR, value);
+        get => GetOption((int)CHOOSECOLOR_FLAGS.CC_SOLIDCOLOR);
+        set => SetOption((int)CHOOSECOLOR_FLAGS.CC_SOLIDCOLOR, value);
     }
 
     /// <summary>
@@ -162,7 +162,7 @@ public class ColorDialog : CommonDialog
     {
         WNDPROC hookProc = HookProcInternal;
         void* hookProcPtr = (void*)Marshal.GetFunctionPointerForDelegate(hookProc);
-        var cc = new Comdlg32.CHOOSECOLORW
+        Comdlg32.CHOOSECOLORW cc = new()
         {
             lStructSize = (uint)Marshal.SizeOf<Comdlg32.CHOOSECOLORW>()
         };
@@ -174,12 +174,12 @@ public class ColorDialog : CommonDialog
             cc.rgbResult = _color.ToWin32();
             cc.lpCustColors = (IntPtr)customColors;
 
-            Comdlg32.CC flags = (Comdlg32.CC)Options | Comdlg32.CC.RGBINIT | Comdlg32.CC.ENABLEHOOK;
+            CHOOSECOLOR_FLAGS flags = (CHOOSECOLOR_FLAGS)Options | CHOOSECOLOR_FLAGS.CC_RGBINIT | CHOOSECOLOR_FLAGS.CC_ENABLEHOOK;
 
             // Our docs say AllowFullOpen takes precedence over FullOpen; ChooseColor implements the opposite
             if (!AllowFullOpen)
             {
-                flags &= ~Comdlg32.CC.FULLOPEN;
+                flags &= ~CHOOSECOLOR_FLAGS.CC_FULLOPEN;
             }
 
             cc.Flags = flags;

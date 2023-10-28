@@ -1,9 +1,10 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
+using Windows.Win32.UI.Accessibility;
 using static Interop.UiaCore;
+using IRawElementProviderSimple = Interop.UiaCore.IRawElementProviderSimple;
 
 namespace System.Windows.Forms;
 
@@ -19,7 +20,7 @@ public partial class TabControl
         {
             get
             {
-                if (!this.TryGetOwnerAs(out TabControl? owner) || !owner.IsHandleCreated)
+                if (!this.IsOwnerHandleCreated(out TabControl? _))
                 {
                     return Rectangle.Empty;
                 }
@@ -43,8 +44,7 @@ public partial class TabControl
 
         public override AccessibleObject? GetChild(int index)
         {
-            if (!this.TryGetOwnerAs(out TabControl? owner)
-                || !owner.IsHandleCreated
+            if (!this.IsOwnerHandleCreated(out TabControl? owner)
                 || owner.TabPages.Count == 0
                 || index < 0
                 || index > owner.TabPages.Count)
@@ -59,7 +59,7 @@ public partial class TabControl
 
         public override int GetChildCount()
         {
-            if (!this.TryGetOwnerAs(out TabControl? owner) || !owner.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out TabControl? owner))
             {
                 // We return -1 instead of 0 when the Handle has not been created,
                 // so that the user can distinguish between the situation
@@ -81,7 +81,7 @@ public partial class TabControl
 
         public override AccessibleObject? HitTest(int x, int y)
         {
-            if (!this.TryGetOwnerAs(out TabControl? owner) || !owner.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out TabControl? owner))
             {
                 return null;
             }
@@ -109,7 +109,7 @@ public partial class TabControl
 
         internal override IRawElementProviderFragment? FragmentNavigate(NavigateDirection direction)
         {
-            if (!this.TryGetOwnerAs(out TabControl? owner) || !owner.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out TabControl? owner))
             {
                 return null;
             }
@@ -124,11 +124,11 @@ public partial class TabControl
             };
         }
 
-        internal override object? GetPropertyValue(UIA propertyID)
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyID)
             => propertyID switch
             {
-                UIA.HasKeyboardFocusPropertyId => this.TryGetOwnerAs(out TabControl? owner) && owner.Focused,
-                UIA.IsKeyboardFocusablePropertyId
+                UIA_PROPERTY_ID.UIA_HasKeyboardFocusPropertyId => this.TryGetOwnerAs(out TabControl? owner) && owner.Focused,
+                UIA_PROPERTY_ID.UIA_IsKeyboardFocusablePropertyId
                     // This is necessary for compatibility with MSAA proxy:
                     // IsKeyboardFocusable = true regardless the control is enabled/disabled.
                     => true,
@@ -136,18 +136,16 @@ public partial class TabControl
             };
 
         internal override IRawElementProviderSimple[]? GetSelection()
-            => !this.TryGetOwnerAs(out TabControl? owner)
-                || !owner.IsHandleCreated
-                || owner.SelectedTab is null
-                    ? Array.Empty<IRawElementProviderSimple>()
-                    : new IRawElementProviderSimple[] { owner.SelectedTab.TabAccessibilityObject };
+            => !this.IsOwnerHandleCreated(out TabControl? owner) || owner.SelectedTab is null
+                ? Array.Empty<IRawElementProviderSimple>()
+                : new IRawElementProviderSimple[] { owner.SelectedTab.TabAccessibilityObject };
 
-        internal override bool IsPatternSupported(UIA patternId)
+        internal override bool IsPatternSupported(UIA_PATTERN_ID patternId)
             => patternId switch
             {
                 // The "Enabled" property of the TabControl does not affect the behavior of that property,
                 // so it is always true
-                UIA.SelectionPatternId => true,
+                UIA_PATTERN_ID.UIA_SelectionPatternId => true,
                 _ => base.IsPatternSupported(patternId)
             };
     }

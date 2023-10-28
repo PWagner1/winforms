@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Text;
 using System.Text.RegularExpressions;
@@ -114,7 +113,7 @@ internal partial class ToolStripSettingsManager
                 if (!string.IsNullOrEmpty(toolStripSettings.Name))
                 {
                     // apply the toolstrip settings.
-                    ToolStrip toolStrip = ToolStripManager.FindToolStrip(form, toolStripSettings.Name);
+                    ToolStrip? toolStrip = ToolStripManager.FindToolStrip(form, toolStripSettings.Name);
                     ApplyToolStripSettings(toolStrip, toolStripSettings, itemLocationHash);
                 }
             }
@@ -159,9 +158,9 @@ internal partial class ToolStripSettingsManager
                     if (!string.IsNullOrEmpty(settings.Name))
                     {
                         // apply the toolstrip settings.
-                        ToolStrip toolStrip = ToolStripManager.FindToolStrip(form, settings.Name);
+                        ToolStrip? toolStrip = ToolStripManager.FindToolStrip(form, settings.Name);
                         ApplyToolStripSettings(toolStrip, settings, itemLocationHash);
-                        toolStripPanel.Join(toolStrip, settings.Location);
+                        toolStripPanel.Join(toolStrip!, settings.Location);
                     }
                 }
             }
@@ -172,31 +171,33 @@ internal partial class ToolStripSettingsManager
         ResumeAllLayout(form, true);
     }
 
-    private static void ApplyToolStripSettings(ToolStrip toolStrip, SettingsStub settings, Dictionary<string, ToolStrip> itemLocationHash)
+    private static void ApplyToolStripSettings(ToolStrip? toolStrip, SettingsStub settings, Dictionary<string, ToolStrip> itemLocationHash)
     {
-        if (toolStrip is not null)
+        if (toolStrip is null)
         {
-            toolStrip.Visible = settings.Visible;
-            toolStrip.Size = settings.Size;
+            return;
+        }
 
-            // Apply the item order changes.
-            string? itemNames = settings.ItemOrder;
-            if (!string.IsNullOrEmpty(itemNames))
+        toolStrip.Visible = settings.Visible;
+        toolStrip.Size = settings.Size;
+
+        // Apply the item order changes.
+        string? itemNames = settings.ItemOrder;
+        if (!string.IsNullOrEmpty(itemNames))
+        {
+            string[] keys = itemNames.Split(',');
+            Regex r = ContiguousNonWhitespace();
+
+            // Shuffle items according to string.
+            for (int i = 0; ((i < toolStrip.Items.Count) && (i < keys.Length)); i++)
             {
-                string[] keys = itemNames.Split(',');
-                Regex r = ContiguousNonWhitespace();
-
-                // Shuffle items according to string.
-                for (int i = 0; ((i < toolStrip.Items.Count) && (i < keys.Length)); i++)
+                Match match = r.Match(keys[i]);
+                if (match.Success)
                 {
-                    Match match = r.Match(keys[i]);
-                    if (match.Success)
+                    string key = match.Value;
+                    if (!string.IsNullOrEmpty(key) && itemLocationHash.TryGetValue(key, out ToolStrip? value))
                     {
-                        string key = match.Value;
-                        if (!string.IsNullOrEmpty(key) && itemLocationHash.TryGetValue(key, out ToolStrip? value))
-                        {
-                            toolStrip.Items.Insert(i, value.Items[key]!);
-                        }
+                        toolStrip.Items.Insert(i, value.Items[key]!);
                     }
                 }
             }

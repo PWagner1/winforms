@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Runtime.Serialization;
 using static Interop;
@@ -12,7 +11,7 @@ public sealed class ImageListStreamer : ISerializable, IDisposable
 {
     // Compressed magic header. If we see this, the image stream is compressed.
     private static ReadOnlySpan<byte> HeaderMagic => "MSFt"u8;
-    private static readonly object s_syncObject = new object();
+    private static readonly object s_syncObject = new();
 
     private readonly ImageList? _imageList;
     private ImageList.NativeImageList? _nativeImageList;
@@ -183,7 +182,7 @@ public sealed class ImageListStreamer : ISerializable, IDisposable
 
         lock (s_syncObject)
         {
-            ComCtl32.InitCommonControls();
+            PInvoke.InitCommonControls();
             _nativeImageList = new ImageList.NativeImageList(new Ole32.GPStream(memoryStream));
         }
 

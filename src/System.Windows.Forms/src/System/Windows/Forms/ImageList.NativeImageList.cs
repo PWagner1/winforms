@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using Windows.Win32.System.Com;
@@ -17,7 +16,7 @@ public sealed partial class ImageList
         private const int GrowBy = 4;
         private const int InitialCapacity = 4;
 
-        private static readonly object s_syncLock = new object();
+        private static readonly object s_syncLock = new();
 
         public unsafe NativeImageList(IStream.Interface pstm)
         {

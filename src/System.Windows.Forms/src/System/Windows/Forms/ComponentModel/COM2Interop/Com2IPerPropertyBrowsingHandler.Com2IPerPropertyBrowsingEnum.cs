@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Globalization;
 using Windows.Win32.System.Ole;
@@ -60,7 +59,10 @@ internal partial class Com2IPerPropertyBrowsingHandler
             try
             {
                 // Marshal the items.
-                if (Target.TargetObject is not IPerPropertyBrowsing.Interface ppb)
+
+                using var ppb = ComHelpers.TryGetComScope<IPerPropertyBrowsing>(Target.TargetObject, out HRESULT hr);
+
+                if (hr.Failed)
                 {
                     PopulateArrays(Array.Empty<string>(), Array.Empty<object>());
                     return;
@@ -100,7 +102,7 @@ internal partial class Com2IPerPropertyBrowsingHandler
                     }
 
                     using VARIANT variant = default;
-                    HRESULT hr = ppb.GetPredefinedValue(Target.DISPID, cookie, &variant);
+                    hr = ppb.Value->GetPredefinedValue(Target.DISPID, cookie, &variant);
                     if (hr.Succeeded && variant.Type != VARENUM.VT_EMPTY)
                     {
                         valueItems[i] = variant.ToObject()!;

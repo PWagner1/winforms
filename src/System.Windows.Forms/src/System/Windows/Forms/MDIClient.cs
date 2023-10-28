@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -22,7 +21,7 @@ public sealed partial class MdiClient : Control
 {
     // kept in add order, not ZOrder. Need to return the correct
     // array of items...
-    private readonly List<Form> _children = new List<Form>();
+    private readonly List<Form> _children = new();
 
     /// <summary>
     ///  Creates a new MdiClient.
@@ -276,7 +275,7 @@ public sealed partial class MdiClient : Control
     /// </summary>
     private void SetWindowRgn()
     {
-        RECT rect = default(RECT);
+        RECT rect = default;
         CreateParams cp = CreateParams;
 
         AdjustWindowRectExForControlDpi(ref rect, (WINDOW_STYLE)cp.Style, false, (WINDOW_EX_STYLE)cp.ExStyle);

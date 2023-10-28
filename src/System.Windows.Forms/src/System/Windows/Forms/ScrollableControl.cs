@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -15,7 +14,7 @@ namespace System.Windows.Forms;
 public partial class ScrollableControl : Control, IArrangedElement
 {
 #if DEBUG
-    internal static readonly TraceSwitch s_autoScrolling = new TraceSwitch("AutoScrolling", "Debug autoscrolling logic");
+    internal static readonly TraceSwitch s_autoScrolling = new("AutoScrolling", "Debug autoscrolling logic");
 #else
     internal static readonly TraceSwitch? s_autoScrolling;
 #endif
@@ -60,7 +59,7 @@ public partial class ScrollableControl : Control, IArrangedElement
 
     private HScrollProperties? _horizontalScroll;
 
-    private static readonly object s_scrollEvent = new object();
+    private static readonly object s_scrollEvent = new();
 
     /// <summary>
     ///  Used to figure out what the horizontal scroll value should be set to when the horizontal

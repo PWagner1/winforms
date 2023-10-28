@@ -1,12 +1,12 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Interop;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Windows.Win32.UI.Controls.Dialogs;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -19,12 +19,12 @@ namespace System.Windows.Forms;
 [SRDescription(nameof(SR.DescriptionFontDialog))]
 public class FontDialog : CommonDialog
 {
-    protected static readonly object EventApply = new object();
+    protected static readonly object EventApply = new();
 
     private const int defaultMinSize = 0;
     private const int defaultMaxSize = 0;
 
-    private Comdlg32.CF options;
+    private CHOOSEFONT_FLAGS options;
     private Font? font;
     private Color color;
     private int minSize = defaultMinSize;
@@ -49,8 +49,8 @@ public class FontDialog : CommonDialog
     [SRDescription(nameof(SR.FnDallowSimulationsDescr))]
     public bool AllowSimulations
     {
-        get => !GetOption(Comdlg32.CF.NOSIMULATIONS);
-        set => SetOption(Comdlg32.CF.NOSIMULATIONS, !value);
+        get => !GetOption(CHOOSEFONT_FLAGS.CF_NOSIMULATIONS);
+        set => SetOption(CHOOSEFONT_FLAGS.CF_NOSIMULATIONS, !value);
     }
 
     /// <summary>
@@ -61,8 +61,8 @@ public class FontDialog : CommonDialog
     [SRDescription(nameof(SR.FnDallowVectorFontsDescr))]
     public bool AllowVectorFonts
     {
-        get => !GetOption(Comdlg32.CF.NOVECTORFONTS);
-        set => SetOption(Comdlg32.CF.NOVECTORFONTS, !value);
+        get => !GetOption(CHOOSEFONT_FLAGS.CF_NOVECTORFONTS);
+        set => SetOption(CHOOSEFONT_FLAGS.CF_NOVECTORFONTS, !value);
     }
 
     /// <summary>
@@ -75,8 +75,8 @@ public class FontDialog : CommonDialog
     [SRDescription(nameof(SR.FnDallowVerticalFontsDescr))]
     public bool AllowVerticalFonts
     {
-        get => !GetOption(Comdlg32.CF.NOVERTFONTS);
-        set => SetOption(Comdlg32.CF.NOVERTFONTS, !value);
+        get => !GetOption(CHOOSEFONT_FLAGS.CF_NOVERTFONTS);
+        set => SetOption(CHOOSEFONT_FLAGS.CF_NOVERTFONTS, !value);
     }
 
     /// <summary>
@@ -90,8 +90,8 @@ public class FontDialog : CommonDialog
     [SRDescription(nameof(SR.FnDallowScriptChangeDescr))]
     public bool AllowScriptChange
     {
-        get => !GetOption(Comdlg32.CF.SELECTSCRIPT);
-        set => SetOption(Comdlg32.CF.SELECTSCRIPT, !value);
+        get => !GetOption(CHOOSEFONT_FLAGS.CF_SELECTSCRIPT);
+        set => SetOption(CHOOSEFONT_FLAGS.CF_SELECTSCRIPT, !value);
     }
 
     /// <summary>
@@ -137,8 +137,8 @@ public class FontDialog : CommonDialog
     [SRDescription(nameof(SR.FnDfixedPitchOnlyDescr))]
     public bool FixedPitchOnly
     {
-        get => GetOption(Comdlg32.CF.FIXEDPITCHONLY);
-        set => SetOption(Comdlg32.CF.FIXEDPITCHONLY, value);
+        get => GetOption(CHOOSEFONT_FLAGS.CF_FIXEDPITCHONLY);
+        set => SetOption(CHOOSEFONT_FLAGS.CF_FIXEDPITCHONLY, value);
     }
 
     /// <summary>
@@ -180,10 +180,10 @@ public class FontDialog : CommonDialog
     [SRDescription(nameof(SR.FnDfontMustExistDescr))]
     public bool FontMustExist
     {
-        get => GetOption(Comdlg32.CF.FORCEFONTEXIST);
+        get => GetOption(CHOOSEFONT_FLAGS.CF_FORCEFONTEXIST);
         set
         {
-            SetOption(Comdlg32.CF.FORCEFONTEXIST, value);
+            SetOption(CHOOSEFONT_FLAGS.CF_FORCEFONTEXIST, value);
         }
     }
 
@@ -259,8 +259,8 @@ public class FontDialog : CommonDialog
     [SRDescription(nameof(SR.FnDscriptsOnlyDescr))]
     public bool ScriptsOnly
     {
-        get => GetOption(Comdlg32.CF.SCRIPTSONLY);
-        set => SetOption(Comdlg32.CF.SCRIPTSONLY, value);
+        get => GetOption(CHOOSEFONT_FLAGS.CF_SCRIPTSONLY);
+        set => SetOption(CHOOSEFONT_FLAGS.CF_SCRIPTSONLY, value);
     }
 
     /// <summary>
@@ -271,8 +271,8 @@ public class FontDialog : CommonDialog
     [SRDescription(nameof(SR.FnDshowApplyDescr))]
     public bool ShowApply
     {
-        get => GetOption(Comdlg32.CF.APPLY);
-        set => SetOption(Comdlg32.CF.APPLY, value);
+        get => GetOption(CHOOSEFONT_FLAGS.CF_APPLY);
+        set => SetOption(CHOOSEFONT_FLAGS.CF_APPLY, value);
     }
 
     /// <summary>
@@ -302,8 +302,8 @@ public class FontDialog : CommonDialog
     [SRDescription(nameof(SR.FnDshowEffectsDescr))]
     public bool ShowEffects
     {
-        get => GetOption(Comdlg32.CF.EFFECTS);
-        set => SetOption(Comdlg32.CF.EFFECTS, value);
+        get => GetOption(CHOOSEFONT_FLAGS.CF_EFFECTS);
+        set => SetOption(CHOOSEFONT_FLAGS.CF_EFFECTS, value);
     }
 
     /// <summary>
@@ -314,8 +314,8 @@ public class FontDialog : CommonDialog
     [SRDescription(nameof(SR.FnDshowHelpDescr))]
     public bool ShowHelp
     {
-        get => GetOption(Comdlg32.CF.SHOWHELP);
-        set => SetOption(Comdlg32.CF.SHOWHELP, value);
+        get => GetOption(CHOOSEFONT_FLAGS.CF_SHOWHELP);
+        set => SetOption(CHOOSEFONT_FLAGS.CF_SHOWHELP, value);
     }
 
     /// <summary>
@@ -331,7 +331,7 @@ public class FontDialog : CommonDialog
     /// <summary>
     ///  Returns the state of the given option flag.
     /// </summary>
-    internal bool GetOption(Comdlg32.CF option)
+    internal bool GetOption(CHOOSEFONT_FLAGS option)
     {
         return (options & option) != 0;
     }
@@ -402,14 +402,14 @@ public class FontDialog : CommonDialog
     /// </summary>
     public override void Reset()
     {
-        options = Comdlg32.CF.SCREENFONTS | Comdlg32.CF.EFFECTS;
+        options = CHOOSEFONT_FLAGS.CF_SCREENFONTS | CHOOSEFONT_FLAGS.CF_EFFECTS;
         font = null;
         color = SystemColors.ControlText;
         usingDefaultIndirectColor = true;
         showColor = false;
         minSize = defaultMinSize;
         maxSize = defaultMaxSize;
-        SetOption(Comdlg32.CF.TTONLY, true);
+        SetOption(CHOOSEFONT_FLAGS.CF_TTONLY, true);
     }
 
     private void ResetFont()
@@ -430,13 +430,13 @@ public class FontDialog : CommonDialog
         using Graphics graphics = Graphics.FromHdcInternal(dc);
         LOGFONTW logFont = LOGFONTW.FromFont(Font, graphics);
 
-        var cf = new Comdlg32.CHOOSEFONTW
+        Comdlg32.CHOOSEFONTW cf = new()
         {
             lStructSize = (uint)sizeof(Comdlg32.CHOOSEFONTW),
             hwndOwner = hWndOwner,
             hDC = IntPtr.Zero,
             lpLogFont = &logFont,
-            Flags = (Comdlg32.CF)Options | Comdlg32.CF.INITTOLOGFONTSTRUCT | Comdlg32.CF.ENABLEHOOK,
+            Flags = (CHOOSEFONT_FLAGS)Options | CHOOSEFONT_FLAGS.CF_INITTOLOGFONTSTRUCT | CHOOSEFONT_FLAGS.CF_ENABLEHOOK,
             lpfnHook = hookProcPtr,
             hInstance = PInvoke.GetModuleHandle((PCWSTR)null),
             nSizeMin = minSize,
@@ -448,7 +448,7 @@ public class FontDialog : CommonDialog
 
         if (minSize > 0 || maxSize > 0)
         {
-            cf.Flags |= Comdlg32.CF.LIMITSIZE;
+            cf.Flags |= CHOOSEFONT_FLAGS.CF_LIMITSIZE;
         }
 
         // if ShowColor=true then try to draw the sample text in color,
@@ -482,7 +482,7 @@ public class FontDialog : CommonDialog
     /// <summary>
     ///  Sets the given option to the given boolean value.
     /// </summary>
-    internal void SetOption(Comdlg32.CF option, bool value)
+    internal void SetOption(CHOOSEFONT_FLAGS option, bool value)
     {
         if (value)
         {

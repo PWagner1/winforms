@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 
@@ -19,7 +18,7 @@ public class BehaviorDragDropEventArgsTests
     [MemberData(nameof(Ctor_ICollection_TestData))]
     public void Ctor_ICollection(ICollection components)
     {
-        var e = new BehaviorDragDropEventArgs(components);
+        BehaviorDragDropEventArgs e = new(components);
         Assert.Same(components, e.DragComponents);
     }
 }

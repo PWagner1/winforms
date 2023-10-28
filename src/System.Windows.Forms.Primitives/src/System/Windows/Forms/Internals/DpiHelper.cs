@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -66,7 +65,7 @@ internal static partial class DpiHelper
             out PROCESS_DPI_AWARENESS processDpiAwareness);
 
         Debug.Assert(result.Succeeded, $"Failed to get ProcessDpi HRESULT: {result}");
-        Debug.Assert(Enum.IsDefined(typeof(PROCESS_DPI_AWARENESS), processDpiAwareness));
+        Debug.Assert(Enum.IsDefined(processDpiAwareness));
 
         return result.Succeeded && processDpiAwareness switch
         {
@@ -487,5 +486,27 @@ internal static partial class DpiHelper
         Initialize();
 
         return success;
+    }
+
+    /// <summary>
+    ///  Create a new button bitmap scaled for the device units.
+    ///  Note: original image might be disposed.
+    /// </summary>
+    public static Image? ScaleButtonImageLogicalToDevice(Image? buttonImage)
+    {
+        if (buttonImage is null)
+        {
+            return null;
+        }
+
+        Bitmap? buttonBitmap = buttonImage as Bitmap;
+        if (buttonBitmap is null)
+        {
+            return null;
+        }
+
+        Bitmap deviceBitmap = CreateScaledBitmap(buttonBitmap);
+        buttonImage.Dispose();
+        return deviceBitmap;
     }
 }

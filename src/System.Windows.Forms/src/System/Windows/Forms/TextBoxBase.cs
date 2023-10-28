@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -9,6 +8,8 @@ using System.Drawing.Design;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms.Layout;
+using Windows.Win32.System.Com;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -39,12 +40,12 @@ public abstract partial class TextBoxBase : Control
     private static readonly int scrollToCaretOnHandleCreated = BitVector32.CreateMask(shortcutsEnabled);
     private static readonly int setSelectionOnHandleCreated = BitVector32.CreateMask(scrollToCaretOnHandleCreated);
 
-    private static readonly object EVENT_ACCEPTSTABCHANGED = new object();
-    private static readonly object EVENT_BORDERSTYLECHANGED = new object();
-    private static readonly object EVENT_HIDESELECTIONCHANGED = new object();
-    private static readonly object EVENT_MODIFIEDCHANGED = new object();
-    private static readonly object EVENT_MULTILINECHANGED = new object();
-    private static readonly object EVENT_READONLYCHANGED = new object();
+    private static readonly object EVENT_ACCEPTSTABCHANGED = new();
+    private static readonly object EVENT_BORDERSTYLECHANGED = new();
+    private static readonly object EVENT_HIDESELECTIONCHANGED = new();
+    private static readonly object EVENT_MODIFIEDCHANGED = new();
+    private static readonly object EVENT_MULTILINECHANGED = new();
+    private static readonly object EVENT_READONLYCHANGED = new();
 
     /// <summary>
     ///  The current border for this edit control.
@@ -1080,7 +1081,7 @@ public abstract partial class TextBoxBase : Control
     {
         get
         {
-            GetSelectionStartAndLength(out int selStart, out int selLength);
+            GetSelectionStartAndLength(out int selStart, out _);
 
             return selStart;
         }
@@ -1156,7 +1157,7 @@ public abstract partial class TextBoxBase : Control
     ///  Make this a method on <see cref="TextBoxBase"/> rather than <see cref="RichTextBox"/> (which is the only
     ///  control that needs this at this point), since we need to set <see cref="codeUpdateText"/>.
     /// </summary>
-    internal void ForceWindowText(string value)
+    internal void ForceWindowText(string? value)
     {
         value ??= string.Empty;
 
@@ -1582,7 +1583,7 @@ public abstract partial class TextBoxBase : Control
     {
         if (IsAccessibilityObjectCreated)
         {
-            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextChangedEventId);
+            AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextChangedEventId);
         }
     }
 
@@ -1694,9 +1695,9 @@ public abstract partial class TextBoxBase : Control
 
                 try
                 {
-                    Marshal.QueryInterface(editOlePtr, ref iiTextDocumentGuid, out iTextDocument);
+                    Marshal.QueryInterface(editOlePtr, in iiTextDocumentGuid, out iTextDocument);
 
-                    if (Marshal.GetObjectForIUnknown(iTextDocument) is Richedit.ITextDocument textDocument)
+                    if (ComHelpers.GetObjectForIUnknown((IUnknown*)iTextDocument) is Richedit.ITextDocument textDocument)
                     {
                         // When the user calls RichTextBox::ScrollToCaret we want the RichTextBox to show as
                         // much text as possible.
@@ -1813,7 +1814,7 @@ public abstract partial class TextBoxBase : Control
 
             if (IsAccessibilityObjectCreated)
             {
-                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+                AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId);
             }
         }
         else

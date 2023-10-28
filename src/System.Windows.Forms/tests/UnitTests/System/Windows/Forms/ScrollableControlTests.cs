@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -1661,11 +1660,11 @@ public class ScrollableControlTests
             }
         }
 
-        static Control CreateControl() => new Control
+        static Control CreateControl() => new()
         {
             Bounds = new Rectangle(1, 2, 30, 40)
         };
-        static TabPage CreateTabPage() => new TabPage
+        static TabPage CreateTabPage() => new()
         {
             Bounds = new Rectangle(1, 2, 30, 40)
         };
@@ -2548,14 +2547,14 @@ public class ScrollableControlTests
 
     private class LargeControl : Control
     {
-        protected override Size DefaultSize => new Size(100, 150);
+        protected override Size DefaultSize => new(100, 150);
 
-        public Rectangle ExpectedSize => new Rectangle(new Point(0, 0), DefaultSize);
+        public Rectangle ExpectedSize => new(new Point(0, 0), DefaultSize);
     }
 
     private class SmallControl : Control
     {
-        protected override Size DefaultSize => new Size(50, 60);
+        protected override Size DefaultSize => new(50, 60);
     }
 
     public class SubScrollableControl : ScrollableControl

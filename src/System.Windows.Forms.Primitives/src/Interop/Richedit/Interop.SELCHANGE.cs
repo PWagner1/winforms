@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Runtime.InteropServices;
 using Windows.Win32.UI.Controls.RichEdit;
@@ -13,7 +12,7 @@ internal partial class Interop
         {
             public NMHDR nmhdr;
             public CHARRANGE chrg;
-            public SEL seltyp;
+            public RICH_EDIT_GET_CONTEXT_MENU_SEL_TYPE seltyp;
         }
     }
 }

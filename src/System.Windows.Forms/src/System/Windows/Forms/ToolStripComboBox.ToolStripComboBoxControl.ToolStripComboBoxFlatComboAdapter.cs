@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -146,9 +145,9 @@ public partial class ToolStripComboBox
                 middle.X += (dropDownRect.Width % 2);
                 g.FillPolygon(brush, new Point[]
                 {
-                    new Point(middle.X - FlatComboAdapter.s_offsetPixels, middle.Y - 1),
-                    new Point(middle.X + FlatComboAdapter.s_offsetPixels + 1, middle.Y - 1),
-                    new Point(middle.X, middle.Y + FlatComboAdapter.s_offsetPixels)
+                    new(middle.X - FlatComboAdapter.s_offsetPixels, middle.Y - 1),
+                    new(middle.X + FlatComboAdapter.s_offsetPixels + 1, middle.Y - 1),
+                    new(middle.X, middle.Y + FlatComboAdapter.s_offsetPixels)
                 });
             }
         }

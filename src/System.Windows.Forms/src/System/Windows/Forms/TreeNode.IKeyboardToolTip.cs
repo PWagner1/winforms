@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 
@@ -20,8 +19,8 @@ public partial class TreeNode : IKeyboardToolTip
 
     IList<Rectangle> IKeyboardToolTip.GetNeighboringToolsRectangles()
     {
-        TreeNode nextNode = NextVisibleNode;
-        TreeNode prevNode = PrevVisibleNode;
+        TreeNode? nextNode = NextVisibleNode;
+        TreeNode? prevNode = PrevVisibleNode;
         List<Rectangle> neighboringRectangles = new List<Rectangle>();
 
         if (nextNode is not null)
@@ -37,7 +36,7 @@ public partial class TreeNode : IKeyboardToolTip
         return neighboringRectangles;
     }
 
-    IWin32Window IKeyboardToolTip.GetOwnerWindow() => TreeView;
+    IWin32Window? IKeyboardToolTip.GetOwnerWindow() => TreeView;
 
     bool IKeyboardToolTip.HasRtlModeEnabled() => TreeView?.RightToLeft == RightToLeft.Yes;
 

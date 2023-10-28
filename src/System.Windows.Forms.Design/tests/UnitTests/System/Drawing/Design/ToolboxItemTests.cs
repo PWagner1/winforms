@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -16,7 +15,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_Ctor_Default()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         Assert.Null(item.AssemblyName);
         Assert.Null(item.Bitmap);
         Assert.Null(item.Company);
@@ -48,7 +47,7 @@ public class ToolboxItemTests
     [MemberData(nameof(AssemblyName_Set_TestData))]
     public void ToolboxItem_AssemblyName_Set_GetReturnsExpected(AssemblyName value)
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             AssemblyName = value
         };
@@ -92,7 +91,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_AssemblyName_SetWithInvalidPropertyType_ThrowsArgumentException()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         Assert.Throws<ArgumentException>("value", () => item.Properties.Add("AssemblyName", new object()));
     }
 
@@ -106,7 +105,7 @@ public class ToolboxItemTests
     [MemberData(nameof(Bitmap_Set_TestData))]
     public void ToolboxItem_Bitmap_Set_GetReturnsExpected(Bitmap value)
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             Bitmap = value
         };
@@ -122,7 +121,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_Bitmap_SetWithInvalidPropertyType_ThrowsArgumentException()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         Assert.Throws<ArgumentException>("value", () => item.Properties.Add("Bitmap", new object()));
     }
 
@@ -130,7 +129,7 @@ public class ToolboxItemTests
     [NormalizedStringData]
     public void ToolboxItem_Company_Set_GetReturnsExpected(string value, string expected)
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             Company = value
         };
@@ -146,7 +145,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_Company_SetWithInvalidPropertyType_ThrowsArgumentException()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         Assert.Throws<ArgumentException>("value", () => item.Properties.Add("Company", new object()));
     }
 
@@ -155,14 +154,14 @@ public class ToolboxItemTests
         yield return new object[] { null };
         yield return new object[] { Array.Empty<AssemblyName>() };
         yield return new object[] { new AssemblyName[] { null } };
-        yield return new object[] { new AssemblyName[] { new AssemblyName() } };
+        yield return new object[] { new AssemblyName[] { new() } };
     }
 
     [Theory]
     [MemberData(nameof(DependentAssemblies_Set_TestData))]
     public void ToolboxItem_DependentAssemblies_Set_GetReturnsExpected(AssemblyName[] value)
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             DependentAssemblies = value
         };
@@ -198,7 +197,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_DependentAssemblies_SetWithInvalidPropertyType_GetThrowsArgumentException()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         Assert.Throws<ArgumentException>("value", () => item.Properties.Add("DependentAssemblies", new object()));
     }
 
@@ -206,7 +205,7 @@ public class ToolboxItemTests
     [NormalizedStringData]
     public void ToolboxItem_Description_Set_GetReturnsExpected(string value, string expected)
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             Description = value
         };
@@ -222,7 +221,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_Description_SetWithInvalidPropertyType_ThrowsArgumentException()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         Assert.Throws<ArgumentException>("value", () => item.Properties.Add("Description", new object()));
     }
 
@@ -230,7 +229,7 @@ public class ToolboxItemTests
     [NormalizedStringData]
     public void ToolboxItem_DisplayName_Set_GetReturnsExpected(string value, string expected)
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             DisplayName = value
         };
@@ -246,7 +245,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_DisplayName_SetWithInvalidPropertyType_ThrowsArgumentException()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         Assert.Throws<ArgumentException>("value", () => item.Properties.Add("DisplayName", new object()));
     }
 
@@ -255,14 +254,14 @@ public class ToolboxItemTests
         yield return new object[] { null, Array.Empty<object>() };
         yield return new object[] { Array.Empty<object>(), Array.Empty<object>() };
         yield return new object[] { new object[] { null }, Array.Empty<object>() };
-        yield return new object[] { new object[] { new object(), new ToolboxItemFilterAttribute("filterString") }, new object[] { new ToolboxItemFilterAttribute("filterString") } };
+        yield return new object[] { new object[] { new(), new ToolboxItemFilterAttribute("filterString") }, new object[] { new ToolboxItemFilterAttribute("filterString") } };
     }
 
     [Theory]
     [MemberData(nameof(Filter_Set_TestData))]
     public void ToolboxItem_Filter_Set_GetReturnsExpected(ICollection value, ICollection expected)
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             Filter = value
         };
@@ -278,7 +277,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_Filter_SetWithInvalidPropertyType_GetThrowsArgumentException()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         Assert.Throws<ArgumentException>("value", () => item.Properties.Add("Filter", new object()));
     }
 
@@ -286,7 +285,7 @@ public class ToolboxItemTests
     [BoolData]
     public void ToolboxItem_IsTransient_Set_GetReturnsExpected(bool value)
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             IsTransient = value
         };
@@ -302,14 +301,14 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_IsTransient_SetWithNullPropertyType_GetThrowsArgumentNullException()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         Assert.Throws<ArgumentNullException>("value", () => item.Properties.Add("IsTransient", null));
     }
 
     [Fact]
     public void ToolboxItem_IsTransient_SetWithInvalidPropertyType_GetThrowsArgumentException()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         Assert.Throws<ArgumentException>("value", () => item.Properties.Add("IsTransient", new object()));
     }
 
@@ -317,7 +316,7 @@ public class ToolboxItemTests
     [MemberData(nameof(Bitmap_Set_TestData))]
     public void ToolboxItem_OriginalBitmap_Set_GetReturnsExpected(Bitmap value)
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             OriginalBitmap = value
         };
@@ -333,7 +332,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_OriginalBitmap_SetWithInvalidPropertyType_ThrowsArgumentException()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         Assert.Throws<ArgumentException>("value", () => item.Properties.Add("OriginalBitmap", new object()));
     }
 
@@ -341,7 +340,7 @@ public class ToolboxItemTests
     [NormalizedStringData]
     public void ToolboxItem_TypeName_Set_GetReturnsExpected(string value, string expected)
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             TypeName = value
         };
@@ -357,14 +356,14 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_TypeName_SetWithInvalidPropertyType_ThrowsArgumentException()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         Assert.Throws<ArgumentException>("value", () => item.Properties.Add("TypeName", new object()));
     }
 
     [Fact]
     public void ToolboxItem_CreateComponents_InvokeWithoutHost_ReturnsExpected()
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             AssemblyName = typeof(Component).Assembly.GetName(true),
             TypeName = "System.ComponentModel.Component"
@@ -406,7 +405,7 @@ public class ToolboxItemTests
 
     public static IEnumerable<object[]> CreateComponents_InvokeWithHostWithNonIComponentInitializerDesigner_TestData()
     {
-        var mockDesigner = new Mock<IDesigner>(MockBehavior.Strict);
+        Mock<IDesigner> mockDesigner = new(MockBehavior.Strict);
         mockDesigner.Setup(d => d.Dispose());
 
         yield return new object[] { new Component(), null };
@@ -420,11 +419,11 @@ public class ToolboxItemTests
     [MemberData(nameof(CreateComponents_InvokeWithHostWithNonIComponentInitializerDesigner_TestData))]
     public void ToolboxItem_CreateComponents_InvokeWithHostWithNonIComponentInitializerDesigner_ReturnsExpected(Component component, IDesigner designer)
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             TypeName = "typeName"
         };
-        var mockDesignerHost = new Mock<IDesignerHost>(MockBehavior.Strict);
+        Mock<IDesignerHost> mockDesignerHost = new(MockBehavior.Strict);
         mockDesignerHost
             .Setup(h => h.GetService(typeof(ITypeResolutionService)))
             .Returns(new CustomTypeResolutionService());
@@ -477,12 +476,12 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_CreateComponents_InvokeWithHostWithIComponentInitializerDesigner_ReturnsExpected()
     {
-        using var component = new Component();
-        var item = new ToolboxItem
+        using Component component = new();
+        ToolboxItem item = new()
         {
             TypeName = "typeName"
         };
-        var mockDesigner = new Mock<IDesigner>(MockBehavior.Strict);
+        Mock<IDesigner> mockDesigner = new(MockBehavior.Strict);
         mockDesigner.Setup(d => d.Dispose());
         Mock<IComponentInitializer> mockComponentInitializer = mockDesigner.As<IComponentInitializer>();
         mockComponentInitializer
@@ -490,7 +489,7 @@ public class ToolboxItemTests
         mockComponentInitializer
             .Setup(i => i.InitializeNewComponent(new Hashtable()));
 
-        var mockDesignerHost = new Mock<IDesignerHost>(MockBehavior.Strict);
+        Mock<IDesignerHost> mockDesignerHost = new(MockBehavior.Strict);
         mockDesignerHost
             .Setup(h => h.GetService(typeof(ITypeResolutionService)))
             .Returns(new CustomTypeResolutionService());
@@ -543,12 +542,12 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_CreateComponents_InvokeWithHostWithThrowingIComponentInitializerDesigner_ReturnsExpected()
     {
-        using var component = new Component();
-        var item = new ToolboxItem
+        using Component component = new();
+        ToolboxItem item = new()
         {
             TypeName = "typeName"
         };
-        var mockDesigner = new Mock<IDesigner>(MockBehavior.Strict);
+        Mock<IDesigner> mockDesigner = new(MockBehavior.Strict);
         mockDesigner.Setup(d => d.Dispose());
         Mock<IComponentInitializer> mockComponentInitializer = mockDesigner.As<IComponentInitializer>();
         mockComponentInitializer
@@ -558,7 +557,7 @@ public class ToolboxItemTests
             .Setup(i => i.InitializeNewComponent(new Hashtable()))
             .Throws(new Exception());
 
-        var mockDesignerHost = new Mock<IDesignerHost>(MockBehavior.Strict);
+        Mock<IDesignerHost> mockDesignerHost = new(MockBehavior.Strict);
         mockDesignerHost
             .Setup(h => h.GetService(typeof(ITypeResolutionService)))
             .Returns(new CustomTypeResolutionService());
@@ -613,11 +612,11 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_CreateComponents_InvokeWithNullComponentsCoreWithHost_ReturnsExpected()
     {
-        var item = new NullComponentsToolboxItem
+        NullComponentsToolboxItem item = new()
         {
             TypeName = "typeName"
         };
-        var mockDesignerHost = new Mock<IDesignerHost>(MockBehavior.Strict);
+        Mock<IDesignerHost> mockDesignerHost = new(MockBehavior.Strict);
         mockDesignerHost
             .Setup(h => h.GetService(typeof(ITypeResolutionService)))
             .Returns(new CustomTypeResolutionService());
@@ -670,7 +669,7 @@ public class ToolboxItemTests
     [InlineData("System.Int32")]
     public void ToolboxItem_CreateComponents_InvokeInvalidType_ReturnsEmpty(string typeName)
     {
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             TypeName = typeName
         };
@@ -699,7 +698,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_CreateComponentsCore_InvokeWithoutHost_ReturnsExpected()
     {
-        var item = new SubToolboxItem
+        SubToolboxItem item = new()
         {
             AssemblyName = typeof(Component).Assembly.GetName(true),
             TypeName = "System.ComponentModel.Component"
@@ -739,11 +738,11 @@ public class ToolboxItemTests
     [MemberData(nameof(CreateComponents_InvokeWithHostWithNonIComponentInitializerDesigner_TestData))]
     public void ToolboxItem_CreateComponentsCore_InvokeWithHostWithNonIComponentInitializerDesigner_ReturnsExpected(Component component, IDesigner designer)
     {
-        var item = new SubToolboxItem
+        SubToolboxItem item = new()
         {
             TypeName = "typeName"
         };
-        var mockDesignerHost = new Mock<IDesignerHost>(MockBehavior.Strict);
+        Mock<IDesignerHost> mockDesignerHost = new(MockBehavior.Strict);
         mockDesignerHost
             .Setup(h => h.GetService(typeof(ITypeResolutionService)))
             .Returns(new CustomTypeResolutionService());
@@ -796,12 +795,12 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_CreateComponentsCore_InvokeWithHostWithIComponentInitializerDesigner_ReturnsExpected()
     {
-        using var component = new Component();
-        var item = new SubToolboxItem
+        using Component component = new();
+        SubToolboxItem item = new()
         {
             TypeName = "typeName"
         };
-        var mockDesigner = new Mock<IDesigner>(MockBehavior.Strict);
+        Mock<IDesigner> mockDesigner = new(MockBehavior.Strict);
         mockDesigner.Setup(d => d.Dispose());
         Mock<IComponentInitializer> mockComponentInitializer = mockDesigner.As<IComponentInitializer>();
         mockComponentInitializer
@@ -809,7 +808,7 @@ public class ToolboxItemTests
         mockComponentInitializer
             .Setup(i => i.InitializeNewComponent(new Hashtable()));
 
-        var mockDesignerHost = new Mock<IDesignerHost>(MockBehavior.Strict);
+        Mock<IDesignerHost> mockDesignerHost = new(MockBehavior.Strict);
         mockDesignerHost
             .Setup(h => h.GetService(typeof(ITypeResolutionService)))
             .Returns(new CustomTypeResolutionService());
@@ -862,12 +861,12 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_CreateComponentsCore_InvokeWithHostWithThrowingIComponentInitializerDesigner_ReturnsExpected()
     {
-        using var component = new Component();
-        var item = new SubToolboxItem
+        using Component component = new();
+        SubToolboxItem item = new()
         {
             TypeName = "typeName"
         };
-        var mockDesigner = new Mock<IDesigner>(MockBehavior.Strict);
+        Mock<IDesigner> mockDesigner = new(MockBehavior.Strict);
         mockDesigner.Setup(d => d.Dispose());
         Mock<IComponentInitializer> mockComponentInitializer = mockDesigner.As<IComponentInitializer>();
         mockComponentInitializer
@@ -877,7 +876,7 @@ public class ToolboxItemTests
             .Setup(i => i.InitializeNewComponent(new Hashtable()))
             .Throws(new Exception());
 
-        var mockDesignerHost = new Mock<IDesignerHost>(MockBehavior.Strict);
+        Mock<IDesignerHost> mockDesignerHost = new(MockBehavior.Strict);
         mockDesignerHost
             .Setup(h => h.GetService(typeof(ITypeResolutionService)))
             .Returns(new CustomTypeResolutionService());
@@ -935,7 +934,7 @@ public class ToolboxItemTests
     [InlineData("System.Int32")]
     public void ToolboxItem_CreateComponentsCore_InvokeInvalidType_ReturnsEmpty(string typeName)
     {
-        var item = new SubToolboxItem
+        SubToolboxItem item = new()
         {
             TypeName = typeName
         };
@@ -964,7 +963,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_CheckUnlocked_NotLocked_Nop()
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
         item.CheckUnlocked();
         item.CheckUnlocked();
     }
@@ -972,14 +971,14 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_CheckUnlocked_Locked_ThrowsInvalidOperationException()
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
         item.Lock();
         Assert.Throws<InvalidOperationException>(() => item.CheckUnlocked());
     }
 
     public static IEnumerable<object[]> Equals_TestData()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         yield return new object[] { item, item, true };
         yield return new object[] { item, new ToolboxItem(), true };
         yield return new object[] { item, new SubToolboxItem(), false };
@@ -992,7 +991,7 @@ public class ToolboxItemTests
                 Company = "Company",
                 DependentAssemblies = new AssemblyName[] { null },
                 Description = "Description",
-                Filter = new ToolboxItemFilterAttribute[] { new ToolboxItemFilterAttribute("Filter") },
+                Filter = new ToolboxItemFilterAttribute[] { new("Filter") },
                 IsTransient = true
             },
             true
@@ -1109,7 +1108,7 @@ public class ToolboxItemTests
             false
         };
 
-        yield return new object[] { new ToolboxItem(), new object(), false };
+        yield return new object[] { new ToolboxItem(), new(), false };
         yield return new object[] { new ToolboxItem(), null, false };
     }
 
@@ -1122,7 +1121,7 @@ public class ToolboxItemTests
 
     public static IEnumerable<object[]> FilterPropertyValue_TestData()
     {
-        var o = new object();
+        object o = new();
         yield return new object[] { "AssemblyName", null, null, true };
         yield return new object[] { "AssemblyName", new AssemblyName("Name"), new AssemblyName("Name"), false };
         yield return new object[] { "AssemblyName", o, o, true };
@@ -1157,7 +1156,7 @@ public class ToolboxItemTests
     [MemberData(nameof(FilterPropertyValue_TestData))]
     public void ToolboxItem_FilterPropertyValue_Invoke_ReturnsExpected(string propertyName, object value, object expected, bool same)
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
         object actual = item.FilterPropertyValue(propertyName, value);
         if (expected is AssemblyName expectedName)
         {
@@ -1187,7 +1186,7 @@ public class ToolboxItemTests
 
     public static IEnumerable<object[]> GetType_TestData()
     {
-        var nullServiceDesignerHost = new Mock<IDesignerHost>(MockBehavior.Strict);
+        Mock<IDesignerHost> nullServiceDesignerHost = new(MockBehavior.Strict);
         nullServiceDesignerHost
             .Setup(h => h.GetService(typeof(ITypeResolutionService)))
             .Returns(null);
@@ -1204,19 +1203,19 @@ public class ToolboxItemTests
             yield return new object[] { null, null, string.Empty, false, null };
 
 #pragma warning disable SYSLIB0044 // Type or member is obsolete
-            var validNameWithCodeBase = new AssemblyName(typeof(int).Assembly.FullName)
+            AssemblyName validNameWithCodeBase = new(typeof(int).Assembly.FullName)
             {
                 CodeBase = "System.Windows.Forms.Design.Tests.dll"
             };
             yield return new object[] { null, validNameWithCodeBase, "System.Drawing.Design.Tests.ToolboxItemTests", false, null };
 
-            var invalidNameWithCodeBase = new AssemblyName("NoSuchAssembly")
+            AssemblyName invalidNameWithCodeBase = new("NoSuchAssembly")
             {
                 CodeBase = "System.Windows.Forms.Design.Tests.dll"
             };
             yield return new object[] { null, invalidNameWithCodeBase, "System.Drawing.Design.Tests.ToolboxItemTests", false, typeof(ToolboxItemTests) };
 
-            var invalidNameWithInvalidCodeBase = new AssemblyName("NoSuchAssembly")
+            AssemblyName invalidNameWithInvalidCodeBase = new("NoSuchAssembly")
             {
                 CodeBase = "AlsoNoSuchAssembly"
             };
@@ -1238,13 +1237,13 @@ public class ToolboxItemTests
             yield return new object[] { null, new AssemblyName("ThrowBadImageFormatException"), "System.Int32", false, typeof(int) };
             yield return new object[] { null, new AssemblyName("ThrowIOException"), "System.Int32", false, typeof(int) };
 
-            var badImageFormatExceptionCodeBase = new AssemblyName("NoSuchAssembly")
+            AssemblyName badImageFormatExceptionCodeBase = new("NoSuchAssembly")
             {
                 CodeBase = "ThrowBadImageFormatException"
             };
             yield return new object[] { null, badImageFormatExceptionCodeBase, "System.Int32", false, typeof(int) };
 
-            var ioFormatExceptionCodeBase = new AssemblyName("NoSuchAssembly")
+            AssemblyName ioFormatExceptionCodeBase = new("NoSuchAssembly")
             {
                 CodeBase = "ThrowIOException"
             };
@@ -1252,7 +1251,7 @@ public class ToolboxItemTests
             yield return new object[] { null, ioFormatExceptionCodeBase, "System.Int32", false, typeof(int) };
         }
 
-        var invalidServiceDesignerHost = new Mock<IDesignerHost>(MockBehavior.Strict);
+        Mock<IDesignerHost> invalidServiceDesignerHost = new(MockBehavior.Strict);
         invalidServiceDesignerHost
             .Setup(h => h.GetService(typeof(ITypeResolutionService)))
             .Returns(new object());
@@ -1260,7 +1259,7 @@ public class ToolboxItemTests
 
         foreach (bool reference in new bool[] { true, false })
         {
-            var mockDesignerHost = new Mock<IDesignerHost>(MockBehavior.Strict);
+            Mock<IDesignerHost> mockDesignerHost = new(MockBehavior.Strict);
             mockDesignerHost
                 .Setup(h => h.GetService(typeof(ITypeResolutionService)))
                 .Returns(new CustomTypeResolutionService());
@@ -1283,7 +1282,7 @@ public class ToolboxItemTests
             return;
         }
 
-        var item = new ToolboxItem
+        ToolboxItem item = new()
         {
             AssemblyName = assemblyName,
             TypeName = typeName
@@ -1295,15 +1294,15 @@ public class ToolboxItemTests
     [MemberData(nameof(GetType_TestData))]
     public void ToolboxItem_GetType_InvokeWithTypeNameAssemblyName_ReturnsExpected(IDesignerHost host, AssemblyName assemblyName, string typeName, bool reference, Type expected)
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
         Assert.Equal(expected, item.GetType(host, assemblyName, typeName, reference));
     }
 
     [Fact]
     public void ToolboxItem_GetType_NullTypeName_ThrowsArgumentNullException()
     {
-        var item = new SubToolboxItem();
-        var mockDesignerHost = new Mock<IDesignerHost>(MockBehavior.Strict);
+        SubToolboxItem item = new();
+        Mock<IDesignerHost> mockDesignerHost = new(MockBehavior.Strict);
         mockDesignerHost
             .Setup(h => h.GetService(typeof(ITypeResolutionService)))
             .Returns(null);
@@ -1314,8 +1313,8 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_GetType_EmptyAssemblyName_ThrowsArgumentException()
     {
-        var item = new SubToolboxItem();
-        var mockDesignerHost = new Mock<IDesignerHost>(MockBehavior.Strict);
+        SubToolboxItem item = new();
+        Mock<IDesignerHost> mockDesignerHost = new(MockBehavior.Strict);
         mockDesignerHost
             .Setup(h => h.GetService(typeof(ITypeResolutionService)))
             .Returns(null);
@@ -1335,50 +1334,57 @@ public class ToolboxItemTests
     [MemberData(nameof(Initialize_TypeWithAttributes_TestData))]
     public void ToolboxItem_Initialize_TypeWithAttributes_Success(Type type, Size expectedOriginalBitmapSize)
     {
-        using (var bitmap = new Bitmap(10, 10))
-        using (var originalBitmap = new Bitmap(10, 10))
-        {
-            var filter = new ToolboxItemFilterAttribute[] { new ToolboxItemFilterAttribute("Filter") };
-            var item = new ToolboxItem
-            {
-                AssemblyName = new AssemblyName("AssemblyName"),
-                Bitmap = bitmap,
-                Company = "Company",
-                Description = "Description",
-                DependentAssemblies = new AssemblyName[2],
-                DisplayName = "DisplayName",
-                Filter = filter,
-                OriginalBitmap = originalBitmap
-            };
-            item.Initialize(type);
-            if (expectedOriginalBitmapSize == new Size(10, 10))
-            {
-                Assert.NotEqual(bitmap, item.Bitmap);
-                Assert.Same(item.Bitmap, item.Bitmap);
-            }
-            else
-            {
-                Assert.Equal(new Size(16, 16), item.Bitmap.Size);
-            }
+        using Bitmap bitmap = new(10, 10);
+        using Bitmap originalBitmap = new(10, 10);
 
-            Assert.Equal("Microsoft Corporation", item.Company);
-            Assert.Equal("Description", item.Description);
-            Assert.Equal(type.Assembly.FullName, item.AssemblyName.FullName);
-            Assert.Equal(new string[] { type.Assembly.FullName }, item.DependentAssemblies.Select(a => a.FullName));
-            Assert.Equal(type.Name, item.DisplayName);
-            Assert.Equal(new string[] { type.Name, "Filter", "System.Drawing.Design.Tests.ToolboxItemTests+" + type.Name }, item.Filter.Cast<ToolboxItemFilterAttribute>().Select(a => a.FilterString).OrderBy(f => f));
-            Assert.Equal(expectedOriginalBitmapSize, item.OriginalBitmap.Size);
+        var filter = new ToolboxItemFilterAttribute[] { new("Filter") };
+        ToolboxItem item = new()
+        {
+            AssemblyName = new AssemblyName("AssemblyName"),
+            Bitmap = bitmap,
+            Company = "Company",
+            Description = "Description",
+            DependentAssemblies = new AssemblyName[2],
+            DisplayName = "DisplayName",
+            Filter = filter,
+            OriginalBitmap = originalBitmap
+        };
+        item.Initialize(type);
+        if (expectedOriginalBitmapSize == new Size(10, 10))
+        {
+            Assert.NotEqual(bitmap, item.Bitmap);
+            Assert.Same(item.Bitmap, item.Bitmap);
         }
+        else
+        {
+            Assert.Equal(new Size(16, 16), item.Bitmap.Size);
+        }
+
+        Assert.Equal("Microsoft Corporation", item.Company);
+        Assert.Equal("Description", item.Description);
+        Assert.Equal(type.Assembly.FullName, item.AssemblyName.FullName);
+        Assert.Equal(new string[] { type.Assembly.FullName }, item.DependentAssemblies.Select(a => a.FullName));
+        Assert.Equal(type.Name, item.DisplayName);
+        Assert.Equal(new string[] { type.Name, "Filter", "System.Drawing.Design.Tests.ToolboxItemTests+" + type.Name }, item.Filter.Cast<ToolboxItemFilterAttribute>().Select(a => a.FilterString).OrderBy(f => f));
+        Assert.Equal(expectedOriginalBitmapSize, item.OriginalBitmap.Size);
+
+        Assert.Equal("Microsoft Corporation", item.Company);
+        Assert.Equal("Description", item.Description);
+        Assert.Equal(type.Assembly.FullName, item.AssemblyName.FullName);
+        Assert.Equal(new string[] { type.Assembly.FullName }, item.DependentAssemblies.Select(a => a.FullName));
+        Assert.Equal(type.Name, item.DisplayName);
+        Assert.Equal(new string[] { type.Name, "Filter", "System.Drawing.Design.Tests.ToolboxItemTests+" + type.Name }, item.Filter.Cast<ToolboxItemFilterAttribute>().Select(a => a.FilterString).OrderBy(f => f));
+        Assert.Equal(expectedOriginalBitmapSize, item.OriginalBitmap.Size);
     }
 
     [Fact]
     public void ToolboxItem_Initialize_ObjectType_Success()
     {
-        using (var bitmap = new Bitmap(10, 10))
-        using (var originalBitmap = new Bitmap(10, 10))
+        using (Bitmap bitmap = new(10, 10))
+        using (Bitmap originalBitmap = new(10, 10))
         {
-            var filter = new ToolboxItemFilterAttribute[] { new ToolboxItemFilterAttribute("Filter") };
-            var item = new ToolboxItem
+            var filter = new ToolboxItemFilterAttribute[] { new("Filter") };
+            ToolboxItem item = new()
             {
                 AssemblyName = new AssemblyName("AssemblyName"),
                 Bitmap = bitmap,
@@ -1405,11 +1411,11 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_Initialize_NullType_Nop()
     {
-        using (var bitmap = new Bitmap(10, 10))
-        using (var originalBitmap = new Bitmap(10, 10))
+        using (Bitmap bitmap = new(10, 10))
+        using (Bitmap originalBitmap = new(10, 10))
         {
-            var filter = new ToolboxItemFilterAttribute[] { new ToolboxItemFilterAttribute("Filter") };
-            var item = new ToolboxItem
+            var filter = new ToolboxItemFilterAttribute[] { new("Filter") };
+            ToolboxItem item = new()
             {
                 AssemblyName = new AssemblyName("AssemblyName"),
                 Bitmap = bitmap,
@@ -1437,7 +1443,7 @@ public class ToolboxItemTests
     [InlineData(typeof(int))]
     public void ToolboxItem_Initialize_Locked_ThrowsInvalidOperationException(Type type)
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         item.Lock();
         Assert.Throws<InvalidOperationException>(() => item.Initialize(type));
     }
@@ -1445,7 +1451,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_Lock_Invoke_Success()
     {
-        var item = new ToolboxItem();
+        ToolboxItem item = new();
         item.Lock();
         Assert.True(item.Locked);
         Assert.True(item.Properties.IsFixedSize);
@@ -1461,7 +1467,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_OnComponentsCreated_Invoke_Success()
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
 
         // No handler.
         item.OnComponentsCreated(null);
@@ -1488,7 +1494,7 @@ public class ToolboxItemTests
     [Fact]
     public void ToolboxItem_OnComponentsCreating_Invoke_Success()
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
 
         // No handler.
         item.OnComponentsCreating(null);
@@ -1528,15 +1534,15 @@ public class ToolboxItemTests
 
     public static IEnumerable<object[]> ValidatePropertyValue_TestData()
     {
-        var name = new AssemblyName();
+        AssemblyName name = new();
         yield return new object[] { "AssemblyName", null, null };
         yield return new object[] { "AssemblyName", name, name };
 
-        var bitmap = new Bitmap(10, 10);
+        Bitmap bitmap = new(10, 10);
         yield return new object[] { "Bitmap", null, null };
         yield return new object[] { "Bitmap", bitmap, bitmap };
 
-        var originalBitmap = new Bitmap(10, 10);
+        Bitmap originalBitmap = new(10, 10);
         yield return new object[] { "OriginalBitmap", null, null };
         yield return new object[] { "OriginalBitmap", originalBitmap, originalBitmap };
 
@@ -1552,7 +1558,7 @@ public class ToolboxItemTests
         yield return new object[] { "TypeName", null, string.Empty };
         yield return new object[] { "TypeName", "value", "value" };
 
-        var filter = new ToolboxItemFilterAttribute("filter");
+        ToolboxItemFilterAttribute filter = new("filter");
         yield return new object[] { "Filter", null, Array.Empty<ToolboxItemFilterAttribute>() };
         yield return new object[] { "Filter", Array.Empty<ToolboxItemFilterAttribute>(), Array.Empty<ToolboxItemFilterAttribute>() };
         yield return new object[] { "Filter", new object[] { null, "value", filter, filter }, new ToolboxItemFilterAttribute[] { filter, filter } };
@@ -1568,7 +1574,7 @@ public class ToolboxItemTests
     [MemberData(nameof(ValidatePropertyValue_TestData))]
     public void ToolboxItem_ValidatePropertyValue_ValueAllowed_ReturnsExpected(string propertyName, object value, object expected)
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
         Assert.Equal(expected, item.ValidatePropertyValue(propertyName, value));
     }
 
@@ -1576,7 +1582,7 @@ public class ToolboxItemTests
     [InlineData("IsTransient")]
     public void ToolboxItem_ValidatePropertyValue_NullValueDisallowed_ThrowsArgumentNullException(string propertyName)
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
         Assert.Throws<ArgumentNullException>("value", () => item.ValidatePropertyValue(propertyName, null));
     }
 
@@ -1592,7 +1598,7 @@ public class ToolboxItemTests
     [InlineData("DependentAssemblies")]
     public void ToolboxItem_ValidatePropertyValue_InvalidValue_ThrowsArgumentException(string propertyName)
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
         Assert.Throws<ArgumentException>("value", () => item.ValidatePropertyValue(propertyName, new object()));
     }
 
@@ -1601,7 +1607,7 @@ public class ToolboxItemTests
     [InlineData("propertyName", typeof(int))]
     public void ToolboxItem_ValidatePropertyType_NullDisallowed_ThrowsArgumentNullException(string propertyName, Type expectedType)
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
         Assert.Throws<ArgumentNullException>("value", () => item.ValidatePropertyType(propertyName, null, expectedType, allowNull: false));
     }
 
@@ -1610,7 +1616,7 @@ public class ToolboxItemTests
     [InlineData("propertyName", typeof(int))]
     public void ToolboxItem_ValidatePropertyType_NullAllowed_Nop(string propertyName, Type expectedType)
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
         item.ValidatePropertyType(propertyName, null, expectedType, allowNull: true);
     }
 
@@ -1619,7 +1625,7 @@ public class ToolboxItemTests
     [InlineData("propertyName", true)]
     public void ToolboxItem_ValidatePropertyType_ValidType_Nop(string propertyName, bool allowNull)
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
         item.ValidatePropertyType(propertyName, 1, typeof(int), allowNull);
     }
 
@@ -1628,7 +1634,7 @@ public class ToolboxItemTests
     [InlineData("propertyName", true)]
     public void ToolboxItem_ValidatePropertyType_InvalidType_ThrowsArgumentException(string propertyName, bool allowNull)
     {
-        var item = new SubToolboxItem();
+        SubToolboxItem item = new();
         Assert.Throws<ArgumentException>("value", () => item.ValidatePropertyType(propertyName, new object(), typeof(int), allowNull));
     }
 

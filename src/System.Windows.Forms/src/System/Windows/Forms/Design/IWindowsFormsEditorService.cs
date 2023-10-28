@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing.Design;
 using System.Windows.Forms.PropertyGridInternal;
@@ -51,7 +50,7 @@ public interface IWindowsFormsEditorService
     ///   no other stored reference to the control.
     ///  </para>
     /// </remarks>
-    void DropDownControl(Control? control);
+    void DropDownControl(Control control);
 
     /// <summary>
     ///  Shows the specified <see cref="Form"/> as a dialog and returns its result. You should always use this

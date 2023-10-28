@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -309,7 +308,7 @@ public partial class ControlDesigner : ComponentDesigner
 
     internal Point GetOffsetToClientArea()
     {
-        var nativeOffset = default(Point);
+        Point nativeOffset = default;
         PInvoke.MapWindowPoints(Control, Control.Parent, ref nativeOffset);
         Point offset = Control.Location;
 
@@ -319,7 +318,7 @@ public partial class ControlDesigner : ComponentDesigner
             offset.Offset(Control.Width, 0);
         }
 
-        return (new Point(Math.Abs(nativeOffset.X - offset.X), nativeOffset.Y - offset.Y));
+        return new Point(Math.Abs(nativeOffset.X - offset.X), nativeOffset.Y - offset.Y);
     }
 
     /// <summary>
@@ -2067,7 +2066,7 @@ public partial class ControlDesigner : ComponentDesigner
 
                     // First, save off the update region and call our base class.
 
-                    RECT clip = default(RECT);
+                    RECT clip = default;
                     using var hrgn = new PInvoke.RegionScope(0, 0, 0, 0);
                     PInvoke.GetUpdateRgn(m.HWND, hrgn, false);
                     PInvoke.GetUpdateRect(m.HWND, &clip, false);
@@ -2253,7 +2252,7 @@ public partial class ControlDesigner : ComponentDesigner
         };
 
         string exceptionText = ex.ToString();
-        stringFormat.SetMeasurableCharacterRanges(new CharacterRange[] { new CharacterRange(0, exceptionText.Length) });
+        stringFormat.SetMeasurableCharacterRanges(new CharacterRange[] { new(0, exceptionText.Length) });
 
         // rendering calculations...
         int penThickness = 2;
@@ -2300,7 +2299,7 @@ public partial class ControlDesigner : ComponentDesigner
                 e.Graphics.DrawRectangle(pen, borderRectangle);
             }
 
-            Icon err = SystemIcons.Error;
+            using Icon err = SystemIcons.GetStockIcon(StockIconId.Error);
             e.Graphics.FillRectangle(Brushes.White, imageRect);
             e.Graphics.DrawIcon(err, imageRect.X, imageRect.Y);
             textRect.X++;

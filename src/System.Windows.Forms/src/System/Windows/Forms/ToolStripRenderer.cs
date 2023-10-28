@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -12,27 +11,27 @@ namespace System.Windows.Forms;
 
 public abstract class ToolStripRenderer
 {
-    private static readonly object EventRenderSplitButtonBackground = new object();
-    private static readonly object EventRenderItemBackground = new object();
-    private static readonly object EventRenderItemImage = new object();
-    private static readonly object EventRenderItemText = new object();
-    private static readonly object EventRenderToolStripBackground = new object();
-    private static readonly object EventRenderGrip = new object();
-    private static readonly object EventRenderButtonBackground = new object();
-    private static readonly object EventRenderLabelBackground = new object();
-    private static readonly object EventRenderMenuItemBackground = new object();
-    private static readonly object EventRenderDropDownButtonBackground = new object();
-    private static readonly object EventRenderOverflowButtonBackground = new object();
-    private static readonly object EventRenderImageMargin = new object();
-    private static readonly object EventRenderBorder = new object();
-    private static readonly object EventRenderArrow = new object();
-    private static readonly object EventRenderToolStripStatusLabelBackground = new object();
-    private static readonly object EventRenderSeparator = new object();
-    private static readonly object EventRenderItemCheck = new object();
-    private static readonly object EventRenderToolStripPanelBackground = new object();
-    private static readonly object EventRenderToolStripContentPanelBackground = new object();
+    private static readonly object EventRenderSplitButtonBackground = new();
+    private static readonly object EventRenderItemBackground = new();
+    private static readonly object EventRenderItemImage = new();
+    private static readonly object EventRenderItemText = new();
+    private static readonly object EventRenderToolStripBackground = new();
+    private static readonly object EventRenderGrip = new();
+    private static readonly object EventRenderButtonBackground = new();
+    private static readonly object EventRenderLabelBackground = new();
+    private static readonly object EventRenderMenuItemBackground = new();
+    private static readonly object EventRenderDropDownButtonBackground = new();
+    private static readonly object EventRenderOverflowButtonBackground = new();
+    private static readonly object EventRenderImageMargin = new();
+    private static readonly object EventRenderBorder = new();
+    private static readonly object EventRenderArrow = new();
+    private static readonly object EventRenderToolStripStatusLabelBackground = new();
+    private static readonly object EventRenderSeparator = new();
+    private static readonly object EventRenderItemCheck = new();
+    private static readonly object EventRenderToolStripPanelBackground = new();
+    private static readonly object EventRenderToolStripContentPanelBackground = new();
 
-    private static readonly object EventRenderStatusStripSizingGrip = new object();
+    private static readonly object EventRenderStatusStripSizingGrip = new();
 
     private static ColorMatrix? s_disabledImageColorMatrix;
 
@@ -54,15 +53,14 @@ public abstract class ToolStripRenderer
 
     // this is used in building up the half pyramid of rectangles that are drawn in a
     // status strip sizing grip.
-    private static readonly Rectangle[] baseSizeGripRectangles = new Rectangle[]
-    {
-        new Rectangle(8, 0, 2, 2),
-        new Rectangle(8, 4, 2, 2),
-        new Rectangle(8, 8, 2, 2),
-        new Rectangle(4, 4, 2, 2),
-        new Rectangle(4, 8, 2, 2),
-        new Rectangle(0, 8, 2, 2)
-    };
+    private static readonly Rectangle[] baseSizeGripRectangles = [
+        new(8, 0, 2, 2),
+        new(8, 4, 2, 2),
+        new(8, 8, 2, 2),
+        new(4, 4, 2, 2),
+        new(4, 8, 2, 2),
+        new(0, 8, 2, 2)
+    ];
 
     protected ToolStripRenderer()
     {
@@ -645,27 +643,27 @@ public abstract class ToolStripRenderer
 
                     arrow = new Point[]
                     {
-                        new Point(middle.X - Offset2X, middle.Y + 1),
-                        new Point(middle.X + Offset2X + 1, middle.Y + 1),
-                        new Point(middle.X, middle.Y - Offset2Y)
+                        new(middle.X - Offset2X, middle.Y + 1),
+                        new(middle.X + Offset2X + 1, middle.Y + 1),
+                        new(middle.X, middle.Y - Offset2Y)
                     };
 
                     break;
                 case ArrowDirection.Left:
                     arrow = new Point[]
                     {
-                        new Point(middle.X + Offset2X, middle.Y - offset4Y),
-                        new Point(middle.X + Offset2X, middle.Y + offset4Y),
-                        new Point(middle.X - horizontalOffset, middle.Y)
+                        new(middle.X + Offset2X, middle.Y - offset4Y),
+                        new(middle.X + Offset2X, middle.Y + offset4Y),
+                        new(middle.X - horizontalOffset, middle.Y)
                     };
 
                     break;
                 case ArrowDirection.Right:
                     arrow = new Point[]
                     {
-                        new Point(middle.X - Offset2X, middle.Y - offset4Y),
-                        new Point(middle.X - Offset2X, middle.Y + offset4Y),
-                        new Point(middle.X + horizontalOffset, middle.Y)
+                        new(middle.X - Offset2X, middle.Y - offset4Y),
+                        new(middle.X - Offset2X, middle.Y + offset4Y),
+                        new(middle.X + horizontalOffset, middle.Y)
                     };
 
                     break;
@@ -673,9 +671,9 @@ public abstract class ToolStripRenderer
                 default:
                     arrow = new Point[]
                     {
-                        new Point(middle.X - Offset2X, middle.Y - 1),
-                        new Point(middle.X + Offset2X + 1, middle.Y - 1),
-                        new Point(middle.X, middle.Y + Offset2Y)
+                        new(middle.X - Offset2X, middle.Y - 1),
+                        new(middle.X + Offset2X + 1, middle.Y - 1),
+                        new(middle.X, middle.Y + Offset2Y)
                     };
                     break;
             }
@@ -842,13 +840,27 @@ public abstract class ToolStripRenderer
 
         if (imageRect != Rectangle.Empty && image is not null)
         {
-            if (e.Item is not null && !e.Item.Enabled)
+            if (e.Item is not null)
             {
-                image = CreateDisabledImage(image, e.ImageAttributes);
+                if (!e.Item.Enabled)
+                {
+                    image = CreateDisabledImage(image, e.ImageAttributes);
+                }
+
+                if (SystemInformation.HighContrast && image is Bitmap bitmap)
+                {
+                    Color backgroundColor = e.Item.Selected ? SystemColors.Highlight : e.Item.BackColor;
+
+                    if (ControlPaint.IsDark(backgroundColor))
+                    {
+                        Image invertedImage = ControlPaint.CreateBitmapWithInvertedForeColor(bitmap, e.Item.BackColor);
+                        image = invertedImage;
+                    }
+                }
             }
 
             e.Graphics.DrawImage(image, imageRect, 0, 0, imageRect.Width,
-                imageRect.Height, GraphicsUnit.Pixel, e.ImageAttributes);
+            imageRect.Height, GraphicsUnit.Pixel, e.ImageAttributes);
         }
     }
 

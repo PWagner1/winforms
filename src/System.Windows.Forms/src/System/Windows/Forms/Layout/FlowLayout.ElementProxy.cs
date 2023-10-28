@@ -1,8 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-#nullable disable
 
 using System.Drawing;
 
@@ -17,13 +14,13 @@ internal partial class FlowLayout
     /// </summary>
     private class ElementProxy
     {
-        private IArrangedElement _element;
+        private IArrangedElement? _element;
 
         public virtual AnchorStyles AnchorStyles
         {
             get
             {
-                AnchorStyles anchorStyles = LayoutUtils.GetUnifiedAnchor(Element);
+                AnchorStyles anchorStyles = LayoutUtils.GetUnifiedAnchor(Element!);
                 bool isStretch = (anchorStyles & LayoutUtils.VerticalAnchorStyles) == LayoutUtils.VerticalAnchorStyles; //whether the control stretches to fill in the whole space
                 bool isTop = (anchorStyles & AnchorStyles.Top) != 0;   //whether the control anchors to top and does not stretch;
                 bool isBottom = (anchorStyles & AnchorStyles.Bottom) != 0;  //whether the control anchors to bottom and does not stretch;
@@ -50,14 +47,14 @@ internal partial class FlowLayout
             }
         }
 
-        public bool AutoSize => CommonProperties.GetAutoSize(_element);
+        public bool AutoSize => CommonProperties.GetAutoSize(_element!);
 
         public virtual Rectangle Bounds
         {
-            set => _element.SetBounds(value, BoundsSpecified.None);
+            set => _element!.SetBounds(value, BoundsSpecified.None);
         }
 
-        public IArrangedElement Element
+        public IArrangedElement? Element
         {
             get => _element;
             set
@@ -67,13 +64,13 @@ internal partial class FlowLayout
             }
         }
 
-        public virtual Padding Margin => CommonProperties.GetMargin(Element);
+        public virtual Padding Margin => CommonProperties.GetMargin(Element!);
 
-        public virtual Size MinimumSize => CommonProperties.GetMinimumSize(Element, Size.Empty);
+        public virtual Size MinimumSize => CommonProperties.GetMinimumSize(Element!, Size.Empty);
 
-        public bool ParticipatesInLayout => _element.ParticipatesInLayout;
+        public bool ParticipatesInLayout => _element!.ParticipatesInLayout;
 
-        public virtual Size SpecifiedSize => CommonProperties.GetSpecifiedBounds(_element).Size;
+        public virtual Size SpecifiedSize => CommonProperties.GetSpecifiedBounds(_element!).Size;
 
         public bool Stretches
         {
@@ -84,9 +81,6 @@ internal partial class FlowLayout
             }
         }
 
-        public virtual Size GetPreferredSize(Size proposedSize)
-        {
-            return _element.GetPreferredSize(proposedSize);
-        }
+        public virtual Size GetPreferredSize(Size proposedSize) => _element!.GetPreferredSize(proposedSize);
     }
 }

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace System.Windows.Forms.Layout;
 
@@ -45,7 +44,7 @@ internal partial class TableLayout
         public int RowSpan { get; set; } = 1;
 
         #if DEBUG
-        public LayoutInfo Clone() => new LayoutInfo(Element)
+        public LayoutInfo Clone() => new(Element)
         {
             RowStart = RowStart,
             ColumnStart = ColumnStart,
@@ -69,7 +68,7 @@ internal partial class TableLayout
 
         public override int GetHashCode()
         {
-            var hash = default(HashCode);
+            HashCode hash = default;
             hash.Add(RowStart);
             hash.Add(ColumnStart);
             hash.Add(RowSpan);

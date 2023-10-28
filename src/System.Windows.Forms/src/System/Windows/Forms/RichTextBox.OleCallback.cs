@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Windows.Win32.System.Com;
 using Windows.Win32.System.Com.StructuredStorage;
@@ -88,6 +87,7 @@ public partial class RichTextBox
             return HRESULT.S_OK;
         }
 
+        /// <inheritdoc cref="IRichEditOleCallback.QueryAcceptData(Com.IDataObject*, ushort*, RECO_FLAGS, BOOL, HGLOBAL)"/>
         public HRESULT QueryAcceptData(Com.IDataObject* lpdataobj, ushort* lpcfFormat, RECO_FLAGS reco, BOOL fReally, HGLOBAL hMetaPict)
         {
             RichTextDbg.TraceVerbose($"IRichEditOleCallback::QueryAcceptData(reco={reco})");
@@ -163,7 +163,7 @@ public partial class RichTextBox
                     _lastDragEventArgs.Message ?? string.Empty,
                     _lastDragEventArgs.MessageReplacementToken ?? string.Empty);
 
-            if (fReally == 0)
+            if (!fReally)
             {
                 // We are just querying
 

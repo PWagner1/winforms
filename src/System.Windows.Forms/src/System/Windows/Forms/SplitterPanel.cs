@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -151,7 +150,7 @@ public sealed class SplitterPanel : Panel
     /// <value>
     ///  A new instance of the <see cref="Padding" /> struct with the padding set to 0 for all edges.
     /// </value>
-    protected override Padding DefaultMargin => new Padding(0, 0, 0, 0);
+    protected override Padding DefaultMargin => new(0, 0, 0, 0);
 
     /// <summary>
     ///  Override AutoSize to make it hidden from the user in the designer

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -1253,7 +1252,7 @@ public partial class StatusStripTests
 
     private class NonReadOnlyControlsStatusStrip : StatusStrip
     {
-        protected override ControlCollection CreateControlsInstance() => new ControlCollection(this);
+        protected override ControlCollection CreateControlsInstance() => new(this);
     }
 
     private class SubStatusStrip : StatusStrip

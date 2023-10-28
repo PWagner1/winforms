@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -77,10 +76,10 @@ public static class CommonTestHelperEx
     {
         var data = new TheoryData<Padding>
         {
-            new Padding(),
-            new Padding(1, 2, 3, 4),
-            new Padding(1),
-            new Padding(-1, -2, -3, -4)
+            new(),
+            new(1, 2, 3, 4),
+            new(1),
+            new(-1, -2, -3, -4)
         };
         return data;
     }
@@ -102,7 +101,7 @@ public static class CommonTestHelperEx
         var data = new TheoryData<Cursor>
         {
             null,
-            new Cursor((IntPtr)1)
+            new((IntPtr)1)
         };
         return data;
     }
@@ -114,7 +113,7 @@ public static class CommonTestHelperEx
         return new TheoryData<PaintEventArgs>
         {
             null,
-            new PaintEventArgs(graphics, Rectangle.Empty)
+            new(graphics, Rectangle.Empty)
         };
     }
 
@@ -122,8 +121,8 @@ public static class CommonTestHelperEx
     {
         return new TheoryData<KeyEventArgs>
         {
-            new KeyEventArgs(Keys.None),
-            new KeyEventArgs(Keys.Cancel)
+            new(Keys.None),
+            new(Keys.Cancel)
         };
     }
 
@@ -132,7 +131,7 @@ public static class CommonTestHelperEx
         var data = new TheoryData<KeyPressEventArgs>
         {
             null,
-            new KeyPressEventArgs('1')
+            new('1')
         };
         return data;
     }
@@ -142,8 +141,8 @@ public static class CommonTestHelperEx
         var data = new TheoryData<LayoutEventArgs>
         {
             null,
-            new LayoutEventArgs(null, null),
-            new LayoutEventArgs(new Control(), "affectedProperty")
+            new(null, null),
+            new(new Control(), "affectedProperty")
         };
         return data;
     }
@@ -153,7 +152,7 @@ public static class CommonTestHelperEx
         return new TheoryData<MouseEventArgs>
         {
             null,
-            new MouseEventArgs(MouseButtons.Left, 1, 2, 3, 4),
+            new(MouseButtons.Left, 1, 2, 3, 4),
             new HandledMouseEventArgs(MouseButtons.Left, 1, 2, 3, 4)
         };
     }

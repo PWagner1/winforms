@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -2240,8 +2239,8 @@ public class ScrollBarTests
             RightToLeft.No, 10, 120,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 10, 9),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 9, 9),
+                new(ScrollEventType.SmallDecrement, 10, 9),
+                new(ScrollEventType.EndScroll, 9, 9),
             }, 9
         };
         yield return new object[]
@@ -2249,8 +2248,8 @@ public class ScrollBarTests
             RightToLeft.No, 10, 121,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 10, 9),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 9, 9),
+                new(ScrollEventType.SmallDecrement, 10, 9),
+                new(ScrollEventType.EndScroll, 9, 9),
             }, 9
         };
         yield return new object[]
@@ -2258,9 +2257,9 @@ public class ScrollBarTests
             RightToLeft.No, 10, 240,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 10, 9),
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 9, 8),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 8, 8),
+                new(ScrollEventType.SmallDecrement, 10, 9),
+                new(ScrollEventType.SmallDecrement, 9, 8),
+                new(ScrollEventType.EndScroll, 8, 8),
             }, 8
         };
         yield return new object[]
@@ -2268,8 +2267,8 @@ public class ScrollBarTests
             RightToLeft.No, 1, 120,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 1, 0),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 0, 0),
+                new(ScrollEventType.SmallDecrement, 1, 0),
+                new(ScrollEventType.EndScroll, 0, 0),
             }, 0
         };
         yield return new object[]
@@ -2277,9 +2276,9 @@ public class ScrollBarTests
             RightToLeft.No, 1, 240,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 1, 0),
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 0, 0),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 0, 0),
+                new(ScrollEventType.SmallDecrement, 1, 0),
+                new(ScrollEventType.SmallDecrement, 0, 0),
+                new(ScrollEventType.EndScroll, 0, 0),
             }, 0
         };
         yield return new object[]
@@ -2287,9 +2286,9 @@ public class ScrollBarTests
             RightToLeft.No, 100, 240,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 100, 99),
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 99, 98),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 98, 98),
+                new(ScrollEventType.SmallDecrement, 100, 99),
+                new(ScrollEventType.SmallDecrement, 99, 98),
+                new(ScrollEventType.EndScroll, 98, 98),
             }, 98
         };
 
@@ -2298,8 +2297,8 @@ public class ScrollBarTests
             RightToLeft.Yes, 10, -120,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 10, 9),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 9, 9),
+                new(ScrollEventType.SmallDecrement, 10, 9),
+                new(ScrollEventType.EndScroll, 9, 9),
             }, 9
         };
         yield return new object[]
@@ -2307,8 +2306,8 @@ public class ScrollBarTests
             RightToLeft.Yes, 10, -121,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 10, 9),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 9, 9),
+                new(ScrollEventType.SmallDecrement, 10, 9),
+                new(ScrollEventType.EndScroll, 9, 9),
             }, 9
         };
         yield return new object[]
@@ -2316,9 +2315,9 @@ public class ScrollBarTests
             RightToLeft.Yes, 10, -240,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 10, 9),
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 9, 8),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 8, 8),
+                new(ScrollEventType.SmallDecrement, 10, 9),
+                new(ScrollEventType.SmallDecrement, 9, 8),
+                new(ScrollEventType.EndScroll, 8, 8),
             }, 8
         };
         yield return new object[]
@@ -2326,8 +2325,8 @@ public class ScrollBarTests
             RightToLeft.Yes, 1, -120,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 1, 0),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 0, 0),
+                new(ScrollEventType.SmallDecrement, 1, 0),
+                new(ScrollEventType.EndScroll, 0, 0),
             }, 0
         };
         yield return new object[]
@@ -2335,9 +2334,9 @@ public class ScrollBarTests
             RightToLeft.Yes, 1, -240,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 1, 0),
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 0, 0),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 0, 0),
+                new(ScrollEventType.SmallDecrement, 1, 0),
+                new(ScrollEventType.SmallDecrement, 0, 0),
+                new(ScrollEventType.EndScroll, 0, 0),
             }, 0
         };
         yield return new object[]
@@ -2345,9 +2344,9 @@ public class ScrollBarTests
             RightToLeft.Yes, 100, -240,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 100, 99),
-                new ScrollEventArgs(ScrollEventType.SmallDecrement, 99, 98),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 98, 98),
+                new(ScrollEventType.SmallDecrement, 100, 99),
+                new(ScrollEventType.SmallDecrement, 99, 98),
+                new(ScrollEventType.EndScroll, 98, 98),
             }, 98
         };
 
@@ -2357,8 +2356,8 @@ public class ScrollBarTests
             RightToLeft.No, 10, -120,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 10, 11),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 11, 11),
+                new(ScrollEventType.SmallIncrement, 10, 11),
+                new(ScrollEventType.EndScroll, 11, 11),
             }, 11
         };
         yield return new object[]
@@ -2366,8 +2365,8 @@ public class ScrollBarTests
             RightToLeft.No, 10, -121,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 10, 11),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 11, 11),
+                new(ScrollEventType.SmallIncrement, 10, 11),
+                new(ScrollEventType.EndScroll, 11, 11),
             }, 11
         };
         yield return new object[]
@@ -2375,9 +2374,9 @@ public class ScrollBarTests
             RightToLeft.No, 10, -240,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 10, 11),
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 11, 12),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 12, 12),
+                new(ScrollEventType.SmallIncrement, 10, 11),
+                new(ScrollEventType.SmallIncrement, 11, 12),
+                new(ScrollEventType.EndScroll, 12, 12),
             }, 12
         };
         yield return new object[]
@@ -2385,8 +2384,8 @@ public class ScrollBarTests
             RightToLeft.No, 90, -120,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 90, 91),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 91, 91),
+                new(ScrollEventType.SmallIncrement, 90, 91),
+                new(ScrollEventType.EndScroll, 91, 91),
             }, 91
         };
         yield return new object[]
@@ -2394,8 +2393,8 @@ public class ScrollBarTests
             RightToLeft.No, 99, -120,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 99, 91),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 91, 91),
+                new(ScrollEventType.SmallIncrement, 99, 91),
+                new(ScrollEventType.EndScroll, 91, 91),
             }, 91
         };
         yield return new object[]
@@ -2403,9 +2402,9 @@ public class ScrollBarTests
             RightToLeft.No, 99, -240,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 99, 91),
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 91, 91),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 91, 91),
+                new(ScrollEventType.SmallIncrement, 99, 91),
+                new(ScrollEventType.SmallIncrement, 91, 91),
+                new(ScrollEventType.EndScroll, 91, 91),
             }, 91
         };
 
@@ -2414,8 +2413,8 @@ public class ScrollBarTests
             RightToLeft.Yes, 10, 120,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 10, 11),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 11, 11),
+                new(ScrollEventType.SmallIncrement, 10, 11),
+                new(ScrollEventType.EndScroll, 11, 11),
             }, 11
         };
         yield return new object[]
@@ -2423,8 +2422,8 @@ public class ScrollBarTests
             RightToLeft.Yes, 10, 121,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 10, 11),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 11, 11),
+                new(ScrollEventType.SmallIncrement, 10, 11),
+                new(ScrollEventType.EndScroll, 11, 11),
             }, 11
         };
         yield return new object[]
@@ -2432,9 +2431,9 @@ public class ScrollBarTests
             RightToLeft.Yes, 10, 240,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 10, 11),
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 11, 12),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 12, 12),
+                new(ScrollEventType.SmallIncrement, 10, 11),
+                new(ScrollEventType.SmallIncrement, 11, 12),
+                new(ScrollEventType.EndScroll, 12, 12),
             }, 12
         };
         yield return new object[]
@@ -2442,8 +2441,8 @@ public class ScrollBarTests
             RightToLeft.Yes, 90, 120,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 90, 91),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 91, 91),
+                new(ScrollEventType.SmallIncrement, 90, 91),
+                new(ScrollEventType.EndScroll, 91, 91),
             }, 91
         };
         yield return new object[]
@@ -2451,8 +2450,8 @@ public class ScrollBarTests
             RightToLeft.Yes, 99, 120,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 99, 91),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 91, 91),
+                new(ScrollEventType.SmallIncrement, 99, 91),
+                new(ScrollEventType.EndScroll, 91, 91),
             }, 91
         };
         yield return new object[]
@@ -2460,9 +2459,9 @@ public class ScrollBarTests
             RightToLeft.Yes, 99, 240,
             new List<ScrollEventArgs>
             {
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 99, 91),
-                new ScrollEventArgs(ScrollEventType.SmallIncrement, 91, 91),
-                new ScrollEventArgs(ScrollEventType.EndScroll, 91, 91),
+                new(ScrollEventType.SmallIncrement, 99, 91),
+                new(ScrollEventType.SmallIncrement, 91, 91),
+                new(ScrollEventType.EndScroll, 91, 91),
             }, 91
         };
     }

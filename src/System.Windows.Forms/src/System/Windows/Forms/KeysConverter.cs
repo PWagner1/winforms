@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -30,13 +29,13 @@ public class KeysConverter : TypeConverter, IComparer
 
     private void AddLocalizedKeyNames(CultureInfo cultureInfo)
     {
-        if (CultureToDisplayOrder.ContainsKey(cultureInfo) && CultureToDisplayOrder.ContainsKey(cultureInfo))
+        if (CultureToDisplayOrder.ContainsKey(cultureInfo) && CultureToKeyName.ContainsKey(cultureInfo))
         {
             return;
         }
 
-        var localizedOrder = new List<string>(34);
-        var localizedNames = new Dictionary<string, Keys>(34);
+        List<string> localizedOrder = new(34);
+        Dictionary<string, Keys> localizedNames = new(34);
 
         AddLocalizedKey(nameof(SR.toStringEnter), Keys.Return);
         AddKey("F12", Keys.F12);
@@ -250,7 +249,7 @@ public class KeysConverter : TypeConverter, IComparer
             {
                 // First, iterate through and do the modifiers. These are
                 // additive, so we support things like Ctrl + Alt
-                foreach (var keyString in displayOrder)
+                foreach (string keyString in displayOrder)
                 {
                     Keys keyValue = keyNames[keyString];
                     if (keyValue != Keys.None && modifiers.HasFlag(keyValue))
@@ -265,7 +264,7 @@ public class KeysConverter : TypeConverter, IComparer
             Keys keyOnly = key & Keys.KeyCode;
             bool foundKey = false;
 
-            foreach (var keyString in displayOrder)
+            foreach (string keyString in displayOrder)
             {
                 Keys keyValue = keyNames[keyString];
                 if (keyValue.Equals(keyOnly))
@@ -279,7 +278,7 @@ public class KeysConverter : TypeConverter, IComparer
             // Finally, if the key wasn't in our list, add it to
             // the end anyway. Here we just pull the key value out
             // of the enum.
-            if (!foundKey && Enum.IsDefined(typeof(Keys), (int)keyOnly))
+            if (!foundKey && Enum.IsDefined(keyOnly))
             {
                 termKeys.Add(keyOnly);
             }
@@ -327,7 +326,7 @@ public class KeysConverter : TypeConverter, IComparer
             // Finally, if the key wasn't in our list, add it to
             // the end anyway. Here we just pull the key value out
             // of the enum.
-            if (!foundKey && Enum.IsDefined(typeof(Keys), (int)keyOnly))
+            if (!foundKey && Enum.IsDefined(keyOnly))
             {
                 termStrings.Append(Enum.GetName(keyOnly));
             }

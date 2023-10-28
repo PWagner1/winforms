@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -11,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms.Layout;
 using System.Windows.Forms.VisualStyles;
 using Windows.Win32.System.Threading;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -27,26 +27,26 @@ namespace System.Windows.Forms;
 [DesignerCategory("Form")]
 public partial class Form : ContainerControl
 {
-    private static readonly object EVENT_ACTIVATED = new object();
-    private static readonly object EVENT_CLOSING = new object();
-    private static readonly object EVENT_CLOSED = new object();
-    private static readonly object EVENT_FORMCLOSING = new object();
-    private static readonly object EVENT_FORMCLOSED = new object();
-    private static readonly object EVENT_DEACTIVATE = new object();
-    private static readonly object EVENT_LOAD = new object();
-    private static readonly object EVENT_MDI_CHILD_ACTIVATE = new object();
-    private static readonly object EVENT_INPUTLANGCHANGE = new object();
-    private static readonly object EVENT_INPUTLANGCHANGEREQUEST = new object();
-    private static readonly object EVENT_MENUSTART = new object();
-    private static readonly object EVENT_MENUCOMPLETE = new object();
-    private static readonly object EVENT_MAXIMUMSIZECHANGED = new object();
-    private static readonly object EVENT_MINIMUMSIZECHANGED = new object();
-    private static readonly object EVENT_HELPBUTTONCLICKED = new object();
-    private static readonly object EVENT_SHOWN = new object();
-    private static readonly object EVENT_RESIZEBEGIN = new object();
-    private static readonly object EVENT_RESIZEEND = new object();
-    private static readonly object EVENT_RIGHTTOLEFTLAYOUTCHANGED = new object();
-    private static readonly object EVENT_DPI_CHANGED = new object();
+    private static readonly object EVENT_ACTIVATED = new();
+    private static readonly object EVENT_CLOSING = new();
+    private static readonly object EVENT_CLOSED = new();
+    private static readonly object EVENT_FORMCLOSING = new();
+    private static readonly object EVENT_FORMCLOSED = new();
+    private static readonly object EVENT_DEACTIVATE = new();
+    private static readonly object EVENT_LOAD = new();
+    private static readonly object EVENT_MDI_CHILD_ACTIVATE = new();
+    private static readonly object EVENT_INPUTLANGCHANGE = new();
+    private static readonly object EVENT_INPUTLANGCHANGEREQUEST = new();
+    private static readonly object EVENT_MENUSTART = new();
+    private static readonly object EVENT_MENUCOMPLETE = new();
+    private static readonly object EVENT_MAXIMUMSIZECHANGED = new();
+    private static readonly object EVENT_MINIMUMSIZECHANGED = new();
+    private static readonly object EVENT_HELPBUTTONCLICKED = new();
+    private static readonly object EVENT_SHOWN = new();
+    private static readonly object EVENT_RESIZEBEGIN = new();
+    private static readonly object EVENT_RESIZEEND = new();
+    private static readonly object EVENT_RIGHTTOLEFTLAYOUTCHANGED = new();
+    private static readonly object EVENT_DPI_CHANGED = new();
 
     //
     // The following flags should be used with formState[..] not formStateEx[..]
@@ -98,7 +98,7 @@ public partial class Form : ContainerControl
     private const int SizeGripSize = 16;
 
     private static Icon? defaultIcon;
-    private static readonly object internalSyncObject = new object();
+    private static readonly object internalSyncObject = new();
 
     // Property store keys for properties.  The property store allocates most efficiently
     // in groups of four, so we try to lump properties in groups of four based on how
@@ -135,21 +135,21 @@ public partial class Form : ContainerControl
     // Form per instance members
     // Note: Do not add anything to this list unless absolutely necessary.
 
-    private BitVector32 _formState = new BitVector32(0x21338);   // magic value... all the defaults... see the ctor for details...
+    private BitVector32 _formState = new(0x21338);   // magic value... all the defaults... see the ctor for details...
     private BitVector32 _formStateEx;
 
     private Icon? _icon;
     private Icon? _smallIcon;
     private Size _autoScaleBaseSize = Size.Empty;
     private Size _minAutoSize = Size.Empty;
-    private Rectangle _restoredWindowBounds = new Rectangle(-1, -1, -1, -1);
+    private Rectangle _restoredWindowBounds = new(-1, -1, -1, -1);
     private BoundsSpecified _restoredWindowBoundsSpecified;
     private DialogResult _dialogResult;
     private MdiClient? _ctlClient;
     private NativeWindow? _ownerWindow;
     private bool _rightToLeftLayout;
 
-    private Rectangle _restoreBounds = new Rectangle(-1, -1, -1, -1);
+    private Rectangle _restoreBounds = new(-1, -1, -1, -1);
     private CloseReason _closeReason = CloseReason.None;
 
     private VisualStyleRenderer? _sizeGripRenderer;
@@ -1239,7 +1239,7 @@ public partial class Form : ContainerControl
         }
     }
 
-    private static readonly object EVENT_MAXIMIZEDBOUNDSCHANGED = new object();
+    private static readonly object EVENT_MAXIMIZEDBOUNDSCHANGED = new();
 
     [SRCategory(nameof(SR.CatPropertyChanged))]
     [SRDescription(nameof(SR.FormOnMaximizedBoundsChangedDescr))]
@@ -3101,7 +3101,7 @@ public partial class Form : ContainerControl
         // If the form has any control (ActiveControl is true), a screen reader will focus on it instead.
         if (Focused && ActiveControl is null)
         {
-            accessibleObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+            accessibleObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
         }
 
         return accessibleObject;
@@ -3392,7 +3392,7 @@ public partial class Form : ContainerControl
 
             if (Properties.TryGetObject(PropDummyMdiMenu, out HMENU dummyMenu) && !dummyMenu.IsNull)
             {
-                Properties.SetObject(PropDummyMdiMenu, null);
+                Properties.RemoveObject(PropDummyMdiMenu);
                 PInvoke.DestroyMenu(dummyMenu);
             }
         }
@@ -3729,7 +3729,7 @@ public partial class Form : ContainerControl
             return;
         }
 
-        Point p = default(Point);
+        Point p = default;
         Size s = Size;
         HWND ownerHandle = (HWND)PInvoke.GetWindowLong(this, WINDOW_LONG_PTR_INDEX.GWL_HWNDPARENT);
 
@@ -3775,7 +3775,7 @@ public partial class Form : ContainerControl
     /// </summary>
     protected void CenterToScreen()
     {
-        Point p = default(Point);
+        Point p = default;
         Screen desktop;
         if (OwnerInternal is not null)
         {
@@ -3977,7 +3977,7 @@ public partial class Form : ContainerControl
         // If the form has any control, a screen reader will focus on it instead.
         if (Focused && IsAccessibilityObjectCreated && ActiveControl is null)
         {
-            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+            AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
         }
     }
 
@@ -4178,11 +4178,11 @@ public partial class Form : ContainerControl
             && data)
         {
             Control button = (Control)AcceptButton;
-            var ptToSnap = new Point(button.Left + button.Width / 2, button.Top + button.Height / 2);
-            PInvoke.ClientToScreen(this, ref ptToSnap);
+            Point pointToSnap = new(button.Left + button.Width / 2, button.Top + button.Height / 2);
+            PInvoke.ClientToScreen(this, ref pointToSnap);
             if (!button.IsWindowObscured)
             {
-                Cursor.Position = ptToSnap;
+                Cursor.Position = pointToSnap;
             }
         }
     }
@@ -4231,7 +4231,7 @@ public partial class Form : ContainerControl
             {
                 _sizeGripRenderer ??= new VisualStyleRenderer(VisualStyleElement.Status.Gripper.Normal);
 
-                using var hdc = new DeviceContextHdcScope(e);
+                using DeviceContextHdcScope hdc = new(e);
                 _sizeGripRenderer.DrawBackground(
                     hdc,
                     new Rectangle(size.Width - SizeGripSize, size.Height - SizeGripSize, SizeGripSize, SizeGripSize));
@@ -5814,7 +5814,7 @@ public partial class Form : ContainerControl
                     }
 #endif
 
-                    ToolStripManager.RevertMergeInternal(mdiControlStrip.MergedMenu, mdiControlStrip, /*revertMDIStuff*/true);
+                    ToolStripManager.RevertMergeInternal(mdiControlStrip.MergedMenu, mdiControlStrip, revertMDIControls: true);
 
 #if DEBUG
                     // double check that RevertMerge doesnt accidentally revert more than it should.
@@ -5841,7 +5841,7 @@ public partial class Form : ContainerControl
                     HMENU hMenu = PInvoke.GetMenu(this);
                     if (hMenu == HMENU.Null)
                     {
-                        MenuStrip sourceMenuStrip = ToolStripManager.GetMainMenuStrip(this);
+                        MenuStrip? sourceMenuStrip = ToolStripManager.GetMainMenuStrip(this);
                         if (sourceMenuStrip is not null)
                         {
                             MdiControlStrip = new MdiControlStrip(ActiveMdiChildInternal);
@@ -5867,10 +5867,10 @@ public partial class Form : ContainerControl
         {
             if (MdiWindowListStrip is not null && MdiWindowListStrip.MergedMenu is not null)
             {
-                ToolStripManager.RevertMergeInternal(MdiWindowListStrip.MergedMenu, MdiWindowListStrip, /*revertMdiStuff*/true);
+                ToolStripManager.RevertMergeInternal(MdiWindowListStrip.MergedMenu, MdiWindowListStrip, revertMDIControls: true);
             }
 
-            MenuStrip sourceMenuStrip = ToolStripManager.GetMainMenuStrip(this);
+            MenuStrip? sourceMenuStrip = ToolStripManager.GetMainMenuStrip(this);
             if (sourceMenuStrip is not null && sourceMenuStrip.MdiWindowListItem is not null)
             {
                 MdiWindowListStrip ??= new MdiWindowListStrip();
@@ -6239,7 +6239,7 @@ public partial class Form : ContainerControl
 
             if (m.MsgInternal == PInvoke.WM_QUERYENDSESSION)
             {
-                m.ResultInternal = (LRESULT)(nint)(BOOL)e.Cancel;
+                m.ResultInternal = (LRESULT)(BOOL)!e.Cancel;
             }
             else if (e.Cancel && (MdiParent is not null))
             {

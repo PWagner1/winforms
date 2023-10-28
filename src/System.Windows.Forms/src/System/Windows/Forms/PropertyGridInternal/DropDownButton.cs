@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Windows.Forms.ButtonInternal;
@@ -82,13 +81,13 @@ internal sealed partial class DropDownButton : Button
                 state = ComboBoxState.Hot;
             }
 
-            Rectangle dropDownButtonRect = new Rectangle(0, 0, Width, Height);
+            Rectangle dropDownButtonRect = new(0, 0, Width, Height);
             if (state == ComboBoxState.Normal)
             {
                 pevent.Graphics.FillRectangle(SystemBrushes.Window, dropDownButtonRect);
             }
 
-            using (var hdc = new DeviceContextHdcScope(pevent))
+            using (DeviceContextHdcScope hdc = new(pevent))
             {
                 ComboBoxRenderer.DrawDropDownButtonForHandle(
                     hdc,

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using Microsoft.Win32;
@@ -37,7 +36,7 @@ public partial class Screen
 
     private readonly int _bitDepth;
 
-    private static readonly object s_syncLock = new object(); //used to lock this class before syncing to SystemEvents
+    private static readonly object s_syncLock = new(); //used to lock this class before syncing to SystemEvents
 
     private static int s_desktopChangedCount = -1; //static counter of desktop size changes
 

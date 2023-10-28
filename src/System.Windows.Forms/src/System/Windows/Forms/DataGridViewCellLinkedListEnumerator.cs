@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 
@@ -11,11 +10,11 @@ namespace System.Windows.Forms;
 /// </summary>
 internal class DataGridViewCellLinkedListEnumerator : IEnumerator
 {
-    private readonly DataGridViewCellLinkedListElement _headElement;
+    private readonly DataGridViewCellLinkedListElement? _headElement;
     private DataGridViewCellLinkedListElement? _current;
     private bool _reset;
 
-    public DataGridViewCellLinkedListEnumerator(DataGridViewCellLinkedListElement headElement)
+    public DataGridViewCellLinkedListEnumerator(DataGridViewCellLinkedListElement? headElement)
     {
         _headElement = headElement;
         _reset = true;

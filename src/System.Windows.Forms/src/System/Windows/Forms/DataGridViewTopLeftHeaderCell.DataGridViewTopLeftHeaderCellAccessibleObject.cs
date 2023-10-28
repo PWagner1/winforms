@@ -1,8 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -63,7 +63,7 @@ public partial class DataGridViewTopLeftHeaderCell
                     throw new InvalidOperationException(SR.DataGridViewCellAccessibleObject_OwnerNotSet);
                 }
 
-                object value = Owner.Value;
+                object? value = Owner.Value;
                 if (value is not null && !(value is string))
                 {
                     // The user set the Value on the DataGridViewTopLeftHeaderCell and it did not set it to a string.
@@ -211,11 +211,16 @@ public partial class DataGridViewTopLeftHeaderCell
                     // This means that there are visible rows and columns.
                     // Focus the first data cell.
                     DataGridViewRow row = Owner.DataGridView.Rows[Owner.DataGridView.Rows.GetFirstRow(DataGridViewElementStates.Visible)];
-                    DataGridViewColumn col = Owner.DataGridView.Columns.GetFirstColumn(DataGridViewElementStates.Visible);
+                    DataGridViewColumn col = Owner.DataGridView.Columns.GetFirstColumn(DataGridViewElementStates.Visible)!;
 
                     // DataGridView::set_CurrentCell clears the previous selection.
                     // So use SetCurrenCellAddressCore directly.
-                    Owner.DataGridView.SetCurrentCellAddressCoreInternal(col.Index, row.Index, false /*setAnchorCellAddress*/, true /*validateCurrentCell*/, false /*thoughMouseClick*/);
+                    Owner.DataGridView.SetCurrentCellAddressCoreInternal(
+                        col.Index,
+                        row.Index,
+                        setAnchorCellAddress: false,
+                        validateCurrentCell: true,
+                        throughMouseClick: false);
                 }
             }
 
@@ -290,13 +295,13 @@ public partial class DataGridViewTopLeftHeaderCell
 
         #region IRawElementProviderSimple Implementation
 
-        internal override object? GetPropertyValue(UiaCore.UIA propertyId) =>
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyId) =>
             propertyId switch
             {
-                UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.HeaderControlTypeId,
-                UiaCore.UIA.IsEnabledPropertyId => Owner?.DataGridView?.Enabled ?? false,
-                UiaCore.UIA.IsKeyboardFocusablePropertyId => false,
-                UiaCore.UIA.IsOffscreenPropertyId => false,
+                UIA_PROPERTY_ID.UIA_ControlTypePropertyId => UIA_CONTROLTYPE_ID.UIA_HeaderControlTypeId,
+                UIA_PROPERTY_ID.UIA_IsEnabledPropertyId => Owner?.DataGridView?.Enabled ?? false,
+                UIA_PROPERTY_ID.UIA_IsKeyboardFocusablePropertyId => false,
+                UIA_PROPERTY_ID.UIA_IsOffscreenPropertyId => false,
                 _ => base.GetPropertyValue(propertyId)
             };
 

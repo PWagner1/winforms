@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 
@@ -533,7 +532,7 @@ public class DataGridViewBand : DataGridViewElement, ICloneable, IDisposable
         }
         set
         {
-            if (!Enum.IsDefined(typeof(DataGridViewTriState), value))
+            if (!Enum.IsDefined(value))
             {
                 throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(DataGridViewTriState));
             }

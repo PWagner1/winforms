@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -97,48 +96,32 @@ public partial class TabControl
             return IndexOf(tabPage);
         }
 
-        public void Add(string? text)
+        public void Add(string? text) => Add(new TabPage
         {
-            var page = new TabPage
-            {
-                Text = text
-            };
-            Add(page);
-        }
+            Text = text
+        });
 
-        public void Add(string? key, string? text)
+        public void Add(string? key, string? text) => Add(new TabPage
         {
-            var page = new TabPage
-            {
-                Name = key,
-                Text = text
-            };
-            Add(page);
-        }
+            Name = key,
+            Text = text
+        });
 
-        public void Add(string? key, string? text, int imageIndex)
+        public void Add(string? key, string? text, int imageIndex) => Add(new TabPage
         {
-            var page = new TabPage
-            {
-                Name = key,
-                Text = text,
-                ImageIndex = imageIndex
-            };
-            Add(page);
-        }
+            Name = key,
+            Text = text,
+            ImageIndex = imageIndex
+        });
 
-        public void Add(string? key, string? text, string imageKey)
+        public void Add(string? key, string? text, string imageKey) => Add(new TabPage
         {
-            var page = new TabPage
-            {
-                Name = key,
-                Text = text,
-                ImageKey = imageKey
-            };
-            Add(page);
-        }
+            Name = key,
+            Text = text,
+            ImageKey = imageKey
+        });
 
-        public void AddRange(TabPage[] pages)
+        public void AddRange(params TabPage[] pages)
         {
             ArgumentNullException.ThrowIfNull(pages);
 
@@ -262,32 +245,25 @@ public partial class TabControl
             Insert(index, actualTabPage);
         }
 
-        public void Insert(int index, string? text)
+        public void Insert(int index, string? text) => Insert(index, new TabPage
         {
-            var page = new TabPage
-            {
-                Text = text
-            };
-            Insert(index, page);
-        }
+            Text = text
+        });
 
-        public void Insert(int index, string? key, string? text)
+        public void Insert(int index, string? key, string? text) => Insert(index, new TabPage
         {
-            var page = new TabPage
-            {
-                Name = key,
-                Text = text
-            };
-            Insert(index, page);
-        }
+            Name = key,
+            Text = text
+        });
 
         public void Insert(int index, string? key, string? text, int imageIndex)
         {
-            var page = new TabPage
+            TabPage page = new()
             {
                 Name = key,
                 Text = text
             };
+
             Insert(index, page);
 
             // ImageKey and ImageIndex require parenting.
@@ -296,11 +272,12 @@ public partial class TabControl
 
         public void Insert(int index, string? key, string? text, string imageKey)
         {
-            var page = new TabPage
+            TabPage page = new()
             {
                 Name = key,
                 Text = text
             };
+
             Insert(index, page);
 
             // ImageKey and ImageIndex require parenting.

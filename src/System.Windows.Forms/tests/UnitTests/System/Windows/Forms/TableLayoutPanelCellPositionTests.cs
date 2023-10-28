@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -71,7 +70,7 @@ public class TableLayoutPanelCellPositionTests
         yield return new object[] { new TableLayoutPanelCellPosition(1, 2), new TableLayoutPanelCellPosition(2, 2), false };
         yield return new object[] { new TableLayoutPanelCellPosition(1, 2), new TableLayoutPanelCellPosition(1, 3), false };
 
-        yield return new object[] { new TableLayoutPanelCellPosition(1, 2), new object(), false };
+        yield return new object[] { new TableLayoutPanelCellPosition(1, 2), new(), false };
         yield return new object[] { new TableLayoutPanelCellPosition(1, 2), null, false };
     }
 

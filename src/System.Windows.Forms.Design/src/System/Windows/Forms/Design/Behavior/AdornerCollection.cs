@@ -1,8 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-#nullable disable
 
 using System.Collections;
 
@@ -14,14 +11,14 @@ namespace System.Windows.Forms.Design.Behavior;
 /// <seealso cref="BehaviorServiceAdornerCollection"/>
 public sealed class BehaviorServiceAdornerCollection : CollectionBase
 {
-    private readonly BehaviorService behaviorService;
+    private readonly BehaviorService? _behaviorService;
 
     /// <summary>
     ///  Initializes a new instance of <see cref="BehaviorServiceAdornerCollection"/>.
     /// </summary>
-    public BehaviorServiceAdornerCollection(BehaviorService behaviorService)
+    public BehaviorServiceAdornerCollection(BehaviorService? behaviorService)
     {
-        this.behaviorService = behaviorService;
+        _behaviorService = behaviorService;
     }
 
     /// <summary>
@@ -61,7 +58,7 @@ public sealed class BehaviorServiceAdornerCollection : CollectionBase
     {
         get
         {
-            return ((Adorner)(List[index]));
+            return ((Adorner)(List[index]!));
         }
         set
         {
@@ -80,7 +77,7 @@ public sealed class BehaviorServiceAdornerCollection : CollectionBase
     /// <seealso cref="AddRange(Adorner[])"/>
     public int Add(Adorner value)
     {
-        value.BehaviorService = behaviorService;
+        value.BehaviorService = _behaviorService;
         return List.Add(value);
     }
 
@@ -96,7 +93,7 @@ public sealed class BehaviorServiceAdornerCollection : CollectionBase
     ///  None.
     /// </returns>
     /// <seealso cref="Add"/>
-    public void AddRange(Adorner[] value)
+    public void AddRange(params Adorner[] value)
     {
         for (int i = 0; (i < value.Length); i++)
         {

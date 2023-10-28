@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace System.Windows.Forms;
 
@@ -13,12 +12,12 @@ public class OSFeature : FeatureSupport
     ///  Represents the layered, top-level windows feature. This <see langword="static"/> field
     ///  is read-only.
     /// </summary>
-    public static readonly object LayeredWindows = new object();
+    public static readonly object LayeredWindows = new();
 
     /// <summary>
     ///  Determines if the OS supports themes
     /// </summary>
-    public static readonly object Themes = new object();
+    public static readonly object Themes = new();
 
     private static OSFeature? _feature;
 

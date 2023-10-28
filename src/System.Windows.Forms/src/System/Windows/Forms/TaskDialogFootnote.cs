@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using static Interop;
 
@@ -35,7 +34,7 @@ public sealed class TaskDialogFootnote : TaskDialogControl
     }
 
     public static implicit operator TaskDialogFootnote(string footnoteText)
-        => new TaskDialogFootnote(footnoteText);
+        => new(footnoteText);
 
     /// <summary>
     ///   Gets or sets the text to be displayed in the dialog's footnote area.

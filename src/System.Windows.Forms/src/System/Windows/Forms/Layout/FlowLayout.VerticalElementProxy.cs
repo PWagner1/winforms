@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 
@@ -19,7 +18,7 @@ internal partial class FlowLayout
         {
             get
             {
-                AnchorStyles anchorStyles = LayoutUtils.GetUnifiedAnchor(Element);
+                AnchorStyles anchorStyles = LayoutUtils.GetUnifiedAnchor(Element!);
                 bool isStretch = (anchorStyles & LayoutUtils.HorizontalAnchorStyles) == LayoutUtils.HorizontalAnchorStyles; //whether the control stretches to fill in the whole space
                 bool isLeft = (anchorStyles & AnchorStyles.Left) != 0;  //whether the control anchors to left and does not stretch;
                 bool isRight = (anchorStyles & AnchorStyles.Right) != 0; //whether the control anchors to right and does not stretch;

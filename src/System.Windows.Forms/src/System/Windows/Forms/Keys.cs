@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing.Design;
@@ -851,14 +850,14 @@ public enum Keys
     Oem2 = OemQuestion,
 
     /// <summary>
-    ///  The Oem tilde key.
-    /// </summary>
-    Oemtilde = 0xC0,
-
-    /// <summary>
     ///  The Oem 3 key.
     /// </summary>
-    Oem3 = Oemtilde,
+    Oem3 = 0xC0,
+
+    /// <summary>
+    ///  The Oem tilde key.
+    /// </summary>
+    Oemtilde = Oem3,
 
     /// <summary>
     ///  The Oem Open Brackets key.
@@ -891,14 +890,14 @@ public enum Keys
     Oem6 = OemCloseBrackets,
 
     /// <summary>
-    ///  The Oem Quotes key.
-    /// </summary>
-    OemQuotes = 0xDE,
-
-    /// <summary>
     ///  The Oem 7 key.
     /// </summary>
-    Oem7 = OemQuotes,
+    Oem7 = 0xDE,
+
+    /// <summary>
+    ///  The Oem Quotes key.
+    /// </summary>
+    OemQuotes = Oem7,
 
     /// <summary>
     ///  The Oem8 key.
@@ -906,14 +905,14 @@ public enum Keys
     Oem8 = 0xDF,
 
     /// <summary>
-    ///  The Oem Backslash key.
-    /// </summary>
-    OemBackslash = 0xE2,
-
-    /// <summary>
     ///  The Oem 102 key.
     /// </summary>
-    Oem102 = OemBackslash,
+    Oem102 = 0xE2,
+
+    /// <summary>
+    ///  The Oem Backslash key.
+    /// </summary>
+    OemBackslash = Oem102,
 
     /// <summary>
     ///  The PROCESS KEY key.

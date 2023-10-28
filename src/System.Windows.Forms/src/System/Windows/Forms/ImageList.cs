@@ -1,12 +1,10 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
 using System.Drawing;
 using System.Drawing.Imaging;
-using static Interop;
 
 namespace System.Windows.Forms;
 
@@ -26,7 +24,7 @@ namespace System.Windows.Forms;
 public sealed partial class ImageList : Component, IHandle<HIMAGELIST>
 {
     private static readonly Color s_fakeTransparencyColor = Color.FromArgb(0x0d, 0x0b, 0x0c);
-    private static readonly Size s_defaultImageSize = new Size(16, 16);
+    private static readonly Size s_defaultImageSize = new(16, 16);
 
     private const int MaxDimension = 256;
     private static int s_maxImageWidth = MaxDimension;
@@ -44,7 +42,7 @@ public sealed partial class ImageList : Component, IHandle<HIMAGELIST>
     // lists are lossy. At runtime, we delay handle creation as long as possible, and store
     // away the original images until handle creation (and hope no one disposes of the images!). At design time, we keep the originals around indefinitely.
     // This variable will become null when the original images are lost.
-    private List<Original>? _originals = new List<Original>();
+    private List<Original>? _originals = new();
     private EventHandler? _recreateHandler;
     private EventHandler? _changeHandler;
 
@@ -441,7 +439,7 @@ public sealed partial class ImageList : Component, IHandle<HIMAGELIST>
 
         using (ThemingScope scope = new(Application.UseVisualStyles))
         {
-            ComCtl32.InitCommonControls();
+            PInvoke.InitCommonControls();
 
             _nativeImageList?.Dispose();
             _nativeImageList = new NativeImageList(_imageSize, flags);
@@ -556,7 +554,7 @@ public sealed partial class ImageList : Component, IHandle<HIMAGELIST>
                 height,
                 Color.FromArgb(PInvoke.CLR_NONE),
                 Color.FromArgb(PInvoke.CLR_NONE),
-                (IMAGE_LIST_DRAW_STYLE)ComCtl32.ILD.TRANSPARENT);
+                IMAGE_LIST_DRAW_STYLE.ILD_TRANSPARENT);
         }
         finally
         {
@@ -694,7 +692,7 @@ public sealed partial class ImageList : Component, IHandle<HIMAGELIST>
                         _imageSize.Height,
                         Color.FromArgb(PInvoke.CLR_NONE),
                         Color.FromArgb(PInvoke.CLR_NONE),
-                        (IMAGE_LIST_DRAW_STYLE)ComCtl32.ILD.TRANSPARENT);
+                        IMAGE_LIST_DRAW_STYLE.ILD_TRANSPARENT);
                 }
                 finally
                 {

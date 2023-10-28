@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Specialized;
 #if DEBUG
@@ -38,9 +37,9 @@ internal partial class CommonProperties
     internal const bool DefaultAutoSize = false;
 
     internal const DockStyle DefaultDock = DockStyle.None;
-    internal static readonly Padding DefaultMargin = new Padding(3);
-    internal static readonly Size DefaultMinimumSize = new Size(0, 0);
-    internal static readonly Size DefaultMaximumSize = new Size(0, 0);
+    internal static readonly Padding DefaultMargin = new(3);
+    internal static readonly Size DefaultMinimumSize = new(0, 0);
+    internal static readonly Size DefaultMaximumSize = new(0, 0);
 
     // DO NOT MOVE THE FOLLOWING 4 SECTIONS
     // We have done some special arranging here so that if the first 7 bits of state are zero, we know
@@ -486,12 +485,9 @@ internal partial class CommonProperties
         if (GetAutoSize(element))
         {
             // check for legacy layout engine
-            if (element.Container is Control)
+            if (element.Container is Control { LayoutEngine: DefaultLayout })
             {
-                if (((Control)element.Container).LayoutEngine is DefaultLayout)
-                {
-                    return GetSelfAutoSizeInDefaultLayout(element);
-                }
+                return GetSelfAutoSizeInDefaultLayout(element);
             }
 
             // else
@@ -721,7 +717,7 @@ internal partial class CommonProperties
     #region DebugHelpers
 #if DEBUG
 
-    internal static readonly TraceSwitch PreferredSize = new TraceSwitch("PreferredSize", "Debug preferred size assertion");
+    internal static readonly TraceSwitch PreferredSize = new("PreferredSize", "Debug preferred size assertion");
 
     internal static string Debug_GetChangedProperties(IArrangedElement element)
     {

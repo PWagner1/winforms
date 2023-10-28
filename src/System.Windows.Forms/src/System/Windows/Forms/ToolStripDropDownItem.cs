@@ -1,10 +1,10 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms.Layout;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -19,11 +19,11 @@ public abstract class ToolStripDropDownItem : ToolStripItem
     private ToolStripDropDown? _dropDown;
     private ToolStripDropDownDirection _toolStripDropDownDirection = ToolStripDropDownDirection.Default;
     private ToolTip? _hookedKeyboardTooltip;
-    private static readonly object EventDropDownShow = new object();
-    private static readonly object EventDropDownHide = new object();
-    private static readonly object EventDropDownOpened = new object();
-    private static readonly object EventDropDownClosed = new object();
-    private static readonly object EventDropDownItemClicked = new object();
+    private static readonly object EventDropDownShow = new();
+    private static readonly object EventDropDownHide = new();
+    private static readonly object EventDropDownOpened = new();
+    private static readonly object EventDropDownClosed = new();
+    private static readonly object EventDropDownItemClicked = new();
 
     /// <summary>
     ///  Protected ctor so you can't create one of these without deriving from it.
@@ -504,7 +504,7 @@ public abstract class ToolStripDropDownItem : ToolStripItem
         if (accessibilityIsOn && AccessibilityObject is ToolStripItemAccessibleObject accessibleObject)
         {
             accessibleObject.RaiseAutomationPropertyChangedEvent(
-                UiaCore.UIA.ExpandCollapseExpandCollapseStatePropertyId,
+                UIA_PROPERTY_ID.UIA_ExpandCollapseExpandCollapseStatePropertyId,
                 UiaCore.ExpandCollapseState.Collapsed,
                 UiaCore.ExpandCollapseState.Expanded);
         }
@@ -533,7 +533,7 @@ public abstract class ToolStripDropDownItem : ToolStripItem
         if (IsAccessibilityObjectCreated && AccessibilityObject is ToolStripItemAccessibleObject accessibleObject)
         {
             accessibleObject.RaiseAutomationPropertyChangedEvent(
-                UiaCore.UIA.ExpandCollapseExpandCollapseStatePropertyId,
+                UIA_PROPERTY_ID.UIA_ExpandCollapseExpandCollapseStatePropertyId,
                 UiaCore.ExpandCollapseState.Expanded,
                 UiaCore.ExpandCollapseState.Collapsed);
         }
@@ -775,7 +775,7 @@ public abstract class ToolStripDropDownItem : ToolStripItem
 
         // Traversing the tree of DropDownMenuItems non-recursively to set new
         // Font (where necessary because not inherited from parent), DeviceDpi and reset the scaling.
-        var itemsStack = new Stack<ToolStripDropDownItem>();
+        Stack<ToolStripDropDownItem> itemsStack = new();
 
         itemsStack.Push(this);
 

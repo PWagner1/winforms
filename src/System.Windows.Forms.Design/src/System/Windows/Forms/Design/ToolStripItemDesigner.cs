@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -78,7 +77,7 @@ internal class ToolStripItemDesigner : ComponentDesigner
     {
         get
         {
-            BaseContextMenuStrip toolStripContextMenu = new BaseContextMenuStrip(Component.Site, ToolStripItem);
+            BaseContextMenuStrip toolStripContextMenu = new BaseContextMenuStrip(Component.Site);
             // If multiple Items Selected don't show the custom properties...
             if (_selectionService.SelectionCount > 1)
             {

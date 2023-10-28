@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -866,7 +865,7 @@ public unsafe partial class WebBrowserBase : Control
 
             hr.ThrowOnFailure();
 
-            _activeXInstance = Marshal.GetObjectForIUnknown((nint)unknown);
+            _activeXInstance = ComHelpers.GetObjectForIUnknown((IUnknown*)unknown);
 
             Debug.Assert(_activeXInstance is not null, "w/o an exception being thrown we must have an object...");
 
@@ -1104,7 +1103,7 @@ public unsafe partial class WebBrowserBase : Control
 
     private unsafe Size SetExtent(int width, int height)
     {
-        var sz = new Size(width, height);
+        Size sz = new(width, height);
         bool resetExtents = DesignMode;
         Pixel2hiMetric(ref sz);
         HRESULT hr = _axOleObject!.SetExtent(DVASPECT.DVASPECT_CONTENT, (SIZE*)&sz);
@@ -1219,7 +1218,7 @@ public unsafe partial class WebBrowserBase : Control
     // Overridden properties:
     //
 
-    protected override Size DefaultSize => new Size(75, 23);
+    protected override Size DefaultSize => new(75, 23);
 
     //
     // Overridden methods:

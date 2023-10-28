@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Windows.Forms.Design;
@@ -14,7 +13,7 @@ public partial class ColorEditorTests
     [Fact]
     public void ColorEditor_Ctor_Default()
     {
-        var editor = new ColorEditor();
+        ColorEditor editor = new();
         Assert.False(editor.IsDropDownResizable);
     }
 
@@ -24,16 +23,16 @@ public partial class ColorEditorTests
         yield return new object[] { "value" };
         yield return new object[] { Color.Empty };
         yield return new object[] { Color.Red };
-        yield return new object[] { new object() };
+        yield return new object[] { new() };
     }
 
     [Theory]
     [MemberData(nameof(EditValue_TestData))]
     public void ColorEditor_EditValue_ValidProvider_ReturnsValue(object value)
     {
-        var editor = new ColorEditor();
-        var mockEditorService = new Mock<IWindowsFormsEditorService>(MockBehavior.Strict);
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        ColorEditor editor = new();
+        Mock<IWindowsFormsEditorService> mockEditorService = new(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(IWindowsFormsEditorService)))
             .Returns(mockEditorService.Object)
@@ -55,7 +54,7 @@ public partial class ColorEditorTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetEditValueInvalidProviderTestData))]
     public void ColorEditor_EditValue_InvalidProvider_ReturnsValue(IServiceProvider provider, object value)
     {
-        var editor = new ColorEditor();
+        ColorEditor editor = new();
         Assert.Same(value, editor.EditValue(null, provider, value));
     }
 
@@ -63,7 +62,7 @@ public partial class ColorEditorTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetITypeDescriptorContextTestData))]
     public void ColorEditor_GetEditStyle_Invoke_ReturnsModal(ITypeDescriptorContext context)
     {
-        var editor = new ColorEditor();
+        ColorEditor editor = new();
         Assert.Equal(UITypeEditorEditStyle.DropDown, editor.GetEditStyle(context));
     }
 
@@ -71,7 +70,7 @@ public partial class ColorEditorTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetITypeDescriptorContextTestData))]
     public void ColorEditor_GetPaintValueSupported_Invoke_ReturnsTrue(ITypeDescriptorContext context)
     {
-        var editor = new ColorEditor();
+        ColorEditor editor = new();
         Assert.True(editor.GetPaintValueSupported(context));
     }
 }

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel.Design.Serialization;
 using System.Drawing;
@@ -78,7 +77,6 @@ public class CursorConverterTests
     {
         var converter = new CursorConverter();
         Assert.Equal("AppStarting", converter.ConvertTo(Cursors.AppStarting, typeof(string)));
-        Assert.Equal("AppStarting", converter.ConvertTo(new Cursor(Cursors.AppStarting.Handle), typeof(string)));
     }
 
     [Fact]

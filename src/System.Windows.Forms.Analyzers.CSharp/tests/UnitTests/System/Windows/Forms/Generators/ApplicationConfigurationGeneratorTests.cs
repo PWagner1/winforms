@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Text;
 using System.Windows.Forms.Analyzers;
@@ -67,7 +66,7 @@ namespace MyProject
             },
         };
 
-        await test.RunAsync().ConfigureAwait(false);
+        await test.RunAsync();
     }
 
     [Theory]
@@ -90,7 +89,7 @@ namespace MyProject
             },
         };
 
-        await test.RunAsync().ConfigureAwait(false);
+        await test.RunAsync();
     }
 
     [Fact]
@@ -111,7 +110,7 @@ namespace MyProject
             },
         };
 
-        await test.RunAsync().ConfigureAwait(false);
+        await test.RunAsync();
     }
 
     [Fact]
@@ -142,7 +141,7 @@ build_property.{PropertyNameCSharp.UseCompatibleTextRendering} = true
             },
         };
 
-        await test.RunAsync().ConfigureAwait(false);
+        await test.RunAsync();
     }
 
     [Fact]
@@ -167,7 +166,7 @@ ApplicationConfiguration.Initialize();
             },
         };
 
-        await test.RunAsync().ConfigureAwait(false);
+        await test.RunAsync();
     }
 
     [Fact]
@@ -202,7 +201,7 @@ build_property.{PropertyNameCSharp.UseCompatibleTextRendering} = true
             },
         };
 
-        await test.RunAsync().ConfigureAwait(false);
+        await test.RunAsync();
     }
 
     private SourceText LoadFileContent(string testName)

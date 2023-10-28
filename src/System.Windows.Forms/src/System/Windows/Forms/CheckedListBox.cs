@@ -1,11 +1,10 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
-using static Interop;
+using Windows.Win32.UI.Accessibility;
 
 namespace System.Windows.Forms;
 
@@ -163,6 +162,7 @@ public partial class CheckedListBox : ListBox
     [Localizable(true)]
     [SRDescription(nameof(SR.ListBoxItemsDescr))]
     [Editor($"System.Windows.Forms.Design.ListControlStringCollectionEditor, {AssemblyRef.SystemDesign}", typeof(UITypeEditor))]
+    [MergableProperty(false)]
     public new ObjectCollection Items
     {
         get
@@ -394,7 +394,7 @@ public partial class CheckedListBox : ListBox
     {
         if (IsHandleCreated)
         {
-            var rect = default(RECT);
+            RECT rect = default;
             PInvoke.SendMessage(this, PInvoke.LB_GETITEMRECT, (WPARAM)index, ref rect);
             PInvoke.InvalidateRect(this, &rect, bErase: false);
         }
@@ -808,7 +808,7 @@ public partial class CheckedListBox : ListBox
         {
             AccessibleObject? checkedItem = AccessibilityObject.GetChild(ice.Index);
 
-            checkedItem?.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.ToggleToggleStatePropertyId, ice.CurrentValue, ice.NewValue);
+            checkedItem?.RaiseAutomationPropertyChangedEvent(UIA_PROPERTY_ID.UIA_ToggleToggleStatePropertyId, ice.CurrentValue, ice.NewValue);
         }
     }
 

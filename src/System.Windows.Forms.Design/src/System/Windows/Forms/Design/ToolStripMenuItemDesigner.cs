@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -1889,12 +1888,10 @@ internal class ToolStripMenuItemDesigner : ToolStripDropDownItemDesigner
                     // Looks like we need to invalidate the entire
                     if (_toolStripAdornerWindowService is not null && boundsToInvalidateOnRemove != Rectangle.Empty)
                     {
-                        using (Region regionToInvalidate = new Region(boundsToInvalidateOnRemove))
-                        {
-                            regionToInvalidate.Exclude(MenuItem.DropDown.Bounds);
-                            _toolStripAdornerWindowService.Invalidate(regionToInvalidate);
-                            boundsToInvalidateOnRemove = Rectangle.Empty;
-                        }
+                        using Region regionToInvalidate = new Region(boundsToInvalidateOnRemove);
+                        regionToInvalidate.Exclude(MenuItem.DropDown.Bounds);
+                        _toolStripAdornerWindowService.Invalidate(regionToInvalidate);
+                        boundsToInvalidateOnRemove = Rectangle.Empty;
                     }
 
                     // Select the item only if Cut/Delete is pressed.
@@ -2658,7 +2655,7 @@ internal class ToolStripMenuItemDesigner : ToolStripDropDownItemDesigner
                 if (ownerItem is not null && host is not null)
                 {
                     string transDesc;
-                    ArrayList components = data.DragComponents;
+                    IList components = data.DragComponents;
                     int primaryIndex = -1;
                     bool copy = (e.Effect == DragDropEffects.Copy);
                     if (components.Count == 1)
@@ -2698,7 +2695,7 @@ internal class ToolStripMenuItemDesigner : ToolStripDropDownItemDesigner
                                 keyboardHandlingService.CopyInProgress = true;
                             }
 
-                            components = DesignerUtils.CopyDragObjects(components, primaryItem.Site) as ArrayList;
+                            components = DesignerUtils.CopyDragObjects(components, primaryItem.Site);
 
                             if (keyboardHandlingService is not null)
                             {

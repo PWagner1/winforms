@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -11,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms.Layout;
 using System.Windows.Forms.VisualStyles;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -36,9 +36,9 @@ public partial class ListBox : ListControl
     /// </summary>
     public const int DefaultItemHeight = 13;
 
-    private static readonly object EVENT_SELECTEDINDEXCHANGED = new object();
-    private static readonly object EVENT_DRAWITEM = new object();
-    private static readonly object EVENT_MEASUREITEM = new object();
+    private static readonly object EVENT_SELECTEDINDEXCHANGED = new();
+    private static readonly object EVENT_DRAWITEM = new();
+    private static readonly object EVENT_MEASUREITEM = new();
 
     private SelectedObjectCollection? _selectedItems;
     private SelectedIndexCollection? _selectedIndices;
@@ -1459,7 +1459,7 @@ public partial class ListBox : ListControl
     public Rectangle GetItemRectangle(int index)
     {
         CheckIndex(index);
-        var rect = default(RECT);
+        RECT rect = default;
         if (PInvoke.SendMessage(this, PInvoke.LB_GETITEMRECT, (uint)index, ref rect) == 0)
         {
             return Rectangle.Empty;
@@ -1728,11 +1728,11 @@ public partial class ListBox : ListControl
 
             if (item is not null)
             {
-                item.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+                item.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
             }
             else
             {
-                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+                AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
             }
         }
 
@@ -1890,14 +1890,14 @@ public partial class ListBox : ListControl
                 var focused = AccessibilityObject.GetFocused();
                 if (focused == AccessibilityObject.GetSelected())
                 {
-                    focused?.RaiseAutomationEvent(UiaCore.UIA.SelectionItem_ElementSelectedEventId);
+                    focused?.RaiseAutomationEvent(UIA_EVENT_ID.UIA_SelectionItem_ElementSelectedEventId);
                 }
 
-                focused?.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+                focused?.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
             }
             else if (ItemsCountIsChanged())
             {
-                AccessibilityObject?.GetChild(Items.Count - 1)?.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+                AccessibilityObject?.GetChild(Items.Count - 1)?.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
             }
         }
 
@@ -2012,7 +2012,7 @@ public partial class ListBox : ListControl
             newItems = new object[DataManager.Count];
             for (int i = 0; i < newItems.Length; i++)
             {
-                newItems[i] = DataManager[i];
+                newItems[i] = DataManager[i]!;
             }
         }
         else if (savedItems is not null)
@@ -2382,12 +2382,12 @@ public partial class ListBox : ListControl
             bounds.Width = MultiColumn ? Math.Max(ColumnWidth, bounds.Width) : Math.Max(MaxItemWidth, bounds.Width);
         }
 
-        using var e = new DrawItemEventArgs(
-            dis->hDC.CreateGraphics(),
+        using DrawItemEventArgs e = new(
+            dis->hDC,
             Font,
             bounds,
-            (int)dis->itemID,
-            (DrawItemState)(int)dis->itemState,
+            dis->itemID,
+            dis->itemState,
             ForeColor,
             BackColor);
 

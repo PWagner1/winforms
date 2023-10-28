@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
@@ -24,8 +23,8 @@ namespace System.Windows.Forms;
 [DefaultEvent(nameof(ItemClicked))]
 public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportToolStripPanel
 {
-    private static Size s_onePixel = new Size(1, 1);
-    internal static Point s_invalidMouseEnter = new Point(int.MaxValue, int.MaxValue);
+    private static Size s_onePixel = new(1, 1);
+    internal static Point s_invalidMouseEnter = new(int.MaxValue, int.MaxValue);
 
     private ToolStripItemCollection? _toolStripItemCollection;
     private ToolStripOverflowButton? _toolStripOverflowButton;
@@ -63,8 +62,8 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
 
     private Font? _defaultFont;
     private RestoreFocusMessageFilter? _restoreFocusFilter;
-    private static readonly Padding s_defaultPadding = new Padding(0, 0, 1, 0);
-    private static readonly Padding s_defaultGripMargin = new Padding(2);
+    private static readonly Padding s_defaultPadding = new(0, 0, 1, 0);
+    private static readonly Padding s_defaultGripMargin = new(2);
     private Padding _scaledDefaultPadding = s_defaultPadding;
     private Padding _scaledDefaultGripMargin = s_defaultGripMargin;
 
@@ -74,16 +73,16 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
 
     internal static int s_insertionBeamWidth = InsertionBeamWidth;
 
-    private static readonly object s_eventPaintGrip = new object();
-    private static readonly object s_eventLayoutCompleted = new object();
-    private static readonly object s_eventItemAdded = new object();
-    private static readonly object s_eventItemRemoved = new object();
-    private static readonly object s_eventLayoutStyleChanged = new object();
-    private static readonly object s_eventRendererChanged = new object();
-    private static readonly object s_eventItemClicked = new object();
-    private static readonly object s_eventLocationChanging = new object();
-    private static readonly object s_eventBeginDrag = new object();
-    private static readonly object s_eventEndDrag = new object();
+    private static readonly object s_eventPaintGrip = new();
+    private static readonly object s_eventLayoutCompleted = new();
+    private static readonly object s_eventItemAdded = new();
+    private static readonly object s_eventItemRemoved = new();
+    private static readonly object s_eventLayoutStyleChanged = new();
+    private static readonly object s_eventRendererChanged = new();
+    private static readonly object s_eventItemClicked = new();
+    private static readonly object s_eventLocationChanging = new();
+    private static readonly object s_eventBeginDrag = new();
+    private static readonly object s_eventEndDrag = new();
 
     private static readonly int s_propBindingContext = PropertyStore.CreateKey();
     private static readonly int s_propTextDirection = PropertyStore.CreateKey();
@@ -108,17 +107,17 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
     internal const int STATE_MENUACTIVE = 0x00008000;
 
 #if DEBUG
-    internal static readonly TraceSwitch s_selectionDebug = new TraceSwitch("SelectionDebug", "Debug ToolStrip Selection code");
-    internal static readonly TraceSwitch s_dropTargetDebug = new TraceSwitch("DropTargetDebug", "Debug ToolStrip Drop code");
-    internal static readonly TraceSwitch s_layoutDebugSwitch = new TraceSwitch("Layout debug", "Debug ToolStrip layout code");
-    internal static readonly TraceSwitch s_mouseActivateDebug = new TraceSwitch("ToolStripMouseActivate", "Debug ToolStrip WM_MOUSEACTIVATE code");
-    internal static readonly TraceSwitch s_mergeDebug = new TraceSwitch("ToolStripMergeDebug", "Debug toolstrip merging");
-    internal static readonly TraceSwitch s_snapFocusDebug = new TraceSwitch("SnapFocus", "Debug snapping/restoration of focus");
-    internal static readonly TraceSwitch s_flickerDebug = new TraceSwitch("FlickerDebug", "Debug excessive calls to Invalidate()");
-    internal static readonly TraceSwitch s_itemReorderDebug = new TraceSwitch("ItemReorderDebug", "Debug excessive calls to Invalidate()");
-    internal static readonly TraceSwitch s_mdiMergeDebug = new TraceSwitch("MDIMergeDebug", "Debug toolstrip MDI merging");
-    internal static readonly TraceSwitch s_menuAutoExpandDebug = new TraceSwitch("MenuAutoExpand", "Debug menu auto expand");
-    internal static readonly TraceSwitch s_controlTabDebug = new TraceSwitch("ControlTab", "Debug ToolStrip Control+Tab selection");
+    internal static readonly TraceSwitch s_selectionDebug = new("SelectionDebug", "Debug ToolStrip Selection code");
+    internal static readonly TraceSwitch s_dropTargetDebug = new("DropTargetDebug", "Debug ToolStrip Drop code");
+    internal static readonly TraceSwitch s_layoutDebugSwitch = new("Layout debug", "Debug ToolStrip layout code");
+    internal static readonly TraceSwitch s_mouseActivateDebug = new("ToolStripMouseActivate", "Debug ToolStrip WM_MOUSEACTIVATE code");
+    internal static readonly TraceSwitch s_mergeDebug = new("ToolStripMergeDebug", "Debug toolstrip merging");
+    internal static readonly TraceSwitch s_snapFocusDebug = new("SnapFocus", "Debug snapping/restoration of focus");
+    internal static readonly TraceSwitch s_flickerDebug = new("FlickerDebug", "Debug excessive calls to Invalidate()");
+    internal static readonly TraceSwitch s_itemReorderDebug = new("ItemReorderDebug", "Debug excessive calls to Invalidate()");
+    internal static readonly TraceSwitch s_mdiMergeDebug = new("MDIMergeDebug", "Debug toolstrip MDI merging");
+    internal static readonly TraceSwitch s_menuAutoExpandDebug = new("MenuAutoExpand", "Debug menu auto expand");
+    internal static readonly TraceSwitch s_controlTabDebug = new("ControlTab", "Debug ToolStrip Control+Tab selection");
 #else
     internal static readonly TraceSwitch? s_selectionDebug;
     internal static readonly TraceSwitch? s_dropTargetDebug;
@@ -1759,7 +1758,7 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
     {
         get
         {
-            if (!Properties.TryGetObject(ToolStrip.s_propToolTip, out ToolTip? toolTip))
+            if (!Properties.TryGetObject(ToolStrip.s_propToolTip, out ToolTip? toolTip) || toolTip is null)
             {
                 toolTip = new ToolTip();
                 Properties.SetObject(ToolStrip.s_propToolTip, toolTip);
@@ -2191,7 +2190,7 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
         // backward direction entering the toolstrip, it means that the first
         // toolstrip item should be selected irrespectively TAB or SHIFT+TAB
         // is pressed.
-        start ??= GetStartItem(forward, dropDown is not null);
+        start ??= forward ? DisplayedItems[DisplayedItems.Count - 1] : DisplayedItems[0];
 
         int current = DisplayedItems.IndexOf(start);
         if (current == -1)
@@ -2232,23 +2231,6 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
         while (DisplayedItems[current] != start);
 
         return null;
-    }
-
-    private ToolStripItem GetStartItem(bool forward, bool isDropDown)
-    {
-        if (forward)
-        {
-            return DisplayedItems[DisplayedItems.Count - 1];
-        }
-
-        if (!isDropDown)
-        {
-            // For the drop-down up-directed loop should be preserved.
-            // So if the current item is topmost, then the bottom item should be selected on up-key press.
-            return DisplayedItems[DisplayedItems.Count > 1 ? 1 : 0];
-        }
-
-        return DisplayedItems[0];
     }
 
     /// <remarks>
@@ -2394,7 +2376,7 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
         return prefSize + newPadding.Size;
     }
 
-#region GetPreferredSizeHelpers
+    #region GetPreferredSizeHelpers
 
     //
     // These are here so they can be shared between splitstack layout and StatusStrip
@@ -2529,7 +2511,7 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
     {
         return item.AutoSize ? item.GetPreferredSize(Size.Empty) : item.Size;
     }
-#endregion
+    #endregion
 
     internal ToolStripItem? GetSelectedItem()
     {
@@ -2807,7 +2789,7 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
     {
         using Bitmap image = new Bitmap(bounds.Width, bounds.Height);
         using Graphics g = Graphics.FromImage(image);
-        using var imageHdc = new DeviceContextHdcScope(g, applyGraphicsState: false);
+        using DeviceContextHdcScope imageHdc = new(g, applyGraphicsState: false);
 
         // Send the actual wm_print message
         PInvoke.SendMessage(
@@ -3707,7 +3689,7 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
             // using WindowsGraphics here because we want to preserve the clipping information.
 
             // calling GetHdc by itself does not set up the clipping info.
-            using (var toolStripHDC = new DeviceContextHdcScope(toolstripGraphics, ApplyGraphicsProperties.Clipping))
+            using (DeviceContextHdcScope toolStripHDC = new(toolstripGraphics, ApplyGraphicsProperties.Clipping))
             {
                 // Get the cached item HDC.
                 HDC itemHDC = ItemHdcInfo.GetCachedItemDC(toolStripHDC, bitmapSize);
@@ -4008,22 +3990,22 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
                 g.DrawLines(SystemPens.ControlText,
                     new Point[]
                     {
-                        new Point(verticalBeamStart, _lastInsertionMarkRect.Y), new Point(verticalBeamStart, _lastInsertionMarkRect.Bottom - 1), // first vertical line
-                        new Point(verticalBeamStart + 1, _lastInsertionMarkRect.Y), new Point(verticalBeamStart + 1, _lastInsertionMarkRect.Bottom - 1), //second  vertical line
+                        new(verticalBeamStart, _lastInsertionMarkRect.Y), new(verticalBeamStart, _lastInsertionMarkRect.Bottom - 1), // first vertical line
+                        new(verticalBeamStart + 1, _lastInsertionMarkRect.Y), new(verticalBeamStart + 1, _lastInsertionMarkRect.Bottom - 1), //second  vertical line
                     });
                 // then two top horizontal
                 g.DrawLines(SystemPens.ControlText,
                     new Point[]
                     {
-                        new Point(start, _lastInsertionMarkRect.Bottom - 1), new Point(start + widthOfBeam - 1, _lastInsertionMarkRect.Bottom - 1), //bottom line
-                        new Point(start + 1, _lastInsertionMarkRect.Bottom - 2), new Point(start + widthOfBeam - 2, _lastInsertionMarkRect.Bottom - 2), //bottom second line
+                        new(start, _lastInsertionMarkRect.Bottom - 1), new(start + widthOfBeam - 1, _lastInsertionMarkRect.Bottom - 1), //bottom line
+                        new(start + 1, _lastInsertionMarkRect.Bottom - 2), new(start + widthOfBeam - 2, _lastInsertionMarkRect.Bottom - 2), //bottom second line
                     });
                 // then two bottom horizontal
                 g.DrawLines(SystemPens.ControlText,
                      new Point[]
                      {
-                         new Point(start, _lastInsertionMarkRect.Y), new Point(start + widthOfBeam - 1, _lastInsertionMarkRect.Y), //top line
-                         new Point(start + 1, _lastInsertionMarkRect.Y + 1), new Point(start + widthOfBeam - 2, _lastInsertionMarkRect.Y + 1) //top second line
+                         new(start, _lastInsertionMarkRect.Y), new(start + widthOfBeam - 1, _lastInsertionMarkRect.Y), //top line
+                         new(start + 1, _lastInsertionMarkRect.Y + 1), new(start + widthOfBeam - 2, _lastInsertionMarkRect.Y + 1) //top second line
                      });
             }
             else
@@ -4036,22 +4018,22 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
                 g.DrawLines(SystemPens.ControlText,
                     new Point[]
                     {
-                        new Point(_lastInsertionMarkRect.X, horizontalBeamStart), new Point(_lastInsertionMarkRect.Right - 1, horizontalBeamStart), // first vertical line
-                        new Point(_lastInsertionMarkRect.X, horizontalBeamStart + 1), new Point(_lastInsertionMarkRect.Right - 1, horizontalBeamStart + 1), //second  vertical line
+                        new(_lastInsertionMarkRect.X, horizontalBeamStart), new(_lastInsertionMarkRect.Right - 1, horizontalBeamStart), // first vertical line
+                        new(_lastInsertionMarkRect.X, horizontalBeamStart + 1), new(_lastInsertionMarkRect.Right - 1, horizontalBeamStart + 1), //second  vertical line
                     });
                 // then two left vertical
                 g.DrawLines(SystemPens.ControlText,
                     new Point[]
                     {
-                        new Point(_lastInsertionMarkRect.X, start), new Point(_lastInsertionMarkRect.X, start + widthOfBeam - 1), //left line
-                        new Point(_lastInsertionMarkRect.X + 1, start + 1), new Point(_lastInsertionMarkRect.X + 1, start + widthOfBeam - 2), //second left line
+                        new(_lastInsertionMarkRect.X, start), new(_lastInsertionMarkRect.X, start + widthOfBeam - 1), //left line
+                        new(_lastInsertionMarkRect.X + 1, start + 1), new(_lastInsertionMarkRect.X + 1, start + widthOfBeam - 2), //second left line
                     });
                 // then two right vertical
                 g.DrawLines(SystemPens.ControlText,
                      new Point[]
                      {
-                         new Point(_lastInsertionMarkRect.Right - 1, start), new Point(_lastInsertionMarkRect.Right - 1, start + widthOfBeam - 1), //right line
-                         new Point(_lastInsertionMarkRect.Right - 2, start + 1), new Point(_lastInsertionMarkRect.Right - 2, start + widthOfBeam - 2), //second right line
+                         new(_lastInsertionMarkRect.Right - 1, start), new(_lastInsertionMarkRect.Right - 1, start + widthOfBeam - 1), //right line
+                         new(_lastInsertionMarkRect.Right - 2, start + 1), new(_lastInsertionMarkRect.Right - 2, start + widthOfBeam - 2), //second right line
                      });
             }
         }
@@ -4918,7 +4900,7 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
 
     protected override ControlCollection CreateControlsInstance()
     {
-        return new ReadOnlyControlCollection(this,  isReadOnly: !DesignMode);
+        return new ReadOnlyControlCollection(this, isReadOnly: !DesignMode);
     }
 
     internal void OnItemAddedInternal(ToolStripItem item)

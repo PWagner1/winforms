@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Runtime.InteropServices;
 
@@ -13,7 +12,7 @@ internal partial class Interop
         [InterfaceType(ComInterfaceType.InterfaceIsDual)]
         public interface IHTMLEventObj
         {
-            [return: MarshalAs(UnmanagedType.Interface)] IHTMLElement GetSrcElement();
+            [return: MarshalAs(UnmanagedType.Interface)] Windows.Win32.Web.MsHtml.IHTMLElement.Interface GetSrcElement();
             bool GetAltKey();
             bool GetCtrlKey();
             bool GetShiftKey();
@@ -21,8 +20,8 @@ internal partial class Interop
             object GetReturnValue();
             void SetCancelBubble(bool p);
             bool GetCancelBubble();
-            [return: MarshalAs(UnmanagedType.Interface)] IHTMLElement GetFromElement();
-            [return: MarshalAs(UnmanagedType.Interface)] IHTMLElement GetToElement();
+            [return: MarshalAs(UnmanagedType.Interface)] Windows.Win32.Web.MsHtml.IHTMLElement.Interface GetFromElement();
+            [return: MarshalAs(UnmanagedType.Interface)] Windows.Win32.Web.MsHtml.IHTMLElement.Interface GetToElement();
             void SetKeyCode([In] int p);
             int GetKeyCode();
             int GetButton();

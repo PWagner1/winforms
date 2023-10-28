@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -1635,7 +1634,7 @@ internal abstract partial class GridEntry : GridItem, ITypeDescriptorContext
             }
             else
             {
-                using var hdc = new DeviceContextHdcScope(g);
+                using DeviceContextHdcScope hdc = new(g);
                 VisualStyleRenderer explorerTreeRenderer = new(VisualStyleElement.ExplorerTreeView.Glyph.Opened);
                 explorerTreeRenderer.DrawBackground(hdc, outline, hwnd);
             }
@@ -1647,7 +1646,7 @@ internal abstract partial class GridEntry : GridItem, ITypeDescriptorContext
                 HWND hwnd)
             {
                 Color backgroundColor = ColorInversionNeededInHighContrast ? InvertColor(OwnerGrid.LineColor) : OwnerGrid.LineColor;
-                using var compatibleDC = new PInvoke.CreateDcScope(default);
+                using PInvoke.CreateDcScope compatibleDC = new(default);
 
                 int planes = PInvoke.GetDeviceCaps(compatibleDC, GET_DEVICE_CAPS_INDEX.PLANES);
                 int bitsPixel = PInvoke.GetDeviceCaps(compatibleDC, GET_DEVICE_CAPS_INDEX.BITSPIXEL);

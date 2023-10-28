@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing.Design;
@@ -185,11 +184,9 @@ public sealed class FolderBrowserDialog : CommonDialog
         get => _rootFolder;
         set
         {
-            if (!Enum.IsDefined(typeof(Environment.SpecialFolder), value))
-            {
-                throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(Environment.SpecialFolder));
-            }
-
+            // If users want to use other CSIDL values that aren't in SpecialFolder (as are exposed in
+            // FolderNameEditor.FolderBrowserFolder) then we'll let them as we're not calling Environment.GetFolderPath
+            // directly.
             _rootFolder = value;
         }
     }
@@ -386,18 +383,8 @@ public sealed class FolderBrowserDialog : CommonDialog
         }
     }
 
-    private unsafe bool RunDialogOld(HWND hWndOwner)
+    private unsafe bool RunDialogOld(HWND owner)
     {
-        PInvoke.SHGetSpecialFolderLocation((int)_rootFolder, out ITEMIDLIST* listHandle);
-        if (listHandle is null)
-        {
-            PInvoke.SHGetSpecialFolderLocation((int)Environment.SpecialFolder.Desktop, out listHandle);
-            if (listHandle is null)
-            {
-                throw new InvalidOperationException(SR.FolderBrowserDialogNoRootFolder);
-            }
-        }
-
         uint mergedOptions = PInvoke.BIF_NEWDIALOGSTYLE;
         if (!ShowNewFolderButton)
         {
@@ -408,46 +395,32 @@ public sealed class FolderBrowserDialog : CommonDialog
         // threading model if the BIF_NEWDIALOGSTYLE flag has been requested (which we always do in mergedOptions
         // above). So make sure OLE is initialized, and throw an exception if caller attempts to invoke dialog
         // under the MTA threading model (...dialog does appear under MTA, but is totally non-functional).
-        if (Control.CheckForIllegalCrossThreadCalls && Application.OleRequired() != System.Threading.ApartmentState.STA)
+        if (Control.CheckForIllegalCrossThreadCalls && Application.OleRequired() != ApartmentState.STA)
         {
             throw new ThreadStateException(string.Format(SR.DebuggingExceptionOnly, SR.ThreadMustBeSTA));
         }
 
-        delegate* unmanaged[Stdcall]<HWND, uint, LPARAM, LPARAM, int> callback = &FolderBrowserDialog_BrowseCallbackProc;
-        using BufferScope<char> displayName = new(PInvoke.MAX_PATH + 1);
-        var handle = GCHandle.Alloc(this);
+        GCHandle handle = GCHandle.Alloc(this);
+
         try
         {
-            fixed (char* pDisplayName = displayName)
-            fixed (char* title = _descriptionText)
+            string? folder = FolderBrowserHelper.BrowseForFolder(
+                _descriptionText,
+                (int)_rootFolder,
+                mergedOptions,
+                owner,
+                &FolderBrowserDialog_BrowseCallbackProc,
+                GCHandle.ToIntPtr(handle));
+
+            if (folder is not null)
             {
-                var bi = new BROWSEINFOW
-                {
-                    pidlRoot = listHandle,
-                    hwndOwner = hWndOwner,
-                    pszDisplayName = pDisplayName,
-                    lpszTitle = title,
-                    ulFlags = mergedOptions,
-                    lpfn = callback,
-                    lParam = GCHandle.ToIntPtr(handle),
-                    iImage = 0
-                };
-
-                // Show the dialog
-                ITEMIDLIST* browseHandle = PInvoke.SHBrowseForFolder(in bi);
-                {
-                    if (browseHandle is null)
-                    {
-                        return false;
-                    }
-
-                    // Retrieve the path from the IDList.
-                    fixed (char* path = _selectedPath!)
-                    {
-                        PInvoke.SHGetPathFromIDList(browseHandle, path);
-                        return true;
-                    }
-                }
+                _selectedPath = folder;
+                return true;
+            }
+            else
+            {
+                _selectedPath = string.Empty;
+                return false;
             }
         }
         finally
@@ -489,9 +462,12 @@ public sealed class FolderBrowserDialog : CommonDialog
                 if (selectedPidl is not null)
                 {
                     // Try to retrieve the path from the IDList
-                    char* buffer = stackalloc char[PInvoke.MAX_PATH + 1];
-                    bool isFileSystemFolder = PInvoke.SHGetPathFromIDList(selectedPidl, (PWSTR)buffer);
-                    PInvoke.SendMessage(hwnd, PInvoke.BFFM_ENABLEOK, 0, (nint)(BOOL)isFileSystemFolder);
+                    using BufferScope<char> buffer = new(stackalloc char[PInvoke.MAX_PATH + 1]);
+                    fixed (char* b = buffer)
+                    {
+                        bool isFileSystemFolder = PInvoke.SHGetPathFromIDListEx(selectedPidl, b, (uint)buffer.Length, GPFIDL_FLAGS.GPFIDL_UNCPRINTER);
+                        PInvoke.SendMessage(hwnd, PInvoke.BFFM_ENABLEOK, 0, (nint)(BOOL)isFileSystemFolder);
+                    }
                 }
 
                 break;

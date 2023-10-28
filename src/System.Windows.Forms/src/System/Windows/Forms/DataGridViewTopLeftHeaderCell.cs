@@ -1,8 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-#nullable disable
 
 using System.Drawing;
 using System.Windows.Forms.VisualStyles;
@@ -30,17 +27,14 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
     {
         ArgumentNullException.ThrowIfNull(cellStyle);
 
-        if (rowIndex != -1)
-        {
-            throw new ArgumentOutOfRangeException(nameof(rowIndex));
-        }
+        ArgumentOutOfRangeException.ThrowIfNotEqual(rowIndex, -1);
 
         if (DataGridView is null)
         {
             return Rectangle.Empty;
         }
 
-        object value = GetValue(rowIndex);
+        object? value = GetValue(rowIndex);
 
         // Intentionally not using GetFormattedValue because header cells don't typically perform formatting.
         // the content bounds are computed on demand
@@ -50,22 +44,24 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
 
         ComputeBorderStyleCellStateAndCellBounds(rowIndex, out DataGridViewAdvancedBorderStyle dgvabsEffective, out DataGridViewElementStates cellState, out Rectangle cellBounds);
 
-        Rectangle contentBounds = PaintPrivate(graphics,
+        Rectangle contentBounds = PaintPrivate(
+            graphics,
             cellBounds,
             cellBounds,
             rowIndex,
             cellState,
             value,
-            null /*errorText*/,                 // contentBounds is independent of errorText
+            errorText: null, // contentBounds is independent of errorText
             cellStyle,
             dgvabsEffective,
             DataGridViewPaintParts.ContentForeground,
-            true /*computeContentBounds*/,
-            false /*computeErrorIconBounds*/,
-            false /*paint*/);
+            computeContentBounds: true,
+            computeErrorIconBounds: false,
+            paint: false);
 
 #if DEBUG
-        Rectangle contentBoundsDebug = PaintPrivate(graphics,
+        Rectangle contentBoundsDebug = PaintPrivate(
+            graphics,
             cellBounds,
             cellBounds,
             rowIndex,
@@ -75,9 +71,9 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
             cellStyle,
             dgvabsEffective,
             DataGridViewPaintParts.ContentForeground,
-            true /*computeContentBounds*/,
-            false /*computeErrorIconBounds*/,
-            false /*paint*/);
+            computeContentBounds: true,
+            computeErrorIconBounds: false,
+            paint: false);
         Debug.Assert(contentBoundsDebug.Equals(contentBounds));
 #endif
 
@@ -86,10 +82,7 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
 
     protected override Rectangle GetErrorIconBounds(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex)
     {
-        if (rowIndex != -1)
-        {
-            throw new ArgumentOutOfRangeException(nameof(rowIndex));
-        }
+        ArgumentOutOfRangeException.ThrowIfNotEqual(rowIndex, -1);
 
         if (DataGridView is null)
         {
@@ -100,24 +93,26 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
 
         ComputeBorderStyleCellStateAndCellBounds(rowIndex, out DataGridViewAdvancedBorderStyle dgvabsEffective, out DataGridViewElementStates cellState, out Rectangle cellBounds);
 
-        Rectangle errorBounds = PaintPrivate(graphics,
+        Rectangle errorBounds = PaintPrivate(
+            graphics,
             cellBounds,
             cellBounds,
             rowIndex,
             cellState,
-            null /*formattedValue*/,            // errorIconBounds is independent of formattedValue
+            formattedValue: null, // errorIconBounds is independent of formattedValue
             GetErrorText(rowIndex),
             cellStyle,
             dgvabsEffective,
             DataGridViewPaintParts.ContentForeground,
-            false /*computeContentBounds*/,
-            true /*computeErrorIconBounds*/,
-            false /*paint*/);
+            computeContentBounds: false,
+            computeErrorIconBounds: true,
+            paint: false);
 
 #if DEBUG
-        object value = GetValue(rowIndex);
+        object? value = GetValue(rowIndex);
 
-        Rectangle errorBoundsDebug = PaintPrivate(graphics,
+        Rectangle errorBoundsDebug = PaintPrivate(
+            graphics,
             cellBounds,
             cellBounds,
             rowIndex,
@@ -127,9 +122,9 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
             cellStyle,
             dgvabsEffective,
             DataGridViewPaintParts.ContentForeground,
-            false /*computeContentBounds*/,
-            true /*computeErrorIconBounds*/,
-            false /*paint*/);
+            computeContentBounds: false,
+            computeErrorIconBounds: true,
+            paint: false);
         Debug.Assert(errorBoundsDebug.Equals(errorBounds));
 #endif
 
@@ -138,10 +133,7 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
 
     protected override Size GetPreferredSize(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex, Size constraintSize)
     {
-        if (rowIndex != -1)
-        {
-            throw new ArgumentOutOfRangeException(nameof(rowIndex));
-        }
+        ArgumentOutOfRangeException.ThrowIfNotEqual(rowIndex, -1);
 
         if (DataGridView is null)
         {
@@ -156,38 +148,37 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
         TextFormatFlags flags = DataGridViewUtilities.ComputeTextFormatFlagsForCellStyleAlignment(DataGridView.RightToLeftInternal, cellStyle.Alignment, cellStyle.WrapMode);
 
         // Intentionally not using GetFormattedValue because header cells don't typically perform formatting.
-        object val = GetValue(rowIndex);
-        if (!(val is string))
-        {
-            val = null;
-        }
+        string? val = GetValue(rowIndex) as string;
 
-        return DataGridViewUtilities.GetPreferredRowHeaderSize(graphics,
-                                                               (string)val,
-                                                               cellStyle,
-                                                               borderAndPaddingWidths,
-                                                               borderAndPaddingHeights,
-                                                               DataGridView.ShowCellErrors,
-                                                               false /*showGlyph*/,
-                                                               constraintSize,
-                                                               flags);
+        return DataGridViewUtilities.GetPreferredRowHeaderSize(
+            graphics,
+            val,
+            cellStyle,
+            borderAndPaddingWidths,
+            borderAndPaddingHeights,
+            DataGridView.ShowCellErrors,
+            showGlyph: false,
+            constraintSize,
+            flags);
     }
 
-    protected override void Paint(Graphics graphics,
+    protected override void Paint(
+        Graphics graphics,
         Rectangle clipBounds,
         Rectangle cellBounds,
         int rowIndex,
         DataGridViewElementStates cellState,
-        object value,
-        object formattedValue,
-        string errorText,
+        object? value,
+        object? formattedValue,
+        string? errorText,
         DataGridViewCellStyle cellStyle,
         DataGridViewAdvancedBorderStyle advancedBorderStyle,
         DataGridViewPaintParts paintParts)
     {
         ArgumentNullException.ThrowIfNull(cellStyle);
 
-        PaintPrivate(graphics,
+        PaintPrivate(
+            graphics,
             clipBounds,
             cellBounds,
             rowIndex,
@@ -197,9 +188,9 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
             cellStyle,
             advancedBorderStyle,
             paintParts,
-            false /*computeContentBounds*/,
-            false /*computeErrorIconBounds*/,
-            true /*paint*/);
+            computeContentBounds: false,
+            computeErrorIconBounds: false,
+            paint: true);
     }
 
     // PaintPrivate is used in three places that need to duplicate the paint code:
@@ -210,13 +201,14 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
     // if computeContentBounds is true then PaintPrivate returns the contentBounds
     // else if computeErrorIconBounds is true then PaintPrivate returns the errorIconBounds
     // else it returns Rectangle.Empty;
-    private Rectangle PaintPrivate(Graphics graphics,
+    private Rectangle PaintPrivate(
+        Graphics graphics,
         Rectangle clipBounds,
         Rectangle cellBounds,
         int rowIndex,
         DataGridViewElementStates cellState,
-        object formattedValue,
-        string errorText,
+        object? formattedValue,
+        string? errorText,
         DataGridViewCellStyle cellStyle,
         DataGridViewAdvancedBorderStyle advancedBorderStyle,
         DataGridViewPaintParts paintParts,
@@ -248,7 +240,7 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
 
         if (paint && PaintBackground(paintParts))
         {
-            if (DataGridView.ApplyVisualStylesToHeaderCells)
+            if (DataGridView!.ApplyVisualStylesToHeaderCells)
             {
                 // Theming
                 int state = (int)HeaderItemState.Normal;
@@ -288,7 +280,7 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
 
         if (cellStyle.Padding != Padding.Empty)
         {
-            if (DataGridView.RightToLeftInternal)
+            if (DataGridView!.RightToLeftInternal)
             {
                 valBounds.Offset(cellStyle.Padding.Right, cellStyle.Padding.Top);
             }
@@ -302,7 +294,7 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
         }
 
         Rectangle errorBounds = valBounds;
-        string formattedValueStr = formattedValue as string;
+        string? formattedValueStr = formattedValue as string;
 
         // Font independent margins
         valBounds.Offset(DATAGRIDVIEWTOPLEFTHEADERCELL_horizontalTextMarginLeft, DATAGRIDVIEWTOPLEFTHEADERCELL_verticalTextMargin);
@@ -314,7 +306,7 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
             (paint || computeContentBounds))
         {
             Color textColor;
-            if (DataGridView.ApplyVisualStylesToHeaderCells)
+            if (DataGridView!.ApplyVisualStylesToHeaderCells)
             {
                 textColor = DataGridViewTopLeftHeaderCellRenderer.VisualStyleRenderer.GetColor(ColorProperty.TextColor);
             }
@@ -333,12 +325,13 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
                         flags |= TextFormatFlags.EndEllipsis;
                     }
 
-                    TextRenderer.DrawText(graphics,
-                                          formattedValueStr,
-                                          cellStyle.Font,
-                                          valBounds,
-                                          textColor,
-                                          flags);
+                    TextRenderer.DrawText(
+                        graphics,
+                        formattedValueStr,
+                        cellStyle.Font,
+                        valBounds,
+                        textColor,
+                        flags);
                 }
             }
             else
@@ -352,7 +345,7 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
             resultBounds = ComputeErrorIconBounds(errorBounds);
         }
 
-        if (DataGridView.ShowCellErrors && paint && PaintErrorIcon(paintParts))
+        if (DataGridView!.ShowCellErrors && paint && PaintErrorIcon(paintParts))
         {
             PaintErrorIcon(graphics, cellStyle, rowIndex, cellBounds, errorBounds, errorText);
         }
@@ -360,7 +353,8 @@ public partial class DataGridViewTopLeftHeaderCell : DataGridViewColumnHeaderCel
         return resultBounds;
     }
 
-    protected override void PaintBorder(Graphics graphics,
+    protected override void PaintBorder(
+        Graphics graphics,
         Rectangle clipBounds,
         Rectangle bounds,
         DataGridViewCellStyle cellStyle,

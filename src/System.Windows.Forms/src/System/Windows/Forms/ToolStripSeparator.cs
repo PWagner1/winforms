@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -52,7 +51,7 @@ public partial class ToolStripSeparator : ToolStripItem
     ///  Deriving classes can override this to configure a default size for their control.
     ///  This is more efficient than setting the size in the control's constructor.
     /// </summary>
-    protected override Size DefaultSize => new Size(SeparatorThickness, SeparatorThickness);
+    protected override Size DefaultSize => new(SeparatorThickness, SeparatorThickness);
 
     protected internal override Padding DefaultMargin => Padding.Empty;
 
@@ -301,9 +300,7 @@ public partial class ToolStripSeparator : ToolStripItem
     protected override void OnFontChanged(EventArgs e)
     {
         // Perf: don't call base, we don't care if the font changes
-#pragma warning disable CA2252 // Suppress 'Opt in to preview features' (https://aka.ms/dotnet-warnings/preview-features)
         RaiseEvent(s_fontChangedEvent, e);
-#pragma warning restore CA2252
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]

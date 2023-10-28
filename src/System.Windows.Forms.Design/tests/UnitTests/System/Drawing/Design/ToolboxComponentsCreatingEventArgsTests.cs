@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel.Design;
 using Moq;
@@ -19,7 +18,7 @@ public class ToolboxComponentsCreatingEventArgsTests
     [MemberData(nameof(Ctor_IDesignerHost_TestData))]
     public void Ctor_IDesignerHost(IDesignerHost host)
     {
-        var e = new ToolboxComponentsCreatingEventArgs(host);
+        ToolboxComponentsCreatingEventArgs e = new(host);
         Assert.Equal(host, e.DesignerHost);
     }
 }

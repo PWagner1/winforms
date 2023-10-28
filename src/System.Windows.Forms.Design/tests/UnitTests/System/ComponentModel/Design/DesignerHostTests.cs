@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel.Design.Serialization;
@@ -15,7 +14,7 @@ public class DesignerHostTests
     [BoolData]
     public void DesignerHost_CanReloadWithErrors_Set_GetReturnsExpected(bool value)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         host.CanReloadWithErrors = value;
         Assert.Equal(value, host.CanReloadWithErrors);
@@ -32,7 +31,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Container_Get_ReturnsHost()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         Assert.Same(host, host.Container);
     }
@@ -41,7 +40,7 @@ public class DesignerHostTests
     [BoolData]
     public void DesignerHost_IgnoreErrorsDuringReload_Set_GetReturnsExpected(bool value)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         host.IgnoreErrorsDuringReload = value;
         Assert.False(host.IgnoreErrorsDuringReload);
@@ -59,7 +58,7 @@ public class DesignerHostTests
     [BoolData]
     public void DesignerHost_IgnoreErrorsDuringReload_SetWithCanReloadWithErrors_GetReturnsExpected(bool value)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         host.CanReloadWithErrors = true;
 
@@ -78,7 +77,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_InTransaction_GetWithoutTransactions_ReturnsFalse()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         Assert.False(host.InTransaction);
     }
@@ -86,7 +85,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_IsClosingTransaction_GetWithoutTransaction_ReturnsFalse()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IDesignerHostTransactionState hostTransactionState = Assert.IsAssignableFrom<IDesignerHostTransactionState>(surface.Host);
         Assert.False(hostTransactionState.IsClosingTransaction);
     }
@@ -94,7 +93,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Loading_GetWithoutComponent_ReturnsFalse()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         Assert.False(host.Loading);
     }
@@ -103,9 +102,9 @@ public class DesignerHostTests
     [BoolData]
     public void DesignerHost_Loading_GetWithLoader_ReturnsExpected(bool loading)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        var mockLoader = new Mock<DesignerLoader>(MockBehavior.Strict);
+        Mock<DesignerLoader> mockLoader = new(MockBehavior.Strict);
         mockLoader
             .Setup(l => l.BeginLoad(host));
         mockLoader
@@ -123,7 +122,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_RootComponent_GetWithoutComponent_ReturnsNull()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         Assert.Null(host.RootComponent);
     }
@@ -131,7 +130,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_RootComponentClassName_GetWithoutComponent_ReturnsNull()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         Assert.Null(host.RootComponentClassName);
     }
@@ -139,7 +138,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_TransactionDescription_GetWithoutTransactions_ReturnsNull()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         Assert.Null(host.TransactionDescription);
     }
@@ -147,7 +146,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Activate_Invoke_CallsViewActivated()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         int viewActivatedCallCount = 0;
         int activatedCallCount = 0;
         surface.ViewActivated += (sender, e) =>
@@ -166,7 +165,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Activate_InvokeDisposed_Nop()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         int viewActivatedCallCount = 0;
         int activatedCallCount = 0;
         surface.ViewActivated += (sender, e) =>
@@ -187,7 +186,7 @@ public class DesignerHostTests
     {
         yield return new object[] { null };
 
-        var nullMockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> nullMockServiceProvider = new(MockBehavior.Strict);
         nullMockServiceProvider
             .Setup(p => p.GetService(typeof(INameCreationService)))
             .Returns(null);
@@ -208,7 +207,7 @@ public class DesignerHostTests
             .Returns(new object());
         yield return new object[] { nullMockServiceProvider.Object };
 
-        var invalidMockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> invalidMockServiceProvider = new(MockBehavior.Strict);
         invalidMockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -239,11 +238,11 @@ public class DesignerHostTests
 
         foreach (string name in new string[] { null, string.Empty, "name" })
         {
-            var mockNameCreationService = new Mock<INameCreationService>(MockBehavior.Strict);
+            Mock<INameCreationService> mockNameCreationService = new(MockBehavior.Strict);
             mockNameCreationService
                 .Setup(s => s.CreateName(It.IsAny<IContainer>(), It.IsAny<Type>()))
                 .Returns(name);
-            var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+            Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
             mockServiceProvider
                 .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
                 .Returns(null);
@@ -270,12 +269,12 @@ public class DesignerHostTests
     [MemberData(nameof(Add_ComponentParentProvider_TestData))]
     public void DesignerHost_Add_ComponentWithRootDesigner_Success(IServiceProvider parentProvider, string expectedName)
     {
-        using var surface = new SubDesignSurface(parentProvider);
+        using SubDesignSurface surface = new(parentProvider);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component1 = new RootDesignerComponent();
-        using var component2 = new RootDesignerComponent();
-        using var component3 = new DesignerComponent();
-        using var component4 = new Component();
+        using RootDesignerComponent component1 = new();
+        using RootDesignerComponent component2 = new();
+        using DesignerComponent component3 = new();
+        using Component component4 = new();
 
         host.Container.Add(component1);
         Assert.Same(component1, Assert.Single(host.Container.Components));
@@ -325,12 +324,12 @@ public class DesignerHostTests
     [MemberData(nameof(Add_InvalidNameCreationServiceParentProvider_TestData))]
     public void DesignerHost_Add_ComponentStringWithRootDesigner_Success(IServiceProvider parentProvider)
     {
-        using var surface = new SubDesignSurface(parentProvider);
+        using SubDesignSurface surface = new(parentProvider);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component1 = new RootDesignerComponent();
-        using var component2 = new RootDesignerComponent();
-        using var component3 = new DesignerComponent();
-        using var component4 = new Component();
+        using RootDesignerComponent component1 = new();
+        using RootDesignerComponent component2 = new();
+        using DesignerComponent component3 = new();
+        using Component component4 = new();
 
         host.Container.Add(component1, "name1");
         Assert.Same(component1, Assert.Single(host.Container.Components));
@@ -381,15 +380,15 @@ public class DesignerHostTests
         yield return new object[] { new RootDesignerComponent(), 0 };
         yield return new object[] { new RootExtenderProviderDesignerComponent(), 1 };
 
-        var readOnlyComponent = new RootExtenderProviderDesignerComponent();
+        RootExtenderProviderDesignerComponent readOnlyComponent = new();
         TypeDescriptor.AddAttributes(readOnlyComponent, new InheritanceAttribute(InheritanceLevel.InheritedReadOnly));
         yield return new object[] { readOnlyComponent, 0 };
 
-        var inheritedComponent = new RootExtenderProviderDesignerComponent();
+        RootExtenderProviderDesignerComponent inheritedComponent = new();
         TypeDescriptor.AddAttributes(inheritedComponent, new InheritanceAttribute(InheritanceLevel.Inherited));
         yield return new object[] { inheritedComponent, 1 };
 
-        var notInheritedComponent = new RootExtenderProviderDesignerComponent();
+        RootExtenderProviderDesignerComponent notInheritedComponent = new();
         TypeDescriptor.AddAttributes(notInheritedComponent, new InheritanceAttribute(InheritanceLevel.NotInherited));
         yield return new object[] { notInheritedComponent, 1 };
     }
@@ -398,13 +397,13 @@ public class DesignerHostTests
     [MemberData(nameof(Add_IExtenderProviderServiceWithoutDefault_TestData))]
     public void DesignerHost_Add_IExtenderProviderServiceWithoutDefault_Success(Component component, int expectedCallCount)
     {
-        var mockExtenderProviderService = new Mock<IExtenderProviderService>(MockBehavior.Strict);
+        Mock<IExtenderProviderService> mockExtenderProviderService = new(MockBehavior.Strict);
         mockExtenderProviderService
             .Setup(s => s.AddExtenderProvider(component as IExtenderProvider))
             .Verifiable();
         mockExtenderProviderService
             .Setup(s => s.RemoveExtenderProvider(component as IExtenderProvider));
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(ITypeResolutionService)))
             .Returns(null);
@@ -422,7 +421,7 @@ public class DesignerHostTests
             .Returns(mockExtenderProviderService.Object)
             .Verifiable();
 
-        using var surface = new SubDesignSurface(mockServiceProvider.Object);
+        using SubDesignSurface surface = new(mockServiceProvider.Object);
         surface.ServiceContainer.RemoveService(typeof(IExtenderProviderService));
         IDesignerLoaderHost2 host = surface.Host;
 
@@ -452,15 +451,15 @@ public class DesignerHostTests
         yield return new object[] { new RootDesignerComponent() };
         yield return new object[] { new RootExtenderProviderDesignerComponent() };
 
-        var readOnlyComponent = new RootExtenderProviderDesignerComponent();
+        RootExtenderProviderDesignerComponent readOnlyComponent = new();
         TypeDescriptor.AddAttributes(readOnlyComponent, new InheritanceAttribute(InheritanceLevel.InheritedReadOnly));
         yield return new object[] { readOnlyComponent };
 
-        var inheritedComponent = new RootExtenderProviderDesignerComponent();
+        RootExtenderProviderDesignerComponent inheritedComponent = new();
         TypeDescriptor.AddAttributes(inheritedComponent, new InheritanceAttribute(InheritanceLevel.Inherited));
         yield return new object[] { inheritedComponent };
 
-        var notInheritedComponent = new RootExtenderProviderDesignerComponent();
+        RootExtenderProviderDesignerComponent notInheritedComponent = new();
         TypeDescriptor.AddAttributes(notInheritedComponent, new InheritanceAttribute(InheritanceLevel.NotInherited));
         yield return new object[] { notInheritedComponent };
     }
@@ -469,13 +468,13 @@ public class DesignerHostTests
     [MemberData(nameof(Add_IExtenderProviderServiceWithDefault_TestData))]
     public void DesignerHost_Add_IExtenderProviderServiceWithDefault_DoesNotCallGetService(Component component)
     {
-        var mockExtenderProviderService = new Mock<IExtenderProviderService>(MockBehavior.Strict);
+        Mock<IExtenderProviderService> mockExtenderProviderService = new(MockBehavior.Strict);
         mockExtenderProviderService
             .Setup(s => s.AddExtenderProvider(component as IExtenderProvider))
             .Verifiable();
         mockExtenderProviderService
             .Setup(s => s.RemoveExtenderProvider(component as IExtenderProvider));
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(ITypeResolutionService)))
             .Returns(null);
@@ -493,7 +492,7 @@ public class DesignerHostTests
             .Returns(mockExtenderProviderService.Object)
             .Verifiable();
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
 
         host.Container.Add(component);
@@ -521,7 +520,7 @@ public class DesignerHostTests
     {
         yield return new object[] { null };
 
-        var nullMockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> nullMockServiceProvider = new(MockBehavior.Strict);
         nullMockServiceProvider
             .Setup(p => p.GetService(typeof(ITypeResolutionService)))
             .Returns(null);
@@ -540,7 +539,7 @@ public class DesignerHostTests
             .Verifiable();
         yield return new object[] { nullMockServiceProvider };
 
-        var invalidMockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> invalidMockServiceProvider = new(MockBehavior.Strict);
         invalidMockServiceProvider
             .Setup(p => p.GetService(typeof(ITypeResolutionService)))
             .Returns(null);
@@ -564,10 +563,10 @@ public class DesignerHostTests
     [MemberData(nameof(InvalidIExtenderProviderService_TestData))]
     public void DesignerHost_Add_InvalidIExtenderProviderServiceWithoutDefault_CallsParentGetService(Mock<IServiceProvider> mockParentProvider)
     {
-        using var surface = new SubDesignSurface(mockParentProvider?.Object);
+        using SubDesignSurface surface = new(mockParentProvider?.Object);
         surface.ServiceContainer.RemoveService(typeof(IExtenderProviderService));
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootExtenderProviderDesignerComponent();
+        using RootExtenderProviderDesignerComponent component = new();
 
         host.Container.Add(component);
         Assert.Same(component, Assert.Single(host.Container.Components));
@@ -578,9 +577,9 @@ public class DesignerHostTests
     [MemberData(nameof(InvalidIExtenderProviderService_TestData))]
     public void DesignerHost_Add_InvalidIExtenderProviderServiceWithDefault_DoesNotCallParentGetService(Mock<IServiceProvider> mockParentProvider)
     {
-        using var surface = new SubDesignSurface(mockParentProvider?.Object);
+        using SubDesignSurface surface = new(mockParentProvider?.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootExtenderProviderDesignerComponent();
+        using RootExtenderProviderDesignerComponent component = new();
 
         host.Container.Add(component);
         Assert.Same(component, Assert.Single(host.Container.Components));
@@ -590,9 +589,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Add_SameComponent_Success()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
 
         host.Container.Add(component);
         Assert.Same(component, Assert.Single(host.Container.Components));
@@ -612,12 +611,12 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Add_ComponentWithNameCreationServiceWithoutName_CallsCreateName()
     {
-        var mockNameCreationService = new Mock<INameCreationService>(MockBehavior.Strict);
+        Mock<INameCreationService> mockNameCreationService = new(MockBehavior.Strict);
         mockNameCreationService
             .Setup(s => s.CreateName(It.IsAny<IContainer>(), It.IsAny<Type>()))
             .Returns("name")
             .Verifiable();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -631,9 +630,9 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(INameCreationService)))
             .Returns(mockNameCreationService.Object);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
 
         host.Container.Add(component);
         Assert.Equal("name", component.Site.Name);
@@ -647,12 +646,12 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Add_ComponentWithNameCreationServiceWithCustomReflectionType_CallsCreateName()
     {
-        using var component = new CustomTypeDescriptionProviderComponent();
-        var mockCustomTypeDescriptor = new Mock<ICustomTypeDescriptor>(MockBehavior.Strict);
+        using CustomTypeDescriptionProviderComponent component = new();
+        Mock<ICustomTypeDescriptor> mockCustomTypeDescriptor = new(MockBehavior.Strict);
         mockCustomTypeDescriptor
             .Setup(d => d.GetAttributes())
             .Returns(TypeDescriptor.GetAttributes(typeof(CustomTypeDescriptionProviderComponent)));
-        var mockProvider = new Mock<TypeDescriptionProvider>(MockBehavior.Strict);
+        Mock<TypeDescriptionProvider> mockProvider = new(MockBehavior.Strict);
         mockProvider
             .Setup(p => p.GetReflectionType(typeof(CustomTypeDescriptionProviderComponent), component))
             .Returns(typeof(RootDesignerComponent))
@@ -668,12 +667,12 @@ public class DesignerHostTests
             .CallBase();
         TypeDescriptor.AddProvider(mockProvider.Object, component);
 
-        var mockNameCreationService = new Mock<INameCreationService>(MockBehavior.Strict);
+        Mock<INameCreationService> mockNameCreationService = new(MockBehavior.Strict);
         mockNameCreationService
             .Setup(s => s.CreateName(It.IsAny<IContainer>(), It.IsAny<Type>()))
             .Returns("name")
             .Verifiable();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -687,7 +686,7 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(INameCreationService)))
             .Returns(mockNameCreationService.Object);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
 
         host.Container.Add(component);
@@ -703,11 +702,11 @@ public class DesignerHostTests
     [StringData]
     public void DesignerHost_Add_ComponentWithNameCreationServiceWithName_CallsValidateName(string name)
     {
-        var mockNameCreationService = new Mock<INameCreationService>(MockBehavior.Strict);
+        Mock<INameCreationService> mockNameCreationService = new(MockBehavior.Strict);
         mockNameCreationService
             .Setup(s => s.ValidateName(It.IsAny<string>()))
             .Verifiable();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -722,16 +721,16 @@ public class DesignerHostTests
             .Returns(mockNameCreationService.Object)
             .Verifiable();
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component1 = new RootDesignerComponent();
+        using RootDesignerComponent component1 = new();
         host.Container.Add(component1, name);
         Assert.Same(name, component1.Site.Name);
         mockNameCreationService.Verify(s => s.ValidateName(name), Times.Once());
         mockServiceProvider.Verify(p => p.GetService(typeof(INameCreationService)), Times.Once());
 
         // Add another.
-        using var component2 = new DesignerComponent();
+        using DesignerComponent component2 = new();
         host.Container.Add(component2, "name2");
         Assert.Equal("name2", component2.Site.Name);
         mockNameCreationService.Verify(s => s.ValidateName("name2"), Times.Once());
@@ -742,7 +741,7 @@ public class DesignerHostTests
     public void DesignerHost_Add_ComponentWithTypeDescriptionProviderServiceWithoutProjectTargetFrameworkAttribute_AddsProvider()
     {
         ICustomTypeDescriptor descriptor = TypeDescriptor.GetProvider(typeof(RootDesignerComponent)).GetTypeDescriptor(typeof(RootDesignerComponent));
-        var mockTypeDescriptionProvider = new Mock<TypeDescriptionProvider>(MockBehavior.Strict);
+        Mock<TypeDescriptionProvider> mockTypeDescriptionProvider = new(MockBehavior.Strict);
         mockTypeDescriptionProvider
             .Setup(p => p.IsSupportedType(typeof(int)))
             .Returns(false)
@@ -756,12 +755,12 @@ public class DesignerHostTests
         mockTypeDescriptionProvider
             .Setup(p => p.GetExtendedTypeDescriptor(It.IsAny<object>()))
             .CallBase();
-        var mockTypeDescriptionProviderService = new Mock<TypeDescriptionProviderService>(MockBehavior.Strict);
+        Mock<TypeDescriptionProviderService> mockTypeDescriptionProviderService = new(MockBehavior.Strict);
         mockTypeDescriptionProviderService
             .Setup(s => s.GetProvider(It.IsAny<object>()))
             .Returns(mockTypeDescriptionProvider.Object)
             .Verifiable();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(mockTypeDescriptionProviderService.Object)
@@ -782,9 +781,9 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(IInheritanceService)))
             .Returns(null);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component1 = new RootDesignerComponent();
+        using RootDesignerComponent component1 = new();
         host.Container.Add(component1, "name1");
         Assert.Equal("name1", component1.Site.Name);
         mockServiceProvider.Verify(p => p.GetService(typeof(TypeDescriptionProviderService)), Times.Once());
@@ -795,7 +794,7 @@ public class DesignerHostTests
         mockTypeDescriptionProvider.Verify(p => p.IsSupportedType(typeof(int)), Times.Once());
 
         // Add again.
-        using var component2 = new DesignerComponent();
+        using DesignerComponent component2 = new();
         host.Container.Add(component2, "name2");
         Assert.Equal("name2", component2.Site.Name);
         mockServiceProvider.Verify(p => p.GetService(typeof(TypeDescriptionProviderService)), Times.Once());
@@ -809,12 +808,12 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Add_ComponentWithNullTypeDescriptionProviderService_Success()
     {
-        var mockTypeDescriptionProviderService = new Mock<TypeDescriptionProviderService>(MockBehavior.Strict);
+        Mock<TypeDescriptionProviderService> mockTypeDescriptionProviderService = new(MockBehavior.Strict);
         mockTypeDescriptionProviderService
             .Setup(s => s.GetProvider(It.IsAny<object>()))
             .Returns<TypeDescriptionProvider>(null)
             .Verifiable();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(mockTypeDescriptionProviderService.Object)
@@ -829,9 +828,9 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(INameCreationService)))
             .Returns(null);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component, "name1");
         Assert.Equal("name1", component.Site.Name);
         mockServiceProvider.Verify(p => p.GetService(typeof(TypeDescriptionProviderService)), Times.Once());
@@ -841,9 +840,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Add_ComponentWithTypeDescriptionProviderServiceWithProjectTargetFrameworkAttribute_DoesNotAddProvider()
     {
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         ICustomTypeDescriptor descriptor = TypeDescriptor.GetProvider(typeof(RootDesignerComponent)).GetTypeDescriptor(typeof(RootDesignerComponent));
-        var mockTypeDescriptionProvider = new Mock<TypeDescriptionProvider>(MockBehavior.Strict);
+        Mock<TypeDescriptionProvider> mockTypeDescriptionProvider = new(MockBehavior.Strict);
         mockTypeDescriptionProvider
             .Setup(p => p.GetTypeDescriptor(It.IsAny<Type>(), It.IsAny<object>()))
             .Returns(descriptor);
@@ -858,8 +857,8 @@ public class DesignerHostTests
             .Returns(typeof(ClassWithProjectTargetFrameworkAttribute));
         TypeDescriptor.AddProvider(mockTypeDescriptionProvider.Object, component);
 
-        var mockTypeDescriptionProviderService = new Mock<TypeDescriptionProviderService>(MockBehavior.Strict);
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<TypeDescriptionProviderService> mockTypeDescriptionProviderService = new(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(mockTypeDescriptionProviderService.Object)
@@ -874,7 +873,7 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(INameCreationService)))
             .Returns(null);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
         host.Container.Add(component, "name1");
         Assert.Equal("name1", component.Site.Name);
@@ -885,16 +884,16 @@ public class DesignerHostTests
     [WinFormsFact(Skip = "Unstable test, see: https://github.com/dotnet/winforms/issues/1460")]
     public void DesignerHost_Add_DuringUnload_ThrowsException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         surface.BeginLoad(typeof(RootDesignerComponent));
 
-        using var component = new DesignerComponent();
+        using DesignerComponent component = new();
         host.Container.Add(component);
         int callCount = 0;
         component.Disposed += (sender, e) =>
         {
-            using var newComponent = new DesignerComponent();
+            using DesignerComponent newComponent = new();
             Assert.Throws<Exception>(() => host.Container.Add(newComponent));
             callCount++;
         };
@@ -908,9 +907,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIDictionaryServiceGetKey_NoDictionary_ReturnsNull()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
 
         IDictionaryService service = Assert.IsAssignableFrom<IDictionaryService>(component.Site);
@@ -921,14 +920,14 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIDictionaryServiceGetKey_NoSuchKeyWithDictionary_ReturnsNull()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
 
         IDictionaryService service = Assert.IsAssignableFrom<IDictionaryService>(component.Site);
-        var key1 = new object();
-        var value1 = new object();
+        object key1 = new();
+        object value1 = new();
         service.SetValue(key1, value1);
         Assert.Same(key1, service.GetKey(value1));
         Assert.Same(value1, service.GetValue(key1));
@@ -940,9 +939,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIDictionaryServiceGetValue_NoDictionary_ReturnsNull()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
 
         IDictionaryService service = Assert.IsAssignableFrom<IDictionaryService>(component.Site);
@@ -952,14 +951,14 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIDictionaryServiceGetValue_NoSuchValueWithDictionary_ReturnsNull()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
 
         IDictionaryService service = Assert.IsAssignableFrom<IDictionaryService>(component.Site);
-        var key1 = new object();
-        var value1 = new object();
+        object key1 = new();
+        object value1 = new();
         service.SetValue(key1, value1);
         Assert.Same(key1, service.GetKey(value1));
         Assert.Same(value1, service.GetValue(key1));
@@ -970,9 +969,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIDictionaryServiceGetValue_NullValueNoDictionary_ReturnsNull()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
 
         IDictionaryService service = Assert.IsAssignableFrom<IDictionaryService>(component.Site);
@@ -982,14 +981,14 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIDictionaryServiceGetValue_NullValueWithDictionary_ThrowsArgumentNullException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
 
         IDictionaryService service = Assert.IsAssignableFrom<IDictionaryService>(component.Site);
-        var key1 = new object();
-        var value1 = new object();
+        object key1 = new();
+        object value1 = new();
         service.SetValue(key1, value1);
         Assert.Same(key1, service.GetKey(value1));
         Assert.Same(value1, service.GetValue(key1));
@@ -1000,27 +999,27 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIDictionaryServiceSetValue_Invoke_GetKeyValueReturnsExpected()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         IDictionaryService service = Assert.IsAssignableFrom<IDictionaryService>(component.Site);
 
-        var key1 = new object();
-        var value1 = new object();
+        object key1 = new();
+        object value1 = new();
         service.SetValue(key1, value1);
         Assert.Same(key1, service.GetKey(value1));
         Assert.Same(value1, service.GetValue(key1));
 
         // Add another.
-        var key2 = new object();
-        var value2 = new object();
+        object key2 = new();
+        object value2 = new();
         service.SetValue(key2, value2);
         Assert.Same(key2, service.GetKey(value2));
         Assert.Same(value2, service.GetValue(key2));
 
         // Add same.
-        var value3 = new object();
+        object value3 = new();
         service.SetValue(key1, value3);
         Assert.Same(key1, service.GetKey(value3));
         Assert.Null(service.GetKey(value1));
@@ -1036,9 +1035,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIDictionaryServiceSetValue_NullKey_ThrowsArgumentNullException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         IDictionaryService service = Assert.IsAssignableFrom<IDictionaryService>(component.Site);
         Assert.Throws<ArgumentNullException>("key", () => service.SetValue(null, new object()));
@@ -1047,9 +1046,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIServiceContainerAddService_InvokeObject_ReturnsExpected()
     {
-        var service = new object();
-        var otherService = new object();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        object service = new();
+        object otherService = new();
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -1063,9 +1062,9 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(object)))
             .Returns(otherService);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         IServiceContainer container = Assert.IsAssignableFrom<IServiceContainer>(component.Site);
         container.AddService(typeof(object), service);
@@ -1076,10 +1075,10 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIServiceContainerAddService_InvokeObjectPromote_ReturnsExpected()
     {
-        var service = new object();
-        var otherService = new object();
-        var otherContainer = new ServiceContainer();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        object service = new();
+        object otherService = new();
+        ServiceContainer otherContainer = new();
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -1096,9 +1095,9 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(IServiceContainer)))
             .Returns(otherContainer);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         IServiceContainer container = Assert.IsAssignableFrom<IServiceContainer>(component.Site);
         container.AddService(typeof(object), service, true);
@@ -1110,9 +1109,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIServiceContainerAddService_InvokeObjectNoPromote_ReturnsExpected()
     {
-        var service = new object();
-        var otherService = new object();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        object service = new();
+        object otherService = new();
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -1126,9 +1125,9 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(object)))
             .Returns(otherService);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         IServiceContainer container = Assert.IsAssignableFrom<IServiceContainer>(component.Site);
         container.AddService(typeof(object), service, false);
@@ -1139,14 +1138,14 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIServiceContainerAddService_InvokeServiceCreatorCallback_ReturnsExpected()
     {
-        var service = new object();
+        object service = new();
         ServiceCreatorCallback callback = (c, serviceType) =>
         {
             Assert.Same(typeof(object), serviceType);
             return service;
         };
-        var otherService = new object();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        object otherService = new();
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -1160,9 +1159,9 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(object)))
             .Returns(otherService);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         IServiceContainer container = Assert.IsAssignableFrom<IServiceContainer>(component.Site);
         container.AddService(typeof(object), callback);
@@ -1173,15 +1172,15 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIServiceContainerAddService_InvokeServiceCreatorCallbackPromote_ReturnsExpected()
     {
-        var service = new object();
+        object service = new();
         ServiceCreatorCallback callback = (c, serviceType) =>
         {
             Assert.Same(typeof(object), serviceType);
             return service;
         };
-        var otherService = new object();
-        var otherContainer = new ServiceContainer();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        object otherService = new();
+        ServiceContainer otherContainer = new();
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -1198,9 +1197,9 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(IServiceContainer)))
             .Returns(otherContainer);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         IServiceContainer container = Assert.IsAssignableFrom<IServiceContainer>(component.Site);
         container.AddService(typeof(object), callback, true);
@@ -1212,14 +1211,14 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentIServiceContainerAddService_InvokeServiceCreatorCallbackNoPromote_ReturnsExpected()
     {
-        var service = new object();
+        object service = new();
         ServiceCreatorCallback callback = (c, serviceType) =>
         {
             Assert.Same(typeof(object), serviceType);
             return service;
         };
-        var otherService = new object();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        object otherService = new();
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -1233,9 +1232,9 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(object)))
             .Returns(otherService);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         IServiceContainer container = Assert.IsAssignableFrom<IServiceContainer>(component.Site);
         container.AddService(typeof(object), callback, false);
@@ -1262,9 +1261,9 @@ public class DesignerHostTests
     [MemberData(nameof(AddComponentISiteName_Set_TestData))]
     public void DesignerHost_AddComponentISiteName_SetRootComponent_GetReturnsExpected(IServiceProvider parentProvider, string oldName, string value, string expectedName)
     {
-        using var surface = new SubDesignSurface(parentProvider);
+        using SubDesignSurface surface = new(parentProvider);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component, oldName);
         component.Site.Name = value;
         Assert.Same(expectedName, component.Site.Name);
@@ -1279,9 +1278,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentISiteName_SetDifferentCase_GetReturnsExpected()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component, "name");
         component.Site.Name = "NAME";
         Assert.Equal("NAME", component.Site.Name);
@@ -1295,11 +1294,11 @@ public class DesignerHostTests
     [StringWithNullData]
     public void DesignerHost_AddComponentISiteName_SetWithMultipleComponents_GetReturnsExpected(string value)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component1 = new RootDesignerComponent();
-        using var component2 = new RootDesignerComponent();
-        using var component3 = new RootDesignerComponent();
+        using RootDesignerComponent component1 = new();
+        using RootDesignerComponent component2 = new();
+        using RootDesignerComponent component3 = new();
         host.Container.Add(component1);
         host.Container.Add(component2, null);
         host.Container.Add(component3, "name3");
@@ -1345,9 +1344,9 @@ public class DesignerHostTests
     [MemberData(nameof(AddComponentISiteName_SetWithNamespaceInRootComponentClassName_TestData))]
     public void DesignerHost_AddComponentISiteName_SetWithNamespaceInRootComponentClassName_GetReturnsExpected(string oldRootComponentClassName, string oldName, string value, string expectedName, string expectedRootComponentClassName)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
 
         host.EndLoad(oldRootComponentClassName, true, null);
         Assert.Equal(oldRootComponentClassName, host.RootComponentClassName);
@@ -1368,10 +1367,10 @@ public class DesignerHostTests
     [StringWithNullData]
     public void DesignerHost_AddComponentISiteName_SetNameWithComponentRename_CallsHandler(string value)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         IComponentChangeService changeService = Assert.IsAssignableFrom<IComponentChangeService>(host);
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
 
         int callCount = 0;
         ComponentRenameEventHandler handler = (sender, e) =>
@@ -1408,14 +1407,14 @@ public class DesignerHostTests
     [InlineData("OLDNAME", "OLDNAME", 0)]
     public void DesignerHost_AddComponentISite_SetNameWithINameCreateService_CallsValidateName(string value, string expectedName, int expectedCallCount)
     {
-        var mockNameCreationService = new Mock<INameCreationService>(MockBehavior.Strict);
+        Mock<INameCreationService> mockNameCreationService = new(MockBehavior.Strict);
         mockNameCreationService
             .Setup(s => s.ValidateName("oldName"))
             .Verifiable();
         mockNameCreationService
             .Setup(s => s.ValidateName(expectedName))
             .Verifiable();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -1429,9 +1428,9 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(INameCreationService)))
             .Returns(mockNameCreationService.Object);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component, "oldName");
         Assert.Equal("oldName", component.Site.Name);
         mockNameCreationService.Verify(s => s.ValidateName("oldName"), Times.Once());
@@ -1444,10 +1443,10 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentISiteName_SetSameAsOtherComponent_GetReturnsExpected()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component1 = new RootDesignerComponent();
-        using var component2 = new RootDesignerComponent();
+        using RootDesignerComponent component1 = new();
+        using RootDesignerComponent component2 = new();
         host.Container.Add(component1, "name1");
         host.Container.Add(component2, "name2");
         Assert.Throws<Exception>(() => component1.Site.Name = "name2");
@@ -1457,8 +1456,8 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentISiteGetService_Invoke_ReturnsExpected()
     {
-        var service = new object();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        object service = new();
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -1472,9 +1471,9 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(int)))
             .Returns(service);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         Assert.Same(service, component.Site.GetService(typeof(int)));
     }
@@ -1482,8 +1481,8 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentISiteGetService_InvokeWithNestedContainer_ReturnsService()
     {
-        var service = new object();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        object service = new();
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -1497,9 +1496,9 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(int)))
             .Returns(service);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         INestedContainer nestedContainer = Assert.IsAssignableFrom<INestedContainer>(component.Site.GetService(typeof(INestedContainer)));
         Assert.Same(service, component.Site.GetService(typeof(int)));
@@ -1510,9 +1509,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentISiteGetService_INestedContainer_ReturnsExpected()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         INestedContainer container = Assert.IsAssignableFrom<INestedContainer>(component.Site.GetService(typeof(INestedContainer)));
         Assert.Same(container, component.Site.GetService(typeof(INestedContainer)));
@@ -1523,8 +1522,8 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentISiteGetServiceINestedContainerGetService_Invoke_ReturnsExpected()
     {
-        var service = new object();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        object service = new();
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(TypeDescriptionProviderService)))
             .Returns(null);
@@ -1544,12 +1543,12 @@ public class DesignerHostTests
             .Setup(p => p.GetService(typeof(int)))
             .Returns(service);
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         NestedContainer container = Assert.IsAssignableFrom<NestedContainer>(component.Site.GetService(typeof(INestedContainer)));
-        using var nestedComponent = new Component();
+        using Component nestedComponent = new();
         container.Add(nestedComponent);
         Assert.Same(service, nestedComponent.Site.GetService(typeof(int)));
     }
@@ -1557,9 +1556,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentISiteGetService_IDictionaryService_ReturnsExpected()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         Assert.Same(component.Site, component.Site.GetService(typeof(IDictionaryService)));
     }
@@ -1567,9 +1566,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentISiteGetService_IServiceContainerReturnsExpected()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         Assert.Same(surface.ServiceContainer, component.Site.GetService(typeof(IServiceContainer)));
     }
@@ -1577,9 +1576,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentISiteGetService_IContainerReturnsExpected()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         Assert.Same(host, component.Site.GetService(typeof(IContainer)));
     }
@@ -1587,9 +1586,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddComponentISiteGetService_NullServiceType_ThrowsArgumentNullException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         Assert.Throws<ArgumentNullException>("service", () => component.Site.GetService(null));
     }
@@ -1597,11 +1596,11 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Add_IComponentWithComponentAddingAndAdded_CallsHandler()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         IComponentChangeService changeService = Assert.IsAssignableFrom<IComponentChangeService>(host);
 
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         int componentAddingCallCount = 0;
         ComponentEventHandler componentAddingHandler = (sender, e) =>
         {
@@ -1651,7 +1650,7 @@ public class DesignerHostTests
     [MemberData(nameof(Add_NoRootDesigner_TestData))]
     public void DesignerHost_Add_NoRootDesigner_ThrowsException(IComponent component)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         Assert.Throws<NotImplementedException>(() => host.Container.Add(component));
         Assert.Throws<NotImplementedException>(() => host.Container.Add(component, "name"));
@@ -1661,9 +1660,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Add_CyclicRootDesigner_ThrowsException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component, component.GetType().FullName);
         Assert.Equal(component.GetType().FullName, host.RootComponentClassName);
         Assert.Throws<Exception>(() => host.Container.Add(component));
@@ -1673,9 +1672,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Add_NonInitializingRootDesigner_ThrowsInvalidOperationException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new NonInitializingDesignerComponent();
+        using NonInitializingDesignerComponent component = new();
         Assert.Throws<InvalidOperationException>(() => host.Container.Add(component));
         Assert.Throws<InvalidOperationException>(() => host.Container.Add(component, "name"));
     }
@@ -1683,9 +1682,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Add_ThrowingInitializingRootDesigner_RethrowsException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new ThrowingInitializingDesignerComponent();
+        using ThrowingInitializingDesignerComponent component = new();
         Assert.Throws<DivideByZeroException>(() => host.Container.Add(component));
         Assert.Null(component.Container);
         Assert.Null(component.Site);
@@ -1698,9 +1697,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Add_CheckoutExceptionThrowingInitializingRootDesigner_RethrowsException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new CheckoutExceptionThrowingInitializingDesignerComponent();
+        using CheckoutExceptionThrowingInitializingDesignerComponent component = new();
         // CheckoutException does not bubble up in xunit.
         bool threwCheckoutException = false;
         try
@@ -1724,10 +1723,10 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddService_InvokeObject_GetServiceReturnsExpected()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
 
-        object service = new object();
+        object service = new();
         host.AddService(typeof(object), service);
         Assert.Same(service, surface.ServiceContainer.GetService(typeof(object)));
         Assert.Same(service, surface.GetService(typeof(object)));
@@ -1738,10 +1737,10 @@ public class DesignerHostTests
     [BoolData]
     public void DesignerHost_AddService_InvokeObjectBool_GetServiceReturnsExpected(bool promote)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
 
-        object service = new object();
+        object service = new();
         host.AddService(typeof(object), service, promote);
         Assert.Same(service, surface.ServiceContainer.GetService(typeof(object)));
         Assert.Same(service, surface.GetService(typeof(object)));
@@ -1751,10 +1750,10 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddService_InvokeCallback_GetServiceReturnsExpected()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
 
-        object service = new object();
+        object service = new();
         ServiceCreatorCallback callback = (container, serviceType) => service;
         host.AddService(typeof(object), callback);
         Assert.Same(service, surface.ServiceContainer.GetService(typeof(object)));
@@ -1766,10 +1765,10 @@ public class DesignerHostTests
     [BoolData]
     public void DesignerHost_AddService_InvokeObjectCallback_GetServiceReturnsExpected(bool promote)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
 
-        object service = new object();
+        object service = new();
         ServiceCreatorCallback callback = (container, serviceType) => service;
         host.AddService(typeof(object), callback, promote);
         Assert.Same(service, surface.ServiceContainer.GetService(typeof(object)));
@@ -1780,7 +1779,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_AddService_InvokeDisposed_ThrowsObjectDisposedException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         surface.Dispose();
         ServiceCreatorCallback callback = (container, service) => new object();
@@ -1795,7 +1794,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Dispose_Invoke_ThrowsInvalidOperationException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         IDisposable disposable = Assert.IsAssignableFrom<IDisposable>(host);
         Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
@@ -1804,11 +1803,11 @@ public class DesignerHostTests
     [WinFormsFact(Skip = "Unstable test, see: https://github.com/dotnet/winforms/issues/1460")]
     public void DesignerHost_Add_DesignerDisposeThrowsDuringUnloadingDispose_ThrowsInvalidOperationException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         surface.BeginLoad(typeof(RootDesignerComponent));
 
-        using var component = new ThrowingDesignerDisposeComponent();
+        using ThrowingDesignerDisposeComponent component = new();
         host.Container.Add(component);
         Assert.Throws<InvalidOperationException>(() => surface.Dispose());
         Assert.False(surface.IsLoaded);
@@ -1819,11 +1818,11 @@ public class DesignerHostTests
     [WinFormsFact(Skip = "Unstable test, see: https://github.com/dotnet/winforms/issues/1151")]
     public void DesignerHost_Add_ComponentDisposeThrowsDuringUnloadingDispose_ThrowsInvalidOperationException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         surface.BeginLoad(typeof(RootDesignerComponent));
 
-        using var component = new ThrowingDisposeDesignerComponent();
+        using ThrowingDisposeDesignerComponent component = new();
         host.Container.Add(component);
         Assert.Throws<InvalidOperationException>(() => surface.Dispose());
         Assert.False(surface.IsLoaded);
@@ -1834,7 +1833,7 @@ public class DesignerHostTests
     [WinFormsFact(Skip = "Unstable test, see: https://github.com/dotnet/winforms/issues/1460")]
     public void DesignerHost_Add_RootDesignerDisposeThrowsDuringUnloadingDispose_ThrowsInvalidOperationException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         surface.BeginLoad(typeof(ThrowingRootDesignerDisposeComponent));
 
@@ -1847,7 +1846,7 @@ public class DesignerHostTests
     [WinFormsFact(Skip = "Unstable test, see: https://github.com/dotnet/winforms/issues/1460")]
     public void DesignerHost_Add_RootComponentDisposeThrowsDuringUnloadingDispose_ThrowsInvalidOperationException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         surface.BeginLoad(typeof(ThrowingDisposeRootDesignerComponent));
         Assert.Throws<InvalidOperationException>(() => surface.Dispose());
@@ -1859,7 +1858,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_CreateComponent_NullComponentType_ThrowsArgumentNullException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         Assert.Throws<ArgumentNullException>("componentType", () => host.CreateComponent(null));
     }
@@ -1867,7 +1866,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_CreateTransaction_Invoke_ReturnsExpected()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         DesignerTransaction transaction1 = host.CreateTransaction();
         Assert.False(transaction1.Canceled);
@@ -1892,7 +1891,7 @@ public class DesignerHostTests
     [InlineData("Description", "Description")]
     public void DesignerHost_CreateTransaction_InvokeWithDescription_ReturnsExpected(string description, string expectedDescription)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         DesignerTransaction transaction1 = host.CreateTransaction(description);
         Assert.False(transaction1.Canceled);
@@ -1914,7 +1913,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_CreateTransaction_InvokeWithTransactionOpeningAndTransactionOpened_CallsHandlers()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
 
         int openingCallCount = 0;
@@ -1960,7 +1959,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_CreateTransaction_Cancel_Success()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         DesignerTransaction transaction1 = host.CreateTransaction("Description1");
         DesignerTransaction transaction2 = host.CreateTransaction("Description2");
@@ -2002,7 +2001,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_CreateTransaction_CancelWithTransactionClosingAndTransactionClosed_CallsHandlers()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         DesignerTransaction transaction1 = host.CreateTransaction("Description1");
         DesignerTransaction transaction2 = host.CreateTransaction("Description2");
@@ -2063,7 +2062,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_CreateTransaction_CancelNested_ThrowsInvalidOperationException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         DesignerTransaction transaction1 = host.CreateTransaction("Description1");
         DesignerTransaction transaction2 = host.CreateTransaction("Description2");
@@ -2073,7 +2072,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_CreateTransaction_Commit_Success()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         DesignerTransaction transaction1 = host.CreateTransaction("Description1");
         DesignerTransaction transaction2 = host.CreateTransaction("Description2");
@@ -2115,7 +2114,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_CreateTransaction_CommitWithTransactionClosingAndTransactionClosed_CallsHandlers()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         DesignerTransaction transaction1 = host.CreateTransaction("Description1");
         DesignerTransaction transaction2 = host.CreateTransaction("Description2");
@@ -2176,7 +2175,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_CreateTransaction_CommitNested_ThrowsInvalidOperationException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         DesignerTransaction transaction1 = host.CreateTransaction("Description1");
         DesignerTransaction transaction2 = host.CreateTransaction("Description2");
@@ -2219,7 +2218,7 @@ public class DesignerHostTests
     [MemberData(nameof(DesignerHost_EndLoad_TestData))]
     public void DesignerHost_EndLoad_NotCalledBeginLoad_Success(string baseClassName, bool successful, ICollection errorCollection)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         host.EndLoad(baseClassName, successful, errorCollection);
         Assert.False(surface.IsLoaded);
@@ -2232,25 +2231,25 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_GetComponents_Invoke_ReturnsFiltered()
     {
-        var collection = new ComponentCollection(new Component[] { new Component() });
-        var mockFilterService = new Mock<ContainerFilterService>(MockBehavior.Strict);
+        ComponentCollection collection = new(new Component[] { new() });
+        Mock<ContainerFilterService> mockFilterService = new(MockBehavior.Strict);
         mockFilterService
             .Setup(f => f.FilterComponents(new ComponentCollection(Array.Empty<IComponent>())))
             .Returns(collection);
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(ContainerFilterService)))
             .Returns(mockFilterService.Object);
-        using var surface = new SubDesignSurface(mockServiceProvider.Object);
+        using SubDesignSurface surface = new(mockServiceProvider.Object);
         Assert.Same(collection, surface.ComponentContainer.Components);
     }
 
     [WinFormsFact]
     public void DesignerHost_GetDesigner_InvokeNonEmpty_ReturnsExpected()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IDesignerHost host = surface.Host;
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         Assert.IsType<RootDesigner>(host.GetDesigner(component));
         Assert.Null(host.GetDesigner(new Component()));
@@ -2260,7 +2259,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_GetDesigner_InvokeEmpty_ReturnsExpected()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IDesignerHost host = surface.Host;
         Assert.Null(host.GetDesigner(new Component()));
         Assert.Null(host.GetDesigner(new RootDesignerComponent()));
@@ -2269,19 +2268,19 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_GetDesigner_NullComponent_ThrowsArgumentNullException()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IDesignerHost host = surface.Host;
         Assert.Throws<ArgumentNullException>("component", () => host.GetDesigner(null));
     }
 
     public static IEnumerable<object[]> GetService_InvalidLoader_TestData()
     {
-        var mockLoader = new Mock<DesignerLoader>(MockBehavior.Strict);
+        Mock<DesignerLoader> mockLoader = new(MockBehavior.Strict);
         mockLoader
             .Setup(l => l.BeginLoad(It.IsAny<IDesignerLoaderHost>()));
         yield return new object[] { mockLoader.Object, null };
 
-        var mockNullServiceProviderLoader = new Mock<DesignerLoader>(MockBehavior.Strict);
+        Mock<DesignerLoader> mockNullServiceProviderLoader = new(MockBehavior.Strict);
         mockNullServiceProviderLoader
             .Setup(l => l.BeginLoad(It.IsAny<IDesignerLoaderHost>()));
         mockNullServiceProviderLoader
@@ -2290,8 +2289,8 @@ public class DesignerHostTests
             .Returns(null);
         yield return new object[] { mockNullServiceProviderLoader.Object, null };
 
-        var o = new object();
-        var mockInvalidServiceProviderLoader = new Mock<DesignerLoader>(MockBehavior.Strict);
+        object o = new();
+        Mock<DesignerLoader> mockInvalidServiceProviderLoader = new(MockBehavior.Strict);
         mockInvalidServiceProviderLoader
             .Setup(l => l.BeginLoad(It.IsAny<IDesignerLoaderHost>()));
         mockInvalidServiceProviderLoader
@@ -2305,11 +2304,11 @@ public class DesignerHostTests
     [MemberData(nameof(GetService_InvalidLoader_TestData))]
     public void DesignerHost_GetService_IMultitargetHelperServiceWithLoader_ReturnsExpected(DesignerLoader loader, object expected)
     {
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(IDesignerEventService)))
             .Returns(null);
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         surface.BeginLoad(loader);
 
         IDesignerLoaderHost2 host = surface.Host;
@@ -2319,9 +2318,9 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_GetServiceIMultitargetHelperServiceWithoutLoader_ReturnsNull()
     {
-        var service = new object();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        object service = new();
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
         Assert.Null(host.GetService(typeof(IMultitargetHelperService)));
     }
@@ -2329,13 +2328,13 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_GetService_InvokeWithServiceProvider_ReturnsExpected()
     {
-        var service = new object();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        object service = new();
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(int)))
             .Returns(service)
             .Verifiable();
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
         Assert.Same(service, host.GetService(typeof(int)));
         mockServiceProvider.Verify(p => p.GetService(typeof(int)), Times.Once());
@@ -2344,7 +2343,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_GetService_InvokeWithoutServiceProvider_ReturnsNull()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         Assert.Null(host.GetService(typeof(int)));
     }
@@ -2352,7 +2351,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_GetService_IContainer_ReturnsExpected()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         Assert.Same(host, host.GetService(typeof(IContainer)));
     }
@@ -2362,7 +2361,7 @@ public class DesignerHostTests
     [InlineData(typeof(ServiceContainer))]
     public void DesignerHost_GetService_IServiceContainer_ReturnsExpected(Type serviceType)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         Assert.Same(surface.ServiceContainer, host.GetService(serviceType));
     }
@@ -2370,7 +2369,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_GetService_NullType_ThrowsArgumentNullException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         Assert.Throws<ArgumentNullException>("service", () => host.GetService(null));
     }
@@ -2384,17 +2383,17 @@ public class DesignerHostTests
     [InlineData("System.Object", typeof(int))]
     public void DesignerHost_GetType_InvokeWithTypeResolutionService_ReturnsExpected(string typeName, Type expected)
     {
-        var mockTypeResolutionService = new Mock<ITypeResolutionService>(MockBehavior.Strict);
+        Mock<ITypeResolutionService> mockTypeResolutionService = new(MockBehavior.Strict);
         mockTypeResolutionService
             .Setup(s => s.GetType(typeName))
             .Returns(expected)
             .Verifiable();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(ITypeResolutionService)))
             .Returns(mockTypeResolutionService.Object)
             .Verifiable();
-        using var surface = new SubDesignSurface(mockServiceProvider.Object);
+        using SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerHost host = surface.Host;
         Assert.Equal(expected, host.GetType(typeName));
         mockServiceProvider.Verify(p => p.GetService(typeof(ITypeResolutionService)), Times.Once());
@@ -2404,19 +2403,19 @@ public class DesignerHostTests
     public static IEnumerable<object[]> GetType_InvalidTypeResolutionService_TestData()
     {
         yield return new object[] { null };
-        yield return new object[] { new object() };
+        yield return new object[] { new() };
     }
 
     [WinFormsTheory]
     [MemberData(nameof(GetType_InvalidTypeResolutionService_TestData))]
     public void DesignerHost_GetType_InvokeWithInvalidTypeResolutionService_ReturnsExpected(object service)
     {
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(ITypeResolutionService)))
             .Returns(service)
             .Verifiable();
-        using var surface = new SubDesignSurface(mockServiceProvider.Object);
+        using SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerHost host = surface.Host;
         Assert.Equal(typeof(int), host.GetType(typeof(int).FullName));
         mockServiceProvider.Verify(p => p.GetService(typeof(ITypeResolutionService)), Times.Once());
@@ -2425,7 +2424,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_GetType_NullTypeName_ThrowsArgumentNullException()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IDesignerHost host = surface.Host;
         Assert.Throws<ArgumentNullException>("typeName", () => host.GetType(null));
     }
@@ -2455,12 +2454,12 @@ public class DesignerHostTests
     [MemberData(nameof(ChangeActiveDesigner_TestData))]
     public void DesignerHost_ChangeActiveDesigner_Invoke_Success(ActiveDesignerEventArgs eventArgs, int expectedActivatedCallCount, int expectedDeactivatedCallCount, int expectedFlushCount)
     {
-        var mockDesignerEventService = new Mock<IDesignerEventService>(MockBehavior.Strict);
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IDesignerEventService> mockDesignerEventService = new(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(IDesignerEventService)))
             .Returns(mockDesignerEventService.Object);
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
 
         int activatedCallCount = 0;
@@ -2488,7 +2487,7 @@ public class DesignerHostTests
         };
         surface.Flushed += flushedHandler;
 
-        var mockLoader = new Mock<DesignerLoader>(MockBehavior.Strict);
+        Mock<DesignerLoader> mockLoader = new(MockBehavior.Strict);
         mockLoader
             .Setup(l => l.BeginLoad((IDesignerLoaderHost)surface.ComponentContainer));
         mockLoader
@@ -2525,11 +2524,11 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Remove_Invoke_Success()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
 
-        using var rootComponent = new RootDesignerComponent();
-        using var component = new DesignerComponent();
+        using RootDesignerComponent rootComponent = new();
+        using DesignerComponent component = new();
         host.Container.Add(rootComponent);
         host.Container.Add(component);
         host.Container.Remove(rootComponent);
@@ -2573,15 +2572,15 @@ public class DesignerHostTests
         yield return new object[] { new RootDesignerComponent(), 0, 0 };
         yield return new object[] { new RootExtenderProviderDesignerComponent(), 1, 1 };
 
-        var readOnlyComponent = new RootExtenderProviderDesignerComponent();
+        RootExtenderProviderDesignerComponent readOnlyComponent = new();
         TypeDescriptor.AddAttributes(readOnlyComponent, new InheritanceAttribute(InheritanceLevel.InheritedReadOnly));
         yield return new object[] { readOnlyComponent, 0, 1 };
 
-        var inheritedComponent = new RootExtenderProviderDesignerComponent();
+        RootExtenderProviderDesignerComponent inheritedComponent = new();
         TypeDescriptor.AddAttributes(inheritedComponent, new InheritanceAttribute(InheritanceLevel.Inherited));
         yield return new object[] { inheritedComponent, 1, 1 };
 
-        var notInheritedComponent = new RootExtenderProviderDesignerComponent();
+        RootExtenderProviderDesignerComponent notInheritedComponent = new();
         TypeDescriptor.AddAttributes(notInheritedComponent, new InheritanceAttribute(InheritanceLevel.NotInherited));
         yield return new object[] { notInheritedComponent, 1, 1 };
     }
@@ -2590,13 +2589,13 @@ public class DesignerHostTests
     [MemberData(nameof(Remove_IExtenderProviderServiceWithoutDefault_TestData))]
     public void DesignerHost_Remove_IExtenderProviderServiceWithoutDefault_Success(Component component, int expectedAddCallCount, int expectedRemoveCallCount)
     {
-        var mockExtenderProviderService = new Mock<IExtenderProviderService>(MockBehavior.Strict);
+        Mock<IExtenderProviderService> mockExtenderProviderService = new(MockBehavior.Strict);
         mockExtenderProviderService
             .Setup(s => s.AddExtenderProvider(component as IExtenderProvider));
         mockExtenderProviderService
             .Setup(s => s.RemoveExtenderProvider(component as IExtenderProvider))
             .Verifiable();
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(ITypeResolutionService)))
             .Returns(null);
@@ -2614,7 +2613,7 @@ public class DesignerHostTests
             .Returns(mockExtenderProviderService.Object)
             .Verifiable();
 
-        using var surface = new SubDesignSurface(mockServiceProvider.Object);
+        using SubDesignSurface surface = new(mockServiceProvider.Object);
         surface.ServiceContainer.RemoveService(typeof(IExtenderProviderService));
         IDesignerLoaderHost2 host = surface.Host;
 
@@ -2643,15 +2642,15 @@ public class DesignerHostTests
         yield return new object[] { new RootDesignerComponent() };
         yield return new object[] { new RootExtenderProviderDesignerComponent() };
 
-        var readOnlyComponent = new RootExtenderProviderDesignerComponent();
+        RootExtenderProviderDesignerComponent readOnlyComponent = new();
         TypeDescriptor.AddAttributes(readOnlyComponent, new InheritanceAttribute(InheritanceLevel.InheritedReadOnly));
         yield return new object[] { readOnlyComponent };
 
-        var inheritedComponent = new RootExtenderProviderDesignerComponent();
+        RootExtenderProviderDesignerComponent inheritedComponent = new();
         TypeDescriptor.AddAttributes(inheritedComponent, new InheritanceAttribute(InheritanceLevel.Inherited));
         yield return new object[] { inheritedComponent };
 
-        var notInheritedComponent = new RootExtenderProviderDesignerComponent();
+        RootExtenderProviderDesignerComponent notInheritedComponent = new();
         TypeDescriptor.AddAttributes(notInheritedComponent, new InheritanceAttribute(InheritanceLevel.NotInherited));
         yield return new object[] { notInheritedComponent };
     }
@@ -2660,13 +2659,13 @@ public class DesignerHostTests
     [MemberData(nameof(Remove_IExtenderProviderServiceWithDefault_TestData))]
     public void DesignerHost_Remove_IExtenderProviderServiceWithDefault_Success(Component component)
     {
-        var mockExtenderProviderService = new Mock<IExtenderProviderService>(MockBehavior.Strict);
+        Mock<IExtenderProviderService> mockExtenderProviderService = new(MockBehavior.Strict);
         mockExtenderProviderService
             .Setup(s => s.AddExtenderProvider(component as IExtenderProvider))
             .Verifiable();
         mockExtenderProviderService
             .Setup(s => s.RemoveExtenderProvider(component as IExtenderProvider));
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(ITypeResolutionService)))
             .Returns(null);
@@ -2684,7 +2683,7 @@ public class DesignerHostTests
             .Returns(mockExtenderProviderService.Object)
             .Verifiable();
 
-        var surface = new SubDesignSurface(mockServiceProvider.Object);
+        SubDesignSurface surface = new(mockServiceProvider.Object);
         IDesignerLoaderHost2 host = surface.Host;
 
         host.Container.Add(component);
@@ -2712,10 +2711,10 @@ public class DesignerHostTests
     [MemberData(nameof(InvalidIExtenderProviderService_TestData))]
     public void DesignerHost_Remove_InvalidIExtenderProviderServiceWithoutDefault_CallsParentGetService(Mock<IServiceProvider> mockParentProvider)
     {
-        using var surface = new SubDesignSurface(mockParentProvider?.Object);
+        using SubDesignSurface surface = new(mockParentProvider?.Object);
         surface.ServiceContainer.RemoveService(typeof(IExtenderProviderService));
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootExtenderProviderDesignerComponent();
+        using RootExtenderProviderDesignerComponent component = new();
 
         host.Container.Add(component);
         Assert.Same(component, Assert.Single(host.Container.Components));
@@ -2730,9 +2729,9 @@ public class DesignerHostTests
     [MemberData(nameof(InvalidIExtenderProviderService_TestData))]
     public void DesignerHost_Remove_InvalidIExtenderProviderServiceWithDefault_DoesNotCallParentGetService(Mock<IServiceProvider> mockParentProvider)
     {
-        using var surface = new SubDesignSurface(mockParentProvider?.Object);
+        using SubDesignSurface surface = new(mockParentProvider?.Object);
         IDesignerLoaderHost2 host = surface.Host;
-        using var component = new RootExtenderProviderDesignerComponent();
+        using RootExtenderProviderDesignerComponent component = new();
 
         host.Container.Add(component);
         Assert.Same(component, Assert.Single(host.Container.Components));
@@ -2746,13 +2745,13 @@ public class DesignerHostTests
     [WinFormsFact]
     public void Remove_ComponentNotInContainerNonEmpty_Nop()
     {
-        using var surface1 = new SubDesignSurface();
-        using var surface2 = new SubDesignSurface();
+        using SubDesignSurface surface1 = new();
+        using SubDesignSurface surface2 = new();
         IDesignerLoaderHost2 host1 = surface1.Host;
         IDesignerLoaderHost2 host2 = surface2.Host;
 
-        var otherComponent = new RootDesignerComponent();
-        using var component = new RootDesignerComponent();
+        RootDesignerComponent otherComponent = new();
+        using RootDesignerComponent component = new();
         host1.Container.Add(otherComponent);
         host2.Container.Add(component);
         host2.Container.Remove(otherComponent);
@@ -2764,12 +2763,12 @@ public class DesignerHostTests
     [WinFormsFact]
     public void Remove_ComponentNotInContainerEmpty_Nop()
     {
-        using var surface1 = new SubDesignSurface();
-        using var surface2 = new SubDesignSurface();
+        using SubDesignSurface surface1 = new();
+        using SubDesignSurface surface2 = new();
         IDesignerLoaderHost2 host1 = surface1.Host;
         IDesignerLoaderHost2 host2 = surface2.Host;
 
-        using var otherComponent = new RootDesignerComponent();
+        using RootDesignerComponent otherComponent = new();
         host1.Container.Add(otherComponent);
         host2.Container.Remove(otherComponent);
         host2.Container.Remove(new Component());
@@ -2780,12 +2779,12 @@ public class DesignerHostTests
     [WinFormsFact]
     public void Remove_InvokeWithComponentRemoved_CallsHandler()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         IComponentChangeService changeService = Assert.IsAssignableFrom<IComponentChangeService>(host);
 
-        using var component1 = new RootDesignerComponent();
-        using var component2 = new DesignerComponent();
+        using RootDesignerComponent component1 = new();
+        using DesignerComponent component2 = new();
         int componentRemovingCallCount = 0;
         ComponentEventHandler componentRemovingHandler = (sender, e) =>
         {
@@ -2846,11 +2845,11 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Remove_SetSiteToNullInComponentRemoving_Success()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         IComponentChangeService changeService = Assert.IsAssignableFrom<IComponentChangeService>(host);
 
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         int componentRemovingCallCount = 0;
         ComponentEventHandler componentRemovingHandler = (sender, e) =>
         {
@@ -2868,10 +2867,10 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_Remove_SiteHasDictionary_ClearsDictionary()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
 
-        using var component = new RootDesignerComponent();
+        using RootDesignerComponent component = new();
         host.Container.Add(component);
         IDictionaryService service = Assert.IsAssignableFrom<IDictionaryService>(component.Site);
         service.SetValue("key", "value");
@@ -2884,7 +2883,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_RemoveService_Invoke_GetServiceReturnsExpected()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
 
         host.AddService(typeof(object), new object());
@@ -2898,7 +2897,7 @@ public class DesignerHostTests
     [BoolData]
     public void DesignerHost_RemoveService_InvokeBool_GetServiceReturnsExpected(bool promote)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
 
         host.AddService(typeof(object), new object());
@@ -2911,7 +2910,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_RemoveService_InvokeDisposed_ThrowsObjectDisposedException()
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         surface.Dispose();
         ServiceCreatorCallback callback = (container, service) => new object();
@@ -2923,14 +2922,14 @@ public class DesignerHostTests
     public static IEnumerable<object[]> OnComponentChanging_TestData()
     {
         yield return new object[] { null, null };
-        yield return new object[] { new object(), TypeDescriptor.GetProperties(typeof(string))[0] };
+        yield return new object[] { new(), TypeDescriptor.GetProperties(typeof(string))[0] };
     }
 
     [WinFormsTheory]
     [MemberData(nameof(OnComponentChanging_TestData))]
     public void DesignerHost_IComponentChangeServiceOnComponentChanging_Invoke_CallsComponentChanging(object component, MemberDescriptor member)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         IComponentChangeService changeService = Assert.IsAssignableFrom<IComponentChangeService>(host);
 
@@ -2963,14 +2962,14 @@ public class DesignerHostTests
     [MemberData(nameof(OnComponentChanging_TestData))]
     public void DesignerHost_IComponentChangeServiceOnComponentChanging_InvokeLoading_DoesNotCallHandler(object component, MemberDescriptor member)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         IComponentChangeService changeService = Assert.IsAssignableFrom<IComponentChangeService>(host);
 
         int callCount = 0;
         ComponentChangingEventHandler handler = (sender, e) => callCount++;
         changeService.ComponentChanging += handler;
-        var mockLoader = new Mock<DesignerLoader>(MockBehavior.Strict);
+        Mock<DesignerLoader> mockLoader = new(MockBehavior.Strict);
         mockLoader
             .Setup(l => l.BeginLoad(host));
         surface.BeginLoad(mockLoader.Object);
@@ -2993,14 +2992,14 @@ public class DesignerHostTests
     public static IEnumerable<object[]> OnComponentChanged_TestData()
     {
         yield return new object[] { null, null, null, null };
-        yield return new object[] { new object(), TypeDescriptor.GetProperties(typeof(string))[0], new object(), new object() };
+        yield return new object[] { new(), TypeDescriptor.GetProperties(typeof(string))[0], new(), new() };
     }
 
     [WinFormsTheory]
     [MemberData(nameof(OnComponentChanged_TestData))]
     public void DesignerHost_IComponentChangeServiceOnComponentChanged_Invoke_CallsComponentChanged(object component, MemberDescriptor member, object oldValue, object newValue)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         IComponentChangeService changeService = Assert.IsAssignableFrom<IComponentChangeService>(host);
 
@@ -3035,14 +3034,14 @@ public class DesignerHostTests
     [MemberData(nameof(OnComponentChanged_TestData))]
     public void DesignerHost_IComponentChangeServiceOnComponentChanged_InvokeLoading_DoesNotCallHandler(object component, MemberDescriptor member, object oldValue, object newValue)
     {
-        var surface = new SubDesignSurface();
+        SubDesignSurface surface = new();
         IDesignerLoaderHost2 host = surface.Host;
         IComponentChangeService changeService = Assert.IsAssignableFrom<IComponentChangeService>(host);
 
         int callCount = 0;
         ComponentChangedEventHandler handler = (sender, e) => callCount++;
         changeService.ComponentChanged += handler;
-        var mockLoader = new Mock<DesignerLoader>(MockBehavior.Strict);
+        Mock<DesignerLoader> mockLoader = new(MockBehavior.Strict);
         mockLoader
             .Setup(l => l.BeginLoad(host));
         surface.BeginLoad(mockLoader.Object);
@@ -3065,7 +3064,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_IReflect_UnderlyingSystemType_ReturnsExpected()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IReflect reflect = Assert.IsAssignableFrom<IReflect>(surface.Host);
         Assert.Equal(typeof(IDesignerHost), reflect.UnderlyingSystemType);
     }
@@ -3073,7 +3072,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_IReflect_GetField_Success()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IReflect reflect = Assert.IsAssignableFrom<IReflect>(surface.Host);
         Assert.Equal(typeof(IDesignerHost).GetField(nameof(IDesignerHost.Activate)), reflect.GetField(nameof(IDesignerHost.Activate), BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public));
     }
@@ -3081,7 +3080,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_IReflect_GetFields_Success()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IReflect reflect = Assert.IsAssignableFrom<IReflect>(surface.Host);
         Assert.Equal(typeof(IDesignerHost).GetFields(), reflect.GetFields(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public));
     }
@@ -3089,7 +3088,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_IReflect_GetMember_Success()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IReflect reflect = Assert.IsAssignableFrom<IReflect>(surface.Host);
         Assert.Equal(typeof(IDesignerHost).GetMember(nameof(IDesignerHost.Container)), reflect.GetMember(nameof(IDesignerHost.Container), BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public));
     }
@@ -3097,7 +3096,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_IReflect_GetMembers_Success()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IReflect reflect = Assert.IsAssignableFrom<IReflect>(surface.Host);
         Assert.Equal(typeof(IDesignerHost).GetMembers(), reflect.GetMembers(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public));
     }
@@ -3105,7 +3104,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_IReflect_GetMethod_Success()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IReflect reflect = Assert.IsAssignableFrom<IReflect>(surface.Host);
         Assert.Equal(typeof(IDesignerHost).GetMethod(nameof(IDesignerHost.Activate)), reflect.GetMethod(nameof(IDesignerHost.Activate), BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public));
         Assert.Equal(typeof(IDesignerHost).GetMethod(nameof(IDesignerHost.Activate)), reflect.GetMethod(nameof(IDesignerHost.Activate), BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public, null, Array.Empty<Type>(), Array.Empty<ParameterModifier>()));
@@ -3114,7 +3113,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_IReflect_GetMethods_Success()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IReflect reflect = Assert.IsAssignableFrom<IReflect>(surface.Host);
         Assert.Equal(typeof(IDesignerHost).GetMethods(), reflect.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public));
     }
@@ -3122,7 +3121,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_IReflect_GetProperty_Success()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IReflect reflect = Assert.IsAssignableFrom<IReflect>(surface.Host);
         Assert.Equal(typeof(IDesignerHost).GetProperty(nameof(IDesignerHost.Container)), reflect.GetProperty(nameof(IDesignerHost.Container), BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public));
         Assert.Equal(typeof(IDesignerHost).GetProperty(nameof(IDesignerHost.Container)), reflect.GetProperty(nameof(IDesignerHost.Container), BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public, null, typeof(IContainer), Array.Empty<Type>(), Array.Empty<ParameterModifier>()));
@@ -3131,7 +3130,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_IReflect_GetProperties_Success()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IReflect reflect = Assert.IsAssignableFrom<IReflect>(surface.Host);
         Assert.Equal(typeof(IDesignerHost).GetProperties(), reflect.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public));
     }
@@ -3139,7 +3138,7 @@ public class DesignerHostTests
     [WinFormsFact]
     public void DesignerHost_IReflect_InvokeMember_ReturnsExpected()
     {
-        using var surface = new SubDesignSurface();
+        using SubDesignSurface surface = new();
         IReflect reflect = Assert.IsAssignableFrom<IReflect>(surface.Host);
         Assert.Equal(surface.Host.Container, reflect.InvokeMember(nameof(IDesignerHost.Container), BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.GetProperty, null, surface.Host, Array.Empty<object>(), Array.Empty<ParameterModifier>(), null, Array.Empty<string>()));
     }

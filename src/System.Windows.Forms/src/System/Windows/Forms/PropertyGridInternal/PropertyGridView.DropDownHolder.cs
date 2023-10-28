@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -552,7 +551,7 @@ internal partial class PropertyGridView
         /// <summary>
         ///  Set the control to host in this <see cref="DropDownHolder"/>.
         /// </summary>
-        public void SetDropDownControl(Control control, bool resizable)
+        public void SetDropDownControl(Control? control, bool resizable)
         {
             _resizable = resizable;
             Font = _gridView.Font;

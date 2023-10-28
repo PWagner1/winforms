@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace System.ComponentModel.Design.Serialization.Tests;
 
@@ -9,7 +8,7 @@ public class SerializeAbsoluteContextTests
     [Fact]
     public void SerializeAbsoluteContext_Ctor_Default()
     {
-        var context = new SerializeAbsoluteContext();
+        SerializeAbsoluteContext context = new();
         Assert.Null(context.Member);
     }
 
@@ -25,7 +24,7 @@ public class SerializeAbsoluteContextTests
     [MemberData(nameof(Ctor_MemberDescriptor_TestData))]
     public void SerializeAbsoluteContext_Ctor_MemberDescriptor(MemberDescriptor member)
     {
-        var context = new SerializeAbsoluteContext(member);
+        SerializeAbsoluteContext context = new(member);
         Assert.Same(member, context.Member);
     }
 

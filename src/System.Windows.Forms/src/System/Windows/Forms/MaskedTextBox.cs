@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -9,8 +8,8 @@ using System.Drawing.Design;
 using System.Globalization;
 using System.Windows.Forms.VisualStyles;
 using Windows.Win32.Globalization;
+using Windows.Win32.UI.Accessibility;
 using Windows.Win32.UI.Input.Ime;
-using static Interop;
 
 namespace System.Windows.Forms;
 
@@ -38,11 +37,11 @@ public partial class MaskedTextBox : TextBoxBase
     private const bool backward = false;
     private const string nullMask = "<>"; // any char/str is OK here.
 
-    private static readonly object EVENT_MASKINPUTREJECTED = new object();
-    private static readonly object EVENT_VALIDATIONCOMPLETED = new object();
-    private static readonly object EVENT_TEXTALIGNCHANGED = new object();
-    private static readonly object EVENT_ISOVERWRITEMODECHANGED = new object();
-    private static readonly object EVENT_MASKCHANGED = new object();
+    private static readonly object EVENT_MASKINPUTREJECTED = new();
+    private static readonly object EVENT_VALIDATIONCOMPLETED = new();
+    private static readonly object EVENT_TEXTALIGNCHANGED = new();
+    private static readonly object EVENT_ISOVERWRITEMODECHANGED = new();
+    private static readonly object EVENT_MASKCHANGED = new();
 
     // The native edit control's default password char (per thread). See corresponding property for more info.
     private static char systemPwdChar;
@@ -2044,7 +2043,7 @@ public partial class MaskedTextBox : TextBoxBase
 
         if (IsHandleCreated && IsAccessibilityObjectCreated && ContainsNavigationKeyCode(e.KeyCode))
         {
-            AccessibilityObject?.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+            AccessibilityObject?.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId);
         }
     }
 
@@ -2089,7 +2088,7 @@ public partial class MaskedTextBox : TextBoxBase
             // about text selection changed for TextBox assuming
             // that any mouse down on textbox leads to change of
             // the caret position and thereby change the selection.
-            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+            AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId);
         }
     }
 

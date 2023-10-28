@@ -1,10 +1,10 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Windows.Win32.UI.Controls.Dialogs;
 using static Interop;
 
 namespace System.Drawing.Design;
@@ -39,7 +39,7 @@ public partial class ColorEditor
             }
         }
 
-        protected override int Options => (int)(Comdlg32.CC.FULLOPEN | Comdlg32.CC.ENABLETEMPLATEHANDLE);
+        protected override int Options => (int)(CHOOSECOLOR_FLAGS.CC_FULLOPEN | CHOOSECOLOR_FLAGS.CC_ENABLETEMPLATEHANDLE);
 
         protected override void Dispose(bool disposing)
         {

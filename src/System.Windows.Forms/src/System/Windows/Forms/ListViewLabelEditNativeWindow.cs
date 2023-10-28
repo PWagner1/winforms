@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Runtime.InteropServices;
 using Windows.Win32.UI.Accessibility;
@@ -92,7 +91,7 @@ internal class ListViewLabelEditNativeWindow : NativeWindow
         InstallWinEventHooks();
     }
 
-    public override void ReleaseHandle()
+    public override unsafe void ReleaseHandle()
     {
         if (_winEventHooksInstalled)
         {
@@ -130,10 +129,10 @@ internal class ListViewLabelEditNativeWindow : NativeWindow
         switch (eventId)
         {
             case (uint)AccessibleEvents.ValueChange:
-                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextChangedEventId);
+                AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextChangedEventId);
                 break;
             case TextSelectionChanged:
-                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+                AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId);
                 break;
         }
     }

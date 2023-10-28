@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -113,7 +112,7 @@ public class ToolStripItemCollection : ArrangedElementCollection, IList
         return retVal;
     }
 
-    public void AddRange(ToolStripItem[] toolStripItems)
+    public void AddRange(params ToolStripItem[] toolStripItems)
     {
         ArgumentNullException.ThrowIfNull(toolStripItems);
 
@@ -380,8 +379,7 @@ public class ToolStripItemCollection : ArrangedElementCollection, IList
     {
         if (_itemsCollection)
         {
-            ToolStrip? parent = null;
-            parent = item.ParentInternal;
+            ToolStrip? parent = item.ParentInternal;
             item.SetOwner(null);
 
             if (_owner is not null)

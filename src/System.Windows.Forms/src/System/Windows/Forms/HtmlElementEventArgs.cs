@@ -1,10 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
-using static Interop.Mshtml;
+using Windows.Win32.Web.MsHtml;
 
 namespace System.Windows.Forms;
 
@@ -12,7 +11,7 @@ public sealed class HtmlElementEventArgs : EventArgs
 {
     private readonly HtmlShimManager _shimManager;
 
-    internal HtmlElementEventArgs(HtmlShimManager shimManager, IHTMLEventObj eventObj)
+    internal HtmlElementEventArgs(HtmlShimManager shimManager, Interop.Mshtml.IHTMLEventObj eventObj)
     {
         NativeHTMLEventObj = eventObj;
         Debug.Assert(NativeHTMLEventObj is not null, "The event object should implement IHTMLEventObj");
@@ -20,7 +19,7 @@ public sealed class HtmlElementEventArgs : EventArgs
         _shimManager = shimManager;
     }
 
-    private IHTMLEventObj NativeHTMLEventObj { get; }
+    private Interop.Mshtml.IHTMLEventObj NativeHTMLEventObj { get; }
 
     public MouseButtons MouseButtonsPressed
     {
@@ -49,17 +48,17 @@ public sealed class HtmlElementEventArgs : EventArgs
 
     public Point ClientMousePosition
     {
-        get => new Point(NativeHTMLEventObj.GetClientX(), NativeHTMLEventObj.GetClientY());
+        get => new(NativeHTMLEventObj.GetClientX(), NativeHTMLEventObj.GetClientY());
     }
 
     public Point OffsetMousePosition
     {
-        get => new Point(NativeHTMLEventObj.GetOffsetX(), NativeHTMLEventObj.GetOffsetY());
+        get => new(NativeHTMLEventObj.GetOffsetX(), NativeHTMLEventObj.GetOffsetY());
     }
 
     public Point MousePosition
     {
-        get => new Point(NativeHTMLEventObj.GetX(), NativeHTMLEventObj.GetY());
+        get => new(NativeHTMLEventObj.GetX(), NativeHTMLEventObj.GetY());
     }
 
     public bool BubbleEvent
@@ -102,23 +101,23 @@ public sealed class HtmlElementEventArgs : EventArgs
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    public HtmlElement? FromElement
+    public unsafe HtmlElement? FromElement
     {
         get
         {
-            IHTMLElement htmlElement = NativeHTMLEventObj.GetFromElement();
-            return htmlElement is null ? null : new HtmlElement(_shimManager, htmlElement);
+            IHTMLElement.Interface htmlElement = NativeHTMLEventObj.GetFromElement();
+            return htmlElement is null ? null : new HtmlElement(_shimManager, ComHelpers.GetComPointer<IHTMLElement>(htmlElement));
         }
     }
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    public HtmlElement? ToElement
+    public unsafe HtmlElement? ToElement
     {
         get
         {
-            IHTMLElement htmlElement = NativeHTMLEventObj.GetToElement();
-            return htmlElement is null ? null : new HtmlElement(_shimManager, htmlElement);
+            IHTMLElement.Interface htmlElement = NativeHTMLEventObj.GetToElement();
+            return htmlElement is null ? null : new HtmlElement(_shimManager, ComHelpers.GetComPointer<IHTMLElement>(htmlElement));
         }
     }
 }

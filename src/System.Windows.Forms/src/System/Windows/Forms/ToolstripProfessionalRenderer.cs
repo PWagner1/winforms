@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -19,7 +18,7 @@ public class ToolStripProfessionalRenderer : ToolStripRenderer
     private const int ICON_WELL_GRADIENT_WIDTH = 12;
     private int iconWellGradientWidth = ICON_WELL_GRADIENT_WIDTH;
 
-    private static readonly Size onePix = new Size(1, 1);
+    private static readonly Size onePix = new(1, 1);
 
     private bool isScalingInitialized;
     private const int OVERFLOW_BUTTON_WIDTH = 12;
@@ -32,7 +31,7 @@ public class ToolStripProfessionalRenderer : ToolStripRenderer
     private int overflowArrowOffsetY = OVERFLOW_ARROW_OFFSETY;
 
     private const int DROP_DOWN_MENU_ITEM_PAINT_PADDING_SIZE = 1;
-    private Padding scaledDropDownMenuItemPaintPadding = new Padding(DROP_DOWN_MENU_ITEM_PAINT_PADDING_SIZE + 1, 0, DROP_DOWN_MENU_ITEM_PAINT_PADDING_SIZE, 0);
+    private Padding scaledDropDownMenuItemPaintPadding = new(DROP_DOWN_MENU_ITEM_PAINT_PADDING_SIZE + 1, 0, DROP_DOWN_MENU_ITEM_PAINT_PADDING_SIZE, 0);
     private readonly ProfessionalColorTable? professionalColorTable;
     private bool roundedEdges = true;
     private ToolStripRenderer? toolStripHighContrastRenderer;
@@ -664,6 +663,11 @@ public class ToolStripProfessionalRenderer : ToolStripRenderer
                 {
                     using var brush = item.BackColor.GetCachedSolidBrushScope();
                     g.FillRectangle(brush, fillRect);
+                }
+                else if (item is ToolStripMenuItem menuItem && menuItem.CheckState == CheckState.Checked)
+                {
+                    using var pen = ColorTable.MenuItemBorder.GetCachedPenScope();
+                    g.DrawRectangle(pen, bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
                 }
             }
         }
@@ -1660,27 +1664,27 @@ public class ToolStripProfessionalRenderer : ToolStripRenderer
             case ArrowDirection.Up:
                 arrow = new Point[]
                 {
-                    new Point(middle.X - Offset2X, middle.Y + 1),
-                    new Point(middle.X + Offset2X + 1, middle.Y + 1),
-                    new Point(middle.X, middle.Y - Offset2Y)
+                    new(middle.X - Offset2X, middle.Y + 1),
+                    new(middle.X + Offset2X + 1, middle.Y + 1),
+                    new(middle.X, middle.Y - Offset2Y)
                 };
                 break;
 
             case ArrowDirection.Left:
                 arrow = new Point[]
                 {
-                    new Point(middle.X + Offset2X, middle.Y - Offset2Y - 1),
-                    new Point(middle.X + Offset2X, middle.Y + Offset2Y + 1),
-                    new Point(middle.X - 1, middle.Y)
+                    new(middle.X + Offset2X, middle.Y - Offset2Y - 1),
+                    new(middle.X + Offset2X, middle.Y + Offset2Y + 1),
+                    new(middle.X - 1, middle.Y)
                 };
                 break;
 
             case ArrowDirection.Right:
                 arrow = new Point[]
                 {
-                    new Point(middle.X - Offset2X, middle.Y - Offset2Y - 1),
-                    new Point(middle.X - Offset2X, middle.Y + Offset2Y + 1),
-                    new Point(middle.X + 1, middle.Y)
+                    new(middle.X - Offset2X, middle.Y - Offset2Y - 1),
+                    new(middle.X - Offset2X, middle.Y + Offset2Y + 1),
+                    new(middle.X + 1, middle.Y)
                 };
                 break;
 
@@ -1688,9 +1692,9 @@ public class ToolStripProfessionalRenderer : ToolStripRenderer
             default:
                 arrow = new Point[]
                 {
-                    new Point(middle.X - Offset2X, middle.Y - 1),
-                    new Point(middle.X + Offset2X + 1, middle.Y - 1),
-                    new Point(middle.X, middle.Y + Offset2Y)
+                    new(middle.X - Offset2X, middle.Y - 1),
+                    new(middle.X + Offset2X + 1, middle.Y - 1),
+                    new(middle.X, middle.Y + Offset2Y)
                 };
                 break;
         }

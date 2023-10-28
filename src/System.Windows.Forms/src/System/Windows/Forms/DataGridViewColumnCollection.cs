@@ -1,8 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-#nullable disable
 
 using System.Collections;
 using System.ComponentModel;
@@ -18,13 +15,13 @@ namespace System.Windows.Forms;
 [ListBindable(false)]
 public partial class DataGridViewColumnCollection : BaseCollection, IList
 {
-    private CollectionChangeEventHandler _onCollectionChanged;
+    private CollectionChangeEventHandler? _onCollectionChanged;
     private readonly List<DataGridViewColumn> _items = new();
-    private List<DataGridViewColumn> _itemsSorted;
+    private List<DataGridViewColumn>? _itemsSorted;
     private int _lastAccessedSortedIndex = -1;
     private int _columnCountsVisible, _columnCountsVisibleSelected;
     private int _columnsWidthVisible, _columnsWidthVisibleFrozen;
-    private static readonly ColumnOrderComparer s_columnOrderComparer = new ColumnOrderComparer();
+    private static readonly ColumnOrderComparer s_columnOrderComparer = new();
 
     /* IList interface implementation */
 
@@ -32,46 +29,25 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
 
     bool IList.IsReadOnly => false;
 
-    object IList.this[int index]
+    object? IList.this[int index]
     {
-        get { return this[index]; }
-        set { throw new NotSupportedException(); }
+        get => this[index];
+        set => throw new NotSupportedException();
     }
 
-    int IList.Add(object value)
-    {
-        return Add((DataGridViewColumn)value);
-    }
+    int IList.Add(object? value) => Add((DataGridViewColumn)value!);
 
-    void IList.Clear()
-    {
-        Clear();
-    }
+    void IList.Clear() => Clear();
 
-    bool IList.Contains(object value)
-    {
-        return _items.Contains(value);
-    }
+    bool IList.Contains(object? value) => _items.Contains(value);
 
-    int IList.IndexOf(object value)
-    {
-        return _items.IndexOf((DataGridViewColumn)value);
-    }
+    int IList.IndexOf(object? value) => _items.IndexOf((DataGridViewColumn)value!);
 
-    void IList.Insert(int index, object value)
-    {
-        Insert(index, (DataGridViewColumn)value);
-    }
+    void IList.Insert(int index, object? value) => Insert(index, (DataGridViewColumn)value!);
 
-    void IList.Remove(object value)
-    {
-        Remove((DataGridViewColumn)value);
-    }
+    void IList.Remove(object? value) => Remove((DataGridViewColumn)value!);
 
-    void IList.RemoveAt(int index)
-    {
-        RemoveAt(index);
-    }
+    void IList.RemoveAt(int index) => RemoveAt(index);
 
     /* ICollection interface implementation */
 
@@ -81,26 +57,20 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
 
     object ICollection.SyncRoot => this;
 
-    void ICollection.CopyTo(Array array, int index)
-    {
-        ((ICollection)_items).CopyTo(array, index);
-    }
+    void ICollection.CopyTo(Array array, int index) => ((ICollection)_items).CopyTo(array, index);
 
     /* IEnumerable interface implementation */
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return _items.GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
 
     public DataGridViewColumnCollection(DataGridView dataGridView)
     {
         InvalidateCachedColumnCounts();
         InvalidateCachedColumnsWidths();
-        this.DataGridView = dataGridView;
+        DataGridView = dataGridView;
     }
 
-    internal static IComparer<DataGridViewColumn> ColumnCollectionOrderComparer => System.Windows.Forms.DataGridViewColumnCollection.s_columnOrderComparer;
+    internal static IComparer<DataGridViewColumn?> ColumnCollectionOrderComparer => DataGridViewColumnCollection.s_columnOrderComparer;
 
     protected override ArrayList List => ArrayList.Adapter(_items);
 
@@ -109,18 +79,12 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
     /// <summary>
     ///  Retrieves the DataGridViewColumn with the specified index.
     /// </summary>
-    public DataGridViewColumn this[int index]
-    {
-        get
-        {
-            return _items[index];
-        }
-    }
+    public DataGridViewColumn this[int index] => _items[index];
 
     /// <summary>
     ///  Retrieves the DataGridViewColumn with the Name provided.
     /// </summary>
-    public DataGridViewColumn this[string columnName]
+    public DataGridViewColumn? this[string columnName]
     {
         get
         {
@@ -141,7 +105,7 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
         }
     }
 
-    public event CollectionChangeEventHandler CollectionChanged
+    public event CollectionChangeEventHandler? CollectionChanged
     {
         add => _onCollectionChanged += value;
         remove => _onCollectionChanged -= value;
@@ -150,10 +114,10 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
     internal int ActualDisplayIndexToColumnIndex(int actualDisplayIndex, DataGridViewElementStates includeFilter)
     {
         // Microsoft: is there a faster way to get the column index?
-        DataGridViewColumn dataGridViewColumn = GetFirstColumn(includeFilter);
+        DataGridViewColumn? dataGridViewColumn = GetFirstColumn(includeFilter);
         for (int i = 0; i < actualDisplayIndex; i++)
         {
-            dataGridViewColumn = GetNextColumn(dataGridViewColumn, includeFilter, DataGridViewElementStates.None);
+            dataGridViewColumn = GetNextColumn(dataGridViewColumn!, includeFilter, DataGridViewElementStates.None);
         }
 
         return dataGridViewColumn?.Index ?? -1;
@@ -163,7 +127,7 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
     ///  Adds a <see cref="DataGridViewColumn"/> to this collection.
     /// </summary>
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public virtual int Add(string columnName, string headerText)
+    public virtual int Add(string? columnName, string? headerText)
     {
         DataGridViewTextBoxColumn dataGridViewTextBoxColumn = new DataGridViewTextBoxColumn
         {
@@ -348,7 +312,7 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
     internal int ColumnIndexToActualDisplayIndex(int columnIndex, DataGridViewElementStates includeFilter)
     {
         // map the column index to the actual display index
-        DataGridViewColumn dataGridViewColumn = GetFirstColumn(includeFilter);
+        DataGridViewColumn? dataGridViewColumn = GetFirstColumn(includeFilter);
         int actualDisplayIndex = 0;
         while (dataGridViewColumn is not null && dataGridViewColumn.Index != columnIndex)
         {
@@ -362,10 +326,7 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
     /// <summary>
     ///  Checks to see if a DataGridViewColumn is contained in this collection.
     /// </summary>
-    public virtual bool Contains(DataGridViewColumn dataGridViewColumn)
-    {
-        return _items.IndexOf(dataGridViewColumn) != -1;
-    }
+    public virtual bool Contains(DataGridViewColumn dataGridViewColumn) => _items.IndexOf(dataGridViewColumn) != -1;
 
     public virtual bool Contains(string columnName)
     {
@@ -397,7 +358,7 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
         return displayIndex1 < displayIndex2;
     }
 
-    internal DataGridViewColumn GetColumnAtDisplayIndex(int displayIndex)
+    internal DataGridViewColumn? GetColumnAtDisplayIndex(int displayIndex)
     {
         if (displayIndex < 0 || displayIndex >= _items.Count)
         {
@@ -516,11 +477,12 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
         Debug.Assert(_items[toColumnIndex].StateIncludes(includeFilter));
 
         int jumpColumns = 0;
-        DataGridViewColumn dataGridViewColumn = _items[fromColumnIndex];
+        DataGridViewColumn? dataGridViewColumn = _items[fromColumnIndex];
 
         while (dataGridViewColumn != _items[toColumnIndex])
         {
-            dataGridViewColumn = GetNextColumn(dataGridViewColumn, includeFilter,
+            dataGridViewColumn = GetNextColumn(
+                dataGridViewColumn, includeFilter,
                 DataGridViewElementStates.None);
             Debug.Assert(dataGridViewColumn is not null);
             if (dataGridViewColumn.StateIncludes(includeFilter))
@@ -630,7 +592,7 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
         return columnsWidth;
     }
 
-    public DataGridViewColumn GetFirstColumn(DataGridViewElementStates includeFilter)
+    public DataGridViewColumn? GetFirstColumn(DataGridViewElementStates includeFilter)
     {
         if ((includeFilter & ~(DataGridViewElementStates.Displayed | DataGridViewElementStates.Frozen | DataGridViewElementStates.Resizable |
             DataGridViewElementStates.ReadOnly | DataGridViewElementStates.Selected | DataGridViewElementStates.Visible)) != 0)
@@ -661,8 +623,9 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
         return null;
     }
 
-    public DataGridViewColumn GetFirstColumn(DataGridViewElementStates includeFilter,
-                                             DataGridViewElementStates excludeFilter)
+    public DataGridViewColumn? GetFirstColumn(
+        DataGridViewElementStates includeFilter,
+        DataGridViewElementStates excludeFilter)
     {
         if (excludeFilter == DataGridViewElementStates.None)
         {
@@ -705,8 +668,9 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
         return null;
     }
 
-    public DataGridViewColumn GetLastColumn(DataGridViewElementStates includeFilter,
-                                            DataGridViewElementStates excludeFilter)
+    public DataGridViewColumn? GetLastColumn(
+        DataGridViewElementStates includeFilter,
+        DataGridViewElementStates excludeFilter)
     {
         if ((includeFilter & ~(DataGridViewElementStates.Displayed | DataGridViewElementStates.Frozen | DataGridViewElementStates.Resizable |
             DataGridViewElementStates.ReadOnly | DataGridViewElementStates.Selected | DataGridViewElementStates.Visible)) != 0)
@@ -744,9 +708,10 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
         return null;
     }
 
-    public DataGridViewColumn GetNextColumn(DataGridViewColumn dataGridViewColumnStart,
-                                            DataGridViewElementStates includeFilter,
-                                            DataGridViewElementStates excludeFilter)
+    public DataGridViewColumn? GetNextColumn(
+        DataGridViewColumn dataGridViewColumnStart,
+        DataGridViewElementStates includeFilter,
+        DataGridViewElementStates excludeFilter)
     {
         ArgumentNullException.ThrowIfNull(dataGridViewColumnStart);
 
@@ -816,9 +781,10 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
         return null;
     }
 
-    public DataGridViewColumn GetPreviousColumn(DataGridViewColumn dataGridViewColumnStart,
-                                                         DataGridViewElementStates includeFilter,
-                                                         DataGridViewElementStates excludeFilter)
+    public DataGridViewColumn? GetPreviousColumn(
+        DataGridViewColumn dataGridViewColumnStart,
+        DataGridViewElementStates includeFilter,
+        DataGridViewElementStates excludeFilter)
     {
         ArgumentNullException.ThrowIfNull(dataGridViewColumnStart);
 
@@ -888,10 +854,7 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
         return null;
     }
 
-    public int IndexOf(DataGridViewColumn dataGridViewColumn)
-    {
-        return _items.IndexOf(dataGridViewColumn);
-    }
+    public int IndexOf(DataGridViewColumn dataGridViewColumn) => _items.IndexOf(dataGridViewColumn);
 
     /// <summary>
     ///  Inserts a <see cref="DataGridViewColumn"/> in this collection.
@@ -959,15 +922,9 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
         }
     }
 
-    internal void InvalidateCachedColumnCounts()
-    {
-        _columnCountsVisible = _columnCountsVisibleSelected = -1;
-    }
+    internal void InvalidateCachedColumnCounts() => _columnCountsVisible = _columnCountsVisibleSelected = -1;
 
-    internal void InvalidateCachedColumnsOrder()
-    {
-        _itemsSorted = null;
-    }
+    internal void InvalidateCachedColumnsOrder() => _itemsSorted = null;
 
     internal void InvalidateCachedColumnsWidth(DataGridViewElementStates includeFilter)
     {
@@ -988,15 +945,9 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
         }
     }
 
-    internal void InvalidateCachedColumnsWidths()
-    {
-        _columnsWidthVisible = _columnsWidthVisibleFrozen = -1;
-    }
+    internal void InvalidateCachedColumnsWidths() => _columnsWidthVisible = _columnsWidthVisibleFrozen = -1;
 
-    protected virtual void OnCollectionChanged(CollectionChangeEventArgs e)
-    {
-        _onCollectionChanged?.Invoke(this, e);
-    }
+    protected virtual void OnCollectionChanged(CollectionChangeEventArgs e) => _onCollectionChanged?.Invoke(this, e);
 
     private void OnCollectionChanged(CollectionChangeEventArgs ccea, bool changeIsInsertion, Point newCurrentCell)
     {
@@ -1017,7 +968,7 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
     private void OnCollectionChanged_PostNotification(CollectionChangeEventArgs ccea, bool changeIsInsertion, Point newCurrentCell)
     {
         Debug.Assert(DataGridView is not null);
-        DataGridViewColumn dataGridViewColumn = (DataGridViewColumn)ccea.Element;
+        DataGridViewColumn? dataGridViewColumn = (DataGridViewColumn?)ccea.Element;
         if (ccea.Action == CollectionChangeAction.Add && changeIsInsertion)
         {
             DataGridView.OnInsertedColumn_PostNotification(newCurrentCell);
@@ -1176,6 +1127,7 @@ public partial class DataGridViewColumnCollection : BaseCollection, IList
         }
     }
 
+    [MemberNotNull(nameof(_itemsSorted))]
     private void UpdateColumnOrderCache()
     {
         _itemsSorted = _items.ToList();

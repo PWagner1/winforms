@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.ComponentModel.Design;
@@ -431,10 +430,10 @@ public partial class ErrorProvider : Component, IExtenderProvider, ISupportIniti
         {
             for (int j = 0; j < bindingsCount; j++)
             {
-                if (errBindings[j].Control is not null)
+                if (errBindings[j].Control is Control control)
                 {
                     // Ignore everything but bindings to Controls
-                    SetError(errBindings[j].Control, "");
+                    SetError(control, string.Empty);
                 }
             }
         }
@@ -460,7 +459,7 @@ public partial class ErrorProvider : Component, IExtenderProvider, ISupportIniti
         }
 
         object? value = _errorManager.Current;
-        if (value is not IDataErrorInfo)
+        if (value is not IDataErrorInfo dataErrorInfo)
         {
             return;
         }
@@ -481,17 +480,17 @@ public partial class ErrorProvider : Component, IExtenderProvider, ISupportIniti
         for (int j = 0; j < bindingsCount; j++)
         {
             // Ignore everything but bindings to Controls
-            if (errBindings[j].Control is null)
+            if (errBindings[j].Control is not Control control)
             {
                 continue;
             }
 
             Binding dataBinding = errBindings[j];
-            string error = ((IDataErrorInfo)value)[dataBinding.BindingMemberInfo.BindingField];
+            string error = dataErrorInfo[dataBinding.BindingMemberInfo.BindingField];
 
             error ??= string.Empty;
 
-            if (!controlError.TryGetValue(dataBinding.Control, out string? outputError))
+            if (!controlError.TryGetValue(control, out string? outputError))
             {
                 outputError = string.Empty;
             }
@@ -506,7 +505,7 @@ public partial class ErrorProvider : Component, IExtenderProvider, ISupportIniti
                 outputError = string.Concat(outputError, "\r\n", error);
             }
 
-            controlError[dataBinding.Control] = outputError;
+            controlError[control] = outputError;
         }
 
         foreach (KeyValuePair<Control, string> entry in controlError)
@@ -555,8 +554,7 @@ public partial class ErrorProvider : Component, IExtenderProvider, ISupportIniti
                     // Error provider uses small Icon.
                     int width = PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXSMICON);
                     int height = PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYSMICON);
-                    using var defaultIcon = new Icon(typeof(ErrorProvider), "Error");
-
+                    using Icon defaultIcon = new(typeof(ErrorProvider), "Error");
                     t_defaultIcon = new Icon(defaultIcon, width, height);
                 }
             }

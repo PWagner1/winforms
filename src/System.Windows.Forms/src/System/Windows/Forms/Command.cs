@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace System.Windows.Forms;
 
@@ -8,7 +7,7 @@ internal class Command : WeakReference
 {
     private static Command?[]? s_cmds;
     private static int s_icmdTry;
-    private static readonly object s_internalSyncObject = new object();
+    private static readonly object s_internalSyncObject = new();
     private const int IdMin = 0x00100;
     private const int IdLim = 0x10000;
 

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing.Design;
@@ -25,6 +24,7 @@ public partial class ColumnHeader : Component, ICloneable
     internal string? _text;
     internal string _name;
     internal int _width = 60;
+    internal int _correspondingListViewSubItemIndex = -1;
 
     // Use TextAlign property instead of this member variable, always
     private HorizontalAlignment _textAlign = HorizontalAlignment.Left;

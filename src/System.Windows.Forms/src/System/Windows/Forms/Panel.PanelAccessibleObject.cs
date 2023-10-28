@@ -1,7 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -18,7 +18,7 @@ public partial class Panel
 
         public override AccessibleObject? GetChild(int index)
         {
-            if (!this.TryGetOwnerAs(out Panel? owner) || !owner.IsHandleCreated || index < 0 || index >= owner.Controls.Count)
+            if (!this.IsOwnerHandleCreated(out Panel? owner) || index < 0 || index >= owner.Controls.Count)
             {
                 return null;
             }
@@ -27,14 +27,12 @@ public partial class Panel
         }
 
         public override int GetChildCount()
-            => this.TryGetOwnerAs(out Panel? owner) && owner.IsHandleCreated
-                ? owner.Controls.Count
-                : -1;
+            => this.IsOwnerHandleCreated(out Panel? owner) ? owner.Controls.Count : -1;
 
-        internal override object? GetPropertyValue(UiaCore.UIA propertyID)
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyID)
            => propertyID switch
            {
-               UiaCore.UIA.IsKeyboardFocusablePropertyId => false,
+               UIA_PROPERTY_ID.UIA_IsKeyboardFocusablePropertyId => false,
                _ => base.GetPropertyValue(propertyID)
            };
     }

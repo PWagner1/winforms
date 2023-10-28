@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -134,7 +133,7 @@ public partial class ListViewItem
             return item;
         }
 
-        public void AddRange(ListViewSubItem[] items)
+        public void AddRange(params ListViewSubItem[] items)
         {
             ArgumentNullException.ThrowIfNull(items);
 
@@ -152,7 +151,7 @@ public partial class ListViewItem
             _owner.UpdateSubItems(-1);
         }
 
-        public void AddRange(string[] items)
+        public void AddRange(params string[] items)
         {
             ArgumentNullException.ThrowIfNull(items);
 
@@ -305,11 +304,8 @@ public partial class ListViewItem
 
         public void Insert(int index, ListViewSubItem item)
         {
-            if (index < 0 || index > Count)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index));
-            }
-
+            ArgumentOutOfRangeException.ThrowIfNegative(index);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(index, Count);
             ArgumentNullException.ThrowIfNull(item);
 
             item._owner = _owner;
@@ -351,10 +347,8 @@ public partial class ListViewItem
 
         public void RemoveAt(int index)
         {
-            if (index < 0 || index >= Count)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegative(index);
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, Count);
 
             // Remove ourselves as the owner.
             _owner._subItems[index]._owner = null;

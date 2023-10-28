@@ -1,10 +1,10 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Globalization;
 using System.Text;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -243,10 +243,7 @@ public partial class DataGridViewRow
 
         public override AccessibleObject? GetChild(int index)
         {
-            if (index < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegative(index);
 
             if (_owningDataGridViewRow is null)
             {
@@ -312,7 +309,7 @@ public partial class DataGridViewRow
                 dataGridView.CurrentCell is not null &&
                 dataGridView.CurrentCell.RowIndex == _owningDataGridViewRow.Index)
             {
-                return _owningDataGridViewRow.DataGridView.CurrentCell.AccessibilityObject;
+                return dataGridView.CurrentCell.AccessibilityObject;
             }
             else
             {
@@ -420,7 +417,7 @@ public partial class DataGridViewRow
                     }
                     else
                     {
-                        int firstVisibleCell = dataGridView.Columns.GetFirstColumn(DataGridViewElementStates.Visible).Index;
+                        int firstVisibleCell = dataGridView.Columns.GetFirstColumn(DataGridViewElementStates.Visible)!.Index;
                         if (firstVisibleCell > -1)
                         {
                             dataGridView.CurrentCell = _owningDataGridViewRow.Cells[firstVisibleCell]; // Do not change old selection
@@ -478,19 +475,17 @@ public partial class DataGridViewRow
             }
         }
 
-        internal override bool IsPatternSupported(UiaCore.UIA patternId)
-        {
-            return patternId.Equals(UiaCore.UIA.LegacyIAccessiblePatternId);
-        }
+        internal override bool IsPatternSupported(UIA_PATTERN_ID patternId)
+            => patternId.Equals(UIA_PATTERN_ID.UIA_LegacyIAccessiblePatternId);
 
         internal override bool IsReadOnly => _owningDataGridViewRow?.ReadOnly ?? false;
 
-        internal override object? GetPropertyValue(UiaCore.UIA propertyId) =>
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyId) =>
             propertyId switch
             {
-                UiaCore.UIA.HasKeyboardFocusPropertyId => string.Empty,
-                UiaCore.UIA.IsEnabledPropertyId => Owner?.DataGridView?.Enabled ?? false,
-                UiaCore.UIA.IsKeyboardFocusablePropertyId => string.Empty,
+                UIA_PROPERTY_ID.UIA_HasKeyboardFocusPropertyId => string.Empty,
+                UIA_PROPERTY_ID.UIA_IsEnabledPropertyId => Owner?.DataGridView?.Enabled ?? false,
+                UIA_PROPERTY_ID.UIA_IsKeyboardFocusablePropertyId => string.Empty,
                 _ => base.GetPropertyValue(propertyId)
             };
     }

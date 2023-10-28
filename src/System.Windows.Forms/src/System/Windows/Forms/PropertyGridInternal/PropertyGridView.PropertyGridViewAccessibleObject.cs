@@ -1,8 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms.PropertyGridInternal;
@@ -23,7 +23,7 @@ internal partial class PropertyGridView
         }
 
         internal override UiaCore.IRawElementProviderFragment? ElementProviderFromPoint(double x, double y)
-            => (this.TryGetOwnerAs(out Control? owner) && owner.IsHandleCreated) ? HitTest((int)x, (int)y) : null;
+            => this.IsOwnerHandleCreated(out Control? _) ? HitTest((int)x, (int)y) : null;
 
         internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
         {
@@ -58,18 +58,18 @@ internal partial class PropertyGridView
 
         internal override UiaCore.IRawElementProviderFragment? GetFocus() => GetFocused();
 
-        internal override object? GetPropertyValue(UiaCore.UIA propertyID)
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyID)
             => propertyID switch
             {
-                UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.TableControlTypeId,
+                UIA_PROPERTY_ID.UIA_ControlTypePropertyId => UIA_CONTROLTYPE_ID.UIA_TableControlTypeId,
                 _ => base.GetPropertyValue(propertyID)
             };
 
-        internal override bool IsPatternSupported(UiaCore.UIA patternId)
+        internal override bool IsPatternSupported(UIA_PATTERN_ID patternId)
             => patternId switch
             {
-                UiaCore.UIA.TablePatternId => true,
-                UiaCore.UIA.GridPatternId => true,
+                UIA_PATTERN_ID.UIA_TablePatternId => true,
+                UIA_PATTERN_ID.UIA_GridPatternId => true,
                 _ => base.IsPatternSupported(patternId)
             };
 
@@ -103,7 +103,7 @@ internal partial class PropertyGridView
             }
 
             int row = owner.GetRowFromGridEntry(current);
-            GridEntry nextEntry = owner.GetGridEntryFromRow(++row);
+            GridEntry? nextEntry = owner.GetGridEntryFromRow(++row);
             return nextEntry?.AccessibilityObject;
         }
 
@@ -114,8 +114,8 @@ internal partial class PropertyGridView
                 return null;
             }
 
-            GridEntryCollection topLevelGridEntries = owner.TopLevelGridEntries;
-            if (topLevelGridEntries.Count > 0)
+            GridEntryCollection? topLevelGridEntries = owner.TopLevelGridEntries;
+            if (topLevelGridEntries is not null && topLevelGridEntries.Count > 0)
             {
                 GridItem targetEntry = topLevelGridEntries[categoryIndex];
                 if (targetEntry is CategoryGridEntry categoryGridEntry)
@@ -128,7 +128,7 @@ internal partial class PropertyGridView
         }
 
         internal AccessibleObject? GetLastCategory()
-            => !this.TryGetOwnerAs(out PropertyGridView? owner) ? null : GetCategory(owner.TopLevelGridEntries.Count - 1);
+            => !this.TryGetOwnerAs(out PropertyGridView? owner) ? null : GetCategory(owner.TopLevelGridEntries!.Count - 1);
 
         internal AccessibleObject? GetLastChild()
         {
@@ -248,7 +248,7 @@ internal partial class PropertyGridView
         /// <returns>The first child property.</returns>
         internal AccessibleObject? GetFirstChildProperty(CategoryGridEntry current)
         {
-            if (current.ChildCount <= 0 || !this.TryGetOwnerAs(out PropertyGridView? owner))
+            if (current.ChildCount <= 0 || !this.TryGetOwnerAs(out PropertyGridView? _))
             {
                 return null;
             }
@@ -279,7 +279,7 @@ internal partial class PropertyGridView
         /// <returns>The last child property.</returns>
         internal AccessibleObject? GetLastChildProperty(CategoryGridEntry current)
         {
-            if (current.ChildCount <= 0 || !this.TryGetOwnerAs(out PropertyGridView? owner))
+            if (current.ChildCount <= 0 || !this.TryGetOwnerAs(out PropertyGridView? _))
             {
                 return null;
             }
@@ -317,7 +317,7 @@ internal partial class PropertyGridView
 
             int row = owner.GetRowFromGridEntry(current);
 
-            GridEntry nextEntry;
+            GridEntry? nextEntry;
 
             do
             {
@@ -340,7 +340,7 @@ internal partial class PropertyGridView
             }
 
             int row = owner.GetRowFromGridEntry(current);
-            GridEntry previousEntry = owner.GetGridEntryFromRow(--row);
+            GridEntry? previousEntry = owner.GetGridEntryFromRow(--row);
             return previousEntry?.AccessibilityObject;
         }
 
@@ -358,7 +358,7 @@ internal partial class PropertyGridView
 
             int row = owner.GetRowFromGridEntry(current);
 
-            GridEntry previousEntry;
+            GridEntry? previousEntry;
 
             do
             {
@@ -380,7 +380,7 @@ internal partial class PropertyGridView
                 return null;
             }
 
-            GridEntryCollection properties = owner.AccessibilityGetGridEntries();
+            GridEntryCollection? properties = owner.AccessibilityGetGridEntries();
             if (properties is not null && index >= 0 && index < properties.Count)
             {
                 return properties[index].AccessibilityObject;
@@ -403,7 +403,7 @@ internal partial class PropertyGridView
                 return null;
             }
 
-            GridEntry gridEntry = owner.SelectedGridEntry;
+            GridEntry? gridEntry = owner.SelectedGridEntry;
             if (gridEntry is not null && gridEntry.HasFocus)
             {
                 return gridEntry.AccessibilityObject;
@@ -417,20 +417,20 @@ internal partial class PropertyGridView
 
         public override AccessibleObject? HitTest(int x, int y)
         {
-            if (!this.TryGetOwnerAs(out PropertyGridView? owner) || !owner.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out PropertyGridView? owner))
             {
                 return null;
             }
 
             // Convert to client coordinates
-            var point = new Point(x, y);
+            Point point = new(x, y);
             PInvoke.ScreenToClient(owner, ref point);
 
             // Find the grid entry at the given client coordinates
             Point position = owner.FindPosition(point.X, point.Y);
             if (position != InvalidPosition)
             {
-                GridEntry gridEntry = owner.GetGridEntryFromRow(position.Y);
+                GridEntry? gridEntry = owner.GetGridEntryFromRow(position.Y);
                 if (gridEntry is not null)
                 {
                     // Return the accessible object for this grid entry

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -45,7 +44,7 @@ internal class ToolStripDesigner : ControlDesigner
     private ToolStripActionList _actionLists; // Action List on Chrome...
     private ToolStripAdornerWindowService _toolStripAdornerWindowService; // Add the Adorner Service for OverFlow DropDown...
     private IDesignerHost _host; //get private copy of the DesignerHost
-    private IComponentChangeService _componentChangeSvc;
+    private IComponentChangeService _componentChangeService;
     private bool _undoingCalled;
     private IToolboxService _toolboxService;
     private ContextMenuStrip _toolStripContextMenu;
@@ -93,7 +92,7 @@ internal class ToolStripDesigner : ControlDesigner
     {
         get
         {
-            Rectangle rect = default(Rectangle);
+            Rectangle rect = default;
             if (_miniToolStrip is null)
             {
                 return rect;
@@ -208,7 +207,7 @@ internal class ToolStripDesigner : ControlDesigner
     {
         get
         {
-            _toolStripContextMenu ??= new BaseContextMenuStrip(ToolStrip.Site, ToolStrip)
+            _toolStripContextMenu ??= new BaseContextMenuStrip(ToolStrip.Site)
                 {
                     Text = "CustomContextMenu"
                 };
@@ -372,7 +371,7 @@ internal class ToolStripDesigner : ControlDesigner
     {
         get
         {
-            Rectangle rect = default(Rectangle);
+            Rectangle rect = default;
             if (ToolStrip.OverflowButton.Visible)
             {
                 return ToolStrip.OverflowButton.Bounds;
@@ -1392,7 +1391,7 @@ internal class ToolStripDesigner : ControlDesigner
         AutoResizeHandles = true;
         if (TryGetService(out _host))
         {
-            _componentChangeSvc = (IComponentChangeService)_host.GetService(typeof(IComponentChangeService));
+            _componentChangeService = (IComponentChangeService)_host.GetService(typeof(IComponentChangeService));
         }
 
         // initialize new Manager For Editing ToolStrips
@@ -1442,7 +1441,7 @@ internal class ToolStripDesigner : ControlDesigner
     /// </summary>
     public override void InitializeNewComponent(IDictionary defaultValues)
     {
-        Control parent = defaultValues["Parent"] as Control;
+        Control parent = defaultValues is not null ? defaultValues["Parent"] as Control : null;
         Form parentForm = _host.RootComponent as Form;
         FormDocumentDesigner parentFormDesigner = null;
         if (parentForm is not null)
@@ -1484,18 +1483,18 @@ internal class ToolStripDesigner : ControlDesigner
             {
                 PropertyDescriptor controlsProp = TypeDescriptor.GetProperties(parentPanel)["Controls"];
 
-                _componentChangeSvc?.OnComponentChanging(parentPanel, controlsProp);
+                _componentChangeService?.OnComponentChanging(parentPanel, controlsProp);
 
                 parentPanel.Join(ToolStrip, parentPanel.Rows.Length);
 
-                _componentChangeSvc?.OnComponentChanged(parentPanel, controlsProp, parentPanel.Controls, parentPanel.Controls);
+                _componentChangeService?.OnComponentChanged(parentPanel, controlsProp, parentPanel.Controls, parentPanel.Controls);
 
                 //Try to fire ComponentChange on the Location Property for ToolStrip.
                 PropertyDescriptor locationProp = TypeDescriptor.GetProperties(ToolStrip)["Location"];
-                if (_componentChangeSvc is not null)
+                if (_componentChangeService is not null)
                 {
-                    _componentChangeSvc.OnComponentChanging(ToolStrip, locationProp);
-                    _componentChangeSvc.OnComponentChanged(ToolStrip, locationProp);
+                    _componentChangeService.OnComponentChanging(ToolStrip, locationProp);
+                    _componentChangeService.OnComponentChanged(ToolStrip, locationProp);
                 }
             }
         }
@@ -1811,7 +1810,7 @@ internal class ToolStripDesigner : ControlDesigner
         }
 
         string transDesc;
-        ArrayList components = data.DragComponents;
+        IList components = data.DragComponents;
         ToolStripItem primaryItem = data.PrimarySelection;
         int primaryIndex = -1;
         bool copy = (de.Effect == DragDropEffects.Copy);
@@ -1854,7 +1853,7 @@ internal class ToolStripDesigner : ControlDesigner
                     KeyboardHandlingService.CopyInProgress = true;
                 }
 
-                components = DesignerUtils.CopyDragObjects(components, Component.Site) as ArrayList;
+                components = DesignerUtils.CopyDragObjects(components, Component.Site);
                 if (KeyboardHandlingService is not null)
                 {
                     KeyboardHandlingService.CopyInProgress = false;

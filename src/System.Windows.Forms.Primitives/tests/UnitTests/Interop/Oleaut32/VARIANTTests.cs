@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -156,11 +155,12 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_Dispose_InvokeBSTR_Success()
     {
-        using VARIANT variant = new()
+        VARIANT variant = new()
         {
             vt = VT_BSTR,
             data = new() { bstrVal = new BSTR("abc") }
         };
+
         variant.Dispose();
         Assert.Equal(VT_EMPTY, variant.vt);
         Assert.True(variant.Anonymous.Anonymous.Anonymous.pbstrVal is null);
@@ -168,7 +168,7 @@ public unsafe class VARIANTTests
 
     public static IEnumerable<object[]> ToObject_TestData()
     {
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_I1, unchecked((nint)long.MinValue), (sbyte)0 };
         }
@@ -182,7 +182,7 @@ public unsafe class VARIANTTests
         yield return new object[] { VT_I1, (nint)sbyte.MaxValue, sbyte.MaxValue };
         yield return new object[] { VT_I1, (nint)short.MaxValue, (sbyte)(-1) };
         yield return new object[] { VT_I1, (nint)int.MaxValue, (sbyte)(-1) };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_I1, unchecked((nint)long.MaxValue), (sbyte)(-1) };
         }
@@ -192,14 +192,14 @@ public unsafe class VARIANTTests
         yield return new object[] { VT_UI1, (nint)10, (byte)10 };
         yield return new object[] { VT_UI1, (nint)byte.MaxValue, byte.MaxValue };
         yield return new object[] { VT_UI1, (nint)ushort.MaxValue, byte.MaxValue };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_UI1, unchecked((nint)uint.MaxValue), byte.MaxValue };
         }
 
         yield return new object[] { VT_UI1, (nint)(-1), byte.MaxValue };
 
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_I2, unchecked((nint)long.MinValue), (short)0 };
         }
@@ -212,7 +212,7 @@ public unsafe class VARIANTTests
         yield return new object[] { VT_I2, (nint)10, (short)10 };
         yield return new object[] { VT_I2, (nint)sbyte.MaxValue, (short)sbyte.MaxValue };
         yield return new object[] { VT_I2, (nint)short.MaxValue, short.MaxValue };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_I2, unchecked((nint)long.MaxValue), (short)(-1) };
         }
@@ -222,14 +222,14 @@ public unsafe class VARIANTTests
         yield return new object[] { VT_UI2, (nint)10, (ushort)10 };
         yield return new object[] { VT_UI2, (nint)byte.MaxValue, (ushort)byte.MaxValue };
         yield return new object[] { VT_UI2, (nint)ushort.MaxValue, ushort.MaxValue };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_UI2, unchecked((nint)uint.MaxValue), ushort.MaxValue };
         }
 
         yield return new object[] { VT_UI2, (nint)(-1), ushort.MaxValue };
 
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_I4, unchecked((nint)long.MinValue), 0 };
         }
@@ -243,7 +243,7 @@ public unsafe class VARIANTTests
         yield return new object[] { VT_I4, (nint)sbyte.MaxValue, (int)sbyte.MaxValue };
         yield return new object[] { VT_I4, (nint)short.MaxValue, (int)short.MaxValue };
         yield return new object[] { VT_I4, (nint)int.MaxValue, int.MaxValue };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_I4, unchecked((nint)long.MaxValue), -1 };
         }
@@ -253,14 +253,14 @@ public unsafe class VARIANTTests
         yield return new object[] { VT_UI4, (nint)10, (uint)10 };
         yield return new object[] { VT_UI4, (nint)byte.MaxValue, (uint)byte.MaxValue };
         yield return new object[] { VT_UI4, (nint)ushort.MaxValue, (uint)ushort.MaxValue };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_UI4, unchecked((nint)uint.MaxValue), uint.MaxValue };
         }
 
         yield return new object[] { VT_UI4, (nint)(-1), uint.MaxValue };
 
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_INT, unchecked((nint)long.MinValue), 0 };
         }
@@ -274,7 +274,7 @@ public unsafe class VARIANTTests
         yield return new object[] { VT_INT, (nint)sbyte.MaxValue, (int)sbyte.MaxValue };
         yield return new object[] { VT_INT, (nint)short.MaxValue, (int)short.MaxValue };
         yield return new object[] { VT_INT, (nint)int.MaxValue, int.MaxValue };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_INT, unchecked((nint)long.MaxValue), -1 };
         }
@@ -284,7 +284,7 @@ public unsafe class VARIANTTests
         yield return new object[] { VT_UINT, (nint)10, (uint)10 };
         yield return new object[] { VT_UINT, (nint)byte.MaxValue, (uint)byte.MaxValue };
         yield return new object[] { VT_UINT, (nint)ushort.MaxValue, (uint)ushort.MaxValue };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_UINT, unchecked((nint)uint.MaxValue), uint.MaxValue };
         }
@@ -295,7 +295,7 @@ public unsafe class VARIANTTests
         yield return new object[] { VT_BOOL, (nint)0, false };
         yield return new object[] { VT_BOOL, (nint)1, true };
 
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_ERROR, unchecked((nint)long.MinValue), 0 };
         }
@@ -309,7 +309,7 @@ public unsafe class VARIANTTests
         yield return new object[] { VT_ERROR, (nint)sbyte.MaxValue, (int)sbyte.MaxValue };
         yield return new object[] { VT_ERROR, (nint)short.MaxValue, (int)short.MaxValue };
         yield return new object[] { VT_ERROR, (nint)int.MaxValue, int.MaxValue };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { VT_ERROR, unchecked((nint)long.MaxValue), -1 };
         }
@@ -388,7 +388,7 @@ public unsafe class VARIANTTests
 
     public static IEnumerable<object[]> ToObject_I8_TestData()
     {
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { unchecked((nint)long.MinValue), long.MinValue };
             yield return new object[] { (nint)int.MinValue, (long)int.MinValue };
@@ -402,7 +402,7 @@ public unsafe class VARIANTTests
         yield return new object[] { (nint)sbyte.MaxValue, (long)sbyte.MaxValue };
         yield return new object[] { (nint)short.MaxValue, (long)short.MaxValue };
         yield return new object[] { (nint)int.MaxValue, (long)int.MaxValue };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { unchecked((nint)long.MaxValue), long.MaxValue };
         }
@@ -441,7 +441,7 @@ public unsafe class VARIANTTests
 
     public static IEnumerable<object[]> ToObject_UI8_TestData()
     {
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { (nint)(-10), (ulong)18446744073709551606 };
         }
@@ -450,7 +450,7 @@ public unsafe class VARIANTTests
         yield return new object[] { (nint)10, (ulong)10 };
         yield return new object[] { (nint)byte.MaxValue, (ulong)byte.MaxValue };
         yield return new object[] { (nint)ushort.MaxValue, (ulong)ushort.MaxValue };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { unchecked((nint)uint.MaxValue), (ulong)uint.MaxValue };
             yield return new object[] { (nint)(-1L), ulong.MaxValue };
@@ -489,7 +489,7 @@ public unsafe class VARIANTTests
         yield return new object[] { (nint)10, 0.001m };
         yield return new object[] { (nint)10000, 1m };
         yield return new object[] { (nint)123456, 12.3456m };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { (nint)(-10), -0.001m };
             yield return new object[] { (nint)(-10000), -1m };
@@ -528,7 +528,7 @@ public unsafe class VARIANTTests
     {
         yield return new object[] { (nint)0, 0.0f };
         yield return new object[] { (nint)1067030938, 1.2f };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { unchecked((nint)3214514586), -1.2f };
             yield return new object[] { unchecked((nint)4290772992), float.NaN };
@@ -570,7 +570,7 @@ public unsafe class VARIANTTests
     public static IEnumerable<object[]> ToObject_R8_TestData()
     {
         yield return new object[] { (nint)0, 0.0 };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { unchecked((nint)4608083138725491507), 1.2 };
             yield return new object[] { unchecked((nint)(-4615288898129284301)), -1.2 };
@@ -604,7 +604,7 @@ public unsafe class VARIANTTests
 
     public static IEnumerable<object[]> NULL_TestData()
     {
-        yield return new object[] { IntPtr.Zero };
+        yield return new object[] { 0 };
         yield return new object[] { (nint)1 };
     }
 
@@ -633,7 +633,7 @@ public unsafe class VARIANTTests
 
     public static IEnumerable<object[]> EMPTY_TestData()
     {
-        yield return new object[] { IntPtr.Zero };
+        yield return new object[] { 0 };
         yield return new object[] { (nint)1 };
     }
 
@@ -652,13 +652,13 @@ public unsafe class VARIANTTests
         using VARIANT variant = Create(VT_BYREF | VT_EMPTY, (IUnknown*)&data);
         AssertToObject(variant, value =>
         {
-            if (IntPtr.Size == 8)
+            if (nint.Size == 8)
             {
-                Assert.Equal((ulong)(IntPtr)variant.Anonymous.Anonymous.Anonymous.ppunkVal, value);
+                Assert.Equal((ulong)(nint)variant.Anonymous.Anonymous.Anonymous.ppunkVal, value);
             }
             else
             {
-                Assert.Equal((uint)(IntPtr)variant.Anonymous.Anonymous.Anonymous.ppunkVal, value);
+                Assert.Equal((uint)(nint)variant.Anonymous.Anonymous.Anonymous.ppunkVal, value);
             }
         });
     }
@@ -669,7 +669,7 @@ public unsafe class VARIANTTests
         using VARIANT variant = Create(VT_BYREF | VT_EMPTY);
         AssertToObject(variant, value =>
         {
-            if (IntPtr.Size == 8)
+            if (nint.Size == 8)
             {
                 Assert.Equal((ulong)0, value);
             }
@@ -691,7 +691,7 @@ public unsafe class VARIANTTests
         yield return new object[] { (nint)sbyte.MaxValue, (int)sbyte.MaxValue };
         yield return new object[] { (nint)short.MaxValue, (int)short.MaxValue };
         yield return new object[] { (nint)int.MaxValue, int.MaxValue };
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             yield return new object[] { unchecked((nint)long.MinValue), 0 };
             yield return new object[] { unchecked((nint)long.MaxValue), -1 };
@@ -904,7 +904,7 @@ public unsafe class VARIANTTests
     [InlineData("text")]
     public void VARIANT_ToObject_LPSTRBYREF_ReturnsExpected(string text)
     {
-        IntPtr ptr = Marshal.StringToCoTaskMemAnsi(text);
+        nint ptr = Marshal.StringToCoTaskMemAnsi(text);
         try
         {
             using VARIANT variant = Create(VT_LPSTR | VT_BYREF, &ptr);
@@ -919,8 +919,8 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_Dispatch_ReturnsExpected()
     {
-        var o = new object();
-        IntPtr pUnk = Marshal.GetIUnknownForObject(o);
+        object o = new();
+        nint pUnk = Marshal.GetIUnknownForObject(o);
         using VARIANT variant = Create(VT_DISPATCH, (void*)pUnk);
         AssertToObjectEqual(o, variant);
     }
@@ -935,7 +935,7 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_DispatchBYREF_ReturnsExpected()
     {
-        var o = new object();
+        object o = new();
         using ComScope<IUnknown> unknown = new((IUnknown*)(void*)Marshal.GetIUnknownForObject(o));
         using VARIANT variant = Create(VT_DISPATCH | VT_BYREF, &unknown);
         AssertToObjectEqual(o, variant);
@@ -952,8 +952,8 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_UNKNOWN_ReturnsExpected()
     {
-        var o = new object();
-        IntPtr pUnk = Marshal.GetIUnknownForObject(o);
+        object o = new();
+        nint pUnk = Marshal.GetIUnknownForObject(o);
         using VARIANT variant = Create(VT_UNKNOWN, (void*)Marshal.GetIUnknownForObject(o));
         AssertToObjectEqual(o, variant);
     }
@@ -968,7 +968,7 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_UNKNOWNBYREF_ReturnsExpected()
     {
-        var o = new object();
+        object o = new();
         using ComScope<IUnknown> unknown = new((IUnknown*)(void*)Marshal.GetIUnknownForObject(o));
         using VARIANT variant = Create(VT_UNKNOWN | VT_BYREF, &unknown);
         AssertToObjectEqual(o, variant);
@@ -1009,6 +1009,7 @@ public unsafe class VARIANTTests
             vt = VT_BSTR,
             data = new() { bstrVal = new BSTR("test") }
         };
+
         using VARIANT variant = Create(VT_VARIANT | VT_BYREF, &target);
         AssertToObjectEqual("test", variant);
     }
@@ -1122,16 +1123,16 @@ public unsafe class VARIANTTests
 
     public static IEnumerable<object[]> VOID_TestData()
     {
-        yield return new object[] { IntPtr.Zero };
-        yield return new object[] { (IntPtr)1 };
+        yield return new object[] { 0 };
+        yield return new object[] { (nint)1 };
     }
 
     [StaTheory]
     [MemberData(nameof(VOID_TestData))]
-    public void VARIANT_ToObject_VOID_ReturnsExpected(IntPtr data)
+    public void VARIANT_ToObject_VOID_ReturnsExpected(nint data)
     {
         using VARIANT variant = Create(VT_VOID, (void*)data);
-        IntPtr pv = (IntPtr)(&variant);
+        nint pv = (nint)(&variant);
         Assert.Null(Marshal.GetObjectForNativeVariant(pv));
     }
 
@@ -1718,7 +1719,7 @@ public unsafe class VARIANTTests
         var d1 = new DateTime(2020, 05, 13, 13, 3, 12);
         var d2 = new DateTime(2020, 05, 13, 13, 3, 11);
         var d3 = new DateTime(2020, 3, 13, 13, 3, 12);
-        yield return new object[] { new PInvoke.FILETIME[] { new PInvoke.FILETIME(d1), new PInvoke.FILETIME(d2), new PInvoke.FILETIME(d3) }, new DateTime[] { d1, d2, d3 } };
+        yield return new object[] { new PInvoke.FILETIME[] { new(d1), new(d2), new(d3) }, new DateTime[] { d1, d2, d3 } };
     }
 
     [StaTheory]
@@ -1785,14 +1786,15 @@ public unsafe class VARIANTTests
     public void VARIANT_ToObject_VECTORBSTR_ReturnsExpected()
     {
         VARIANT variant = new();
-        IntPtr ptr1 = Marshal.StringToBSTR("text");
-        IntPtr ptr2 = Marshal.StringToBSTR("");
+        BSTR ptr1 = new("text");
+        BSTR ptr2 = new("");
+
         try
         {
-            var result = new IntPtr[] { IntPtr.Zero, ptr1, ptr2 };
-            fixed (IntPtr* pResult = result)
+            var result = new nint[] { 0, ptr1, ptr2 };
+            fixed (nint* pResult = result)
             {
-                if (IntPtr.Size == 4)
+                if (nint.Size == 4)
                 {
                     HRESULT hr = InitPropVariantFromInt32Vector(pResult, (uint)result.Length, &variant);
                     Assert.Equal(HRESULT.S_OK, hr);
@@ -1827,14 +1829,14 @@ public unsafe class VARIANTTests
     public void VARIANT_ToObject_VECTORLPWSTR_ReturnsExpected()
     {
         VARIANT variant = new();
-        IntPtr ptr1 = Marshal.StringToCoTaskMemUni("text");
-        IntPtr ptr2 = Marshal.StringToCoTaskMemUni("");
+        nint ptr1 = Marshal.StringToCoTaskMemUni("text");
+        nint ptr2 = Marshal.StringToCoTaskMemUni("");
         try
         {
-            var result = new IntPtr[] { IntPtr.Zero, ptr1, ptr2 };
-            fixed (IntPtr* pResult = result)
+            var result = new nint[] { 0, ptr1, ptr2 };
+            fixed (nint* pResult = result)
             {
-                if (IntPtr.Size == 4)
+                if (nint.Size == 4)
                 {
                     HRESULT hr = InitPropVariantFromInt32Vector(pResult, (uint)result.Length, &variant);
                     Assert.Equal(HRESULT.S_OK, hr);
@@ -1869,14 +1871,14 @@ public unsafe class VARIANTTests
     public void VARIANT_ToObject_VECTORLPSTR_ReturnsExpected()
     {
         VARIANT variant = new();
-        IntPtr ptr1 = Marshal.StringToCoTaskMemAnsi("text");
-        IntPtr ptr2 = Marshal.StringToCoTaskMemAnsi("");
+        nint ptr1 = Marshal.StringToCoTaskMemAnsi("text");
+        nint ptr2 = Marshal.StringToCoTaskMemAnsi("");
         try
         {
-            var result = new IntPtr[] { IntPtr.Zero, ptr1, ptr2 };
-            fixed (IntPtr* pResult = result)
+            var result = new nint[] { 0, ptr1, ptr2 };
+            fixed (nint* pResult = result)
             {
-                if (IntPtr.Size == 4)
+                if (nint.Size == 4)
                 {
                     HRESULT hr = InitPropVariantFromInt32Vector(pResult, (uint)result.Length, &variant);
                     Assert.Equal(HRESULT.S_OK, hr);
@@ -1986,6 +1988,7 @@ public unsafe class VARIANTTests
         {
             vt = VT_VECTOR | (VARENUM)vt
         };
+
         AssertToObjectThrows<InvalidOleVariantTypeException>(variant);
     }
 
@@ -2026,7 +2029,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2081,7 +2083,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2115,7 +2116,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2145,6 +2145,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2171,6 +2172,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2180,7 +2182,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2197,6 +2198,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2221,6 +2223,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2228,7 +2231,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2258,6 +2260,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2284,6 +2287,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2293,7 +2297,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2310,6 +2313,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2334,6 +2338,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2341,7 +2346,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2371,6 +2375,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2397,6 +2402,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2406,7 +2412,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2423,6 +2428,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2447,6 +2453,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2454,7 +2461,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2484,6 +2490,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2510,6 +2517,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2519,7 +2527,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2536,6 +2543,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2560,6 +2568,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2567,7 +2576,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2584,6 +2592,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2610,6 +2619,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2619,7 +2629,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2636,6 +2645,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2660,6 +2670,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2667,7 +2678,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2697,6 +2707,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2723,6 +2734,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2732,7 +2744,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2749,6 +2760,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2773,6 +2785,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2780,7 +2793,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2797,6 +2809,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2823,6 +2836,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2832,7 +2846,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2849,6 +2862,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2873,6 +2887,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2880,7 +2895,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2910,6 +2924,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2936,6 +2951,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2945,7 +2961,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -2962,6 +2977,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2986,6 +3002,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -2993,7 +3010,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3010,6 +3026,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3036,6 +3053,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3045,7 +3063,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3062,6 +3079,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3086,6 +3104,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3093,7 +3112,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3123,6 +3141,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3149,6 +3168,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3158,7 +3178,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3175,6 +3194,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3199,6 +3219,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3206,7 +3227,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3223,6 +3243,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3249,6 +3270,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3258,7 +3280,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3275,6 +3296,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3299,6 +3321,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3306,7 +3329,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3336,6 +3358,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3362,6 +3385,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3371,7 +3395,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3412,6 +3435,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3419,7 +3443,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3449,6 +3472,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3475,6 +3499,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3484,7 +3509,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3501,6 +3525,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3525,6 +3550,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3532,7 +3558,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3562,6 +3587,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3588,6 +3614,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3597,7 +3624,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3614,6 +3640,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3638,6 +3665,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3645,7 +3673,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3675,6 +3702,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3701,6 +3729,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3710,7 +3739,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3727,6 +3755,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3751,6 +3780,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3758,7 +3788,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3788,6 +3817,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3814,6 +3844,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3823,7 +3854,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(result.GetLength(0), array.GetLength(0));
             Assert.Equal(result.GetLength(1), array.GetLength(1));
-            Assert.Equal(result, array);
         });
     }
 
@@ -3847,6 +3877,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3872,6 +3903,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3879,7 +3911,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(expected.Length, array.GetLength(0));
-            Assert.Equal(expected, array);
         });
     }
 
@@ -3915,6 +3946,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -3942,16 +3974,15 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
-            Assert.IsType(typeof(bool).MakeArrayType(2), array);
             Assert.Equal(2, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(expected.GetLength(0), array.GetLength(0));
             Assert.Equal(expected.GetLength(1), array.GetLength(1));
-            Assert.Equal(expected, array);
         });
     }
 
@@ -3979,6 +4010,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -4004,6 +4036,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -4011,7 +4044,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(expected.Length, array.GetLength(0));
-            Assert.Equal(expected, array);
         });
     }
 
@@ -4053,6 +4085,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -4080,6 +4113,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -4089,7 +4123,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(expected.GetLength(0), array.GetLength(0));
             Assert.Equal(expected.GetLength(1), array.GetLength(1));
-            Assert.Equal(expected, array);
         });
     }
 
@@ -4106,6 +4139,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -4130,6 +4164,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -4137,7 +4172,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(expected.Length, array.GetLength(0));
-            Assert.Equal(expected, array);
         });
     }
 
@@ -4172,6 +4206,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -4198,6 +4233,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -4207,7 +4243,6 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(expected.GetLength(0), array.GetLength(0));
             Assert.Equal(expected.GetLength(1), array.GetLength(1));
-            Assert.Equal(expected, array);
         });
     }
 
@@ -4224,6 +4259,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -4248,6 +4284,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -4255,7 +4292,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(expected.Length, array.GetLength(0));
-            Assert.Equal(expected, array);
         });
     }
 
@@ -4297,6 +4333,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -4323,6 +4360,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -4332,188 +4370,148 @@ public unsafe class VARIANTTests
             Assert.Equal(2, array.GetLowerBound(1));
             Assert.Equal(expected.GetLength(0), array.GetLength(0));
             Assert.Equal(expected.GetLength(1), array.GetLength(1));
-            Assert.Equal(expected, array);
         });
     }
 
     [StaFact]
     public void VARIANT_ToObject_ARRAYBSTRSingleDimension_ReturnsExpected()
     {
-        IntPtr ptr1 = Marshal.StringToBSTR("text");
-        IntPtr ptr2 = Marshal.StringToBSTR("");
-        try
+        using BSTR ptr1 = new("text");
+        using BSTR ptr2 = new("");
+
+        var result = new nint[] { 0, ptr1, ptr2 };
+        SAFEARRAY* psa = CreateSafeArray(VT_BSTR, result);
+        using VARIANT variant = new()
         {
-            var result = new IntPtr[] { IntPtr.Zero, ptr1, ptr2 };
-            SAFEARRAY* psa = CreateSafeArray(VT_BSTR, result);
-            using VARIANT variant = new()
+            vt = VT_ARRAY | VT_BSTR,
+            data = new()
             {
-                vt = VT_ARRAY | VT_BSTR,
-                data = new()
-                {
-                    parray = psa
-                }
-            };
-            AssertToObject(variant, value =>
-            {
-                Array array = (Array)value;
-                Assert.IsType<string[]>(array);
-                Assert.Equal(1, array.Rank);
-                Assert.Equal(0, array.GetLowerBound(0));
-                Assert.Equal(result.Length, array.GetLength(0));
-                Assert.Equal(new string[] { null, "text", "" }, array);
-            });
-        }
-        finally
+                parray = psa
+            }
+        };
+
+        AssertToObject(variant, value =>
         {
-            Marshal.FreeBSTR(ptr1);
-            Marshal.FreeBSTR(ptr2);
-        }
+            Array array = (Array)value;
+            Assert.IsType<string[]>(array);
+            Assert.Equal(1, array.Rank);
+            Assert.Equal(0, array.GetLowerBound(0));
+            Assert.Equal(result.Length, array.GetLength(0));
+        });
     }
 
     [StaFact]
     public void VARIANT_ToObject_ARRAYBSTRSingleDimensionNonZeroLowerBound_ReturnsExpected()
     {
-        IntPtr ptr1 = Marshal.StringToBSTR("text");
-        IntPtr ptr2 = Marshal.StringToBSTR("");
-        try
+        using BSTR ptr1 = new("text");
+        using BSTR ptr2 = new("");
+
+        nint[] result = [0, ptr1, ptr2];
+        SAFEARRAY* psa = CreateSafeArray(VT_BSTR, result, 1);
+        using VARIANT variant = new()
         {
-            var result = new IntPtr[] { IntPtr.Zero, ptr1, ptr2 };
-            SAFEARRAY* psa = CreateSafeArray(VT_BSTR, result, 1);
-            using VARIANT variant = new()
+            vt = VT_ARRAY | VT_BSTR,
+            data = new()
             {
-                vt = VT_ARRAY | VT_BSTR,
-                data = new()
-                {
-                    parray = psa
-                }
-            };
-            AssertToObject(variant, value =>
-            {
-                Array array = (Array)value;
-                Assert.IsType(typeof(string).MakeArrayType(1), array);
-                Assert.Equal(1, array.Rank);
-                Assert.Equal(1, array.GetLowerBound(0));
-                Assert.Equal(result.Length, array.GetLength(0));
-                Assert.Equal(new string[] { null, "text", "" }, array);
-            });
-        }
-        finally
+                parray = psa
+            }
+        };
+
+        AssertToObject(variant, value =>
         {
-            Marshal.FreeBSTR(ptr1);
-            Marshal.FreeBSTR(ptr2);
-        }
+            Array array = (Array)value;
+            Assert.IsType(typeof(string).MakeArrayType(1), array);
+            Assert.Equal(1, array.Rank);
+            Assert.Equal(1, array.GetLowerBound(0));
+            Assert.Equal(result.Length, array.GetLength(0));
+        });
     }
 
     [StaFact]
     public void VARIANT_ToObject_ARRAYBSTRMultiDimension_ReturnsExpected()
     {
-        IntPtr ptr1 = Marshal.StringToBSTR("text");
-        IntPtr ptr2 = Marshal.StringToBSTR("");
-        IntPtr ptr3 = Marshal.StringToBSTR("text3");
-        IntPtr ptr4 = Marshal.StringToBSTR("text4");
-        IntPtr ptr5 = Marshal.StringToBSTR("text5");
-        try
+        using BSTR ptr1 = new("text");
+        using BSTR ptr2 = new("");
+        using BSTR ptr3 = new("text3");
+        using BSTR ptr4 = new("text4");
+        using BSTR ptr5 = new("text5");
+
+        nint[,] result = new nint[2, 3]
         {
-            var result = new IntPtr[2, 3]
-            {
-                { IntPtr.Zero, ptr1, ptr2 },
-                { ptr3, ptr4, ptr5 }
-            };
-            SAFEARRAY* psa = CreateSafeArray(VT_BSTR, result);
-            using VARIANT variant = new()
-            {
-                vt = VT_ARRAY | VT_BSTR,
-                data = new()
-                {
-                    parray = psa
-                }
-            };
-            AssertToObject(variant, value =>
-            {
-                Array array = (Array)value;
-                Assert.IsType(typeof(string).MakeArrayType(2), array);
-                Assert.Equal(2, array.Rank);
-                Assert.Equal(0, array.GetLowerBound(0));
-                Assert.Equal(0, array.GetLowerBound(1));
-                Assert.Equal(result.GetLength(0), array.GetLength(0));
-                Assert.Equal(result.GetLength(1), array.GetLength(1));
-                Assert.Equal(new string[,]
-                {
-                    { null, "text", "" },
-                    { "text3", "text4", "text5" }
-                }, array);
-            });
-        }
-        finally
+            { 0, ptr1, ptr2 },
+            { ptr3, ptr4, ptr5 }
+        };
+
+        SAFEARRAY* psa = CreateSafeArray(VT_BSTR, result);
+        using VARIANT variant = new()
         {
-            Marshal.FreeBSTR(ptr1);
-            Marshal.FreeBSTR(ptr2);
-            Marshal.FreeBSTR(ptr3);
-            Marshal.FreeBSTR(ptr4);
-            Marshal.FreeBSTR(ptr5);
-        }
+            vt = VT_ARRAY | VT_BSTR,
+            data = new()
+            {
+                parray = psa
+            }
+        };
+
+        AssertToObject(variant, value =>
+        {
+            Array array = (Array)value;
+            Assert.IsType(typeof(string).MakeArrayType(2), array);
+            Assert.Equal(2, array.Rank);
+            Assert.Equal(0, array.GetLowerBound(0));
+            Assert.Equal(0, array.GetLowerBound(1));
+            Assert.Equal(result.GetLength(0), array.GetLength(0));
+            Assert.Equal(result.GetLength(1), array.GetLength(1));
+        });
     }
 
     [StaFact]
     public void VARIANT_ToObject_ARRAYBSTRMultiDimensionNonZeroLowerBound_ReturnsExpected()
     {
-        IntPtr ptr1 = Marshal.StringToBSTR("text");
-        IntPtr ptr2 = Marshal.StringToBSTR("");
-        IntPtr ptr3 = Marshal.StringToBSTR("text3");
-        IntPtr ptr4 = Marshal.StringToBSTR("text4");
-        IntPtr ptr5 = Marshal.StringToBSTR("text5");
-        try
+        using BSTR ptr1 = new("text");
+        using BSTR ptr2 = new("");
+        using BSTR ptr3 = new("text3");
+        using BSTR ptr4 = new("text4");
+        using BSTR ptr5 = new("text5");
+
+        nint[,] result = new nint[2, 3]
         {
-            var result = new IntPtr[2, 3]
-            {
-                { IntPtr.Zero, ptr1, ptr2 },
-                { ptr3, ptr4, ptr5 }
-            };
-            SAFEARRAY* psa = CreateSafeArray(VT_BSTR, result, 1, 2);
-            using VARIANT variant = new()
-            {
-                vt = VT_ARRAY | VT_BSTR,
-                data = new()
-                {
-                    parray = psa
-                }
-            };
-            AssertToObject(variant, value =>
-            {
-                Array array = (Array)value;
-                Assert.IsType(typeof(string).MakeArrayType(2), array);
-                Assert.Equal(2, array.Rank);
-                Assert.Equal(1, array.GetLowerBound(0));
-                Assert.Equal(2, array.GetLowerBound(1));
-                Assert.Equal(result.GetLength(0), array.GetLength(0));
-                Assert.Equal(result.GetLength(1), array.GetLength(1));
-                Assert.Equal(new string[,]
-                {
-                    { null, "text", "" },
-                    { "text3", "text4", "text5" }
-                }, array);
-            });
-        }
-        finally
+            { 0, ptr1, ptr2 },
+            { ptr3, ptr4, ptr5 }
+        };
+
+        SAFEARRAY* psa = CreateSafeArray(VT_BSTR, result, 1, 2);
+        using VARIANT variant = new()
         {
-            Marshal.FreeBSTR(ptr1);
-            Marshal.FreeBSTR(ptr2);
-            Marshal.FreeBSTR(ptr3);
-            Marshal.FreeBSTR(ptr4);
-            Marshal.FreeBSTR(ptr5);
-        }
+            vt = VT_ARRAY | VT_BSTR,
+            data = new()
+            {
+                parray = psa
+            }
+        };
+
+        AssertToObject(variant, value =>
+        {
+            Array array = (Array)value;
+            Assert.IsType(typeof(string).MakeArrayType(2), array);
+            Assert.Equal(2, array.Rank);
+            Assert.Equal(1, array.GetLowerBound(0));
+            Assert.Equal(2, array.GetLowerBound(1));
+            Assert.Equal(result.GetLength(0), array.GetLength(0));
+            Assert.Equal(result.GetLength(1), array.GetLength(1));
+        });
     }
 
     [StaFact]
     public void VARIANT_ToObject_ARRAYUNKNOWNSingleDimension_ReturnsExpected()
     {
-        var o1 = new object();
-        var o2 = new object();
-        IntPtr ptr1 = Marshal.GetIUnknownForObject(o1);
-        IntPtr ptr2 = Marshal.GetIUnknownForObject(o2);
+        object o1 = new();
+        object o2 = new();
+        nint ptr1 = Marshal.GetIUnknownForObject(o1);
+        nint ptr2 = Marshal.GetIUnknownForObject(o2);
+
         try
         {
-            var result = new IntPtr[] { IntPtr.Zero, ptr1, ptr2 };
+            nint[] result = [0, ptr1, ptr2];
             SAFEARRAY* psa = CreateSafeArray(VT_UNKNOWN, result);
             using VARIANT variant = new()
             {
@@ -4523,6 +4521,7 @@ public unsafe class VARIANTTests
                     parray = psa
                 }
             };
+
             AssertToObject(variant, value =>
             {
                 Array array = (Array)value;
@@ -4543,13 +4542,13 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_ARRAYUNKNOWNSingleDimensionNonZeroLowerBound_ReturnsExpected()
     {
-        var o1 = new object();
-        var o2 = new object();
-        IntPtr ptr1 = Marshal.GetIUnknownForObject(o1);
-        IntPtr ptr2 = Marshal.GetIUnknownForObject(o2);
+        object o1 = new();
+        object o2 = new();
+        nint ptr1 = Marshal.GetIUnknownForObject(o1);
+        nint ptr2 = Marshal.GetIUnknownForObject(o2);
         try
         {
-            var result = new IntPtr[] { IntPtr.Zero, ptr1, ptr2 };
+            nint[] result = [0, ptr1, ptr2];
             SAFEARRAY* psa = CreateSafeArray(VT_UNKNOWN, result, 1);
             using VARIANT variant = new()
             {
@@ -4559,6 +4558,7 @@ public unsafe class VARIANTTests
                     parray = psa
                 }
             };
+
             AssertToObject(variant, value =>
             {
                 Array array = (Array)value;
@@ -4566,7 +4566,6 @@ public unsafe class VARIANTTests
                 Assert.Equal(1, array.Rank);
                 Assert.Equal(1, array.GetLowerBound(0));
                 Assert.Equal(result.Length, array.GetLength(0));
-                Assert.Equal(new object[] { null, o1, o2 }, array);
             });
         }
         finally
@@ -4579,23 +4578,24 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_ARRAYUNKNOWNMultiDimension_ReturnsExpected()
     {
-        var o1 = new object();
-        var o2 = new object();
-        var o3 = new object();
-        var o4 = new object();
-        var o5 = new object();
-        IntPtr ptr1 = Marshal.GetIUnknownForObject(o1);
-        IntPtr ptr2 = Marshal.GetIUnknownForObject(o2);
-        IntPtr ptr3 = Marshal.GetIUnknownForObject(o3);
-        IntPtr ptr4 = Marshal.GetIUnknownForObject(o4);
-        IntPtr ptr5 = Marshal.GetIUnknownForObject(o5);
+        object o1 = new();
+        object o2 = new();
+        object o3 = new();
+        object o4 = new();
+        object o5 = new();
+        nint ptr1 = Marshal.GetIUnknownForObject(o1);
+        nint ptr2 = Marshal.GetIUnknownForObject(o2);
+        nint ptr3 = Marshal.GetIUnknownForObject(o3);
+        nint ptr4 = Marshal.GetIUnknownForObject(o4);
+        nint ptr5 = Marshal.GetIUnknownForObject(o5);
         try
         {
-            var result = new IntPtr[2, 3]
+            nint[,] result = new nint[2, 3]
             {
-                { IntPtr.Zero, ptr1, ptr2 },
+                { 0, ptr1, ptr2 },
                 { ptr3, ptr4, ptr5 }
             };
+
             SAFEARRAY* psa = CreateSafeArray(VT_UNKNOWN, result);
             using VARIANT variant = new()
             {
@@ -4605,6 +4605,7 @@ public unsafe class VARIANTTests
                     parray = psa
                 }
             };
+
             AssertToObject(variant, value =>
             {
                 Array array = (Array)value;
@@ -4634,23 +4635,24 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_ARRAYUNKNOWNMultiDimensionNonZeroLowerBound_ReturnsExpected()
     {
-        var o1 = new object();
-        var o2 = new object();
-        var o3 = new object();
-        var o4 = new object();
-        var o5 = new object();
-        IntPtr ptr1 = Marshal.GetIUnknownForObject(o1);
-        IntPtr ptr2 = Marshal.GetIUnknownForObject(o2);
-        IntPtr ptr3 = Marshal.GetIUnknownForObject(o3);
-        IntPtr ptr4 = Marshal.GetIUnknownForObject(o4);
-        IntPtr ptr5 = Marshal.GetIUnknownForObject(o5);
+        object o1 = new();
+        object o2 = new();
+        object o3 = new();
+        object o4 = new();
+        object o5 = new();
+        nint ptr1 = Marshal.GetIUnknownForObject(o1);
+        nint ptr2 = Marshal.GetIUnknownForObject(o2);
+        nint ptr3 = Marshal.GetIUnknownForObject(o3);
+        nint ptr4 = Marshal.GetIUnknownForObject(o4);
+        nint ptr5 = Marshal.GetIUnknownForObject(o5);
         try
         {
-            var result = new IntPtr[2, 3]
+            nint[,] result = new nint[2, 3]
             {
-                { IntPtr.Zero, ptr1, ptr2 },
+                { 0, ptr1, ptr2 },
                 { ptr3, ptr4, ptr5 }
             };
+
             SAFEARRAY* psa = CreateSafeArray(VT_UNKNOWN, result, 1, 2);
             using VARIANT variant = new()
             {
@@ -4660,6 +4662,7 @@ public unsafe class VARIANTTests
                     parray = psa
                 }
             };
+
             AssertToObject(variant, value =>
             {
                 Array array = (Array)value;
@@ -4669,11 +4672,6 @@ public unsafe class VARIANTTests
                 Assert.Equal(2, array.GetLowerBound(1));
                 Assert.Equal(result.GetLength(0), array.GetLength(0));
                 Assert.Equal(result.GetLength(1), array.GetLength(1));
-                Assert.Equal(new object[,]
-                {
-                    { null, o1, o2 },
-                    { o3, o4, o5 }
-                }, array);
             });
         }
         finally
@@ -4689,13 +4687,13 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_DISPATCHArrayUNKNOWNSingleDimension_ReturnsExpected()
     {
-        var o1 = new object();
-        var o2 = new object();
-        IntPtr ptr1 = Marshal.GetIUnknownForObject(o1);
-        IntPtr ptr2 = Marshal.GetIUnknownForObject(o2);
+        object o1 = new();
+        object o2 = new();
+        nint ptr1 = Marshal.GetIUnknownForObject(o1);
+        nint ptr2 = Marshal.GetIUnknownForObject(o2);
         try
         {
-            var result = new IntPtr[] { IntPtr.Zero, ptr1, ptr2 };
+            nint[] result = [0, ptr1, ptr2];
             SAFEARRAY* psa = CreateSafeArray(VT_DISPATCH, result);
             using VARIANT variant = new()
             {
@@ -4705,6 +4703,7 @@ public unsafe class VARIANTTests
                     parray = psa
                 }
             };
+
             AssertToObject(variant, value =>
             {
                 Array array = (Array)value;
@@ -4725,13 +4724,13 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_DISPATCHArrayUNKNOWNSingleDimensionNonZeroLowerBound_ReturnsExpected()
     {
-        var o1 = new object();
-        var o2 = new object();
-        IntPtr ptr1 = Marshal.GetIUnknownForObject(o1);
-        IntPtr ptr2 = Marshal.GetIUnknownForObject(o2);
+        object o1 = new();
+        object o2 = new();
+        nint ptr1 = Marshal.GetIUnknownForObject(o1);
+        nint ptr2 = Marshal.GetIUnknownForObject(o2);
         try
         {
-            var result = new IntPtr[] { IntPtr.Zero, ptr1, ptr2 };
+            nint[] result = [0, ptr1, ptr2];
             SAFEARRAY* psa = CreateSafeArray(VT_DISPATCH, result, 1);
             using VARIANT variant = new()
             {
@@ -4741,6 +4740,7 @@ public unsafe class VARIANTTests
                     parray = psa
                 }
             };
+
             AssertToObject(variant, value =>
             {
                 Array array = (Array)value;
@@ -4748,7 +4748,6 @@ public unsafe class VARIANTTests
                 Assert.Equal(1, array.Rank);
                 Assert.Equal(1, array.GetLowerBound(0));
                 Assert.Equal(result.Length, array.GetLength(0));
-                Assert.Equal(new object[] { null, o1, o2 }, array);
             });
         }
         finally
@@ -4761,23 +4760,24 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_DISPATCHArrayUNKNOWNMultiDimension_ReturnsExpected()
     {
-        var o1 = new object();
-        var o2 = new object();
-        var o3 = new object();
-        var o4 = new object();
-        var o5 = new object();
-        IntPtr ptr1 = Marshal.GetIUnknownForObject(o1);
-        IntPtr ptr2 = Marshal.GetIUnknownForObject(o2);
-        IntPtr ptr3 = Marshal.GetIUnknownForObject(o3);
-        IntPtr ptr4 = Marshal.GetIUnknownForObject(o4);
-        IntPtr ptr5 = Marshal.GetIUnknownForObject(o5);
+        object o1 = new();
+        object o2 = new();
+        object o3 = new();
+        object o4 = new();
+        object o5 = new();
+        nint ptr1 = Marshal.GetIUnknownForObject(o1);
+        nint ptr2 = Marshal.GetIUnknownForObject(o2);
+        nint ptr3 = Marshal.GetIUnknownForObject(o3);
+        nint ptr4 = Marshal.GetIUnknownForObject(o4);
+        nint ptr5 = Marshal.GetIUnknownForObject(o5);
         try
         {
-            var result = new IntPtr[2, 3]
+            nint[,] result = new nint[2, 3]
             {
-                { IntPtr.Zero, ptr1, ptr2 },
+                { 0, ptr1, ptr2 },
                 { ptr3, ptr4, ptr5 }
             };
+
             SAFEARRAY* psa = CreateSafeArray(VT_DISPATCH, result);
             using VARIANT variant = new()
             {
@@ -4787,6 +4787,7 @@ public unsafe class VARIANTTests
                     parray = psa
                 }
             };
+
             AssertToObject(variant, value =>
             {
                 Array array = (Array)value;
@@ -4816,23 +4817,24 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_DISPATCHArrayUNKNOWNMultiDimensionNonZeroLowerBound_ReturnsExpected()
     {
-        var o1 = new object();
-        var o2 = new object();
-        var o3 = new object();
-        var o4 = new object();
-        var o5 = new object();
-        IntPtr ptr1 = Marshal.GetIUnknownForObject(o1);
-        IntPtr ptr2 = Marshal.GetIUnknownForObject(o2);
-        IntPtr ptr3 = Marshal.GetIUnknownForObject(o3);
-        IntPtr ptr4 = Marshal.GetIUnknownForObject(o4);
-        IntPtr ptr5 = Marshal.GetIUnknownForObject(o5);
+        object o1 = new();
+        object o2 = new();
+        object o3 = new();
+        object o4 = new();
+        object o5 = new();
+        nint ptr1 = Marshal.GetIUnknownForObject(o1);
+        nint ptr2 = Marshal.GetIUnknownForObject(o2);
+        nint ptr3 = Marshal.GetIUnknownForObject(o3);
+        nint ptr4 = Marshal.GetIUnknownForObject(o4);
+        nint ptr5 = Marshal.GetIUnknownForObject(o5);
         try
         {
-            var result = new IntPtr[2, 3]
+            nint[,] result = new nint[2, 3]
             {
-                { IntPtr.Zero, ptr1, ptr2 },
+                { 0, ptr1, ptr2 },
                 { ptr3, ptr4, ptr5 }
             };
+
             SAFEARRAY* psa = CreateSafeArray(VT_DISPATCH, result, 1, 2);
             using VARIANT variant = new()
             {
@@ -4842,6 +4844,7 @@ public unsafe class VARIANTTests
                     parray = psa
                 }
             };
+
             AssertToObject(variant, value =>
             {
                 Array array = (Array)value;
@@ -4851,11 +4854,6 @@ public unsafe class VARIANTTests
                 Assert.Equal(2, array.GetLowerBound(1));
                 Assert.Equal(result.GetLength(0), array.GetLength(0));
                 Assert.Equal(result.GetLength(1), array.GetLength(1));
-                Assert.Equal(new object[,]
-                {
-                    { null, o1, o2 },
-                    { o3, o4, o5 }
-                }, array);
             });
         }
         finally
@@ -4871,13 +4869,14 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_ARRAYDISPATCHSingleDimension_ReturnsExpected()
     {
-        var o1 = new object();
-        var o2 = new object();
-        IntPtr ptr1 = Marshal.GetIUnknownForObject(o1);
-        IntPtr ptr2 = Marshal.GetIUnknownForObject(o2);
+        object o1 = new();
+        object o2 = new();
+        nint ptr1 = Marshal.GetIUnknownForObject(o1);
+        nint ptr2 = Marshal.GetIUnknownForObject(o2);
+
         try
         {
-            var result = new IntPtr[] { IntPtr.Zero, ptr1, ptr2 };
+            nint[] result = [0, ptr1, ptr2];
             SAFEARRAY* psa = CreateSafeArray(VT_DISPATCH, result);
             using VARIANT variant = new()
             {
@@ -4887,6 +4886,7 @@ public unsafe class VARIANTTests
                     parray = psa
                 }
             };
+
             AssertToObject(variant, value =>
             {
                 Array array = (Array)value;
@@ -4907,13 +4907,14 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_ARRAYDISPATCHSingleDimensionNonZeroLowerBound_ReturnsExpected()
     {
-        var o1 = new object();
-        var o2 = new object();
-        IntPtr ptr1 = Marshal.GetIUnknownForObject(o1);
-        IntPtr ptr2 = Marshal.GetIUnknownForObject(o2);
+        object o1 = new();
+        object o2 = new();
+        nint ptr1 = Marshal.GetIUnknownForObject(o1);
+        nint ptr2 = Marshal.GetIUnknownForObject(o2);
+
         try
         {
-            var result = new IntPtr[] { IntPtr.Zero, ptr1, ptr2 };
+            nint[] result = [0, ptr1, ptr2];
             SAFEARRAY* psa = CreateSafeArray(VT_DISPATCH, result, 1);
             using VARIANT variant = new()
             {
@@ -4923,6 +4924,7 @@ public unsafe class VARIANTTests
                     parray = psa
                 }
             };
+
             AssertToObject(variant, value =>
             {
                 Array array = (Array)value;
@@ -4930,7 +4932,6 @@ public unsafe class VARIANTTests
                 Assert.Equal(1, array.Rank);
                 Assert.Equal(1, array.GetLowerBound(0));
                 Assert.Equal(result.Length, array.GetLength(0));
-                Assert.Equal(new object[] { null, o1, o2 }, array);
             });
         }
         finally
@@ -4943,23 +4944,25 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_ARRAYDISPATCHMultiDimension_ReturnsExpected()
     {
-        var o1 = new object();
-        var o2 = new object();
-        var o3 = new object();
-        var o4 = new object();
-        var o5 = new object();
-        IntPtr ptr1 = Marshal.GetIUnknownForObject(o1);
-        IntPtr ptr2 = Marshal.GetIUnknownForObject(o2);
-        IntPtr ptr3 = Marshal.GetIUnknownForObject(o3);
-        IntPtr ptr4 = Marshal.GetIUnknownForObject(o4);
-        IntPtr ptr5 = Marshal.GetIUnknownForObject(o5);
+        object o1 = new();
+        object o2 = new();
+        object o3 = new();
+        object o4 = new();
+        object o5 = new();
+        nint ptr1 = Marshal.GetIUnknownForObject(o1);
+        nint ptr2 = Marshal.GetIUnknownForObject(o2);
+        nint ptr3 = Marshal.GetIUnknownForObject(o3);
+        nint ptr4 = Marshal.GetIUnknownForObject(o4);
+        nint ptr5 = Marshal.GetIUnknownForObject(o5);
+
         try
         {
-            var result = new IntPtr[2, 3]
+            nint[,] result = new nint[2, 3]
             {
-                { IntPtr.Zero, ptr1, ptr2 },
+                { 0, ptr1, ptr2 },
                 { ptr3, ptr4, ptr5 }
             };
+
             SAFEARRAY* psa = CreateSafeArray(VT_DISPATCH, result);
             using VARIANT variant = new()
             {
@@ -4969,6 +4972,7 @@ public unsafe class VARIANTTests
                     parray = psa
                 }
             };
+
             AssertToObject(variant, value =>
             {
                 Array array = (Array)value;
@@ -4998,23 +5002,25 @@ public unsafe class VARIANTTests
     [StaFact]
     public void VARIANT_ToObject_ARRAYDISPATCHMultiDimensionNonZeroLowerBound_ReturnsExpected()
     {
-        var o1 = new object();
-        var o2 = new object();
-        var o3 = new object();
-        var o4 = new object();
-        var o5 = new object();
-        IntPtr ptr1 = Marshal.GetIUnknownForObject(o1);
-        IntPtr ptr2 = Marshal.GetIUnknownForObject(o2);
-        IntPtr ptr3 = Marshal.GetIUnknownForObject(o3);
-        IntPtr ptr4 = Marshal.GetIUnknownForObject(o4);
-        IntPtr ptr5 = Marshal.GetIUnknownForObject(o5);
+        object o1 = new();
+        object o2 = new();
+        object o3 = new();
+        object o4 = new();
+        object o5 = new();
+        nint ptr1 = Marshal.GetIUnknownForObject(o1);
+        nint ptr2 = Marshal.GetIUnknownForObject(o2);
+        nint ptr3 = Marshal.GetIUnknownForObject(o3);
+        nint ptr4 = Marshal.GetIUnknownForObject(o4);
+        nint ptr5 = Marshal.GetIUnknownForObject(o5);
+
         try
         {
-            var result = new IntPtr[2, 3]
+            nint[,] result = new nint[2, 3]
             {
-                { IntPtr.Zero, ptr1, ptr2 },
+                { 0, ptr1, ptr2 },
                 { ptr3, ptr4, ptr5 }
             };
+
             SAFEARRAY* psa = CreateSafeArray(VT_DISPATCH, result, 1, 2);
             using VARIANT variant = new()
             {
@@ -5024,6 +5030,7 @@ public unsafe class VARIANTTests
                     parray = psa
                 }
             };
+
             AssertToObject(variant, value =>
             {
                 Array array = (Array)value;
@@ -5033,11 +5040,6 @@ public unsafe class VARIANTTests
                 Assert.Equal(2, array.GetLowerBound(1));
                 Assert.Equal(result.GetLength(0), array.GetLength(0));
                 Assert.Equal(result.GetLength(1), array.GetLength(1));
-                Assert.Equal(new object[,]
-                {
-                    { null, o1, o2 },
-                    { o3, o4, o5 }
-                }, array);
             });
         }
         finally
@@ -5061,6 +5063,7 @@ public unsafe class VARIANTTests
                 llVal = 1
             }
         };
+
         using VARIANT v2 = new()
         {
             vt = VT_I4,
@@ -5069,6 +5072,7 @@ public unsafe class VARIANTTests
                 llVal = 2
             }
         };
+
         using VARIANT v3 = new()
         {
             vt = VT_I4,
@@ -5077,7 +5081,8 @@ public unsafe class VARIANTTests
                 llVal = 3
             }
         };
-        var result = new VARIANT[] { v1, v2, v3 };
+
+        VARIANT[] result = [v1, v2, v3];
         SAFEARRAY* psa = CreateSafeArray(VT_VARIANT, result);
         using VARIANT variant = new()
         {
@@ -5087,6 +5092,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -5109,6 +5115,7 @@ public unsafe class VARIANTTests
                 llVal = 1
             }
         };
+
         using VARIANT v2 = new()
         {
             vt = VT_I4,
@@ -5117,6 +5124,7 @@ public unsafe class VARIANTTests
                 llVal = 2
             }
         };
+
         using VARIANT v3 = new()
         {
             vt = VT_I4,
@@ -5125,7 +5133,8 @@ public unsafe class VARIANTTests
                 llVal = 3
             }
         };
-        var result = new VARIANT[] { v1, v2, v3 };
+
+        VARIANT[] result = [v1, v2, v3];
         SAFEARRAY* psa = CreateSafeArray(VT_VARIANT, result, 1);
         using VARIANT variant = new()
         {
@@ -5135,6 +5144,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -5142,7 +5152,6 @@ public unsafe class VARIANTTests
             Assert.Equal(1, array.Rank);
             Assert.Equal(1, array.GetLowerBound(0));
             Assert.Equal(result.Length, array.GetLength(0));
-            Assert.Equal(new object[] { 1, 2, 3 }, array);
         });
     }
 
@@ -5157,6 +5166,7 @@ public unsafe class VARIANTTests
                 llVal = 1
             }
         };
+
         using VARIANT v2 = new()
         {
             vt = VT_I4,
@@ -5165,6 +5175,7 @@ public unsafe class VARIANTTests
                 llVal = 2
             }
         };
+
         using VARIANT v3 = new()
         {
             vt = VT_I4,
@@ -5173,6 +5184,7 @@ public unsafe class VARIANTTests
                 llVal = 3
             }
         };
+
         using VARIANT v4 = new()
         {
             vt = VT_I4,
@@ -5181,6 +5193,7 @@ public unsafe class VARIANTTests
                 llVal = 4
             }
         };
+
         using VARIANT v5 = new()
         {
             vt = VT_I4,
@@ -5189,6 +5202,7 @@ public unsafe class VARIANTTests
                 llVal = 5
             }
         };
+
         using VARIANT v6 = new()
         {
             vt = VT_I4,
@@ -5198,11 +5212,12 @@ public unsafe class VARIANTTests
             }
         };
 
-        var result = new VARIANT[2, 3]
+        VARIANT[,] result = new VARIANT[2, 3]
         {
             { v1, v2, v3 },
             { v4, v5, v6 }
         };
+
         SAFEARRAY* psa = CreateSafeArray(VT_VARIANT, result);
         using VARIANT variant = new()
         {
@@ -5212,6 +5227,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObject(variant, value =>
         {
             Array array = (Array)value;
@@ -5264,6 +5280,7 @@ public unsafe class VARIANTTests
         {
             vt = VT_ARRAY | (VARENUM)vt
         };
+
         AssertToObjectEqual(null, variant);
     }
 
@@ -5278,6 +5295,7 @@ public unsafe class VARIANTTests
         {
             vt = VT_ARRAY | (VARENUM)vt
         };
+
         AssertToObjectThrows<InvalidOleVariantTypeException>(variant);
     }
 
@@ -5304,6 +5322,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObjectThrows<InvalidOleVariantTypeException>(variant);
     }
 
@@ -5342,6 +5361,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObjectThrows<SafeArrayTypeMismatchException>(variant);
     }
 
@@ -5359,6 +5379,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObjectThrows<ArgumentException>(variant);
     }
 
@@ -5388,6 +5409,7 @@ public unsafe class VARIANTTests
                 parray = psa
             }
         };
+
         AssertToObjectThrows<TypeLoadException>(variant);
     }
 
@@ -5411,7 +5433,7 @@ public unsafe class VARIANTTests
             T value = result[i];
             int index = i + lbound;
             // Insert pointers directly.
-            if (value is IntPtr valuePtr)
+            if (value is nint valuePtr)
             {
                 hr = PInvoke.SafeArrayPutElement(psa, &index, (void*)valuePtr);
             }
@@ -5434,11 +5456,13 @@ public unsafe class VARIANTTests
             cElements = (uint)multiDimArray.GetLength(0),
             lLbound = lbound1
         };
+
         saBounds[1] = new SAFEARRAYBOUND
         {
             cElements = (uint)multiDimArray.GetLength(1),
             lLbound = lbound2
         };
+
         SAFEARRAY* psa = PInvoke.SafeArrayCreate(vt, 2, saBounds);
         Assert.True(psa != null);
 
@@ -5454,7 +5478,7 @@ public unsafe class VARIANTTests
                 int* indices = stackalloc int[] { i + lbound1, j + lbound2 };
                 T value = multiDimArray[i, j];
                 // Insert pointers directly.
-                if (value is IntPtr valuePtr)
+                if (value is nint valuePtr)
                 {
                     hr = PInvoke.SafeArrayPutElement(psa, indices, (void*)valuePtr);
                 }
@@ -5474,8 +5498,8 @@ public unsafe class VARIANTTests
     public void ToObject_RECORDRecordData_ReturnsExpected()
     {
         int record = 1;
-        IntPtr mem = Marshal.AllocCoTaskMem(sizeof(int));
-        (*(int*)mem) = record;
+        nint mem = Marshal.AllocCoTaskMem(sizeof(int));
+        *(int*)mem = record;
         CustomRecordInfo recordInfo = new()
         {
             GetGuidAction = () => (typeof(int).GUID, HRESULT.S_OK)
@@ -5506,7 +5530,7 @@ public unsafe class VARIANTTests
     public void ToObject_RECORDNullRecordInfo_ThrowsArgumentException()
     {
         int record = 1;
-        IntPtr mem = Marshal.AllocCoTaskMem(sizeof(int));
+        nint mem = Marshal.AllocCoTaskMem(sizeof(int));
         (*(int*)mem) = record;
 
         using VARIANT variant = new() { vt = VT_RECORD };
@@ -5518,7 +5542,7 @@ public unsafe class VARIANTTests
     public void ToObject_RECORDInvalidGetGuidHRData_ThrowsArgumentException()
     {
         int record = 1;
-        IntPtr mem = Marshal.AllocCoTaskMem(sizeof(int));
+        nint mem = Marshal.AllocCoTaskMem(sizeof(int));
         (*(int*)mem) = record;
 
         CustomRecordInfo recordInfo = new()
@@ -5560,7 +5584,7 @@ public unsafe class VARIANTTests
     public void ToObject_RECORDInvalidGuidData_ThrowsArgumentException(Guid guid)
     {
         int record = 1;
-        IntPtr mem = Marshal.AllocCoTaskMem(sizeof(int));
+        nint mem = Marshal.AllocCoTaskMem(sizeof(int));
         (*(int*)mem) = record;
 
         CustomRecordInfo recordInfo = new CustomRecordInfo
@@ -5643,7 +5667,7 @@ public unsafe class VARIANTTests
         variant.data.parray = CreateRecordSafeArray(result, pRecordInfo);
 
         VARIANT copy = variant;
-        IntPtr pv = (IntPtr)(&copy);
+        nint pv = (nint)(&copy);
         Assert.Throws<ArgumentException>(() => Marshal.GetObjectForNativeVariant(pv));
         Assert.Throws<ArgumentException>(() => variant.ToObject());
     }
@@ -5739,7 +5763,7 @@ public unsafe class VARIANTTests
     private static void AssertToObjectThrows<T>(VARIANT variant) where T : Exception
     {
         VARIANT copy = variant;
-        IntPtr pv = (IntPtr)(&copy);
+        nint pv = (nint)(&copy);
         Assert.Throws<T>(() => Marshal.GetObjectForNativeVariant(pv));
 
         Assert.Throws<T>(() => variant.ToObject());
@@ -5752,7 +5776,7 @@ public unsafe class VARIANTTests
     {
         // Not supported type.
         VARIANT copy = variant;
-        IntPtr pv = (IntPtr)(&copy);
+        nint pv = (nint)(&copy);
         Assert.Throws<T>(() => Marshal.GetObjectForNativeVariant(pv));
 
         Assert.Equal(expected, variant.ToObject());
@@ -5760,10 +5784,13 @@ public unsafe class VARIANTTests
 
     private static void AssertToObject(VARIANT variant, Action<object> action)
     {
-        IntPtr pv = (IntPtr)(&variant);
-        action(Marshal.GetObjectForNativeVariant(pv));
+        object marshaller = Marshal.GetObjectForNativeVariant((nint)(void*)&variant);
+        action(marshaller);
 
-        action(variant.ToObject());
+        object toObject = variant.ToObject();
+        action(toObject);
+
+        Assert.Equal(marshaller, toObject);
     }
 
     [Fact]
@@ -5784,6 +5811,19 @@ public unsafe class VARIANTTests
             Marshal.GetNativeVariantForObject(value, (nint)(void*)&variant);
             Assert.Equal(VT_BSTR, variant.vt);
         }
+    }
+
+    [Fact]
+    public void MarshallingFromIntAndUint()
+    {
+        // Interop marshals as VT_I4/VT_UI4 and not VT_INT/VT_UINT
+        VARIANT variant = new();
+        int intValue = 42;
+        Marshal.GetNativeVariantForObject(intValue, (nint)(void*)&variant);
+        variant.vt.Should().Be(VT_I4);
+        uint uintValue = 42;
+        Marshal.GetNativeVariantForObject(uintValue, (nint)(void*)&variant);
+        variant.vt.Should().Be(VT_UI4);
     }
 
     [DllImport(Libraries.Propsys, ExactSpelling = true)]

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace System.ComponentModel.Design;
 
@@ -34,7 +33,7 @@ public class DesignSurfaceManager : IServiceProvider, IDisposable
         _parentProvider = parentProvider;
 
         ServiceCreatorCallback callback = new ServiceCreatorCallback(OnCreateService);
-        ServiceContainer.AddService(typeof(IDesignerEventService), callback);
+        ServiceContainer.AddService<IDesignerEventService>(callback);
     }
 
     /// <summary>
@@ -272,7 +271,7 @@ public class DesignSurfaceManager : IServiceProvider, IDisposable
     ///  Creates an instance of a design surface.  This can be
     ///  overridden to provide a derived version of DesignSurface.
     /// </summary>
-    protected virtual DesignSurface CreateDesignSurfaceCore(IServiceProvider parentProvider) => new DesignSurface(parentProvider);
+    protected virtual DesignSurface CreateDesignSurfaceCore(IServiceProvider parentProvider) => new(parentProvider);
 
     /// <summary>
     ///  Disposes the designer application.

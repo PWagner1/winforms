@@ -1,13 +1,11 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using Windows.Win32.System.SystemServices;
 using Ole = Windows.Win32.System.Ole;
 using Com = Windows.Win32.System.Com;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
-using System.Runtime.InteropServices;
 using Windows.Win32.System.Com;
 
 namespace System.Windows.Forms;
@@ -60,7 +58,7 @@ internal unsafe class DropTarget : Ole.IDropTarget.Interface, IManagedWrapper<Ol
         }
         else
         {
-            object? obj = Marshal.GetObjectForIUnknown((nint)pDataObj);
+            object obj = ComHelpers.GetObjectForIUnknown((Com.IUnknown*)pDataObj);
             if (obj is IDataObject dataObject)
             {
                 data = dataObject;

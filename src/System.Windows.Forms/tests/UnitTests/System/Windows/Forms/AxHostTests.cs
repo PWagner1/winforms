@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.ComponentModel.Design;
@@ -871,26 +870,33 @@ public class AxHostTests
         Assert.Same(ocx, control.GetOcx());
     }
 
+    public static IEnumerable<object[]> Text_Set_TestData()
+    {
+        yield return new object[] { null, string.Empty };
+        yield return new object[] { string.Empty, string.Empty };
+        yield return new object[] { "text", "text" };
+    }
+
     [WinFormsTheory]
-    [StringWithNullData]
-    public void AxHost_Text_Set_GetReturnsExpected(string value)
+    [MemberData(nameof(Text_Set_TestData))]
+    public void AxHost_Text_Set_GetReturnsExpected(string value, string expected)
     {
         using var control = new SubAxHost(EmptyClsidString)
         {
             Text = value
         };
-        Assert.Equal(value, control.Text);
+        Assert.Equal(expected, control.Text);
         Assert.False(control.IsHandleCreated);
 
         // Set same.
         control.Text = value;
-        Assert.Equal(value, control.Text);
+        Assert.Equal(expected, control.Text);
         Assert.False(control.IsHandleCreated);
     }
 
     [WinFormsTheory]
-    [StringWithNullData]
-    public void AxHost_Text_SetWithHandle_GetReturnsExpected(string value)
+    [MemberData(nameof(Text_Set_TestData))]
+    public void AxHost_Text_SetWithHandle_GetReturnsExpected(string value, string expected)
     {
         using var control = new SubAxHost(WebBrowserClsidString);
         Assert.NotEqual(IntPtr.Zero, control.Handle);
@@ -902,7 +908,7 @@ public class AxHostTests
         control.HandleCreated += (sender, e) => createdCallCount++;
 
         control.Text = value;
-        Assert.Equal(value, control.Text);
+        Assert.Equal(expected, control.Text);
         Assert.True(control.IsHandleCreated);
         Assert.Equal(0, invalidatedCallCount);
         Assert.Equal(0, styleChangedCallCount);
@@ -910,7 +916,7 @@ public class AxHostTests
 
         // Set same.
         control.Text = value;
-        Assert.Equal(value, control.Text);
+        Assert.Equal(expected, control.Text);
         Assert.True(control.IsHandleCreated);
         Assert.Equal(0, invalidatedCallCount);
         Assert.Equal(0, styleChangedCallCount);

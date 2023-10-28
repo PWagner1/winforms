@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -637,7 +636,7 @@ internal class ToolStripItemBehavior : Behavior.Behavior
             //Do DragDrop only if currentDropItem has changed.
             if (currentDropItem != selectedItem && designerHost is not null)
             {
-                ArrayList components = data.DragComponents;
+                IList components = data.DragComponents;
                 ToolStrip parentToolStrip = currentDropItem.GetCurrentParent();
                 int primaryIndex = -1;
                 string transDesc;
@@ -688,7 +687,7 @@ internal class ToolStripItemBehavior : Behavior.Behavior
                             keyboardHandlingService.CopyInProgress = true;
                         }
 
-                        components = DesignerUtils.CopyDragObjects(components, currentDropItem.Site) as ArrayList;
+                        components = DesignerUtils.CopyDragObjects(components, currentDropItem.Site);
                         if (keyboardHandlingService is not null)
                         {
                             keyboardHandlingService.CopyInProgress = false;
@@ -901,11 +900,9 @@ internal class ToolStripItemBehavior : Behavior.Behavior
                     Graphics g = bSvc.AdornerWindowGraphics;
                     try
                     {
-                        using (Pen p = new Pen(new SolidBrush(Color.Black)))
-                        {
-                            p.DashStyle = DashStyle.Dot;
-                            g.DrawRectangle(p, bounds);
-                        }
+                        using Pen p = new Pen(new SolidBrush(Color.Black));
+                        p.DashStyle = DashStyle.Dot;
+                        g.DrawRectangle(p, bounds);
                     }
                     finally
                     {

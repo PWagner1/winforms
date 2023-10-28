@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 
@@ -8,7 +7,7 @@ namespace System.Windows.Forms.Layout;
 
 public class ArrangedElementCollection : IList
 {
-    internal static ArrangedElementCollection Empty = new ArrangedElementCollection(0);
+    internal static ArrangedElementCollection Empty = new(0);
 
     internal ArrangedElementCollection()
         : this(4)
@@ -49,7 +48,7 @@ public class ArrangedElementCollection : IList
 
     public override int GetHashCode()
     {
-        var hash = default(HashCode);
+        HashCode hash = default;
         foreach (object o in InnerList)
         {
             hash.Add(o);

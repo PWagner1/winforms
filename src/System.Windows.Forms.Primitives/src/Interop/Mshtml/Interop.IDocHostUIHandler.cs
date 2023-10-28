@@ -1,11 +1,11 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using Windows.Win32.System.Ole;
+using MsHtml = Windows.Win32.Web.MsHtml;
 
 internal partial class Interop
 {
@@ -25,7 +25,7 @@ internal partial class Interop
 
             [PreserveSig]
             HRESULT GetHostInfo(
-                DOCHOSTUIINFO* pInfo);
+                MsHtml.DOCHOSTUIINFO* pInfo);
 
             [PreserveSig]
             HRESULT ShowUI(
@@ -77,7 +77,7 @@ internal partial class Interop
 
             [PreserveSig]
             HRESULT GetExternal(
-                [MarshalAs(UnmanagedType.Interface)] out object ppDispatch);
+                [MarshalAs(UnmanagedType.Interface)] out object? ppDispatch);
 
             [PreserveSig]
             HRESULT TranslateUrl(

@@ -1,10 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using static Interop;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms;
 
@@ -122,7 +120,7 @@ public partial class ListView
             }
         }
 
-        public void AddRange(ListViewItem[] values)
+        public void AddRange(params ListViewItem[] values)
         {
             ArgumentNullException.ThrowIfNull(values);
 
@@ -190,7 +188,7 @@ public partial class ListView
             if (_owner.IsHandleCreated && !_owner.ListViewHandleDestroyed)
             {
                 // Obtain internal index of the item
-                var lvItem = new LVITEMW
+                LVITEMW lvItem = new()
                 {
                     mask = LIST_VIEW_ITEM_FLAGS.LVIF_PARAM,
                     iItem = displayIndex
@@ -316,7 +314,7 @@ public partial class ListView
 
         public ListViewItem Insert(int index, ListViewItem item)
         {
-            int count = 0;
+            int count;
             if (_owner.VirtualMode)
             {
                 count = Count;

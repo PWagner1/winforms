@@ -1,11 +1,10 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Runtime.InteropServices;
+using Windows.Win32.UI.Accessibility;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
-using static Interop;
 
 namespace System.Windows.Forms;
 
@@ -28,19 +27,19 @@ public partial class MonthCalendar
 
         public override void DoDefaultAction() => Invoke();
 
-        internal override object? GetPropertyValue(UiaCore.UIA propertyID)
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyID)
             => propertyID switch
             {
-                UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.ButtonControlTypeId,
+                UIA_PROPERTY_ID.UIA_ControlTypePropertyId => UIA_CONTROLTYPE_ID.UIA_ButtonControlTypeId,
                 _ => base.GetPropertyValue(propertyID)
             };
 
         internal override void Invoke() => RaiseMouseClick();
 
-        internal override bool IsPatternSupported(UiaCore.UIA patternId)
+        internal override bool IsPatternSupported(UIA_PATTERN_ID patternId)
             => patternId switch
             {
-                UiaCore.UIA.InvokePatternId => true,
+                UIA_PATTERN_ID.UIA_InvokePatternId => true,
                 _ => base.IsPatternSupported(patternId)
             };
 
@@ -120,7 +119,7 @@ public partial class MonthCalendar
                 flags |= MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK;
             }
 
-            INPUT mouseInput = default(INPUT);
+            INPUT mouseInput = default;
             mouseInput.type = INPUT_TYPE.INPUT_MOUSE;
             mouseInput.Anonymous.mi.dx = x;
             mouseInput.Anonymous.mi.dy = y;

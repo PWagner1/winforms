@@ -1,8 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-#nullable disable
 
 using System.Collections;
 
@@ -41,7 +38,7 @@ public class GlyphCollection : CollectionBase
     /// </summary>
     public Glyph this[int index]
     {
-        get => (Glyph)List[index];
+        get => (Glyph)List[index]!;
         set => List[index] = value;
     }
 
@@ -57,7 +54,7 @@ public class GlyphCollection : CollectionBase
     /// <summary>
     ///  Copies the elements of an array to the end of the Behavior.GlyphCollection.
     /// </summary>
-    public void AddRange(Glyph[] value)
+    public void AddRange(params Glyph[] value)
     {
         for (int i = 0; i < value.Length; i += 1)
         {

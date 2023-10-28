@@ -1,12 +1,11 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms.ButtonInternal;
 using System.Windows.Forms.Layout;
-using static Interop;
+using Windows.Win32.UI.Accessibility;
 
 namespace System.Windows.Forms;
 
@@ -21,9 +20,9 @@ namespace System.Windows.Forms;
 [SRDescription(nameof(SR.DescriptionCheckBox))]
 public partial class CheckBox : ButtonBase
 {
-    private static readonly object EVENT_CHECKEDCHANGED = new object();
-    private static readonly object EVENT_CHECKSTATECHANGED = new object();
-    private static readonly object EVENT_APPEARANCECHANGED = new object();
+    private static readonly object EVENT_CHECKEDCHANGED = new();
+    private static readonly object EVENT_CHECKSTATECHANGED = new();
+    private static readonly object EVENT_APPEARANCECHANGED = new();
     private const ContentAlignment AnyRight = ContentAlignment.TopRight | ContentAlignment.MiddleRight | ContentAlignment.BottomRight;
 
     private ContentAlignment _checkAlign = ContentAlignment.MiddleLeft;
@@ -280,7 +279,7 @@ public partial class CheckBox : ButtonBase
         }
     }
 
-    protected override Size DefaultSize => new Size(104, 24);
+    protected override Size DefaultSize => new(104, 24);
 
     /// <summary>
     ///  When overridden in a derived class, handles rescaling of any magic numbers used in control painting.
@@ -468,8 +467,8 @@ public partial class CheckBox : ButtonBase
         // UIA events:
         if (IsAccessibilityObjectCreated)
         {
-            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.NamePropertyId, Name, Name);
-            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId);
+            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UIA_PROPERTY_ID.UIA_NamePropertyId, Name, Name);
+            AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationPropertyChangedEventId);
         }
 
         if (FlatStyle == FlatStyle.System)

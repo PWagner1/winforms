@@ -1,9 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Globalization;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -127,18 +127,18 @@ public partial class MonthCalendar
             {
                 if (cell.Column == _columnIndex)
                 {
-                    return new UiaCore.IRawElementProviderSimple[1] { cell };
+                    return [cell];
                 }
             }
 
             return null;
         }
 
-        internal override object? GetPropertyValue(UiaCore.UIA propertyID)
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyID)
             => propertyID switch
             {
-                UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.DataItemControlTypeId,
-                UiaCore.UIA.IsKeyboardFocusablePropertyId => IsEnabled,
+                UIA_PROPERTY_ID.UIA_ControlTypePropertyId => UIA_CONTROLTYPE_ID.UIA_DataItemControlTypeId,
+                UIA_PROPERTY_ID.UIA_IsKeyboardFocusablePropertyId => IsEnabled,
                 _ => base.GetPropertyValue(propertyID)
             };
 
@@ -151,11 +151,11 @@ public partial class MonthCalendar
             => _monthCalendarAccessibleObject.Focused
                 && _monthCalendarAccessibleObject.FocusedCell == this;
 
-        internal override bool IsPatternSupported(UiaCore.UIA patternId)
+        internal override bool IsPatternSupported(UIA_PATTERN_ID patternId)
             => patternId switch
             {
-                UiaCore.UIA.GridItemPatternId => true,
-                UiaCore.UIA.TableItemPatternId => true,
+                UIA_PATTERN_ID.UIA_GridItemPatternId => true,
+                UIA_PATTERN_ID.UIA_TableItemPatternId => true,
                 _ => base.IsPatternSupported(patternId)
             };
 

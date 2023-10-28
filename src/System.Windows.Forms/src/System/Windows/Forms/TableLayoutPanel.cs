@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
@@ -23,27 +22,21 @@ namespace System.Windows.Forms;
 public class TableLayoutPanel : Panel, IExtenderProvider
 {
     private readonly TableLayoutSettings _tableLayoutSettings;
-    private static readonly object s_eventCellPaint = new object();
+    private static readonly object s_eventCellPaint = new();
 
     public TableLayoutPanel()
     {
         _tableLayoutSettings = TableLayout.CreateSettings(this);
     }
 
-    public override LayoutEngine LayoutEngine
-    {
-        get { return TableLayout.Instance; }
-    }
+    public override LayoutEngine LayoutEngine => TableLayout.Instance;
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public TableLayoutSettings LayoutSettings
     {
-        get
-        {
-            return _tableLayoutSettings;
-        }
+        get => _tableLayoutSettings;
         set
         {
             if (value is not null && value.IsStub)
@@ -99,18 +92,12 @@ public class TableLayoutPanel : Panel, IExtenderProvider
         }
     }
 
-    private int CellBorderWidth
-    {
-        get { return _tableLayoutSettings.CellBorderWidth; }
-    }
+    private int CellBorderWidth => _tableLayoutSettings.CellBorderWidth;
 
     [Browsable(false)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
     [SRDescription(nameof(SR.ControlControlsDescr))]
-    public new TableLayoutControlCollection Controls
-    {
-        get { return (TableLayoutControlCollection)base.Controls; }
-    }
+    public new TableLayoutControlCollection Controls => (TableLayoutControlCollection)base.Controls;
 
     /// <summary>
     ///  This sets the maximum number of columns allowed on this table instead of allocating
@@ -123,7 +110,7 @@ public class TableLayoutPanel : Panel, IExtenderProvider
     [Localizable(true)]
     public int ColumnCount
     {
-        get { return _tableLayoutSettings.ColumnCount; }
+        get => _tableLayoutSettings.ColumnCount;
         set
         {
             _tableLayoutSettings.ColumnCount = value;
@@ -141,14 +128,8 @@ public class TableLayoutPanel : Panel, IExtenderProvider
     [DefaultValue(TableLayoutPanelGrowStyle.AddRows)]
     public TableLayoutPanelGrowStyle GrowStyle
     {
-        get
-        {
-            return _tableLayoutSettings.GrowStyle;
-        }
-        set
-        {
-            _tableLayoutSettings.GrowStyle = value;
-        }
+        get => _tableLayoutSettings.GrowStyle;
+        set => _tableLayoutSettings.GrowStyle = value;
     }
 
     /// <summary>
@@ -162,8 +143,8 @@ public class TableLayoutPanel : Panel, IExtenderProvider
     [Localizable(true)]
     public int RowCount
     {
-        get { return _tableLayoutSettings.RowCount; }
-        set { _tableLayoutSettings.RowCount = value; }
+        get => _tableLayoutSettings.RowCount;
+        set => _tableLayoutSettings.RowCount = value;
     }
 
     [SRDescription(nameof(SR.GridPanelRowStylesDescr))]
@@ -172,10 +153,7 @@ public class TableLayoutPanel : Panel, IExtenderProvider
     [DisplayName("Rows")]
     [MergableProperty(false)]
     [Browsable(false)]
-    public TableLayoutRowStyleCollection RowStyles
-    {
-        get { return _tableLayoutSettings.RowStyles; }
-    }
+    public TableLayoutRowStyleCollection RowStyles => _tableLayoutSettings.RowStyles;
 
     [SRDescription(nameof(SR.GridPanelColumnStylesDescr))]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
@@ -183,16 +161,10 @@ public class TableLayoutPanel : Panel, IExtenderProvider
     [DisplayName("Columns")]
     [Browsable(false)]
     [MergableProperty(false)]
-    public TableLayoutColumnStyleCollection ColumnStyles
-    {
-        get { return _tableLayoutSettings.ColumnStyles; }
-    }
+    public TableLayoutColumnStyleCollection ColumnStyles => _tableLayoutSettings.ColumnStyles;
 
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    protected override ControlCollection CreateControlsInstance()
-    {
-        return new TableLayoutControlCollection(this);
-    }
+    protected override ControlCollection CreateControlsInstance() => new TableLayoutControlCollection(this);
 
     private bool ShouldSerializeControls()
     {
@@ -201,19 +173,15 @@ public class TableLayoutPanel : Panel, IExtenderProvider
     }
 
     #region Extended Properties
-    bool IExtenderProvider.CanExtend(object obj)
-    {
-        return obj is Control control && control.Parent == this;
-    }
+    bool IExtenderProvider.CanExtend(object obj) =>
+        obj is Control control && control.Parent == this;
 
     [SRDescription(nameof(SR.GridPanelGetColumnSpanDescr))]
     [DefaultValue(1)]
     [SRCategory(nameof(SR.CatLayout))]
     [DisplayName("ColumnSpan")]
-    public int GetColumnSpan(Control control)
-    {
-        return _tableLayoutSettings.GetColumnSpan(control);
-    }
+    public int GetColumnSpan(Control control) =>
+        _tableLayoutSettings.GetColumnSpan(control);
 
     public void SetColumnSpan(Control control, int value)
     {
@@ -226,10 +194,7 @@ public class TableLayoutPanel : Panel, IExtenderProvider
     [DefaultValue(1)]
     [SRCategory(nameof(SR.CatLayout))]
     [DisplayName("RowSpan")]
-    public int GetRowSpan(Control control)
-    {
-        return _tableLayoutSettings.GetRowSpan(control);
-    }
+    public int GetRowSpan(Control control) => _tableLayoutSettings.GetRowSpan(control);
 
     public void SetRowSpan(Control control, int value)
     {
@@ -244,10 +209,7 @@ public class TableLayoutPanel : Panel, IExtenderProvider
     [SRCategory(nameof(SR.CatLayout))]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     [DisplayName("Row")]
-    public int GetRow(Control control)
-    {
-        return _tableLayoutSettings.GetRow(control);
-    }
+    public int GetRow(Control control) => _tableLayoutSettings.GetRow(control);
 
     //set the row position of the control
     public void SetRow(Control control, int row)
@@ -262,16 +224,12 @@ public class TableLayoutPanel : Panel, IExtenderProvider
     [SRCategory(nameof(SR.CatLayout))]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     [DisplayName("Cell")]
-    public TableLayoutPanelCellPosition GetCellPosition(Control control)
-    {
-        return _tableLayoutSettings.GetCellPosition(control);
-    }
+    public TableLayoutPanelCellPosition GetCellPosition(Control control) =>
+        _tableLayoutSettings.GetCellPosition(control);
 
     //set the row and column of the control
-    public void SetCellPosition(Control control, TableLayoutPanelCellPosition position)
-    {
+    public void SetCellPosition(Control control, TableLayoutPanelCellPosition position) =>
         _tableLayoutSettings.SetCellPosition(control, position);
-    }
 
     //get the column position of the control
     [DefaultValue(-1)]  //if change this value, also change the SerializeViaAdd in TableLayoutControlCollectionCodeDomSerializer
@@ -279,10 +237,7 @@ public class TableLayoutPanel : Panel, IExtenderProvider
     [SRCategory(nameof(SR.CatLayout))]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     [DisplayName("Column")]
-    public int GetColumn(Control control)
-    {
-        return _tableLayoutSettings.GetColumn(control);
-    }
+    public int GetColumn(Control control) => _tableLayoutSettings.GetColumn(control);
 
     //set the column position of the control
     public void SetColumn(Control control, int column)
@@ -294,15 +249,11 @@ public class TableLayoutPanel : Panel, IExtenderProvider
     /// <summary>
     ///  get the control which covers the specified row and column. return null if we can't find one
     /// </summary>
-    public Control? GetControlFromPosition(int column, int row)
-    {
-        return (Control?)_tableLayoutSettings.GetControlFromPosition(column, row);
-    }
+    public Control? GetControlFromPosition(int column, int row) =>
+        (Control?)_tableLayoutSettings.GetControlFromPosition(column, row);
 
-    public TableLayoutPanelCellPosition GetPositionFromControl(Control? control)
-    {
-        return _tableLayoutSettings.GetPositionFromControl(control);
-    }
+    public TableLayoutPanelCellPosition GetPositionFromControl(Control? control) =>
+        _tableLayoutSettings.GetPositionFromControl(control);
 
     /// <summary>
     ///  This returns an array representing the widths (in pixels) of the columns in the TableLayoutPanel.
@@ -441,7 +392,7 @@ public class TableLayoutPanel : Panel, IExtenderProvider
                 if (clipRect.IntersectsWith(insideCellBounds))
                 {
                     // First, call user's painting code
-                    using (var pcea = new TableLayoutCellPaintEventArgs(e, clipRect, insideCellBounds, i, j))
+                    using (TableLayoutCellPaintEventArgs pcea = new(e, clipRect, insideCellBounds, i, j))
                     {
                         OnCellPaint(pcea);
                         if (!((IGraphicsHdcProvider)pcea).IsGraphicsStateClean)

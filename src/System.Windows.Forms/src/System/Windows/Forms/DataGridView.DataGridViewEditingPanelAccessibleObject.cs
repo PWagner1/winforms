@@ -1,8 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -40,7 +40,7 @@ public partial class DataGridView
             switch (direction)
             {
                 case UiaCore.NavigateDirection.Parent:
-                    DataGridViewCell currentCell = owner.CurrentCell;
+                    DataGridViewCell? currentCell = owner.CurrentCell;
                     if (currentCell is not null && owner.IsCurrentCellInEditMode)
                     {
                         return owner.AccessibilityObject;
@@ -59,30 +59,30 @@ public partial class DataGridView
 
         internal override void SetFocus()
         {
-            if (this.TryGetOwnerAs(out Panel? owner) && owner.IsHandleCreated && owner.CanFocus)
+            if (this.IsOwnerHandleCreated(out Panel? owner) && owner.CanFocus)
             {
                 owner.Focus();
             }
         }
 
-        internal override object? GetPropertyValue(UiaCore.UIA propertyId) =>
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyId) =>
             propertyId switch
             {
-                UiaCore.UIA.AccessKeyPropertyId => this.TryGetOwnerAs(out Panel? owner)
+                UIA_PROPERTY_ID.UIA_AccessKeyPropertyId => this.TryGetOwnerAs(out Panel? owner)
                     ? owner.AccessibilityObject.KeyboardShortcut
                     : null,
-                UiaCore.UIA.ControlTypePropertyId => this.GetOwnerAccessibleRole() == AccessibleRole.Default
+                UIA_PROPERTY_ID.UIA_ControlTypePropertyId => this.GetOwnerAccessibleRole() == AccessibleRole.Default
                     // If we don't set a default role for the accessible object it will be retrieved from Windows.
                     // And we don't have a 100% guarantee it will be correct, hence set it ourselves.
-                    ? UiaCore.UIA.PaneControlTypeId
+                    ? UIA_CONTROLTYPE_ID.UIA_PaneControlTypeId
                     : base.GetPropertyValue(propertyId),
-                UiaCore.UIA.HasKeyboardFocusPropertyId
+                UIA_PROPERTY_ID.UIA_HasKeyboardFocusPropertyId
                     => _ownerDataGridView.TryGetTarget(out var owner) && owner.CurrentCell is not null,
-                UiaCore.UIA.IsContentElementPropertyId => true,
-                UiaCore.UIA.IsControlElementPropertyId => true,
-                UiaCore.UIA.IsEnabledPropertyId => _ownerDataGridView.TryGetTarget(out var owner) && owner.Enabled,
-                UiaCore.UIA.IsKeyboardFocusablePropertyId => true,
-                UiaCore.UIA.ProviderDescriptionPropertyId => SR.DataGridViewEditingPanelUiaProviderDescription,
+                UIA_PROPERTY_ID.UIA_IsContentElementPropertyId => true,
+                UIA_PROPERTY_ID.UIA_IsControlElementPropertyId => true,
+                UIA_PROPERTY_ID.UIA_IsEnabledPropertyId => _ownerDataGridView.TryGetTarget(out var owner) && owner.Enabled,
+                UIA_PROPERTY_ID.UIA_IsKeyboardFocusablePropertyId => true,
+                UIA_PROPERTY_ID.UIA_ProviderDescriptionPropertyId => SR.DataGridViewEditingPanelUiaProviderDescription,
                 _ => base.GetPropertyValue(propertyId)
             };
     }

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Runtime.Serialization;
@@ -14,7 +13,7 @@ namespace System.Windows.Forms;
 public class OwnerDrawPropertyBag : MarshalByRefObject, ISerializable
 {
     private Control.FontHandleWrapper? _fontWrapper;
-    private static readonly object s_internalSyncObject = new object();
+    private static readonly object s_internalSyncObject = new();
 
     protected OwnerDrawPropertyBag(SerializationInfo info, StreamingContext context)
     {
@@ -71,7 +70,7 @@ public class OwnerDrawPropertyBag : MarshalByRefObject, ISerializable
     {
         lock (s_internalSyncObject)
         {
-            var result = new OwnerDrawPropertyBag();
+            OwnerDrawPropertyBag result = new();
             if (value is null)
             {
                 return result;

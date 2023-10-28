@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Globalization;
@@ -13,7 +12,7 @@ internal static class Formatter
     private static readonly Type stringType = typeof(string);
     private static readonly Type booleanType = typeof(bool);
     private static readonly Type checkStateType = typeof(CheckState);
-    private static readonly object parseMethodNotFound = new object();
+    private static readonly object parseMethodNotFound = new();
     private static readonly object defaultDataSourceNullValue = DBNull.Value;
 
     /// <summary>
@@ -540,7 +539,7 @@ internal static class Formatter
             : typeConverter;
     }
 
-    public static object? GetDefaultDataSourceNullValue(Type type)
+    public static object? GetDefaultDataSourceNullValue(Type? type)
     {
         return (type is not null && !type.IsValueType)
             ? null

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -232,7 +231,7 @@ public partial class ToolStripTextBox
 
             // Note that GetWindowDC just calls GetDCEx with DCX_WINDOW | DCX_USESTYLE.
 
-            using var hdc = new GetDcScope(m.HWND, HRGN.Null, GET_DCX_FLAGS.DCX_WINDOW | (GET_DCX_FLAGS)0x00010000 /* DCX_USESTYLE */);
+            using GetDcScope hdc = new(m.HWND, HRGN.Null, GET_DCX_FLAGS.DCX_WINDOW | (GET_DCX_FLAGS)0x00010000 /* DCX_USESTYLE */);
             if (hdc.IsNull)
             {
                 throw new Win32Exception();

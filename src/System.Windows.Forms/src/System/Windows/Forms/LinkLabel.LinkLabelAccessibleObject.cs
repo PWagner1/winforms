@@ -1,8 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -18,7 +18,7 @@ public partial class LinkLabel
         }
 
         internal override UiaCore.IRawElementProviderFragment? ElementProviderFromPoint(double x, double y)
-            => !this.TryGetOwnerAs(out LinkLabel? owner) || !owner.IsHandleCreated
+            => !this.IsOwnerHandleCreated(out LinkLabel? owner)
                 ? base.ElementProviderFromPoint(x, y)
                 : HitTest((int)x, (int)y) ?? base.ElementProviderFromPoint(x, y);
 
@@ -50,17 +50,17 @@ public partial class LinkLabel
 
         public override int GetChildCount() => this.TryGetOwnerAs(out LinkLabel? owner) ? owner.Links.Count : 0;
 
-        internal override object? GetPropertyValue(UiaCore.UIA propertyID)
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyID)
             => propertyID switch
             {
-                UiaCore.UIA.HasKeyboardFocusPropertyId => false,
-                UiaCore.UIA.IsKeyboardFocusablePropertyId => false,
+                UIA_PROPERTY_ID.UIA_HasKeyboardFocusPropertyId => false,
+                UIA_PROPERTY_ID.UIA_IsKeyboardFocusablePropertyId => false,
                 _ => base.GetPropertyValue(propertyID)
             };
 
         public override AccessibleObject? HitTest(int x, int y)
         {
-            if (!this.TryGetOwnerAs(out LinkLabel? owner) || !owner.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out LinkLabel? owner))
             {
                 return null;
             }

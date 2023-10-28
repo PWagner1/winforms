@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 
@@ -116,7 +115,7 @@ internal abstract partial class ButtonBaseAdapter
                 colors.WindowText = colors.WindowFrame;
             }
 
-            using var hdc = new DeviceContextHdcScope(_deviceContext, applyGraphicsState: false);
+            using DeviceContextHdcScope hdc = new(_deviceContext, applyGraphicsState: false);
 
             colors.ButtonFace = hdc.FindNearestColor(colors.ButtonFace);
             colors.ButtonShadow = hdc.FindNearestColor(colors.ButtonShadow);

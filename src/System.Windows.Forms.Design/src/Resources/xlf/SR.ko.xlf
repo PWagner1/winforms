@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ko" original="../SR.resx">
     <body>
+      <trans-unit id="0_reparent_controls_transaction">
+        <source>{0} Reparent Controls Transaction.</source>
+        <target state="translated">{0}이(가) 컨트롤 트랜잭션의 부모를 다시 지정합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AXNotRegistered">
         <source>Could not create ActiveX control '{0}' because it is not properly registered.</source>
         <target state="translated">'{0}' ActiveX 컨트롤이 제대로 등록되어 있지 않으므로 이 컨트롤을 만들 수 없습니다.</target>
@@ -225,6 +230,11 @@
       <trans-unit id="CellStyleBuilderSelectedPreviewAccName">
         <source>Selected Preview</source>
         <target state="translated">선택된 미리 보기</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChooseIconDisplayName">
+        <source>Choose Icon...</source>
+        <target state="translated">아이콘 선택...</target>
         <note />
       </trans-unit>
       <trans-unit id="ChooseImageDescription">
@@ -641,9 +651,134 @@
         <target state="translated">   이 강력한 형식의 리소스 클래스를 사용하는 리소스를 조회합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataGridViewAddColumnTransactionString">
+        <source>Add Column</source>
+        <target state="translated">열 추가</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewAddColumnVerb">
+        <source>&amp;Add Column...</source>
+        <target state="translated">열 추가(&amp;A)...</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewBoundColumnProperties">
+        <source>Bound Column &amp;Properties</source>
+        <target state="translated">바인딩된 열 속성(&amp;P)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewChooseDataSource">
+        <source>Choose Data Source:</source>
+        <target state="translated">데이터 소스 선택:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewChooseDataSourceTransactionString">
+        <source>{0} DataSource changed</source>
+        <target state="translated">{0} DataSource가 변경되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewColumnTypePropertyDescription">
+        <source>The DataGridViewColumn type.</source>
+        <target state="translated">DataGridViewColumn 형식입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewDataSourceNoLongerValid">
+        <source>Unable to create columns for the data source. The data source is no longer valid</source>
+        <target state="translated">데이터 원본에 대한 열을 만들 수 없습니다. 데이터 원본이 더 이상 유효하지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewDisableAddingTransactionString">
+        <source>Disable Adding</source>
+        <target state="translated">추가 사용 안 함</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewDisableColumnReorderingTransactionString">
+        <source>Disable Column Reordering</source>
+        <target state="translated">열 다시 정렬 사용 안 함</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewDisableDeletingTransactionString">
+        <source>Disable Deleting</source>
+        <target state="translated">삭제 사용 안 함</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewDisableEditingTransactionString">
+        <source>Disable Editing</source>
+        <target state="translated">편집 사용 안 함</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewDuplicateColumnName">
+        <source>The name {0} is already in use by another column.</source>
+        <target state="translated">이름 {0}은(는) 다른 열에서 이미 사용 중입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewEditColumnsTransactionString">
+        <source>Edit Columns</source>
+        <target state="translated">열 편집</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewEditColumnsVerb">
+        <source>&amp;Edit Columns...</source>
+        <target state="translated">열 편집(&amp;E)...</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewEnableAdding">
+        <source>Enable Adding</source>
+        <target state="translated">추가 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewEnableAddingTransactionString">
+        <source>Enable Adding</source>
+        <target state="translated">추가 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewEnableColumnReordering">
+        <source>Enable Column Reordering</source>
+        <target state="translated">열 다시 정렬 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewEnableColumnReorderingTransactionString">
+        <source>Enable Column Reordering</source>
+        <target state="translated">열 다시 정렬 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewEnableDeleting">
+        <source>Enable Deleting</source>
+        <target state="translated">삭제 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewEnableDeletingTransactionString">
+        <source>Enable Deleting</source>
+        <target state="translated">삭제 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewEnableEditing">
+        <source>Enable Editing</source>
+        <target state="translated">편집 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewEnableEditingTransactionString">
+        <source>Enable Editing</source>
+        <target state="translated">편집 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewProperties">
+        <source>&amp;Properties</source>
+        <target state="translated">속성(&amp;P)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridViewUnboundColumnProperties">
+        <source>Unbound Column &amp;Properties</source>
+        <target state="translated">바인딩되지 않은 열 속성(&amp;P)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataGridView_Cancel">
         <source>Cancel</source>
         <target state="translated">취소</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataGridView_Close">
+        <source>Close</source>
+        <target state="translated">닫기</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridView_OK">
@@ -654,6 +789,91 @@
       <trans-unit id="DataSourceLocksItems">
         <source>Items collection cannot be modified when the DataSource property is set.</source>
         <target state="translated">DataSource 속성이 설정된 경우에는 Items 컬렉션을 수정할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerAccessibleName">
+        <source>Data binding editor</source>
+        <target state="translated">데이터 바인딩 편집기</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerAddProjDataSourceLabel">
+        <source>Add new Object Data Source...</source>
+        <target state="translated">새 개체 데이터 원본 추가...</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerHelpGenAddDataSrc">
+        <source>Click the 'Add Project Data Source...' link to connect to data.</source>
+        <target state="translated">데이터에 연결하려면 '프로젝트 데이터 소스 추가...' 링크를 클릭하십시오.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerHelpGenCurrentBinding">
+        <source>Currently data bound to '{0}'.</source>
+        <target state="translated">현재 데이터가 '{0}'에 바인딩되어 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerHelpGenPickBindSrc">
+        <source>Select a BindingSource to bind to.</source>
+        <target state="translated">바인딩할 BindingSource를 선택하십시오.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerHelpGenPickDataSrc">
+        <source>Select a data source under 'Other Data Sources' to connect to data.</source>
+        <target state="translated">데이터에 연결하려면 '기타 데이터 소스' 아래에 있는 데이터 소스를 선택하십시오.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerHelpGenPickMember">
+        <source>Select a data member to bind to.</source>
+        <target state="translated">바인딩할 데이터 멤버를 선택하십시오.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerHelpNodeInstances">
+        <source>Contains all form components that implement IList, IListSource or Array.</source>
+        <target state="translated">IList, IListSource 또는 Array를 구현하는 모든 폼 구성 요소를 포함합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerHelpNodeNone">
+        <source>Selecting 'None' clears the current data binding.</source>
+        <target state="translated">'없음'을 선택하면 현재 데이터 바인딩이 지워집니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerHelpNodeOther">
+        <source>Contains all project data sources and local form list instances.</source>
+        <target state="translated">모든 프로젝트 데이터 소스 및 로컬 폼 목록 인스턴스를 포함합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerHelpNodeProject">
+        <source>Contains all project data sources.</source>
+        <target state="translated">모든 프로젝트 데이터 소스를 포함합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerHelpNodeProjectGroup">
+        <source>Contains project data sources belonging to this namespace.</source>
+        <target state="translated">이 네임스페이스에 속해 있는 프로젝트 데이터 소스를 포함합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerNodeInstances">
+        <source>{0} List Instances</source>
+        <target state="translated">{0} 목록 인스턴스</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerNodeNone">
+        <source>None</source>
+        <target state="translated">없음</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerNodeOther">
+        <source>Other Data Sources</source>
+        <target state="translated">기타 데이터 소스</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerNodeProject">
+        <source>Project Data Sources</source>
+        <target state="translated">프로젝트 데이터 소스</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignBindingPickerTreeViewAccessibleName">
+        <source>Bindable data sources and data members</source>
+        <target state="translated">바인딩 가능 데이터 소스 및 데이터 멤버</target>
         <note />
       </trans-unit>
       <trans-unit id="DesignerActionPanel_CouldNotConvertValue">
@@ -905,14 +1125,29 @@
         <target state="translated">개체를 식별하기 위해 코드에 사용되는 이름을 나타냅니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DesignerShortcutDockInForm">
+        <source>Dock Fill in Form</source>
+        <target state="translated">폼에서 전체 도킹</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DesignerShortcutDockInParent">
         <source>Dock in Parent Container</source>
         <target state="translated">부모 컨테이너에서 도킹</target>
         <note />
       </trans-unit>
+      <trans-unit id="DesignerShortcutDockInUserControl">
+        <source>Dock Fill in UserControl</source>
+        <target state="translated">UserControl에서 전체 도킹</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DesignerShortcutHorizontalOrientation">
         <source>Horizontal Splitter Orientation.</source>
         <target state="translated">가로 분할자 방향입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DesignerShortcutReparentControls">
+        <source>Re-parent Controls</source>
+        <target state="translated">컨트롤 부모 재지정</target>
         <note />
       </trans-unit>
       <trans-unit id="DesignerShortcutUndockInParent">
@@ -1078,6 +1313,36 @@
       <trans-unit id="ImageCollectionEditorFormText">
         <source>Images Collection Editor</source>
         <target state="translated">이미지 컬렉션 편집기</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ImageListActionList_ChooseImagesDescription">
+        <source>Opens the Images collection editor</source>
+        <target state="translated">이미지 컬렉션 편집기를 엽니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ImageListActionList_ChooseImagesDisplayName">
+        <source>Choose images</source>
+        <target state="translated">이미지 선택</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ImageListActionList_ColorDepthDescription">
+        <source>Changes the bit depth images imported into this ImageList are stored at</source>
+        <target state="translated">이 ImageList가 저장되어 있는 위치로 가져온 이미지의 비트 수준을 변경합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ImageListActionList_ColorDepthDisplayName">
+        <source>Image Bit Depth</source>
+        <target state="translated">이미지 비트 수준</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ImageListActionList_ImageSizeDescription">
+        <source>Changes the size images imported into this ImageList are stored at</source>
+        <target state="translated">이 ImageList가 저장되어 있는 위치로 가져온 이미지의 크기를 변경합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ImageListActionList_ImageSizeDisplayName">
+        <source>Image Size</source>
+        <target state="translated">이미지 크기</target>
         <note />
       </trans-unit>
       <trans-unit id="ImageListDescription">
@@ -1712,6 +1977,181 @@ Press Ctrl+Enter to accept Text.</source>
         <target state="translated"> {0}[나머지 문자열은 잘림]";</target>
         <note />
       </trans-unit>
+      <trans-unit id="TabControlAdd">
+        <source>Add Tab</source>
+        <target state="translated">탭 추가</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TabControlAddTab">
+        <source>Add tab to '{0}'</source>
+        <target state="translated">'{0}'에 탭을 추가합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TabControlInvalidTabPageType">
+        <source>Cannot add '{0}' to TabControl.  Only TabPages can be directly added to TabControls.</source>
+        <target state="translated">TabControl에 '{0}'을(를) 추가할 수 없습니다. TabControls에는 TabPages만 직접 추가할 수 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TabControlRemove">
+        <source>Remove Tab</source>
+        <target state="translated">탭 제거</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TabControlRemoveTab">
+        <source>Remove tab '{0}' from '{1}'</source>
+        <target state="translated">'{1}'에서 '{0}' 탭을 제거합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerAbsoluteMenu">
+        <source>A&amp;bsolute</source>
+        <target state="translated">절대(&amp;B)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerAddColumn">
+        <source>&amp;Add Column</source>
+        <target state="translated">열 추가(&amp;A)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerAddColumnUndoUnit">
+        <source>Add Column on {0}</source>
+        <target state="translated">{0}에 열 추가</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerAddMenu">
+        <source>&amp;Add</source>
+        <target state="translated">추가(&amp;A)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerAddRow">
+        <source>Add Ro&amp;w</source>
+        <target state="translated">행 추가(&amp;W)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerAddRowUndoUnit">
+        <source>Add Row on {0}</source>
+        <target state="translated">{0}에 행 추가</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerAutoSizeMenu">
+        <source>A&amp;utoSize</source>
+        <target state="translated">크기 자동 조정(&amp;U)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerChangeSizeTypeUndoUnit">
+        <source>Change SizeType on {0}</source>
+        <target state="translated">{0}의 SizeType 변경</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerClearAnchor">
+        <source>Clearing Anchor property of {0} for {1}</source>
+        <target state="translated">{1}에 대한 {0}의 Anchor 속성 지우기</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerClearDock">
+        <source>Clearing Dock property of {0} for {1}</source>
+        <target state="translated">{1}에 대한 {0}의 Dock 속성 지우기</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerColMenu">
+        <source>&amp;Column</source>
+        <target state="translated">열(&amp;C)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerContextMenuCopy">
+        <source>C&amp;opy TableLayoutPanel</source>
+        <target state="translated">TableLayoutPanel 복사(&amp;O)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerContextMenuCut">
+        <source>&amp;Cut TableLayoutPanel</source>
+        <target state="translated">TableLayoutPanel 잘라내기(&amp;C)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerContextMenuDelete">
+        <source>&amp;Delete TableLayoutPanel</source>
+        <target state="translated">TableLayoutPanel 삭제(&amp;D)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerControlsSwapped">
+        <source>{0} swapped with {1}</source>
+        <target state="translated">{1}과(와) 대체된 {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerDeleteMenu">
+        <source>&amp;Delete</source>
+        <target state="translated">삭제(&amp;D)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerDontBoldLabel">
+        <source>0</source>
+        <target state="translated">0</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerEditRowAndCol">
+        <source>&amp;Edit Rows and Columns...</source>
+        <target state="translated">행 및 열 편집(&amp;E)...</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerInsertMenu">
+        <source>&amp;Insert</source>
+        <target state="translated">삽입(&amp;I)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerInvalidColumnRowCount">
+        <source>{0} must be greater than zero.</source>
+        <target state="translated">{0}은(는) 0보다 커야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerLabelMenu">
+        <source>SizeMode</source>
+        <target state="translated">SizeMode</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerPercentageMenu">
+        <source>&amp;Percentage</source>
+        <target state="translated">백분율(&amp;P)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerRemoveColumn">
+        <source>Remove Last Colu&amp;mn</source>
+        <target state="translated">마지막 열 제거(&amp;M)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerRemoveColumnUndoUnit">
+        <source>Remove Column on {0}</source>
+        <target state="translated">{0}에서 열 제거</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerRemoveRow">
+        <source>Remo&amp;ve Last Row</source>
+        <target state="translated">마지막 행 제거(&amp;V)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerRemoveRowUndoUnit">
+        <source>Remove Row on {0}</source>
+        <target state="translated">{0}에서 행 제거</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelDesignerRowMenu">
+        <source>&amp;Row</source>
+        <target state="translated">행(&amp;R)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelFullDesc">
+        <source>Additional Rows or Columns cannot be created.  TableLayoutPanel is full and GrowStyle is 'FixedSize'.</source>
+        <target state="translated">추가 행이나 열을 만들 수 없습니다. TableLayoutPanel에 여유 공간이 없고 GrowStyle이 'FixedSize'입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelRowColResize">
+        <source>Resizing {0} within {1}</source>
+        <target state="translated">{1}에서 {0} 크기 조정</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TableLayoutPanelSpanDesc">
+        <source>TableLayoutPanel cannot expand to contain the control, because the panel's GrowStyle property is set to 'FixedSize'.</source>
+        <target state="translated">패널의 GrowStyle 속성이 'FixedSize'로 설정되어 있으므로 컨트롤을 포함하도록 TableLayoutPanel을 확장할 수 없습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ToolStripActionList_Dock">
         <source>Dock:</source>
         <target state="translated">도킹:</target>
@@ -1755,6 +2195,56 @@ Press Ctrl+Enter to accept Text.</source>
       <trans-unit id="ToolStripAllowItemReorderAndAllowDropCannotBeSetToTrue">
         <source>AllowItemReorder and AllowDrop cannot both be true.</source>
         <target state="translated">AllowItemReorder 및 AllowDrop이 모두 true일 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripContainerActionList_Bottom">
+        <source>Bottom</source>
+        <target state="translated">아래쪽</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripContainerActionList_BottomDesc">
+        <source>Toggles the participation of BottomToolStripPanel in runtime dragging of ToolStrip.</source>
+        <target state="translated">ToolStrip의 런타임 끌기 동작에서 BottomToolStripPanel의 사용을 설정/해제합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripContainerActionList_Left">
+        <source>Left</source>
+        <target state="translated">왼쪽</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripContainerActionList_LeftDesc">
+        <source>Toggles the participation of LeftToolStripPanel in runtime dragging of ToolStrip.</source>
+        <target state="translated">ToolStrip의 런타임 끌기 동작에서 LeftToolStripPanel의 사용을 설정/해제합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripContainerActionList_Right">
+        <source>Right</source>
+        <target state="translated">오른쪽</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripContainerActionList_RightDesc">
+        <source>Toggles the participation of RightToolStripPanel  in runtime dragging of ToolStrip.</source>
+        <target state="translated">ToolStrip의 런타임 끌기 동작에서 RightToolStripPanel의 사용을 설정/해제합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripContainerActionList_Show">
+        <source>Show</source>
+        <target state="translated">표시</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripContainerActionList_Top">
+        <source>Top</source>
+        <target state="translated">위쪽</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripContainerActionList_TopDesc">
+        <source>Toggles the participation of TopToolStripPanel in runtime dragging of ToolStrip.</source>
+        <target state="translated">ToolStrip의 런타임 끌기 동작에서 TopToolStripPanel의 사용을 설정/해제합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripContainerActionList_Visible">
+        <source>Panel Visibility</source>
+        <target state="translated">패널 표시</target>
         <note />
       </trans-unit>
       <trans-unit id="ToolStripCreatingNewItemTransaction">
@@ -1860,6 +2350,11 @@ Press Ctrl+Enter to accept Text.</source>
       <trans-unit id="ToolStripMorphingItemTransaction">
         <source>ToolStripItem Morphing Transaction.</source>
         <target state="translated">ToolStripItem 모핑 트랜잭션입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripPanelGlyphUnsupportedDock">
+        <source>Unsupported Dock</source>
+        <target state="translated">지원되지 않는 도킹</target>
         <note />
       </trans-unit>
       <trans-unit id="ToolStripSelectMenuItem">

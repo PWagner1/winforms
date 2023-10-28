@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -726,7 +725,7 @@ public class ContainerControl : ScrollableControl, IContainerControl
         {
             // Get window's client rectangle (i.e. without chrome) expressed in screen coordinates
             PInvoke.GetClientRect(this, out RECT clientRectangle);
-            var topLeftPoint = default(Point);
+            Point topLeftPoint = default;
             PInvoke.ClientToScreen(this, ref topLeftPoint);
             return new Rectangle(topLeftPoint.X, topLeftPoint.Y, clientRectangle.right, clientRectangle.bottom);
         }
@@ -744,7 +743,7 @@ public class ContainerControl : ScrollableControl, IContainerControl
         // Windows uses CreateCompatibleDC(NULL) to get a memory DC for
         // the monitor the application is currently on.
 
-        using var dc = new PInvoke.CreateDcScope(default);
+        using PInvoke.CreateDcScope dc = new(default);
         if (dc.IsNull)
         {
             throw new Win32Exception();
@@ -820,7 +819,7 @@ public class ContainerControl : ScrollableControl, IContainerControl
         {
             if (ActiveControl is null)
             {
-                SelectNextControl(null, true, true, true, false);
+                SelectNextControl(ctl: null, forward: true, tabStopOnly: true, nested: true, wrap: false);
             }
 
             InnerMostActiveContainerControl.FocusActiveControlInternal();

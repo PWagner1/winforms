@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Windows.Forms.VisualStyles;
@@ -106,7 +105,7 @@ public static class ButtonRenderer
         {
             InitializeRenderer((int)state);
 
-            using var hdc = new DeviceContextHdcScope(deviceContext);
+            using DeviceContextHdcScope hdc = new(deviceContext);
             t_visualStyleRenderer.DrawBackground(hdc, bounds, hwnd);
             contentBounds = t_visualStyleRenderer.GetBackgroundContentRectangle(hdc, bounds);
         }

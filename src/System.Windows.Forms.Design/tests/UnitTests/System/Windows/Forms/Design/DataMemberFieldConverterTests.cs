@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
@@ -10,7 +9,7 @@ namespace System.Windows.Forms.Design.Tests;
 
 public class DataMemberFieldConverterTests
 {
-    private static DataMemberFieldConverter s_converter = new DataMemberFieldConverter();
+    private static DataMemberFieldConverter s_converter = new();
     private static ITypeDescriptorContext s_context = new MyTypeDescriptorContext();
 
     [Fact]

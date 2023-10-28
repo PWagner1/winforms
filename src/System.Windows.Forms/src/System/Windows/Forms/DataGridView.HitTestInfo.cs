@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace System.Windows.Forms;
 
@@ -21,7 +20,7 @@ public partial class DataGridView
         /// <summary>
         ///  Allows the <see cref="HitTestInfo"/> object to inform you the extent of the grid.
         /// </summary>
-        public static readonly HitTestInfo Nowhere = new HitTestInfo();
+        public static readonly HitTestInfo Nowhere = new();
 
         internal HitTestInfo()
         {

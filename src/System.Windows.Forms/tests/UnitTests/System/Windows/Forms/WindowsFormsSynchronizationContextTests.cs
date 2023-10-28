@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 
@@ -16,7 +15,7 @@ public partial class WindowsFormsSynchronizationContextTests
         Assert.NotSame(context, copy);
 
         // Send something.
-        object state = new object();
+        object state = new();
         int callCount = 0;
         SendOrPostCallback callback = (actualState) =>
         {
@@ -148,5 +147,19 @@ public partial class WindowsFormsSynchronizationContextTests
         // Call again.
         context.Post(callback, state);
         Assert.Equal(0, callCount);
+    }
+
+    [WinFormsFact]
+    public void WindowsFormsSynchronizationContext_Send_NoDynamicInvoke()
+    {
+        string stackTrace = null;
+        var context = new WindowsFormsSynchronizationContext();
+        context.Send(_ => { stackTrace = Environment.StackTrace; }, null);
+
+        Assert.NotNull(stackTrace);
+
+        // check that the WindowsFormsSynchronizationContext.Send does not involve DynamicInvoke, for performance reasons.
+        // see https://github.com/dotnet/winforms/issues/9965
+        Assert.DoesNotContain("System.Delegate.DynamicInvokeImpl", stackTrace);
     }
 }

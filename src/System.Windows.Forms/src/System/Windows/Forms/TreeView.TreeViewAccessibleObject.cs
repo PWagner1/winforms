@@ -1,8 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 using static Interop.UiaCore;
 using static System.Windows.Forms.TreeNode;
@@ -13,76 +13,78 @@ public partial class TreeView
 {
     internal class TreeViewAccessibleObject : ControlAccessibleObject
     {
-        private readonly TreeView _owningTreeView;
-
-        public TreeViewAccessibleObject(TreeView owningTreeView) : base(owningTreeView)
-        {
-            _owningTreeView = owningTreeView;
-        }
+        public TreeViewAccessibleObject(TreeView owningTreeView) : base(owningTreeView) { }
 
         internal override IRawElementProviderFragment? ElementProviderFromPoint(double x, double y)
             => HitTest((int)x, (int)y) ?? base.ElementProviderFromPoint(x, y);
 
-        internal override UiaCore.IRawElementProviderFragmentRoot FragmentRoot => this;
+        internal override IRawElementProviderFragmentRoot FragmentRoot => this;
 
-        internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
+        internal override IRawElementProviderFragment? FragmentNavigate(NavigateDirection direction)
             => direction switch
             {
-                UiaCore.NavigateDirection.FirstChild => GetChild(0),
-                UiaCore.NavigateDirection.LastChild => GetChild(GetChildCount() - 1),
+                NavigateDirection.FirstChild => GetChild(0),
+                NavigateDirection.LastChild => GetChild(GetChildCount() - 1),
                 _ => base.FragmentNavigate(direction),
             };
 
         public override AccessibleObject? GetChild(int index)
-            => index >= 0 && index < GetChildCount()
-                ? _owningTreeView.Nodes[index].AccessibilityObject
+            => index >= 0 && index < GetChildCount() && this.TryGetOwnerAs(out TreeView? owningTreeView)
+                ? owningTreeView.Nodes[index].AccessibilityObject
                 : null;
 
-        public override int GetChildCount() => _owningTreeView.Nodes.Count;
+        public override int GetChildCount() =>
+            this.TryGetOwnerAs(out TreeView? owningTreeView) ? owningTreeView.Nodes.Count : base.GetChildCount();
 
         internal override int GetChildIndex(AccessibleObject? child)
             => child is TreeNodeAccessibleObject node ? node.Index : -1;
 
-        internal override object? GetPropertyValue(UIA propertyID)
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyID)
             => propertyID switch
             {
-                UIA.ControlTypePropertyId => UIA.TreeControlTypeId,
-                UIA.HasKeyboardFocusPropertyId => _owningTreeView.Enabled && _owningTreeView.Nodes.Count == 0,
-                UIA.IsEnabledPropertyId => _owningTreeView.Enabled,
-                UIA.IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
+                UIA_PROPERTY_ID.UIA_ControlTypePropertyId => UIA_CONTROLTYPE_ID.UIA_TreeControlTypeId,
+                UIA_PROPERTY_ID.UIA_HasKeyboardFocusPropertyId => this.TryGetOwnerAs(out TreeView? owningTreeView)
+                    && owningTreeView.Enabled && owningTreeView.Nodes.Count == 0,
+                UIA_PROPERTY_ID.UIA_IsEnabledPropertyId => this.TryGetOwnerAs(out TreeView? owningTreeView) && owningTreeView.Enabled,
+                UIA_PROPERTY_ID.UIA_IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
                 _ => base.GetPropertyValue(propertyID)
             };
 
         public override AccessibleObject? HitTest(int x, int y)
         {
-            if (!_owningTreeView.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out TreeView? owningTreeView))
             {
                 return null;
             }
 
-            Point p = _owningTreeView.PointToClient(new Point(x, y));
-            TreeNode node = _owningTreeView.GetNodeAt(p);
+            Point p = owningTreeView.PointToClient(new Point(x, y));
+            TreeNode? node = owningTreeView.GetNodeAt(p);
 
             if (node is not null)
             {
                 return node.AccessibilityObject;
             }
 
-            if (Bounds.Contains(x, y))
-            {
-                return this;
-            }
-
-            return null;
+            return Bounds.Contains(x, y) ? this : null;
         }
 
         internal override int[] RuntimeId
-            => new int[]
+        {
+            get
             {
-                RuntimeIDFirstItem,
-                PARAM.ToInt(_owningTreeView.InternalHandle),
-                _owningTreeView.GetHashCode()
-            };
+                if (this.TryGetOwnerAs(out TreeView? owningTreeView))
+                {
+                    return new int[]
+                    {
+                        RuntimeIDFirstItem,
+                        PARAM.ToInt(owningTreeView.InternalHandle),
+                        owningTreeView.GetHashCode()
+                    };
+                }
+
+                return base.RuntimeId;
+            }
+        }
 
         public override AccessibleStates State
         {
@@ -90,12 +92,17 @@ public partial class TreeView
             {
                 AccessibleStates state = AccessibleStates.Focusable;
 
-                if (_owningTreeView.Focused)
+                if (!this.TryGetOwnerAs(out TreeView? owningTreeView))
+                {
+                    return AccessibleStates.None;
+                }
+
+                if (owningTreeView.Focused)
                 {
                     state |= AccessibleStates.Focused;
                 }
 
-                if (!_owningTreeView.Enabled)
+                if (!owningTreeView.Enabled)
                 {
                     state |= AccessibleStates.Unavailable;
                 }
@@ -104,21 +111,22 @@ public partial class TreeView
             }
         }
 
-        internal override bool IsPatternSupported(UiaCore.UIA patternId)
+        internal override bool IsPatternSupported(UIA_PATTERN_ID patternId)
             => patternId switch
             {
-                UiaCore.UIA.LegacyIAccessiblePatternId => true,
-                UiaCore.UIA.SelectionPatternId => true,
+                UIA_PATTERN_ID.UIA_LegacyIAccessiblePatternId => true,
+                UIA_PATTERN_ID.UIA_SelectionPatternId => true,
                 _ => base.IsPatternSupported(patternId),
             };
 
         #region Selection Pattern
 
-        internal override bool IsSelectionRequired => _owningTreeView.Nodes.Count != 0;
+        internal override bool IsSelectionRequired => this.TryGetOwnerAs(out TreeView? owningTreeView) &&
+            owningTreeView.Nodes.Count != 0;
 
         internal override UiaCore.IRawElementProviderSimple[]? GetSelection()
         {
-            if (_owningTreeView.IsHandleCreated && GetSelected() is UiaCore.IRawElementProviderSimple selected)
+            if (this.IsOwnerHandleCreated(out TreeView? _) && GetSelected() is UiaCore.IRawElementProviderSimple selected)
             {
                 return new[] { selected };
             }

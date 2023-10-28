@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel.Design;
 using System.ComponentModel;
@@ -21,17 +20,17 @@ internal class ListViewActionList : DesignerActionList
 
     public void InvokeItemsDialog()
     {
-        EditorServiceContext.EditValue(_designer, Component, "Items");
+        EditorServiceContext.EditValue(_designer, Component!, "Items");
     }
 
     public void InvokeColumnsDialog()
     {
-        EditorServiceContext.EditValue(_designer, Component, "Columns");
+        EditorServiceContext.EditValue(_designer, Component!, "Columns");
     }
 
     public void InvokeGroupsDialog()
     {
-        EditorServiceContext.EditValue(_designer, Component, "Groups");
+        EditorServiceContext.EditValue(_designer, Component!, "Groups");
     }
 
     public View View

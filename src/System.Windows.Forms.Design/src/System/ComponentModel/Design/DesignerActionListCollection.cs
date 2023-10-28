@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 
@@ -25,7 +24,7 @@ public class DesignerActionListCollection : CollectionBase
 
     public int Add(DesignerActionList? value) => List.Add(value);
 
-    public void AddRange(DesignerActionList?[] value)
+    public void AddRange(params DesignerActionList?[] value)
     {
         ArgumentNullException.ThrowIfNull(value);
 

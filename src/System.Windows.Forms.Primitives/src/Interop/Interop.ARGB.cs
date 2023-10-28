@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Runtime.CompilerServices;
@@ -40,6 +39,6 @@ internal readonly struct ARGB
         Value = value;
     }
 
-    public static implicit operator ARGB(Color color) => new ARGB(color.ToArgb());
+    public static implicit operator ARGB(Color color) => new(color.ToArgb());
     public static implicit operator Color(ARGB argb) => Color.FromArgb(argb.Value);
 }

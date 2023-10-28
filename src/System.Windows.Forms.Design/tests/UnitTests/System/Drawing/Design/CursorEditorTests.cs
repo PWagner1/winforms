@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Windows.Forms.Design;
@@ -14,7 +13,7 @@ public class CursorEditorTests
     [Fact]
     public void CursorEditor_Ctor_Default()
     {
-        var editor = new CursorEditor();
+        CursorEditor editor = new();
         Assert.True(editor.IsDropDownResizable);
     }
 
@@ -23,16 +22,16 @@ public class CursorEditorTests
         yield return new object[] { null };
         yield return new object[] { "value" };
         yield return new object[] { Cursors.Default };
-        yield return new object[] { new object() };
+        yield return new object[] { new() };
     }
 
     [Theory]
     [MemberData(nameof(EditValue_TestData))]
     public void CursorEditor_EditValue_ValidProvider_ReturnsValue(object value)
     {
-        var editor = new CursorEditor();
-        var mockEditorService = new Mock<IWindowsFormsEditorService>(MockBehavior.Strict);
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        CursorEditor editor = new();
+        Mock<IWindowsFormsEditorService> mockEditorService = new(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(IWindowsFormsEditorService)))
             .Returns(mockEditorService.Object)
@@ -54,7 +53,7 @@ public class CursorEditorTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetEditValueInvalidProviderTestData))]
     public void CursorEditor_EditValue_InvalidProvider_ReturnsValue(IServiceProvider provider, object value)
     {
-        var editor = new CursorEditor();
+        CursorEditor editor = new();
         Assert.Same(value, editor.EditValue(null, provider, value));
     }
 
@@ -62,7 +61,7 @@ public class CursorEditorTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetITypeDescriptorContextTestData))]
     public void CursorEditor_GetEditStyle_Invoke_ReturnsModal(ITypeDescriptorContext context)
     {
-        var editor = new CursorEditor();
+        CursorEditor editor = new();
         Assert.Equal(UITypeEditorEditStyle.DropDown, editor.GetEditStyle(context));
     }
 
@@ -70,7 +69,7 @@ public class CursorEditorTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetITypeDescriptorContextTestData))]
     public void CursorEditor_GetPaintValueSupported_Invoke_ReturnsFalse(ITypeDescriptorContext context)
     {
-        var editor = new CursorEditor();
+        CursorEditor editor = new();
         Assert.False(editor.GetPaintValueSupported(context));
     }
 }

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -86,7 +85,7 @@ public partial class ToolStripPanelRow
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void AddRange(Control[] value)
+        public void AddRange(params Control[] value)
         {
             ArgumentNullException.ThrowIfNull(value);
 
@@ -286,10 +285,7 @@ public partial class ToolStripPanelRow
         {
             ArgumentNullException.ThrowIfNull(array);
 
-            if (index < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegative(index);
 
             if (index >= array.Length || InnerList.Count > array.Length - index)
             {

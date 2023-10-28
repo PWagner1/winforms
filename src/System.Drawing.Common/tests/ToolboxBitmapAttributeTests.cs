@@ -14,7 +14,7 @@ namespace System.Drawing.Tests
 
     public class ToolboxBitmapAttributeTests
     {
-        private static Size DefaultSize = new Size(16, 16);
+        private static Size DefaultSize = new(16, 16);
         private void AssertDefaultSize(Image image)
         {
             Assert.Equal(DefaultSize, image.Size);
@@ -177,7 +177,7 @@ namespace System.Drawing.Tests
             yield return new object[] { ToolboxBitmapAttribute.Default, ToolboxBitmapAttribute.Default, true };
             yield return new object[] { ToolboxBitmapAttribute.Default, new ToolboxBitmapAttribute(typeof(ToolboxBitmapAttribute), "bitmap_173x183_indexed_8bit"), true };
 
-            yield return new object[] { ToolboxBitmapAttribute.Default, new object(), false };
+            yield return new object[] { ToolboxBitmapAttribute.Default, new(), false };
             yield return new object[] { ToolboxBitmapAttribute.Default, null, false };
         }
 

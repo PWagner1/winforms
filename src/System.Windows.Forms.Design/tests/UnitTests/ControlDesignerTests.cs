@@ -1,13 +1,42 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
+using System.ComponentModel.Design;
+using System.Windows.Forms.Design.Tests.Mocks;
+using Moq;
 using Windows.Win32;
 
 namespace System.Windows.Forms.Design.Tests;
 
 public class ControlDesignerTests
 {
+    [WinFormsFact]
+    public void ControlDesigner_Ctor_Default()
+    {
+        using TestControlDesigner controlDesigner = new TestControlDesigner();
+        Assert.False(controlDesigner.AutoResizeHandles);
+        Assert.Null(controlDesigner.Control);
+        Assert.True(controlDesigner.ControlSupportsSnaplines);
+        Assert.Null(controlDesigner.Component);
+        Assert.True(controlDesigner.ForceVisible);
+        Assert.Null(controlDesigner.GetParentComponentProperty());
+        Assert.False(controlDesigner.SerializePerformLayout);
+    }
+
+    [WinFormsFact]
+    public void ControlDesigner_PropertiesTest()
+    {
+        using TestControlDesigner controlDesigner = new TestControlDesigner();
+        using Button button = new Button();
+        controlDesigner.Initialize(button);
+        Assert.Empty(controlDesigner.AssociatedComponents);
+        Assert.False(controlDesigner.IsRootDesigner);
+        Assert.NotNull(controlDesigner.SnapLines);
+        Assert.Equal(8, controlDesigner.SnapLines.Count);
+        Assert.NotNull(controlDesigner.StandardBehavior);
+        Assert.Equal(Cursors.Default, controlDesigner.StandardBehavior.Cursor);
+    }
+
     [Fact]
     public void AccessibleObjectField()
     {
@@ -161,11 +190,54 @@ public class ControlDesignerTests
     [WinFormsFact]
     public void ControlDesigner_WndProc_InvokePaint_Success()
     {
-        using var designer = new ControlDesigner();
+        using ControlDesigner designer = new();
         Message m = new Message
         {
             Msg = (int)PInvoke.WM_PAINT
         };
         designer.TestAccessor().Dynamic.WndProc(ref m);
+    }
+
+    [Fact]
+    public void ControlDesigner_AssociatedComponents_NullSite_Test()
+    {
+        using ControlDesigner controlDesigner = new();
+        using Control control = new();
+
+        using Control childControl = new();
+        controlDesigner.Initialize(control);
+
+        Assert.Empty(controlDesigner.AssociatedComponents);
+
+        control.Controls.Add(childControl);
+
+        Assert.Empty(controlDesigner.AssociatedComponents);
+    }
+
+    [WinFormsFact]
+    public void ControlDesigner_AssociatedComponentsTest()
+    {
+        using Control control = new();
+        using ControlDesigner controlDesigner = new();
+
+        Mock<IDesignerHost> mockDesignerHost = new(MockBehavior.Strict);
+        mockDesignerHost
+            .Setup(h => h.RootComponent)
+            .Returns(control);
+        mockDesignerHost
+            .Setup(s => s.GetDesigner(It.IsAny<Control>()))
+            .Returns(() => null);
+        var mockSite = MockSite.CreateMockSiteWithDesignerHost(mockDesignerHost.Object);
+        control.Site = mockSite.Object;
+
+        controlDesigner.Initialize(control);
+
+        Assert.Empty(controlDesigner.AssociatedComponents);
+
+        using Control childControl = new();
+        childControl.Site = mockSite.Object;
+        control.Controls.Add(childControl);
+
+        Assert.Equal(1, controlDesigner.AssociatedComponents.Count);
     }
 }

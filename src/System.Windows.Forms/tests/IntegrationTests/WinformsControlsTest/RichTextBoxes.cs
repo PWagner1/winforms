@@ -1,9 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.UI.Controls.RichEdit;
 
 namespace WinformsControlsTest;
 
@@ -41,14 +41,14 @@ This is a custom link\v #data#\v0  with hidden text after the link.\par
         var format = new Interop.Richedit.CHARFORMAT2W
         {
             cbSize = (uint)sizeof(Interop.Richedit.CHARFORMAT2W),
-            dwMask = Interop.Richedit.CFM.LINK,
-            dwEffects = Interop.Richedit.CFE.LINK,
+            dwMask = CFM_MASK.CFM_LINK,
+            dwEffects = CFE_EFFECTS.CFE_LINK,
         };
 
         PInvoke.SendMessage(
             control,
             PInvoke.EM_SETCHARFORMAT,
-            (WPARAM)(uint)Interop.Richedit.SCF.SELECTION,
+            (WPARAM)PInvoke.SCF_SELECTION,
             ref format);
 
         control.Select(0, 0);

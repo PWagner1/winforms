@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -1829,7 +1828,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
         Control? tool = window as Control;
         if (tool is not null && _tools.ContainsKey(tool))
         {
-            var toolInfo = new ToolInfoWrapper<Control>(tool);
+            ToolInfoWrapper<Control> toolInfo = new(tool);
             if (toolInfo.SendMessage(this, PInvoke.TTM_GETTOOLINFOW) != IntPtr.Zero)
             {
                 TOOLTIP_FLAGS flags = TOOLTIP_FLAGS.TTF_TRACK;
@@ -1990,7 +1989,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
 
     private HWND GetCurrentToolHwnd()
     {
-        var toolInfo = default(ToolInfoWrapper<Control>);
+        ToolInfoWrapper<Control> toolInfo = default;
         if (toolInfo.SendMessage(this, PInvoke.TTM_GETCURRENTTOOLW) != 0)
         {
             return (HWND)toolInfo.Info.hwnd;
@@ -2306,11 +2305,11 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
         {
             case (int)(MessageId.WM_REFLECT_NOTIFY):
                 var nmhdr = (NMHDR*)(nint)message.LParamInternal;
-                if ((int)nmhdr->code == (int)TTN.SHOW && !_trackPosition)
+                if (nmhdr->code == PInvoke.TTN_SHOW && !_trackPosition)
                 {
                     WmShow();
                 }
-                else if ((int)nmhdr->code == (int)TTN.POP)
+                else if (nmhdr->code == PInvoke.TTN_POP)
                 {
                     WmPop();
                     _window?.DefWndProc(ref message);
@@ -2348,7 +2347,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
             case (int)PInvoke.WM_PAINT:
                 if (OwnerDraw && !_isBalloon && !_trackPosition)
                 {
-                    using var paintScope = new PInvoke.BeginPaintScope((HWND)Handle);
+                    using PInvoke.BeginPaintScope paintScope = new((HWND)Handle);
                     Rectangle bounds = paintScope.PaintRectangle;
                     if (bounds == Rectangle.Empty)
                     {

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -349,7 +348,7 @@ public partial class BindingContext : ICollection
     {
         ArgumentNullException.ThrowIfNull(binding);
 
-        BindingManagerBase oldManager = binding.BindingManagerBase;
+        BindingManagerBase? oldManager = binding.BindingManagerBase;
         oldManager?.Bindings.Remove(binding);
 
         if (newBindingContext is not null)
@@ -361,7 +360,7 @@ public partial class BindingContext : ICollection
                 CheckPropertyBindingCycles(newBindingContext, binding);
             }
 
-            BindingManagerBase newManager = newBindingContext.EnsureListManager(binding.DataSource, binding.BindingMemberInfo.BindingPath);
+            BindingManagerBase newManager = newBindingContext.EnsureListManager(binding.DataSource!, binding.BindingMemberInfo.BindingPath);
             newManager.Bindings.Add(binding);
         }
     }

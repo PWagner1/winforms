@@ -4,8 +4,6 @@
     <AssemblyName>System.Windows.Forms</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CLSCompliant>true</CLSCompliant>
-    <EnablePreviewFeatures>True</EnablePreviewFeatures>
-    <GenerateRequiresPreviewFeaturesAttribute>False</GenerateRequiresPreviewFeaturesAttribute>
     <Nullable>enable</Nullable>
 
     <NoWarn>$(NoWarn);618</NoWarn>
@@ -45,7 +43,6 @@
     <Compile Include="..\..\Common\src\IComparerHelpers.cs" Link="Common\IComparerHelpers.cs" />
     <Compile Include="..\..\Common\src\Obsoletions.cs" Link="Common\Obsoletions.cs" />
     <Compile Include="..\..\Common\src\RTLAwareMessageBox.cs" Link="Common\RTLAwareMessageBox.cs" />
-    <Compile Include="..\..\Common\src\TraceSwitchExtensions.cs" Link="Common\TraceSwitchExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>

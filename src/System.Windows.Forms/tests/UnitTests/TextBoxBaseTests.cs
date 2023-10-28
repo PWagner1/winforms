@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -6016,7 +6015,7 @@ public partial class TextBoxBaseTests
                 yield return new object[] { shortcutsEnabled, readOnly, (Keys)Shortcut.CtrlC, !shortcutsEnabled };
                 yield return new object[] { shortcutsEnabled, readOnly, (Keys)Shortcut.CtrlX, !shortcutsEnabled };
                 yield return new object[] { shortcutsEnabled, readOnly, (Keys)Shortcut.CtrlV, !shortcutsEnabled };
-                yield return new object[] { shortcutsEnabled, readOnly, (Keys)Shortcut.CtrlA, !shortcutsEnabled };
+                yield return new object[] { shortcutsEnabled, readOnly, (Keys)Shortcut.CtrlA, true };
                 yield return new object[] { shortcutsEnabled, readOnly, (Keys)Shortcut.CtrlL, !shortcutsEnabled || readOnly };
                 yield return new object[] { shortcutsEnabled, readOnly, (Keys)Shortcut.CtrlR, !shortcutsEnabled || readOnly };
                 yield return new object[] { shortcutsEnabled, readOnly, (Keys)Shortcut.CtrlE, !shortcutsEnabled || readOnly };
@@ -6086,7 +6085,7 @@ public partial class TextBoxBaseTests
 
     [WinFormsTheory]
     [InlineData(true, false, (Keys)Shortcut.CtrlA, true, true)]
-    [InlineData(true, false, (Keys)Shortcut.CtrlA, false, false)]
+    [InlineData(true, false, (Keys)Shortcut.CtrlA, false, true)]
     [InlineData(false, false, (Keys)Shortcut.CtrlA, true, true)]
     [InlineData(false, false, (Keys)Shortcut.CtrlA, false, true)]
     [InlineData(true, true, (Keys)Shortcut.CtrlL, true, true)]
@@ -6417,7 +6416,7 @@ public partial class TextBoxBaseTests
         };
         Assert.NotEqual(IntPtr.Zero, control.Handle);
 
-        Assert.Throws<ArgumentNullException>("pUnk", () => control.ScrollToCaret());
+        Assert.Throws<ArgumentNullException>("unknown", () => control.ScrollToCaret());
     }
 
     private class CustomGetOleInterfaceTextBox : TextBox

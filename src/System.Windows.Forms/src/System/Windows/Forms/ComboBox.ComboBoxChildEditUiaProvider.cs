@@ -1,9 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
-using System.Drawing;
 using System.Runtime.InteropServices;
+using Windows.Win32.System.Com;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -13,7 +13,7 @@ public partial class ComboBox
     /// <summary>
     ///  Represents the ComboBox's child (inner) edit native window control accessible object with UI Automation provider functionality.
     /// </summary>
-    internal class ComboBoxChildEditUiaProvider : ChildAccessibleObject
+    internal unsafe class ComboBoxChildEditUiaProvider : ChildAccessibleObject
     {
         private const string COMBO_BOX_EDIT_AUTOMATION_ID = "1001";
 
@@ -81,15 +81,15 @@ public partial class ComboBox
         /// </summary>
         /// <param name="propertyID">The accessible property ID.</param>
         /// <returns>The accessible property value.</returns>
-        internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyID) =>
             propertyID switch
             {
-                UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.EditControlTypeId,
-                UiaCore.UIA.HasKeyboardFocusPropertyId => _owningComboBox.Focused,
-                UiaCore.UIA.IsEnabledPropertyId => _owningComboBox.Enabled,
-                UiaCore.UIA.IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
-                UiaCore.UIA.IsOffscreenPropertyId => false,
-                UiaCore.UIA.NativeWindowHandlePropertyId => _handle,
+                UIA_PROPERTY_ID.UIA_ControlTypePropertyId => UIA_CONTROLTYPE_ID.UIA_EditControlTypeId,
+                UIA_PROPERTY_ID.UIA_HasKeyboardFocusPropertyId => _owningComboBox.Focused,
+                UIA_PROPERTY_ID.UIA_IsEnabledPropertyId => _owningComboBox.Enabled,
+                UIA_PROPERTY_ID.UIA_IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
+                UIA_PROPERTY_ID.UIA_IsOffscreenPropertyId => false,
+                UIA_PROPERTY_ID.UIA_NativeWindowHandlePropertyId => _handle,
                 _ => base.GetPropertyValue(propertyID)
             };
 
@@ -104,12 +104,12 @@ public partial class ComboBox
 
         internal override bool IsIAccessibleExSupported() => true;
 
-        internal override bool IsPatternSupported(UiaCore.UIA patternId) =>
+        internal override bool IsPatternSupported(UIA_PATTERN_ID patternId) =>
             patternId switch
             {
-                UiaCore.UIA.ValuePatternId => true,
-                UiaCore.UIA.TextPatternId => true,
-                UiaCore.UIA.TextPattern2Id => true,
+                UIA_PATTERN_ID.UIA_ValuePatternId => true,
+                UIA_PATTERN_ID.UIA_TextPatternId => true,
+                UIA_PATTERN_ID.UIA_TextPattern2Id => true,
                 _ => base.IsPatternSupported(patternId)
             };
 
@@ -118,28 +118,25 @@ public partial class ComboBox
         /// </summary>
         internal override int[] RuntimeId => new int[] { RuntimeIDFirstItem, GetHashCode() };
 
-        internal override UiaCore.ITextRangeProvider DocumentRangeInternal
+        internal override unsafe ITextRangeProvider* DocumentRangeInternal
             => _textProvider.DocumentRange;
 
-        internal override UiaCore.ITextRangeProvider[]? GetTextSelection()
-            => _textProvider.GetSelection();
+        internal override unsafe HRESULT GetTextSelection(SAFEARRAY** pRetVal) => _textProvider.GetSelection(pRetVal);
 
-        internal override UiaCore.ITextRangeProvider[]? GetTextVisibleRanges()
-            => _textProvider.GetVisibleRanges();
+        internal override unsafe HRESULT GetTextVisibleRanges(SAFEARRAY** pRetVal) => _textProvider.GetVisibleRanges(pRetVal);
 
-        internal override UiaCore.ITextRangeProvider? GetTextRangeFromChild(UiaCore.IRawElementProviderSimple childElement)
-            => _textProvider.RangeFromChild(childElement);
+        internal override unsafe HRESULT GetTextRangeFromChild(IRawElementProviderSimple* childElement, ITextRangeProvider** pRetVal)
+            => _textProvider.RangeFromChild(childElement, pRetVal);
 
-        internal override UiaCore.ITextRangeProvider? GetTextRangeFromPoint(Point screenLocation)
-            => _textProvider.RangeFromPoint(screenLocation);
+        internal override unsafe HRESULT GetTextRangeFromPoint(UiaPoint screenLocation, ITextRangeProvider** pRetVal)
+            => _textProvider.RangeFromPoint(screenLocation, pRetVal);
 
-        internal override UiaCore.SupportedTextSelection SupportedTextSelectionInternal
-            => _textProvider.SupportedTextSelection;
+        internal override SupportedTextSelection SupportedTextSelectionInternal => _textProvider.SupportedTextSelection;
 
-        internal override UiaCore.ITextRangeProvider? GetTextCaretRange(out BOOL isActive)
-            => _textProvider.GetCaretRange(out isActive);
+        internal override unsafe HRESULT GetTextCaretRange(BOOL* isActive, ITextRangeProvider** pRetVal)
+            => _textProvider.GetCaretRange(isActive, pRetVal);
 
-        internal override UiaCore.ITextRangeProvider GetRangeFromAnnotation(UiaCore.IRawElementProviderSimple annotationElement)
-            => _textProvider.RangeFromAnnotation(annotationElement);
+        internal override unsafe HRESULT GetRangeFromAnnotation(IRawElementProviderSimple* annotationElement, ITextRangeProvider** pRetVal)
+            => _textProvider.RangeFromAnnotation(annotationElement, pRetVal);
     }
 }

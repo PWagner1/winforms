@@ -1,7 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
+using Windows.Win32.UI.Accessibility;
 using static System.Windows.Forms.ComboBox.ObjectCollection;
 using static Interop;
 
@@ -29,7 +29,7 @@ public partial class ComboBox
 
         private void ComboBoxDefaultAction(bool expand)
         {
-            if (this.TryGetOwnerAs(out ComboBox? owner) && owner.IsHandleCreated && owner.DroppedDown != expand)
+            if (this.IsOwnerHandleCreated(out ComboBox? owner) && owner.DroppedDown != expand)
             {
                 owner.DroppedDown = expand;
             }
@@ -38,15 +38,10 @@ public partial class ComboBox
         internal override bool IsIAccessibleExSupported()
             => this.TryGetOwnerAs(out ComboBox? _) || base.IsIAccessibleExSupported();
 
-        internal override bool IsPatternSupported(UiaCore.UIA patternId)
-        {
-            if (patternId == UiaCore.UIA.ExpandCollapsePatternId && this.TryGetOwnerAs(out ComboBox? owner))
-            {
-                return owner.DropDownStyle != ComboBoxStyle.Simple;
-            }
-
-            return patternId == UiaCore.UIA.ValuePatternId ? true : base.IsPatternSupported(patternId);
-        }
+        internal override bool IsPatternSupported(UIA_PATTERN_ID patternId)
+            => patternId == UIA_PATTERN_ID.UIA_ExpandCollapsePatternId && this.TryGetOwnerAs(out ComboBox? owner)
+                ? owner.DropDownStyle != ComboBoxStyle.Simple
+                : patternId == UIA_PATTERN_ID.UIA_ValuePatternId ? true : base.IsPatternSupported(patternId);
 
         internal override int[] RuntimeId
             => this.TryGetOwnerAs(out ComboBox? owner)
@@ -65,7 +60,7 @@ public partial class ComboBox
         internal override void Collapse() => ComboBoxDefaultAction(false);
 
         internal override UiaCore.ExpandCollapseState ExpandCollapseState
-            => this.TryGetOwnerAs(out ComboBox? owner) && owner.IsHandleCreated && owner.DroppedDown
+            => this.IsOwnerHandleCreated(out ComboBox? owner) && owner.DroppedDown
                 ? UiaCore.ExpandCollapseState.Expanded
                 : UiaCore.ExpandCollapseState.Collapsed;
 
@@ -105,7 +100,7 @@ public partial class ComboBox
 
         internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
         {
-            if (!this.TryGetOwnerAs(out ComboBox? owner) || !owner.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out ComboBox? _))
             {
                 return null;
             }
@@ -147,17 +142,17 @@ public partial class ComboBox
             }
         }
 
-        internal override object? GetPropertyValue(UiaCore.UIA propertyID) =>
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyID) =>
             propertyID switch
             {
-                UiaCore.UIA.ControlTypePropertyId =>
+                UIA_PROPERTY_ID.UIA_ControlTypePropertyId =>
                     // If we don't set a default role for the accessible object
                     // it will be retrieved from Windows.
                     // And we don't have a 100% guarantee it will be correct, hence set it ourselves.
                     this.GetOwnerAccessibleRole() == AccessibleRole.Default
-                        ? UiaCore.UIA.ComboBoxControlTypeId
+                        ? UIA_CONTROLTYPE_ID.UIA_ComboBoxControlTypeId
                         : base.GetPropertyValue(propertyID),
-                UiaCore.UIA.HasKeyboardFocusPropertyId => this.TryGetOwnerAs(out ComboBox? owner) && owner.Focused,
+                UIA_PROPERTY_ID.UIA_HasKeyboardFocusPropertyId => this.TryGetOwnerAs(out ComboBox? owner) && owner.Focused,
                 _ => base.GetPropertyValue(propertyID)
             };
 
@@ -210,7 +205,7 @@ public partial class ComboBox
 
         internal void SetComboBoxItemFocus()
         {
-            if (!this.TryGetOwnerAs(out ComboBox? owner) || !owner.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out ComboBox? _))
             {
                 return;
             }
@@ -220,24 +215,24 @@ public partial class ComboBox
 
         internal void SetComboBoxItemSelection()
         {
-            if (!this.TryGetOwnerAs(out ComboBox? owner) || !owner.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out ComboBox? _))
             {
                 return;
             }
 
-            GetSelectedComboBoxItemAccessibleObject()?.RaiseAutomationEvent(UiaCore.UIA.SelectionItem_ElementSelectedEventId);
+            GetSelectedComboBoxItemAccessibleObject()?.RaiseAutomationEvent(UIA_EVENT_ID.UIA_SelectionItem_ElementSelectedEventId);
         }
 
         internal override void SetFocus()
         {
-            if (!this.TryGetOwnerAs(out ComboBox? owner) || !owner.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out ComboBox? _))
             {
                 return;
             }
 
             base.SetFocus();
 
-            RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+            RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
         }
 
         private ComboBoxItemAccessibleObject? GetSelectedComboBoxItemAccessibleObject()
@@ -283,7 +278,7 @@ public partial class ComboBox
 
         public override void DoDefaultAction()
         {
-            if (!this.TryGetOwnerAs(out ComboBox? owner) || !owner.IsHandleCreated || owner.DropDownStyle == ComboBoxStyle.Simple)
+            if (!this.IsOwnerHandleCreated(out ComboBox? owner) || owner.DropDownStyle == ComboBoxStyle.Simple)
             {
                 return;
             }

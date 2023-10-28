@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable enable
 
@@ -18,7 +17,7 @@ internal unsafe class DeviceContextState
     // Not all state is handled yet. Backfilling in as we write specific tests. Of special note is that we don't
     // have tracking for Save/RestoreDC yet.
 
-    private readonly List<State> _savedStates = new List<State>();
+    private readonly List<State> _savedStates = new();
     private State _currentState;
 
     /// <summary>

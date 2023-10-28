@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.Collections.Specialized;
@@ -26,8 +25,8 @@ internal sealed class SelectionService : ISelectionService, IDisposable
     private static readonly int s_stateTransactionChange = BitVector32.CreateMask(s_stateTransaction); // Component change occurred while in a transaction
 
     // ISelectionService events
-    private static readonly object s_eventSelectionChanging = new object();
-    private static readonly object s_eventSelectionChanged = new object();
+    private static readonly object s_eventSelectionChanging = new();
+    private static readonly object s_eventSelectionChanged = new();
 
     // Member variables
     private IServiceProvider _provider; // The service provider

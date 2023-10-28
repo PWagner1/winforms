@@ -1,12 +1,12 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing.Design;
-using Moq;
-using System.Windows.Forms.TestUtilities;
 using System.Reflection;
+using System.Windows.Forms.TestUtilities;
+using Moq;
+using Windows.Win32.UI.Accessibility;
 
 namespace System.Windows.Forms.Design.Tests;
 
@@ -15,7 +15,7 @@ public class AnchorEditorTests
     [Fact]
     public void AnchorEditor_Ctor_Default()
     {
-        var editor = new AnchorEditor();
+        AnchorEditor editor = new();
         Assert.False(editor.IsDropDownResizable);
     }
 
@@ -24,16 +24,16 @@ public class AnchorEditorTests
         yield return new object[] { null };
         yield return new object[] { "value" };
         yield return new object[] { AnchorStyles.Top };
-        yield return new object[] { new object() };
+        yield return new object[] { new() };
     }
 
     [Theory]
     [MemberData(nameof(EditValue_TestData))]
     public void AnchorEditor_EditValue_ValidProvider_ReturnsValue(object value)
     {
-        var editor = new AnchorEditor();
-        var mockEditorService = new Mock<IWindowsFormsEditorService>(MockBehavior.Strict);
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        AnchorEditor editor = new();
+        Mock<IWindowsFormsEditorService> mockEditorService = new(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(IWindowsFormsEditorService)))
             .Returns(mockEditorService.Object)
@@ -55,7 +55,7 @@ public class AnchorEditorTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetEditValueInvalidProviderTestData))]
     public void AnchorEditor_EditValue_InvalidProvider_ReturnsValue(IServiceProvider provider, object value)
     {
-        var editor = new AnchorEditor();
+        AnchorEditor editor = new();
         Assert.Same(value, editor.EditValue(null, provider, value));
     }
 
@@ -63,7 +63,7 @@ public class AnchorEditorTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetITypeDescriptorContextTestData))]
     public void AnchorEditor_GetEditStyle_Invoke_ReturnsModal(ITypeDescriptorContext context)
     {
-        var editor = new AnchorEditor();
+        AnchorEditor editor = new();
         Assert.Equal(UITypeEditorEditStyle.DropDown, editor.GetEditStyle(context));
     }
 
@@ -71,27 +71,26 @@ public class AnchorEditorTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetITypeDescriptorContextTestData))]
     public void AnchorEditor_GetPaintValueSupported_Invoke_ReturnsFalse(ITypeDescriptorContext context)
     {
-        var editor = new AnchorEditor();
+        AnchorEditor editor = new();
         Assert.False(editor.GetPaintValueSupported(context));
     }
 
     [Theory]
-    [InlineData("left")]
-    [InlineData("right")]
-    [InlineData("top")]
-    [InlineData("bottom")]
+    [InlineData("_left")]
+    [InlineData("_right")]
+    [InlineData("_top")]
+    [InlineData("_bottom")]
     public void AnchorEditor_AnchorUI_ControlType_IsCheckButton(string fieldName)
     {
-        AnchorEditor editor = new();
-        Type type = editor.GetType()
+        Type type = typeof(AnchorEditor)
             .GetNestedType("AnchorUI", BindingFlags.NonPublic | BindingFlags.Instance);
-        var anchorUI = (Control)Activator.CreateInstance(type, new object[] { editor });
+        var anchorUI = (Control)Activator.CreateInstance(type);
         var item = (Control)anchorUI.GetType()
             .GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance).GetValue(anchorUI);
 
         object actual = item.AccessibilityObject.TestAccessor().Dynamic
-            .GetPropertyValue(Interop.UiaCore.UIA.ControlTypePropertyId);
+            .GetPropertyValue(UIA_PROPERTY_ID.UIA_ControlTypePropertyId);
 
-        Assert.Equal(Interop.UiaCore.UIA.CheckBoxControlTypeId, actual);
+        Assert.Equal(UIA_CONTROLTYPE_ID.UIA_CheckBoxControlTypeId, actual);
     }
 }

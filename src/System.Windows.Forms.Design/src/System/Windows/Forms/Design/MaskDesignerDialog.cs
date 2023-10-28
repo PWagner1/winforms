@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -31,16 +30,16 @@ internal class MaskDesignerDialog : Form
     private Button _btnCancel;
     private ErrorProvider _errorProvider;
 
-    private readonly List<MaskDescriptor> _maskDescriptors = new List<MaskDescriptor>();
-    private MaskDescriptor _customMaskDescriptor;
+    private readonly List<MaskDescriptor> _maskDescriptors = new();
+    private MaskDescriptorTemplate _customMaskDescriptor;
     private SortOrder _listViewSortOrder = SortOrder.Ascending;
     private IContainer _components;
-    private readonly IHelpService _helpService;
+    private readonly IHelpService? _helpService;
 
     /// <summary>
     /// Constructor receiving a clone of the MaskedTextBox control under design.
     /// </summary>
-    public MaskDesignerDialog(MaskedTextBox instance, IHelpService helpService)
+    public MaskDesignerDialog(MaskedTextBox instance, IHelpService? helpService)
     {
         if (instance is null)
         {
@@ -328,7 +327,7 @@ internal class MaskDesignerDialog : Form
 
         // Need to pass false for validateDescriptor param since the custom mask will fail validation
         // because the mask is empty.
-        InsertMaskDescriptor(0, _customMaskDescriptor, /*validate*/ false);
+        InsertMaskDescriptor(0, _customMaskDescriptor, validateDescriptor: false);
 
         foreach (MaskDescriptor maskDescriptor in maskDescriptors)
         {
@@ -342,12 +341,16 @@ internal class MaskDesignerDialog : Form
     private bool ContainsMaskDescriptor(MaskDescriptor maskDescriptor)
     {
         Debug.Assert(maskDescriptor is not null, "Null mask descriptor.");
+        Debug.Assert(maskDescriptor.Name is not null, "Mask descriptor should either be valid or equal to _customMaskDescriptor");
+
+        string maskDescriptorName = maskDescriptor.Name.Trim();
 
         foreach (MaskDescriptor descriptor in _maskDescriptors)
         {
             Debug.Assert(descriptor is not null, "Null mask descriptor in the collection.");
 
-            if (maskDescriptor.Equals(descriptor) || maskDescriptor.Name.Trim() == descriptor.Name.Trim())
+            // descriptor.Name is not null because _maskDescriptors can only contain valid mask descriptors or _customMaskDescriptor
+            if (maskDescriptor.Equals(descriptor) || maskDescriptorName == descriptor.Name!.Trim())
             {
                 return true;
             }
@@ -360,7 +363,7 @@ internal class MaskDesignerDialog : Form
     /// Uses the specified ITypeDiscoveryService service provider to discover MaskDescriptor objects from
     /// the referenced assemblies.
     /// </summary>
-    public void DiscoverMaskDescriptors(ITypeDiscoveryService discoveryService)
+    public void DiscoverMaskDescriptors(ITypeDiscoveryService? discoveryService)
     {
         if (discoveryService is null)
         {
@@ -508,13 +511,13 @@ internal class MaskDesignerDialog : Form
                 string validatingType = maskDescriptor.ValidatingType is not null ? maskDescriptor.ValidatingType.Name : nullEntry;
 
                 // Make sure the sample displays literals.
-                MaskedTextProvider mtp = new MaskedTextProvider(maskDescriptor.Mask, maskDescriptor.Culture);
-                bool success = mtp.Add(maskDescriptor.Sample);
+                MaskedTextProvider mtp = new(maskDescriptor.Mask!, maskDescriptor.Culture);
+                bool success = mtp.Add(maskDescriptor.Sample!);
                 Debug.Assert(success, "BadBad: Could not add MaskDescriptor.Sample even it was validated, something is wrong!");
                 // Don't include prompt.
                 string sample = mtp.ToString(false, true);
 
-                _listViewCannedMasks.Items.Add(new ListViewItem(new string[] { maskDescriptor.Name, sample, validatingType }));
+                _listViewCannedMasks.Items.Add(new ListViewItem(new string[] { maskDescriptor.Name!, sample, validatingType }));
             }
 
             // Add the custom mask descriptor as the last entry.
@@ -544,7 +547,7 @@ internal class MaskDesignerDialog : Form
 
     private void InsertMaskDescriptor(int index, MaskDescriptor maskDescriptor, bool validateDescriptor)
     {
-        if (validateDescriptor && !MaskDescriptor.IsValidMaskDescriptor(maskDescriptor, out _))
+        if (validateDescriptor && !MaskDescriptor.IsValidMaskDescriptor(maskDescriptor))
         {
             return;
         }

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Windows.Forms.Layout;
@@ -162,9 +161,9 @@ public partial class ComboBox
                 brush,
                 new Point[]
                 {
-                    new Point(middle.X - s_offsetPixels, middle.Y - 1),
-                    new Point(middle.X + s_offsetPixels + 1, middle.Y - 1),
-                    new Point(middle.X, middle.Y + s_offsetPixels)
+                    new(middle.X - s_offsetPixels, middle.Y - 1),
+                    new(middle.X + s_offsetPixels + 1, middle.Y - 1),
+                    new(middle.X, middle.Y + s_offsetPixels)
                 });
         }
 

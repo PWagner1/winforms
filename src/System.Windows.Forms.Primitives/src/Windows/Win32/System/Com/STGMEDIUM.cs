@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Runtime.InteropServices;
 using ComType = System.Runtime.InteropServices.ComTypes;
@@ -14,7 +13,7 @@ internal unsafe partial struct STGMEDIUM
 
     public static explicit operator STGMEDIUM(ComType.STGMEDIUM comTypeStg)
     {
-        IUnknown* pUnkForRelease = ComHelpers.TryGetComPointer<IUnknown>(comTypeStg.pUnkForRelease, out HRESULT hr);
+        IUnknown* pUnkForRelease = ComHelpers.TryGetComPointer<IUnknown>(comTypeStg.pUnkForRelease, out _);
 
         return new()
         {

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace System.ComponentModel.Design;
 
@@ -12,10 +11,10 @@ namespace System.ComponentModel.Design;
 /// </summary>
 internal sealed class DesignerEventService : IDesignerEventService
 {
-    private static readonly object s_eventActiveDesignerChanged = new object();
-    private static readonly object s_eventDesignerCreated = new object();
-    private static readonly object s_eventDesignerDisposed = new object();
-    private static readonly object s_eventSelectionChanged = new object();
+    private static readonly object s_eventActiveDesignerChanged = new();
+    private static readonly object s_eventDesignerCreated = new();
+    private static readonly object s_eventDesignerDisposed = new();
+    private static readonly object s_eventSelectionChanged = new();
 
     private List<IDesignerHost>? _designerList;          // read write list used as data for the collection
     private DesignerCollection? _designerCollection;     // public read only view of the above list

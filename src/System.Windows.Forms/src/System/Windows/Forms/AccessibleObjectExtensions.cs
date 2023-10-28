@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using Windows.Win32.System.Variant;
@@ -195,7 +194,7 @@ internal static unsafe class AccessibleObjectExtensions
 
         Debug.Assert(result.Succeeded, $"{nameof(TryGetRole)}: get_accRole call failed with {result}");
 
-        return role.vt != VARENUM.VT_I4 ? AccessibleRole.None : (AccessibleRole)(int)role;
+        return role.vt is VARENUM.VT_I4 or VARENUM.VT_INT ? (AccessibleRole)(int)role : AccessibleRole.None;
     }
 
     public static AccessibleStates TryGetState(this AgileComPointer<IAccessible>? agile, int child)
@@ -216,7 +215,7 @@ internal static unsafe class AccessibleObjectExtensions
             result.Succeeded,
             $"{nameof(TryGetState)}: get_accState call for id {(int)child} failed with {result}");
 
-        return state.vt != VARENUM.VT_I4 ? AccessibleStates.None : (AccessibleStates)(int)state;
+        return state.vt is VARENUM.VT_I4 or VARENUM.VT_INT ? (AccessibleStates)(int)state : AccessibleStates.None;
     }
 
     public static string? TryGetValue(this AgileComPointer<IAccessible>? agile, VARIANT child)

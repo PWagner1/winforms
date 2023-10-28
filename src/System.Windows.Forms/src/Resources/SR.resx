@@ -3100,9 +3100,6 @@ Do you want to replace it?</value>
   <data name="FolderBrowserDialogDescription" xml:space="preserve">
     <value>The string that is displayed above the tree view control in the dialog box. This string can be used to specify instructions to the user.</value>
   </data>
-  <data name="FolderBrowserDialogNoRootFolder" xml:space="preserve">
-    <value>Unable to retrieve the root folder.</value>
-  </data>
   <data name="FolderBrowserDialogRootFolder" xml:space="preserve">
     <value>The location of the root folder from which to start browsing. Only the specified folder and any subfolders that are beneath it will appear in the dialog box.</value>
   </data>
@@ -6131,42 +6128,52 @@ Stack trace where the illegal operation occurred was:
   </data>
   <data name="toStringAlt" xml:space="preserve">
     <value>Alt</value>
+	<comment>{Locked="Alt"}</comment>
   </data>
   <data name="toStringBack" xml:space="preserve">
     <value>Back</value>
   </data>
   <data name="toStringControl" xml:space="preserve">
     <value>Ctrl</value>
+	<comment>{Locked=!de; "Ctrl"}</comment>
   </data>
   <data name="toStringDefault" xml:space="preserve">
     <value>(default)</value>
   </data>
   <data name="toStringDelete" xml:space="preserve">
     <value>Del</value>
+	<comment>{Locked=!fr,de,it,es; "Del"}</comment>
   </data>
   <data name="toStringEnd" xml:space="preserve">
     <value>End</value>
+	<comment>{Locked=!fr,de,it,es; "End"}</comment>
   </data>
   <data name="toStringEnter" xml:space="preserve">
     <value>Enter</value>
+	<comment>{Locked=!fr,de,it,es; "Enter"}</comment>
   </data>
   <data name="toStringHome" xml:space="preserve">
     <value>Home</value>
+	<comment>{Locked=!fr,de,es; "Home"}</comment>
   </data>
   <data name="toStringInsert" xml:space="preserve">
-    <value>Ins</value>
+    <value>Insert</value>
+	<comment>{Locked=!fr,de,it,es,zh-Hant; "Insert"}</comment>
   </data>
   <data name="toStringNone" xml:space="preserve">
     <value>(none)</value>
   </data>
   <data name="toStringPageDown" xml:space="preserve">
     <value>PgDn</value>
+	<comment>{Locked=!fr,de,it,es; "PgDn"}</comment>
   </data>
   <data name="toStringPageUp" xml:space="preserve">
     <value>PgUp</value>
+	<comment>{Locked=!fr,de,it,es; "PgUp"}</comment>
   </data>
   <data name="toStringShift" xml:space="preserve">
     <value>Shift</value>
+	<comment>{Locked=!fr,de,it,es; "Shift"}</comment>
   </data>
   <data name="TrackBarAutoSizeDescr" xml:space="preserve">
     <value>Indicates whether the control will resize itself automatically based on a computation of the default scroll bar dimensions.</value>

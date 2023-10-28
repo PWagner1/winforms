@@ -1,8 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-#nullable disable
 
 using System.Collections;
 
@@ -32,22 +29,13 @@ public sealed class ToolboxItemCollection : ReadOnlyCollectionBase
     /// <summary>
     ///  Represents the entry at the specified index of the <see cref="ToolboxItem"/>.
     /// </summary>
-    public ToolboxItem this[int index]
-    {
-        get
-        {
-            return ((ToolboxItem)(InnerList[index]));
-        }
-    }
+    public ToolboxItem this[int index] => (ToolboxItem)InnerList[index]!;
 
     /// <summary>
     ///  Gets a value indicating whether the
     /// <see cref="ToolboxItemCollection"/> contains the specified <see cref="ToolboxItem"/>.
     /// </summary>
-    public bool Contains(ToolboxItem value)
-    {
-        return InnerList.Contains(value);
-    }
+    public bool Contains(ToolboxItem value) => InnerList.Contains(value);
 
     /// <summary>
     ///  Copies the <see cref="ToolboxItemCollection"/> values to a one-dimensional <see cref="Array"/> instance at the
@@ -62,8 +50,5 @@ public sealed class ToolboxItemCollection : ReadOnlyCollectionBase
     ///  Returns the index of a <see cref="ToolboxItem"/> in
     ///  the <see cref="ToolboxItemCollection"/> .
     /// </summary>
-    public int IndexOf(ToolboxItem value)
-    {
-        return InnerList.IndexOf(value);
-    }
+    public int IndexOf(ToolboxItem value) => InnerList.IndexOf(value);
 }

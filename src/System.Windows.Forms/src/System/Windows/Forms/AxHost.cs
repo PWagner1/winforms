@@ -1,8 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-#nullable disable
 
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -28,10 +25,6 @@ namespace System.Windows.Forms;
 [Designer($"System.Windows.Forms.Design.AxHostDesigner, {AssemblyRef.SystemDesign}")]
 public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICustomTypeDescriptor
 {
-    private static readonly TraceSwitch s_axHTraceSwitch = new("AxHTrace", "ActiveX handle tracing");
-    private static readonly TraceSwitch s_axPropTraceSwitch = new("AxPropTrace", "ActiveX property tracing");
-    private static readonly TraceSwitch s_axHostSwitch = new("AxHost", "ActiveX host creation");
-
 #if DEBUG
     private static readonly BooleanSwitch s_axAlwaysSaveSwitch = new(
         "AxAlwaysSave",
@@ -52,11 +45,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     private const int EDITM_OBJECT = 1; // object provided an edit verb and we invoked it
     private const int EDITM_HOST = 2;   // we invoked our own edit verb
 
-    private const int STG_UNKNOWN = -1;
-    private const int STG_STREAM = 0;
-    private const int STG_STREAMINIT = 1;
-    private const int STG_STORAGE = 2;
-
     private readonly uint _subclassCheckMessage
         = PInvoke.RegisterWindowMessage($"{Application.WindowMessagesVersion}_subclassCheck");
 
@@ -73,7 +61,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     private static readonly Guid s_maskEdit_Clsid = new("{c932ba85-4374-101b-a56c-00aa003668dc}");
 
     // Static state for perf optimization
-    private static ConditionalWeakTable<Font, object> s_fontTable;
+    private static ConditionalWeakTable<Font, object>? s_fontTable;
 
     // BitVector32 masks for various internal state flags.
     private static readonly int s_ocxStateSet = BitVector32.CreateMask();
@@ -109,7 +97,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     private BitVector32 _axState;
 
-    private int _storageType = STG_UNKNOWN;
+    private StorageType _storageType = StorageType.Unknown;
     private int _ocState = OC_PASSIVE;
     private OLEMISC _miscStatusBits;
     private int _freezeCount;
@@ -122,34 +110,30 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     private readonly Guid _clsid;
     private string _text = string.Empty;
-    private string _licenseKey;
+    private string? _licenseKey;
 
     private readonly OleInterfaces _oleSite;
-    private AxComponentEditor _editor;
-    private AxContainer _container;
-    private ContainerControl _containingControl;
-    private ContainerControl _newParent;
-    private AxContainer _axContainer;
-    private State _ocxState;
+    private AxComponentEditor? _editor;
+    private AxContainer? _container;
+    private ContainerControl? _containingControl;
+    private ContainerControl? _newParent;
+    private AxContainer? _axContainer;
+    private State? _ocxState;
     private HWND _hwndFocus;
 
     // CustomTypeDescriptor related state
 
-    private Dictionary<string, PropertyDescriptor> _properties;
-    private Dictionary<string, PropertyInfo> _propertyInfos;
-    private PropertyDescriptorCollection _propsStash;
-    private Attribute[] _attribsStash;
+    private Dictionary<string, PropertyDescriptor>? _properties;
+    private Dictionary<string, PropertyInfo>? _propertyInfos;
+    private PropertyDescriptorCollection? _propsStash;
+    private Attribute[]? _attribsStash;
 
     // Interface pointers to the ocx
 
-    private object _instance;
-    private AgileComPointer<IOleInPlaceActiveObject> _iOleInPlaceActiveObjectExternal;
-    private IPersistPropertyBag.Interface _iPersistPropBag;
-    private IPersistStream.Interface _iPersistStream;
-    private IPersistStreamInit.Interface _iPersistStreamInit;
-    private IPersistStorage.Interface _iPersistStorage;
+    private object? _instance;
+    private AgileComPointer<IOleInPlaceActiveObject>? _iOleInPlaceActiveObjectExternal;
 
-    private AboutBoxDelegate _aboutBoxDelegate;
+    private AboutBoxDelegate? _aboutBoxDelegate;
     private readonly EventHandler _selectionChangeHandler;
 
     private readonly bool _isMaskEdit;
@@ -160,7 +144,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     // These should be in the order given by the PROPCAT_X values
     // Also, note that they are not to be localized...
 
-    private static readonly CategoryAttribute[] s_categoryNames = new CategoryAttribute[]
+    private static readonly CategoryAttribute?[] s_categoryNames = new CategoryAttribute?[]
     {
         null,
         new WinCategoryAttribute("Default"),
@@ -176,7 +160,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         new WinCategoryAttribute("DDE")
     };
 
-    private Dictionary<PROPCAT, CategoryAttribute> _objectDefinedCategoryNames;
+    private Dictionary<PROPCAT, CategoryAttribute>? _objectDefinedCategoryNames;
 
 #if DEBUG
     static AxHost()
@@ -199,7 +183,8 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     ///  Creates a new instance of a control which wraps an activeX control given by the
     ///  clsid parameter and flags of 0.
     /// </summary>
-    protected AxHost(string clsid) : this(clsid, 0)
+    protected AxHost(string clsid)
+        : this(clsid, 0)
     {
     }
 
@@ -207,7 +192,8 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     ///  Creates a new instance of a control which wraps an activeX control given by the
     ///  clsid and flags parameters.
     /// </summary>
-    protected AxHost(string clsid, int flags) : base()
+    protected AxHost(string clsid, int flags)
+        : base()
     {
         if (Application.OleRequired() != ApartmentState.STA)
         {
@@ -291,7 +277,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public override Image BackgroundImage
+    public override Image? BackgroundImage
     {
         get => base.BackgroundImage;
         set => base.BackgroundImage = value;
@@ -320,7 +306,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler MouseClick
+    public new event EventHandler? MouseClick
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "MouseClick"));
         remove { }
@@ -328,7 +314,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler MouseDoubleClick
+    public new event EventHandler? MouseDoubleClick
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "MouseDoubleClick"));
         remove { }
@@ -336,6 +322,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [AllowNull]
     public override Cursor Cursor
     {
         get => base.Cursor;
@@ -364,6 +351,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [AllowNull]
     public override Font Font
     {
         get => base.Font;
@@ -393,10 +381,11 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [AllowNull]
     public override string Text
     {
         get => _text;
-        set => _text = value;
+        set => _text = value ?? string.Empty;
     }
 
     internal override bool CanAccessProperties
@@ -434,28 +423,28 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         {
             ParentInternal.CreateControl(true);
 
-            ContainerControl f = ContainingControl;
-            if (f is not null)
+            ContainerControl? containingControl = ContainingControl;
+            if (containingControl is not null)
             {
-                f.VisibleChanged += _onContainerVisibleChanged;
+                containingControl.VisibleChanged += _onContainerVisibleChanged;
             }
         }
     }
 
-    private void OnContainerVisibleChanged(object sender, EventArgs e)
+    private void OnContainerVisibleChanged(object? sender, EventArgs e)
     {
-        ContainerControl f = ContainingControl;
-        if (f is not null)
+        ContainerControl? containingControl = ContainingControl;
+        if (containingControl is not null)
         {
-            if (f.Visible && Visible && !_axState[s_fOwnWindow])
+            if (containingControl.Visible && Visible && !_axState[s_fOwnWindow])
             {
                 MakeVisibleWithShow();
             }
-            else if (!f.Visible && Visible && IsHandleCreated && GetOcState() >= OC_INPLACE)
+            else if (!containingControl.Visible && Visible && IsHandleCreated && GetOcState() >= OC_INPLACE)
             {
                 HideAxControl();
             }
-            else if (f.Visible && !GetState(States.Visible) && IsHandleCreated && GetOcState() >= OC_INPLACE)
+            else if (containingControl.Visible && !GetState(States.Visible) && IsHandleCreated && GetOcState() >= OC_INPLACE)
             {
                 HideAxControl();
             }
@@ -494,7 +483,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler BackColorChanged
+    public new event EventHandler? BackColorChanged
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "BackColorChanged"));
         remove { }
@@ -502,7 +491,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler BackgroundImageChanged
+    public new event EventHandler? BackgroundImageChanged
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "BackgroundImageChanged"));
         remove { }
@@ -510,7 +499,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler BackgroundImageLayoutChanged
+    public new event EventHandler? BackgroundImageLayoutChanged
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "BackgroundImageLayoutChanged"));
         remove { }
@@ -518,7 +507,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler BindingContextChanged
+    public new event EventHandler? BindingContextChanged
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "BindingContextChanged"));
         remove { }
@@ -526,7 +515,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler CursorChanged
+    public new event EventHandler? CursorChanged
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "CursorChanged"));
         remove { }
@@ -537,7 +526,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler EnabledChanged
+    public new event EventHandler? EnabledChanged
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "EnabledChanged"));
         remove { }
@@ -545,7 +534,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler FontChanged
+    public new event EventHandler? FontChanged
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "FontChanged"));
         remove { }
@@ -553,7 +542,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler ForeColorChanged
+    public new event EventHandler? ForeColorChanged
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "ForeColorChanged"));
         remove { }
@@ -561,7 +550,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler RightToLeftChanged
+    public new event EventHandler? RightToLeftChanged
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "RightToLeftChanged"));
         remove { }
@@ -569,7 +558,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler TextChanged
+    public new event EventHandler? TextChanged
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "TextChanged"));
         remove { }
@@ -580,7 +569,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler Click
+    public new event EventHandler? Click
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "Click"));
         remove { }
@@ -588,7 +577,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event DragEventHandler DragDrop
+    public new event DragEventHandler? DragDrop
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "DragDrop"));
         remove { }
@@ -596,7 +585,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event DragEventHandler DragEnter
+    public new event DragEventHandler? DragEnter
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "DragEnter"));
         remove { }
@@ -604,7 +593,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event DragEventHandler DragOver
+    public new event DragEventHandler? DragOver
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "DragOver"));
         remove { }
@@ -612,7 +601,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler DragLeave
+    public new event EventHandler? DragLeave
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "DragLeave"));
         remove { }
@@ -620,7 +609,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event GiveFeedbackEventHandler GiveFeedback
+    public new event GiveFeedbackEventHandler? GiveFeedback
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "GiveFeedback"));
         remove { }
@@ -628,7 +617,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event HelpEventHandler HelpRequested
+    public new event HelpEventHandler? HelpRequested
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "HelpRequested"));
         remove { }
@@ -636,7 +625,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event PaintEventHandler Paint
+    public new event PaintEventHandler? Paint
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "Paint"));
         remove { }
@@ -644,7 +633,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event QueryContinueDragEventHandler QueryContinueDrag
+    public new event QueryContinueDragEventHandler? QueryContinueDrag
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "QueryContinueDrag"));
         remove { }
@@ -652,7 +641,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event QueryAccessibilityHelpEventHandler QueryAccessibilityHelp
+    public new event QueryAccessibilityHelpEventHandler? QueryAccessibilityHelp
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "QueryAccessibilityHelp"));
         remove { }
@@ -663,7 +652,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler DoubleClick
+    public new event EventHandler? DoubleClick
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "DoubleClick"));
         remove { }
@@ -671,7 +660,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler ImeModeChanged
+    public new event EventHandler? ImeModeChanged
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "ImeModeChanged"));
         remove { }
@@ -682,7 +671,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event KeyEventHandler KeyDown
+    public new event KeyEventHandler? KeyDown
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "KeyDown"));
         remove { }
@@ -693,7 +682,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event KeyPressEventHandler KeyPress
+    public new event KeyPressEventHandler? KeyPress
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "KeyPress"));
         remove { }
@@ -704,7 +693,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event KeyEventHandler KeyUp
+    public new event KeyEventHandler? KeyUp
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "KeyUp"));
         remove { }
@@ -712,7 +701,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event LayoutEventHandler Layout
+    public new event LayoutEventHandler? Layout
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "Layout"));
         remove { }
@@ -723,7 +712,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event MouseEventHandler MouseDown
+    public new event MouseEventHandler? MouseDown
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "MouseDown"));
         remove { }
@@ -734,7 +723,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler MouseEnter
+    public new event EventHandler? MouseEnter
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "MouseEnter"));
         remove { }
@@ -745,7 +734,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler MouseLeave
+    public new event EventHandler? MouseLeave
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "MouseLeave"));
         remove { }
@@ -756,7 +745,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler MouseHover
+    public new event EventHandler? MouseHover
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "MouseHover"));
         remove { }
@@ -767,7 +756,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event MouseEventHandler MouseMove
+    public new event MouseEventHandler? MouseMove
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "MouseMove"));
         remove { }
@@ -778,7 +767,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event MouseEventHandler MouseUp
+    public new event MouseEventHandler? MouseUp
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "MouseUp"));
         remove { }
@@ -789,7 +778,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event MouseEventHandler MouseWheel
+    public new event MouseEventHandler? MouseWheel
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "MouseWheel"));
         remove { }
@@ -797,7 +786,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event UICuesEventHandler ChangeUICues
+    public new event UICuesEventHandler? ChangeUICues
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "ChangeUICues"));
         remove { }
@@ -805,7 +794,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler StyleChanged
+    public new event EventHandler? StyleChanged
     {
         add => throw new NotSupportedException(string.Format(SR.AXAddInvalidEvent, "StyleChanged"));
         remove { }
@@ -850,7 +839,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             return;
         }
 
-        if (Site.TryGetService(out ISelectionService selectionService))
+        if (Site.TryGetService(out ISelectionService? selectionService))
         {
             selectionService.SelectionChanging += _selectionChangeHandler;
         }
@@ -858,7 +847,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         _axState[s_addedSelectionHandler] = true;
     }
 
-    private void OnComponentRename(object sender, ComponentRenameEventArgs e)
+    private void OnComponentRename(object? sender, ComponentRenameEventArgs e)
     {
         // When we're notified of a rename, see if this is the component that is being renamed.
         if (e.Component == this)
@@ -878,7 +867,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             return false;
         }
 
-        if (Site.TryGetService(out ISelectionService selectionService))
+        if (Site.TryGetService(out ISelectionService? selectionService))
         {
             selectionService.SelectionChanging -= _selectionChangeHandler;
         }
@@ -892,7 +881,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         if (DesignMode && hook != _axState[s_renameEventHooked])
         {
             // If we're in design mode, listen to the following events from the component change service.
-            IComponentChangeService changeService = (IComponentChangeService)GetService(typeof(IComponentChangeService));
+            IComponentChangeService? changeService = (IComponentChangeService?)GetService(typeof(IComponentChangeService));
 
             if (changeService is not null)
             {
@@ -910,7 +899,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         }
     }
 
-    public override ISite Site
+    public override ISite? Site
     {
         set
         {
@@ -948,8 +937,8 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             {
                 TransitionDownTo(OC_LOADED);
                 TransitionUpTo(OC_INPLACE);
-                ContainerControl f = ContainingControl;
-                if (f is not null && f.Visible && Visible)
+                ContainerControl? containingControl = ContainingControl;
+                if (containingControl is not null && containingControl.Visible && Visible)
                 {
                     MakeVisibleWithShow();
                 }
@@ -991,9 +980,9 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         }
     }
 
-    private void OnNewSelection(object sender, EventArgs e)
+    private void OnNewSelection(object? sender, EventArgs e)
     {
-        if (IsUserMode() || !Site.TryGetService(out ISelectionService selectionService))
+        if (IsUserMode() || !Site.TryGetService(out ISelectionService? selectionService))
         {
             return;
         }
@@ -1003,8 +992,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         if (GetOcState() >= OC_UIACTIVE && !selectionService.GetComponentSelected(this))
         {
             // Need to deactivate.
-            HRESULT hr = UiDeactivate();
-            Debug.Assert(hr.Succeeded, $"Failed to UiDeactivate: {hr}");
+            UiDeactivate().AssertSuccess();
         }
 
         if (!selectionService.GetComponentSelected(this))
@@ -1024,7 +1012,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             // The AX Host designer will offer an extender property called "SelectionStyle".
             if (TypeDescriptor.GetProperties(this)["SelectionStyle"] is { } property && property.PropertyType == typeof(int))
             {
-                if ((int)property.GetValue(this) != _selectionStyle)
+                if ((int)property.GetValue(this)! != _selectionStyle)
                 {
                     property.SetValue(this, _selectionStyle);
                 }
@@ -1087,14 +1075,13 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         if (s_logPixelsX == -1 || force)
         {
             using var dc = GetDcScope.ScreenDC;
-            if (dc == IntPtr.Zero)
+            if (dc.IsNull)
             {
                 return HRESULT.E_FAIL;
             }
 
             s_logPixelsX = PInvoke.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSX);
             s_logPixelsY = PInvoke.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSY);
-            s_axHTraceSwitch.TraceVerbose($"log pixels are: {s_logPixelsX} {s_logPixelsY}");
         }
 
         return HRESULT.S_OK;
@@ -1149,7 +1136,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     private unsafe Size SetExtent(int width, int height)
     {
-        s_axHTraceSwitch.TraceVerbose($"setting extent to {width} {height}");
         Size size = new(width, height);
         bool resetExtents = !IsUserMode();
         Pixel2hiMetric(ref size);
@@ -1291,7 +1277,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         }
 
         // We were resubclassed, we need to resublass ourselves.
-        s_axHostSwitch.TraceVerbose("The control subclassed itself w/o calling the old wndproc.");
         Debug.Assert(!OwnWindow(), "Why are we here if we own our window?");
         WindowReleaseHandle();
         PInvoke.SetWindowLong(this, WINDOW_LONG_PTR_INDEX.GWL_WNDPROC, currentWndproc);
@@ -1321,7 +1306,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     {
         if (_axState[s_inTransition])
         {
-            s_axHTraceSwitch.TraceVerbose("Recursively entering TransitionDownTo...");
             return;
         }
 
@@ -1338,9 +1322,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                         SetOcState(OC_UIACTIVE);
                         break;
                     case OC_UIACTIVE:
-                        HRESULT hr = UiDeactivate();
-                        Debug.Assert(hr.Succeeded, $"Failed in UiDeactivate: {hr}");
-                        Debug.WriteLineIf(s_axHTraceSwitch.TraceVerbose && GetOcState() == OC_INPLACE, "failed transition");
+                        UiDeactivate().AssertSuccess();
                         SetOcState(OC_INPLACE);
                         break;
                     case OC_INPLACE:
@@ -1354,7 +1336,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                             InPlaceDeactivate();
                         }
 
-                        Debug.WriteLineIf(s_axHTraceSwitch.TraceVerbose && GetOcState() == OC_RUNNING, "failed transition");
                         SetOcState(OC_RUNNING);
                         break;
                     case OC_RUNNING:
@@ -1385,7 +1366,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     {
         if (_axState[s_inTransition])
         {
-            s_axHTraceSwitch.TraceVerbose("Recursively entering TransitionUpTo...");
             return;
         }
 
@@ -1395,7 +1375,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
             while (state > GetOcState())
             {
-                s_axHTraceSwitch.TraceVerbose($"Transitioning up from: {GetOcState()} to: {state}");
                 switch (GetOcState())
                 {
                     case OC_PASSIVE:
@@ -1505,12 +1484,12 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     private HRESULT InPlaceDeactivate()
     {
         _axState[s_ownDisposing] = true;
-        ContainerControl f = ContainingControl;
-        if (f is not null)
+        ContainerControl? containingControl = ContainingControl;
+        if (containingControl is not null)
         {
-            if (f.ActiveControl == this)
+            if (containingControl.ActiveControl == this)
             {
-                f.ActiveControl = null;
+                containingControl.ActiveControl = null;
             }
         }
 
@@ -1520,7 +1499,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     private void UiActivate()
     {
-        s_axHTraceSwitch.TraceVerbose($"calling uiActivate for {ToString()}");
         Debug.Assert(CanUIActivate, "we have to be able to uiactivate");
         if (CanUIActivate)
         {
@@ -1547,7 +1525,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         // if the ctl didn't call showobject, we need to do it for it...
         if (!IsHandleCreated)
         {
-            s_axHTraceSwitch.TraceVerbose("Naughty control didn't call showObject...");
             try
             {
                 ((IOleClientSite.Interface)_oleSite).ShowObject();
@@ -1602,7 +1579,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                     }
                     catch
                     {
-                        s_axHTraceSwitch.TraceVerbose("Could not make ctl visible by using INPLACE. Will try SHOW");
                         MakeVisibleWithShow();
                     }
                 }
@@ -1637,8 +1613,8 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     private void MakeVisibleWithShow()
     {
-        ContainerControl container = ContainingControl;
-        Control control = container?.ActiveControl;
+        ContainerControl? container = ContainingControl;
+        Control? control = container?.ActiveControl;
         try
         {
             DoVerb((int)OLEIVERB.OLEIVERB_SHOW);
@@ -1666,7 +1642,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         DoVerb((int)OLEIVERB.OLEIVERB_HIDE);
         if (GetOcState() < OC_INPLACE)
         {
-            s_axHTraceSwitch.TraceVerbose("Naughty control inplace deactivated on a hide verb...");
             Debug.Assert(!IsHandleCreated, "if we are inplace deactivated we should not have a window.");
 
             // Set a flag saying that we need the window to be created if create handle is ever called.
@@ -1706,8 +1681,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     public override unsafe bool PreProcessMessage(ref Message msg)
     {
-        s_controlKeyboardRouting.TraceVerbose($"AxHost.PreProcessMessage {msg}");
-
         if (!IsUserMode())
         {
             return false;
@@ -1746,7 +1719,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
             if (hr == HRESULT.S_OK)
             {
-                s_controlKeyboardRouting.TraceVerbose($"\t Message translated by control to {msg}");
                 return true;
             }
             else if (hr == HRESULT.S_FALSE)
@@ -1761,17 +1733,9 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                     _ignoreDialogKeys = false;
                 }
             }
-            else if (_axState[s_siteProcessedInputKey])
-            {
-                s_controlKeyboardRouting.TraceVerbose(
-                    $"\t Message processed by site. Calling base.PreProcessMessage() {msg}");
-                return base.PreProcessMessage(ref msg);
-            }
             else
             {
-                s_controlKeyboardRouting.TraceVerbose(
-                    $"\t Message not processed by site. Returning false. {msg}");
-                return false;
+                return _axState[s_siteProcessedInputKey] ? base.PreProcessMessage(ref msg) : false;
             }
         }
         finally
@@ -1786,7 +1750,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     protected internal override unsafe bool ProcessMnemonic(char charCode)
     {
-        s_controlKeyboardRouting.TraceVerbose($"In AxHost.ProcessMnemonic: {(int)charCode}");
         if (!CanSelect)
         {
             return false;
@@ -1823,7 +1786,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         if (PInvoke.IsAccelerator(new HandleRef<HACCEL>(this, ctlInfo.hAccel), ctlInfo.cAccel, &msg, lpwCmd: null))
         {
             oleControl.Value->OnMnemonic(&msg).AssertSuccess();
-            s_controlKeyboardRouting.TraceVerbose($"\t Processed mnemonic {msg}");
 
             try
             {
@@ -1869,7 +1831,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     [RefreshProperties(RefreshProperties.All)]
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    public State OcxState
+    public State? OcxState
     {
         get
         {
@@ -1890,7 +1852,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 return;
             }
 
-            if (_storageType != STG_UNKNOWN && _storageType != value.Type)
+            if (_storageType != StorageType.Unknown && _storageType != value.Type)
             {
                 Debug.Fail("Trying to reload with a OcxState that is of a different type.");
                 throw new InvalidOperationException(SR.AXOcxStateLoaded);
@@ -1921,7 +1883,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         }
     }
 
-    private State CreateNewOcxState(State oldOcxState)
+    private State? CreateNewOcxState(State? oldOcxState)
     {
         NoComponentChangeEvents++;
 
@@ -1932,59 +1894,53 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 return null;
             }
 
-            PropertyBagStream propBag = null;
-
-            if (_iPersistPropBag is not null)
-            {
-                propBag = new PropertyBagStream();
-                using var propertyBag = ComHelpers.GetComScope<IPropertyBag>(propBag);
-                _iPersistPropBag.Save(propertyBag, fClearDirty: true, fSaveAllProperties: true);
-            }
-
-            MemoryStream ms = null;
+            PropertyBagStream? propBag = null;
+            MemoryStream? ms = null;
             switch (_storageType)
             {
-                case STG_STREAM:
-                case STG_STREAMINIT:
+                case StorageType.Stream:
+                case StorageType.StreamInit:
                     ms = new MemoryStream();
                     using (var stream = ComHelpers.GetComScope<IStream>(new Interop.Ole32.GPStream(ms)))
                     {
-                        if (_storageType == STG_STREAM)
+                        if (_storageType == StorageType.Stream)
                         {
-                            _iPersistStream.Save(stream, true);
+                            using var persistStream = ComHelpers.GetComScope<IPersistStream>(_instance);
+                            persistStream.Value->Save(stream, fClearDirty: true).AssertSuccess();
                         }
                         else
                         {
-                            _iPersistStreamInit.Save(stream, true);
+                            using var persistStreamInit = ComHelpers.GetComScope<IPersistStreamInit>(_instance);
+                            persistStreamInit.Value->Save(stream, fClearDirty: true).AssertSuccess();
                         }
                     }
 
-                    break;
-                case STG_STORAGE:
+                    return new State(ms, _storageType, this);
+                case StorageType.Storage:
                     Debug.Assert(oldOcxState is not null, "we got to have an old state which holds out scribble storage...");
                     if (oldOcxState is not null)
                     {
-                        return oldOcxState.RefreshStorage(_iPersistStorage);
+                        using var persistStorage = ComHelpers.GetComScope<IPersistStorage>(_instance);
+                        return oldOcxState.RefreshStorage(persistStorage);
                     }
 
                     return null;
+                case StorageType.PropertyBag:
+                    propBag = new PropertyBagStream();
+                    using (var propertyBag = ComHelpers.GetComScope<IPropertyBag>(propBag))
+                    using (var persistPropBag = ComHelpers.GetComScope<IPersistPropertyBag>(_instance))
+                    {
+                        persistPropBag.Value->Save(propertyBag, fClearDirty: true, fSaveAllProperties: true).AssertSuccess();
+                    }
+
+                    return new State(propBag);
                 default:
                     Debug.Fail("unknown storage type.");
                     return null;
             }
-
-            if (ms is not null)
-            {
-                return new State(ms, _storageType, this, propBag);
-            }
-            else if (propBag is not null)
-            {
-                return new State(propBag);
-            }
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            s_axHTraceSwitch.TraceVerbose($"Could not create new OCX State: {e}");
         }
         finally
         {
@@ -2021,7 +1977,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public ContainerControl ContainingControl
+    public ContainerControl? ContainingControl
     {
         get => _containingControl ??= FindContainerControlInternal();
         set => _containingControl = value;
@@ -2050,14 +2006,14 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     [EditorBrowsable(EditorBrowsableState.Never)]
     private bool ShouldSerializeContainingControl() => ContainingControl != ParentInternal;
 
-    private ContainerControl FindContainerControlInternal()
+    private ContainerControl? FindContainerControlInternal()
     {
-        if (Site.TryGetService(out IDesignerHost host) && host.RootComponent is ContainerControl rootControl)
+        if (Site.TryGetService(out IDesignerHost? host) && host.RootComponent is ContainerControl rootControl)
         {
             return rootControl;
         }
 
-        Control control = this;
+        Control? control = this;
         while (control is not null)
         {
             if (control is ContainerControl containerControl)
@@ -2078,7 +2034,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             return false;
         }
 
-        Debug.Assert(_storageType != STG_UNKNOWN, "if we are loaded, out storage type must be set!");
+        Debug.Assert(_storageType != StorageType.Unknown, "if we are loaded, out storage type must be set!");
 
         if (_axState[s_valueChanged])
         {
@@ -2095,14 +2051,26 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         HRESULT hr = HRESULT.E_FAIL;
         switch (_storageType)
         {
-            case STG_STREAM:
-                hr = _iPersistStream.IsDirty();
+            case StorageType.Stream:
+                using (var persistStream = ComHelpers.GetComScope<IPersistStream>(_instance))
+                {
+                    hr = persistStream.Value->IsDirty();
+                }
+
                 break;
-            case STG_STREAMINIT:
-                hr = _iPersistStreamInit.IsDirty();
+            case StorageType.StreamInit:
+                using (var persistStreamInit = ComHelpers.GetComScope<IPersistStreamInit>(_instance))
+                {
+                    hr = persistStreamInit.Value->IsDirty();
+                }
+
                 break;
-            case STG_STORAGE:
-                hr = _iPersistStorage.IsDirty();
+            case StorageType.Storage:
+                using (var persistStorage = ComHelpers.GetComScope<IPersistStorage>(_instance))
+                {
+                    hr = persistStorage.Value->IsDirty();
+                }
+
                 break;
             default:
                 Debug.Fail("unknown storage type");
@@ -2122,33 +2090,27 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     internal bool IsUserMode()
     {
-        ISite site = Site;
+        ISite? site = Site;
         return site is null || !site.DesignMode;
     }
 
-    private object GetAmbientProperty(int dispid)
+    private object? GetAmbientProperty(int dispid)
     {
-        Control richParent = ParentInternal;
+        Control? richParent = ParentInternal;
 
         switch (dispid)
         {
             case PInvoke.DISPID_AMBIENT_USERMODE:
-                s_axHTraceSwitch.TraceVerbose("asked for usermode");
                 return IsUserMode();
             case PInvoke.DISPID_AMBIENT_AUTOCLIP:
-                s_axHTraceSwitch.TraceVerbose("asked for autoclip");
                 return true;
             case PInvoke.DISPID_AMBIENT_MESSAGEREFLECT:
-                s_axHTraceSwitch.TraceVerbose("asked for message reflect");
                 return true;
             case PInvoke.DISPID_AMBIENT_UIDEAD:
-                s_axHTraceSwitch.TraceVerbose("asked for uidead");
                 return false;
             case PInvoke.DISPID_AMBIENT_DISPLAYASDEFAULT:
-                s_axHTraceSwitch.TraceVerbose("asked for displayasdefault");
                 return false;
             case PInvoke.DISPID_AMBIENT_FONT:
-                s_axHTraceSwitch.TraceVerbose("asked for font");
                 if (richParent is not null)
                 {
                     return GetIFontFromFont(richParent.Font);
@@ -2156,10 +2118,8 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
                 return null;
             case PInvoke.DISPID_AMBIENT_SHOWGRABHANDLES:
-                s_axHTraceSwitch.TraceVerbose("asked for showGrabHandles");
                 return false;
             case PInvoke.DISPID_AMBIENT_SHOWHATCHING:
-                s_axHTraceSwitch.TraceVerbose("asked for showHatching");
                 return false;
             case PInvoke.DISPID_AMBIENT_BACKCOLOR:
                 if (richParent is not null)
@@ -2178,11 +2138,9 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             case PInvoke.DISPID_AMBIENT_DISPLAYNAME:
                 return AxContainer.GetNameForControl(this) ?? string.Empty;
             case PInvoke.DISPID_AMBIENT_LOCALEID:
-                s_axHTraceSwitch.TraceVerbose("asked for localeid");
                 return PInvoke.GetThreadLocale();
             case PInvoke.DISPID_AMBIENT_RIGHTTOLEFT:
-                s_axHTraceSwitch.TraceVerbose("asked for right to left");
-                Control control = this;
+                Control? control = this;
                 while (control is not null)
                 {
                     if (control.RightToLeft == Forms.RightToLeft.No)
@@ -2203,17 +2161,16 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
                 return null;
             default:
-                s_axHTraceSwitch.TraceVerbose($"unsupported ambient {dispid}");
                 return null;
         }
     }
 
     public unsafe void DoVerb(int verb)
     {
-        Control parent = ParentInternal;
+        Control? parent = ParentInternal;
         RECT posRect = Bounds;
         using var pClientSite = ComHelpers.TryGetComScope<IOleClientSite>(_oleSite, out HRESULT hr);
-        Debug.Assert(hr.Succeeded);
+        hr.AssertSuccess();
         using var oleObject = GetComScope<IOleObject>();
         oleObject.Value->DoVerb(
             verb,
@@ -2228,8 +2185,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     private void FreezeEvents(bool freeze)
     {
-        s_axHTraceSwitch.TraceVerbose($"freezing {freeze}");
-
         using var oleControl = GetComScope<IOleControl>();
 
         if (freeze)
@@ -2248,7 +2203,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     private HRESULT UiDeactivate()
     {
-        s_axHTraceSwitch.TraceVerbose($"calling uiDeactivate for {ToString()}");
         bool ownDispose = _axState[s_ownDisposing];
         _axState[s_ownDisposing] = true;
         try
@@ -2272,12 +2226,12 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         _ocState = nv;
     }
 
-    private string GetLicenseKey()
+    private string? GetLicenseKey()
     {
         return GetLicenseKey(_clsid);
     }
 
-    private unsafe string GetLicenseKey(Guid clsid)
+    private unsafe string? GetLicenseKey(Guid clsid)
     {
         if (_licenseKey is not null || !_axState[s_needLicenseKey])
         {
@@ -2304,7 +2258,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             return null;
         }
 
-        var licInfo = new LICINFO
+        LICINFO licInfo = new()
         {
             cbLicInfo = sizeof(LICINFO)
         };
@@ -2323,7 +2277,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     private void CreateWithoutLicense(Guid clsid)
     {
-        s_axHTraceSwitch.TraceVerbose($"Creating object without license: {clsid}");
         IUnknown* unknown;
         HRESULT hr = PInvoke.CoCreateInstance(
             &clsid,
@@ -2333,16 +2286,13 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             (void**)&unknown);
         hr.ThrowOnFailure();
 
-        _instance = Marshal.GetObjectForIUnknown((nint)unknown);
-        s_axHTraceSwitch.TraceVerbose($"\t{(_instance is not null)}");
+        _instance = ComHelpers.GetObjectForIUnknown(unknown);
     }
 
-    private void CreateWithLicense(string license, Guid clsid)
+    private void CreateWithLicense(string? license, Guid clsid)
     {
         if (license is not null)
         {
-            s_axHTraceSwitch.TraceVerbose($"Creating object with license: {clsid}");
-
             using ComScope<IClassFactory2> factory = new(null);
 
             HRESULT hr = PInvoke.CoGetClassObject(
@@ -2358,8 +2308,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 hr = factory.Value->CreateInstanceLic(null, null, IID.Get<IUnknown>(), new BSTR(license), (void**)&unknown);
                 hr.ThrowOnFailure();
 
-                _instance = Marshal.GetObjectForIUnknown((nint)unknown);
-                s_axHTraceSwitch.TraceVerbose($"\t{(_instance is not null)}");
+                _instance = ComHelpers.GetObjectForIUnknown(unknown);
             }
         }
 
@@ -2369,6 +2318,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         }
     }
 
+    [MemberNotNull(nameof(_instance))]
     private void CreateInstance()
     {
         Debug.Assert(_instance is null, "instance must be null");
@@ -2388,7 +2338,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             throw;
         }
 
-        s_axHTraceSwitch.TraceVerbose("created");
         SetOcState(OC_LOADED);
     }
 
@@ -2396,7 +2345,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     ///  Called to create the ActiveX control.  Override this member to perform your own creation logic
     ///  or call base to do the default creation logic.
     /// </summary>
-    protected virtual object CreateInstanceCore(Guid clsid)
+    protected virtual object? CreateInstanceCore(Guid clsid)
     {
         if (IsUserMode())
         {
@@ -2410,7 +2359,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         return _instance;
     }
 
-    private unsafe CategoryAttribute GetCategoryForDispid(int dispid)
+    private unsafe CategoryAttribute? GetCategoryForDispid(int dispid)
     {
         using var categorizeProperties = ComHelpers.TryGetComScope<ICategorizeProperties>(_instance, out HRESULT hr);
         if (hr.Failed)
@@ -2431,7 +2380,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             return s_categoryNames[index];
         }
 
-        if (_objectDefinedCategoryNames?.TryGetValue(propcat, out CategoryAttribute category) ?? false
+        if (_objectDefinedCategoryNames?.TryGetValue(propcat, out CategoryAttribute? category) ?? false
             && category is not null)
         {
             return category;
@@ -2461,7 +2410,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         Debug.Assert(selectionStyle is >= 0 and <= 2, "Invalid selection style");
         _selectionStyle = selectionStyle;
 
-        if (Site.TryGetService(out ISelectionService selectionService) && selectionService.GetComponentSelected(this))
+        if (Site.TryGetService(out ISelectionService? selectionService) && selectionService.GetComponentSelected(this))
         {
             // The AX Host designer will offer an extender property called "SelectionStyle"
             if (TypeDescriptor.GetProperties(this)["SelectionStyle"] is { } property && property.PropertyType == typeof(int))
@@ -2474,7 +2423,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     public void InvokeEditMode()
     {
-        s_axHTraceSwitch.TraceVerbose($"invoking EditMode for {ToString()}");
         Debug.Assert((_flags & AxFlags.PreventEditMode) == 0, "edit mode should have been disabled");
         if (_editMode != EDITM_NONE)
         {
@@ -2515,7 +2463,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     ///  the type name is used.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    string ICustomTypeDescriptor.GetClassName()
+    string? ICustomTypeDescriptor.GetClassName()
     {
         return null;
     }
@@ -2525,7 +2473,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     ///  the default is used.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    string ICustomTypeDescriptor.GetComponentName()
+    string? ICustomTypeDescriptor.GetComponentName()
     {
         return null;
     }
@@ -2535,21 +2483,21 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [RequiresUnreferencedCode(TrimmingConstants.AttributesRequiresUnreferencedCodeMessage)]
-    TypeConverter ICustomTypeDescriptor.GetConverter()
+    TypeConverter? ICustomTypeDescriptor.GetConverter()
     {
         return null;
     }
 
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [RequiresUnreferencedCode(TrimmingConstants.EventDescriptorRequiresUnreferencedCodeMessage)]
-    EventDescriptor ICustomTypeDescriptor.GetDefaultEvent()
+    EventDescriptor? ICustomTypeDescriptor.GetDefaultEvent()
     {
         return TypeDescriptor.GetDefaultEvent(this, true);
     }
 
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [RequiresUnreferencedCode(TrimmingConstants.PropertyDescriptorPropertyTypeMessage)]
-    PropertyDescriptor ICustomTypeDescriptor.GetDefaultProperty()
+    PropertyDescriptor? ICustomTypeDescriptor.GetDefaultProperty()
     {
         return TypeDescriptor.GetDefaultProperty(this, true);
     }
@@ -2559,7 +2507,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [RequiresUnreferencedCode(TrimmingConstants.EditorRequiresUnreferencedCode)]
-    object ICustomTypeDescriptor.GetEditor(Type editorBaseType)
+    object? ICustomTypeDescriptor.GetEditor(Type editorBaseType)
     {
         if (editorBaseType != typeof(ComponentEditor))
         {
@@ -2585,10 +2533,10 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [RequiresUnreferencedCode(TrimmingConstants.FilterRequiresUnreferencedCodeMessage)]
-    EventDescriptorCollection ICustomTypeDescriptor.GetEvents(Attribute[] attributes)
+    EventDescriptorCollection ICustomTypeDescriptor.GetEvents(Attribute[]? attributes)
         => TypeDescriptor.GetEvents(this, attributes, noCustomTypeDesc: true);
 
-    private void OnIdle(object sender, EventArgs e)
+    private void OnIdle(object? sender, EventArgs e)
     {
         if (_axState[s_refreshProperties])
         {
@@ -2618,7 +2566,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         }
     }
 
-    private PropertyDescriptorCollection FillProperties(Attribute[] attributes)
+    private PropertyDescriptorCollection FillProperties(Attribute[]? attributes)
     {
         if (RefreshAllProperties)
         {
@@ -2630,7 +2578,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         {
             if (attributes is null && _attribsStash is null)
             {
-                s_axHTraceSwitch.TraceVerbose("Returning stashed values for : <null>");
                 return _propsStash;
             }
             else if (attributes is not null && _attribsStash is not null && attributes.Length == _attribsStash.Length)
@@ -2648,7 +2595,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
                 if (attribsEqual)
                 {
-                    s_axHTraceSwitch.TraceVerbose($"Returning stashed values for : {attributes.Length}");
                     return _propsStash;
                 }
             }
@@ -2683,9 +2629,9 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 }
 
                 string propName = baseProps[i].Name;
-                PropertyDescriptor prop = null;
+                PropertyDescriptor? prop = null;
 
-                _propertyInfos.TryGetValue(propName, out PropertyInfo propInfo);
+                _propertyInfos.TryGetValue(propName, out PropertyInfo? propInfo);
 
                 // We do not support "write-only" properties that some activex controls support.
                 if (propInfo is not null && !propInfo.CanRead)
@@ -2693,17 +2639,15 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                     continue;
                 }
 
-                if (!_properties.ContainsKey(propName))
+                if (!_properties.TryGetValue(propName, out PropertyDescriptor? propDesc))
                 {
                     if (propInfo is not null)
                     {
-                        s_axPropTraceSwitch.TraceVerbose($"Added AxPropertyDescriptor for: {propName}");
                         prop = new AxPropertyDescriptor(baseProps[i], this);
                         ((AxPropertyDescriptor)prop).UpdateAttributes();
                     }
                     else
                     {
-                        s_axPropTraceSwitch.TraceVerbose($"Added PropertyDescriptor for: {propName}");
                         prop = baseProps[i];
                     }
 
@@ -2712,13 +2656,11 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 }
                 else
                 {
-                    _properties.TryGetValue(propName, out PropertyDescriptor propDesc);
                     Debug.Assert(propDesc is not null, $"Cannot find cached entry for: {propName}");
-                    AxPropertyDescriptor axPropDesc = propDesc as AxPropertyDescriptor;
+                    AxPropertyDescriptor? axPropDesc = propDesc as AxPropertyDescriptor;
                     if ((propInfo is null && axPropDesc is not null) || (propInfo is not null && axPropDesc is null))
                     {
                         Debug.Fail($"Duplicate property with same name: {propName}");
-                        s_axPropTraceSwitch.TraceVerbose($"Duplicate property with same name: {propName}");
                     }
                     else
                     {
@@ -2732,7 +2674,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             // Filter only the Browsable attribute, since that is the only one we mess with.
             if (attributes is not null)
             {
-                Attribute browse = null;
+                Attribute? browse = null;
                 foreach (Attribute attribute in attributes)
                 {
                     if (attribute is BrowsableAttribute)
@@ -2743,12 +2685,12 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
                 if (browse is not null)
                 {
-                    List<PropertyDescriptor> removeList = null;
+                    List<PropertyDescriptor>? removeList = null;
 
                     foreach (PropertyDescriptor prop in returnProperties)
                     {
                         if (prop is AxPropertyDescriptor
-                            && prop.TryGetAttribute(out BrowsableAttribute browsableAttribute)
+                            && prop.TryGetAttribute(out BrowsableAttribute? browsableAttribute)
                             && !browsableAttribute.Equals(browse))
                         {
                             removeList ??= new();
@@ -2768,7 +2710,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         }
 
         // Update our stashed values.
-        s_axHTraceSwitch.TraceVerbose($"Updating stashed values for : {attributes?.Length.ToString() ?? "<null>"}");
         _propsStash = new PropertyDescriptorCollection(returnProperties.ToArray());
         _attribsStash = attributes;
 
@@ -2784,18 +2725,18 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [RequiresUnreferencedCode($"{TrimmingConstants.PropertyDescriptorPropertyTypeMessage} {TrimmingConstants.FilterRequiresUnreferencedCodeMessage}")]
-    PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
+    PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[]? attributes)
     {
         return FillProperties(attributes);
     }
 
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    object ICustomTypeDescriptor.GetPropertyOwner(PropertyDescriptor pd)
+    object? ICustomTypeDescriptor.GetPropertyOwner(PropertyDescriptor? pd)
     {
         return this;
     }
 
-    private AxPropertyDescriptor GetPropertyDescriptorFromDispid(int dispid)
+    private AxPropertyDescriptor? GetPropertyDescriptorFromDispid(int dispid)
     {
         Debug.Assert(dispid != PInvoke.DISPID_UNKNOWN, "Wrong dispid sent to GetPropertyDescriptorFromDispid");
 
@@ -2825,41 +2766,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         SetOcState(OC_RUNNING);
     }
 
-    private void DepersistFromIPropertyBag(IPropertyBag.Interface propBag)
-    {
-        using var pPropBag = ComHelpers.TryGetComScope<IPropertyBag>(propBag, out HRESULT hr);
-        Debug.Assert(hr.Succeeded);
-        _iPersistPropBag.Load(pPropBag, pErrorLog: null).ThrowOnFailure();
-    }
-
-    private void DepersistFromIStream(IStream.Interface istream)
-    {
-        _storageType = STG_STREAM;
-        using var pStream = ComHelpers.TryGetComScope<IStream>(istream, out HRESULT hr);
-        Debug.Assert(hr.Succeeded);
-        _iPersistStream.Load(pStream).ThrowOnFailure();
-    }
-
-    private void DepersistFromIStreamInit(IStream.Interface istream)
-    {
-        _storageType = STG_STREAMINIT;
-        using var pStream = ComHelpers.TryGetComScope<IStream>(istream, out HRESULT hr);
-        Debug.Assert(hr.Succeeded);
-        _iPersistStreamInit.Load(pStream).ThrowOnFailure();
-    }
-
-    private void DepersistFromIStorage(IStorage* storage)
-    {
-        _storageType = STG_STORAGE;
-
-        // MapPoint control does not create a valid IStorage until some property has changed.
-        // Since we end up creating an empty storage, we are not able to re-create a valid one and this would fail.
-        if (storage is not null)
-        {
-            _iPersistStorage.Load(storage).ThrowOnFailure();
-        }
-    }
-
     private void DepersistControl()
     {
         FreezeEvents(true);
@@ -2867,53 +2773,36 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         if (_ocxState is null)
         {
             // Must init new:
-            if (_instance is IPersistStreamInit.Interface init)
+            using var persistStreamInit = ComHelpers.TryGetComScope<IPersistStreamInit>(_instance, out HRESULT hr);
+            if (hr.Succeeded)
             {
-                _iPersistStreamInit = init;
-                _storageType = STG_STREAMINIT;
-                HRESULT hr = _iPersistStreamInit.InitNew();
-                if (hr.Failed)
-                {
-                    s_axHTraceSwitch.TraceVerbose(
-                        $"Failure trying to IPersistStreamInit.InitNew(). Is this good? {hr}");
-                }
-
+                _storageType = StorageType.StreamInit;
+                persistStreamInit.Value->InitNew().AssertSuccess();
                 return;
             }
 
-            if (_instance is IPersistStream.Interface persistStream)
+            if (ComHelpers.SupportsInterface<IPersistStream>(_instance))
             {
-                _storageType = STG_STREAM;
-                _iPersistStream = persistStream;
+                _storageType = StorageType.Stream;
                 return;
             }
 
-            if (_instance is IPersistStorage.Interface persistStorage)
+            using var persistStoragePtr = ComHelpers.TryGetComScope<IPersistStorage>(_instance, out hr);
+            if (hr.Succeeded)
             {
-                _storageType = STG_STORAGE;
+                _storageType = StorageType.Storage;
                 _ocxState = new State(this);
-                _iPersistStorage = persistStorage;
                 using var storage = _ocxState.GetStorage();
-                HRESULT hr = _iPersistStorage.InitNew(storage);
-                if (hr.Failed)
-                {
-                    s_axHTraceSwitch.TraceVerbose(
-                        $"Failure trying to IPersistStorage.InitNew(). Is this good? {hr}");
-                }
-
+                persistStoragePtr.Value->InitNew(storage).AssertSuccess();
                 return;
             }
 
-            if (_instance is IPersistPropertyBag.Interface persistPropertyBag)
+            using var persistPropBag = ComHelpers.TryGetComScope<IPersistPropertyBag>(_instance, out hr);
+            if (hr.Succeeded)
             {
-                s_axHTraceSwitch.TraceVerbose($"{this} supports IPersistPropertyBag.");
-                _iPersistPropBag = persistPropertyBag;
-                HRESULT hr = _iPersistPropBag.InitNew();
-                if (hr.Failed)
-                {
-                    s_axHTraceSwitch.TraceVerbose(
-                        $"Exception thrown trying to IPersistPropertyBag.InitNew(). Is this good? {hr}");
-                }
+                _storageType = StorageType.PropertyBag;
+                persistPropBag.Value->InitNew().AssertSuccess();
+                return;
             }
 
             Debug.Fail("no implemented persistence interfaces on object");
@@ -2923,54 +2812,62 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         // Otherwise, we have state to depersist from:
         switch (_ocxState.Type)
         {
-            case STG_STREAM:
-                try
+            case StorageType.Stream:
+                using (var stream = _ocxState.GetStream())
                 {
-                    _iPersistStream = (IPersistStream.Interface)_instance;
-                    DepersistFromIStream(_ocxState.GetStream());
-                }
-                catch (Exception e)
-                {
-                    s_axHTraceSwitch.TraceVerbose(
-                        $"Exception thrown trying to IPersistStream.DepersistFromIStream(). Is this good? {e}");
+                    _storageType = StorageType.Stream;
+                    using var persistStream = ComHelpers.GetComScope<IPersistStream>(_instance);
+                    persistStream.Value->Load(stream).AssertSuccess();
                 }
 
                 break;
-            case STG_STREAMINIT:
-                if (_instance is IPersistStreamInit.Interface persistStreamInit)
+            case StorageType.StreamInit:
+                using (var persistStreamInit = ComHelpers.TryGetComScope<IPersistStreamInit>(_instance, out HRESULT hr))
                 {
-                    try
+                    if (hr.Succeeded)
                     {
-                        _iPersistStreamInit = persistStreamInit;
-                        DepersistFromIStreamInit(_ocxState.GetStream());
-                    }
-                    catch (Exception e)
-                    {
-                        s_axHTraceSwitch.TraceVerbose(
-                            $"Exception thrown trying to IPersistStreamInit.DepersistFromIStreamInit(). Is this good? {e}");
-                    }
+                        using (var stream = _ocxState.GetStream())
+                        {
+                            _storageType = StorageType.StreamInit;
+                            persistStreamInit.Value->Load(stream).AssertSuccess();
+                        }
 
-                    GetControlEnabled();
-                }
-                else
-                {
-                    _ocxState.Type = STG_STREAM;
-                    DepersistControl();
-                    return;
+                        GetControlEnabled();
+                    }
+                    else
+                    {
+                        _ocxState.Type = StorageType.Stream;
+                        DepersistControl();
+                        return;
+                    }
                 }
 
                 break;
-            case STG_STORAGE:
-                try
+            case StorageType.Storage:
+                using (var storage = _ocxState.GetStorage())
                 {
-                    _iPersistStorage = (IPersistStorage.Interface)_instance;
-                    using var storage = _ocxState.GetStorage();
-                    DepersistFromIStorage(storage);
+                    _storageType = StorageType.Storage;
+
+                    // MapPoint control does not create a valid IStorage until some property has changed.
+                    // Since we end up creating an empty storage, we are not able to re-create a valid one and this would fail.
+                    if (!storage.IsNull)
+                    {
+                        using var persistStorage = ComHelpers.GetComScope<IPersistStorage>(_instance);
+                        persistStorage.Value->Load(storage).AssertSuccess();
+                    }
                 }
-                catch (Exception e)
+
+                break;
+            case StorageType.PropertyBag:
+                using (var propBag = _ocxState.GetPropBag())
                 {
-                    s_axHTraceSwitch.TraceVerbose(
-                        $"Exception thrown trying to IPersistStorage.DepersistFromIStorage(). Is this good? {e}");
+                    _storageType = StorageType.PropertyBag;
+
+                    if (!propBag.IsNull)
+                    {
+                        using var persistPropBag = ComHelpers.GetComScope<IPersistPropertyBag>(_instance);
+                        persistPropBag.Value->Load(propBag, pErrorLog: null).AssertSuccess();
+                    }
                 }
 
                 break;
@@ -2978,27 +2875,13 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 Debug.Fail("unknown storage type.");
                 throw new InvalidOperationException(SR.UnableToInitComponent);
         }
-
-        if (_ocxState.GetPropBag() is not null)
-        {
-            try
-            {
-                _iPersistPropBag = (IPersistPropertyBag.Interface)_instance;
-                DepersistFromIPropertyBag(_ocxState.GetPropBag());
-            }
-            catch (Exception e)
-            {
-                s_axHTraceSwitch.TraceVerbose(
-                    $"Exception thrown trying to IPersistPropertyBag.DepersistFromIPropertyBag(). Is this good? {e}");
-            }
-        }
     }
 
     /// <summary>
     ///  Returns the IUnknown pointer to the enclosed ActiveX control.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    public object GetOcx()
+    public object? GetOcx()
     {
         return _instance;
     }
@@ -3022,7 +2905,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         {
             try
             {
-                s_axHTraceSwitch.TraceVerbose("Creating sink for events...");
                 CreateSink();
                 _oleSite.StartEvents();
             }
@@ -3127,15 +3009,14 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 dispidInitialProperty = dispid
             };
 
-            hr = PInvoke.OleCreatePropertyFrameIndirect(&parameters);
-            Debug.Assert(hr.Succeeded);
+            PInvoke.OleCreatePropertyFrameIndirect(&parameters).AssertSuccess();
         }
     }
 
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     public void MakeDirty()
     {
-        if (Site.TryGetService(out IComponentChangeService changeService))
+        if (Site.TryGetService(out IComponentChangeService? changeService))
         {
             changeService.OnComponentChanging(this);
             changeService.OnComponentChanged(this);
@@ -3152,7 +3033,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         ShowPropertyPages(ParentInternal);
     }
 
-    public unsafe void ShowPropertyPages(Control control)
+    public unsafe void ShowPropertyPages(Control? control)
     {
         if (!CanShowPropertyPages())
         {
@@ -3166,16 +3047,16 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             return;
         }
 
-        IDesignerHost host = (IDesignerHost)Site?.GetService(typeof(IDesignerHost));
+        IDesignerHost? host = (IDesignerHost?)Site?.GetService(typeof(IDesignerHost));
 
-        DesignerTransaction transaction = null;
+        DesignerTransaction? transaction = null;
         try
         {
             transaction = host?.CreateTransaction(SR.AXEditProperties);
 
             HWND handle = ContainingControl is null ? HWND.Null : ContainingControl.HWND;
             IUnknown* unknown = ComHelpers.GetComPointer<IUnknown>(_instance);
-            hr = PInvoke.OleCreatePropertyFrame(
+            PInvoke.OleCreatePropertyFrame(
                 handle,
                 0,
                 0,
@@ -3186,7 +3067,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 uuids.pElems,
                 PInvoke.GetThreadLocale(),
                 0,
-                (void*)null);
+                (void*)null).AssertSuccess();
         }
         finally
         {
@@ -3280,13 +3161,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 break;
 
             case PInvoke.WM_DESTROY:
-#if DEBUG
-                if (!OwnWindow())
-                {
-                    s_axHTraceSwitch.TraceVerbose(
-                        $"WM_DESTROY control is destroying the window from under us... {GetType()}");
-                }
-#endif
                 // If we are currently in a state of InPlaceActive or above, we should first reparent the ActiveX
                 // control to our parking window before we transition to a state below InPlaceActive. Otherwise we
                 // face all sorts of problems when we try to transition back to a state >= InPlaceActive.
@@ -3342,13 +3216,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 break;
 
             case PInvoke.WM_NCDESTROY:
-#if DEBUG
-                if (!OwnWindow())
-                {
-                    s_axHTraceSwitch.TraceVerbose(
-                        $"WM_NCDESTROY control is destroying the window from under us...{GetType()}");
-                }
-#endif
                 // Need to detach it now.
                 DetachAndForward(ref m);
                 break;
@@ -3400,7 +3267,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     private void AttachWindow(HWND hwnd)
     {
-        s_axHTraceSwitch.TraceVerbose($"attaching window for {ToString()} {hwnd}");
         if (!_axState[s_fFakingWindow])
         {
             WindowAssignHandle(hwnd, _axState[s_assignUniqueID]);
@@ -3410,12 +3276,10 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
         // Get the latest bounds set by the user.
         Size setExtent = Size;
-        s_axHTraceSwitch.TraceVerbose($"SetBounds {setExtent}");
 
         // Get the default bounds set by the ActiveX control.
         UpdateBounds();
         Size ocxExtent = GetExtent();
-        s_axHTraceSwitch.TraceVerbose($"OcxBounds {ocxExtent}");
 
         Point location = Location;
 
@@ -3489,7 +3353,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         qaContainer.dwAppearance = 0;
         qaContainer.lcid = (int)PInvoke.GetThreadLocale();
 
-        Control parent = ParentInternal;
+        Control? parent = ParentInternal;
 
         if (parent is not null)
         {
@@ -3517,7 +3381,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         HRESULT hr = iqa.QuickActivate(&qaContainer, &qaControl);
         if (!hr.Succeeded)
         {
-            s_axHTraceSwitch.TraceVerbose($"Failed to QuickActivate: {hr}");
             DisposeAxControl();
             return false;
         }
@@ -3604,10 +3467,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             {
                 Marshal.ReleaseComObject(_instance);
                 _instance = null;
-                _iOleInPlaceActiveObjectExternal = null;
-                _iPersistStream = null;
-                _iPersistStreamInit = null;
-                _iPersistStorage = null;
+                DisposeHelper.NullAndDispose(ref _iOleInPlaceActiveObjectExternal);
             }
 
             _axState[s_disposed] = true;
@@ -3667,7 +3527,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         {
             // ContainingControl can be null if the AxHost is still not parented to a ContainerControl.
             // Use a temporary container until one gets created.
-            if (_newParent is null)
+            if (_newParent is null || _axContainer is null)
             {
                 _newParent = new ContainerControl();
                 _axContainer = _newParent.CreateAxContainer();
@@ -3678,7 +3538,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         }
         else
         {
-            s_axHTraceSwitch.TraceVerbose($"calling upon {container} to create a container");
             _container = container.CreateAxContainer();
             _container.AddControl(this);
             _containingControl = container;
@@ -3699,28 +3558,28 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     ///  Maps from a System.Drawing.Image to an OLE IPicture
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    protected static object GetIPictureFromPicture(Image image)
+    protected static object? GetIPictureFromPicture(Image? image)
         => image is null ? null : IPicture.CreateObjectFromImage(image);
 
     /// <summary>
     ///  Maps from a System.Drawing.Cursor to an OLE IPicture
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    protected static object GetIPictureFromCursor(Cursor cursor)
+    protected static object? GetIPictureFromCursor(Cursor? cursor)
         => cursor is null ? null : IPicture.CreateObjectFromIcon(Icon.FromHandle(cursor.Handle), copy: true);
 
     /// <summary>
     ///  Maps from a System.Drawing.Image to an OLE IPictureDisp
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    protected static object GetIPictureDispFromPicture(Image image)
+    protected static object? GetIPictureDispFromPicture(Image? image)
         => image is null ? null : IPictureDisp.CreateObjectFromImage(image);
 
     /// <summary>
     ///  Maps from an OLE IPicture to a System.Drawing.Image
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    protected static Image GetPictureFromIPicture(object picture)
+    protected static Image? GetPictureFromIPicture(object? picture)
     {
         if (picture is null)
         {
@@ -3744,7 +3603,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     ///  Maps from an OLE IPictureDisp to a System.Drawing.Image
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    protected static unsafe Image GetPictureFromIPictureDisp(object picture)
+    protected static unsafe Image? GetPictureFromIPictureDisp(object? picture)
     {
         if (picture is null)
         {
@@ -3775,13 +3634,13 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         {
             s_fontTable = new();
         }
-        else if (s_fontTable.TryGetValue(font, out object cachedFDesc))
+        else if (s_fontTable.TryGetValue(font, out object? cachedFDesc))
         {
             return (FONTDESC)cachedFDesc;
         }
 
         LOGFONTW logfont = LOGFONTW.FromFont(font);
-        var fdesc = new FONTDESC
+        FONTDESC fdesc = new()
         {
             cbSizeofstruct = (uint)sizeof(FONTDESC),
             cySize = (CY)font.SizeInPoints,
@@ -3820,7 +3679,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     ///  Maps from a System.Drawing.Font object to an OLE IFont
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    protected static object GetIFontFromFont(Font font)
+    protected static object? GetIFontFromFont(Font? font)
     {
         IFont* ifont = GetIFontPointerFromFont(font);
         if (ifont is null)
@@ -3830,7 +3689,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
         try
         {
-            return Marshal.GetObjectForIUnknown((nint)ifont);
+            return ComHelpers.GetObjectForIUnknown((IUnknown*)ifont);
         }
         catch
         {
@@ -3839,7 +3698,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
         return null;
     }
 
-    private protected static IFont* GetIFontPointerFromFont(Font font)
+    private protected static IFont* GetIFontPointerFromFont(Font? font)
     {
         if (font is null)
         {
@@ -3862,7 +3721,6 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             }
         }
 
-        s_axHTraceSwitch.TraceVerbose($"Failed to create IFrom from font: {font}");
         return null;
     }
 
@@ -3870,7 +3728,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     ///  Maps from an OLE IFont to a System.Drawing.Font object
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    protected static Font GetFontFromIFont(object font)
+    protected static Font? GetFontFromIFont(object? font)
     {
         if (font is null)
         {
@@ -3885,9 +3743,8 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 ? f
                 : new(f.Name, f.SizeInPoints, f.Style, GraphicsUnit.Point, f.GdiCharSet, f.GdiVerticalFont);
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            s_axHTraceSwitch.TraceVerbose($"Could not create font. {e.Message}");
             return DefaultFont;
         }
     }
@@ -3896,7 +3753,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     ///  Maps from a System.Drawing.Font object to an OLE IFontDisp
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    protected static object GetIFontDispFromFont(Font font)
+    protected static object? GetIFontDispFromFont(Font? font)
     {
         if (font is null)
         {
@@ -3913,7 +3770,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             FONTDESC fontdesc = GetFONTDESCFromFont(font);
             fontdesc.lpstrName = n;
             PInvoke.OleCreateFontIndirect(in fontdesc, in IID.GetRef<IFontDisp>(), out void* lplpvObj).ThrowOnFailure();
-            return Marshal.GetObjectForIUnknown((nint)lplpvObj);
+            return ComHelpers.GetObjectForIUnknown((IUnknown*)lplpvObj);
         }
     }
 
@@ -3921,7 +3778,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
     ///  Maps from an IFontDisp to a System.Drawing.Font object
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    protected static Font GetFontFromIFontDisp(object font)
+    protected static Font? GetFontFromIFontDisp(object? font)
     {
         if (font is null)
         {
@@ -3974,9 +3831,8 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 GraphicsUnit.Point,
                 (byte)(short)dispatch.Value->GetProperty(PInvoke.DISPID_FONT_CHARSET));
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            s_axHTraceSwitch.TraceVerbose($"Could not create font from IFontDisp: {e.Message}");
             return DefaultFont;
         }
     }
@@ -4001,7 +3857,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     private static int Convert2int(object o, bool xDirection)
     {
-        o = ((Array)o).GetValue(0);
+        o = ((Array)o).GetValue(0)!;
 
         // User controls & other visual basic related controls give us coordinates as floats in twips
         // but MFC controls give us integers as pixels.
@@ -4012,7 +3868,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
 
     private static short Convert2short(object o)
     {
-        o = ((Array)o).GetValue(0);
+        o = ((Array)o).GetValue(0)!;
         return Convert.ToInt16(o, CultureInfo.InvariantCulture);
     }
 

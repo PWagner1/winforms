@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -10,10 +9,10 @@ namespace System.Windows.Forms;
 [DefaultProperty(nameof(Value))]
 public partial class ToolStripProgressBar : ToolStripControlHost
 {
-    internal static readonly object EventRightToLeftLayoutChanged = new object();
+    internal static readonly object EventRightToLeftLayoutChanged = new();
 
-    private static readonly Padding defaultMargin = new Padding(1, 2, 1, 1);
-    private static readonly Padding defaultStatusStripMargin = new Padding(1, 3, 1, 3);
+    private static readonly Padding defaultMargin = new(1, 2, 1, 1);
+    private static readonly Padding defaultStatusStripMargin = new(1, 3, 1, 3);
     private Padding scaledDefaultMargin = defaultMargin;
     private Padding scaledDefaultStatusStripMargin = defaultStatusStripMargin;
 
@@ -257,9 +256,7 @@ public partial class ToolStripProgressBar : ToolStripControlHost
 
     protected virtual void OnRightToLeftLayoutChanged(EventArgs e)
     {
-#pragma warning disable CA2252 // Suppress 'Opt in to preview features' (https://aka.ms/dotnet-warnings/preview-features)
         RaiseEvent(EventRightToLeftLayoutChanged, e);
-#pragma warning restore CA2252
     }
 
     protected override void OnSubscribeControlEvents(Control? control)

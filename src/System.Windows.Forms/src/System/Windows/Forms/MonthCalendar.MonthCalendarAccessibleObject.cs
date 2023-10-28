@@ -1,10 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms;
 
@@ -17,7 +16,6 @@ public partial class MonthCalendar
     {
         private const int MaxCalendarsCount = 12;
 
-        private readonly MonthCalendar _owningMonthCalendar;
         private CalendarCellAccessibleObject? _focusedCellAccessibleObject;
         private CalendarPreviousButtonAccessibleObject? _previousButtonAccessibleObject;
         private CalendarNextButtonAccessibleObject? _nextButtonAccessibleObject;
@@ -26,9 +24,7 @@ public partial class MonthCalendar
 
         public MonthCalendarAccessibleObject(MonthCalendar owner) : base(owner)
         {
-            _owningMonthCalendar = owner;
-
-            _owningMonthCalendar.DisplayRangeChanged += OnMonthCalendarStateChanged;
+            owner.DisplayRangeChanged += OnMonthCalendarStateChanged;
         }
 
         // Use a LinkedList instead a List for the following reasons:
@@ -47,7 +43,7 @@ public partial class MonthCalendar
         {
             get
             {
-                if (!_owningMonthCalendar.IsHandleCreated)
+                if (!this.IsOwnerHandleCreated(out MonthCalendar? _))
                 {
                     return null;
                 }
@@ -127,13 +123,13 @@ public partial class MonthCalendar
                 _ => DayOfWeek.Sunday
             };
 
-        internal MONTH_CALDENDAR_MESSAGES_VIEW CalendarView => _owningMonthCalendar._mcCurView;
+        internal MONTH_CALDENDAR_MESSAGES_VIEW CalendarView => this.TryGetOwnerAs(out MonthCalendar? owner) ? owner._mcCurView : MONTH_CALDENDAR_MESSAGES_VIEW.MCMV_MONTH;
 
         internal override int ColumnCount
         {
             get
             {
-                if (!_owningMonthCalendar.IsHandleCreated || CalendarsAccessibleObjects is null)
+                if (!this.IsOwnerHandleCreated(out MonthCalendar? _) || CalendarsAccessibleObjects is null)
                 {
                     return -1;
                 }
@@ -160,7 +156,7 @@ public partial class MonthCalendar
             int innerX = (int)x;
             int innerY = (int)y;
 
-            if (!_owningMonthCalendar.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out MonthCalendar? _))
             {
                 return base.ElementProviderFromPoint(x, y);
             }
@@ -201,14 +197,12 @@ public partial class MonthCalendar
             };
         }
 
-        internal DayOfWeek FirstDayOfWeek => CastDayToDayOfWeek(_owningMonthCalendar.FirstDayOfWeek);
+        internal DayOfWeek FirstDayOfWeek => this.TryGetOwnerAs(out MonthCalendar? owner) ? CastDayToDayOfWeek(owner.FirstDayOfWeek) : CastDayToDayOfWeek(Day.Default);
 
-        internal bool Focused => _owningMonthCalendar.Focused;
+        internal bool Focused => this.TryGetOwnerAs(out MonthCalendar? owner) ? owner.Focused : false;
 
         internal CalendarCellAccessibleObject? FocusedCell
-            => UiaCore.UiaClientsAreListening()
-                ? _focusedCellAccessibleObject ??= GetCellByDate(_owningMonthCalendar._focusedDate)
-                : null;
+            => _focusedCellAccessibleObject ??= this.TryGetOwnerAs(out MonthCalendar? owner) ? GetCellByDate(owner._focusedDate) : null;
 
         internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
             => direction switch
@@ -222,7 +216,7 @@ public partial class MonthCalendar
 
         private CalendarAccessibleObject? GetCalendarFromPoint(int x, int y)
         {
-            if (!_owningMonthCalendar.IsHandleCreated || CalendarsAccessibleObjects is null)
+            if (!this.IsOwnerHandleCreated(out MonthCalendar? _) || CalendarsAccessibleObjects is null)
             {
                 return null;
             }
@@ -240,7 +234,7 @@ public partial class MonthCalendar
 
         internal unsafe SelectionRange? GetCalendarPartDateRange(MCGRIDINFO_PART dwPart, int calendarIndex = 0, int rowIndex = 0, int columnIndex = 0)
         {
-            if (!_owningMonthCalendar.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out MonthCalendar? owner))
             {
                 return null;
             }
@@ -255,14 +249,14 @@ public partial class MonthCalendar
                 iRow = rowIndex
             };
 
-            bool success = PInvoke.SendMessage(_owningMonthCalendar, PInvoke.MCM_GETCALENDARGRIDINFO, 0, ref gridInfo) != 0;
+            bool success = PInvoke.SendMessage(owner, PInvoke.MCM_GETCALENDARGRIDINFO, 0, ref gridInfo) != 0;
 
             return success ? new((DateTime)gridInfo.stStart, (DateTime)gridInfo.stEnd) : null;
         }
 
         internal unsafe RECT GetCalendarPartRectangle(MCGRIDINFO_PART dwPart, int calendarIndex = 0, int rowIndex = 0, int columnIndex = 0)
         {
-            if (!_owningMonthCalendar.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out MonthCalendar? owner))
             {
                 return default;
             }
@@ -277,14 +271,14 @@ public partial class MonthCalendar
                 iRow = rowIndex
             };
 
-            bool success = PInvoke.SendMessage(_owningMonthCalendar, PInvoke.MCM_GETCALENDARGRIDINFO, 0, ref gridInfo) != 0;
+            bool success = PInvoke.SendMessage(owner, PInvoke.MCM_GETCALENDARGRIDINFO, 0, ref gridInfo) != 0;
 
-            return success ? _owningMonthCalendar.RectangleToScreen(gridInfo.rc) : default;
+            return success ? owner.RectangleToScreen(gridInfo.rc) : default;
         }
 
         internal unsafe string GetCalendarPartText(MCGRIDINFO_PART dwPart, int calendarIndex = 0, int rowIndex = 0, int columnIndex = 0)
         {
-            if (!_owningMonthCalendar.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out MonthCalendar? owner))
             {
                 return string.Empty;
             }
@@ -305,7 +299,7 @@ public partial class MonthCalendar
                     cchName = (UIntPtr)name.Length - 1
                 };
 
-                PInvoke.SendMessage(_owningMonthCalendar, PInvoke.MCM_GETCALENDARGRIDINFO, 0, ref gridInfo);
+                PInvoke.SendMessage(owner, PInvoke.MCM_GETCALENDARGRIDINFO, 0, ref gridInfo);
             }
 
             string text = string.Empty;
@@ -324,7 +318,7 @@ public partial class MonthCalendar
 
         private CalendarCellAccessibleObject? GetCellByDate(DateTime date)
         {
-            if (!_owningMonthCalendar.IsHandleCreated || CalendarsAccessibleObjects is null)
+            if (!this.IsOwnerHandleCreated(out MonthCalendar? _) || CalendarsAccessibleObjects is null)
             {
                 return null;
             }
@@ -380,8 +374,8 @@ public partial class MonthCalendar
         internal override UiaCore.IRawElementProviderSimple[]? GetColumnHeaders() => null;
 
         internal SelectionRange? GetDisplayRange(bool visible)
-            => _owningMonthCalendar.IsHandleCreated
-                ? _owningMonthCalendar.GetDisplayRange(visible)
+            => this.TryGetOwnerAs(out MonthCalendar? owner) && owner.IsHandleCreated
+                ? owner.GetDisplayRange(visible)
                 : null;
 
         internal override UiaCore.IRawElementProviderFragment? GetFocus() => _focusedCellAccessibleObject;
@@ -390,26 +384,26 @@ public partial class MonthCalendar
 
         private unsafe MCHITTESTINFO GetHitTestInfo(int xScreen, int yScreen)
         {
-            if (!_owningMonthCalendar.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out MonthCalendar? owner))
             {
                 return default;
             }
 
-            Point point = _owningMonthCalendar.PointToClient(new Point(xScreen, yScreen));
+            Point point = owner.PointToClient(new Point(xScreen, yScreen));
             MCHITTESTINFO hitTestInfo = new()
             {
                 cbSize = (uint)sizeof(MCHITTESTINFO),
                 pt = point
             };
 
-            PInvoke.SendMessage(_owningMonthCalendar, PInvoke.MCM_HITTEST, 0, ref hitTestInfo);
+            PInvoke.SendMessage(owner, PInvoke.MCM_HITTEST, 0, ref hitTestInfo);
 
             return hitTestInfo;
         }
 
         internal override UiaCore.IRawElementProviderSimple? GetItem(int row, int column)
         {
-            if (!_owningMonthCalendar.IsHandleCreated || CalendarsAccessibleObjects is null)
+            if (!this.IsOwnerHandleCreated(out MonthCalendar? _) || CalendarsAccessibleObjects is null)
             {
                 return null;
             }
@@ -425,13 +419,13 @@ public partial class MonthCalendar
             return null;
         }
 
-        internal override object? GetPropertyValue(UiaCore.UIA propertyID)
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyID)
             => propertyID switch
             {
-                UiaCore.UIA.ControlTypePropertyId when
-                    _owningMonthCalendar.AccessibleRole == AccessibleRole.Default
-                    => UiaCore.UIA.CalendarControlTypeId,
-                UiaCore.UIA.IsKeyboardFocusablePropertyId => IsEnabled,
+                UIA_PROPERTY_ID.UIA_ControlTypePropertyId when
+                    this.TryGetOwnerAs(out MonthCalendar? owner) && owner.AccessibleRole == AccessibleRole.Default
+                    => UIA_CONTROLTYPE_ID.UIA_CalendarControlTypeId,
+                UIA_PROPERTY_ID.UIA_IsKeyboardFocusablePropertyId => IsEnabled,
                 _ => base.GetPropertyValue(propertyID)
             };
 
@@ -447,30 +441,30 @@ public partial class MonthCalendar
                     return help;
                 }
 
-                if (_owningMonthCalendar.GetType().BaseType is Type baseType)
+                if (this.TryGetOwnerAs(out MonthCalendar? owner) && owner.GetType().BaseType is Type baseType)
                 {
-                    return $"{_owningMonthCalendar.GetType().Name}({baseType.Name})";
+                    return $"{owner.GetType().Name}({baseType.Name})";
                 }
 
                 return string.Empty;
             }
         }
 
-        internal bool IsEnabled => _owningMonthCalendar.Enabled;
+        internal bool IsEnabled => this.TryGetOwnerAs(out MonthCalendar? owner) && owner.Enabled;
 
-        internal bool IsHandleCreated => _owningMonthCalendar.IsHandleCreated;
+        internal bool IsHandleCreated => this.IsOwnerHandleCreated(out MonthCalendar? _);
 
-        internal override bool IsPatternSupported(UiaCore.UIA patternId)
+        internal override bool IsPatternSupported(UIA_PATTERN_ID patternId)
             => patternId switch
             {
-                UiaCore.UIA.GridPatternId => true,
-                UiaCore.UIA.TablePatternId => true,
-                UiaCore.UIA.ValuePatternId => true,
+                UIA_PATTERN_ID.UIA_GridPatternId => true,
+                UIA_PATTERN_ID.UIA_TablePatternId => true,
+                UIA_PATTERN_ID.UIA_ValuePatternId => true,
                 _ => base.IsPatternSupported(patternId)
             };
 
-        internal DateTime MinDate => _owningMonthCalendar.MinDate;
-        internal DateTime MaxDate => _owningMonthCalendar.MaxDate;
+        internal DateTime MinDate => this.TryGetOwnerAs(out MonthCalendar? owner) ? owner.MinDate : DateTime.MinValue;
+        internal DateTime MaxDate => this.TryGetOwnerAs(out MonthCalendar? owner) ? owner.MaxDate : DateTime.MaxValue;
 
         internal CalendarNextButtonAccessibleObject NextButtonAccessibleObject
             => _nextButtonAccessibleObject ??= new CalendarNextButtonAccessibleObject(this);
@@ -478,15 +472,15 @@ public partial class MonthCalendar
         private void OnMonthCalendarStateChanged(object? sender, EventArgs e)
         {
             RebuildAccessibilityTree();
-            FocusedCell?.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+            FocusedCell?.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
         }
 
         internal CalendarPreviousButtonAccessibleObject PreviousButtonAccessibleObject
             => _previousButtonAccessibleObject ??= new CalendarPreviousButtonAccessibleObject(this);
 
-        internal void RaiseAutomationEventForChild(UiaCore.UIA automationEventId)
+        internal void RaiseAutomationEventForChild(UIA_EVENT_ID automationEventId)
         {
-            if (!_owningMonthCalendar.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out MonthCalendar? _))
             {
                 return;
             }
@@ -507,7 +501,7 @@ public partial class MonthCalendar
 
         private void RebuildAccessibilityTree()
         {
-            if (!_owningMonthCalendar.IsHandleCreated || _calendarsAccessibleObjects is null)
+            if (!this.IsOwnerHandleCreated(out MonthCalendar? _) || _calendarsAccessibleObjects is null)
             {
                 return;
             }
@@ -527,14 +521,12 @@ public partial class MonthCalendar
             if (CalendarsAccessibleObjects!.Count > 0)
             {
                 // Get the new focused cell accessible object and try to raise the focus event for it
-                FocusedCell?.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+                FocusedCell?.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
             }
         }
 
         public override AccessibleRole Role
-            => _owningMonthCalendar.AccessibleRole == AccessibleRole.Default
-                ? AccessibleRole.Table
-                : _owningMonthCalendar.AccessibleRole;
+            => this.GetOwnerAccessibleRole(AccessibleRole.Table);
 
         internal override int RowCount
             => ColumnCount > 0 && CalendarsAccessibleObjects is not null
@@ -543,24 +535,24 @@ public partial class MonthCalendar
 
         internal override UiaCore.RowOrColumnMajor RowOrColumnMajor => UiaCore.RowOrColumnMajor.RowMajor;
 
-        internal SelectionRange SelectionRange => _owningMonthCalendar.SelectionRange;
+        internal SelectionRange SelectionRange => this.TryGetOwnerAs(out MonthCalendar? owner) ? owner.SelectionRange : new SelectionRange();
 
         internal override void SetFocus()
-            => FocusedCell?.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+            => FocusedCell?.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
 
         internal void SetSelectionRange(DateTime d1, DateTime d2)
         {
-            if (_owningMonthCalendar.IsHandleCreated)
+            if (this.IsOwnerHandleCreated(out MonthCalendar? owner))
             {
-                _owningMonthCalendar.SetSelectionRange(d1, d2);
+                owner.SetSelectionRange(d1, d2);
             }
         }
 
-        internal bool ShowToday => _owningMonthCalendar.ShowToday;
+        internal bool ShowToday => this.TryGetOwnerAs(out MonthCalendar? owner) ? owner.ShowToday : false;
 
-        internal bool ShowWeekNumbers => _owningMonthCalendar.ShowWeekNumbers;
+        internal bool ShowWeekNumbers => this.TryGetOwnerAs(out MonthCalendar? owner) ? owner.ShowWeekNumbers : false;
 
-        internal DateTime TodayDate => _owningMonthCalendar.TodayDate;
+        internal DateTime TodayDate => this.TryGetOwnerAs(out MonthCalendar? owner) ? owner.TodayDate : DateTime.Today;
 
         internal CalendarTodayLinkAccessibleObject TodayLinkAccessibleObject
             => _todayLinkAccessibleObject ??= new CalendarTodayLinkAccessibleObject(this);
@@ -569,20 +561,35 @@ public partial class MonthCalendar
         {
             get
             {
+                MonthCalendar? owner;
                 SelectionRange? range;
 
                 switch (CalendarView)
                 {
                     case MONTH_CALDENDAR_MESSAGES_VIEW.MCMV_MONTH:
-                        range = _owningMonthCalendar.SelectionRange;
+                        if(this.TryGetOwnerAs(out owner))
+                        {
+                            range = owner.SelectionRange;
+                            return DateTime.Equals(range.Start.Date, range.End.Date)
+                                ? $"{range.Start:D}"
+                                : $"{range.Start:D} - {range.End:D}";
+                        }
 
-                        return DateTime.Equals(range.Start.Date, range.End.Date)
-                            ? $"{range.Start:D}"
-                            : $"{range.Start:D} - {range.End:D}";
+                        return string.Empty;
                     case MONTH_CALDENDAR_MESSAGES_VIEW.MCMV_YEAR:
-                        return $"{_owningMonthCalendar.SelectionStart:y}";
+                        if(this.TryGetOwnerAs(out owner))
+                        {
+                            return $"{owner.SelectionStart:y}";
+                        }
+
+                        return string.Empty;
                     case MONTH_CALDENDAR_MESSAGES_VIEW.MCMV_DECADE:
-                        return $"{_owningMonthCalendar.SelectionStart:yyyy}";
+                        if (this.TryGetOwnerAs(out owner))
+                        {
+                            return $"{owner.SelectionStart:yyyy}";
+                        }
+
+                        return string.Empty;
                     case MONTH_CALDENDAR_MESSAGES_VIEW.MCMV_CENTURY:
                         range = FocusedCell?.DateRange;
                         if (range is null)
@@ -597,6 +604,16 @@ public partial class MonthCalendar
             }
         }
 
-        internal void UpdateDisplayRange() => _owningMonthCalendar.UpdateDisplayRange();
+        internal void UpdateDisplayRange()
+        {
+            if(!this.TryGetOwnerAs(out MonthCalendar? owner))
+            {
+                return;
+            }
+            else
+            {
+                owner.UpdateDisplayRange();
+            }
+        }
     }
 }

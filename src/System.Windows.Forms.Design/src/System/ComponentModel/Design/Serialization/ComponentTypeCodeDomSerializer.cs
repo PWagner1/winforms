@@ -1,8 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-#nullable disable
 
 using System.CodeDom;
 
@@ -13,19 +10,11 @@ namespace System.ComponentModel.Design.Serialization;
 /// </summary>
 internal class ComponentTypeCodeDomSerializer : TypeCodeDomSerializer
 {
-    private static readonly object _initMethodKey = new object();
+    private static readonly object _initMethodKey = new();
     private const string _initMethodName = "InitializeComponent";
-    private static ComponentTypeCodeDomSerializer s_default;
+    private static ComponentTypeCodeDomSerializer? s_default;
 
-    internal static new ComponentTypeCodeDomSerializer Default
-    {
-        get
-        {
-            s_default ??= new ComponentTypeCodeDomSerializer();
-
-            return s_default;
-        }
-    }
+    internal static new ComponentTypeCodeDomSerializer Default => s_default ??= new ComponentTypeCodeDomSerializer();
 
     /// <summary>
     ///  This method returns the method to emit all of the initialization code to for the given member.
@@ -37,7 +26,7 @@ internal class ComponentTypeCodeDomSerializer : TypeCodeDomSerializer
         ArgumentNullException.ThrowIfNull(typeDecl);
         ArgumentNullException.ThrowIfNull(value);
 
-        if (!(typeDecl.UserData[_initMethodKey] is CodeMemberMethod method))
+        if (typeDecl.UserData[_initMethodKey] is not CodeMemberMethod method)
         {
             method = new CodeMemberMethod
             {

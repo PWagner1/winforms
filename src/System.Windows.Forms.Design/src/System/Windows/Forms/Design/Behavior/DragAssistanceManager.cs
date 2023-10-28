@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -24,7 +23,7 @@ internal sealed class DragAssistanceManager
     private Rectangle _cachedDragRect; //used to store drag rect between erasing & waiting to render
     private readonly Pen _edgePen = SystemPens.Highlight;
     private readonly bool _disposeEdgePen;
-    private readonly Pen _baselinePen = new Pen(Color.Fuchsia);
+    private readonly Pen _baselinePen = new(Color.Fuchsia);
     // These are global lists of all the existing vertical and horizontal snaplineson the designer's surface excluding the targetControl.  All SnapLine coords in these lists have been properly adjusted for the AdornerWindow coords.
     private readonly List<SnapLine> _verticalSnapLines = new();
     private readonly List<SnapLine> _horizontalSnapLines = new();
@@ -1122,21 +1121,19 @@ internal sealed class DragAssistanceManager
             //x's align
             if (l1.x1 == l1.x2 && l1.x1 == l2.x1)
             {
-                return new Line[2]
-                {
-                    new Line(l1.x1, Math.Min(l1.y1, l2.y1), l1.x1, Math.Max(l1.y1, l2.y1)),
-                    new Line(l1.x1, Math.Min(l1.y2, l2.y2), l1.x1, Math.Max(l1.y2, l2.y2))
-                };
+                return [
+                    new(l1.x1, Math.Min(l1.y1, l2.y1), l1.x1, Math.Max(l1.y1, l2.y1)),
+                    new(l1.x1, Math.Min(l1.y2, l2.y2), l1.x1, Math.Max(l1.y2, l2.y2))
+                ];
             }
 
             //y's align
             if (l1.y1 == l1.y2 && l1.y1 == l2.y1)
             {
-                return new Line[2]
-                {
-                    new Line(Math.Min(l1.x1, l2.x1), l1.y1, Math.Max(l1.x1, l2.x1), l1.y1),
-                    new Line(Math.Min(l1.x2, l2.x2), l1.y1, Math.Max(l1.x2, l2.x2), l1.y1)
-                };
+                return [
+                    new(Math.Min(l1.x1, l2.x1), l1.y1, Math.Max(l1.x1, l2.x1), l1.y1),
+                    new(Math.Min(l1.x2, l2.x2), l1.y1, Math.Max(l1.x2, l2.x2), l1.y1)
+                ];
             }
 
             return null;

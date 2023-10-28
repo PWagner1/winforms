@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -12,10 +11,10 @@ namespace System.Windows.Forms;
 [Designer($"System.Windows.Forms.Design.ToolStripDropDownDesigner, {AssemblyRef.SystemDesign}")]
 public partial class ToolStripDropDownMenu : ToolStripDropDown
 {
-    private static readonly Padding ImagePadding = new Padding(2);
-    private static readonly Padding TextPadding = new Padding(8, 1, 9, 1);
-    private static readonly Padding CheckPadding = new Padding(5, 2, 2, 2);
-    private static readonly Padding ArrowPadding = new Padding(0, 0, 8, 0);
+    private static readonly Padding ImagePadding = new(2);
+    private static readonly Padding TextPadding = new(8, 1, 9, 1);
+    private static readonly Padding CheckPadding = new(5, 2, 2, 2);
+    private static readonly Padding ArrowPadding = new(0, 0, 8, 0);
 
     // This is totally a UI Fudge - if we have an image or check margin with
     // no image or checks in it use this - which is consistent with office
@@ -45,7 +44,7 @@ public partial class ToolStripDropDownMenu : ToolStripDropDown
     private static readonly int stateShowCheckMargin = BitVector32.CreateMask(stateShowImageMargin);
     private static readonly int stateMaxItemSizeValid = BitVector32.CreateMask(stateShowCheckMargin);
 
-    private static readonly Size DefaultImageSize = new Size(16, 16);
+    private static readonly Size DefaultImageSize = new(16, 16);
 
     private Size _scaledDefaultImageSize = DefaultImageSize;
     private int _scaledDefaultImageMarginWidth = DefaultImageMarginWidth + 1; // 1px for border

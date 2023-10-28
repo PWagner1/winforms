@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -33,6 +32,7 @@ public class PaddingConverterTests
     }
 
     [Theory]
+    [UseDefaultXunitCulture]
     [MemberData(nameof(ConvertFrom_TestData))]
     public void PaddingConverter_ConvertFrom_String_ReturnsExpected(string value, object expected)
     {
@@ -73,6 +73,7 @@ public class PaddingConverterTests
     }
 
     [Fact]
+    [UseDefaultXunitCulture]
     public void PaddingConverter_ConvertTo_String_ReturnsExpected()
     {
         var converter = new PaddingConverter();

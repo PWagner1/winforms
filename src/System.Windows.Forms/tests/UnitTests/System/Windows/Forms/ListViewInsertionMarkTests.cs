@@ -1,11 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Windows.Forms.TestUtilities;
 using Microsoft.DotNet.RemoteExecutor;
-using static Interop;
 using Point = System.Drawing.Point;
 
 namespace System.Windows.Forms.Tests;
@@ -15,7 +13,7 @@ public class ListViewInsertionMarkTests
     [WinFormsFact]
     public void ListViewInsertionMark_AppearsAfterItem_Get_ReturnsExpected()
     {
-        using var control = new ListView();
+        using ListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
         Assert.False(insertionMark.AppearsAfterItem);
         Assert.False(control.IsHandleCreated);
@@ -25,7 +23,7 @@ public class ListViewInsertionMarkTests
     [BoolData]
     public void ListViewInsertionMark_AppearsAfterItem_Set_GetReturnsExpected(bool value)
     {
-        using var control = new ListView();
+        using ListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
 
         insertionMark.AppearsAfterItem = value;
@@ -47,7 +45,7 @@ public class ListViewInsertionMarkTests
     [BoolData]
     public void ListViewInsertionMark_AppearsAfterItem_SetWithHandle_GetReturnsExpected(bool value)
     {
-        using var control = new ListView();
+        using ListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
         Assert.NotEqual(IntPtr.Zero, control.Handle);
         int invalidatedCallCount = 0;
@@ -89,15 +87,15 @@ public class ListViewInsertionMarkTests
         {
             Application.EnableVisualStyles();
 
-            using var control = new ListView();
+            using ListView control = new();
             ListViewInsertionMark insertionMark = control.InsertionMark;
 
             // Set same.
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             control.InsertionMark.AppearsAfterItem = false;
-            var insertMark = new ComCtl32.LVINSERTMARK
+            LVINSERTMARK insertMark = new()
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(0, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
@@ -107,9 +105,9 @@ public class ListViewInsertionMarkTests
 
             // Set true.
             control.InsertionMark.AppearsAfterItem = true;
-            insertMark = new ComCtl32.LVINSERTMARK
+            insertMark = new LVINSERTMARK
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(1, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000001, (uint)insertMark.dwFlags);
@@ -119,9 +117,9 @@ public class ListViewInsertionMarkTests
 
             // Set false.
             control.InsertionMark.AppearsAfterItem = false;
-            insertMark = new ComCtl32.LVINSERTMARK
+            insertMark = new LVINSERTMARK
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(1, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
@@ -139,16 +137,16 @@ public class ListViewInsertionMarkTests
         {
             Application.EnableVisualStyles();
 
-            using var control = new ListView();
+            using ListView control = new();
             ListViewInsertionMark insertionMark = control.InsertionMark;
             control.InsertionMark.Color = Color.FromArgb(0x12, 0x34, 0x56, 0x78);
 
             // Set same.
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             control.InsertionMark.AppearsAfterItem = false;
-            var insertMark = new ComCtl32.LVINSERTMARK
+            LVINSERTMARK insertMark = new()
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(0, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
@@ -158,9 +156,9 @@ public class ListViewInsertionMarkTests
 
             // Set true.
             control.InsertionMark.AppearsAfterItem = true;
-            insertMark = new ComCtl32.LVINSERTMARK
+            insertMark = new LVINSERTMARK
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(1, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000001, (uint)insertMark.dwFlags);
@@ -170,9 +168,9 @@ public class ListViewInsertionMarkTests
 
             // Set false.
             control.InsertionMark.AppearsAfterItem = false;
-            insertMark = new ComCtl32.LVINSERTMARK
+            insertMark = new LVINSERTMARK
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(1, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
@@ -185,7 +183,7 @@ public class ListViewInsertionMarkTests
     [WinFormsFact]
     public void ListViewInsertionMark_Bounds_GetWithoutHandle_ReturnsEqual()
     {
-        using var control = new ListView();
+        using ListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
         Assert.Equal(Rectangle.Empty, insertionMark.Bounds);
         Assert.Equal(insertionMark.Bounds, insertionMark.Bounds);
@@ -195,7 +193,7 @@ public class ListViewInsertionMarkTests
     [WinFormsFact]
     public void ListViewInsertionMark_Bounds_GetWithHandle_ReturnsEqual()
     {
-        using var control = new ListView();
+        using ListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
         Assert.NotEqual(IntPtr.Zero, control.Handle);
         int invalidatedCallCount = 0;
@@ -223,7 +221,7 @@ public class ListViewInsertionMarkTests
     [MemberData(nameof(Bounds_GetCustomInsertMarkRect_TestData))]
     public void ListViewInsertionMark_Bounds_GetCustomGetInsertMarkRect_ReturnsExpected(object getInsertMarkRectResult, Rectangle expected)
     {
-        using var control = new CustomGetInsertMarkRectListView
+        using CustomGetInsertMarkRectListView control = new()
         {
             GetInsertMarkRectResult = (RECT)getInsertMarkRectResult
         };
@@ -253,7 +251,7 @@ public class ListViewInsertionMarkTests
     [WinFormsFact]
     public void ListViewInsertionMark_Bounds_GetInvalidGetInsertMarkRect_ReturnsExpected()
     {
-        using var control = new InvalidGetInsertMarkRectListView();
+        using InvalidGetInsertMarkRectListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
         Assert.NotEqual(IntPtr.Zero, control.Handle);
 
@@ -282,7 +280,7 @@ public class ListViewInsertionMarkTests
     [WinFormsFact]
     public void ListViewInsertionMark_Color_GetWithoutHandle_ReturnsExpected()
     {
-        using var control = new ListView();
+        using ListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
         Assert.NotEqual(Color.Empty, insertionMark.Color);
         Assert.Equal(insertionMark.Color, insertionMark.Color);
@@ -292,7 +290,7 @@ public class ListViewInsertionMarkTests
     [WinFormsFact]
     public void ListViewInsertionMark_Color_GetWithHandle_ReturnsExpected()
     {
-        using var control = new ListView();
+        using ListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
         Assert.NotEqual(IntPtr.Zero, control.Handle);
         int invalidatedCallCount = 0;
@@ -314,7 +312,7 @@ public class ListViewInsertionMarkTests
     [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetColorTheoryData))]
     public void ListViewInsertionMark_Color_SetWithoutHandle_ReturnsExpected(Color value)
     {
-        using var control = new ListView();
+        using ListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
 
         insertionMark.Color = value;
@@ -331,7 +329,7 @@ public class ListViewInsertionMarkTests
     [CommonMemberData(typeof(CommonTestHelper), nameof(CommonTestHelper.GetColorTheoryData))]
     public void ListViewInsertionMark_Color_SetWithHandle_ReturnsExpected(Color value)
     {
-        using var control = new ListView();
+        using ListView control = new();
         Assert.NotEqual(IntPtr.Zero, control.Handle);
         int invalidatedCallCount = 0;
         control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -365,15 +363,15 @@ public class ListViewInsertionMarkTests
         {
             Application.EnableVisualStyles();
 
-            using var control = new ListView();
+            using ListView control = new();
             ListViewInsertionMark insertionMark = control.InsertionMark;
             Assert.NotEqual(IntPtr.Zero, control.Handle);
 
             // Set same.
             control.InsertionMark.Color = Color.Empty;
-            var insertMark = new ComCtl32.LVINSERTMARK
+            LVINSERTMARK insertMark = new()
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(0, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
@@ -383,9 +381,9 @@ public class ListViewInsertionMarkTests
 
             // Set different.
             control.InsertionMark.Color = Color.FromArgb(0x12, 0x34, 0x56, 0x78);
-            insertMark = new ComCtl32.LVINSERTMARK
+            insertMark = new LVINSERTMARK
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(0, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
@@ -398,7 +396,7 @@ public class ListViewInsertionMarkTests
     [WinFormsFact]
     public void ListViewInsertionMark_Index_Get_ReturnsExpected()
     {
-        using var control = new ListView();
+        using ListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
         Assert.Equal(0, insertionMark.Index);
         Assert.False(control.IsHandleCreated);
@@ -408,7 +406,7 @@ public class ListViewInsertionMarkTests
     [IntegerData<int>]
     public void ListViewInsertionMark_Index_SetWithoutHandle_GetReturnsExpected(int value)
     {
-        using var control = new ListView();
+        using ListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
 
         insertionMark.Index = value;
@@ -425,7 +423,7 @@ public class ListViewInsertionMarkTests
     [IntegerData<int>]
     public void ListViewInsertionMark_Index_SetWithHandle_GetReturnsExpected(int value)
     {
-        using var control = new ListView();
+        using ListView control = new();
         Assert.NotEqual(IntPtr.Zero, control.Handle);
         int invalidatedCallCount = 0;
         control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -462,15 +460,15 @@ public class ListViewInsertionMarkTests
             int index = int.Parse(indexString);
             Application.EnableVisualStyles();
 
-            using var control = new ListView();
+            using ListView control = new();
             ListViewInsertionMark insertionMark = control.InsertionMark;
 
             // Set same.
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             control.InsertionMark.Index = 0;
-            var insertMark = new ComCtl32.LVINSERTMARK
+            LVINSERTMARK insertMark = new()
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(0, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
@@ -481,9 +479,9 @@ public class ListViewInsertionMarkTests
             // Set negative one.
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             control.InsertionMark.Index = -1;
-            insertMark = new ComCtl32.LVINSERTMARK
+            insertMark = new LVINSERTMARK
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(0, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
@@ -493,9 +491,9 @@ public class ListViewInsertionMarkTests
 
             // Set different.
             control.InsertionMark.Index = index;
-            insertMark = new ComCtl32.LVINSERTMARK
+            insertMark = new LVINSERTMARK
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(1, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
@@ -516,16 +514,16 @@ public class ListViewInsertionMarkTests
             int index = int.Parse(indexString);
             Application.EnableVisualStyles();
 
-            using var control = new ListView();
+            using ListView control = new();
             ListViewInsertionMark insertionMark = control.InsertionMark;
             insertionMark.Color = Color.FromArgb(0x12, 0x34, 0x56, 0x78);
 
             // Set same.
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             control.InsertionMark.Index = 0;
-            var insertMark = new ComCtl32.LVINSERTMARK
+            LVINSERTMARK insertMark = new()
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(0, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
@@ -536,9 +534,9 @@ public class ListViewInsertionMarkTests
             // Set negative one.
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             control.InsertionMark.Index = -1;
-            insertMark = new ComCtl32.LVINSERTMARK
+            insertMark = new LVINSERTMARK
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(0, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
@@ -548,9 +546,9 @@ public class ListViewInsertionMarkTests
 
             // Set different.
             control.InsertionMark.Index = index;
-            insertMark = new ComCtl32.LVINSERTMARK
+            insertMark = new LVINSERTMARK
             {
-                cbSize = (uint)sizeof(ComCtl32.LVINSERTMARK)
+                cbSize = (uint)sizeof(LVINSERTMARK)
             };
             Assert.Equal(1, (int)PInvoke.SendMessage(control, PInvoke.LVM_GETINSERTMARK, 0, ref insertMark));
             Assert.Equal(0x80000000, (uint)insertMark.dwFlags);
@@ -563,7 +561,7 @@ public class ListViewInsertionMarkTests
     [WinFormsFact]
     public void ListViewInsertionMark_NearestIndex_NoSuchPointWithoutHandle_ReturnsInvalid()
     {
-        using var control = new ListView();
+        using ListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
         Assert.True(insertionMark.NearestIndex(new Point(-10, -11)) >= -1);
         Assert.True(control.IsHandleCreated);
@@ -572,7 +570,7 @@ public class ListViewInsertionMarkTests
     [WinFormsFact]
     public void ListViewInsertionMark_NearestIndex_NoSuchPointWithHandle_ReturnsInvalid()
     {
-        using var control = new ListView();
+        using ListView control = new();
         ListViewInsertionMark insertionMark = control.InsertionMark;
         Assert.NotEqual(IntPtr.Zero, control.Handle);
         int invalidatedCallCount = 0;
@@ -596,7 +594,7 @@ public class ListViewInsertionMarkTests
     [InlineData(1)]
     public void ListViewInsertionMark_NearestIndex_InvokeCustomInsertMarkHitTest_ReturnsExpected(int result)
     {
-        using var control = new CustomInsertMarkHitTestListView
+        using CustomInsertMarkHitTestListView control = new()
         {
             InsertMarkHitTestResult = result
         };
@@ -616,7 +614,7 @@ public class ListViewInsertionMarkTests
                 Point* pPt = (Point*)m.WParam;
                 Assert.Equal(1, pPt->X);
                 Assert.Equal(2, pPt->Y);
-                ComCtl32.LVINSERTMARK* pInsertMark = (ComCtl32.LVINSERTMARK*)m.LParam;
+                LVINSERTMARK* pInsertMark = (LVINSERTMARK*)m.LParam;
                 pInsertMark->iItem = InsertMarkHitTestResult;
                 m.Result = (IntPtr)1;
                 return;

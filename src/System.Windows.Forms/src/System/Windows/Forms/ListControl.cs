@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -12,14 +11,14 @@ namespace System.Windows.Forms;
 [LookupBindingProperties(nameof(DataSource), nameof(DisplayMember), nameof(ValueMember), nameof(SelectedValue))]
 public abstract class ListControl : Control
 {
-    private static readonly object s_dataSourceChangedEvent = new object();
-    private static readonly object s_displayMemberChangedEvent = new object();
-    private static readonly object s_valueMemberChangedEvent = new object();
-    private static readonly object s_selectedValueChangedEvent = new object();
-    private static readonly object s_formatInfoChangedEvent = new object();
-    private static readonly object s_formatStringChangedEvent = new object();
-    private static readonly object s_formattingEnabledChangedEvent = new object();
-    private static readonly object s_formatEvent = new object();
+    private static readonly object s_dataSourceChangedEvent = new();
+    private static readonly object s_displayMemberChangedEvent = new();
+    private static readonly object s_valueMemberChangedEvent = new();
+    private static readonly object s_selectedValueChangedEvent = new();
+    private static readonly object s_formatInfoChangedEvent = new();
+    private static readonly object s_formatStringChangedEvent = new();
+    private static readonly object s_formattingEnabledChangedEvent = new();
+    private static readonly object s_formatEvent = new();
 
     private object? _dataSource;
     private CurrencyManager? _dataManager;
@@ -103,6 +102,7 @@ public abstract class ListControl : Control
     [TypeConverter($"System.Windows.Forms.Design.DataMemberFieldConverter, {AssemblyRef.SystemDesign}")]
     [Editor($"System.Windows.Forms.Design.DataMemberFieldEditor, {AssemblyRef.SystemDesign}", typeof(UITypeEditor))]
     [SRDescription(nameof(SR.ListControlDisplayMemberDescr))]
+    [AllowNull]
     public string DisplayMember
     {
         get => _displayMember.BindingMember;
@@ -286,6 +286,7 @@ public abstract class ListControl : Control
     [DefaultValue("")]
     [Editor($"System.Windows.Forms.Design.DataMemberFieldEditor, {AssemblyRef.SystemDesign}", typeof(UITypeEditor))]
     [SRDescription(nameof(SR.ListControlValueMemberDescr))]
+    [AllowNull]
     public string ValueMember
     {
         get => _valueMember.BindingMember;
@@ -294,7 +295,6 @@ public abstract class ListControl : Control
             value ??= string.Empty;
 
             BindingMemberInfo newValueMember = new BindingMemberInfo(value);
-            BindingMemberInfo oldValueMember = _valueMember;
             if (!newValueMember.Equals(_valueMember))
             {
                 // If the displayMember is set to the EmptyString, then recreate the dataConnection
@@ -341,13 +341,14 @@ public abstract class ListControl : Control
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     [SRDescription(nameof(SR.ListControlSelectedValueDescr))]
     [Bindable(true)]
+    [DisallowNull]
     public object? SelectedValue
     {
         get
         {
             if (SelectedIndex != -1 && _dataManager is not null)
             {
-                object currentItem = _dataManager[SelectedIndex];
+                object? currentItem = _dataManager[SelectedIndex];
                 return FilterItemOnProperty(currentItem, _valueMember.BindingField);
             }
 
@@ -407,7 +408,7 @@ public abstract class ListControl : Control
             }
             else
             {
-                SetItemCore(e.Index, _dataManager[e.Index]);
+                SetItemCore(e.Index, _dataManager[e.Index]!);
             }
         }
     }
@@ -465,10 +466,8 @@ public abstract class ListControl : Control
             return -1;
         }
 
-        if (startIndex < -1 || startIndex >= items.Count)
-        {
-            throw new ArgumentOutOfRangeException(nameof(startIndex));
-        }
+        ArgumentOutOfRangeException.ThrowIfLessThan(startIndex, -1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(startIndex, items.Count);
 
         // Start from the start index and wrap around until we find the string
         // in question. Use a separate counter to ensure that we aren't cycling through the list infinitely.
@@ -519,7 +518,7 @@ public abstract class ListControl : Control
         object? filteredItem = FilterItemOnProperty(item, _displayMember.BindingField);
 
         // First try the OnFormat event
-        var e = new ListControlConvertEventArgs(filteredItem, typeof(string), item);
+        ListControlConvertEventArgs e = new(filteredItem, typeof(string), item);
         OnFormat(e);
         if (e.Value != item && e.Value is string stringValue)
         {

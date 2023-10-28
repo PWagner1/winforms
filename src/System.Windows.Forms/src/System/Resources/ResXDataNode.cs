@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.ComponentModel.Design;
@@ -39,7 +38,7 @@ public sealed class ResXDataNode : ISerializable
 
     // This is going to be used to check if a ResXDataNode is of type ResXFileRef
     private static readonly ITypeResolutionService s_internalTypeResolver
-        = new AssemblyNamesTypeResolutionService(new AssemblyName[] { new AssemblyName("System.Windows.Forms") });
+        = new AssemblyNamesTypeResolutionService(new AssemblyName[] { new("System.Windows.Forms") });
 
     // Callback function to get type name for multitargeting.
     // No public property to force using constructors for the following reasons:
@@ -590,7 +589,7 @@ public sealed class ResXDataNode : ISerializable
     /// <summary>
     ///  Retrieves the type name for the value by examining the specified assemblies.
     /// </summary>
-    public string? GetValueTypeName(AssemblyName[] names)
+    public string? GetValueTypeName(AssemblyName[]? names)
         => GetValueTypeName(new AssemblyNamesTypeResolutionService(names));
 
     /// <summary>
@@ -633,7 +632,7 @@ public sealed class ResXDataNode : ISerializable
     /// <summary>
     ///  Retrieves the object that is stored by this node by searching the specified assemblies.
     /// </summary>
-    public object? GetValue(AssemblyName[] names) => GetValue(new AssemblyNamesTypeResolutionService(names));
+    public object? GetValue(AssemblyName[]? names) => GetValue(new AssemblyNamesTypeResolutionService(names));
 
     private static byte[] FromBase64WrappedString(string text)
     {

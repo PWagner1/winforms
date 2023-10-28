@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 
@@ -11,7 +10,7 @@ public class DesignerOptionsTests
     [Fact]
     public void DesignerOptions_Ctor_Default()
     {
-        var options = new DesignerOptions();
+        DesignerOptions options = new();
         Assert.True(options.EnableInSituEditing);
         Assert.Equal(new Size(8, 8), options.GridSize);
         Assert.True(options.ObjectBoundSmartTagAutoShow);
@@ -26,7 +25,7 @@ public class DesignerOptionsTests
     [BoolData]
     public void DesignerOptions_EnableInSituEditing_Set_GetReturnsExpected(bool value)
     {
-        var options = new DesignerOptions
+        DesignerOptions options = new()
         {
             EnableInSituEditing = value
         };
@@ -56,7 +55,7 @@ public class DesignerOptionsTests
     [MemberData(nameof(GridSize_Set_TestData))]
     public void DesignerOptions_GridSize_Set_GetReturnsExpected(Size value, Size expected)
     {
-        var options = new DesignerOptions
+        DesignerOptions options = new()
         {
             GridSize = value
         };
@@ -71,7 +70,7 @@ public class DesignerOptionsTests
     [BoolData]
     public void DesignerOptions_ObjectBoundSmartTagAutoShow_Set_GetReturnsExpected(bool value)
     {
-        var options = new DesignerOptions
+        DesignerOptions options = new()
         {
             ObjectBoundSmartTagAutoShow = value
         };
@@ -90,7 +89,7 @@ public class DesignerOptionsTests
     [BoolData]
     public void DesignerOptions_ShowGrid_Set_GetReturnsExpected(bool value)
     {
-        var options = new DesignerOptions
+        DesignerOptions options = new()
         {
             ShowGrid = value
         };
@@ -109,7 +108,7 @@ public class DesignerOptionsTests
     [BoolData]
     public void DesignerOptions_SnapToGrid_Set_GetReturnsExpected(bool value)
     {
-        var options = new DesignerOptions
+        DesignerOptions options = new()
         {
             SnapToGrid = value
         };
@@ -128,7 +127,7 @@ public class DesignerOptionsTests
     [BoolData]
     public void DesignerOptions_UseOptimizedCodeGeneration_Set_GetReturnsExpected(bool value)
     {
-        var options = new DesignerOptions
+        DesignerOptions options = new()
         {
             UseOptimizedCodeGeneration = value
         };
@@ -147,7 +146,7 @@ public class DesignerOptionsTests
     [BoolData]
     public void DesignerOptions_UseSmartTags_Set_GetReturnsExpected(bool value)
     {
-        var options = new DesignerOptions
+        DesignerOptions options = new()
         {
             UseSmartTags = value
         };
@@ -166,7 +165,7 @@ public class DesignerOptionsTests
     [BoolData]
     public void DesignerOptions_UseSnapLines_Set_GetReturnsExpected(bool value)
     {
-        var options = new DesignerOptions
+        DesignerOptions options = new()
         {
             UseSnapLines = value
         };

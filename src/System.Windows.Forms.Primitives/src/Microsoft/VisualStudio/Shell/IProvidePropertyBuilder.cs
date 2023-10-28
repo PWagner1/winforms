@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -11,7 +10,7 @@ namespace Microsoft.VisualStudio.Shell;
 
 internal unsafe struct IProvidePropertyBuilder : IComIID
 {
-    internal static readonly Guid Guid = new Guid(0x33C0C1D8, 0x33CF, 0x11d3, 0xBF, 0xF2, 0x00, 0xC0, 0x4F, 0x99, 0x02, 0x35);
+    internal static readonly Guid Guid = new(0x33C0C1D8, 0x33CF, 0x11d3, 0xBF, 0xF2, 0x00, 0xC0, 0x4F, 0x99, 0x02, 0x35);
 
     static ref readonly Guid IComIID.Guid
     {

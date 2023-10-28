@@ -1,8 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms;
@@ -43,7 +43,7 @@ public partial class DataGridView
             if (_topRowAccessibilityObject is not null)
             {
                 UiaCore.UiaDisconnectProvider(_topRowAccessibilityObject);
-                _topRowAccessibilityObject = null;
+            _topRowAccessibilityObject = null;
             }
 
             if (_selectedCellsAccessibilityObject is not null)
@@ -177,7 +177,7 @@ public partial class DataGridView
 
         public override AccessibleObject? HitTest(int x, int y)
         {
-            if (!this.TryGetOwnerAs(out DataGridView? owner) || !owner.IsHandleCreated)
+            if (!this.IsOwnerHandleCreated(out DataGridView? owner))
             {
                 return null;
             }
@@ -244,25 +244,25 @@ public partial class DataGridView
 
         internal override bool IsIAccessibleExSupported() => true;
 
-        internal override object? GetPropertyValue(UiaCore.UIA propertyID)
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyID)
         {
             DataGridView? owner;
 
             switch (propertyID)
             {
-                case UiaCore.UIA.ControlTypePropertyId:
+                case UIA_PROPERTY_ID.UIA_ControlTypePropertyId:
                     return (this.TryGetOwnerAs(out owner) && owner.AccessibleRole == AccessibleRole.Default)
-                        ? UiaCore.UIA.DataGridControlTypeId
+                        ? UIA_CONTROLTYPE_ID.UIA_DataGridControlTypeId
                         : base.GetPropertyValue(propertyID);
-                case UiaCore.UIA.HasKeyboardFocusPropertyId:
+                case UIA_PROPERTY_ID.UIA_HasKeyboardFocusPropertyId:
                     // If no inner cell entire DGV should be announced as focused by Narrator.
                     // Else only inner cell should be announced as focused by Narrator but not entire DGV.
                     return this.TryGetOwnerAs(out owner) && (IsModal || RowCount == 0) && owner.Focused;
-                case UiaCore.UIA.IsControlElementPropertyId:
+                case UIA_PROPERTY_ID.UIA_IsControlElementPropertyId:
                     return true;
-                case UiaCore.UIA.IsKeyboardFocusablePropertyId:
+                case UIA_PROPERTY_ID.UIA_IsKeyboardFocusablePropertyId:
                     return this.TryGetOwnerAs(out owner) && owner.CanFocus;
-                case UiaCore.UIA.ItemStatusPropertyId:
+                case UIA_PROPERTY_ID.UIA_ItemStatusPropertyId:
                     var canSort = false;
                     if (!this.TryGetOwnerAs(out owner))
                     {
@@ -303,12 +303,10 @@ public partial class DataGridView
             }
         }
 
-        internal override bool IsPatternSupported(UiaCore.UIA patternId)
-        {
-            return (patternId == UiaCore.UIA.TablePatternId && RowCount > 0) ||
-                patternId == UiaCore.UIA.GridPatternId ||
+        internal override bool IsPatternSupported(UIA_PATTERN_ID patternId)
+            => (patternId == UIA_PATTERN_ID.UIA_TablePatternId && RowCount > 0) ||
+                patternId == UIA_PATTERN_ID.UIA_GridPatternId ||
                 base.IsPatternSupported(patternId);
-        }
 
         internal override UiaCore.IRawElementProviderSimple[]? GetRowHeaders()
         {
@@ -424,7 +422,7 @@ public partial class DataGridView
 
         internal override void SetFocus()
         {
-            if (this.TryGetOwnerAs(out DataGridView? owner) && owner.IsHandleCreated && owner.CanFocus)
+            if (this.IsOwnerHandleCreated(out DataGridView? owner) && owner.CanFocus)
             {
                 owner.Focus();
             }
@@ -435,7 +433,7 @@ public partial class DataGridView
         #region IRawElementProviderFragmentRoot Implementation
 
         internal override UiaCore.IRawElementProviderFragment? ElementProviderFromPoint(double x, double y)
-            => this.TryGetOwnerAs(out DataGridView? owner) && owner.IsHandleCreated ? HitTest((int)x, (int)y) : null;
+            => this.IsOwnerHandleCreated(out DataGridView? _) ? HitTest((int)x, (int)y) : null;
 
         internal override UiaCore.IRawElementProviderFragment? GetFocus() => GetFocused();
 

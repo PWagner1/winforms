@@ -1,10 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Reflection;
 using System.Text;
-using System.Windows.Forms;
 using System.Xml;
 
 namespace System.Resources;
@@ -31,7 +29,7 @@ public class ResXResourceWriter : IResourceWriter
 
     private Dictionary<string, string?>? _cachedAliases;
 
-    private static readonly TraceSwitch s_resValueProviderSwitch = new TraceSwitch("ResX", "Debug the resource value provider");
+    private static readonly TraceSwitch s_resValueProviderSwitch = new("ResX", "Debug the resource value provider");
 
 #pragma warning disable IDE1006 // Naming Styles (Shipped public API)
     public static readonly string BinSerializedObjectMimeType = "application/x-microsoft.net.object.binary.base64";

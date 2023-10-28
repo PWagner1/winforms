@@ -11,7 +11,7 @@ public partial class MainForm : Form
 {
     ISelectionService _selectionService;
 
-    private List<IDesignSurfaceExt> _listOfDesignSurface = new List<IDesignSurfaceExt>();
+    private List<IDesignSurfaceExt> _listOfDesignSurface = new();
 
     public MainForm()
     {
@@ -24,11 +24,13 @@ public partial class MainForm : Form
         CreateDesignSurface(2);
         CreateDesignSurface(3);
         CreateDesignSurface(4);
+        CreateDesignSurface(5);
 
         tabPage1.Text = "Use SnapLines";
         tabPage2.Text = "Use Grid (Snap to the grid)";
         tabPage3.Text = "Use Grid";
         tabPage4.Text = "Align control by hand";
+        tabPage5.Text = "TabControl and TableLayoutPanel";
 
         //- enable the UndoEngines
         for (int i = 0; i < tabControl1.TabCount; i++)
@@ -88,6 +90,9 @@ public partial class MainForm : Form
                 surface.UseGridWithoutSnapping(new System.Drawing.Size(32, 32));
                 break;
             case 4:
+                surface.UseNoGuides();
+                break;
+            case 5:
                 surface.UseNoGuides();
                 break;
             default:
@@ -161,21 +166,23 @@ public partial class MainForm : Form
                         //- create some Controls at DesignTime
                         TextBox t1 = surface.CreateControl<TextBox>(new Size(200, 20), new Point(10, 10));
                         Button b1 = surface.CreateControl<Button>(new Size(200, 40), new Point(10, 40));
-                        Label l1 = surface.CreateControl<Label>(new Size(200, 120), new Point(48, 100));
+                        Label l1 = surface.CreateControl<Label>(new Size(200, 100), new Point(10, 100));
                         t1.Text = "I'm a TextBox";
                         b1.Text = "I'm a Button";
                         b1.BackColor = Color.Coral;
                         l1.Text = "I'm a Label";
                         l1.BackColor = Color.Coral;
 
-                        ComboBox cb1 = surface.CreateControl<ComboBox>(new Size(200, 20), new Point(288, 16));
+                        MaskedTextBox maskTextBox = surface.CreateControl<MaskedTextBox>(new Size(200, 20), new Point(260, 60));
+
+                        ComboBox cb1 = surface.CreateControl<ComboBox>(new Size(200, 20), new Point(260, 16));
                         cb1.Items.AddRange(new string[] { "a1", "b2", "c3" });
                         cb1.SelectedIndex = 1;
 
-                        ListBox lb1 = surface.CreateControl<ListBox>(new Size(200, 130), new Point(288, 100));
+                        ListBox lb1 = surface.CreateControl<ListBox>(new Size(200, 130), new Point(260, 100));
                         lb1.Items.AddRange(new string[] { "a1", "b2", "c3" });
 
-                        TreeView tv1 = surface.CreateControl<TreeView>(new Size(290, 160), new Point(20, 220));
+                        TreeView tv1 = surface.CreateControl<TreeView>(new Size(200, 160), new Point(10, 220));
                     }
 
                     break;
@@ -203,13 +210,13 @@ public partial class MainForm : Form
                     break;
                 case 4:
                     {
-                        rootComponent = surface.CreateRootComponent<Form>(new Size(320, 200));
+                        rootComponent = surface.CreateRootComponent<Form>(new Size(800, 600));
                         rootComponent.BackColor = Color.Orange;
                         rootComponent.Text = "Root Component hosted by the DesignSurface N.4";       //- step.1
                                                                                                      //- step.3
                                                                                                      //- create some Controls at DesignTime
                         Button b1 = surface.CreateControl<Button>(new Size(200, 40), new Point(10, 10));
-                        Button b2 = surface.CreateControl<Button>(new Size(200, 40), new Point(100, 100));
+                        Button b2 = surface.CreateControl<Button>(new Size(200, 40), new Point(10, 60));
                         b1.Text = "I'm the first Button";
                         b2.Text = "I'm the second Button";
                         b1.BackColor = Color.Gold;
@@ -217,6 +224,44 @@ public partial class MainForm : Form
 
                         Timer tm11 = surface.CreateComponent<Timer>();
                         FontDialog fd1 = surface.CreateComponent<FontDialog>();
+                        PrintDialog pd1 = surface.CreateComponent<PrintDialog>();
+
+                        MonthCalendar monthCalendar1 = surface.CreateControl<MonthCalendar>(new Size(230, 170), new Point(10, 110));
+
+                        Button subButton1OfLayoutPanel = surface.CreateControl<Button>(new Size(100, 40), new Point(10, 10));
+                        Button subButton2OfLayoutPanel = surface.CreateControl<Button>(new Size(100, 40), new Point(10, 10));
+                        FlowLayoutPanel layoutPanel = surface.CreateControl<FlowLayoutPanel>(new Size(430, 200), new Point(250, 10));
+                        layoutPanel.Controls.Add(subButton1OfLayoutPanel);
+                        layoutPanel.Controls.Add(subButton2OfLayoutPanel);
+
+                        TrackBar trackBar = surface.CreateControl<TrackBar>(new Size(200, 50), new Point(250, 220));
+
+                        FolderBrowserDialog folderBrowserDialog = surface.CreateComponent<FolderBrowserDialog>();
+                        SaveFileDialog saveFileDialog = surface.CreateComponent<SaveFileDialog>();
+
+                        ToolStripContainer toolStripContainer = surface.CreateControl<ToolStripContainer>(new Size(200, 180), new Point(250, 280));
+                    }
+
+                    break;
+                case 5:
+                    {
+                        rootComponent = surface.CreateRootComponent<Form>(new Size(800, 600));
+                        rootComponent.BackColor = Color.Orange;
+                        rootComponent.Text = "Root Component hosted by the DesignSurface N.5";
+
+                        surface.CreateControl<TabControl>(new Size(400, 100), new Point(12, 21));
+                        surface.CreateControl<TableLayoutPanel>(new Size(290, 160), new Point(20, 150));
+                        surface.CreateControl<PropertyGrid>(new Size(200, 150), new Point(430, 23));
+                        surface.CreateComponent<NotifyIcon>();
+
+                        ListBox listBox = surface.CreateControl<ListBox>(new Size(120, 94), new Point(337, 217));
+                        BindingSource bindingSource = surface.CreateComponent<BindingSource>();
+                        bindingSource.DataSource = new List<string> { "a1", "b2", "c3", "d4", "e5", "f6" };
+                        listBox.DataSource = bindingSource;
+                        DataGridView dataGridView = surface.CreateControl<DataGridView>(new Size(200, 150), new Point(470, 220));
+                        DataGridViewComboBoxColumn comboBoxColumn = surface.CreateComponent<DataGridViewComboBoxColumn>();
+                        comboBoxColumn.HeaderText = "Column1";
+                        dataGridView.Columns.AddRange([comboBoxColumn]);
                     }
 
                     break;
@@ -249,6 +294,9 @@ public partial class MainForm : Form
                     break;
                 case 4:
                     view.Parent = tabPage4;
+                    break;
+                case 5:
+                    view.Parent = tabPage5;
                     break;
                 default:
                     Console.WriteLine("Invalid selection");

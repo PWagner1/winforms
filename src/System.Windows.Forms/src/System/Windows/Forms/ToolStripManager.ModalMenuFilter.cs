@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using static Interop;
@@ -43,7 +42,7 @@ public static partial class ToolStripManager
 
         private ToolStrip? _toplevelToolStrip;
 
-        private readonly WeakReference<IKeyboardToolTip?> _lastFocusedTool = new WeakReference<IKeyboardToolTip?>(null);
+        private readonly WeakReference<IKeyboardToolTip?> _lastFocusedTool = new(null);
 
 #if DEBUG
         private bool _justEnteredMenuMode;
@@ -571,7 +570,7 @@ public static partial class ToolStripManager
                 return false;
             }
 
-            var activeToolStripHandle = new HandleRef<HWND>(activeToolStrip);
+            HandleRef<HWND> activeToolStripHandle = new(activeToolStrip);
             var activeWindowHandle = Control.GetHandleRef(PInvoke.GetActiveWindow());
 
             // if the active window has changed...

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Windows.Win32.System.Com;
 using Windows.Win32.System.Ole;
@@ -10,7 +9,7 @@ namespace System.Windows.Forms.Tests;
 [Collection("Sequential")] // workaround for WebBrowser control corrupting memory when run on multiple UI threads (instantiated via GUID)
 public class AxHostConnectionPointCookieTests
 {
-    private static readonly Guid CLSID_WebBrowser = new Guid("8856f961-340a-11d0-a96b-00c04fd705a2");
+    private static readonly Guid CLSID_WebBrowser = new("8856f961-340a-11d0-a96b-00c04fd705a2");
 
     [WinFormsFact]
     public void ConnectionPointCookie_Ctor_Object_Object_Type()

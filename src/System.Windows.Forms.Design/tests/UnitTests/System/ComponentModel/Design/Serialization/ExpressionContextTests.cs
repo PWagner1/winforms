@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.CodeDom;
 
@@ -10,15 +9,15 @@ public class ExpressionContextTests
 {
     public static IEnumerable<object[]> Ctor_CodeExpression_Type_Object_Object_TestData()
     {
-        yield return new object[] { new CodeExpression(), typeof(int), new object(), new object() };
-        yield return new object[] { new CodeExpression(), typeof(int), new object(), null };
+        yield return new object[] { new CodeExpression(), typeof(int), new(), new() };
+        yield return new object[] { new CodeExpression(), typeof(int), new(), null };
     }
 
     [Theory]
     [MemberData(nameof(Ctor_CodeExpression_Type_Object_Object_TestData))]
     public void ExpressionContext_Ctor_CodeExpression_Type_Object_Object_TestData(CodeExpression expression, Type expressionType, object owner, object presetValue)
     {
-        var context = new ExpressionContext(expression, expressionType, owner, presetValue);
+        ExpressionContext context = new(expression, expressionType, owner, presetValue);
         Assert.Same(expression, context.Expression);
         Assert.Same(expressionType, context.ExpressionType);
         Assert.Same(owner, context.Owner);
@@ -27,14 +26,14 @@ public class ExpressionContextTests
 
     public static IEnumerable<object[]> Ctor_CodeExpression_Type_Object_TestData()
     {
-        yield return new object[] { new CodeExpression(), typeof(int), new object() };
+        yield return new object[] { new CodeExpression(), typeof(int), new() };
     }
 
     [Theory]
     [MemberData(nameof(Ctor_CodeExpression_Type_Object_TestData))]
     public void ExpressionContext_Ctor_CodeExpression_Type_Object_TestData(CodeExpression expression, Type expressionType, object owner)
     {
-        var context = new ExpressionContext(expression, expressionType, owner);
+        ExpressionContext context = new(expression, expressionType, owner);
         Assert.Same(expression, context.Expression);
         Assert.Same(expressionType, context.ExpressionType);
         Assert.Same(owner, context.Owner);

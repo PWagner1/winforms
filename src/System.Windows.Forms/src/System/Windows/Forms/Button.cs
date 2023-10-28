@@ -1,12 +1,11 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms.ButtonInternal;
 using System.Windows.Forms.Layout;
-using static Interop;
+using Windows.Win32.UI.Accessibility;
 
 namespace System.Windows.Forms;
 
@@ -30,7 +29,7 @@ public partial class Button : ButtonBase, IButtonControl
     ///  For buttons whose FlatStyle = FlatStyle.Flat, this property specifies the size, in pixels
     ///  of the border around the button.
     /// </summary>
-    private Size _systemSize = new Size(InvalidDimensionValue, InvalidDimensionValue);
+    private Size _systemSize = new(InvalidDimensionValue, InvalidDimensionValue);
 
     /// <summary>
     ///  Initializes a new instance of the <see cref="Button"/>
@@ -242,8 +241,8 @@ public partial class Button : ButtonBase, IButtonControl
         // UIA events:
         if (IsAccessibilityObjectCreated)
         {
-            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.NamePropertyId, Name, Name);
-            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId);
+            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UIA_PROPERTY_ID.UIA_NamePropertyId, Name, Name);
+            AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationPropertyChangedEventId);
         }
 
         base.OnClick(e);

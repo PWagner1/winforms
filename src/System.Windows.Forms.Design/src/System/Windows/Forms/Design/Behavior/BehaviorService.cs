@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -48,14 +47,14 @@ public sealed partial class BehaviorService : IDisposable
     private bool _queriedSnapLines;                                 // only query for this once since we require the user restart design sessions when this changes
     private readonly HashSet<Glyph> _dragEnterReplies;              // we keep track of whether glyph has already responded to a DragEnter this D&D.
     private static readonly TraceSwitch s_dragDropSwitch
-        = new TraceSwitch("BSDRAGDROP", "Behavior service drag & drop messages");
+        = new("BSDRAGDROP", "Behavior service drag & drop messages");
 
     //test hooks for SnapLines
     private static MessageId WM_GETALLSNAPLINES;
     private static MessageId WM_GETRECENTSNAPLINES;
     private const string ToolboxFormat = ".NET Toolbox Item"; // used to detect if a drag is coming from the toolbox.
 
-    internal BehaviorService(IServiceProvider serviceProvider, Control windowFrame)
+    internal BehaviorService(IServiceProvider serviceProvider, DesignerFrame windowFrame)
     {
         _serviceProvider = serviceProvider;
         _adornerWindow = new AdornerWindow(this, windowFrame);
@@ -85,8 +84,8 @@ public sealed partial class BehaviorService : IDisposable
         if (menuCommandService is not null && host is not null)
         {
             MenuCommandHandler menuCommandHandler = new(this, menuCommandService);
-            host.RemoveService(typeof(IMenuCommandService));
-            host.AddService(typeof(IMenuCommandService), menuCommandHandler);
+            host.RemoveService<IMenuCommandService>();
+            host.AddService<IMenuCommandService>(menuCommandHandler);
         }
 
         // Default layoutmode is SnapToGrid.
@@ -177,8 +176,8 @@ public sealed partial class BehaviorService : IDisposable
             _serviceProvider.GetService(typeof(IDesignerHost)) is IDesignerHost host)
         {
             IMenuCommandService oldMenuCommandService = menuCommandHandler.MenuService;
-            host.RemoveService(typeof(IMenuCommandService));
-            host.AddService(typeof(IMenuCommandService), oldMenuCommandService);
+            host.RemoveService<IMenuCommandService>();
+            host.AddService(oldMenuCommandService);
         }
 
         _adornerWindow.Dispose();

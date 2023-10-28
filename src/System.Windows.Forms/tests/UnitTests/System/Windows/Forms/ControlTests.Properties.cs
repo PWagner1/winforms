@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -3283,17 +3282,17 @@ public partial class ControlTests
 
     private class NonZeroWidthBorderedControl : BorderedControl
     {
-        protected override Size DefaultSize => new Size(10, 0);
+        protected override Size DefaultSize => new(10, 0);
     }
 
     private class NonZeroHeightBorderedControl : BorderedControl
     {
-        protected override Size DefaultSize => new Size(0, 10);
+        protected override Size DefaultSize => new(0, 10);
     }
 
     private class NonZeroWidthNonZeroHeightBorderedControl : BorderedControl
     {
-        protected override Size DefaultSize => new Size(10, 20);
+        protected override Size DefaultSize => new(10, 20);
     }
 
     public static IEnumerable<object[]> ClientSize_Set_TestData()
@@ -7671,7 +7670,7 @@ public partial class ControlTests
 
     private class NonZeroDefaultMarginControl : Control
     {
-        protected override Padding DefaultMargin => new Padding(1, 2, 3, 4);
+        protected override Padding DefaultMargin => new(1, 2, 3, 4);
     }
 
     private class ZeroDefaultMarginControl : Control
@@ -7880,17 +7879,17 @@ public partial class ControlTests
 
     private class NonZeroWidthDefaultMaximumSizeControl : Control
     {
-        protected override Size DefaultMaximumSize => new Size(10, 0);
+        protected override Size DefaultMaximumSize => new(10, 0);
     }
 
     private class NonZeroHeightDefaultMaximumSizeControl : Control
     {
-        protected override Size DefaultMaximumSize => new Size(0, 20);
+        protected override Size DefaultMaximumSize => new(0, 20);
     }
 
     private class NonZeroWidthNonZeroHeightDefaultMaximumSizeControl : Control
     {
-        protected override Size DefaultMaximumSize => new Size(10, 20);
+        protected override Size DefaultMaximumSize => new(10, 20);
     }
 
     public static IEnumerable<object[]> MaximumSize_Set_TestData()
@@ -8489,17 +8488,17 @@ public partial class ControlTests
 
     private class NonZeroWidthDefaultMinimumSizeControl : Control
     {
-        protected override Size DefaultMinimumSize => new Size(10, 0);
+        protected override Size DefaultMinimumSize => new(10, 0);
     }
 
     private class NonZeroHeightDefaultMinimumSizeControl : Control
     {
-        protected override Size DefaultMinimumSize => new Size(0, 20);
+        protected override Size DefaultMinimumSize => new(0, 20);
     }
 
     private class NonZeroWidthNonZeroHeightDefaultMinimumSizeControl : Control
     {
-        protected override Size DefaultMinimumSize => new Size(10, 20);
+        protected override Size DefaultMinimumSize => new(10, 20);
     }
 
     public static IEnumerable<object[]> MinimumSize_Set_TestData()
@@ -9382,7 +9381,7 @@ public partial class ControlTests
 
     private class NonZeroDefaultPaddingControl : Control
     {
-        protected override Padding DefaultPadding => new Padding(1, 2, 3, 4);
+        protected override Padding DefaultPadding => new(1, 2, 3, 4);
     }
 
     public static IEnumerable<object[]> Padding_Set_TestData()

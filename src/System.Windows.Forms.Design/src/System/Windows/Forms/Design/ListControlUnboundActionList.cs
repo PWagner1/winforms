@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel.Design;
 
@@ -18,7 +17,7 @@ internal class ListControlUnboundActionList : DesignerActionList
 
     public void InvokeItemsDialog()
     {
-        EditorServiceContext.EditValue(_designer, Component, "Items");
+        EditorServiceContext.EditValue(_designer, Component!, "Items");
     }
 
     public override DesignerActionItemCollection GetSortedActionItems()

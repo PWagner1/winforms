@@ -20,11 +20,11 @@ namespace System.Drawing;
 /// <summary>
 /// An abstract base class that provides functionality for 'Bitmap', 'Icon', 'Cursor', and 'Metafile' descended classes.
 /// </summary>
-[Editor("System.Drawing.Design.ImageEditor, System.Drawing.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
-        "System.Drawing.Design.UITypeEditor, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
+[Editor($"System.Drawing.Design.ImageEditor, {AssemblyRef.SystemDrawingDesign}",
+        $"System.Drawing.Design.UITypeEditor, {AssemblyRef.SystemDrawing}")]
 [ImmutableObject(true)]
 [Serializable]
-[System.Runtime.CompilerServices.TypeForwardedFrom("System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
+[System.Runtime.CompilerServices.TypeForwardedFrom(AssemblyRef.SystemDrawing)]
 [TypeConverter(typeof(ImageConverter))]
 public abstract class Image : MarshalByRefObject, IDisposable, ICloneable, ISerializable
 {
@@ -128,11 +128,10 @@ public abstract class Image : MarshalByRefObject, IDisposable, ICloneable, ISeri
 
     void ISerializable.GetObjectData(SerializationInfo si, StreamingContext context)
     {
-        using (MemoryStream stream = new MemoryStream())
-        {
-            Save(stream);
-            si.AddValue("Data", stream.ToArray(), typeof(byte[])); // Do not rename (binary serialization)
-        }
+        using var stream = new MemoryStream();
+
+        Save(stream);
+        si.AddValue("Data", stream.ToArray(), typeof(byte[])); // Do not rename (binary serialization)
     }
 
     /// <summary>
@@ -329,11 +328,9 @@ public abstract class Image : MarshalByRefObject, IDisposable, ICloneable, ISeri
 
             if (_rawData is not null && RawFormat.FindEncoder() is { } rawEncoder && rawEncoder.Clsid == guid)
             {
-                using (FileStream fs = File.OpenWrite(filename))
-                {
-                    fs.Write(_rawData, 0, _rawData.Length);
-                    saved = true;
-                }
+                using var fs = File.OpenWrite(filename);
+                fs.Write(_rawData, 0, _rawData.Length);
+                saved = true;
             }
 
             if (!saved)
@@ -516,7 +513,7 @@ public abstract class Image : MarshalByRefObject, IDisposable, ICloneable, ISeri
     /// <summary>
     /// Gets the width and height of this <see cref='Image'/>.
     /// </summary>
-    public Size Size => new Size(Width, Height);
+    public Size Size => new(Width, Height);
 
     /// <summary>
     /// Gets the width of this <see cref='Image'/>.

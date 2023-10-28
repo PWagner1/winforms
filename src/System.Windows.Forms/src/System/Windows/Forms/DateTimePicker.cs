@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -8,8 +7,8 @@ using System.Globalization;
 using System.Windows.Forms.Layout;
 using Microsoft.Win32;
 using SourceGenerated;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms;
 
@@ -338,9 +337,9 @@ public partial class DateTimePicker : Control
             // The information from win32 DateTimePicker is reliable only when ShowCheckBoxes is True
             if (ShowCheckBox && IsHandleCreated)
             {
-                var sys = default(SYSTEMTIME);
-                NMDATETIMECHANGE_FLAGS gdt = (NMDATETIMECHANGE_FLAGS)PInvoke.SendMessage(this, PInvoke.DTM_GETSYSTEMTIME, 0, ref sys);
-                return gdt == NMDATETIMECHANGE_FLAGS.GDT_VALID;
+                SYSTEMTIME systemTime = default;
+                nint result = PInvoke.SendMessage(this, PInvoke.DTM_GETSYSTEMTIME, 0, ref systemTime);
+                return result == (nint)NMDATETIMECHANGE_FLAGS.GDT_VALID;
             }
             else
             {
@@ -1066,7 +1065,7 @@ public partial class DateTimePicker : Control
         if (IsAccessibilityObjectCreated)
         {
             AccessibilityObject.RaiseAutomationPropertyChangedEvent(
-                UiaCore.UIA.ExpandCollapseExpandCollapseStatePropertyId,
+                UIA_PROPERTY_ID.UIA_ExpandCollapseExpandCollapseStatePropertyId,
                 oldValue: UiaCore.ExpandCollapseState.Expanded,
                 newValue: UiaCore.ExpandCollapseState.Collapsed);
         }
@@ -1084,7 +1083,7 @@ public partial class DateTimePicker : Control
         if (IsAccessibilityObjectCreated)
         {
             AccessibilityObject.RaiseAutomationPropertyChangedEvent(
-                UiaCore.UIA.ExpandCollapseExpandCollapseStatePropertyId,
+                UIA_PROPERTY_ID.UIA_ExpandCollapseExpandCollapseStatePropertyId,
                 oldValue: UiaCore.ExpandCollapseState.Collapsed,
                 newValue: UiaCore.ExpandCollapseState.Expanded);
         }
@@ -1106,7 +1105,7 @@ public partial class DateTimePicker : Control
         if (IsAccessibilityObjectCreated)
         {
             _expandCollapseState = UiaCore.ExpandCollapseState.Collapsed;
-            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+            AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
         }
     }
 
@@ -1161,7 +1160,7 @@ public partial class DateTimePicker : Control
             // Anyway it doesn't matter because the Narrator pronounces actual AO state.
             string? value = AccessibilityObject.Value;
             AccessibilityObject.RaiseAutomationPropertyChangedEvent(
-                UiaCore.UIA.ValueValuePropertyId,
+                UIA_PROPERTY_ID.UIA_ValueValuePropertyId,
                 oldValue: value,
                 newValue: value);
         }
@@ -1547,15 +1546,15 @@ public partial class DateTimePicker : Control
         if (m.HWnd == Handle)
         {
             NMHDR* nmhdr = (NMHDR*)(nint)m.LParamInternal;
-            switch ((DTN)nmhdr->code)
+            switch (nmhdr->code)
             {
-                case DTN.CLOSEUP:
+                case PInvoke.DTN_CLOSEUP:
                     OnCloseUp(EventArgs.Empty);
                     break;
-                case DTN.DATETIMECHANGE:
+                case PInvoke.DTN_DATETIMECHANGE:
                     WmDateTimeChange(ref m);
                     break;
-                case DTN.DROPDOWN:
+                case PInvoke.DTN_DROPDOWN:
                     WmDropDown();
                     break;
             }

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Windows.Forms.VisualStyles;
@@ -88,7 +87,7 @@ public class DrawListViewColumnHeaderEventArgs : EventArgs
     {
         if (Application.RenderWithVisualStyles)
         {
-            var vsr = new VisualStyleRenderer(VisualStyleElement.Header.Item.Normal);
+            VisualStyleRenderer vsr = new(VisualStyleElement.Header.Item.Normal);
             vsr.DrawBackground(Graphics, Bounds);
         }
         else

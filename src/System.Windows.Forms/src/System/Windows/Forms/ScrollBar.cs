@@ -1,10 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
-using static Interop;
+using Windows.Win32.UI.Accessibility;
 
 namespace System.Windows.Forms;
 
@@ -15,8 +14,8 @@ namespace System.Windows.Forms;
 [DefaultEvent(nameof(Scroll))]
 public abstract partial class ScrollBar : Control
 {
-    private static readonly object s_scrollEvent = new object();
-    private static readonly object s_valueChangedEvent = new object();
+    private static readonly object s_scrollEvent = new();
+    private static readonly object s_valueChangedEvent = new();
 
     private int _minimum;
     private int _maximum = 100;
@@ -371,7 +370,7 @@ public abstract partial class ScrollBar : Control
                 OnValueChanged(EventArgs.Empty);
                 if (IsAccessibilityObjectCreated)
                 {
-                    AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.RangeValueValuePropertyId, (double)oldValue, (double)_value);
+                    AccessibilityObject.RaiseAutomationPropertyChangedEvent(UIA_PROPERTY_ID.UIA_RangeValueValuePropertyId, (double)oldValue, (double)_value);
                 }
             }
         }
@@ -719,7 +718,7 @@ public abstract partial class ScrollBar : Control
                 break;
         }
 
-        var se = new ScrollEventArgs(type, oldValue, newValue, _scrollOrientation);
+        ScrollEventArgs se = new(type, oldValue, newValue, _scrollOrientation);
         OnScroll(se);
         Value = se.NewValue;
     }

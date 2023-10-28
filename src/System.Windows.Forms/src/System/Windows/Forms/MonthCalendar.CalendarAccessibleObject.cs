@@ -1,10 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms;
 
@@ -178,11 +177,11 @@ public partial class MonthCalendar
             return cellAccessibleObject;
         }
 
-        internal override object? GetPropertyValue(UiaCore.UIA propertyID)
+        internal override object? GetPropertyValue(UIA_PROPERTY_ID propertyID)
             => propertyID switch
             {
-                UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.PaneControlTypeId,
-                UiaCore.UIA.IsKeyboardFocusablePropertyId => IsEnabled,
+                UIA_PROPERTY_ID.UIA_ControlTypePropertyId => UIA_CONTROLTYPE_ID.UIA_PaneControlTypeId,
+                UIA_PROPERTY_ID.UIA_IsKeyboardFocusablePropertyId => IsEnabled,
                 _ => base.GetPropertyValue(propertyID)
             };
 
@@ -192,11 +191,11 @@ public partial class MonthCalendar
             => _monthCalendarAccessibleObject.Focused
                 && _monthCalendarAccessibleObject.FocusedCell?.CalendarIndex == _calendarIndex;
 
-        internal override bool IsPatternSupported(UiaCore.UIA patternId)
+        internal override bool IsPatternSupported(UIA_PATTERN_ID patternId)
             => patternId switch
             {
-                UiaCore.UIA.GridItemPatternId => true,
-                UiaCore.UIA.TableItemPatternId => true,
+                UIA_PATTERN_ID.UIA_GridItemPatternId => true,
+                UIA_PATTERN_ID.UIA_TableItemPatternId => true,
                 _ => base.IsPatternSupported(patternId)
             };
 
@@ -216,7 +215,7 @@ public partial class MonthCalendar
             CalendarCellAccessibleObject? focusedCell = _monthCalendarAccessibleObject.FocusedCell;
             if (focusedCell?.CalendarIndex == _calendarIndex)
             {
-                focusedCell.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+                focusedCell.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
             }
         }
 

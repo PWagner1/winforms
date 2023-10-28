@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Microsoft.CSharp.RuntimeBinder;
 
@@ -204,7 +203,7 @@ public class TestAccessorTests
     {
         private int _integer;
         private readonly int _readOnlyInteger;
-        private List<string> _list = new List<string> { "42" };
+        private List<string> _list = new() { "42" };
 
         private long Long { get; set; }
 

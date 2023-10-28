@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -28,7 +27,7 @@ internal class DesignerToolStripControlHost : ToolStripControlHost, IComponent
     /// </summary>
     protected override Size DefaultSize
     {
-        get => new Size(92, 22);
+        get => new(92, 22);
     }
 
     internal GlyphCollection GetGlyphs(ToolStrip parent, GlyphCollection glyphs, Behavior.Behavior standardBehavior)

@@ -1,12 +1,11 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Runtime.InteropServices;
 
 internal partial class Interop
 {
-    internal partial class SHDocVw
+    internal static partial class SHDocVw
     {
         [ComImport]
         [Guid("34A715A0-6587-11D0-924A-0020AFC7AC4D")]
@@ -25,7 +24,7 @@ internal partial class Interop
 
             [DispId(105)]
             void CommandStateChange(
-                SHDocVw.CSC command,
+                CommandStateChangeConstants command,
                 bool enable);
 
             [DispId(106)]

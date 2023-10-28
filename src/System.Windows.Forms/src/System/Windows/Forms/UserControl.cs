@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.ComponentModel.Design;
@@ -20,7 +19,7 @@ namespace System.Windows.Forms;
 [DefaultEvent(nameof(Load))]
 public class UserControl : ContainerControl
 {
-    private static readonly object EVENT_LOAD = new object();
+    private static readonly object EVENT_LOAD = new();
     private BorderStyle _borderStyle = BorderStyle.None;
 
     /// <summary>

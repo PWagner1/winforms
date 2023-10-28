@@ -1,8 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-#nullable disable
 
 using System.ComponentModel;
 using System.Windows.Forms.Layout;
@@ -13,10 +10,10 @@ public sealed partial class TableLayoutSettings
 {
     private class TableLayoutSettingsStub
     {
-        private static ControlInformation s_defaultControlInfo = new ControlInformation(null, -1, -1, 1, 1);
-        private TableLayoutColumnStyleCollection _columnStyles;
-        private TableLayoutRowStyleCollection _rowStyles;
-        private Dictionary<object, ControlInformation> _controlsInfo;
+        private static ControlInformation s_defaultControlInfo = new(null, -1, -1, 1, 1);
+        private TableLayoutColumnStyleCollection? _columnStyles;
+        private TableLayoutRowStyleCollection? _rowStyles;
+        private Dictionary<object, ControlInformation>? _controlsInfo;
 
         public TableLayoutSettingsStub()
         {
@@ -32,7 +29,7 @@ public sealed partial class TableLayoutSettings
         internal void ApplySettings(TableLayoutSettings settings)
         {
             // apply row,column,rowspan,colspan
-            TableLayout.ContainerInfo containerInfo = TableLayout.GetContainerInfo(settings.Owner);
+            TableLayout.ContainerInfo containerInfo = TableLayout.GetContainerInfo(settings.Owner!);
             if (containerInfo.Container is Control appliedControl && _controlsInfo is not null)
             {
                 // we store the control names, look up the controls
@@ -48,14 +45,14 @@ public sealed partial class TableLayoutSettings
                     {
                         if (tableControl is not null)
                         {
-                            string name = null;
-                            PropertyDescriptor prop = TypeDescriptor.GetProperties(tableControl)["Name"];
+                            string? name = null;
+                            PropertyDescriptor? prop = TypeDescriptor.GetProperties(tableControl)["Name"];
                             if (prop is not null && prop.PropertyType == typeof(string))
                             {
                                 name = prop.GetValue(tableControl) as string;
                             }
 
-                            if (WindowsFormsUtils.SafeCompareStrings(name, controlName as string, /* ignoreCase = */ false))
+                            if (WindowsFormsUtils.SafeCompareStrings(name, controlName as string, ignoreCase: false))
                             {
                                 settings.SetRow(tableControl, controlInfo.Row);
                                 settings.SetColumn(tableControl, controlInfo.Column);

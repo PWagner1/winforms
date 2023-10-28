@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.CodeDom;
 
@@ -18,7 +17,7 @@ public static class CodeDomHelpers
                 Assert.Equal(GetConstructionString(expected[i]), GetConstructionString(actual[i]));
             }
         }
-        catch (Xunit.Sdk.AssertActualExpectedException)
+        catch (Xunit.Sdk.XunitException)
         {
             Console.WriteLine($"Expected: {expected.Count} elements");
             for (int i = 0; i < expected.Count; i++)

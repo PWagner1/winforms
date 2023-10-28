@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Windows.Forms.Design;
@@ -21,7 +20,7 @@ public class FontNameEditorTests
     [Fact]
     public void FontNameEditor_Ctor_Default()
     {
-        var editor = new FontNameEditor();
+        FontNameEditor editor = new();
         Assert.False(editor.IsDropDownResizable);
     }
 
@@ -29,16 +28,16 @@ public class FontNameEditorTests
     {
         yield return new object[] { null };
         yield return new object[] { "value" };
-        yield return new object[] { new object() };
+        yield return new object[] { new() };
     }
 
     [Theory]
     [MemberData(nameof(EditValue_TestData))]
     public void FontNameEditor_EditValue_ValidProvider_ReturnsValue(object value)
     {
-        var editor = new FontNameEditor();
-        var mockEditorService = new Mock<IWindowsFormsEditorService>(MockBehavior.Strict);
-        var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        FontNameEditor editor = new();
+        Mock<IWindowsFormsEditorService> mockEditorService = new(MockBehavior.Strict);
+        Mock<IServiceProvider> mockServiceProvider = new(MockBehavior.Strict);
         mockServiceProvider
             .Setup(p => p.GetService(typeof(IWindowsFormsEditorService)))
             .Returns(mockEditorService.Object)
@@ -55,7 +54,7 @@ public class FontNameEditorTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetEditValueInvalidProviderTestData))]
     public void FontNameEditor_EditValue_InvalidProvider_ReturnsValue(IServiceProvider provider, object value)
     {
-        var editor = new FontNameEditor();
+        FontNameEditor editor = new();
         Assert.Same(value, editor.EditValue(null, provider, value));
     }
 
@@ -63,7 +62,7 @@ public class FontNameEditorTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetITypeDescriptorContextTestData))]
     public void FontNameEditor_GetEditStyle_Invoke_ReturnsNone(ITypeDescriptorContext context)
     {
-        var editor = new FontNameEditor();
+        FontNameEditor editor = new();
         Assert.Equal(UITypeEditorEditStyle.None, editor.GetEditStyle(context));
     }
 
@@ -71,7 +70,7 @@ public class FontNameEditorTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetITypeDescriptorContextTestData))]
     public void FontNameEditor_GetPaintValueSupported_Invoke_ReturnsTrue(ITypeDescriptorContext context)
     {
-        var editor = new FontNameEditor();
+        FontNameEditor editor = new();
         Assert.True(editor.GetPaintValueSupported(context));
     }
 
@@ -82,18 +81,16 @@ public class FontNameEditorTests
     public void FontNameEditor_PaintValue_ReturnsEarly_InvalidPaintValueEventArgsValue(string fontName)
     {
         PaintValueEventArgs e;
-        using (var bitmap = new Bitmap(1, 1))
+        using (Bitmap bitmap = new(1, 1))
         {
-            using (var g = Graphics.FromImage(bitmap))
-            {
-                e = new PaintValueEventArgs(_typeDescriptorContext, fontName, g, Rectangle.Empty);
-            }
+            using var g = Graphics.FromImage(bitmap);
+            e = new PaintValueEventArgs(_typeDescriptorContext, fontName, g, Rectangle.Empty);
         }
 
         // assert by the virtue of calling the method
         // if the implementation is incorrect, having disposed of the Graphics object
         // we would received an AE attempting to call e.Graphics.FillRectangle()
-        var editor = new FontNameEditor();
+        FontNameEditor editor = new();
         editor.PaintValue(e);
     }
 }

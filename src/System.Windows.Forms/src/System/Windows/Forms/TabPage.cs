@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -28,7 +27,7 @@ public partial class TabPage : Panel
     private bool _useVisualStyleBackColor;
     private List<ToolTip>? _associatedToolTips;
     private ToolTip? _externalToolTip;
-    private readonly ToolTip _internalToolTip = new ToolTip();
+    private readonly ToolTip _internalToolTip = new();
     private TabAccessibleObject? _tabAccessibilityObject;
 
     /// <summary>

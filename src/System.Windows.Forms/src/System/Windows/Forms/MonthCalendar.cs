@@ -1,14 +1,12 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms.Layout;
 using Microsoft.Win32;
-using static Interop;
-using static Interop.ComCtl32;
+using Windows.Win32.UI.Accessibility;
 
 namespace System.Windows.Forms;
 
@@ -322,7 +320,7 @@ public partial class MonthCalendar : Control
 
     protected override ImeMode DefaultImeMode => ImeMode.Disable;
 
-    protected override Padding DefaultMargin => new Padding(9);
+    protected override Padding DefaultMargin => new(9);
 
     protected override Size DefaultSize => GetMinReqRect();
 
@@ -767,7 +765,7 @@ public partial class MonthCalendar : Control
     [Bindable(true)]
     public SelectionRange SelectionRange
     {
-        get => new SelectionRange(SelectionStart, SelectionEnd);
+        get => new(SelectionStart, SelectionEnd);
         set => SetSelectionRange(value.Start, value.End);
     }
 
@@ -857,7 +855,7 @@ public partial class MonthCalendar : Control
         {
             if (IsHandleCreated)
             {
-                RECT rect = default(RECT);
+                RECT rect = default;
                 if (PInvoke.SendMessage(this, PInvoke.MCM_GETMINREQRECT, 0, ref rect) == 0)
                 {
                     throw new InvalidOperationException(SR.InvalidSingleMonthSize);
@@ -921,7 +919,7 @@ public partial class MonthCalendar : Control
 
             if (IsHandleCreated)
             {
-                SYSTEMTIME systemTime = default(SYSTEMTIME);
+                SYSTEMTIME systemTime = default;
                 int result = (int)PInvoke.SendMessage(this, PInvoke.MCM_GETTODAY, 0, ref systemTime);
                 Debug.Assert(result != 0, "MCM_GETTODAY failed");
                 return ((DateTime)systemTime).Date;
@@ -1384,7 +1382,7 @@ public partial class MonthCalendar : Control
         {
             cbSize = (uint)sizeof(MCHITTESTINFO),
             pt = new Point(x, y),
-            st = default(SYSTEMTIME)
+            st = default
         };
 
         PInvoke.SendMessage(this, PInvoke.MCM_HITTEST, 0, ref mchi);
@@ -1520,7 +1518,7 @@ public partial class MonthCalendar : Control
 
         if (IsAccessibilityObjectCreated)
         {
-            ((MonthCalendarAccessibleObject)AccessibilityObject).FocusedCell?.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+            ((MonthCalendarAccessibleObject)AccessibilityObject).FocusedCell?.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
         }
     }
 
@@ -2203,7 +2201,7 @@ public partial class MonthCalendar : Control
         if (IsAccessibilityObjectCreated)
         {
             MonthCalendarAccessibleObject calendarAccessibleObject = (MonthCalendarAccessibleObject)AccessibilityObject;
-            calendarAccessibleObject.RaiseAutomationEventForChild(UiaCore.UIA.AutomationFocusChangedEventId);
+            calendarAccessibleObject.RaiseAutomationEventForChild(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
         }
 
         OnDateChanged(new DateRangeEventArgs(start, end));
@@ -2226,11 +2224,11 @@ public partial class MonthCalendar : Control
     private unsafe void WmCalViewChanged(ref Message m)
     {
         NMVIEWCHANGE* nmmcvm = (NMVIEWCHANGE*)(nint)m.LParamInternal;
-        Debug.Assert(_mcCurView == nmmcvm->uOldView, "Calendar view mode is out of sync with native control");
-        if (_mcCurView != nmmcvm->uNewView)
+        Debug.Assert(_mcCurView == nmmcvm->dwOldView, "Calendar view mode is out of sync with native control");
+        if (_mcCurView != nmmcvm->dwNewView)
         {
             _mcOldView = _mcCurView;
-            _mcCurView = nmmcvm->uNewView;
+            _mcCurView = nmmcvm->dwNewView;
 
             OnCalendarViewChanged(EventArgs.Empty);
             AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
@@ -2285,19 +2283,19 @@ public partial class MonthCalendar : Control
         {
             NMHDR* nmhdr = (NMHDR*)(nint)m.LParamInternal;
 
-            switch ((MCN)nmhdr->code)
+            switch (nmhdr->code)
             {
-                case MCN.SELECT:
+                case PInvoke.MCN_SELECT:
                     WmDateSelected(ref m);
                     break;
-                case MCN.SELCHANGE:
+                case PInvoke.MCN_SELCHANGE:
                     WmDateChanged(ref m);
                     break;
-                case MCN.GETDAYSTATE:
+                case PInvoke.MCN_GETDAYSTATE:
                     WmDateBold(ref m);
                     UpdateDisplayRange();
                     break;
-                case MCN.VIEWCHANGE:
+                case PInvoke.MCN_VIEWCHANGE:
                     WmCalViewChanged(ref m);
                     break;
             }

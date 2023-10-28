@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Windows.Win32.System.Com;
 
@@ -57,7 +56,7 @@ internal unsafe class DataStreamFromComStream : Stream
         int bytesRead = 0;
         if (count > 0 && index >= 0 && (count + index) <= buffer.Length)
         {
-            var span = new Span<byte>(buffer, index, count);
+            Span<byte> span = new(buffer, index, count);
             bytesRead = Read(span);
         }
 
@@ -110,7 +109,7 @@ internal unsafe class DataStreamFromComStream : Stream
 
         if (count > 0 && index >= 0 && (count + index) <= buffer.Length)
         {
-            var span = new ReadOnlySpan<byte>(buffer, index, count);
+            ReadOnlySpan<byte> span = new(buffer, index, count);
             Write(span);
             return;
         }

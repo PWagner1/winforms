@@ -1,11 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
-using System.Runtime.InteropServices;
 using Windows.Win32.System.Ole;
-using static Interop;
+using Windows.Win32.Web.MsHtml;
 
 namespace System.Windows.Forms;
 
@@ -41,8 +39,8 @@ public partial class Control
                 using var clientSite = _clientSite.GetInterface();
                 using ComScope<IOleContainer> container = new(null);
                 clientSite.Value->GetContainer(container);
-
-                if (Marshal.GetObjectForIUnknown((nint)container) is Mshtml.IHTMLDocument document)
+                using var document = container.TryQuery<IHTMLDocument>(out HRESULT hr);
+                if (hr.Succeeded)
                 {
                     _shimManager ??= new HtmlShimManager();
                     return new HtmlDocument(_shimManager, document);

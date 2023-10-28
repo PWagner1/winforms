@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.ComponentModel.Design;
@@ -23,7 +22,7 @@ public partial class ComponentEditorForm : Form
     private bool _dirty;
     private bool _firstActivate;
 
-    private readonly Panel _pageHost = new Panel();
+    private readonly Panel _pageHost = new();
     private PageSelector _selector;
     private ImageList _selectorImageList;
     private Button _okButton;
@@ -383,7 +382,7 @@ public partial class ComponentEditorForm : Form
             return;
         }
 
-        int newPage = _selector.SelectedNode.Index;
+        int newPage = _selector.SelectedNode!.Index;
         Debug.Assert((newPage >= 0) && (newPage < _pageSites.Length),
                      "Invalid page selected");
 

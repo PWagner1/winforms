@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -15,16 +14,16 @@ namespace System.Windows.Forms;
 public partial class ToolStripPanel : ContainerControl, IArrangedElement
 {
     private Orientation _orientation = Orientation.Horizontal;
-    private static readonly Padding s_rowMargin = new Padding(3, 0, 0, 0);
+    private static readonly Padding s_rowMargin = new(3, 0, 0, 0);
     private Padding _scaledRowMargin = s_rowMargin;
     private ToolStripRendererSwitcher? _rendererSwitcher;
     private BitVector32 _state;
     private readonly ToolStripContainer? _owner;
 
 #if DEBUG
-    internal static TraceSwitch s_toolStripPanelDebug = new TraceSwitch("ToolStripPanelDebug", "Debug code for rafting mouse movement");
-    internal static TraceSwitch s_toolStripPanelFeedbackDebug = new TraceSwitch("ToolStripPanelFeedbackDebug", "Debug code for rafting feedback");
-    internal static TraceSwitch s_toolStripPanelMissingRowDebug = new TraceSwitch("ToolStripPanelMissingRowDebug", "Debug code for rafting feedback");
+    internal static TraceSwitch s_toolStripPanelDebug = new("ToolStripPanelDebug", "Debug code for rafting mouse movement");
+    internal static TraceSwitch s_toolStripPanelFeedbackDebug = new("ToolStripPanelFeedbackDebug", "Debug code for rafting feedback");
+    internal static TraceSwitch s_toolStripPanelMissingRowDebug = new("ToolStripPanelMissingRowDebug", "Debug code for rafting feedback");
 #else
     internal static TraceSwitch? s_toolStripPanelDebug;
     internal static TraceSwitch? s_toolStripPanelFeedbackDebug;
@@ -41,9 +40,9 @@ public partial class ToolStripPanel : ContainerControl, IArrangedElement
     private static readonly int s_stateLayoutSuspended = BitVector32.CreateMask(s_stateEndInit);
     private static readonly int s_stateRightToLeftChanged = BitVector32.CreateMask(s_stateLayoutSuspended);
 
-    internal static readonly Padding s_dragMargin = new Padding(10);
+    internal static readonly Padding s_dragMargin = new(10);
 
-    private static readonly object s_eventRendererChanged = new object();
+    private static readonly object s_eventRendererChanged = new();
 
     public ToolStripPanel()
     {
@@ -1049,7 +1048,7 @@ public partial class ToolStripPanel : ContainerControl, IArrangedElement
     private void MoveOutsideContainer(ToolStrip toolStripToDrag, Point screenLocation)
     {
         // look for another rafting container.
-        ToolStripPanel panel = ToolStripManager.ToolStripPanelFromPoint(toolStripToDrag, screenLocation);
+        ToolStripPanel? panel = ToolStripManager.ToolStripPanelFromPoint(toolStripToDrag, screenLocation);
         if (panel is not null)
         {
             using (new LayoutTransaction(panel, panel, null))

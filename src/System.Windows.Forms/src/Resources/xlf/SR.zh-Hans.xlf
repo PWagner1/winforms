@@ -2264,7 +2264,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCellAccessibleObject_OwnerWrongType">
         <source>DataGridViewCell of type {0} does not provide the Toggle pattern.</source>
-        <target state="new">DataGridViewCell of type {0} does not provide the Toggle pattern.</target>
+        <target state="translated">{0} 类型的 DataGridViewCell 未提供切换模式。</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCellCollection_AtLeastOneCellIsNull">
@@ -2339,7 +2339,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCellIndeterminateStateDescription">
         <source>{0} check box indeterminate</source>
-        <target state="new">{0} check box indeterminate</target>
+        <target state="translated">{0} 复选框不确定</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCellUncheckedStateDescription">
@@ -5208,11 +5208,6 @@ Do you want to replace it?</source>
       <trans-unit id="FolderBrowserDialogDescription">
         <source>The string that is displayed above the tree view control in the dialog box. This string can be used to specify instructions to the user.</source>
         <target state="translated">显示在对话框的树视图控件上方的字符串。该字符串可用来指定显示给用户的指导信息。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="FolderBrowserDialogNoRootFolder">
-        <source>Unable to retrieve the root folder.</source>
-        <target state="translated">无法检索根文件夹。</target>
         <note />
       </trans-unit>
       <trans-unit id="FolderBrowserDialogOkRequiresInteraction">
@@ -11367,7 +11362,7 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="toStringAlt">
         <source>Alt</source>
         <target state="translated">Alt</target>
-        <note />
+        <note>{Locked="Alt"}</note>
       </trans-unit>
       <trans-unit id="toStringBack">
         <source>Back</source>
@@ -11377,7 +11372,7 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="toStringControl">
         <source>Ctrl</source>
         <target state="translated">Ctrl</target>
-        <note />
+        <note>{Locked=!de; "Ctrl"}</note>
       </trans-unit>
       <trans-unit id="toStringDefault">
         <source>(default)</source>
@@ -11387,27 +11382,27 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="toStringDelete">
         <source>Del</source>
         <target state="translated">Delete</target>
-        <note />
+        <note>{Locked=!fr,de,it,es; "Del"}</note>
       </trans-unit>
       <trans-unit id="toStringEnd">
         <source>End</source>
         <target state="translated">End</target>
-        <note />
+        <note>{Locked=!fr,de,it,es; "End"}</note>
       </trans-unit>
       <trans-unit id="toStringEnter">
         <source>Enter</source>
         <target state="translated">Enter</target>
-        <note />
+        <note>{Locked=!fr,de,it,es; "Enter"}</note>
       </trans-unit>
       <trans-unit id="toStringHome">
         <source>Home</source>
-        <target state="translated">主页</target>
-        <note />
+        <target state="translated">Home</target>
+        <note>{Locked=!fr,de,es; "Home"}</note>
       </trans-unit>
       <trans-unit id="toStringInsert">
-        <source>Ins</source>
+        <source>Insert</source>
         <target state="translated">Insert</target>
-        <note />
+        <note>{Locked=!fr,de,it,es,zh-Hant; "Insert"}</note>
       </trans-unit>
       <trans-unit id="toStringNone">
         <source>(none)</source>
@@ -11416,18 +11411,18 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="toStringPageDown">
         <source>PgDn</source>
-        <target state="translated">Page Down</target>
-        <note />
+        <target state="translated">PgDn</target>
+        <note>{Locked=!fr,de,it,es; "PgDn"}</note>
       </trans-unit>
       <trans-unit id="toStringPageUp">
         <source>PgUp</source>
-        <target state="translated">Page Up</target>
-        <note />
+        <target state="translated">PgUp</target>
+        <note>{Locked=!fr,de,it,es; "PgUp"}</note>
       </trans-unit>
       <trans-unit id="toStringShift">
         <source>Shift</source>
         <target state="translated">Shift</target>
-        <note />
+        <note>{Locked=!fr,de,it,es; "Shift"}</note>
       </trans-unit>
       <trans-unit id="valueChangedEventDescr">
         <source>Occurs when the value of the control changes.</source>

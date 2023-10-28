@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace System.Windows.Forms.Primitives.Tests.Interop.User32;
 
@@ -23,7 +22,7 @@ public class GetWindowTextTests
         const string shortText = "A";
 
         // Use a long string that exceeds the initial buffer size (16).
-        string longText = new string('X', 50);
+        string longText = new('X', 50);
 
         var windowClass = new ChangeWindowTextClass();
         windowClass.Register();

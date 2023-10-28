@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -59,20 +58,20 @@ public abstract class BindingManagerBase
 
     public abstract object? Current { get; }
 
-    private protected abstract void SetDataSource(object dataSource);
+    private protected abstract void SetDataSource(object? dataSource);
 
     public BindingManagerBase() { }
 
-    internal BindingManagerBase(object dataSource)
+    internal BindingManagerBase(object? dataSource)
     {
         SetDataSource(dataSource);
     }
 
-    internal abstract Type BindType { get; }
+    internal abstract Type? BindType { get; }
 
     internal abstract PropertyDescriptorCollection GetItemProperties(PropertyDescriptor[]? listAccessors);
 
-    public virtual PropertyDescriptorCollection GetItemProperties() => GetItemProperties(null);
+    public virtual PropertyDescriptorCollection GetItemProperties() => GetItemProperties(listAccessors: null);
 
     protected internal virtual PropertyDescriptorCollection? GetItemProperties(ArrayList dataSources, ArrayList listAccessors)
     {
@@ -89,7 +88,7 @@ public abstract class BindingManagerBase
             return typedList.GetItemProperties(properties);
         }
 
-        return GetItemProperties(BindType, 0, dataSources, listAccessors);
+        return GetItemProperties(BindType!, 0, dataSources, listAccessors);
     }
 
     protected virtual PropertyDescriptorCollection? GetItemProperties([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]Type listType, int offset, ArrayList dataSources, ArrayList listAccessors)

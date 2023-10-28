@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 
@@ -18,7 +17,7 @@ public partial class ListView
             ListViewItem this[int index] { get; set; }
 
             ListViewItem Add(ListViewItem item);
-            void AddRange(ListViewItem[] items);
+            void AddRange(params ListViewItem[] items);
             void Clear();
             bool Contains(ListViewItem item);
             void CopyTo(Array dest, int index);

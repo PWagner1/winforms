@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -14,16 +13,16 @@ namespace System.Windows.Forms;
 [ToolStripItemDesignerAvailability(ToolStripItemDesignerAvailability.MenuStrip | ToolStripItemDesignerAvailability.ToolStrip | ToolStripItemDesignerAvailability.ContextMenuStrip)]
 public partial class ToolStripTextBox : ToolStripControlHost
 {
-    internal static readonly object s_eventTextBoxTextAlignChanged = new object();
-    internal static readonly object s_eventAcceptsTabChanged = new object();
-    internal static readonly object s_eventBorderStyleChanged = new object();
-    internal static readonly object s_eventHideSelectionChanged = new object();
-    internal static readonly object s_eventReadOnlyChanged = new object();
-    internal static readonly object s_eventMultilineChanged = new object();
-    internal static readonly object s_eventModifiedChanged = new object();
+    internal static readonly object s_eventTextBoxTextAlignChanged = new();
+    internal static readonly object s_eventAcceptsTabChanged = new();
+    internal static readonly object s_eventBorderStyleChanged = new();
+    internal static readonly object s_eventHideSelectionChanged = new();
+    internal static readonly object s_eventReadOnlyChanged = new();
+    internal static readonly object s_eventMultilineChanged = new();
+    internal static readonly object s_eventModifiedChanged = new();
 
-    private static readonly Padding s_defaultMargin = new Padding(1, 0, 1, 0);
-    private static readonly Padding s_defaultDropDownMargin = new Padding(1);
+    private static readonly Padding s_defaultMargin = new(1, 0, 1, 0);
+    private static readonly Padding s_defaultDropDownMargin = new(1);
     private Padding _scaledDefaultMargin = s_defaultMargin;
     private Padding _scaledDefaultDropDownMargin = s_defaultDropDownMargin;
 
@@ -155,7 +154,6 @@ public partial class ToolStripTextBox : ToolStripControlHost
         OnReadOnlyChanged(e);
     }
 
-#pragma warning disable CA2252 // Suppress 'Opt in to preview features' (https://aka.ms/dotnet-warnings/preview-features)
     private void HandleTextBoxTextAlignChanged(object? sender, EventArgs e)
     {
         RaiseEvent(s_eventTextBoxTextAlignChanged, e);
@@ -190,7 +188,6 @@ public partial class ToolStripTextBox : ToolStripControlHost
     {
         RaiseEvent(s_eventReadOnlyChanged, e);
     }
-#pragma warning restore CA2252
 
     protected override void OnSubscribeControlEvents(Control? control)
     {

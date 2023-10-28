@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace WinformsControlsTest;
 
@@ -10,7 +9,7 @@ public partial class DataGridViewInVirtualModeTest : Form
     // The example was taken from: https://docs.microsoft.com/dotnet/desktop/winforms/controls/implementing-virtual-mode-wf-datagridview-control
 
     // Declare a List to serve as the test data source
-    private readonly List<TestCustomer> _customers = new List<TestCustomer>();
+    private readonly List<TestCustomer> _customers = new();
 
     // Declare a TestCustomer object to store data for a row being edited
     private TestCustomer _customerInEdit;

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Globalization;
@@ -508,8 +507,8 @@ internal static unsafe partial class Com2TypeInfoProcessor
         VARFLAGS flags)
     {
         // Get the name and the helpstring.
-        using var nameBstr = default(BSTR);
-        using var helpStringBstr = default(BSTR);
+        using BSTR nameBstr = default;
+        using BSTR helpStringBstr = default;
         HRESULT hr = typeInfo->GetDocumentation(dispid, &nameBstr, &helpStringBstr, null, null);
         if (!hr.Succeeded)
         {
@@ -738,8 +737,8 @@ internal static unsafe partial class Com2TypeInfoProcessor
 
                 object? varValue = null;
 
-                using var enumNameBstr = default(BSTR);
-                using var enumHelpStringBstr = default(BSTR);
+                using BSTR enumNameBstr = default;
+                using BSTR enumHelpStringBstr = default;
                 enumTypeInfo->GetDocumentation(PInvoke.MEMBERID_NIL, &enumNameBstr, &enumHelpStringBstr, null, null);
 
                 // For each item in the enum type info, we just need it's name and value and
@@ -783,7 +782,7 @@ internal static unsafe partial class Com2TypeInfoProcessor
                         // Get the value.
                         try
                         {
-                            varValue = Marshal.GetObjectForNativeVariant((nint)(void*)pVarDesc->Anonymous.lpvarValue);
+                            varValue = (*pVarDesc->Anonymous.lpvarValue).ToObject();
                         }
                         catch (Exception ex)
                         {

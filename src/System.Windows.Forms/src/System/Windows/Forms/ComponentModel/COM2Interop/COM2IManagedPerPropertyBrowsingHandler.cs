@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -68,7 +67,7 @@ internal sealed unsafe class Com2IManagedPerPropertyBrowsingHandler : Com2Extend
         }
 
         // Get the types.
-        for (int  i= 0; i < typeNames.Length; i++)
+        for (int i = 0; i < typeNames.Length; i++)
         {
             string typeName = typeNames[i];
 
@@ -221,7 +220,7 @@ internal sealed unsafe class Com2IManagedPerPropertyBrowsingHandler : Com2Extend
 
     private static unsafe object?[] GetVariantsFromPtr(VARIANT* values, uint count)
     {
-        var objects = new object?[count];
+        object?[] objects = new object?[count];
         for (int i = 0; i < count; i++)
         {
             try

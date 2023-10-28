@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -5883,7 +5882,7 @@ public class ToolStripItemTests
 
     private class CustomDefaultMarginToolStripItem : ToolStripItem
     {
-        protected internal override Padding DefaultMargin => new Padding(1, 2, 3, 4);
+        protected internal override Padding DefaultMargin => new(1, 2, 3, 4);
     }
 
     [WinFormsTheory]
@@ -6704,7 +6703,7 @@ public class ToolStripItemTests
 
     private class CustomDefaultPaddingToolStripItem : ToolStripItem
     {
-        protected override Padding DefaultPadding => new Padding(2, 3, 4, 5);
+        protected override Padding DefaultPadding => new(2, 3, 4, 5);
     }
 
     [WinFormsTheory]
@@ -7811,7 +7810,7 @@ public class ToolStripItemTests
 
     private class CustomDefaultSizeToolStripItem : ToolStripItem
     {
-        protected override Size DefaultSize => new Size(10, 11);
+        protected override Size DefaultSize => new(10, 11);
     }
 
     public static IEnumerable<object[]> Size_Set_TestData()

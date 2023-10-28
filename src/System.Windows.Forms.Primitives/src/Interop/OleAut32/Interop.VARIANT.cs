@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -152,13 +151,13 @@ internal unsafe partial struct VARIANT : IDisposable
                 return Marshal.PtrToStringAnsi(*(IntPtr*)data);
             case VT_DISPATCH:
             case VT_UNKNOWN:
-                IntPtr pInterface = *(IntPtr*)data;
-                if (pInterface == IntPtr.Zero)
+                IUnknown* pInterface = *(IUnknown**)data;
+                if (pInterface is null)
                 {
                     return null;
                 }
 
-                return Marshal.GetObjectForIUnknown(pInterface);
+                return ComHelpers.GetObjectForIUnknown(pInterface);
             case VT_DECIMAL:
                 return ((DECIMAL*)data)->ToDecimal();
             case VT_BOOL:
@@ -381,7 +380,7 @@ internal unsafe partial struct VARIANT : IDisposable
                             var result = GetSpan<object?>(array);
                             for (int i = 0; i < data.Length; i++)
                             {
-                                result[i] = data[i] == IntPtr.Zero ? null : Marshal.GetObjectForIUnknown(data[i]);
+                                result[i] = data[i] == IntPtr.Zero ? null : ComHelpers.GetObjectForIUnknown((IUnknown*)data[i]);
                             }
 
                             break;
@@ -591,7 +590,7 @@ internal unsafe partial struct VARIANT : IDisposable
                     }
                     else
                     {
-                        SetValue(array, Marshal.GetObjectForIUnknown(data), indices, lowerBounds);
+                        SetValue(array, ComHelpers.GetObjectForIUnknown((IUnknown*)data), indices, lowerBounds);
                     }
 
                     break;
@@ -659,10 +658,10 @@ internal unsafe partial struct VARIANT : IDisposable
             _ => throw new ArgumentException(string.Format(SR.COM2UnhandledVT, vt)),
         };
 
-        if (psa->cDims == 1 && psa->Bounds[0].lLbound == 0)
+        if (psa->cDims == 1 && psa->GetBounds().lLbound == 0)
         {
             // SZArray.
-            return Array.CreateInstance(elementType, (int)psa->Bounds[0].cElements);
+            return Array.CreateInstance(elementType, (int)psa->GetBounds().cElements);
         }
 
         var lengths = new int[psa->cDims];
@@ -672,8 +671,8 @@ internal unsafe partial struct VARIANT : IDisposable
         // Copy the lower bounds and count of elements for the dimensions. These need to copied in reverse order.
         for (int i = psa->cDims - 1; i >= 0; i--)
         {
-            lengths[counter] = (int)psa->Bounds[i].cElements;
-            bounds[counter] = psa->Bounds[i].lLbound;
+            lengths[counter] = (int)psa->GetBounds(i).cElements;
+            bounds[counter] = psa->GetBounds(i).lLbound;
             counter++;
         }
 
@@ -890,6 +889,7 @@ internal unsafe partial struct VARIANT : IDisposable
     public static explicit operator VARIANT(int value)
         => new()
         {
+            // Legacy marshalling uses VT_I4, not VT_INT
             vt = VT_I4,
             data = new() { intVal = value }
         };
@@ -902,6 +902,7 @@ internal unsafe partial struct VARIANT : IDisposable
     public static explicit operator VARIANT(uint value)
         => new()
         {
+            // Legacy marshalling uses VT_UI4, not VT_UINT
             vt = VT_UI4,
             data = new() { uintVal = value }
         };
@@ -940,7 +941,7 @@ internal unsafe partial struct VARIANT : IDisposable
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator VARIANT(IUnknown* value)
-        => new VARIANT()
+        => new()
         {
             vt = VT_UNKNOWN,
             data = new() { punkVal = value }
@@ -949,6 +950,18 @@ internal unsafe partial struct VARIANT : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator IUnknown*(VARIANT value)
         => value.vt == VT_UNKNOWN ? value.data.punkVal : throw new InvalidCastException();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator double(VARIANT value)
+        => value.vt == VT_R8 ? value.data.dblVal : ThrowInvalidCast<double>();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator VARIANT(double value)
+        => new()
+        {
+            vt = VT_R8,
+            data = new() { dblVal = value }
+        };
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static T ThrowInvalidCast<T>() => throw new InvalidCastException();
@@ -982,6 +995,10 @@ internal unsafe partial struct VARIANT : IDisposable
         else if (value is uint uintValue)
         {
             return (VARIANT)uintValue;
+        }
+        else if (value is double doubleValue)
+        {
+            return (VARIANT)doubleValue;
         }
 
         // Need to fill out to match Marshal behavior so we can remove the call.

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -17,7 +16,7 @@ namespace System.Windows.Forms.Design;
 internal class CollectionEditVerbManager : IWindowsFormsEditorService, ITypeDescriptorContext
 {
     private readonly ComponentDesigner _designer;
-    private IComponentChangeService _componentChangeSvc;
+    private IComponentChangeService _componentChangeService;
     private readonly PropertyDescriptor _targetProperty;
     private readonly DesignerVerb _editItemsVerb;
 
@@ -56,9 +55,9 @@ internal class CollectionEditVerbManager : IWindowsFormsEditorService, ITypeDesc
     {
         get
         {
-            _componentChangeSvc ??= (IComponentChangeService)((IServiceProvider)this).GetService(typeof(IComponentChangeService));
+            _componentChangeService ??= this.GetService<IComponentChangeService>();
 
-            return _componentChangeSvc;
+            return _componentChangeService;
         }
     }
 

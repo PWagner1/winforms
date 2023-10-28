@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -581,14 +580,10 @@ public static partial class ControlPaint
         Color bottomColor, int bottomWidth, ButtonBorderStyle bottomStyle)
     {
         // Very general, and very slow
-        if (leftWidth < 0)
-            throw new ArgumentOutOfRangeException(nameof(leftWidth));
-        if (topWidth < 0)
-            throw new ArgumentOutOfRangeException(nameof(topWidth));
-        if (rightWidth < 0)
-            throw new ArgumentOutOfRangeException(nameof(rightWidth));
-        if (bottomWidth < 0)
-            throw new ArgumentOutOfRangeException(nameof(bottomWidth));
+        ArgumentOutOfRangeException.ThrowIfNegative(leftWidth);
+        ArgumentOutOfRangeException.ThrowIfNegative(topWidth);
+        ArgumentOutOfRangeException.ThrowIfNegative(rightWidth);
+        ArgumentOutOfRangeException.ThrowIfNegative(bottomWidth);
 
         int totalData = (topWidth + leftWidth + bottomWidth + rightWidth) * 2;
         Span<int> allData;
@@ -773,7 +768,7 @@ public static partial class ControlPaint
                 {
                     HLSColor hlsColor = new HLSColor(topColor);
                     float inc = InfinityToOne(1.0f / (topWidth - 1));
-                    using var hdc = new DeviceContextHdcScope(deviceContext);
+                    using DeviceContextHdcScope hdc = new(deviceContext);
                     for (int i = 0; i < topWidth; i++)
                     {
                         using PInvoke.CreatePenScope hpen = new(
@@ -836,7 +831,7 @@ public static partial class ControlPaint
                 {
                     HLSColor hlsColor = new HLSColor(leftColor);
                     float inc = InfinityToOne(1.0f / (leftWidth - 1));
-                    using var hdc = new DeviceContextHdcScope(deviceContext);
+                    using DeviceContextHdcScope hdc = new(deviceContext);
                     for (int i = 0; i < leftWidth; i++)
                     {
                         using PInvoke.CreatePenScope hpen = new(
@@ -1081,7 +1076,7 @@ public static partial class ControlPaint
         }
 
         // Get Win32 dc with Graphics properties applied to it.
-        using var hdc = new DeviceContextHdcScope(graphics);
+        using DeviceContextHdcScope hdc = new(graphics);
         PInvoke.DrawEdge(hdc, ref rc, edge, flags);
     }
 
@@ -1409,7 +1404,7 @@ public static partial class ControlPaint
                 using (Graphics g2 = Graphics.FromImage(bitmap))
                 {
                     g2.Clear(Color.Transparent);
-                    using var dc = new DeviceContextHdcScope(g2, applyGraphicsState: false);
+                    using DeviceContextHdcScope dc = new(g2, applyGraphicsState: false);
                     PInvoke.DrawFrameControl(dc, ref rcCheck, DFC_TYPE.DFC_MENU, DFCS_STATE.DFCS_MENUCHECK);
                 }
 
@@ -1472,17 +1467,15 @@ public static partial class ControlPaint
         Color backColor)
     {
         ArgumentNullException.ThrowIfNull(graphics);
-        if (width < 0)
-            throw new ArgumentOutOfRangeException(nameof(width));
-        if (height < 0)
-            throw new ArgumentOutOfRangeException(nameof(height));
+        ArgumentOutOfRangeException.ThrowIfNegative(width);
+        ArgumentOutOfRangeException.ThrowIfNegative(height);
 
         RECT rcFrame = new RECT(0, 0, width, height);
         using Bitmap bitmap = new Bitmap(width, height);
         using Graphics g2 = Graphics.FromImage(bitmap);
         g2.Clear(Color.Transparent);
 
-        using (var hdc = new DeviceContextHdcScope(g2, applyGraphicsState: false))
+        using (DeviceContextHdcScope hdc = new(g2, applyGraphicsState: false))
         {
             // Get Win32 dc with Graphics properties applied to it.
             PInvoke.DrawFrameControl(hdc, ref rcFrame, kind, state);
@@ -1496,13 +1489,13 @@ public static partial class ControlPaint
         {
             // Replace black/white with foreColor/backColor.
             ImageAttributes attrs = new ImageAttributes();
-            ColorMap cm1 = new ColorMap
+            ColorMap cm1 = new()
             {
                 OldColor = Color.Black,
                 NewColor = foreColor
             };
 
-            ColorMap cm2 = new ColorMap
+            ColorMap cm2 = new()
             {
                 OldColor = Color.White,
                 NewColor = backColor
@@ -1605,7 +1598,7 @@ public static partial class ControlPaint
     {
         ArgumentNullException.ThrowIfNull(graphics);
 
-        using var attributes = new ImageAttributes();
+        using ImageAttributes attributes = new();
         attributes.SetColorMatrix(RemapBlackAndWhitePreserveTransparentMatrix(replaceBlack, Color.White));
         graphics.DrawImage(
             image,
@@ -1624,9 +1617,9 @@ public static partial class ControlPaint
     // the supplied Graphics object.
     internal static void DrawImageReplaceColor(Graphics g, Image image, Rectangle dest, Color oldColor, Color newColor)
     {
-        ImageAttributes attrs = new ImageAttributes();
+        ImageAttributes attrs = new();
 
-        ColorMap cm = new ColorMap
+        ColorMap cm = new()
         {
             OldColor = oldColor,
             NewColor = newColor
@@ -1683,8 +1676,8 @@ public static partial class ControlPaint
 
         if (unscaledImage)
         {
-            using Bitmap bmp = new Bitmap(image.Width, image.Height);
-            using (Graphics g = Graphics.FromImage(bmp))
+            using Bitmap bitmap = new(image.Width, image.Height);
+            using (Graphics g = Graphics.FromImage(bitmap))
             {
                 g.DrawImage(
                     image,
@@ -1694,7 +1687,7 @@ public static partial class ControlPaint
                     t_disabledImageAttr);
             }
 
-            graphics.DrawImageUnscaled(bmp, imageBounds);
+            graphics.DrawImageUnscaled(bitmap, imageBounds);
         }
         else
         {
@@ -2036,7 +2029,7 @@ public static partial class ControlPaint
         // This must come before creating the scope.
         FONT_QUALITY quality = TextRenderer.FontQualityFromTextRenderingHint(dc);
 
-        using var hdc = new DeviceContextHdcScope(dc, TextRenderer.GetApplyStateFlags(dc, format));
+        using DeviceContextHdcScope hdc = new(dc, TextRenderer.GetApplyStateFlags(dc, format));
         DrawStringDisabled(hdc, s, font, color, layoutRectangle, format, quality);
     }
 
@@ -2090,7 +2083,7 @@ public static partial class ControlPaint
             0x5a0049);  // RasterOp.BRUSH.XorWith(RasterOp.TARGET));
         R2_MODE rop2 = R2_MODE.R2_NOT;
 
-        using var desktopDC = new GetDcScope(
+        using GetDcScope desktopDC = new(
             PInvoke.GetDesktopWindow(),
             HRGN.Null,
             GET_DCX_FLAGS.DCX_WINDOW | GET_DCX_FLAGS.DCX_LOCKWINDOWUPDATE | GET_DCX_FLAGS.DCX_CACHE);
@@ -2109,7 +2102,7 @@ public static partial class ControlPaint
     ///  function -- when used on something not obtained from ChooseFont, it may round away some precision.
     /// </summary>
     internal static Font FontInPoints(Font font)
-        => new Font(
+        => new(
             font.FontFamily,
             font.SizeInPoints,
             font.Style,
@@ -2468,7 +2461,7 @@ public static partial class ControlPaint
                 var pixel = bitmap.GetPixel(x, y);
                 if (pixel != backgroundColor)
                 {
-                    var pixelColorWrapper = new HLSColor(pixel);
+                    HLSColor pixelColorWrapper = new(pixel);
                     if (Math.Abs(pixelColorWrapper.Luminosity - backgroundColorWrapper.Luminosity) > MaximumLuminosityDifference)
                     {
                         bitmap.SetPixel(x, y, pixel.InvertColor());

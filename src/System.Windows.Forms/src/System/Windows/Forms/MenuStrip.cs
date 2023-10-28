@@ -1,10 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
-using static Interop;
+using Windows.Win32.UI.Accessibility;
 
 namespace System.Windows.Forms;
 
@@ -13,8 +12,8 @@ public partial class MenuStrip : ToolStrip
 {
     private ToolStripMenuItem? _mdiWindowListItem;
 
-    private static readonly object EventMenuActivate = new object();
-    private static readonly object EventMenuDeactivate = new object();
+    private static readonly object EventMenuActivate = new();
+    private static readonly object EventMenuDeactivate = new();
 
     public MenuStrip()
     {
@@ -173,8 +172,8 @@ public partial class MenuStrip : ToolStrip
         {
             if (!TabStop && !DesignMode && IsAccessibilityObjectCreated)
             {
-                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.MenuModeStartEventId);
-                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.MenuOpenedEventId);
+                AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_MenuModeStartEventId);
+                AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_MenuOpenedEventId);
             }
 
             AccessibilityNotifyClients(AccessibleEvents.SystemMenuStart, (int)OBJECT_IDENTIFIER.OBJID_MENU, -1);
@@ -191,8 +190,8 @@ public partial class MenuStrip : ToolStrip
 
             if (!TabStop && !DesignMode && IsAccessibilityObjectCreated)
             {
-                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.MenuClosedEventId);
-                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.MenuModeEndEventId);
+                AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_MenuClosedEventId);
+                AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_MenuModeEndEventId);
             }
         }
 

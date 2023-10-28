@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -25,18 +24,17 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
 
     private readonly byte[]? _cursorData;
     private HCURSOR _handle;
-    private bool _ownHandle = true;
-    private readonly PCWSTR _resourceId;
+    private readonly bool _freeHandle;
 
     /// <summary>
-    ///  Private constructor. If you want a standard system cursor, use one of the
-    ///  definitions in the Cursors class.
+    ///  If created by the <see cref="Cursors"/> class, this is the property name that created it.
     /// </summary>
-    internal unsafe Cursor(PCWSTR nResourceId)
+    internal string? CursorsProperty { get; }
+
+    internal unsafe Cursor(PCWSTR nResourceId, string cursorsProperty)
     {
-        // We don't delete stock cursors.
-        _ownHandle = false;
-        _resourceId = nResourceId;
+        _freeHandle = false;
+        CursorsProperty = cursorsProperty;
         _handle = PInvoke.LoadCursor((HINSTANCE)0, nResourceId);
         if (_handle.IsNull)
         {
@@ -44,48 +42,57 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
         }
     }
 
+    internal Cursor(string resource, string cursorsProperty)
+        : this(typeof(Cursors).Assembly.GetManifestResourceStream(typeof(Cursor), resource).OrThrowIfNull())
+    {
+        CursorsProperty = cursorsProperty;
+        _freeHandle = false;
+    }
+
     /// <summary>
-    ///  Initializes a new instance of the <see cref="Cursor"/> class with the specified handle.
+    ///  Initializes a new instance of the <see cref="Cursor"/> class from the specified <paramref name="handle"/>.
     /// </summary>
     public Cursor(IntPtr handle)
     {
-        if (handle == IntPtr.Zero)
+        if (handle == 0)
         {
             throw new ArgumentException(string.Format(SR.InvalidGDIHandle, (typeof(Cursor)).Name), nameof(handle));
         }
 
+        _freeHandle = false;
         _handle = (HCURSOR)handle;
-        _ownHandle = false;
     }
 
     /// <summary>
-    ///  Initializes a new instance of the <see cref="Cursor"/> class with the specified filename.
+    ///  Initializes a new instance of the <see cref="Cursor"/> class with the specified <paramref name="fileName"/>.
     /// </summary>
     public Cursor(string fileName)
     {
         _cursorData = File.ReadAllBytes(fileName);
+        _freeHandle = true;
         LoadPicture(
             new Ole32.GPStream(new MemoryStream(_cursorData)),
             nameof(fileName));
     }
 
     /// <summary>
-    ///  Initializes a new instance of the <see cref="Cursor"/> class from the specified resource.
+    ///  Initializes a new instance of the <see cref="Cursor"/> class from the specified <paramref name="resource"/>.
     /// </summary>
     public Cursor(Type type, string resource)
-        : this((type.OrThrowIfNull()).Module.Assembly.GetManifestResourceStream(type, resource)!)
+        : this(type.OrThrowIfNull().Module.Assembly.GetManifestResourceStream(type, resource)!)
     {
     }
 
     /// <summary>
     ///  Initializes a new instance of the <see cref="Cursor"/> class from the
-    ///  specified data stream.
+    ///  specified data <paramref name="stream"/>.
     /// </summary>
     public Cursor(Stream stream)
     {
         ArgumentNullException.ThrowIfNull(stream);
-        MemoryStream memoryStream = new();
-        // reset stream position to start, there are no gaurantees it is at the start.
+        using MemoryStream memoryStream = new();
+
+        // Reset stream position to start, there are no gaurantees it is at the start.
         if (stream.CanSeek)
         {
             stream.Position = 0;
@@ -93,6 +100,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
 
         stream.CopyTo(memoryStream);
         _cursorData = memoryStream.ToArray();
+        _freeHandle = true;
 
         // stream.CopyTo causes both streams to advance. So reset it for LoadPicture.
         memoryStream.Position = 0;
@@ -225,7 +233,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
 
     private void Dispose(bool disposing)
     {
-        if (!_handle.IsNull && _ownHandle)
+        if (!_handle.IsNull && _freeHandle)
         {
             PInvoke.DestroyCursor(_handle);
             _handle = HCURSOR.Null;
@@ -246,7 +254,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
         targetRect.X += (int)graphics.Transform.OffsetX;
         targetRect.Y += (int)graphics.Transform.OffsetY;
 
-        using var dc = new DeviceContextHdcScope(graphics, applyGraphicsState: false);
+        using DeviceContextHdcScope dc = new(graphics, applyGraphicsState: false);
 
         int imageX = 0;
         int imageY = 0;
@@ -353,17 +361,11 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
         DrawImageCore(g, Rectangle.Empty, targetRect, stretch: true);
     }
 
-    /// <summary>
-    ///  Cleans up Windows resources for this object.
-    /// </summary>
     ~Cursor()
     {
         Dispose(disposing: false);
     }
 
-    /// <summary>
-    ///  ISerializable private implementation
-    /// </summary>
     void ISerializable.GetObjectData(SerializationInfo si, StreamingContext context)
     {
         throw new PlatformNotSupportedException();
@@ -433,8 +435,6 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
                 {
                     throw new Win32Exception(string.Format(SR.FailedToLoadCursor, Marshal.GetLastWin32Error()));
                 }
-
-                _ownHandle = true;
             }
             else
             {
@@ -452,20 +452,15 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
     /// </summary>
     internal unsafe byte[] GetData()
     {
-        if (_resourceId.Value is not null)
-        {
-            throw new FormatException(SR.CursorCannotCovertToBytes);
-        }
-
         if (_cursorData is null)
         {
-            throw new InvalidOperationException(SR.InvalidPictureFormat);
+            throw CursorsProperty is null
+                ? new InvalidOperationException(SR.InvalidPictureFormat)
+                : new FormatException(SR.CursorCannotCovertToBytes);
         }
 
         return (byte[])_cursorData.Clone();
     }
-
-    internal bool IsValid() => _handle != IntPtr.Zero;
 
     /// <summary>
     ///  Displays the cursor. For every call to Cursor.show() there must have been
@@ -476,23 +471,11 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
     /// <summary>
     ///  Retrieves a human readable string representing this <see cref="Cursor"/>.
     /// </summary>
-    public override string ToString()
-    {
-        string? s = !_ownHandle
-            ? TypeDescriptor.GetConverter(typeof(Cursor)).ConvertToString(this)
-            : base.ToString();
-
-        return $"[Cursor: {s}]";
-    }
+    public override string ToString() => $"[Cursor: {CursorsProperty ?? base.ToString()}]";
 
     public static bool operator ==(Cursor? left, Cursor? right)
     {
-        if (right is null || left is null)
-        {
-            return left is null && right is null;
-        }
-
-        return left._handle == right._handle;
+        return right is null || left is null ? left is null && right is null : left._handle == right._handle;
     }
 
     public static bool operator !=(Cursor? left, Cursor? right) => !(left == right);

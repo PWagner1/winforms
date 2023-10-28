@@ -1,9 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
-using static Interop;
 
 namespace System.Windows.Forms.Design;
 
@@ -94,10 +92,10 @@ public partial class ComponentEditorForm
             COLORREF backColor,
             COLORREF textColor)
         {
-            Size size = default(Size);
-            RECT rc2 = default(RECT);
+            Size size = default;
+            RECT rc2 = default;
             RECT rc = rcIn;
-            ImageList imagelist = ImageList;
+            ImageList? imageList = ImageList;
 
             // Select the font of the dialog, so we don't get the underlined font
             // when the item is being tracked
@@ -142,13 +140,16 @@ public partial class ComponentEditorForm
                     DRAW_TEXT_FORMAT.DT_LEFT | DRAW_TEXT_FORMAT.DT_VCENTER | DRAW_TEXT_FORMAT.DT_END_ELLIPSIS | DRAW_TEXT_FORMAT.DT_NOPREFIX);
             }
 
-            PInvoke.ImageList.Draw(
-                imagelist,
-                imageIndex,
-                dc,
-                PADDING_HORZ,
-                rc.top + (((rc.bottom - rc.top) - SIZE_ICON_Y) >> 1),
-                (IMAGE_LIST_DRAW_STYLE)ComCtl32.ILD.TRANSPARENT);
+            if (imageList is not null)
+            {
+                PInvoke.ImageList.Draw(
+                    imageList,
+                    imageIndex,
+                    dc,
+                    PADDING_HORZ,
+                    rc.top + (((rc.bottom - rc.top) - SIZE_ICON_Y) >> 1),
+                    IMAGE_LIST_DRAW_STYLE.ILD_TRANSPARENT);
+            }
 
             // Draw the hot-tracking border if needed
             if ((state & STATE_HOT) != 0)
@@ -206,7 +207,7 @@ public partial class ComponentEditorForm
                     break;
                 case NMCUSTOMDRAW_DRAW_STAGE.CDDS_ITEMPREPAINT:
                     {
-                        TreeNode itemNode = TreeNode.FromHandle(this, (nint)nmtvcd->nmcd.dwItemSpec);
+                        TreeNode? itemNode = TreeNode.FromHandle(this, (nint)nmtvcd->nmcd.dwItemSpec);
                         if (itemNode is not null)
                         {
                             int state = STATE_NORMAL;
@@ -276,7 +277,7 @@ public partial class ComponentEditorForm
             if (m.MsgInternal == MessageId.WM_REFLECT_NOTIFY)
             {
                 NMHDR* nmhdr = (NMHDR*)(nint)m.LParamInternal;
-                if ((int)nmhdr->code == (int)ComCtl32.NM.CUSTOMDRAW)
+                if (nmhdr->code == PInvoke.NM_CUSTOMDRAW)
                 {
                     OnCustomDraw(ref m);
                     return;

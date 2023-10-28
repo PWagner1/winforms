@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace System.Windows.Forms.Design;
 
@@ -9,12 +8,12 @@ public partial class FolderNameEditor
     [Flags]
     protected enum FolderBrowserStyles
     {
-        BrowseForComputer        = unchecked((int)PInvoke.BIF_BROWSEFORCOMPUTER),
-        BrowseForEverything      = unchecked((int)PInvoke.BIF_BROWSEINCLUDEFILES),
-        BrowseForPrinter         = unchecked((int)PInvoke.BIF_BROWSEFORPRINTER),
-        RestrictToDomain         = unchecked((int)PInvoke.BIF_DONTGOBELOWDOMAIN),
-        RestrictToFilesystem     = unchecked((int)PInvoke.BIF_RETURNONLYFSDIRS),
-        RestrictToSubfolders     = unchecked((int)PInvoke.BIF_RETURNFSANCESTORS),
-        ShowTextBox              = unchecked((int)PInvoke.BIF_EDITBOX)
+        BrowseForComputer        = (int)PInvoke.BIF_BROWSEFORCOMPUTER,
+        BrowseForEverything      = (int)PInvoke.BIF_BROWSEINCLUDEFILES,
+        BrowseForPrinter         = (int)PInvoke.BIF_BROWSEFORPRINTER,
+        RestrictToDomain         = (int)PInvoke.BIF_DONTGOBELOWDOMAIN,
+        RestrictToFilesystem     = (int)PInvoke.BIF_RETURNONLYFSDIRS,
+        RestrictToSubfolders     = (int)PInvoke.BIF_RETURNFSANCESTORS,
+        ShowTextBox              = (int)PInvoke.BIF_EDITBOX
     }
 }

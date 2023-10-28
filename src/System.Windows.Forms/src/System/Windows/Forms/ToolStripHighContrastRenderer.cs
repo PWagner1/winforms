@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Specialized;
 using System.Drawing;
@@ -180,6 +179,19 @@ internal class ToolStripHighContrastRenderer : ToolStripSystemRenderer
         {
             e.Graphics.DrawRectangle(SystemPens.ButtonHighlight, 0, 0, e.Item.Width - 1, e.Item.Height - 1);
         }
+
+        if (e.Item is ToolStripMenuItem menuItem && (menuItem.Checked || menuItem.Selected))
+        {
+            Graphics g = e.Graphics;
+            Rectangle bounds = new Rectangle(Point.Empty, menuItem.Size);
+
+            g.FillRectangle(SystemBrushes.Highlight, bounds);
+            g.DrawRectangle(SystemPens.ControlLight, bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
+            if (menuItem.Selected)
+            {
+                DrawHightContrastDashedBorder(g, menuItem);
+            }
+        }
     }
 
     protected override void OnRenderOverflowButtonBackground(ToolStripItemRenderEventArgs e)
@@ -219,11 +231,14 @@ internal class ToolStripHighContrastRenderer : ToolStripSystemRenderer
             }
         }
 
-        // ToolstripButtons that are checked are rendered with a highlight
+        // ToolstripButtons and ToolstripMenuItems that are checked are rendered with a highlight
         // background. In that case, set the text color to highlight as well.
-        if (typeof(ToolStripButton).IsAssignableFrom(e.Item.GetType()) &&
+        if ((typeof(ToolStripButton).IsAssignableFrom(e.Item.GetType()) &&
             ((ToolStripButton)e.Item).DisplayStyle != ToolStripItemDisplayStyle.Image &&
-            ((ToolStripButton)e.Item).Checked)
+            ((ToolStripButton)e.Item).Checked) ||
+            (typeof(ToolStripMenuItem).IsAssignableFrom(e.Item.GetType()) &&
+            ((ToolStripMenuItem)e.Item).DisplayStyle != ToolStripItemDisplayStyle.Image &&
+            ((ToolStripMenuItem)e.Item).Checked))
         {
             e.TextColor = SystemColors.HighlightText;
         }
@@ -444,16 +459,16 @@ internal class ToolStripHighContrastRenderer : ToolStripSystemRenderer
 
     private static void DrawHightContrastDashedBorder(Graphics graphics, ToolStripItem item)
     {
-        var bounds = item.ClientBounds;
+        Rectangle bounds = item.ClientBounds;
         float[] dashValues = { 2, 2 };
         int penWidth = 2;
 
-        var focusPen1 = new Pen(SystemColors.ControlText, penWidth)
+        Pen focusPen1 = new(SystemColors.ControlText, penWidth)
         {
             DashPattern = dashValues
         };
 
-        var focusPen2 = new Pen(SystemColors.Control, penWidth)
+        Pen focusPen2 = new(SystemColors.Control, penWidth)
         {
             DashPattern = dashValues,
             DashOffset = 2

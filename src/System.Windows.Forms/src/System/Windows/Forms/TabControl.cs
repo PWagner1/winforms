@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -8,8 +7,8 @@ using System.Drawing;
 using System.Drawing.Design;
 using System.Text;
 using System.Windows.Forms.Layout;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms;
 
@@ -24,7 +23,7 @@ namespace System.Windows.Forms;
 public partial class TabControl : Control
 {
     private static readonly Size DefaultItemSize = Size.Empty;
-    private static readonly Point DefaultPaddingPoint = new Point(6, 3);
+    private static readonly Point DefaultPaddingPoint = new(6, 3);
 
     // Properties
     private readonly TabPageCollection _tabCollection;
@@ -45,11 +44,11 @@ public partial class TabControl : Control
     private EventHandler? _onSelectedIndexChanged;
     private DrawItemEventHandler? _onDrawItem;
 
-    private static readonly object s_deselectingEvent = new object();
-    private static readonly object s_deselectedEvent = new object();
-    private static readonly object s_selectingEvent = new object();
-    private static readonly object s_selectedEvent = new object();
-    private static readonly object s_rightToLeftLayoutChangedEvent = new object();
+    private static readonly object s_deselectingEvent = new();
+    private static readonly object s_deselectedEvent = new();
+    private static readonly object s_selectingEvent = new();
+    private static readonly object s_selectedEvent = new();
+    private static readonly object s_rightToLeftLayoutChangedEvent = new();
 
     // Perf: take all the bools and put them into a state variable: see TabControlState consts above
     private BitVector32 _tabControlState;
@@ -1111,7 +1110,7 @@ public partial class TabControl : Control
         }
 
         SetState(State.GetTabRectfromItemSize, false);
-        RECT rect = default(RECT);
+        RECT rect = default;
 
         // normally, we would not want to create the handle for this, but since
         // it is dependent on the actual physical display, we simply must.
@@ -1221,7 +1220,7 @@ public partial class TabControl : Control
 
         if (IsAccessibilityObjectCreated && SelectedTab is not null)
         {
-            SelectedTab.TabAccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+            SelectedTab.TabAccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
         }
     }
 
@@ -1931,8 +1930,8 @@ public partial class TabControl : Control
         }
 
         _toolTipBuffer.SetText(tipText);
-        ttt->lpszText = _toolTipBuffer.Buffer;
-        ttt->hinst = IntPtr.Zero;
+        ttt->lpszText = (char*)_toolTipBuffer.Buffer;
+        ttt->hinst = HINSTANCE.Null;
 
         // RightToLeft reading order
         if (RightToLeft == RightToLeft.Yes)
@@ -1945,7 +1944,7 @@ public partial class TabControl : Control
     {
         DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)(nint)m.LParamInternal;
 
-        using var e = new DrawItemEventArgs(
+        using DrawItemEventArgs e = new(
             dis->hDC.CreateGraphics(),
             Font,
             dis->rcItem,
@@ -1968,8 +1967,8 @@ public partial class TabControl : Control
 
             if (IsAccessibilityObjectCreated && SelectedTab?.ParentInternal is TabControl)
             {
-                SelectedTab.TabAccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.SelectionItem_ElementSelectedEventId);
-                BeginInvoke((MethodInvoker)(() => SelectedTab.TabAccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId)));
+                SelectedTab.TabAccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_SelectionItem_ElementSelectedEventId);
+                BeginInvoke((MethodInvoker)(() => SelectedTab.TabAccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId)));
             }
         }
         else
@@ -2052,7 +2051,7 @@ public partial class TabControl : Control
             case PInvoke.WM_NOTIFY:
             case MessageId.WM_REFLECT_NOTIFY:
                 NMHDR* nmhdr = (NMHDR*)(nint)m.LParamInternal;
-                switch ((int)nmhdr->code)
+                switch (nmhdr->code)
                 {
                     // new switch added to prevent the TabControl from changing to next TabPage ...
                     //in case of validation cancelled...
@@ -2060,7 +2059,7 @@ public partial class TabControl : Control
                     //If validation not cancelled then tabControlState[State.UISelection] is turned ON to set the focus on to the ...
                     //next TabPage..
 
-                    case (int)TCN.SELCHANGING:
+                    case PInvoke.TCN_SELCHANGING:
                         if (WmSelChanging())
                         {
                             m.ResultInternal = (LRESULT)1;
@@ -2080,7 +2079,7 @@ public partial class TabControl : Control
                         }
 
                         break;
-                    case (int)TCN.SELCHANGE:
+                    case PInvoke.TCN_SELCHANGE:
                         if (WmSelChange())
                         {
                             m.ResultInternal = (LRESULT)1;
@@ -2093,7 +2092,7 @@ public partial class TabControl : Control
                         }
 
                         break;
-                    case (int)TTN.GETDISPINFOW:
+                    case PInvoke.TTN_GETDISPINFOW:
                         // Setting the max width has the added benefit of enabling Multiline tool tips
                         PInvoke.SendMessage(nmhdr->hwndFrom, PInvoke.TTM_SETMAXTIPWIDTH, 0, SystemInformation.MaxWindowTrackSize.Width);
                         WmNeedText(ref m);
@@ -2119,7 +2118,7 @@ public partial class TabControl : Control
 
     private unsafe int SendMessage(uint msg, int wParam, TabPage tabPage)
     {
-        ComCtl32.TCITEMW tcitem = default;
+        TCITEMW tcitem = default;
         string text = tabPage.Text;
         PrefixAmpersands(ref text);
         if (text is not null)
@@ -2158,7 +2157,7 @@ public partial class TabControl : Control
         }
 
         // Insert extra ampersands
-        var newString = new StringBuilder();
+        StringBuilder newString = new();
         newString.Append(value.AsSpan(0, firstAmpersand));
         for (int i = firstAmpersand; i < value.Length; ++i)
         {

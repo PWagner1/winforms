@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace System.Windows.Forms;
 
@@ -28,10 +27,10 @@ public class LinkClickedEventArgs : EventArgs
     /// </exception>
     public LinkClickedEventArgs(string? linkText, int linkStart, int linkLength)
     {
-        if (linkStart < 0)
-            throw new ArgumentOutOfRangeException(nameof(linkStart));
+        ArgumentOutOfRangeException.ThrowIfNegative(linkStart);
+        ArgumentOutOfRangeException.ThrowIfNegative(linkLength);
 
-        if (linkLength < 0 || linkStart + linkLength < 0)
+        if (linkStart + linkLength < 0)
             throw new ArgumentOutOfRangeException(nameof(linkLength));
 
         LinkText = linkText;

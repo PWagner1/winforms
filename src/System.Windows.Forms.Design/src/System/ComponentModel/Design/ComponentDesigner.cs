@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -35,6 +34,24 @@ public partial class ComponentDesigner : ITreeDesigner, IDesignerFilter, ICompon
     /// </summary>
     public virtual ICollection AssociatedComponents => Array.Empty<IComponent>();
 
+    private protected virtual void UpdateTextualDefaultProperty()
+    {
+        var component = Component;
+        if (component?.Site is { } site)
+        {
+            PropertyDescriptor defaultProperty = TypeDescriptor.GetDefaultProperty(component);
+            if (!(defaultProperty is not null && defaultProperty.PropertyType.Equals(typeof(string))))
+            {
+                return;
+            }
+
+            if (defaultProperty.GetValue(component) is string currentValue && string.IsNullOrEmpty(currentValue))
+            {
+                defaultProperty.SetValue(component, site.Name);
+            }
+        }
+    }
+
     internal virtual bool CanBeAssociatedWith(IDesigner parentDesigner) => true;
 
     /// <summary>
@@ -48,6 +65,9 @@ public partial class ComponentDesigner : ITreeDesigner, IDesignerFilter, ICompon
             return inheritanceAttribute is not null && !inheritanceAttribute.Equals(InheritanceAttribute.NotInherited);
         }
     }
+
+    internal bool IsInheritedReadOnly
+        => InheritanceAttribute.InheritanceLevel == InheritanceLevel.InheritedReadOnly;
 
     /// <summary>
     ///  This property provides a generic mechanism for discovering parent relationships within designers,
@@ -123,6 +143,15 @@ public partial class ComponentDesigner : ITreeDesigner, IDesignerFilter, ICompon
     {
         // execute legacy code
         InitializeNonDefault();
+
+        // Note: This was originally an obsoleted API called OnSetComponentDefaults(). The
+        // default behavior of this API was to set the the default property to the component's
+        // site name, if the property was a string and null or empty. We've removed the API
+        // but preserved the same behavior, now controlled by SetTextualDefaultProperty.
+        if (SetTextualDefaultProperty)
+        {
+            UpdateTextualDefaultProperty();
+        }
     }
 
     void IDesignerFilter.PostFilterAttributes(IDictionary attributes) => PostFilterAttributes(attributes);
@@ -146,6 +175,12 @@ public partial class ComponentDesigner : ITreeDesigner, IDesignerFilter, ICompon
     ///  Gets the design-time verbs supported by the component associated with the designer.
     /// </summary>
     public virtual DesignerVerbCollection Verbs => _verbs ??= new DesignerVerbCollection();
+
+    /// <summary>
+    ///  Controls whether the default property of <see cref="Component"/> is automatically set
+    ///  to <see cref="ISite.Name"/> on creation. The default is <see langword="true"/>.
+    /// </summary>
+    protected virtual bool SetTextualDefaultProperty => true;
 
     ICollection ITreeDesigner.Children
     {
@@ -292,7 +327,6 @@ public partial class ComponentDesigner : ITreeDesigner, IDesignerFilter, ICompon
                 }
 
                 // Save the new value... BEFORE navigating to it!
-                // s_codemarkers.CodeMarker(CodeMarkerEvent.perfFXBindEventDesignToCode);
                 if (eventChanged)
                 {
                     defaultPropEvent.SetValue(comp, handler);
@@ -348,7 +382,7 @@ public partial class ComponentDesigner : ITreeDesigner, IDesignerFilter, ICompon
 
         if (component?.Site is IServiceContainer sc && GetService(typeof(DesignerCommandSet)) is null)
         {
-            sc.AddService(typeof(DesignerCommandSet), new CDDesignerCommandSet(this));
+            sc.AddService<DesignerCommandSet>(new CDDesignerCommandSet(this));
         }
 
         if (TryGetService(out IComponentChangeService cs))

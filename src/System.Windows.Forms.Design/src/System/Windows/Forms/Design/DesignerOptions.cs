@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -14,7 +13,7 @@ public class DesignerOptions
 {
     private const int MinGridSize = 2;
     private const int MaxGridSize = 200;
-    private Size _gridSize = new Size(8, 8);
+    private Size _gridSize = new(8, 8);
 
     /// <summary>
     ///  Public GridSize property.

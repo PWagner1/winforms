@@ -1,10 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
-#nullable disable
-
-using System.Runtime.InteropServices;
+using Windows.Win32.System.Com;
+using Windows.Win32.Web.MsHtml;
 using static Interop.Mshtml;
 
 namespace System.Windows.Forms;
@@ -24,9 +22,9 @@ public sealed partial class HtmlWindow
     ///                       a new HtmlToClrEventProxy, detect the callback and fire the corresponding
     ///                       CLR event.
     /// </summary>
-    internal class HtmlWindowShim : HtmlShim
+    internal unsafe class HtmlWindowShim : HtmlShim
     {
-        private AxHost.ConnectionPointCookie _cookie;
+        private AxHost.ConnectionPointCookie? _cookie;
         private HtmlWindow _htmlWindow;
 
         public HtmlWindowShim(HtmlWindow window)
@@ -34,15 +32,9 @@ public sealed partial class HtmlWindow
             _htmlWindow = window;
         }
 
-        public override IHTMLWindow2 AssociatedWindow
-        {
-            get { return _htmlWindow.NativeHtmlWindow; }
-        }
+        public override IHTMLWindow2.Interface AssociatedWindow => NativeHtmlWindow;
 
-        public IHTMLWindow2 NativeHtmlWindow
-        {
-            get { return _htmlWindow.NativeHtmlWindow; }
-        }
+        public IHTMLWindow2.Interface NativeHtmlWindow => (IHTMLWindow2.Interface)_htmlWindow.NativeHtmlWindow.GetManagedObject();
 
         ///  Support IHtmlDocument3.AttachHandler
         public override void AttachEventHandler(string eventName, EventHandler eventHandler)
@@ -52,8 +44,12 @@ public sealed partial class HtmlWindow
             // our EventHandler properly.
 
             HtmlToClrEventProxy proxy = AddEventProxy(eventName, eventHandler);
-            bool success = ((IHTMLWindow3)NativeHtmlWindow).AttachEvent(eventName, proxy);
-            Debug.Assert(success, "failed to add event");
+            using var htmlWindow3 = _htmlWindow.GetHtmlWindow<IHTMLWindow3>();
+            using BSTR name = new(eventName);
+            using var dispatch = ComHelpers.GetComScope<IDispatch>(proxy);
+            VARIANT_BOOL result;
+            htmlWindow3.Value->attachEvent(name, dispatch, &result).ThrowOnFailure();
+            Debug.Assert(result, "failed to add event");
         }
 
         ///  Support HTMLWindowEvents2
@@ -61,10 +57,11 @@ public sealed partial class HtmlWindow
         {
             if (_cookie is null || !_cookie.Connected)
             {
-                _cookie = new AxHost.ConnectionPointCookie(NativeHtmlWindow,
-                                                                          new HTMLWindowEvents2(_htmlWindow),
-                                                                          typeof(DHTMLWindowEvents2),
-                                                                          /*throwException*/ false);
+                _cookie = new AxHost.ConnectionPointCookie(
+                    NativeHtmlWindow,
+                    new HTMLWindowEvents2(_htmlWindow),
+                    typeof(DHTMLWindowEvents2),
+                    throwException: false);
                 if (!_cookie.Connected)
                 {
                     _cookie = null;
@@ -75,10 +72,13 @@ public sealed partial class HtmlWindow
         ///  Support IHTMLWindow3.DetachHandler
         public override void DetachEventHandler(string eventName, EventHandler eventHandler)
         {
-            HtmlToClrEventProxy proxy = RemoveEventProxy(eventHandler);
+            HtmlToClrEventProxy? proxy = RemoveEventProxy(eventHandler);
             if (proxy is not null)
             {
-                ((IHTMLWindow3)NativeHtmlWindow).DetachEvent(eventName, proxy);
+                using var htmlWindow3 = _htmlWindow.GetHtmlWindow<IHTMLWindow3>();
+                using BSTR name = new(eventName);
+                using var dispatch = ComHelpers.GetComScope<IDispatch>(proxy);
+                htmlWindow3.Value->detachEvent(name, dispatch).ThrowOnFailure();
             }
         }
 
@@ -91,28 +91,18 @@ public sealed partial class HtmlWindow
             }
         }
 
-        public void OnWindowUnload()
-        {
-            _htmlWindow?.ShimManager.OnWindowUnloaded(_htmlWindow);
-        }
+        public void OnWindowUnload() => _htmlWindow?.ShimManager.OnWindowUnloaded(_htmlWindow);
 
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
             if (disposing)
             {
-                if (_htmlWindow is not null && _htmlWindow.NativeHtmlWindow is not null)
-                {
-                    Marshal.FinalReleaseComObject(_htmlWindow.NativeHtmlWindow);
-                }
-
-                _htmlWindow = null;
+                _htmlWindow?.NativeHtmlWindow?.Dispose();
+                _htmlWindow = null!;
             }
         }
 
-        protected override object GetEventSender()
-        {
-            return _htmlWindow;
-        }
+        protected override object GetEventSender() => _htmlWindow;
     }
 }

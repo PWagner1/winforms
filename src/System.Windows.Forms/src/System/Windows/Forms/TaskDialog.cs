@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -73,7 +72,7 @@ public partial class TaskDialog : IWin32Window
     ///   <see cref="TASKDIALOG_NOTIFICATIONS.TDN_NAVIGATED"/> notification was
     ///   not yet received.
     /// </summary>
-    private readonly Queue<TaskDialogPage> _waitingNavigationPages = new Queue<TaskDialogPage>();
+    private readonly Queue<TaskDialogPage> _waitingNavigationPages = new();
 
     /// <summary>
     ///   The <see cref="IntPtr"/> of a <see cref="GCHandle"/> that represents this
@@ -613,10 +612,7 @@ public partial class TaskDialog : IWin32Window
     /// </param>
     internal unsafe void SetProgressBarMarquee(bool enableMarquee, int animationSpeed = 0)
     {
-        if (animationSpeed < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(animationSpeed));
-        }
+        ArgumentOutOfRangeException.ThrowIfNegative(animationSpeed);
 
         SendTaskDialogMessage(
             TASKDIALOG_MESSAGES.TDM_SET_PROGRESS_BAR_MARQUEE,
@@ -634,15 +630,11 @@ public partial class TaskDialog : IWin32Window
     /// </remarks>
     internal unsafe void SetProgressBarRange(int min, int max)
     {
-        if (min < 0 || min > ushort.MaxValue)
-        {
-            throw new ArgumentOutOfRangeException(nameof(min));
-        }
+        ArgumentOutOfRangeException.ThrowIfNegative(min);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(min, ushort.MaxValue);
 
-        if (max < 0 || max > ushort.MaxValue)
-        {
-            throw new ArgumentOutOfRangeException(nameof(max));
-        }
+        ArgumentOutOfRangeException.ThrowIfNegative(max);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(max, ushort.MaxValue);
 
         SendTaskDialogMessage(
             TASKDIALOG_MESSAGES.TDM_SET_PROGRESS_BAR_RANGE,
@@ -656,10 +648,8 @@ public partial class TaskDialog : IWin32Window
     /// <param name="pos"></param>
     internal void SetProgressBarPosition(int pos)
     {
-        if (pos < 0 || pos > ushort.MaxValue)
-        {
-            throw new ArgumentOutOfRangeException(nameof(pos));
-        }
+        ArgumentOutOfRangeException.ThrowIfNegative(pos);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(pos, ushort.MaxValue);
 
         SendTaskDialogMessage(
             TASKDIALOG_MESSAGES.TDM_SET_PROGRESS_BAR_POS,

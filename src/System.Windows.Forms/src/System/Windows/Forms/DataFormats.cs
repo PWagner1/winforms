@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -148,7 +147,7 @@ public static partial class DataFormats
     private static Format[]? s_formatList;
     private static int s_formatCount;
 
-    private static readonly object s_internalSyncObject = new object();
+    private static readonly object s_internalSyncObject = new();
 
     /// <summary>
     ///  Gets a <see cref="Format"/> with the Windows Clipboard numeric ID and name for the specified format.
@@ -274,22 +273,22 @@ public static partial class DataFormats
             s_formatList = new Format[]
             {
                 //         Text name                  Win32 format ID
-                new Format(UnicodeTextConstant,       (int)CLIPBOARD_FORMAT.CF_UNICODETEXT),
-                new Format(TextConstant,              (int)CLIPBOARD_FORMAT.CF_TEXT),
-                new Format(BitmapConstant,            (int)CLIPBOARD_FORMAT.CF_BITMAP),
-                new Format(WmfConstant,               (int)CLIPBOARD_FORMAT.CF_METAFILEPICT),
-                new Format(EmfConstant,               (int)CLIPBOARD_FORMAT.CF_ENHMETAFILE),
-                new Format(DifConstant,               (int)CLIPBOARD_FORMAT.CF_DIF),
-                new Format(TiffConstant,              (int)CLIPBOARD_FORMAT.CF_TIFF),
-                new Format(OemTextConstant,           (int)CLIPBOARD_FORMAT.CF_OEMTEXT),
-                new Format(DibConstant,               (int)CLIPBOARD_FORMAT.CF_DIB),
-                new Format(PaletteConstant,           (int)CLIPBOARD_FORMAT.CF_PALETTE),
-                new Format(PenDataConstant,           (int)CLIPBOARD_FORMAT.CF_PENDATA),
-                new Format(RiffConstant,              (int)CLIPBOARD_FORMAT.CF_RIFF),
-                new Format(WaveAudioConstant,         (int)CLIPBOARD_FORMAT.CF_WAVE),
-                new Format(SymbolicLinkConstant,      (int)CLIPBOARD_FORMAT.CF_SYLK),
-                new Format(FileDropConstant,          (int)CLIPBOARD_FORMAT.CF_HDROP),
-                new Format(LocaleConstant,            (int)CLIPBOARD_FORMAT.CF_LOCALE)
+                new(UnicodeTextConstant,       (int)CLIPBOARD_FORMAT.CF_UNICODETEXT),
+                new(TextConstant,              (int)CLIPBOARD_FORMAT.CF_TEXT),
+                new(BitmapConstant,            (int)CLIPBOARD_FORMAT.CF_BITMAP),
+                new(WmfConstant,               (int)CLIPBOARD_FORMAT.CF_METAFILEPICT),
+                new(EmfConstant,               (int)CLIPBOARD_FORMAT.CF_ENHMETAFILE),
+                new(DifConstant,               (int)CLIPBOARD_FORMAT.CF_DIF),
+                new(TiffConstant,              (int)CLIPBOARD_FORMAT.CF_TIFF),
+                new(OemTextConstant,           (int)CLIPBOARD_FORMAT.CF_OEMTEXT),
+                new(DibConstant,               (int)CLIPBOARD_FORMAT.CF_DIB),
+                new(PaletteConstant,           (int)CLIPBOARD_FORMAT.CF_PALETTE),
+                new(PenDataConstant,           (int)CLIPBOARD_FORMAT.CF_PENDATA),
+                new(RiffConstant,              (int)CLIPBOARD_FORMAT.CF_RIFF),
+                new(WaveAudioConstant,         (int)CLIPBOARD_FORMAT.CF_WAVE),
+                new(SymbolicLinkConstant,      (int)CLIPBOARD_FORMAT.CF_SYLK),
+                new(FileDropConstant,          (int)CLIPBOARD_FORMAT.CF_HDROP),
+                new(LocaleConstant,            (int)CLIPBOARD_FORMAT.CF_LOCALE)
             };
 
             s_formatCount = s_formatList.Length;

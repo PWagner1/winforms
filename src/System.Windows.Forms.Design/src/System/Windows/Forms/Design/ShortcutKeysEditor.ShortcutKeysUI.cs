@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -319,7 +318,7 @@ public partial class ShortcutKeysEditor
         /// <summary>
         ///  Triggered whenever the user drops down the editor.
         /// </summary>
-        public void Start(object value)
+        public void Start(object? value)
         {
             Debug.Assert(!_updateCurrentValue);
             _originalValue = _currentValue = value;

@@ -1,9 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
-using System.Runtime.Versioning;
 
 namespace System.Windows.Forms;
 
@@ -11,7 +9,6 @@ namespace System.Windows.Forms;
 /// Base class for components which provide properties which can be
 /// data bound with the WinForms Designer.
 /// </summary>
-[RequiresPreviewFeatures]
 public abstract class BindableComponent : Component, IBindableComponent
 {
     internal static readonly object s_bindingContextChangedEvent = new();
@@ -76,6 +73,7 @@ public abstract class BindableComponent : Component, IBindableComponent
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
     [RefreshProperties(RefreshProperties.All)]
     [ParenthesizePropertyName(true)]
+    [SRCategory(nameof(SR.CatData))]
     public ControlBindingsCollection DataBindings
         => _dataBindings ??= new ControlBindingsCollection(this);
 

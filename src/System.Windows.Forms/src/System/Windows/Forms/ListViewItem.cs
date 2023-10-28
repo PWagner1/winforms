@@ -1,14 +1,13 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Runtime.Serialization;
+using Windows.Win32.UI.Accessibility;
 using static Interop;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms;
 
@@ -32,7 +31,7 @@ public partial class ListViewItem : ICloneable, ISerializable
     private static readonly BitVector32.Section s_subItemCountSection = BitVector32.CreateSection(MaxSubItems, s_savedStateImageIndexSection);
 
     private int _indentCount;
-    private Point _position = new Point(-1, -1);
+    private Point _position = new(-1, -1);
 
     internal ListView? _listView;
 
@@ -315,7 +314,7 @@ public partial class ListViewItem : ICloneable, ISerializable
             }
             else
             {
-                return default(Rectangle);
+                return default;
             }
         }
     }
@@ -377,7 +376,7 @@ public partial class ListViewItem : ICloneable, ISerializable
 
                 if (_listView.IsAccessibilityObjectCreated)
                 {
-                    AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+                    AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
                 }
             }
         }
@@ -979,7 +978,7 @@ public partial class ListViewItem : ICloneable, ISerializable
             return _listView.GetItemRect(Index, portion);
         }
 
-        return default(Rectangle);
+        return default;
     }
 
     public ListViewSubItem? GetSubItemAt(int x, int y)
@@ -1058,8 +1057,8 @@ public partial class ListViewItem : ICloneable, ISerializable
 
     internal void UpdateStateToListView(int index)
     {
-        var lvItem = default(LVITEMW);
-        UpdateStateToListView(index, ref lvItem, true);
+        LVITEMW item = default;
+        UpdateStateToListView(index, ref item, updateOwner: true);
     }
 
     /// <summary>
@@ -1103,11 +1102,11 @@ public partial class ListViewItem : ICloneable, ISerializable
         if (_listView.GroupsEnabled)
         {
             lvItem.mask |= LIST_VIEW_ITEM_FLAGS.LVIF_GROUPID;
-            lvItem.iGroupId = _listView.GetNativeGroupId(this);
+            lvItem.iGroupId = (LVITEMA_GROUP_ID)_listView.GetNativeGroupId(this);
 
             nint result = PInvoke.SendMessage(_listView, PInvoke.LVM_ISGROUPVIEWENABLED);
             Debug.Assert(!updateOwner || result != 0, "Groups not enabled");
-            result = PInvoke.SendMessage(_listView, PInvoke.LVM_HASGROUP, (WPARAM)lvItem.iGroupId);
+            result = PInvoke.SendMessage(_listView, PInvoke.LVM_HASGROUP, (WPARAM)(int)lvItem.iGroupId);
             Debug.Assert(!updateOwner || result != 0, $"Doesn't contain group id: {lvItem.iGroupId}");
         }
 
@@ -1122,7 +1121,7 @@ public partial class ListViewItem : ICloneable, ISerializable
         if (_listView is not null && _listView.IsHandleCreated && displayIndex != -1)
         {
             // Get information from comctl control
-            var lvItem = new LVITEMW
+            LVITEMW lvItem = new()
             {
                 mask = LIST_VIEW_ITEM_FLAGS.LVIF_PARAM | LIST_VIEW_ITEM_FLAGS.LVIF_STATE | LIST_VIEW_ITEM_FLAGS.LVIF_GROUPID
             };
@@ -1155,7 +1154,7 @@ public partial class ListViewItem : ICloneable, ISerializable
             _group = null;
             foreach (ListViewGroup lvg in ListView!.Groups)
             {
-                if (lvg.ID == lvItem.iGroupId)
+                if (lvg.ID == (int)lvItem.iGroupId)
                 {
                     _group = lvg;
                     break;

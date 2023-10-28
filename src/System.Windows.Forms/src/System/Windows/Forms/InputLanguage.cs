@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Globalization;
 using Microsoft.Win32;
@@ -27,7 +26,7 @@ public sealed class InputLanguage
     /// <summary>
     ///  Returns the culture of the current input language.
     /// </summary>
-    public CultureInfo Culture => new CultureInfo(LanguageTag);
+    public CultureInfo Culture => new(LanguageTag);
 
     /// <summary>
     ///  Gets or sets the input language for the current thread.
@@ -236,7 +235,7 @@ public sealed class InputLanguage
     /// </summary>
     internal static InputLanguageChangingEventArgs CreateInputLanguageChangingEventArgs(Message m)
     {
-        var inputLanguage = new InputLanguage(m.LParamInternal);
+        InputLanguage inputLanguage = new(m.LParamInternal);
 
         // NOTE: by default we should allow any locale switch
         bool localeSupportedBySystem = m.WParamInternal != 0u;

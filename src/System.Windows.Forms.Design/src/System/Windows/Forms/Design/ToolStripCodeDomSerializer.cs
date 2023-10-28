@@ -1,8 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-#nullable disable
 
 using System.ComponentModel;
 
@@ -12,9 +9,7 @@ internal class ToolStripCodeDomSerializer : ControlCodeDomSerializer
 {
     protected override bool HasSitedNonReadonlyChildren(Control parent)
     {
-        ToolStrip toolStrip = parent as ToolStrip;
-
-        if (toolStrip is null)
+        if (parent is not ToolStrip toolStrip)
         {
             Debug.Fail("why were we passed a non winbar?");
             return false;
@@ -30,9 +25,7 @@ internal class ToolStripCodeDomSerializer : ControlCodeDomSerializer
             if (item.Site is not null && toolStrip.Site is not null && item.Site.Container == toolStrip.Site.Container)
             {
                 // We only emit Size/Location information for controls that are sited and not inherited readonly.
-                InheritanceAttribute ia = (InheritanceAttribute)TypeDescriptor.GetAttributes(item)[typeof(InheritanceAttribute)];
-
-                if (ia is not null && ia.InheritanceLevel != InheritanceLevel.InheritedReadOnly)
+                if (TypeDescriptorHelper.TryGetAttribute(item, out InheritanceAttribute? ia) && ia.InheritanceLevel != InheritanceLevel.InheritedReadOnly)
                 {
                     return true;
                 }

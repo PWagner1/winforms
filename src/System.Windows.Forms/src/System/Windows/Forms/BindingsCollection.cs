@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -35,7 +34,7 @@ public class BindingsCollection : BaseCollection
 
     protected internal void Add(Binding binding)
     {
-        var eventArgs = new CollectionChangeEventArgs(CollectionChangeAction.Add, binding);
+        CollectionChangeEventArgs eventArgs = new(CollectionChangeAction.Add, binding);
         OnCollectionChanging(eventArgs);
         AddCore(binding);
         OnCollectionChanged(eventArgs);
@@ -72,7 +71,7 @@ public class BindingsCollection : BaseCollection
 
     protected internal void Clear()
     {
-        var eventArgs = new CollectionChangeEventArgs(CollectionChangeAction.Refresh, null);
+        CollectionChangeEventArgs eventArgs = new(CollectionChangeAction.Refresh, null);
         OnCollectionChanging(eventArgs);
         ClearCore();
         OnCollectionChanged(eventArgs);
@@ -101,7 +100,7 @@ public class BindingsCollection : BaseCollection
 
     protected internal void Remove(Binding binding)
     {
-        var eventArgs = new CollectionChangeEventArgs(CollectionChangeAction.Remove, binding);
+        CollectionChangeEventArgs eventArgs = new(CollectionChangeAction.Remove, binding);
         OnCollectionChanging(eventArgs);
         RemoveCore(binding);
         OnCollectionChanged(eventArgs);

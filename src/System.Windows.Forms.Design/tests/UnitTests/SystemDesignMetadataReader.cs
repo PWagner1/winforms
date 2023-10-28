@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel.Design;
 using System.Reflection;
@@ -20,8 +19,8 @@ internal sealed class SystemDesignMetadataReader
 
         Assembly systemDesign = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetName().Name == "System.Design");
 
-        using var fs = new FileStream(systemDesign.Location, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        using var peReader = new PEReader(fs);
+        using FileStream fs = new(systemDesign.Location, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using PEReader peReader = new(fs);
 
         MetadataReader metadataReader = peReader.GetMetadataReader();
         List<string> typeNames = new();

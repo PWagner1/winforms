@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -65,7 +64,7 @@ public unsafe partial class DataObject :
     internal static DataObject FromComPointer(Com.IDataObject* data)
     {
         // Get the RCW for the pointer and continue.
-        bool success = ComHelpers.TryGetManagedInterface(
+        bool success = ComHelpers.TryGetObjectForIUnknown(
             (Com.IUnknown*)data,
             takeOwnership: true,
             out ComTypes.IDataObject? comTypesData);
@@ -969,7 +968,7 @@ public unsafe partial class DataObject :
 
     HRESULT Com.IDataObject.Interface.DAdvise(Com.FORMATETC* pformatetc, uint advf, Com.IAdviseSink* pAdvSink, uint* pdwConnection)
     {
-        var adviseSink = (IAdviseSink)Marshal.GetObjectForIUnknown((nint)(void*)pAdvSink);
+        var adviseSink = (IAdviseSink)ComHelpers.GetObjectForIUnknown((Com.IUnknown*)pAdvSink);
         return (HRESULT)((ComTypes.IDataObject)this).DAdvise(ref *(FORMATETC*)pformatetc, (ADVF)advf, adviseSink, out *(int*)pdwConnection);
     }
 

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 
@@ -47,7 +46,7 @@ internal class ListViewGroupItemCollection : ListView.ListViewItemCollection.IIn
         return value;
     }
 
-    public void AddRange(ListViewItem[] items)
+    public void AddRange(params ListViewItem[] items)
     {
         for (int i = 0; i < items.Length; i++)
         {

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace System.Windows.Forms.PropertyGridInternal;
 
@@ -9,7 +8,7 @@ internal partial class PropertyGridView
     internal class GridPositionData
     {
         private readonly List<GridEntryCollection> _expandedState;
-        private readonly GridEntryCollection _selectedItemTree;
+        private readonly GridEntryCollection? _selectedItemTree;
         private readonly int _itemRow;
 
         public GridPositionData(PropertyGridView gridView)
@@ -22,7 +21,7 @@ internal partial class PropertyGridView
         public GridEntry? Restore(PropertyGridView gridView)
         {
             gridView.RestoreHierarchyState(_expandedState);
-            GridEntry entry = gridView.FindEquivalentGridEntry(_selectedItemTree);
+            GridEntry? entry = gridView.FindEquivalentGridEntry(_selectedItemTree);
 
             if (entry is null)
             {

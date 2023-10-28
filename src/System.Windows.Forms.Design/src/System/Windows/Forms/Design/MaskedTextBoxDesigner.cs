@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -18,6 +17,10 @@ internal class MaskedTextBoxDesigner : TextBoxBaseDesigner
 {
     private DesignerVerbCollection _verbs;
     private DesignerActionListCollection _actions;
+
+    // Overridden to avoid setting the default property ("Mask")
+    // to the Site.Name (i.e. maskedTextBox1).
+    protected override bool SetTextualDefaultProperty => false;
 
     /// <summary>
     /// MaskedTextBox designer action list property. Gets the design-time supported actions on the control.

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.ComponentModel;
@@ -9,6 +8,7 @@ using System.Drawing.Design;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms.Layout;
+using Windows.Win32.UI.Accessibility;
 using static System.Windows.Forms.ComboBox.ObjectCollection;
 using static Interop;
 
@@ -25,15 +25,15 @@ namespace System.Windows.Forms;
 [SRDescription(nameof(SR.DescriptionComboBox))]
 public partial class ComboBox : ListControl
 {
-    private static readonly object EVENT_DROPDOWN = new object();
-    private static readonly object EVENT_DRAWITEM = new object();
-    private static readonly object EVENT_MEASUREITEM = new object();
-    private static readonly object EVENT_SELECTEDINDEXCHANGED = new object();
-    private static readonly object EVENT_SELECTIONCHANGECOMMITTED = new object();
-    private static readonly object EVENT_SELECTEDITEMCHANGED = new object();
-    private static readonly object EVENT_DROPDOWNSTYLE = new object();
-    private static readonly object EVENT_TEXTUPDATE = new object();
-    private static readonly object EVENT_DROPDOWNCLOSED = new object();
+    private static readonly object EVENT_DROPDOWN = new();
+    private static readonly object EVENT_DRAWITEM = new();
+    private static readonly object EVENT_MEASUREITEM = new();
+    private static readonly object EVENT_SELECTEDINDEXCHANGED = new();
+    private static readonly object EVENT_SELECTIONCHANGECOMMITTED = new();
+    private static readonly object EVENT_SELECTEDITEMCHANGED = new();
+    private static readonly object EVENT_DROPDOWNSTYLE = new();
+    private static readonly object EVENT_TEXTUPDATE = new();
+    private static readonly object EVENT_DROPDOWNCLOSED = new();
 
     private static readonly int PropMaxLength = PropertyStore.CreateKey();
     private static readonly int PropItemHeight = PropertyStore.CreateKey();
@@ -88,7 +88,7 @@ public partial class ComboBox : ListControl
     private string _currentText = string.Empty;
     private string? _lastTextChangedValue;
     private bool _dropDown;
-    private readonly AutoCompleteDropDownFinder _finder = new AutoCompleteDropDownFinder();
+    private readonly AutoCompleteDropDownFinder _finder = new();
 
     private bool _selectedValueChangedFired;
     private AutoCompleteMode _autoCompleteMode = AutoCompleteMode.None;
@@ -1252,9 +1252,7 @@ public partial class ComboBox : ListControl
             }
 
             base.Text = value;
-            object? selectedItem = null;
-
-            selectedItem = SelectedItem;
+            object? selectedItem = SelectedItem;
 
             if (!DesignMode)
             {
@@ -1931,7 +1929,7 @@ public partial class ComboBox : ListControl
 
         if (IsAccessibilityObjectCreated && _childEdit is not null && ChildEditAccessibleObject.Bounds.Contains(PointToScreen(e.Location)))
         {
-            ChildEditAccessibleObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+            ChildEditAccessibleObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId);
         }
     }
 
@@ -2467,8 +2465,7 @@ public partial class ComboBox : ListControl
             PInvoke.SendMessage(this, PInvoke.CB_SETDROPPEDWIDTH, (WPARAM)dropDownWidth);
         }
 
-        found = false;
-        int itemHeight = Properties.GetInteger(PropItemHeight, out found);
+        _ = Properties.GetInteger(PropItemHeight, out found);
         if (found)
         {
             // someone has set the item height - update it
@@ -2568,7 +2565,7 @@ public partial class ComboBox : ListControl
         if (IsAccessibilityObjectCreated)
         {
             AccessibilityObject.RaiseAutomationPropertyChangedEvent(
-                UiaCore.UIA.ExpandCollapseExpandCollapseStatePropertyId,
+                UIA_PROPERTY_ID.UIA_ExpandCollapseExpandCollapseStatePropertyId,
                 UiaCore.ExpandCollapseState.Collapsed,
                 UiaCore.ExpandCollapseState.Expanded);
 
@@ -2637,7 +2634,7 @@ public partial class ComboBox : ListControl
 
         if (IsAccessibilityObjectCreated && _childEdit is not null && ContainsNavigationKeyCode(e.KeyCode))
         {
-            ChildEditAccessibleObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+            ChildEditAccessibleObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId);
         }
     }
 
@@ -2763,7 +2760,7 @@ public partial class ComboBox : ListControl
 
             if (_childEdit is not null)
             {
-                ChildEditAccessibleObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+                ChildEditAccessibleObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId);
             }
         }
 
@@ -2931,7 +2928,7 @@ public partial class ComboBox : ListControl
 
         if (IsAccessibilityObjectCreated && _childEdit is not null)
         {
-            ChildEditAccessibleObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextChangedEventId);
+            ChildEditAccessibleObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextChangedEventId);
         }
     }
 
@@ -3036,7 +3033,7 @@ public partial class ComboBox : ListControl
             // This is necessary for DropDown style as edit should not take focus.
             if (DropDownStyle == ComboBoxStyle.DropDown)
             {
-                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+                AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
             }
 
             // Some accessibility tools (e.g., NVDA) could recognize ComboBox as IAccessible object
@@ -3059,7 +3056,7 @@ public partial class ComboBox : ListControl
 
             // Notify Collapsed/expanded property change.
             AccessibilityObject.RaiseAutomationPropertyChangedEvent(
-                UiaCore.UIA.ExpandCollapseExpandCollapseStatePropertyId,
+                UIA_PROPERTY_ID.UIA_ExpandCollapseExpandCollapseStatePropertyId,
                 UiaCore.ExpandCollapseState.Expanded,
                 UiaCore.ExpandCollapseState.Collapsed);
         }
@@ -3080,6 +3077,16 @@ public partial class ComboBox : ListControl
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
         bool returnedValue = base.ProcessCmdKey(ref msg, keyData);
+
+        if (!returnedValue && keyData == (Keys.Control | Keys.A))
+        {
+            Select(0, Text.Length);
+            SelectedText = Text;
+            SelectionStart = 0;
+            SelectionLength = Text.Length;
+
+            return true;
+        }
 
         if (DropDownStyle != ComboBoxStyle.DropDownList &&
             (keyData == (Keys.Control | Keys.Back) || keyData == (Keys.Control | Keys.Shift | Keys.Back)))
@@ -3145,7 +3152,7 @@ public partial class ComboBox : ListControl
             newItems = new object[DataManager.Count];
             for (int i = 0; i < newItems.Length; i++)
             {
-                newItems[i] = DataManager[i];
+                newItems[i] = DataManager[i]!;
             }
         }
         else if (savedItems is not null)
@@ -3740,12 +3747,12 @@ public partial class ComboBox : ListControl
     {
         DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)(nint)m.LParamInternal;
 
-        using var e = new DrawItemEventArgs(
-            dis->hDC.CreateGraphics(),
+        using DrawItemEventArgs e = new(
+            dis->hDC,
             Font,
             dis->rcItem,
-            (int)dis->itemID,
-            (DrawItemState)(int)dis->itemState,
+            dis->itemID,
+            dis->itemState,
             ForeColor,
             BackColor);
 
@@ -4005,5 +4012,5 @@ public partial class ComboBox : ListControl
     }
 
     internal virtual FlatComboAdapter CreateFlatComboAdapterInstance()
-        => new FlatComboAdapter(this, smallButton: false);
+        => new(this, smallButton: false);
 }

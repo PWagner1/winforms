@@ -1,11 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
-using static Interop;
-using static Interop.Shell32;
 
 namespace System.Windows.Forms;
 
@@ -21,21 +18,21 @@ namespace System.Windows.Forms;
 public sealed partial class NotifyIcon : Component
 {
     internal const int MaxTextSize = 127;
-    private static readonly object EVENT_MOUSEDOWN = new object();
-    private static readonly object EVENT_MOUSEMOVE = new object();
-    private static readonly object EVENT_MOUSEUP = new object();
-    private static readonly object EVENT_CLICK = new object();
-    private static readonly object EVENT_DOUBLECLICK = new object();
-    private static readonly object EVENT_MOUSECLICK = new object();
-    private static readonly object EVENT_MOUSEDOUBLECLICK = new object();
-    private static readonly object EVENT_BALLOONTIPSHOWN = new object();
-    private static readonly object EVENT_BALLOONTIPCLICKED = new object();
-    private static readonly object EVENT_BALLOONTIPCLOSED = new object();
+    private static readonly object EVENT_MOUSEDOWN = new();
+    private static readonly object EVENT_MOUSEMOVE = new();
+    private static readonly object EVENT_MOUSEUP = new();
+    private static readonly object EVENT_CLICK = new();
+    private static readonly object EVENT_DOUBLECLICK = new();
+    private static readonly object EVENT_MOUSECLICK = new();
+    private static readonly object EVENT_MOUSEDOUBLECLICK = new();
+    private static readonly object EVENT_BALLOONTIPSHOWN = new();
+    private static readonly object EVENT_BALLOONTIPCLICKED = new();
+    private static readonly object EVENT_BALLOONTIPCLOSED = new();
 
     private const int WM_TRAYMOUSEMESSAGE = (int)PInvoke.WM_USER + 1024;
     private static readonly MessageId WM_TASKBARCREATED = PInvoke.RegisterWindowMessage("TaskbarCreated");
 
-    private readonly object _syncObj = new object();
+    private readonly object _syncObj = new();
 
     private Icon? _icon;
     private string _text = string.Empty;
@@ -569,13 +566,14 @@ public sealed partial class NotifyIcon : Component
                 return;
             }
 
-            var data = new NOTIFYICONDATAW
+            NOTIFYICONDATAW data = new()
             {
                 cbSize = (uint)sizeof(NOTIFYICONDATAW),
-                uFlags = NIF.INFO,
+                uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_INFO,
                 uID = _id,
                 uTimeoutOrVersion = (uint)timeout
             };
+
             if (_window.Handle == IntPtr.Zero)
             {
                 _window.CreateHandle(new CreateParams());
@@ -587,20 +585,20 @@ public sealed partial class NotifyIcon : Component
             switch (tipIcon)
             {
                 case ToolTipIcon.Info:
-                    data.dwInfoFlags = NIIF.INFO;
+                    data.dwInfoFlags = NOTIFY_ICON_INFOTIP_FLAGS.NIIF_INFO;
                     break;
                 case ToolTipIcon.Warning:
-                    data.dwInfoFlags = NIIF.WARNING;
+                    data.dwInfoFlags = NOTIFY_ICON_INFOTIP_FLAGS.NIIF_WARNING;
                     break;
                 case ToolTipIcon.Error:
-                    data.dwInfoFlags = NIIF.ERROR;
+                    data.dwInfoFlags = NOTIFY_ICON_INFOTIP_FLAGS.NIIF_ERROR;
                     break;
                 case ToolTipIcon.None:
-                    data.dwInfoFlags = NIIF.NONE;
+                    data.dwInfoFlags = NOTIFY_ICON_INFOTIP_FLAGS.NIIF_NONE;
                     break;
             }
 
-            Shell32.Shell_NotifyIconW(NIM.MODIFY, ref data);
+            PInvoke.Shell_NotifyIconW(NOTIFY_ICON_MESSAGE.NIM_MODIFY, ref data);
         }
     }
 
@@ -639,13 +637,14 @@ public sealed partial class NotifyIcon : Component
 
             _window.LockReference(showIconInTray);
 
-            var data = new NOTIFYICONDATAW
+            NOTIFYICONDATAW data = new()
             {
                 cbSize = (uint)sizeof(NOTIFYICONDATAW),
                 uCallbackMessage = WM_TRAYMOUSEMESSAGE,
-                uFlags = NIF.MESSAGE,
+                uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE,
                 uID = _id
             };
+
             if (showIconInTray)
             {
                 if (_window.Handle == IntPtr.Zero)
@@ -657,28 +656,28 @@ public sealed partial class NotifyIcon : Component
             data.hWnd = _window.Handle;
             if (_icon is not null)
             {
-                data.uFlags |= NIF.ICON;
+                data.uFlags |= NOTIFY_ICON_DATA_FLAGS.NIF_ICON;
                 data.hIcon = _icon.Handle;
             }
 
-            data.uFlags |= NIF.TIP;
+            data.uFlags |= NOTIFY_ICON_DATA_FLAGS.NIF_TIP;
             data.Tip = _text;
 
             if (showIconInTray && _icon is not null)
             {
                 if (!_added)
                 {
-                    Shell_NotifyIconW(NIM.ADD, ref data);
+                    PInvoke.Shell_NotifyIconW(NOTIFY_ICON_MESSAGE.NIM_ADD, ref data);
                     _added = true;
                 }
                 else
                 {
-                    Shell_NotifyIconW(NIM.MODIFY, ref data);
+                    PInvoke.Shell_NotifyIconW(NOTIFY_ICON_MESSAGE.NIM_MODIFY, ref data);
                 }
             }
             else if (_added)
             {
-                Shell_NotifyIconW(NIM.DELETE, ref data);
+                PInvoke.Shell_NotifyIconW(NOTIFY_ICON_MESSAGE.NIM_DELETE, ref data);
                 _added = false;
             }
         }

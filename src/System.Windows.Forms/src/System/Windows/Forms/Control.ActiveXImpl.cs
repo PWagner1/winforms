@@ -1,11 +1,12 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
+using System.Buffers;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
@@ -116,6 +117,7 @@ public partial class Control
         private static readonly int s_uiActive = BitVector32.CreateMask(s_inPlaceVisible);
         private static readonly int s_uiDead = BitVector32.CreateMask(s_uiActive);
         private static readonly int s_adjustingRect = BitVector32.CreateMask(s_uiDead);
+        private static readonly SearchValues<char> s_whitespace = SearchValues.Create(" \r\n");
 
         private static Point s_logPixels = Point.Empty;
         private static OLEVERB[]? s_axVerbs;
@@ -127,7 +129,7 @@ public partial class Control
         private AgileComPointer<IOleClientSite>? _clientSite;
         private AgileComPointer<IOleInPlaceUIWindow>? _inPlaceUiWindow;
         private AgileComPointer<IOleInPlaceFrame>? _inPlaceFrame;
-        private readonly ComPointerList<IAdviseSink> _adviseList = new();
+        private AgileComPointer<IOleAdviseHolder>? _adviseHolder;
         private IAdviseSink* _viewAdviseSink;
         private BitVector32 _activeXState;
         private readonly AmbientProperty[] _ambientProperties;
@@ -150,9 +152,9 @@ public partial class Control
             _activeXState = default;
             _ambientProperties = new AmbientProperty[]
             {
-                new AmbientProperty("Font", PInvoke.DISPID_AMBIENT_FONT),
-                new AmbientProperty("BackColor", PInvoke.DISPID_AMBIENT_BACKCOLOR),
-                new AmbientProperty("ForeColor", PInvoke.DISPID_AMBIENT_FORECOLOR)
+                new("Font", PInvoke.DISPID_AMBIENT_FONT),
+                new("BackColor", PInvoke.DISPID_AMBIENT_BACKCOLOR),
+                new("ForeColor", PInvoke.DISPID_AMBIENT_FORECOLOR)
             };
         }
 
@@ -280,18 +282,26 @@ public partial class Control
             }
         }
 
-        /// <summary>
-        ///  Implements IOleObject::Advise
-        /// </summary>
-        internal unsafe uint Advise(IAdviseSink* pAdvSink)
+        /// <inheritdoc cref="IOleObject.Advise(IAdviseSink*, uint*)"/>
+        internal HRESULT Advise(IAdviseSink* pAdvSink, uint* token)
         {
-            _adviseList.Add(pAdvSink);
-            return (uint)_adviseList.Count;
+            if (_adviseHolder is null)
+            {
+                IOleAdviseHolder* holder = null;
+                HRESULT hr = PInvoke.CreateOleAdviseHolder(&holder);
+                if (hr.Failed)
+                {
+                    return hr;
+                }
+
+                _adviseHolder = new(holder, takeOwnership: true);
+            }
+
+            using var adviseHolder = _adviseHolder.GetInterface();
+            return adviseHolder.Value->Advise(pAdvSink, token);
         }
 
-        /// <summary>
-        ///  Implements IOleObject::Close
-        /// </summary>
+        /// <inheritdoc cref="IOleObject.Close(uint)"/>
         internal void Close(OLECLOSE dwSaveOption)
         {
             if (_activeXState[s_inPlaceActive])
@@ -312,9 +322,7 @@ public partial class Control
             }
         }
 
-        /// <summary>
-        ///  Implements IOleObject::DoVerb
-        /// </summary>
+        /// <inheritdoc cref="IOleObject.DoVerb(int, MSG*, IOleClientSite*, int, HWND, RECT*)"/>
         internal unsafe HRESULT DoVerb(
             OLEIVERB iVerb,
             MSG* lpmsg,
@@ -346,11 +354,7 @@ public partial class Control
                     {
                         // Must translate message coordinates over to our HWND.
                         HWND hwndMap = hwnd.IsNull ? hwndParent : hwnd;
-                        var pt = new Point
-                        {
-                            X = PARAM.LOWORD(lpmsg->lParam),
-                            Y = PARAM.HIWORD(lpmsg->lParam)
-                        };
+                        Point pt = new(PARAM.LOWORD(lpmsg->lParam), PARAM.HIWORD(lpmsg->lParam));
 
                         PInvoke.MapWindowPoints(hwndMap, _control, ref pt);
 
@@ -406,9 +410,7 @@ public partial class Control
             return HRESULT.S_OK;
         }
 
-        /// <summary>
-        ///  Implements IViewObject2::Draw.
-        /// </summary>
+        /// <inheritdoc cref="IViewObject.Interface.Draw(DVASPECT, int, void*, DVTARGETDEVICE*, HDC, HDC, RECTL*, RECTL*, nint, nuint)"/>
         internal HRESULT Draw(
             DVASPECT dwDrawAspect,
             int lindex,
@@ -501,9 +503,7 @@ public partial class Control
             return HRESULT.S_OK;
         }
 
-        /// <summary>
-        ///  Returns a new verb enumerator.
-        /// </summary>
+        /// <inheritdoc cref="IOleObject.EnumVerbs(IEnumOLEVERB**)"/>
         internal static IEnumOLEVERB* EnumVerbs()
         {
             if (s_axVerbs is null)
@@ -531,7 +531,7 @@ public partial class Control
         /// </summary>
         private static byte[] FromBase64WrappedString(string text)
         {
-            if (text.IndexOfAny(new char[] { ' ', '\r', '\n' }) != -1)
+            if (text.AsSpan().ContainsAny(s_whitespace))
             {
                 StringBuilder sb = new StringBuilder(text.Length);
                 for (int i = 0; i < text.Length; i++)
@@ -556,9 +556,7 @@ public partial class Control
             }
         }
 
-        /// <summary>
-        ///  Implements IViewObject2::GetAdvise.
-        /// </summary>
+        /// <inheritdoc cref="IViewObject.GetAdvise(uint*, uint*, IAdviseSink**)"/>
         internal unsafe HRESULT GetAdvise(DVASPECT* pAspects, ADVF* pAdvf, IAdviseSink** ppAdvSink)
         {
             if (pAspects is not null)
@@ -584,6 +582,11 @@ public partial class Control
             if (ppAdvSink is not null)
             {
                 *ppAdvSink = _viewAdviseSink;
+
+                if (_viewAdviseSink is not null)
+                {
+                    _viewAdviseSink->AddRef();
+                }
             }
 
             return HRESULT.S_OK;
@@ -629,11 +632,10 @@ public partial class Control
             return property;
         }
 
-        /// <summary>
-        ///  Implements IOleObject::GetClientSite.
-        /// </summary>
+        /// <inheritdoc cref="IOleObject.GetClientSite(IOleClientSite**)"/>
         internal ComScope<IOleClientSite> GetClientSite() => _clientSite is null ? default : _clientSite.GetInterface();
 
+        /// <inheritdoc cref="IOleControl.GetControlInfo(CONTROLINFO*)"/>
         internal unsafe HRESULT GetControlInfo(CONTROLINFO* pControlInfo)
         {
             if (_accelCount == -1)
@@ -719,9 +721,7 @@ public partial class Control
             return HRESULT.S_OK;
         }
 
-        /// <summary>
-        ///  Implements IOleObject::GetExtent.
-        /// </summary>
+        /// <inheritdoc cref="IOleObject.GetExtent(DVASPECT, SIZE*)"/>
         internal unsafe void GetExtent(DVASPECT dwDrawAspect, Size* pSizel)
         {
             if (!dwDrawAspect.HasFlag(DVASPECT.DVASPECT_CONTENT))
@@ -776,9 +776,7 @@ public partial class Control
             return streamName;
         }
 
-        /// <summary>
-        ///  Implements IOleWindow::GetWindow
-        /// </summary>
+        /// <inheritdoc cref="IOleWindow.GetWindow(HWND*)"/>
         internal unsafe HRESULT GetWindow(HWND* phwnd)
         {
             if (phwnd is null)
@@ -810,7 +808,7 @@ public partial class Control
         }
 
         /// <summary>
-        ///  In place activates this Object.
+        ///  In place activates this object.
         /// </summary>
         internal unsafe void InPlaceActivate(OLEIVERB verb)
         {
@@ -866,14 +864,11 @@ public partial class Control
                     ThrowHr(hr);
                 }
 
-                var posRect = default(RECT);
-                var clipRect = default(RECT);
+                RECT posRect = default;
+                RECT clipRect = default;
 
-                _inPlaceUiWindow?.Dispose();
-                _inPlaceUiWindow = null;
-
-                _inPlaceFrame?.Dispose();
-                _inPlaceFrame = null;
+                DisposeHelper.NullAndDispose(ref _inPlaceUiWindow);
+                DisposeHelper.NullAndDispose(ref _inPlaceFrame);
 
                 IOleInPlaceFrame* pFrame;
                 IOleInPlaceUIWindow* pWindow;
@@ -882,12 +877,12 @@ public partial class Control
                     &pWindow,
                     &posRect,
                     &clipRect,
-                    &inPlaceFrameInfo);
+                    &inPlaceFrameInfo).AssertSuccess();
 
                 SetObjectRects(&posRect, &clipRect);
 
-                _inPlaceFrame = new(pFrame, takeOwnership: true);
-                _inPlaceUiWindow = new(pWindow, takeOwnership: true);
+                _inPlaceFrame = pFrame is null ? null : new(pFrame, takeOwnership: true);
+                _inPlaceUiWindow = pWindow is null ? null : new(pWindow, takeOwnership: true);
 
                 // We are parenting ourselves directly to the host window. The host must implement the ambient property
                 // DISPID_AMBIENT_MESSAGEREFLECT. If it doesn't, that means that the host won't reflect messages back
@@ -937,7 +932,7 @@ public partial class Control
             // Set ourselves up in the host.
             Debug.Assert(_inPlaceFrame is not null, "Setting us to visible should have created the in place frame");
 
-            var activeObject = ComHelpers.GetComPointer<IOleInPlaceActiveObject>(_control);
+            using var activeObject = ComHelpers.GetComScope<IOleInPlaceActiveObject>(_control);
 
             using var inPlaceFrame = _inPlaceFrame.GetInterface();
             inPlaceFrame.Value->SetActiveObject(activeObject, (PCWSTR)null);
@@ -954,7 +949,7 @@ public partial class Control
                 && hr != HRESULT.INPLACE_E_NOTOOLSPACE
                 && hr != HRESULT.E_NOTIMPL)
             {
-                Marshal.ThrowExceptionForHR((int)hr);
+                hr.ThrowOnFailure();
             }
 
             if (_inPlaceUiWindow is not null)
@@ -965,14 +960,12 @@ public partial class Control
                     && hr != HRESULT.INPLACE_E_NOTOOLSPACE
                     && hr != HRESULT.E_NOTIMPL)
                 {
-                    Marshal.ThrowExceptionForHR((int)hr);
+                    hr.ThrowOnFailure();
                 }
             }
         }
 
-        /// <summary>
-        ///  Implements IOleInPlaceObject::InPlaceDeactivate.
-        /// </summary>
+        /// <inheritdoc cref="IOleInPlaceObject.InPlaceDeactivate"/>
         internal HRESULT InPlaceDeactivate()
         {
             // Only do this if we're already in place active.
@@ -1005,18 +998,13 @@ public partial class Control
             _control.Visible = false;
             HWNDParent = default;
 
-            _inPlaceUiWindow?.Dispose();
-            _inPlaceUiWindow = null;
-
-            _inPlaceFrame?.Dispose();
-            _inPlaceFrame = null;
+            DisposeHelper.NullAndDispose(ref _inPlaceUiWindow);
+            DisposeHelper.NullAndDispose(ref _inPlaceFrame);
 
             return HRESULT.S_OK;
         }
 
-        /// <summary>
-        ///  Implements IPersistStreamInit::IsDirty.
-        /// </summary>
+        /// <inheritdoc cref="IPersistStorage.IsDirty"/>
         internal HRESULT IsDirty() => _activeXState[s_isDirty] ? HRESULT.S_OK : HRESULT.S_FALSE;
 
         /// <summary>
@@ -1044,9 +1032,7 @@ public partial class Control
                 || property.GetValue(_control) is ISerializable;
         }
 
-        /// <summary>
-        ///  Implements IPersistStorage::Load
-        /// </summary>
+        /// <inheritdoc cref="IPersistStorage.Load(IStorage*)"/>
         internal HRESULT Load(IStorage* stg)
         {
             using ComScope<IStream> stream = new(null);
@@ -1075,28 +1061,23 @@ public partial class Control
             return hr;
         }
 
-        /// <summary>
-        ///  Implements IPersistStreamInit::Load
-        /// </summary>
+        /// <inheritdoc cref="IPersistStreamInit.Load(IStream*)"/>
         internal void Load(IStream* stream)
         {
             // We do everything through property bags because we support full fidelity
-            // in them.  So, load through that method.
+            // in them. So, load through that method.
             PropertyBagStream bagStream = new();
             bagStream.Read(stream);
-            Load(ComHelpers.GetComPointer<IPropertyBag>(bagStream), errorLog: null);
+            using var propertyBag = ComHelpers.GetComScope<IPropertyBag>(bagStream);
+            Load(propertyBag, errorLog: null);
         }
 
-        /// <summary>
-        ///  Implements IPersistPropertyBag::Load
-        /// </summary>
+        /// <inheritdoc cref="IPersistPropertyBag.Load(IPropertyBag*, IErrorLog*)"/>
         internal unsafe void Load(IPropertyBag* propertyBag, IErrorLog* errorLog)
         {
             PropertyDescriptorCollection props = TypeDescriptor.GetProperties(
                 _control,
                 new Attribute[] { DesignerSerializationVisibilityAttribute.Visible });
-
-            using ComScope<IPropertyBag> scope = new(propertyBag);
 
             for (int i = 0; i < props.Count; i++)
             {
@@ -1311,9 +1292,7 @@ public partial class Control
             }
         }
 
-        /// <summary>
-        ///  Implements IOleControl::OnAmbientPropertyChanged
-        /// </summary>
+        /// <inheritdoc cref="IOleControl.OnAmbientPropertyChange(int)"/>
         internal void OnAmbientPropertyChange(int dispID)
         {
             if (dispID != PInvoke.DISPID_UNKNOWN)
@@ -1368,9 +1347,7 @@ public partial class Control
             }
         }
 
-        /// <summary>
-        ///  Implements IOleInPlaceActiveObject::OnDocWindowActivate.
-        /// </summary>
+        /// <inheritdoc cref="IOleInPlaceActiveObject.OnDocWindowActivate(BOOL)"/>
         internal void OnDocWindowActivate(BOOL fActivate)
         {
             if (_activeXState[s_uiActive] && fActivate && _inPlaceFrame is not null)
@@ -1415,9 +1392,7 @@ public partial class Control
             Y = (HiMetricPerInch * y + (LogPixels.Y >> 1)) / LogPixels.Y
         };
 
-        /// <summary>
-        ///  Our implementation of IQuickActivate::QuickActivate
-        /// </summary>
+        /// <inheritdoc cref="IQuickActivate.QuickActivate(QACONTAINER*, QACONTROL*)"/>
         internal unsafe HRESULT QuickActivate(QACONTAINER* pQaContainer, QACONTROL* pQaControl)
         {
             if (pQaControl is null)
@@ -1475,17 +1450,17 @@ public partial class Control
             if ((pQaContainer->pUnkEventSink is not null) && (_control is UserControl))
             {
                 // Check if this control exposes events to COM.
-                Type? eventInterface = GetDefaultEventsInterface(_control.GetType());
-
-                if (eventInterface is not null)
+                if (GetDefaultEventsInterface(_control.GetType()) is { } eventInterface)
                 {
                     // Control doesn't explicitly implement IConnectionPointContainer, but it is generated with a CCW by
                     // COM interop.
 
-                    using var container = ComHelpers.GetComScope<IConnectionPointContainer>(_control);
+                    using var container = ComHelpers.TryGetComScope<IConnectionPointContainer>(_control, out HRESULT hr);
+
+                    hr.AssertSuccess();
+
                     using ComScope<IConnectionPoint> connectionPoint = new(null);
-                    HRESULT hr = container.Value->FindConnectionPoint(eventInterface.GUID, connectionPoint);
-                    if (hr.Failed)
+                    if (hr.Failed || container.Value->FindConnectionPoint(eventInterface.GUID, connectionPoint).Failed)
                     {
                         throw new ArgumentException(string.Format(SR.AXNoConnectionPoint, eventInterface.Name));
                     }
@@ -1495,43 +1470,27 @@ public partial class Control
                 }
             }
 
-            if (pQaContainer->pPropertyNotifySink is not null)
-            {
-                pQaContainer->pPropertyNotifySink->Release();
-            }
-
-            if (pQaContainer->pUnkEventSink is not null)
-            {
-                pQaContainer->pUnkEventSink->Release();
-            }
-
             return HRESULT.S_OK;
-        }
 
-        /// <summary>
-        ///  Return the default COM events interface declared on a .NET class.
-        ///  This looks for the ComSourceInterfacesAttribute and returns the .NET
-        ///  interface type of the first interface declared.
-        /// </summary>
-        private static Type? GetDefaultEventsInterface(Type controlType)
-        {
-            Type? eventInterface = null;
-            object[] custom = controlType.GetCustomAttributes(typeof(ComSourceInterfacesAttribute), inherit: false);
-
-            if (custom.Length > 0)
+            // Get the default COM events interface declared on a .NET class.
+            static Type? GetDefaultEventsInterface(Type controlType)
             {
-                ComSourceInterfacesAttribute coms = (ComSourceInterfacesAttribute)custom[0];
-                string eventName = coms.Value.Split('\0')[0];
-                eventInterface = controlType.Module.Assembly.GetType(eventName, throwOnError: false);
-                eventInterface ??= Type.GetType(eventName, throwOnError: false);
-            }
+                Type? eventInterface = null;
 
-            return eventInterface;
+                // Get the first declared interface, if any.
+                if (controlType.GetCustomAttributes<ComSourceInterfacesAttribute>(inherit: false).FirstOrDefault()
+                    is { } comSourceInterfaces)
+                {
+                    string eventName = comSourceInterfaces.Value.Split('\0')[0];
+                    eventInterface = controlType.Module.Assembly.GetType(eventName, throwOnError: false);
+                    eventInterface ??= Type.GetType(eventName, throwOnError: false);
+                }
+
+                return eventInterface;
+            }
         }
 
-        /// <summary>
-        ///  Implements IPersistStorage::Save
-        /// </summary>
+        /// <inheritdoc cref="IPersistStorage.Save(IStorage*, BOOL)"/>
         internal HRESULT Save(IStorage* storage, BOOL fSameAsLoad)
         {
             using ComScope<IStream> stream = new(null);
@@ -1552,28 +1511,24 @@ public partial class Control
             return hr;
         }
 
-        /// <summary>
-        ///  Implements IPersistStreamInit::Save
-        /// </summary>
+        /// <inheritdoc cref="IPersistStreamInit.Save(IStream*, BOOL)"/>
         internal void Save(IStream* stream, BOOL fClearDirty)
         {
             // We do everything through property bags because we support full fidelity in them.
             // So, save through that method.
             PropertyBagStream bagStream = new();
-            Save(ComHelpers.GetComPointer<IPropertyBag>(bagStream), fClearDirty, saveAllProperties: false);
+
+            using var propertyBag = ComHelpers.GetComScope<IPropertyBag>(bagStream);
+            Save(propertyBag, fClearDirty, saveAllProperties: false);
             bagStream.Write(stream);
         }
 
-        /// <summary>
-        ///  Implements IPersistPropertyBag::Save. Releases <paramref name="propertyBag"/> when finished.
-        /// </summary>
+        /// <inheritdoc cref="IPersistPropertyBag.Save(IPropertyBag*, BOOL, BOOL)"/>
         internal void Save(IPropertyBag* propertyBag, BOOL clearDirty, BOOL saveAllProperties)
         {
             PropertyDescriptorCollection props = TypeDescriptor.GetProperties(
                 _control,
                 new Attribute[] { DesignerSerializationVisibilityAttribute.Visible });
-
-            using ComScope<IPropertyBag> scope = new(propertyBag);
 
             for (int i = 0; i < props.Count; i++)
             {
@@ -1660,18 +1615,16 @@ public partial class Control
         /// </summary>
         private void SendOnSave()
         {
-            int cnt = _adviseList.Count;
-            for (int i = 0; i < cnt; i++)
+            if (_adviseHolder is null)
             {
-                IAdviseSink* s = _adviseList[i];
-                Debug.Assert(s is not null, "NULL in our advise list");
-                s->OnSave();
+                return;
             }
+
+            using var holder = _adviseHolder.GetInterface();
+            holder.Value->SendOnSave();
         }
 
-        /// <summary>
-        ///  Implements IViewObject2::SetAdvise.
-        /// </summary>
+        /// <inheritdoc cref="IViewObject.SetAdvise(DVASPECT, uint, IAdviseSink*)"/>
         internal HRESULT SetAdvise(DVASPECT aspects, ADVF advf, IAdviseSink* pAdvSink)
         {
             // If it's not a content aspect, we don't support it.
@@ -1684,14 +1637,16 @@ public partial class Control
             _activeXState[s_viewAdvisePrimeFirst] = advf.HasFlag(ADVF.ADVF_PRIMEFIRST);
             _activeXState[s_viewAdviseOnlyOnce] = advf.HasFlag(ADVF.ADVF_ONLYONCE);
 
-            if (_viewAdviseSink is not null)
+            DisposeHelper.NullAndRelease(ref _viewAdviseSink);
+
+            if (pAdvSink is not null)
             {
-                _viewAdviseSink->Release();
+                pAdvSink->AddRef();
             }
 
             _viewAdviseSink = pAdvSink;
 
-            // prime them if they want it [we need to store this so they can get flags later]
+            // Prime them if they want it [we need to store this so they can get flags later]
             if (_activeXState[s_viewAdvisePrimeFirst])
             {
                 ViewChanged();
@@ -1700,17 +1655,26 @@ public partial class Control
             return HRESULT.S_OK;
         }
 
-        /// <summary>
-        ///  Implements IOleObject::SetClientSite.
-        /// </summary>
+        /// <inheritdoc cref="IOleObject.SetClientSite(IOleClientSite*)"/>
         internal void SetClientSite(IOleClientSite* value)
         {
-            _clientSite?.Dispose();
-            _clientSite = value is null ? null : new(value, takeOwnership: true);
+            DisposeHelper.NullAndDispose(ref _clientSite);
 
-            _control.Site = _clientSite is not null
-                ? new AxSourcingSite(_control, _clientSite, "ControlAxSourcingSite")
-                : (ISite?)null;
+            if (value is not null)
+            {
+                // Callers don't increment the ref count when they pass IOleClientSite, it is up to us to do so as we're
+                // maintaining a reference to the pointer. Validated this behavior with the ATL/MFC sources.
+                //
+                // https://learn.microsoft.com/windows/win32/api/oleidl/nf-oleidl-ioleobject-setclientsite#notes-to-implementers
+
+                value->AddRef();
+                _clientSite = new(value, takeOwnership: true);
+                _control.Site = new AxSourcingSite(_control, _clientSite, "ControlAxSourcingSite");
+            }
+            else
+            {
+                _control.Site = null;
+            }
 
             // Get the ambient properties that effect us.
             using VARIANT property = GetAmbientProperty(PInvoke.DISPID_AMBIENT_UIDEAD);
@@ -1735,9 +1699,7 @@ public partial class Control
             _control.OnTopMostActiveXParentChanged(EventArgs.Empty);
         }
 
-        /// <summary>
-        ///  Implements IOleObject::SetExtent
-        /// </summary>
+        /// <inheritdoc cref="IOleObject.SetExtent(DVASPECT, SIZE*)"/>
         internal unsafe void SetExtent(DVASPECT dwDrawAspect, Size* pSizel)
         {
             if (!dwDrawAspect.HasFlag(DVASPECT.DVASPECT_CONTENT))
@@ -1826,9 +1788,7 @@ public partial class Control
             _control.Visible = visible;
         }
 
-        /// <summary>
-        ///  Implements IOleInPlaceObject::SetObjectRects.
-        /// </summary>
+        /// <inheritdoc cref="IOleInPlaceObject.SetObjectRects(RECT*, RECT*)"/>
         internal unsafe HRESULT SetObjectRects(RECT* lprcPosRect, RECT* lprcClipRect)
         {
             if (lprcPosRect is null || lprcClipRect is null)
@@ -1946,9 +1906,7 @@ public partial class Control
         [DoesNotReturn]
         internal static void ThrowHr(HRESULT hr) => throw new ExternalException(SR.ExternalException, (int)hr);
 
-        /// <summary>
-        ///  Handles IOleControl::TranslateAccelerator
-        /// </summary>
+        /// <inheritdoc cref="IOleInPlaceActiveObject.TranslateAccelerator(MSG*)"/>
         internal unsafe HRESULT TranslateAccelerator(MSG* lpmsg)
         {
             if (lpmsg is null)
@@ -1969,7 +1927,7 @@ public partial class Control
                     Debug.WriteLine($"AxSource: TranslateAccelerator : {m}");
                 }
             }
-#endif // DEBUG
+#endif
 
             bool needPreProcess = false;
             switch (lpmsg->message)
@@ -2053,9 +2011,7 @@ public partial class Control
             return controlSite.Value->TranslateAccelerator(lpmsg, keyState);
         }
 
-        /// <summary>
-        ///  Implements IOleInPlaceObject::UIDeactivate.
-        /// </summary>
+        /// <inheritdoc cref="IOleInPlaceObject.UIDeactivate"/>
         internal HRESULT UIDeactivate()
         {
             // Only do this if we're UI active
@@ -2087,27 +2043,23 @@ public partial class Control
                 using var inPlaceSite = _clientSite.TryGetInterface<IOleInPlaceSite>(out HRESULT hr);
                 if (hr.Succeeded)
                 {
-                    inPlaceSite.Value->OnUIDeactivate(BOOL.FALSE);
+                    inPlaceSite.Value->OnUIDeactivate(fUndoable: BOOL.FALSE);
                 }
             }
 
             return HRESULT.S_OK;
         }
 
-        /// <summary>
-        ///  Implements IOleObject::Unadvise
-        /// </summary>
+        /// <inheritdoc cref="IOleObject.Unadvise(uint)"/>
         internal HRESULT Unadvise(uint dwConnection)
         {
-            if (dwConnection > _adviseList.Count || _adviseList[(int)dwConnection - 1] is null)
+            if (_adviseHolder is null)
             {
-                return HRESULT.OLE_E_NOCONNECTION;
+                return HRESULT.E_FAIL;
             }
 
-            IAdviseSink* sink = _adviseList[(int)dwConnection - 1];
-            _adviseList.RemoveAt((int)dwConnection - 1);
-            sink->Release();
-            return HRESULT.S_OK;
+            using var holder = _adviseHolder.GetInterface();
+            return holder.Value->Unadvise(dwConnection);
         }
 
         /// <summary>
@@ -2222,8 +2174,7 @@ public partial class Control
 
             if (_activeXState[s_viewAdviseOnlyOnce])
             {
-                _viewAdviseSink->Release();
-                _viewAdviseSink = null;
+                DisposeHelper.NullAndRelease(ref _viewAdviseSink);
             }
         }
 
@@ -2260,12 +2211,14 @@ public partial class Control
 
         public void Dispose()
         {
-            _inPlaceFrame?.Dispose();
-            _inPlaceFrame = null;
-            _inPlaceUiWindow?.Dispose();
-            _inPlaceUiWindow = null;
-            _clientSite?.Dispose();
-            _clientSite = null;
+            // Disposing the client site handle can get us called back with SetClientSite(null). We need to
+            // make sure that we clear the field before disposing it. To avoid similar problems, we do the same
+            // pattern for every COM pointer.
+
+            DisposeHelper.NullAndDispose(ref _inPlaceFrame);
+            DisposeHelper.NullAndDispose(ref _inPlaceUiWindow);
+            DisposeHelper.NullAndDispose(ref _clientSite);
+            DisposeHelper.NullAndDispose(ref _adviseHolder);
         }
     }
 }

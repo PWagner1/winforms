@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Drawing.Text;
@@ -305,7 +304,7 @@ public static class TextRenderer
         // This MUST come before retrieving the HDC, which locks the Graphics object
         FONT_QUALITY quality = FontQualityFromTextRenderingHint(dc);
 
-        using var hdc = new DeviceContextHdcScope(dc, GetApplyStateFlags(dc, flags));
+        using DeviceContextHdcScope hdc = new(dc, GetApplyStateFlags(dc, flags));
 
         DrawTextInternal(hdc, text, font, bounds, foreColor, quality, backColor, flags);
     }
@@ -334,7 +333,7 @@ public static class TextRenderer
             // This MUST come before retrieving the HDC, which locks the Graphics object
             FONT_QUALITY quality = FontQualityFromTextRenderingHint(e.GraphicsInternal);
 
-            using var graphicsHdc = new DeviceContextHdcScope(e.GraphicsInternal, applyGraphicsState: false);
+            using DeviceContextHdcScope graphicsHdc = new(e.GraphicsInternal, applyGraphicsState: false);
             DrawTextInternal(graphicsHdc, text, font, bounds, foreColor, quality, backColor, flags);
         }
         else
@@ -539,7 +538,7 @@ public static class TextRenderer
 
         // Applying state may not impact text size measurements. Rather than risk missing some
         // case we'll apply as we have historically to avoid surprise regressions.
-        using var hdc = new DeviceContextHdcScope(dc, GetApplyStateFlags(dc, flags));
+        using DeviceContextHdcScope hdc = new(dc, GetApplyStateFlags(dc, flags));
         using var hfont = GdiCache.GetHFONT(font, quality, hdc);
         return hdc.HDC.MeasureText(text, hfont, proposedSize, flags);
     }
@@ -619,6 +618,18 @@ public static class TextRenderer
 #if DEBUG
         if ((textFormatFlags & SkipAssertFlag) == 0)
         {
+            // Clipping and translation transforms applied to Graphics objects are not done on the underlying HDC.
+            // When we're rendering text to the HDC we, by default, should apply both. If it is *known* that these
+            // aren't wanted we can get a _slight_ performance benefit by not applying them and in that case the
+            // SkipAssertFlag bit can be set to skip this check.
+            //
+            // This application of clipping and translation is meant to make Graphics.DrawText and TextRenderer.DrawText
+            // roughly equivalent in the way they render.
+            //
+            // Note that there aren't flags for other transforms. Windows 9x doesn't support HDC transforms outside of
+            // translation (rotation for example), and this likely impacted the decision to only have a translation
+            // flag when this was originally written.
+
             Debug.Assert(apply.HasFlag(ApplyGraphicsProperties.Clipping)
                 || graphics.Clip is null
                 || graphics.Clip.GetHrgn(graphics) == IntPtr.Zero,

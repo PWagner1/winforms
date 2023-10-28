@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -37,8 +36,8 @@ public class ByteViewer : TableLayoutPanel
     private const int DUMP_START_X = HEX_START_X + HEX_WIDTH + HEX_DUMP_GAP;
     private const int SCROLLBAR_START_X = DUMP_START_X + DUMP_WIDTH + HEX_DUMP_GAP;
 
-    private static readonly Font ADDRESS_FONT = new Font("Microsoft Sans Serif", 8.0f);
-    private static readonly Font HEXDUMP_FONT = new Font("Courier New", 8.0f);
+    private static readonly Font ADDRESS_FONT = new("Microsoft Sans Serif", 8.0f);
+    private static readonly Font HEXDUMP_FONT = new("Courier New", 8.0f);
 
     private int SCROLLBAR_HEIGHT;
     private int SCROLLBAR_WIDTH;

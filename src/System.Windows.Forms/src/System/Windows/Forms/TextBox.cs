@@ -1,12 +1,11 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Windows.Forms.VisualStyles;
-using static Interop;
+using Windows.Win32.UI.Accessibility;
 
 namespace System.Windows.Forms;
 
@@ -17,7 +16,7 @@ namespace System.Windows.Forms;
 [SRDescription(nameof(SR.DescriptionTextBox))]
 public partial class TextBox : TextBoxBase
 {
-    private static readonly object EVENT_TEXTALIGNCHANGED = new object();
+    private static readonly object EVENT_TEXTALIGNCHANGED = new();
 
     /// <summary>
     ///  Controls whether or not the edit box consumes/respects ENTER key
@@ -654,7 +653,7 @@ public partial class TextBox : TextBoxBase
 
         if (IsHandleCreated && IsAccessibilityObjectCreated && ContainsNavigationKeyCode(e.KeyCode))
         {
-            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+            AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId);
         }
     }
 
@@ -668,7 +667,7 @@ public partial class TextBox : TextBoxBase
             // about text selection changed for TextBox assuming
             // that any mouse down on textbox leads to change of
             // the caret position and thereby change the selection.
-            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.Text_TextSelectionChangedEventId);
+            AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextSelectionChangedEventId);
         }
     }
 
@@ -690,7 +689,7 @@ public partial class TextBox : TextBoxBase
     protected override bool ProcessCmdKey(ref Message m, Keys keyData)
     {
         bool returnValue = base.ProcessCmdKey(ref m, keyData);
-        if (!returnValue && Multiline && ShortcutsEnabled && (keyData == (Keys.Control | Keys.A)))
+        if (!returnValue && ShortcutsEnabled && (keyData == (Keys.Control | Keys.A)))
         {
             SelectAll();
             return true;
@@ -967,7 +966,7 @@ public partial class TextBox : TextBoxBase
                         PInvoke.InvalidateRect(this, lpRect: null, bErase: true);
 
                         // Use BeginPaint instead of GetDC to prevent flicker and support print-to-image scenarios.
-                        using var paintScope = new PInvoke.BeginPaintScope((HWND)Handle);
+                        using PInvoke.BeginPaintScope paintScope = new((HWND)Handle);
                         DrawPlaceholderText(paintScope);
 
                         PInvoke.ValidateRect(this, lpRect: null);

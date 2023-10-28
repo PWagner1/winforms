@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
@@ -34,7 +33,7 @@ public partial class ControlDesigner
 
         public override void Add(Control c) => _realCollection.Add(c);
 
-        public override void AddRange(Control[] controls) => _realCollection.AddRange(controls);
+        public override void AddRange(params Control[] controls) => _realCollection.AddRange(controls);
 
         bool IList.Contains(object control) => ((IList)_realCollection).Contains(control);
 

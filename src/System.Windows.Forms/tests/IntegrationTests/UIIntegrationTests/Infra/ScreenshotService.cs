@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -9,7 +8,7 @@ namespace System.Windows.Forms.UITests;
 
 internal static class ScreenshotService
 {
-    private static readonly object Gate = new object();
+    private static readonly object Gate = new();
 
     /// <summary>
     /// Takes a picture of the screen and saves it to the location specified by

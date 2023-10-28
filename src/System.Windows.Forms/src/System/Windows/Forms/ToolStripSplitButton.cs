@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -25,9 +24,9 @@ public partial class ToolStripSplitButton : ToolStripDropDownItem
 
     private const int DefaultDropDownWidth = 11;
 
-    private static readonly object s_eventDefaultItemChanged = new object();
-    private static readonly object s_eventButtonClick = new object();
-    private static readonly object s_eventButtonDoubleClick = new object();
+    private static readonly object s_eventDefaultItemChanged = new();
+    private static readonly object s_eventButtonClick = new();
+    private static readonly object s_eventButtonDoubleClick = new();
 
     private static bool s_isScalingInitialized;
     private static int s_scaledDropDownButtonWidth = DefaultDropDownWidth;

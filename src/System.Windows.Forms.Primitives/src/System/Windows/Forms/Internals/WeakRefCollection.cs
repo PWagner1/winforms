@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 
@@ -106,7 +105,7 @@ internal class WeakRefCollection : IList
 
     public override int GetHashCode()
     {
-        var hash = default(HashCode);
+        HashCode hash = default;
         foreach (WeakRefObject? o in InnerList)
         {
             hash.Add(o);

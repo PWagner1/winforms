@@ -1,14 +1,12 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 #nullable disable
 
-using System.ComponentModel.Design;
-using System.ComponentModel;
 using System.Collections;
+using System.ComponentModel;
+using System.ComponentModel.Design;
 using System.Drawing;
-using static Interop;
 
 namespace System.Windows.Forms.Design;
 
@@ -19,7 +17,7 @@ namespace System.Windows.Forms.Design;
 internal class ListViewDesigner : ControlDesigner
 {
     private DesignerActionListCollection _actionLists;
-    private ComCtl32.HDHITTESTINFO _hdrhit;
+    private HDHITTESTINFO _hdrhit;
     private bool _inShowErrorDialog;
 
     /// <summary>
@@ -138,7 +136,7 @@ internal class ListViewDesigner : ControlDesigner
             case (int)PInvoke.WM_NOTIFY:
             case (int)MessageId.WM_REFLECT_NOTIFY:
                 NMHDR* nmhdr = (NMHDR*)(nint)m.LParamInternal;
-                if ((int)nmhdr->code == (int)ComCtl32.HDN.ENDTRACKW)
+                if (nmhdr->code == PInvoke.HDN_ENDTRACKW)
                 {
                     // Re-codegen if the columns have been resized
                     try

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.Runtime.InteropServices;
@@ -13,8 +12,6 @@ internal partial class Interop
     /// </summary>
     internal unsafe partial class WinFormsComWrappers : ComWrappers
     {
-        private const int S_OK = 0;
-
         internal static WinFormsComWrappers Instance { get; } = new WinFormsComWrappers();
 
         private WinFormsComWrappers() { }
@@ -44,17 +41,6 @@ internal partial class Interop
 
         protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
         {
-            Debug.Assert(flags == CreateObjectFlags.UniqueInstance
-                || flags == CreateObjectFlags.None
-                || flags == CreateObjectFlags.Unwrap);
-
-            int hr = Marshal.QueryInterface(externalComObject, ref IID.GetRef<IErrorInfo>(), out IntPtr errorInfoComObject);
-            if (hr == S_OK)
-            {
-                Marshal.Release(externalComObject);
-                return new ErrorInfoWrapper(errorInfoComObject);
-            }
-
             throw new NotImplementedException();
         }
 

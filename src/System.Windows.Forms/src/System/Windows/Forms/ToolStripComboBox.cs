@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -13,15 +12,15 @@ namespace System.Windows.Forms;
 [DefaultProperty(nameof(Items))]
 public partial class ToolStripComboBox : ToolStripControlHost
 {
-    internal static readonly object s_eventDropDown = new object();
-    internal static readonly object s_eventDropDownClosed = new object();
-    internal static readonly object s_eventDropDownStyleChanged = new object();
-    internal static readonly object s_eventSelectedIndexChanged = new object();
-    internal static readonly object s_eventSelectionChangeCommitted = new object();
-    internal static readonly object s_eventTextUpdate = new object();
+    internal static readonly object s_eventDropDown = new();
+    internal static readonly object s_eventDropDownClosed = new();
+    internal static readonly object s_eventDropDownStyleChanged = new();
+    internal static readonly object s_eventSelectedIndexChanged = new();
+    internal static readonly object s_eventSelectionChangeCommitted = new();
+    internal static readonly object s_eventTextUpdate = new();
 
-    private static readonly Padding s_dropDownPadding = new Padding(2);
-    private static readonly Padding s_padding = new Padding(1, 0, 1, 0);
+    private static readonly Padding s_dropDownPadding = new(2);
+    private static readonly Padding s_padding = new(1, 0, 1, 0);
 
     private Padding _scaledDropDownPadding = s_dropDownPadding;
     private Padding _scaledPadding = s_padding;
@@ -398,7 +397,6 @@ public partial class ToolStripComboBox : ToolStripControlHost
         OnTextUpdate(e);
     }
 
-#pragma warning disable CA2252 // Suppress 'Opt in to preview features' (https://aka.ms/dotnet-warnings/preview-features)
     protected virtual void OnDropDown(EventArgs e)
     {
         if (ParentInternal is not null)
@@ -442,7 +440,6 @@ public partial class ToolStripComboBox : ToolStripControlHost
     {
         RaiseEvent(s_eventTextUpdate, e);
     }
-#pragma warning restore CA2252
 
     protected override void OnSubscribeControlEvents(Control? control)
     {

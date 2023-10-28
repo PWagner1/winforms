@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Data;
 using System.Windows.Forms;
@@ -9,8 +8,8 @@ namespace Accessibility_Core_App;
 
 public partial class DataBindingExample : Form
 {
-    private readonly List<Student> _studentA = new List<Student>();
-    private readonly List<Student> _studentB = new List<Student>();
+    private readonly List<Student> _studentA = new();
+    private readonly List<Student> _studentB = new();
 
     public DataBindingExample()
     {
@@ -40,10 +39,10 @@ public partial class DataBindingExample : Form
         // Binding Data For DataGridView control by using DadSource property
         dataGridView1.DataSource = new List<Student>
         {
-            new Student(1, "StudentA", "Female", 12121, "1001", "Basketball", false, 10, 11),
-            new Student(2, "StudentB", "Male", 12122, "1002", "Basketball", true, 10, 11),
-            new Student(3, "StudentC", "Female", 12123, "1003", "Football", false, 10, 11),
-            new Student(4, "StudentD", "Male", 12124, "1004", "Football", true, 10, 11),
+            new(1, "StudentA", "Female", 12121, "1001", "Basketball", false, 10, 11),
+            new(2, "StudentB", "Male", 12122, "1002", "Basketball", true, 10, 11),
+            new(3, "StudentC", "Female", 12123, "1003", "Football", false, 10, 11),
+            new(4, "StudentD", "Male", 12124, "1004", "Football", true, 10, 11),
         };
 
         // Binding Data For TextBox/Label/DomainUpDown/NumericUpDown/LinkLabel/CheckBox/RadioButton/RichTextBox/MaskedTextBox/Button controls by using DadaBindings property

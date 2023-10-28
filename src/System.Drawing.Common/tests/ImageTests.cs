@@ -519,7 +519,7 @@ public class ImageTests
         // Throws PathTooLongException on Desktop and FileNotFoundException elsewhere.
         if (PlatformDetection.IsNetFramework)
         {
-            string fileName = new string('a', 261);
+            string fileName = new('a', 261);
 
             Assert.Throws<PathTooLongException>(() => Image.FromFile(fileName));
             Assert.Throws<PathTooLongException>(() => Image.FromFile(fileName,
@@ -527,7 +527,7 @@ public class ImageTests
         }
         else
         {
-            string fileName = new string('a', 261);
+            string fileName = new('a', 261);
 
             Assert.Throws<FileNotFoundException>(() => Image.FromFile(fileName));
             Assert.Throws<FileNotFoundException>(() => Image.FromFile(fileName,
@@ -618,7 +618,7 @@ public class ImageTests
                 Encoder.Compression.Guid,
                 Encoder.ColorDepth.Guid,
                 Encoder.SaveFlag.Guid,
-                new Guid(unchecked((int)0xa219bbc9), unchecked((short)0x0a9d), unchecked((short)0x4005), new byte[] { 0xa3, 0xee, 0x3a, 0x42, 0x1b, 0x8b, 0xb0, 0x6c }) /* Encoder.SaveAsCmyk.Guid */
+                new(unchecked((int)0xa219bbc9), unchecked((short)0x0a9d), unchecked((short)0x4005), new byte[] { 0xa3, 0xee, 0x3a, 0x42, 0x1b, 0x8b, 0xb0, 0x6c }) /* Encoder.SaveAsCmyk.Guid */
             }
         };
 

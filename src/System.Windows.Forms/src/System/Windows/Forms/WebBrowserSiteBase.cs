@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel.Design;
 using System.Drawing;
@@ -409,8 +408,8 @@ public unsafe class WebBrowserSiteBase :
             return HRESULT.E_INVALIDARG;
         }
 
-        var posRect = new RECT(0, 0, lprcPosRect->right - lprcPosRect->left, lprcPosRect->bottom - lprcPosRect->top);
-        var clipRect = WebBrowserHelper.GetClipRect();
+        RECT posRect = new(0, 0, lprcPosRect->right - lprcPosRect->left, lprcPosRect->bottom - lprcPosRect->top);
+        RECT clipRect = WebBrowserHelper.GetClipRect();
         Host.AXInPlaceObject!.SetObjectRects(&posRect, &clipRect);
         Host.MakeDirty();
         return HRESULT.S_OK;

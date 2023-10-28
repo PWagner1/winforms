@@ -1,8 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-#nullable disable
 
 using System.ComponentModel;
 using System.ComponentModel.Design;
@@ -34,43 +31,43 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
     private bool _helpVisible = true;
     private bool _toolbarVisible = true;
 
-    private ImageList _normalButtonImages;
-    private ImageList _largeButtonImages;
+    private ImageList? _normalButtonImages;
+    private ImageList? _largeButtonImages;
     private bool _largeButtons;
 
-    private Bitmap _alphaBitmap;
-    private Bitmap _categoryBitmap;
-    private Bitmap _propertyPageBitmap;
+    private Bitmap? _alphaBitmap;
+    private Bitmap? _categoryBitmap;
+    private Bitmap? _propertyPageBitmap;
 
     private readonly List<TabInfo> _tabs = new();
-    private TabInfo _selectedTab;
+    private TabInfo? _selectedTab;
     private bool _tabsDirty = true;
 
     private bool _drawFlatToolBar;
 
-    private Dictionary<string, GridEntry> _viewTabProperties;
+    private Dictionary<string, GridEntry>? _viewTabProperties;
 
     // Our view type buttons (Alpha vs. categorized)
-    private ToolStripButton[] _viewSortButtons;
+    private ToolStripButton[]? _viewSortButtons;
     private int _selectedViewSort;
     private PropertySort _propertySortValue;
 
-    private ToolStripButton _viewPropertyPagesButton;
+    private ToolStripButton? _viewPropertyPagesButton;
     private readonly ToolStripSeparator _separator1;
     private readonly ToolStripSeparator _separator2;
 
     // Our main view
     private readonly PropertyGridView _gridView;
 
-    private IDesignerHost _designerHost;
-    private IDesignerEventService _designerEventService;
+    private IDesignerHost? _designerHost;
+    private IDesignerEventService? _designerEventService;
 
-    private Dictionary<int, int> _designerSelections;
+    private Dictionary<int, int>? _designerSelections;
 
-    private GridEntry _defaultEntry;
-    private GridEntry _rootEntry;
-    private GridEntryCollection _currentEntries;
-    private object[] _selectedObjects;
+    private GridEntry? _defaultEntry;
+    private GridEntry? _rootEntry;
+    private GridEntryCollection? _currentEntries;
+    private object[]? _selectedObjects;
 
     private int _paintFrozen;
     private Color _lineColor = SystemInformation.HighContrast ? SystemColors.ControlDarkDark : SystemColors.InactiveBorder;
@@ -81,9 +78,9 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
     private Color _selectedItemWithFocusBackColor = SystemColors.Highlight;
     private bool _canShowVisualStyleGlyphs = true;
 
-    private AttributeCollection _browsableAttributes;
+    private AttributeCollection? _browsableAttributes;
 
-    private SnappableControl _targetMove;
+    private SnappableControl? _targetMove;
     private int _dividerMoveY = -1;
     private const int CyDivider = 3;
     private static int s_cyDivider = CyDivider;
@@ -104,7 +101,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
     private static Size s_normalButtonSize = s_defaultNormalButtonSize;
     private static bool s_isScalingInitialized;
 
-    private string _propertyName;
+    private string? _propertyName;
     private int _copyDataMessage;
 
     private Flags _flags;
@@ -128,7 +125,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
     private readonly ComponentChangedEventHandler _onComponentChanged;
 
     // The cookies for our connection points on objects that support IPropertyNotifySink
-    private AxHost.ConnectionPointCookie[] _connectionPointCookies;
+    private AxHost.ConnectionPointCookie[]? _connectionPointCookies;
 
     private static readonly object s_propertyValueChangedEvent = new();
     private static readonly object s_comComponentNameChangedEvent = new();
@@ -252,7 +249,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
         }
     }
 
-    internal IDesignerHost ActiveDesigner
+    internal IDesignerHost? ActiveDesigner
     {
         get => _designerHost ??= GetService<IDesignerHost>();
         set
@@ -265,14 +262,14 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
             SetFlag(Flags.ReInitTab, true);
             if (_designerHost is not null)
             {
-                if (_designerHost.TryGetService(out IComponentChangeService changeService))
+                if (_designerHost.TryGetService(out IComponentChangeService? changeService))
                 {
                     changeService.ComponentAdded -= _onComponentAdded;
                     changeService.ComponentRemoved -= _onComponentRemoved;
                     changeService.ComponentChanged -= _onComponentChanged;
                 }
 
-                if (_designerHost.TryGetService(out IPropertyValueUIService propertyValueService))
+                if (_designerHost.TryGetService(out IPropertyValueUIService? propertyValueService))
                 {
                     propertyValueService.PropertyUIValueItemsChanged -= OnNotifyPropertyValueUIItemsChanged;
                 }
@@ -287,7 +284,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
 
             if (value is not null)
             {
-                if (value.TryGetService(out IComponentChangeService changeService))
+                if (value.TryGetService(out IComponentChangeService? changeService))
                 {
                     changeService.ComponentAdded += _onComponentAdded;
                     changeService.ComponentRemoved += _onComponentRemoved;
@@ -298,7 +295,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
                 value.TransactionClosed += OnTransactionClosed;
                 SetFlag(Flags.BatchMode, false);
 
-                if (value.TryGetService(out IPropertyValueUIService propertyValueService))
+                if (value.TryGetService(out IPropertyValueUIService? propertyValueService))
                 {
                     propertyValueService.PropertyUIValueItemsChanged += OnNotifyPropertyValueUIItemsChanged;
                 }
@@ -335,7 +332,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public override Image BackgroundImage
+    public override Image? BackgroundImage
     {
         get => base.BackgroundImage;
         set => base.BackgroundImage = value;
@@ -343,7 +340,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler BackgroundImageChanged
+    public new event EventHandler? BackgroundImageChanged
     {
         add => base.BackgroundImageChanged += value;
         remove => base.BackgroundImageChanged -= value;
@@ -359,7 +356,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new event EventHandler BackgroundImageLayoutChanged
+    public new event EventHandler? BackgroundImageLayoutChanged
     {
         add => base.BackgroundImageLayoutChanged += value;
         remove => base.BackgroundImageLayoutChanged -= value;
@@ -368,6 +365,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    [AllowNull]
     public AttributeCollection BrowsableAttributes
     {
         get => _browsableAttributes ??= new(BrowsableAttribute.Yes);
@@ -560,7 +558,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     protected virtual Type DefaultTabType => typeof(PropertiesTab);
-
+#nullable disable
     /// <summary>
     ///  Gets or sets a value indicating whether the <see cref="PropertyGrid"/> control paints its toolbar
     ///  with flat buttons.
@@ -909,7 +907,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
         get => _selectedObjects is null ? Array.Empty<object>() : (object[])_selectedObjects.Clone();
         set
         {
-            using var _ = new FreezePaintScope(this);
+            using FreezePaintScope _ = new(this);
 
             SetFlag(Flags.FullRefreshAfterBatch, false);
             if (GetFlag(Flags.BatchMode))
@@ -2572,7 +2570,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
             return;
         }
 
-        using var _ = new FreezePaintScope(this);
+        using FreezePaintScope _ = new(this);
 
         if (!dividerOnly)
         {
@@ -3030,7 +3028,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
 
     private void OnViewSortButtonClick(object sender, EventArgs e)
     {
-        using (var _ = new FreezePaintScope(this))
+        using (FreezePaintScope _ = new(this))
         {
             // Is this tab selected? If so, do nothing.
             if (sender == _viewSortButtons[_selectedViewSort])
@@ -3079,7 +3077,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
 
     private void OnViewTabButtonClick(object sender, EventArgs e)
     {
-        using (var _ = new FreezePaintScope(this))
+        using (FreezePaintScope _ = new(this))
         {
             SelectViewTabButton((ToolStripButton)sender, true);
             OnLayoutInternal(dividerOnly: false);
@@ -3792,7 +3790,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
             return;
         }
 
-        using var _ = new FreezePaintScope(this);
+        using FreezePaintScope _ = new(this);
 
         if (_normalButtonImages is null || fullRebuild)
         {
@@ -4060,7 +4058,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
         if (e.Y <= 1 || (size.Height - e.Y) <= 1)
         {
             // Convert the coordinates.
-            var temp = new Point(e.X, e.Y);
+            Point temp = new(e.X, e.Y);
             temp = WindowsFormsUtils.TranslatePoint(temp, child, this);
 
             // Forward the message.

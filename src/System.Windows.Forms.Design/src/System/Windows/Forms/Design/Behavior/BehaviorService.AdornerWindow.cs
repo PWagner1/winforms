@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using static Interop;
@@ -17,13 +16,13 @@ public sealed partial class BehaviorService
     {
         private readonly BehaviorService _behaviorService;
         private static MouseHook? s_mouseHook;
-        private static readonly List<AdornerWindow> s_adornerWindowList = new List<AdornerWindow>();
+        private static readonly List<AdornerWindow> s_adornerWindowList = new();
 
         /// <summary>
         ///  Constructor that parents itself to the Designer Frame and hooks all
         ///  necessary events.
         /// </summary>
-        internal AdornerWindow(BehaviorService behaviorService, Control designerFrame)
+        internal AdornerWindow(BehaviorService behaviorService, DesignerFrame designerFrame)
         {
             _behaviorService = behaviorService;
             DesignerFrame = designerFrame;
@@ -90,13 +89,13 @@ public sealed partial class BehaviorService
             base.Dispose(disposing);
         }
 
-        internal Control DesignerFrame { get; private set; }
+        internal DesignerFrame DesignerFrame { get; private set; }
 
         /// <summary>
         ///  Returns the display rectangle for the adorner window
         /// </summary>
         internal Rectangle DesignerFrameDisplayRectangle
-            => DesignerFrameValid ? ((DesignerFrame)DesignerFrame).DisplayRectangle : Rectangle.Empty;
+            => DesignerFrameValid ? DesignerFrame.DisplayRectangle : Rectangle.Empty;
 
         /// <summary>
         ///  Returns true if the DesignerFrame is created and not being disposed.
@@ -131,7 +130,7 @@ public sealed partial class BehaviorService
             if (DesignerFrameValid)
             {
                 // Translate for non-zero scroll positions
-                Point scrollPosition = ((DesignerFrame)DesignerFrame).AutoScrollPosition;
+                Point scrollPosition = DesignerFrame.AutoScrollPosition;
                 region.Translate(scrollPosition.X, scrollPosition.Y);
 
                 DesignerFrame.Invalidate(region, true);
@@ -148,7 +147,7 @@ public sealed partial class BehaviorService
             if (DesignerFrameValid)
             {
                 // Translate for non-zero scroll positions
-                Point scrollPosition = ((DesignerFrame)DesignerFrame).AutoScrollPosition;
+                Point scrollPosition = DesignerFrame.AutoScrollPosition;
                 rectangle.Offset(scrollPosition.X, scrollPosition.Y);
 
                 DesignerFrame.Invalidate(rectangle, true);
@@ -318,19 +317,12 @@ public sealed partial class BehaviorService
 
                 case PInvoke.WM_NCHITTEST:
                     Point pt = PARAM.ToPoint(m.LParamInternal);
-
-                    var pt1 = default(Point);
-                    pt1 = PointToClient(pt1);
+                    Point pt1 = PointToClient(default);
                     pt.Offset(pt1.X, pt1.Y);
 
-                    if (_behaviorService.PropagateHitTest(pt) && !ProcessingDrag)
-                    {
-                        m.ResultInternal = (LRESULT)PInvoke.HTTRANSPARENT;
-                    }
-                    else
-                    {
-                        m.ResultInternal = (LRESULT)(int)PInvoke.HTCLIENT;
-                    }
+                    m.ResultInternal = _behaviorService.PropagateHitTest(pt) && !ProcessingDrag
+                        ? (LRESULT)PInvoke.HTTRANSPARENT
+                        : (LRESULT)(int)PInvoke.HTCLIENT;
 
                     break;
 

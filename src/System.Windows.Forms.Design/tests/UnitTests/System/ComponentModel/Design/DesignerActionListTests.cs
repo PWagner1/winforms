@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Runtime.CompilerServices;
 using Moq;
@@ -19,7 +18,7 @@ public class DesignerActionListTests
     [MemberData(nameof(Ctor_IComponent_TestDat))]
     public void DesignerActionList_Ctor_IComponent(IComponent component)
     {
-        var list = new DesignerActionList(component);
+        DesignerActionList list = new(component);
         Assert.Equal(component, list.Component);
         Assert.False(list.AutoShow);
     }
@@ -28,7 +27,7 @@ public class DesignerActionListTests
     [BoolData]
     public void DesignerActionList_AutoShow_Set_GetReturnsExpected(bool value)
     {
-        var list = new DesignerActionList(new Component())
+        DesignerActionList list = new(new Component())
         {
             AutoShow = value
         };
@@ -44,8 +43,8 @@ public class DesignerActionListTests
         yield return new object[] { null, null };
         yield return new object[] { new Component(), null };
 
-        var o = new object();
-        var mockSite = new Mock<ISite>(MockBehavior.Strict);
+        object o = new();
+        Mock<ISite> mockSite = new(MockBehavior.Strict);
         mockSite
             .Setup(s => s.GetService(typeof(int)))
             .Returns(o);
@@ -59,14 +58,14 @@ public class DesignerActionListTests
     [MemberData(nameof(GetService_TestData))]
     public void DesignerActionList_GetService_Invoke_ReturnsExpected(Component component, object expected)
     {
-        var list = new DesignerActionList(component);
+        DesignerActionList list = new(component);
         Assert.Equal(expected, list.GetService(typeof(int)));
     }
 
     [Fact]
     public void DesignerActionList_GetSortedActionItems_CustomClass_ReturnsExpected()
     {
-        var list = new SubDesignerActionList();
+        SubDesignerActionList list = new();
         DesignerActionItemCollection items = list.GetSortedActionItems();
         Assert.Equal(8, items.Count);
 
@@ -122,7 +121,7 @@ public class DesignerActionListTests
     [Fact]
     public void DesignerActionList_GetSortedActionItems_BaseClass_ReturnsEmpty()
     {
-        var list = new DesignerActionList(null);
+        DesignerActionList list = new(null);
         DesignerActionItemCollection items = list.GetSortedActionItems();
         Assert.Empty(items);
     }

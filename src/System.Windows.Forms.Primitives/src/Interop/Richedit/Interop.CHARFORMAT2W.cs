@@ -1,8 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Runtime.InteropServices;
+using Windows.Win32.UI.Controls.RichEdit;
 
 internal partial class Interop
 {
@@ -11,18 +11,16 @@ internal partial class Interop
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode, Pack = RichEditPack)]
         public unsafe struct CHARFORMAT2W
         {
-            private const int LF_FACESIZE = 32;
-
             public uint cbSize;
-            public CFM dwMask;
-            public CFE dwEffects;
+            public CFM_MASK dwMask;
+            public CFE_EFFECTS dwEffects;
             public int yHeight;
             public int yOffset;
             public int crTextColor;
             public byte bCharSet;
             public byte bPitchAndFamily;
 
-            public fixed char _szFaceName[LF_FACESIZE];
+            public fixed char _szFaceName[(int)PInvoke.LF_FACESIZE];
 
             public ushort wWeight;
             public short sSpacing;
@@ -40,7 +38,7 @@ internal partial class Interop
 
             private Span<char> szFaceName
             {
-                get { fixed (char* c = _szFaceName) { return new Span<char>(c, LF_FACESIZE); } }
+                get { fixed (char* c = _szFaceName) { return new Span<char>(c, (int)PInvoke.LF_FACESIZE); } }
             }
 
             public ReadOnlySpan<char> FaceName

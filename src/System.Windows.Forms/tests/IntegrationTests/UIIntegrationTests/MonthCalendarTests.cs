@@ -1,12 +1,10 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using Xunit.Abstractions;
 using static System.Windows.Forms.MonthCalendar;
-using static Interop.ComCtl32;
 
 namespace System.Windows.Forms.UITests;
 
@@ -69,7 +67,7 @@ public class MonthCalendarTests : ControlTestBase
             {
                 nmhdr = new NMHDR
                 {
-                    code = unchecked((uint)MCN.SELCHANGE),
+                    code = PInvoke.MCN_SELCHANGE,
                 },
                 stSelStart = date,
                 stSelEnd = date,

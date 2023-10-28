@@ -1,10 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
-using static Interop;
+using Windows.Win32.UI.Accessibility;
 
 namespace System.Windows.Forms.PropertyGridInternal;
 
@@ -133,7 +132,7 @@ internal partial class PropertyGridView
 
             if (IsAccessibilityObjectCreated)
             {
-                AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+                AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
             }
         }
 
@@ -294,9 +293,9 @@ internal partial class PropertyGridView
 
                 if (nmhdr->hwndFrom == PropertyGridView.ToolTip.Handle)
                 {
-                    switch ((ComCtl32.TTN)nmhdr->code)
+                    switch (nmhdr->code)
                     {
-                        case ComCtl32.TTN.SHOW:
+                        case PInvoke.TTN_SHOW:
                             PositionTooltip(this, PropertyGridView.ToolTip, ClientRectangle);
                             m.ResultInternal = (LRESULT)1;
                             return true;

@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 
@@ -31,13 +30,14 @@ internal partial class FlowLayout
         private readonly bool _isContainerRTL;
         private Rectangle _displayRect;
         private ElementProxy? _elementProxy;
+
         public ContainerProxy(IArrangedElement container)
         {
             _container = container;
             _isContainerRTL = false;
-            if (_container is Control)
+            if (_container is Control control)
             {
-                _isContainerRTL = ((Control)(_container)).RightToLeft == RightToLeft.Yes;
+                _isContainerRTL = control.RightToLeft == RightToLeft.Yes;
             }
         }
 

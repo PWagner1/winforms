@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
@@ -79,8 +78,8 @@ public partial class SplitContainer : ContainerControl, ISupportInitialize
     private bool _setSplitterDistance;
 
     // Events
-    private static readonly object s_eventMoving = new object();
-    private static readonly object s_eventMoved = new object();
+    private static readonly object s_eventMoving = new();
+    private static readonly object s_eventMoved = new();
 
     // IMessageFilter implementation
     private SplitContainerMessageFilter? _splitContainerMessageFilter;
@@ -99,7 +98,7 @@ public partial class SplitContainer : ContainerControl, ISupportInitialize
         // either the right or bottom panel - LTR
         // either the left or bottom panel - RTL
         Panel2 = new SplitterPanel(this);
-        _splitterRect = default(Rectangle);
+        _splitterRect = default;
 
         SetStyle(ControlStyles.SupportsTransparentBackColor, true);
         SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
@@ -1388,7 +1387,7 @@ public partial class SplitContainer : ContainerControl, ISupportInitialize
     /// </summary>
     private Rectangle CalcSplitLine(int splitSize, int minWeight)
     {
-        Rectangle r = default(Rectangle);
+        Rectangle r = default;
         switch (Orientation)
         {
             case Orientation.Vertical:

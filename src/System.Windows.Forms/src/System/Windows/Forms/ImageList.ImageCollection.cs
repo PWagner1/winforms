@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections;
 using System.Collections.Specialized;
@@ -18,7 +17,7 @@ public sealed partial class ImageList
     public sealed partial class ImageCollection : IList
     {
         private readonly ImageList _owner;
-        private readonly List<ImageInfo> _imageInfoCollection = new List<ImageInfo>();
+        private readonly List<ImageInfo> _imageInfoCollection = new();
 
         ///  A caching mechanism for key accessor
         ///  We use an index here rather than control so that we don't have lifetime
@@ -235,13 +234,13 @@ public sealed partial class ImageList
             Debug.Assert((Count == _imageInfoCollection.Count), "The count of these two collections should be equal.");
 
             // Store off the name.
-            var imageInfo = new ImageInfo
+            ImageInfo imageInfo = new()
             {
                 Name = key
             };
 
             // Add the image to the IList
-            var original = new Original(image, OriginalOptions.Default);
+            Original original = new(image, OriginalOptions.Default);
             Add(original, imageInfo);
         }
 
@@ -253,13 +252,13 @@ public sealed partial class ImageList
             Debug.Assert((Count == _imageInfoCollection.Count), "The count of these two collections should be equal.");
 
             // Store off the name.
-            var imageInfo = new ImageInfo
+            ImageInfo imageInfo = new()
             {
                 Name = key
             };
 
             // Add the image to the IList
-            var original = new Original(icon, OriginalOptions.Default);
+            Original original = new(icon, OriginalOptions.Default);
             Add(original, imageInfo);
         }
 
@@ -289,7 +288,7 @@ public sealed partial class ImageList
         {
             ArgumentNullException.ThrowIfNull(value);
 
-            var original = new Original(value, OriginalOptions.Default);
+            Original original = new(value, OriginalOptions.Default);
             Add(original, null);
         }
 
@@ -302,7 +301,7 @@ public sealed partial class ImageList
         {
             ArgumentNullException.ThrowIfNull(value);
 
-            var original = new Original(value, OriginalOptions.CustomTransparentColor, transparentColor);
+            Original original = new(value, OriginalOptions.CustomTransparentColor, transparentColor);
             return Add(original, null);
         }
 
@@ -374,7 +373,7 @@ public sealed partial class ImageList
             return index;
         }
 
-        public void AddRange(Image[] images)
+        public void AddRange(params Image[] images)
         {
             ArgumentNullException.ThrowIfNull(images);
 
@@ -409,7 +408,7 @@ public sealed partial class ImageList
 
             int nImages = value.Width / _owner.ImageSize.Width;
 
-            var original = new Original(value, OriginalOptions.ImageStrip, nImages);
+            Original original = new(value, OriginalOptions.ImageStrip, nImages);
 
             return Add(original, null);
         }
@@ -437,7 +436,7 @@ public sealed partial class ImageList
 
         bool IList.Contains(object? value)
         {
-            if (!(value is Image image))
+            if (value is not Image image)
             {
                 return false;
             }
@@ -476,17 +475,18 @@ public sealed partial class ImageList
             }
 
             // Check the last cached item
-            if (IsValidIndex(_lastAccessedIndex))
+            int i = _lastAccessedIndex;
+            if (IsValidIndex(i))
             {
-                if ((_imageInfoCollection[_lastAccessedIndex] is not null) &&
-                    (WindowsFormsUtils.SafeCompareStrings(_imageInfoCollection[_lastAccessedIndex].Name, key, ignoreCase: true)))
+                if ((_imageInfoCollection[i] is not null) &&
+                    (WindowsFormsUtils.SafeCompareStrings(_imageInfoCollection[i].Name, key, ignoreCase: true)))
                 {
-                    return _lastAccessedIndex;
+                    return i;
                 }
             }
 
             // Search for the item
-            for (int i = 0; i < Count; i++)
+            for (i = 0; i < Count; i++)
             {
                 if ((_imageInfoCollection[i] is not null) &&
                         (WindowsFormsUtils.SafeCompareStrings(_imageInfoCollection[i].Name, key, ignoreCase: true)))

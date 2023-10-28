@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.ComponentModel.Design;
@@ -39,7 +38,7 @@ internal static class ServiceExtensions
     /// <param name="service">If found, contains the service object when this method returns; otherwise, <see langword="null"/>.</param>
     /// <returns>A service object of type <typeparamref name="T"/> or <see langword="null"/> if there is no such service.</returns>
     public static bool TryGetService<T>(
-        this IServiceProvider? provider,
+        [NotNullWhen(true)] this IServiceProvider? provider,
         [NotNullWhen(true)] out T? service)
         where T : class
         => (service = provider?.GetService(typeof(T)) as T) is not null;
@@ -52,7 +51,7 @@ internal static class ServiceExtensions
     /// <param name="service">If found, contains the service object when this method returns; otherwise, <see langword="null"/>.</param>
     /// <returns>A service object of type <typeparamref name="T"/> or <see langword="null"/> if there is no such service.</returns>
     public static bool TryGetService<T>(
-        this IDesignerHost? designerHost,
+        [NotNullWhen(true)] this IDesignerHost? designerHost,
         [NotNullWhen(true)] out T? service)
         where T : class
         => (service = designerHost?.GetService(typeof(T)) as T) is not null;
@@ -65,7 +64,7 @@ internal static class ServiceExtensions
     /// <param name="service">If found, contains the service object when this method returns; otherwise, <see langword="null"/>.</param>
     /// <returns>A service object of type <typeparamref name="T"/> or <see langword="null"/> if there is no such service.</returns>
     public static bool TryGetService<T>(
-        this ITypeDescriptorContext? context,
+        [NotNullWhen(true)] this ITypeDescriptorContext? context,
         [NotNullWhen(true)] out T? service)
         where T : class
         => (service = context?.GetService(typeof(T)) as T) is not null;

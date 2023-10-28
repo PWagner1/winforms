@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Windows.Forms.PropertyGridInternal.TestUtilities;
 using System.Windows.Forms.UITests;
@@ -183,7 +182,8 @@ public class PropertyDescriptorGridEntryAccessibleObjectTests : ControlTestBase
             grid.SelectedEntry = grid[nameof(Button.AccessibleRole)];
 
             grid.PopupEditorAndClose(() =>
-                Assert.Equal(grid.GridView.DropDownControlHolder.AccessibilityObject,
+                Assert.Equal(
+                    grid.GridView.DropDownControlHolder!.AccessibilityObject,
                     grid.SelectedEntry.AccessibilityObject.FragmentNavigate(NavigateDirection.FirstChild)));
 
             return Task.CompletedTask;

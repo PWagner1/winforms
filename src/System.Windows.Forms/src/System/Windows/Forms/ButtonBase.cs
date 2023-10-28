@@ -1,14 +1,12 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
-using System.Runtime.Versioning;
 using System.Windows.Forms.ButtonInternal;
 using System.Windows.Forms.Layout;
-using static Interop;
+using Windows.Win32.UI.Accessibility;
 
 namespace System.Windows.Forms;
 
@@ -22,7 +20,7 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
     private ContentAlignment _imageAlign = ContentAlignment.MiddleCenter;
     private ContentAlignment _textAlign = ContentAlignment.MiddleCenter;
     private TextImageRelation _textImageRelation = TextImageRelation.Overlay;
-    private readonly ImageList.Indexer _imageIndex = new ImageList.Indexer();
+    private readonly ImageList.Indexer _imageIndex = new();
     private FlatButtonAppearance? _flatAppearance;
     private ImageList? _imageList;
     private Image? _image;
@@ -175,7 +173,6 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
     ///  Gets or sets the <see cref="System.Windows.Input.ICommand"/> whose <see cref="System.Windows.Input.ICommand.Execute(object?)"/>
     ///  method will be called when the <see cref="Control.Click"/> event gets invoked.
     /// </summary>
-    [RequiresPreviewFeatures]
     [Bindable(true)]
     [Browsable(false)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -191,7 +188,6 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
     ///  Occurs when the <see cref="System.Windows.Input.ICommand.CanExecute(object?)"/> status of the
     ///  <see cref="System.Windows.Input.ICommand"/> which is assigned to the <see cref="Command"/> property has changed.
     /// </summary>
-    [RequiresPreviewFeatures]
     [SRCategory(nameof(SR.CatData))]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [SRDescription(nameof(SR.CommandCanExecuteChangedEventDescr))]
@@ -204,7 +200,6 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
     /// <summary>
     ///  Occurs when the assigned <see cref="System.Windows.Input.ICommand"/> of the <see cref="Command"/> property has changed.
     /// </summary>
-    [RequiresPreviewFeatures]
     [SRCategory(nameof(SR.CatData))]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [SRDescription(nameof(SR.CommandChangedEventDescr))]
@@ -225,12 +220,8 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
     [SRDescription(nameof(SR.CommandComponentCommandParameterDescr))]
     public object? CommandParameter
     {
-        [RequiresPreviewFeatures]
         get => _commandParameter;
 
-        // We need to opt into preview features on the getter and the setter rather than on top of the property,
-        // because we calling a preview feature from the setter.
-        [RequiresPreviewFeatures]
         set
         {
             if (!Equals(_commandParameter, value))
@@ -244,7 +235,6 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
     /// <summary>
     ///  Occurs when the value of the <see cref="CommandParameter"/> property has changed.
     /// </summary>
-    [RequiresPreviewFeatures]
     [SRCategory(nameof(SR.CatData))]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [SRDescription(nameof(SR.CommandParameterChangedEventDescr))]
@@ -254,7 +244,7 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
         remove => Events.RemoveHandler(s_commandParameterChangedEvent, value);
     }
 
-    protected override Size DefaultSize => new Size(75, 23);
+    protected override Size DefaultSize => new(75, 23);
 
     protected override CreateParams CreateParams
     {
@@ -887,11 +877,7 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
     protected override void OnClick(EventArgs e)
     {
         base.OnClick(e);
-
-        // We won't let the preview feature warnings bubble further up beyond this point.
-#pragma warning disable CA2252 // Suppress 'Opt in to preview features' (https://aka.ms/dotnet-warnings/preview-features)
         OnRequestCommandExecute(e);
-#pragma warning restore CA2252
     }
 
     /// <summary>
@@ -1123,7 +1109,6 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
     ///  Raises the <see cref="ButtonBase.CommandChanged"/> event.
     /// </summary>
     /// <param name="e">An empty <see cref="EventArgs"/> instance.</param>
-    [RequiresPreviewFeatures]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     protected virtual void OnCommandChanged(EventArgs e)
         => RaiseEvent(s_commandChangedEvent, e);
@@ -1132,7 +1117,6 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
     ///  Raises the <see cref="ButtonBase.CommandCanExecuteChanged"/> event.
     /// </summary>
     /// <param name="e">An empty <see cref="EventArgs"/> instance.</param>
-    [RequiresPreviewFeatures]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     protected virtual void OnCommandCanExecuteChanged(EventArgs e)
         => ((EventHandler?)Events[s_commandCanExecuteChangedEvent])?.Invoke(this, e);
@@ -1141,7 +1125,6 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
     ///  Raises the <see cref="ButtonBase.CommandParameterChanged"/> event.
     /// </summary>
     /// <param name="e">An empty <see cref="EventArgs"/> instance.</param>
-    [RequiresPreviewFeatures]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     protected virtual void OnCommandParameterChanged(EventArgs e) => RaiseEvent(s_commandParameterChangedEvent, e);
 
@@ -1149,17 +1132,14 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
     ///  Called in the context of <see cref="OnClick(EventArgs)"/> to invoke <see cref="System.Windows.Input.ICommand.Execute(object?)"/> if the context allows.
     /// </summary>
     /// <param name="e">An empty <see cref="EventArgs"/> instance.</param>
-    [RequiresPreviewFeatures]
     protected virtual void OnRequestCommandExecute(EventArgs e)
         => ICommandBindingTargetProvider.RequestCommandExecute(this);
 
     // Called by the CommandProviderManager's command handling logic.
-    [RequiresPreviewFeatures]
     void ICommandBindingTargetProvider.RaiseCommandChanged(EventArgs e)
         => OnCommandChanged(e);
 
     // Called by the CommandProviderManager's command handling logic.
-    [RequiresPreviewFeatures]
     void ICommandBindingTargetProvider.RaiseCommandCanExecuteChanged(EventArgs e)
         => OnCommandCanExecuteChanged(e);
 
@@ -1202,7 +1182,7 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
 
         if (IsAccessibilityObjectCreated)
         {
-            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.NamePropertyId, Text, Text);
+            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UIA_PROPERTY_ID.UIA_NamePropertyId, Text, Text);
         }
     }
 

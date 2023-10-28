@@ -1,12 +1,11 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms.Layout;
 using System.Windows.Forms.Primitives;
-using static Interop;
+using Windows.Win32.UI.Accessibility;
 
 namespace System.Windows.Forms;
 
@@ -24,9 +23,9 @@ namespace System.Windows.Forms;
 [SRDescription(nameof(SR.DescriptionTrackBar))]
 public partial class TrackBar : Control, ISupportInitialize
 {
-    private static readonly object s_scrollEvent = new object();
-    private static readonly object s_valueChangedEvent = new object();
-    private static readonly object s_rightToLeftChangedEvent = new object();
+    private static readonly object s_scrollEvent = new();
+    private static readonly object s_valueChangedEvent = new();
+    private static readonly object s_rightToLeftChangedEvent = new();
     private bool _autoSize = true;
     private int _largeChange = 5;
     private int _maximum = 10;
@@ -195,7 +194,7 @@ public partial class TrackBar : Control, ISupportInitialize
 
     protected override ImeMode DefaultImeMode => ImeMode.Disable;
 
-    protected override Size DefaultSize => new Size(104, PreferredDimension);
+    protected override Size DefaultSize => new(104, PreferredDimension);
 
     /// <summary>
     ///  This property is overridden and hidden from statement completion
@@ -970,8 +969,8 @@ public partial class TrackBar : Control, ISupportInitialize
     {
         if (IsAccessibilityObjectCreated)
         {
-            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.ValueValuePropertyId, Name, Name);
-            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId);
+            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UIA_PROPERTY_ID.UIA_ValueValuePropertyId, Name, Name);
+            AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationPropertyChangedEventId);
         }
 
         ((EventHandler?)Events[s_valueChangedEvent])?.Invoke(this, e);

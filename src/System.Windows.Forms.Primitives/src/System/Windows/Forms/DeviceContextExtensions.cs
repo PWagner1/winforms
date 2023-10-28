@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Drawing;
 
@@ -89,7 +88,7 @@ internal static class DeviceContextExtensions
         using PInvoke.SetBkModeScope bkScope = new(hdc, BACKGROUND_MODE.TRANSPARENT);
         using PInvoke.SelectObjectScope selection = new(hdc, (HGDIOBJ)hpen.Value);
 
-        Point oldPoint = default(Point);
+        Point oldPoint = default;
 
         for (int i = 0; i < lines.Length; i += 4)
         {

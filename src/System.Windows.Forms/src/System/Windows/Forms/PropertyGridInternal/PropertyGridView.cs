@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Windows.Forms.Design;
 using System.Windows.Forms.VisualStyles;
 using Microsoft.Win32;
+using Windows.Win32.System.Variant;
 using Windows.Win32.UI.Accessibility;
 using static Interop;
 
@@ -813,8 +814,8 @@ internal sealed partial class PropertyGridView :
                     gridEntry.AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_AutomationFocusChangedEventId);
                     gridEntry.AccessibilityObject.RaiseAutomationPropertyChangedEvent(
                         UIA_PROPERTY_ID.UIA_ExpandCollapseExpandCollapseStatePropertyId,
-                        UiaCore.ExpandCollapseState.Expanded,
-                        UiaCore.ExpandCollapseState.Collapsed);
+                        (VARIANT)(int)ExpandCollapseState.ExpandCollapseState_Expanded,
+                        (VARIANT)(int)ExpandCollapseState.ExpandCollapseState_Collapsed);
                 }
             }
         }
@@ -1835,6 +1836,7 @@ internal sealed partial class PropertyGridView :
     ///  Returns an array of entries specifying the current hierarchy of entries from the given
     ///  <paramref name="gridEntry"/> through its parents to the root.
     /// </summary>
+    [return: NotNullIfNotNull(nameof(gridEntry))]
     private static GridEntryCollection? GetGridEntryHierarchy(GridEntry? gridEntry)
     {
         if (gridEntry is null)
@@ -1903,7 +1905,7 @@ internal sealed partial class PropertyGridView :
             if (currentEntry.InternalExpanded)
             {
                 GridEntryCollection childEntries = currentEntry.Children;
-                if (childEntries is not null && childEntries.Count > 0)
+                if (childEntries.Count > 0)
                 {
                     current = GetGridEntriesFromOutline(childEntries, current + 1, target, targetEntries);
                 }
@@ -4051,12 +4053,9 @@ internal sealed partial class PropertyGridView :
         SetExpand(gridEntry, expand);
 
         GridEntryCollection children = gridEntry.Children;
-        if (children is not null)
+        for (int i = 0; i < children.Count; i++)
         {
-            for (int i = 0; i < children.Count; i++)
-            {
-                RecursivelyExpand(children[i], initialize: false, expand, maxExpands);
-            }
+            RecursivelyExpand(children[i], initialize: false, expand, maxExpands);
         }
 
         if (initialize)
@@ -4260,7 +4259,7 @@ internal sealed partial class PropertyGridView :
             if (entries[i].InternalExpanded)
             {
                 GridEntry entry = entries[i];
-                expandedItems.Add(GetGridEntryHierarchy(entry.Children[0])!);
+                expandedItems.Add(GetGridEntryHierarchy(entry.Children[0]));
                 SaveHierarchyState(entry.Children, expandedItems);
             }
         }
@@ -4658,12 +4657,12 @@ internal sealed partial class PropertyGridView :
 
         if (_selectedGridEntry is not null && IsAccessibilityObjectCreated)
         {
-            var oldExpandedState = value ? UiaCore.ExpandCollapseState.Collapsed : UiaCore.ExpandCollapseState.Expanded;
-            var newExpandedState = value ? UiaCore.ExpandCollapseState.Expanded : UiaCore.ExpandCollapseState.Collapsed;
+            var oldExpandedState = value ? ExpandCollapseState.ExpandCollapseState_Collapsed : ExpandCollapseState.ExpandCollapseState_Expanded;
+            var newExpandedState = value ? ExpandCollapseState.ExpandCollapseState_Expanded : ExpandCollapseState.ExpandCollapseState_Collapsed;
             _selectedGridEntry.AccessibilityObject.RaiseAutomationPropertyChangedEvent(
                 UIA_PROPERTY_ID.UIA_ExpandCollapseExpandCollapseStatePropertyId,
-                oldExpandedState,
-                newExpandedState);
+                (VARIANT)(int)oldExpandedState,
+                (VARIANT)(int)newExpandedState);
         }
 
         RecalculateProperties();

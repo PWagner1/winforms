@@ -28,10 +28,13 @@ CDM_GETSPEC
 CDRF_*
 CFE_EFFECTS
 CFM_MASK
+CFSTR_DROPDESCRIPTION
+CFSTR_INDRAGLOOP
 CHILDID_SELF
 ChildWindowFromPointEx
 CSIDL_*
 CHOOSEFONT_FLAGS
+CHOOSEFONT_FONT_TYPE
 CHOOSECOLOR_FLAGS
 CLIENTCREATESTRUCT
 ClientToScreen
@@ -116,6 +119,7 @@ DISPID_*
 DISPPARAMS
 DLGC_*
 DOCHOSTUIINFO
+DocumentProperties
 DoDragDrop
 DPI_AWARENESS_CONTEXT_*
 DPI_HOSTING_BEHAVIOR
@@ -141,6 +145,7 @@ DrawThemeText
 DROPDESCRIPTION
 DROPFILES
 DROPIMAGETYPE
+DSH_FLAGS
 DTM_*
 DTN_*
 DTS_*
@@ -341,13 +346,9 @@ HFONT
 HideCaret
 HIGHCONTRASTW
 HitTestThemeBackground
+HPROPSHEETPAGE
 HT*
 HTREEITEM
-HTML_HELP_COMMAND
-HtmlHelpW
-HH_AKLINK
-HH_FTS_QUERY
-HH_POPUP
 HWND_*
 IAccessible
 IAutoComplete2
@@ -371,6 +372,7 @@ IEnumFORMATETC
 IEnumOLEVERB
 IEnumVARIANT
 IErrorInfo
+IExpandCollapseProvider
 IFileDialog
 IFileDialogCustomize
 IFileDialogEvents
@@ -381,6 +383,8 @@ IFontDisp
 IGetOleObject
 IGetVBAObject
 IGlobalInterfaceTable
+IGridItemProvider
+IGridProvider
 IHTMLDocument
 IHTMLDocument2
 IHTMLDocument3
@@ -390,6 +394,7 @@ IHTMLElement3
 IHTMLElementCollection
 IHTMLWindow3
 IHTMLWindow4
+IInvokeProvider
 IMAGE_LIST_WRITE_STREAM_FLAGS
 ImageList_Add
 ImageList_Create
@@ -418,6 +423,7 @@ ImmSetConversionStatus
 ImmSetOpenStatus
 IMN_*
 IMPLTYPEFLAGS
+IMultipleViewProvider
 InitCommonControls
 InitCommonControlsEx
 INITCOMMONCONTROLSEX_ICC
@@ -445,7 +451,10 @@ IPictureDisp
 IPropertyNotifySink
 IProvideMultipleClassInfo
 IQuickActivate
+IRangeValueProvider
 IRawElementProviderFragment
+IRawElementProviderFragmentRoot
+IRawElementProviderHwndOverride
 IRecordInfo
 IRichEditOle
 IRichEditOleCallback
@@ -453,7 +462,10 @@ IsAccelerator
 IsAppThemed
 IsChild
 IsDialogMessage
+IScrollItemProvider
 IScrollProvider
+ISelectionItemProvider
+ISelectionProvider
 IServiceProvider
 IShellItem
 ISimpleFrameSite
@@ -469,10 +481,14 @@ IsWindowEnabled
 IsWindowUnicode
 IsWindowVisible
 IsZoomed
+ITableItemProvider
+ITableProvider
 ITextDocument
 ITextProvider
 ITextProvider2
 ITextRangeProvider
+IToggleProvider
+IValueProvider
 IVBFormat
 IVBGetControl
 IViewObject
@@ -514,9 +530,10 @@ LVCOLUMNW
 LVCOLUMNW_FORMAT
 LVCOLUMNW_MASK
 LVGGR_*
+LVGROUP
 LVFINDINFOW
 LVFINDINFOW_FLAGS
-LVHITTESTINFO_FLAGS
+LVHITTESTINFO
 LVINSERTMARK
 LVIR_*
 LVM_*
@@ -630,8 +647,8 @@ PeekMessage
 PostMessage
 PostThreadMessage
 PostQuitMessage
-PRF_*
 PRINTDLGEX_FLAGS
+PRF_*
 PROGRESS_CLASS
 PROPERTYKEY
 PropVariantClear
@@ -767,6 +784,7 @@ TASKDIALOG_FLAGS
 TASKDIALOG_ICON_ELEMENTS
 TASKDIALOG_MESSAGES
 TASKDIALOG_NOTIFICATIONS
+TaskDialogIndirect
 TB_*
 TBS_*
 TBM_*
@@ -789,9 +807,11 @@ TREE_VIEW_ITEM_STATE_FLAGS
 TTDT_*
 TTM_*
 TTN_*
+TTTOOLINFOW
 TTS_*
 TVGN_*
 TVHITTESTINFO
+TVINSERTSTRUCTW
 TVITEM_MASK
 TVITEMW
 TVI_*

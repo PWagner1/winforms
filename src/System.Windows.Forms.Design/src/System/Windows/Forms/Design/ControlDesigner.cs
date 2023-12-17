@@ -464,7 +464,7 @@ public partial class ControlDesigner : ComponentDesigner
     {
         if (disposing)
         {
-            if (Control is not null)
+            if (HasComponent)
             {
                 if (_dataBindingsCollectionChanged is not null)
                 {
@@ -494,7 +494,7 @@ public partial class ControlDesigner : ComponentDesigner
 
             _downPos = Point.Empty;
 
-            if (Control is not null)
+            if (HasComponent)
             {
                 Control.ControlAdded -= new ControlEventHandler(OnControlAdded);
                 Control.ControlRemoved -= new ControlEventHandler(OnControlRemoved);
@@ -1437,7 +1437,7 @@ public partial class ControlDesigner : ComponentDesigner
                     }
                     else if (!requiredParent.Equals(control.Parent))
                     {
-                        continue; //mixed selection of different parents - don't add this
+                        continue; // mixed selection of different parents - don't add this
                     }
 
                     if (_host.GetDesigner(comp) is ControlDesigner des && (des.SelectionRules & SelectionRules.Moveable) != 0)
@@ -2183,11 +2183,11 @@ public partial class ControlDesigner : ComponentDesigner
                 // the focus in that case, the Windows Narrator won't follow navigation via the keyboard.
                 // NB:  "ToolStrip" is a bit of a misnomer here, because the ToolStripTemplateNode is also used
                 // for MenuStrip, StatusStrip, etc...
-                //if (Control.FromHandle(m.HWnd) is ToolStripTemplateNode.TransparentToolStrip)
-                //{
+                // if (Control.FromHandle(m.HWnd) is ToolStripTemplateNode.TransparentToolStrip)
+                // {
                 //    DefWndProc(ref m);
-                //}
-                //else
+                // }
+                // else
                 if (_host is not null && _host.RootComponent is not null && _host.GetDesigner(_host.RootComponent) is IRootDesigner rd)
                 {
                     ViewTechnology[] techs = rd.SupportedTechnologies;

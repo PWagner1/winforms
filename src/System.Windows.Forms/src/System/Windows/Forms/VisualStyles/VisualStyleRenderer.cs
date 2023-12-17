@@ -13,7 +13,7 @@ namespace System.Windows.Forms.VisualStyles;
 public sealed class VisualStyleRenderer : IHandle<HTHEME>
 {
     private HRESULT _lastHResult;
-    private const int NumberOfPossibleClasses = VisualStyleElement.Count; //used as size for themeHandles
+    private const int NumberOfPossibleClasses = VisualStyleElement.Count; // used as size for themeHandles
 
     [ThreadStatic]
     private static Dictionary<string, ThemeHandle>? t_themeHandles; // per-thread cache of ThemeHandle objects.
@@ -581,7 +581,7 @@ public sealed class VisualStyleRenderer : IHandle<HTHEME>
         // Valid values are 0x0 to 0x2
         SourceGenerated.EnumValidator.Validate(type, nameof(type));
 
-        if (!hwnd.IsNull && DpiHelper.IsPerMonitorV2Awareness)
+        if (!hwnd.IsNull && ScaleHelper.IsThreadPerMonitorV2Aware)
         {
             using var htheme = OpenThemeData(hwnd, Class);
             _lastHResult = PInvoke.GetThemePartSize(htheme, dc, Part, State, null, (THEMESIZE)type, out SIZE dpiSize);
@@ -612,7 +612,7 @@ public sealed class VisualStyleRenderer : IHandle<HTHEME>
     /// </summary>
     public Point GetPoint(PointProperty prop)
     {
-        //valid values are 0xd49 to 0xd50
+        // valid values are 0xd49 to 0xd50
         SourceGenerated.EnumValidator.Validate(prop, nameof(prop));
 
         _lastHResult = PInvoke.GetThemePosition(HTHEME, Part, State, (THEME_PROPERTY_SYMBOL_ID)prop, out Point point);

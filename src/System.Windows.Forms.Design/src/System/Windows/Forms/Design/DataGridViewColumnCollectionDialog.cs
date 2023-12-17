@@ -55,15 +55,17 @@ internal class DataGridViewColumnCollectionDialog : Form
     {
         _serviceProvider = provider;
 
-        //
         // Required for Windows Form Designer support
-        //
         InitializeComponent();
 
-        if (DpiHelper.IsScalingRequired)
+        if (_moveUp.Image is Bitmap moveUp)
         {
-            _moveUp.Image = DpiHelper.ScaleButtonImageLogicalToDevice(_moveUp.Image);
-            _moveDown.Image = DpiHelper.ScaleButtonImageLogicalToDevice(_moveDown.Image);
+            _moveUp.Image = ScaleHelper.ScaleToDpi(moveUp, ScaleHelper.InitialSystemDpi, disposeBitmap: true);
+        }
+
+        if (_moveDown.Image is Bitmap moveDown)
+        {
+            _moveDown.Image = ScaleHelper.ScaleToDpi(moveDown, ScaleHelper.InitialSystemDpi, disposeBitmap: true);
         }
 
         _dataGridViewPrivateCopy = new DataGridView();
@@ -77,7 +79,9 @@ internal class DataGridViewColumnCollectionDialog : Form
         {
             if (_selectedColumnsItemBitmap is null)
             {
-                _selectedColumnsItemBitmap = new Bitmap(BitmapSelector.GetResourceStream(typeof(DataGridViewColumnCollectionDialog), "DataGridViewColumnsDialog.selectedColumns.bmp"));
+                _selectedColumnsItemBitmap = new Bitmap(
+                    BitmapSelector.GetResourceStream(typeof(DataGridViewColumnCollectionDialog), "DataGridViewColumnsDialog.selectedColumns.bmp")
+                    ?? throw new InvalidOperationException());
                 _selectedColumnsItemBitmap.MakeTransparent(Color.Red);
             }
 
@@ -349,7 +353,7 @@ internal class DataGridViewColumnCollectionDialog : Form
             return;
         }
 
-        //      2.a Create a default srcColumn so we get its default cell style. If we get an exception when we are creating the default cell style
+        // 2.a Create a default srcColumn so we get its default cell style. If we get an exception when we are creating the default cell style
         //      then we copy all the public properties.
         DataGridViewColumn? defaultSrcColumn = null;
         try
@@ -366,7 +370,7 @@ internal class DataGridViewColumnCollectionDialog : Form
             defaultSrcColumn = null;
         }
 
-        //      2.b Go thru the public properties in the DataGridViewCellStyle and copy only the property that are changed from the default values;
+        // 2.b Go thru the public properties in the DataGridViewCellStyle and copy only the property that are changed from the default values;
         if (defaultSrcColumn is null || defaultSrcColumn.DefaultCellStyle.Alignment != srcColumn.DefaultCellStyle.Alignment)
         {
             destColumn.DefaultCellStyle.Alignment = srcColumn.DefaultCellStyle.Alignment;
@@ -480,7 +484,7 @@ internal class DataGridViewColumnCollectionDialog : Form
         _addRemoveTableLayoutPanel = new TableLayoutPanel();
         _selectedColumnsLabel = new Label();
         _propertyGridLabel = new Label();
-        _propertyGrid1 = new VsPropertyGrid(_serviceProvider);
+        _propertyGrid1 = new VsPropertyGrid();
         _okCancelTableLayoutPanel = new TableLayoutPanel();
         _cancelButton = new Button();
         _okButton = new Button();
@@ -850,7 +854,7 @@ internal class DataGridViewColumnCollectionDialog : Form
         if (_addColumnDialog is null)
         {
             // child modal dialog -launching in System Aware mode
-            _addColumnDialog = DpiHelper.CreateInstanceInSystemAwareContext(() => new DataGridViewAddColumnDialog(_columnsPrivateCopy, _liveDataGridView!));
+            _addColumnDialog = ScaleHelper.InvokeInSystemAwareContext(() => new DataGridViewAddColumnDialog(_columnsPrivateCopy, _liveDataGridView!));
             _addColumnDialog.StartPosition = FormStartPosition.CenterParent;
         }
 

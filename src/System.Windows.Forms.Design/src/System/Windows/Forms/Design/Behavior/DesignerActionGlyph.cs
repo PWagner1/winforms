@@ -95,44 +95,15 @@ internal sealed class DesignerActionGlyph : Glyph
         return null;
     }
 
-    /// <summary>
-    ///  Returns an image representing the
-    /// </summary>
-    private Image GlyphImageClosed
-    {
-        get
-        {
-            if (_glyphImageClosed is null)
-            {
-                _glyphImageClosed = new Icon(typeof(DesignerActionGlyph), "Close_left").ToBitmap();
+    private Image GlyphImageClosed => _glyphImageClosed ??= ScaleHelper.GetIconResourceAsBitmap(
+        typeof(DesignerActionGlyph),
+        "Close_left",
+        ScaleHelper.InitialSystemDpi);
 
-                if (DpiHelper.IsScalingRequired)
-                {
-                    DpiHelper.ScaleBitmapLogicalToDevice(ref _glyphImageClosed);
-                }
-            }
-
-            return _glyphImageClosed;
-        }
-    }
-
-    private Image GlyphImageOpened
-    {
-        get
-        {
-            if (_glyphImageOpened is null)
-            {
-                _glyphImageOpened = new Icon(typeof(DesignerActionGlyph), "Open_left").ToBitmap();
-
-                if (DpiHelper.IsScalingRequired)
-                {
-                    DpiHelper.ScaleBitmapLogicalToDevice(ref _glyphImageOpened);
-                }
-            }
-
-            return _glyphImageOpened;
-        }
-    }
+    private Image GlyphImageOpened => _glyphImageOpened ??= ScaleHelper.GetIconResourceAsBitmap(
+        typeof(DesignerActionGlyph),
+        "Open_left",
+        ScaleHelper.InitialSystemDpi);
 
     internal void InvalidateOwnerLocation()
     {
@@ -158,7 +129,7 @@ internal sealed class DesignerActionGlyph : Glyph
 
         IComponent relatedComponent = ((DesignerActionBehavior)Behavior).RelatedComponent;
         Point topRight = Point.Empty;
-        //handle the case that our comp is a control
+        // handle the case that our comp is a control
         if (relatedComponent is Control relatedControl && !(relatedComponent is ToolStripDropDown) && _adorner?.BehaviorService is not null)
         {
             topRight = _adorner.BehaviorService.ControlToAdornerWindow(relatedControl);

@@ -11,13 +11,12 @@ public class ButtonRenderingTests
     [WinFormsFact]
     public unsafe void CaptureButton()
     {
-        using Button button = new Button();
-
-        using var emf = new EmfScope();
+        using Button button = new();
+        using EmfScope emf = new();
         button.PrintToMetafile(emf);
 
-        var types = new List<ENHANCED_METAFILE_RECORD_TYPE>();
-        var details = new List<string>();
+        List<ENHANCED_METAFILE_RECORD_TYPE> types = [];
+        List<string> details = [];
         emf.Enumerate((ref EmfRecord record) =>
         {
             types.Add(record.Type);
@@ -34,10 +33,9 @@ public class ButtonRenderingTests
             return;
         }
 
-        using Button button = new Button();
-        using var emf = new EmfScope();
-        DeviceContextState state = new DeviceContextState(emf);
-
+        using Button button = new();
+        using EmfScope emf = new();
+        DeviceContextState state = new(emf);
         Rectangle bounds = button.Bounds;
 
         button.PrintToMetafile(emf);
@@ -46,28 +44,28 @@ public class ButtonRenderingTests
             state,
             Validate.Repeat(Validate.SkipType(ENHANCED_METAFILE_RECORD_TYPE.EMR_BITBLT), 1),
             Validate.LineTo(
-                (bounds.Right - 1, 0), (0, 0),
+                new(bounds.Right - 1, 0), new(0, 0),
                 State.PenColor(SystemColors.ControlLightLight)),
             Validate.LineTo(
-                (0, 0), (0, bounds.Bottom - 1),
+                new(0, 0), new(0, bounds.Bottom - 1),
                 State.PenColor(SystemColors.ControlLightLight)),
             Validate.LineTo(
-                (0, bounds.Bottom - 1), (bounds.Right - 1, bounds.Bottom - 1),
+                new(0, bounds.Bottom - 1), new(bounds.Right - 1, bounds.Bottom - 1),
                 State.PenColor(SystemColors.ControlDarkDark)),
             Validate.LineTo(
-                (bounds.Right - 1, bounds.Bottom - 1), (bounds.Right - 1, -1),
+                new(bounds.Right - 1, bounds.Bottom - 1), new(bounds.Right - 1, -1),
                 State.PenColor(SystemColors.ControlDarkDark)),
             Validate.LineTo(
-                (bounds.Right - 2, 1), (1, 1),
+                new(bounds.Right - 2, 1), new(1, 1),
                 State.PenColor(SystemColors.Control)),
             Validate.LineTo(
-                (1, 1), (1, bounds.Bottom - 2),
+                new(1, 1), new(1, bounds.Bottom - 2),
                 State.PenColor(SystemColors.Control)),
             Validate.LineTo(
-                (1, bounds.Bottom - 2), (bounds.Right - 2, bounds.Bottom - 2),
+                new(1, bounds.Bottom - 2), new(bounds.Right - 2, bounds.Bottom - 2),
                 State.PenColor(SystemColors.ControlDark)),
             Validate.LineTo(
-                (bounds.Right - 2, bounds.Bottom - 2), (bounds.Right - 2, 0),
+                new(bounds.Right - 2, bounds.Bottom - 2), new(bounds.Right - 2, 0),
                 State.PenColor(SystemColors.ControlDark)));
     }
 
@@ -79,10 +77,9 @@ public class ButtonRenderingTests
             return;
         }
 
-        using Button button = new Button();
-        using var emf = new EmfScope();
-        DeviceContextState state = new DeviceContextState(emf);
-
+        using Button button = new();
+        using EmfScope emf = new EmfScope();
+        DeviceContextState state = new(emf);
         Rectangle bounds = button.Bounds;
 
         button.PrintToMetafile(emf);
@@ -120,10 +117,9 @@ public class ButtonRenderingTests
             return;
         }
 
-        using Button button = new Button { Text = "Hello" };
-        using var emf = new EmfScope();
-        DeviceContextState state = new DeviceContextState(emf);
-
+        using Button button = new() { Text = "Hello" };
+        using EmfScope emf = new();
+        DeviceContextState state = new(emf);
         Rectangle bounds = button.Bounds;
 
         button.PrintToMetafile(emf);
@@ -133,28 +129,28 @@ public class ButtonRenderingTests
             Validate.SkipType(ENHANCED_METAFILE_RECORD_TYPE.EMR_BITBLT),
             Validate.TextOut("Hello"),
             Validate.LineTo(
-                (bounds.Right - 1, 0), (0, 0),
+                new(bounds.Right - 1, 0), new(0, 0),
                 State.PenColor(SystemColors.ControlLightLight)),
             Validate.LineTo(
-                (0, 0), (0, bounds.Bottom - 1),
+                new(0, 0), new(0, bounds.Bottom - 1),
                 State.PenColor(SystemColors.ControlLightLight)),
             Validate.LineTo(
-                (0, bounds.Bottom - 1), (bounds.Right - 1, bounds.Bottom - 1),
+                new(0, bounds.Bottom - 1), new(bounds.Right - 1, bounds.Bottom - 1),
                 State.PenColor(SystemColors.ControlDarkDark)),
             Validate.LineTo(
-                (bounds.Right - 1, bounds.Bottom - 1), (bounds.Right - 1, -1),
+                new(bounds.Right - 1, bounds.Bottom - 1), new(bounds.Right - 1, -1),
                 State.PenColor(SystemColors.ControlDarkDark)),
             Validate.LineTo(
-                (bounds.Right - 2, 1), (1, 1),
+                new(bounds.Right - 2, 1), new(1, 1),
                 State.PenColor(SystemColors.Control)),
             Validate.LineTo(
-                (1, 1), (1, bounds.Bottom - 2),
+                new(1, 1), new(1, bounds.Bottom - 2),
                 State.PenColor(SystemColors.Control)),
             Validate.LineTo(
-                (1, bounds.Bottom - 2), (bounds.Right - 2, bounds.Bottom - 2),
+                new(1, bounds.Bottom - 2), new(bounds.Right - 2, bounds.Bottom - 2),
                 State.PenColor(SystemColors.ControlDark)),
             Validate.LineTo(
-                (bounds.Right - 2, bounds.Bottom - 2), (bounds.Right - 2, 0),
+                new(bounds.Right - 2, bounds.Bottom - 2), new(bounds.Right - 2, 0),
                 State.PenColor(SystemColors.ControlDark)));
     }
 
@@ -166,10 +162,9 @@ public class ButtonRenderingTests
             return;
         }
 
-        using Button button = new Button { Text = "Hello" };
-        using var emf = new EmfScope();
-        DeviceContextState state = new DeviceContextState(emf);
-
+        using Button button = new() { Text = "Hello" };
+        using EmfScope emf = new();
+        DeviceContextState state = new(emf);
         Rectangle bounds = button.Bounds;
 
         button.PrintToMetafile(emf);
@@ -214,11 +209,11 @@ public class ButtonRenderingTests
     [WinFormsFact]
     public unsafe void CaptureButtonOnForm()
     {
-        using Form form = new Form();
-        using Button button = new Button();
+        using Form form = new();
+        using Button button = new();
         form.Controls.Add(button);
 
-        using var emf = new EmfScope();
+        using EmfScope emf = new();
         form.PrintToMetafile(emf);
 
         var details = emf.RecordsToString();
@@ -227,15 +222,14 @@ public class ButtonRenderingTests
     [WinFormsFact]
     public unsafe void Button_FlatStyle_WithText_Rectangle()
     {
-        using Button button = new Button
+        using Button button = new()
         {
             Text = "Flat Style",
             FlatStyle = FlatStyle.Flat,
         };
 
-        using var emf = new EmfScope();
-        DeviceContextState state = new DeviceContextState(emf);
-
+        using EmfScope emf = new();
+        DeviceContextState state = new(emf);
         Rectangle bounds = button.Bounds;
 
         button.PrintToMetafile(emf);

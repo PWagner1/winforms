@@ -1324,7 +1324,9 @@ public class Control_ControlAccessibleObjectTests
         {
             { typeof(DataGridViewTextBoxEditingControl), SR.DataGridView_AccEditingControlAccName },
             { typeof(DateTimePicker), string.Empty },
-            { typeof(PrintPreviewDialog), SR.PrintPreviewDialog_PrintPreview }
+            { typeof(PrintPreviewDialog), SR.PrintPreviewDialog_PrintPreview },
+            { typeof(TextBox), string.Empty},
+            { typeof(MaskedTextBox), string.Empty}
         };
 
         foreach (Type type in ReflectionHelper.GetPublicNotAbstractClasses<Control>())
@@ -1394,7 +1396,7 @@ public class Control_ControlAccessibleObjectTests
         Assert.False(control.IsHandleCreated);
         Assert.True(control.AccessibilityObject is Control.ControlAccessibleObject);
 
-        IRawElementProviderFragment.Interface actual = control.AccessibilityObject.FragmentRoot;
+        IRawElementProviderFragment.Interface actual = (IRawElementProviderFragment.Interface)control.AccessibilityObject.FragmentRoot;
 
         Assert.True(actual is null || actual == control.AccessibilityObject);
     }

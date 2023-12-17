@@ -43,17 +43,17 @@ internal partial class SplitContainerDesigner
 
             Orientation orientation = verb.Text.Equals(SR.DesignerShortcutHorizontalOrientation) ? Orientation.Horizontal : Orientation.Vertical;
 
-            //switch the text of the orientation action from vertical to horizontal or visa-versa
+            // switch the text of the orientation action from vertical to horizontal or visa-versa
             _actionName = (orientation == Orientation.Horizontal) ? SR.DesignerShortcutVerticalOrientation : SR.DesignerShortcutHorizontalOrientation;
 
-            //get the prop and actually modify the orientation
+            // get the prop and actually modify the orientation
             PropertyDescriptor? orientationProp = TypeDescriptor.GetProperties(_ownerComponent!)["Orientation"];
             if (orientationProp is not null && ((Orientation)orientationProp.GetValue(_ownerComponent)!) != orientation)
             {
                 orientationProp.SetValue(_ownerComponent, orientation);
             }
 
-            var actionUIService = (DesignerActionUIService)_owner.GetService(typeof(DesignerActionUIService));
+            DesignerActionUIService actionUIService = _owner.GetRequiredService<DesignerActionUIService>();
             actionUIService.Refresh(_ownerComponent);
         }
 

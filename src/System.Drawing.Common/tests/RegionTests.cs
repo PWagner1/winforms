@@ -33,7 +33,7 @@ public class RegionTests
 
     private static Region CreateDisposedRegion()
     {
-        var region = new Region();
+        Region region = new();
         region.Dispose();
         return region;
     }
@@ -41,7 +41,7 @@ public class RegionTests
     [Fact]
     public void Ctor_Default()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             Assert.False(region.IsEmpty(s_graphic));
             Assert.True(region.IsInfinite(s_graphic));
@@ -55,9 +55,9 @@ public class RegionTests
     [InlineData(1, 2, 3, 4, false)]
     public void Ctor_Rectangle(int x, int y, int width, int height, bool isEmpty)
     {
-        var rectangle = new Rectangle(x, y, width, height);
+        Rectangle rectangle = new(x, y, width, height);
 
-        using (var region = new Region(rectangle))
+        using (Region region = new(rectangle))
         {
             Assert.Equal(isEmpty, region.IsEmpty(s_graphic));
             Assert.False(region.IsInfinite(s_graphic));
@@ -73,9 +73,9 @@ public class RegionTests
     [InlineData(float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue, true)]
     public void Ctor_RectangleF(float x, float y, float width, float height, bool isEmpty)
     {
-        var rectangle = new RectangleF(x, y, width, height);
+        RectangleF rectangle = new(x, y, width, height);
 
-        using (var region = new Region(rectangle))
+        using (Region region = new(rectangle))
         {
             Assert.Equal(isEmpty, region.IsEmpty(s_graphic));
             Assert.False(region.IsInfinite(s_graphic));
@@ -96,8 +96,8 @@ public class RegionTests
     {
         using (region)
         {
-            using (var otherRegion = new Region(region.GetRegionData()))
-            using (var matrix = new Matrix())
+            using (Region otherRegion = new(region.GetRegionData()))
+            using (Matrix matrix = new())
             {
                 Assert.Equal(region.GetBounds(s_graphic), otherRegion.GetBounds(s_graphic));
                 Assert.Equal(region.GetRegionScans(matrix), otherRegion.GetRegionScans(matrix));
@@ -108,11 +108,11 @@ public class RegionTests
     [Fact]
     public void Ctor_RegionDataOfRegionWithPath_Success()
     {
-        using (var graphicsPath = new GraphicsPath())
+        using (GraphicsPath graphicsPath = new())
         {
             graphicsPath.AddRectangle(new Rectangle(1, 2, 3, 4));
 
-            using (var region = new Region(graphicsPath))
+            using (Region region = new(graphicsPath))
             {
                 Ctor_RegionData(region);
             }
@@ -122,8 +122,8 @@ public class RegionTests
     [Fact]
     public void Ctor_RegionDataOfRegionWithRegionData_Success()
     {
-        using (var region = new Region(new Rectangle(1, 2, 3, 4)))
-        using (var other = new Region(region.GetRegionData()))
+        using (Region region = new(new Rectangle(1, 2, 3, 4)))
+        using (Region other = new(region.GetRegionData()))
         {
             Ctor_RegionData(other);
         }
@@ -135,14 +135,22 @@ public class RegionTests
         AssertExtensions.Throws<ArgumentNullException>("rgnData", () => new Region((RegionData)null));
     }
 
+    [Fact]
+    public void Ctor_EmptyRegionData_ThrowsArgumentException()
+    {
+        using Region region = new();
+        RegionData regionData = region.GetRegionData();
+        regionData.Data = [];
+        AssertExtensions.Throws<ArgumentException>(null, () => new Region(regionData));
+    }
+
     [Theory]
-    [InlineData(0)]
     [InlineData(1)]
     [InlineData(7)]
     [InlineData(256)]
     public void Ctor_InvalidRegionData_ThrowsExternalException(int dataLength)
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             RegionData regionData = region.GetRegionData();
             regionData.Data = new byte[dataLength];
@@ -153,8 +161,8 @@ public class RegionTests
     [Fact]
     public void Ctor_EmptyGraphicsPath_ThrowsExternalException()
     {
-        using (var graphicsPath = new GraphicsPath())
-        using (var region = new Region(graphicsPath))
+        using (GraphicsPath graphicsPath = new())
+        using (Region region = new(graphicsPath))
         {
             RegionData regionData = region.GetRegionData();
             Assert.Throws<ExternalException>(() => new Region(regionData));
@@ -164,7 +172,7 @@ public class RegionTests
     [Fact]
     public void Ctor_NullDataInRegionData_ThrowsNullReferenceException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             RegionData regionData = region.GetRegionData();
             regionData.Data = null;
@@ -175,13 +183,13 @@ public class RegionTests
     [Fact]
     public void Ctor_GraphicsPath()
     {
-        using (var graphicsPath = new GraphicsPath())
+        using (GraphicsPath graphicsPath = new())
         {
             graphicsPath.AddRectangle(new Rectangle(1, 2, 3, 4));
             graphicsPath.AddRectangle(new Rectangle(4, 5, 6, 7));
 
-            using (var region = new Region(graphicsPath))
-            using (var matrix = new Matrix())
+            using (Region region = new(graphicsPath))
+            using (Matrix matrix = new())
             {
                 Assert.Equal(new RectangleF[]
                 {
@@ -197,9 +205,9 @@ public class RegionTests
     [Fact]
     public void Ctor_EmptyGraphicsPath()
     {
-        using (var graphicsPath = new GraphicsPath())
-        using (var region = new Region(graphicsPath))
-        using (var matrix = new Matrix())
+        using (GraphicsPath graphicsPath = new())
+        using (Region region = new(graphicsPath))
+        using (Matrix matrix = new())
         {
             Assert.True(region.IsEmpty(s_graphic));
             Assert.Empty(region.GetRegionScans(matrix));
@@ -208,29 +216,29 @@ public class RegionTests
 
     public static IEnumerable<object[]> Ctor_InfiniteGraphicsPath_TestData()
     {
-        var path1 = new GraphicsPath();
+        GraphicsPath path1 = new();
         path1.AddRectangle(new Rectangle(-4194304, -4194304, 8388608, 8388608));
         yield return new object[] { path1, true };
 
-        var path2 = new GraphicsPath();
+        GraphicsPath path2 = new();
         path2.AddRectangle(new Rectangle(-4194304, -4194304, 8388608, 8388608));
         path2.AddRectangle(Rectangle.Empty);
         yield return new object[] { path2, true };
 
-        var path3 = new GraphicsPath();
+        GraphicsPath path3 = new();
         path3.AddRectangle(new Rectangle(-4194304, -4194304, 8388608, 8388608));
         path3.AddRectangle(new Rectangle(1, 2, 3, 4));
         yield return new object[] { path3, false };
 
-        var path4 = new GraphicsPath();
+        GraphicsPath path4 = new();
         path4.AddCurve(new Point[] { new(-4194304, -4194304), new(4194304, 4194304) });
         yield return new object[] { path4, false };
 
-        var path5 = new GraphicsPath();
+        GraphicsPath path5 = new();
         path5.AddPolygon(new Point[] { new(-4194304, -4194304), new(-4194304, 4194304), new(4194304, 4194304), new(4194304, -4194304) });
         yield return new object[] { path5, true };
 
-        var path6 = new GraphicsPath();
+        GraphicsPath path6 = new();
         path6.AddPolygon(new Point[] { new(-4194304, -4194304), new(-4194304, 4194304), new(4194304, 4194304), new(4194304, -4194304), new(-4194304, -4194304) });
         yield return new object[] { path6, true };
     }
@@ -240,7 +248,7 @@ public class RegionTests
     public void Ctor_InfiniteGraphicsPath_IsInfinite(GraphicsPath path, bool isInfinite)
     {
         using (path)
-        using (var region = new Region(path))
+        using (Region region = new(path))
         {
             Assert.Equal(isInfinite, region.IsInfinite(s_graphic));
         }
@@ -249,12 +257,12 @@ public class RegionTests
     [Fact]
     public void Ctor_GraphicsPathTooLarge_SetsToEmpty()
     {
-        using (var path = new GraphicsPath())
+        using (GraphicsPath path = new())
         {
             path.AddCurve(new Point[] { new(-4194304, -4194304), new(4194304, 4194304) });
 
-            using (var region = new Region(path))
-            using (var matrix = new Matrix())
+            using (Region region = new(path))
+            using (Matrix matrix = new())
             {
                 Assert.Empty(region.GetRegionScans(matrix));
             }
@@ -270,7 +278,7 @@ public class RegionTests
     [Fact]
     public void Ctor_DisposedGraphicsPath_ThrowsArgumentException()
     {
-        var path = new GraphicsPath();
+        GraphicsPath path = new();
         path.Dispose();
 
         AssertExtensions.Throws<ArgumentException>(null, () => new Region(path));
@@ -282,7 +290,7 @@ public class RegionTests
     {
         using (region)
         using (Region clone = Assert.IsType<Region>(region.Clone()))
-        using (var matrix = new Matrix())
+        using (Matrix matrix = new())
         {
             Assert.NotSame(region, clone);
 
@@ -362,13 +370,13 @@ public class RegionTests
         {
             foreach (RectangleF rect in rectangles)
             {
-                using (var other = new Region(rect))
+                using (Region other = new(rect))
                 {
                     region.Complement(other);
                 }
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -378,9 +386,9 @@ public class RegionTests
     [Fact]
     public void Complement_UnionRegion_Success()
     {
-        using (var region = new Region(new Rectangle(20, 20, 20, 20)))
-        using (var other = new Region(new Rectangle(20, 80, 20, 10)))
-        using (var matrix = new Matrix())
+        using (Region region = new(new Rectangle(20, 20, 20, 20)))
+        using (Region other = new(new Rectangle(20, 80, 20, 10)))
+        using (Matrix matrix = new())
         {
             other.Union(new Rectangle(60, 60, 30, 10));
 
@@ -396,8 +404,8 @@ public class RegionTests
     [Fact]
     public void Complement_InfiniteAndWithIntersectRegion_Success()
     {
-        using (var region = new Region())
-        using (var matrix = new Matrix())
+        using (Region region = new())
+        using (Matrix matrix = new())
         {
             region.Intersect(new Rectangle(5, 5, -10, -10));
             region.Complement(new Rectangle(-5, -5, 12, 12));
@@ -415,9 +423,9 @@ public class RegionTests
     [Fact]
     public void Complement_InfiniteRegion_Success()
     {
-        using (var region = new Region(new Rectangle(1, 2, 3, 4)))
-        using (var matrix = new Matrix())
-        using (var other = new Region())
+        using (Region region = new(new Rectangle(1, 2, 3, 4)))
+        using (Matrix matrix = new())
+        using (Region other = new())
         {
             region.Complement(other);
 
@@ -434,7 +442,7 @@ public class RegionTests
     [Fact]
     public void Complement_NullRegion_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("region", () => region.Complement((Region)null));
         }
@@ -449,7 +457,7 @@ public class RegionTests
     [Fact]
     public void Complement_SameRegion_ThrowsInvalidOperationException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             Assert.Throws<InvalidOperationException>(() => region.Complement(region));
         }
@@ -466,7 +474,7 @@ public class RegionTests
                 region.Complement(new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height));
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -484,7 +492,7 @@ public class RegionTests
                 region.Complement(rect);
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -499,14 +507,14 @@ public class RegionTests
         {
             foreach (RectangleF rect in rectangles)
             {
-                using (var path = new GraphicsPath())
+                using (GraphicsPath path = new())
                 {
                     path.AddRectangle(rect);
                     region.Complement(path);
                 }
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -516,13 +524,13 @@ public class RegionTests
     [Fact]
     public void Complement_GraphicsPathWithMultipleRectangles_Success()
     {
-        var rect1 = new Rectangle(20, 30, 60, 80);
-        var rect2 = new Rectangle(50, 40, 60, 80);
+        Rectangle rect1 = new(20, 30, 60, 80);
+        Rectangle rect2 = new(50, 40, 60, 80);
 
         using (Graphics graphics = Graphics.FromImage(new Bitmap(600, 800)))
-        using (var region1 = new Region(rect1))
-        using (var region2 = new Region(rect2))
-        using (var matrix = new Matrix())
+        using (Region region1 = new(rect1))
+        using (Region region2 = new(rect2))
+        using (Matrix matrix = new())
         {
             graphics.DrawRectangle(Pens.Green, rect1);
             graphics.DrawRectangle(Pens.Red, rect2);
@@ -542,8 +550,8 @@ public class RegionTests
     [Fact]
     public void Complement_EmptyPathWithInfiniteRegion_MakesEmpty()
     {
-        using (var region = new Region())
-        using (var graphicsPath = new GraphicsPath())
+        using (Region region = new())
+        using (GraphicsPath graphicsPath = new())
         {
             region.Complement(graphicsPath);
             Assert.True(region.IsEmpty(s_graphic));
@@ -553,7 +561,7 @@ public class RegionTests
     [Fact]
     public void Complement_NullGraphicsPath_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("path", () => region.Complement((GraphicsPath)null));
         }
@@ -564,8 +572,8 @@ public class RegionTests
     {
         Region disposedRegion = CreateDisposedRegion();
 
-        using (var graphicPath = new GraphicsPath())
-        using (var other = new Region())
+        using (GraphicsPath graphicPath = new())
+        using (Region other = new())
         {
             AssertExtensions.Throws<ArgumentException>(null, () => disposedRegion.Complement(graphicPath));
             AssertExtensions.Throws<ArgumentException>(null, () => disposedRegion.Complement(new Rectangle()));
@@ -578,12 +586,12 @@ public class RegionTests
     {
         static Region Empty()
         {
-            var emptyRegion = new Region();
+            Region emptyRegion = new();
             emptyRegion.MakeEmpty();
             return emptyRegion;
         }
 
-        var createdRegion = new Region();
+        Region createdRegion = new();
         yield return new object[] { createdRegion, createdRegion, true };
         yield return new object[] { new Region(), new Region(), true };
         yield return new object[] { new Region(), Empty(), false };
@@ -600,22 +608,22 @@ public class RegionTests
         yield return new object[] { new Region(new Rectangle(1, 2, 3, 4)), new Region(new Rectangle(1, 2, 4, 4)), false };
         yield return new object[] { new Region(new Rectangle(1, 2, 3, 4)), new Region(new Rectangle(1, 2, 3, 5)), false };
 
-        var graphics1 = new GraphicsPath();
+        GraphicsPath graphics1 = new();
         graphics1.AddRectangle(new Rectangle(1, 2, 3, 4));
 
-        var graphics2 = new GraphicsPath();
+        GraphicsPath graphics2 = new();
         graphics2.AddRectangle(new Rectangle(1, 2, 3, 4));
 
-        var graphics3 = new GraphicsPath();
+        GraphicsPath graphics3 = new();
         graphics3.AddRectangle(new Rectangle(2, 2, 3, 4));
 
-        var graphics4 = new GraphicsPath();
+        GraphicsPath graphics4 = new();
         graphics4.AddRectangle(new Rectangle(1, 3, 3, 4));
 
-        var graphics5 = new GraphicsPath();
+        GraphicsPath graphics5 = new();
         graphics5.AddRectangle(new Rectangle(1, 2, 4, 4));
 
-        var graphics6 = new GraphicsPath();
+        GraphicsPath graphics6 = new();
         graphics6.AddRectangle(new Rectangle(1, 2, 3, 5));
 
         yield return new object[] { new Region(graphics1), new Region(graphics1), true };
@@ -640,7 +648,7 @@ public class RegionTests
     [Fact]
     public void Equals_NullRegion_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("region", () => region.Equals(null, s_graphic));
         }
@@ -649,7 +657,7 @@ public class RegionTests
     [Fact]
     public void Equals_NullGraphics_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("g", () => region.Equals(region, null));
         }
@@ -658,9 +666,9 @@ public class RegionTests
     [Fact]
     public void Equals_DisposedGraphics_ThrowsArgumentException()
     {
-        using (var region = new Region())
-        using (var other = new Region())
-        using (var image = new Bitmap(10, 10))
+        using (Region region = new())
+        using (Region other = new())
+        using (Bitmap image = new(10, 10))
         {
             var graphics = Graphics.FromImage(image);
             graphics.Dispose();
@@ -834,13 +842,13 @@ public class RegionTests
         {
             foreach (RectangleF rect in rectangles)
             {
-                using (var other = new Region(rect))
+                using (Region other = new(rect))
                 {
                     region.Exclude(other);
                 }
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -850,9 +858,9 @@ public class RegionTests
     [Fact]
     public void Exclude_UnionRegion_Success()
     {
-        using (var region = new Region(new RectangleF(20, 20, 20, 20)))
-        using (var union = new Region(new RectangleF(20, 80, 20, 10)))
-        using (var matrix = new Matrix())
+        using (Region region = new(new RectangleF(20, 20, 20, 20)))
+        using (Region union = new(new RectangleF(20, 80, 20, 10)))
+        using (Matrix matrix = new())
         {
             union.Union(new RectangleF(60, 60, 30, 10));
             region.Exclude(union);
@@ -863,9 +871,9 @@ public class RegionTests
     [Fact]
     public void Exclude_InfiniteRegion_Success()
     {
-        using (var region = new Region(new Rectangle(1, 2, 3, 4)))
-        using (var other = new Region())
-        using (var matrix = new Matrix())
+        using (Region region = new(new Rectangle(1, 2, 3, 4)))
+        using (Region other = new())
+        using (Matrix matrix = new())
         {
             region.Exclude(other);
             Assert.Equal(new RectangleF[0], region.GetRegionScans(matrix));
@@ -875,7 +883,7 @@ public class RegionTests
     [Fact]
     public void Exclude_NullRegion_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("region", () => region.Exclude((Region)null));
         }
@@ -890,7 +898,7 @@ public class RegionTests
     [Fact]
     public void Exclude_SameRegion_ThrowsInvalidOperationException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             Assert.Throws<InvalidOperationException>(() => region.Exclude(region));
         }
@@ -907,7 +915,7 @@ public class RegionTests
                 region.Exclude(new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height));
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -925,7 +933,7 @@ public class RegionTests
                 region.Exclude(rect);
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -940,14 +948,14 @@ public class RegionTests
         {
             foreach (RectangleF rect in rectangles)
             {
-                using (var path = new GraphicsPath())
+                using (GraphicsPath path = new())
                 {
                     path.AddRectangle(rect);
                     region.Exclude(path);
                 }
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -957,8 +965,8 @@ public class RegionTests
     [Fact]
     public void Exclude_EmptyPathWithInfiniteRegion_MakesInfinite()
     {
-        using (var region = new Region())
-        using (var graphicsPath = new GraphicsPath())
+        using (Region region = new())
+        using (GraphicsPath graphicsPath = new())
         {
             region.Exclude(graphicsPath);
             Assert.True(region.IsInfinite(s_graphic));
@@ -968,7 +976,7 @@ public class RegionTests
     [Fact]
     public void Exclude_NullGraphicsPath_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("path", () => region.Exclude((GraphicsPath)null));
         }
@@ -979,8 +987,8 @@ public class RegionTests
     {
         Region disposedRegion = CreateDisposedRegion();
 
-        using (var graphicsPath = new GraphicsPath())
-        using (var other = new Region())
+        using (GraphicsPath graphicsPath = new())
+        using (Region other = new())
         {
             AssertExtensions.Throws<ArgumentException>(null, () => disposedRegion.Exclude(graphicsPath));
             AssertExtensions.Throws<ArgumentException>(null, () => disposedRegion.Exclude(new Rectangle()));
@@ -992,7 +1000,7 @@ public class RegionTests
     [Fact]
     public void FromHrgn_ValidHrgn_ReturnsExpected()
     {
-        using (var region = new Region(new Rectangle(1, 2, 3, 4)))
+        using (Region region = new(new Rectangle(1, 2, 3, 4)))
         {
             IntPtr handle1 = region.GetHrgn(s_graphic);
             IntPtr handle2 = region.GetHrgn(s_graphic);
@@ -1019,7 +1027,7 @@ public class RegionTests
     [Fact]
     public void GetHrgn_Infinite_ReturnsZero()
     {
-        using (var region = new Region(new Rectangle(1, 2, 3, 4)))
+        using (Region region = new(new Rectangle(1, 2, 3, 4)))
         {
             IntPtr handle = region.GetHrgn(s_graphic);
             Assert.NotEqual(IntPtr.Zero, handle);
@@ -1033,7 +1041,7 @@ public class RegionTests
     [Fact]
     public void GetHrgn_Empty_ReturnsNonZero()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             Assert.Equal(IntPtr.Zero, region.GetHrgn(s_graphic));
 
@@ -1047,7 +1055,7 @@ public class RegionTests
     [Fact]
     public void GetHrgn_NullGraphics_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("g", () => region.GetHrgn(null));
         }
@@ -1062,7 +1070,7 @@ public class RegionTests
     [Fact]
     public void ReleaseHrgn_ZeroHandle_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("regionHandle", () => region.ReleaseHrgn(IntPtr.Zero));
         }
@@ -1071,7 +1079,7 @@ public class RegionTests
     [Fact]
     public void GetBounds_NullGraphics_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("g", () => region.GetBounds(null));
         }
@@ -1080,8 +1088,8 @@ public class RegionTests
     [Fact]
     public void GetBounds_DisposedGraphics_ThrowsArgumentException()
     {
-        using (var region = new Region())
-        using (var image = new Bitmap(10, 10))
+        using (Region region = new())
+        using (Bitmap image = new(10, 10))
         {
             var graphics = Graphics.FromImage(image);
             graphics.Dispose();
@@ -1104,9 +1112,9 @@ public class RegionTests
     [Fact]
     public void GetRegionScans_CustomMatrix_TransformsRegionScans()
     {
-        using (var matrix = new Matrix())
-        using (var region = new Region(new Rectangle(1, 2, 3, 4)))
-        using (var emptyMatrix = new Matrix())
+        using (Matrix matrix = new())
+        using (Region region = new(new Rectangle(1, 2, 3, 4)))
+        using (Matrix emptyMatrix = new())
         {
             matrix.Translate(10, 11);
             matrix.Scale(5, 6);
@@ -1119,7 +1127,7 @@ public class RegionTests
     [Fact]
     public void GetRegionScans_NullMatrix_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("matrix", () => region.GetRegionScans(null));
         }
@@ -1128,7 +1136,7 @@ public class RegionTests
     [Fact]
     public void GetRegionScans_Disposed_ThrowsArgumentException()
     {
-        using (var matrix = new Matrix())
+        using (Matrix matrix = new())
         {
             AssertExtensions.Throws<ArgumentException>(null, () => CreateDisposedRegion().GetRegionScans(matrix));
         }
@@ -1137,9 +1145,9 @@ public class RegionTests
     [Fact]
     public void GetRegionScans_DisposedMatrix_ThrowsArgumentException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
-            var matrix = new Matrix();
+            Matrix matrix = new();
             matrix.Dispose();
             AssertExtensions.Throws<ArgumentException>(null, () => region.GetRegionScans(matrix));
         }
@@ -1148,10 +1156,10 @@ public class RegionTests
     [Fact]
     public void Intersect_SmallerRect_Success()
     {
-        using (var clipRegion = new Region())
-        using (var matrix = new Matrix())
+        using (Region clipRegion = new())
+        using (Matrix matrix = new())
         {
-            Rectangle smaller = new Rectangle(5, 5, -10, -10);
+            Rectangle smaller = new(5, 5, -10, -10);
 
             clipRegion.Intersect(smaller);
             Assert.False(clipRegion.IsEmpty(s_graphic));
@@ -1227,13 +1235,13 @@ public class RegionTests
         {
             foreach (RectangleF rect in rectangles)
             {
-                using (var rectangleRegion = new Region(rect))
+                using (Region rectangleRegion = new(rect))
                 {
                     region.Intersect(rectangleRegion);
                 }
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -1243,9 +1251,9 @@ public class RegionTests
     [Fact]
     public void Intersect_InfiniteRegion_Success()
     {
-        using (var region = new Region(new Rectangle(1, 2, 3, 4)))
-        using (var matrix = new Matrix())
-        using (var infiniteRegion = new Region())
+        using (Region region = new(new Rectangle(1, 2, 3, 4)))
+        using (Matrix matrix = new())
+        using (Region infiniteRegion = new())
         {
             region.Intersect(infiniteRegion);
 
@@ -1256,7 +1264,7 @@ public class RegionTests
     [Fact]
     public void Intersect_NullRegion_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("region", () => region.Intersect((Region)null));
         }
@@ -1271,7 +1279,7 @@ public class RegionTests
     [Fact]
     public void Intersect_SameRegion_ThrowsInvalidOperationException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             Assert.Throws<InvalidOperationException>(() => region.Intersect(region));
         }
@@ -1288,7 +1296,7 @@ public class RegionTests
                 region.Intersect(new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height));
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -1298,8 +1306,8 @@ public class RegionTests
     [Fact]
     public void Intersect_InfiniteRegionWithSmallerRectangle_Success()
     {
-        using (var region = new Region())
-        using (var matrix = new Matrix())
+        using (Region region = new())
+        using (Matrix matrix = new())
         {
             region.Intersect(new Rectangle(5, 5, -10, -10));
 
@@ -1320,7 +1328,7 @@ public class RegionTests
                 region.Intersect(rect);
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -1330,8 +1338,8 @@ public class RegionTests
     [Fact]
     public void Intersect_InfiniteRegionWithSmallerRectangleF_Success()
     {
-        using (var region = new Region())
-        using (var matrix = new Matrix())
+        using (Region region = new())
+        using (Matrix matrix = new())
         {
             region.Intersect(new RectangleF(5, 5, -10, -10));
 
@@ -1349,14 +1357,14 @@ public class RegionTests
         {
             foreach (RectangleF rect in rectangles)
             {
-                using (var path = new GraphicsPath())
+                using (GraphicsPath path = new())
                 {
                     path.AddRectangle(rect);
                     region.Intersect(path);
                 }
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -1366,8 +1374,8 @@ public class RegionTests
     [Fact]
     public void Intersect_EmptyPathWithInfiniteRegion_MakesEmpty()
     {
-        using (var region = new Region())
-        using (var graphicsPath = new GraphicsPath())
+        using (Region region = new())
+        using (GraphicsPath graphicsPath = new())
         {
             region.Intersect(graphicsPath);
             Assert.True(region.IsEmpty(s_graphic));
@@ -1377,7 +1385,7 @@ public class RegionTests
     [Fact]
     public void Intersect_NullGraphicsPath_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("path", () => region.Intersect((GraphicsPath)null));
         }
@@ -1388,8 +1396,8 @@ public class RegionTests
     {
         Region disposedRegion = CreateDisposedRegion();
 
-        using (var graphicsPath = new GraphicsPath())
-        using (var other = new Region())
+        using (GraphicsPath graphicsPath = new())
+        using (Region other = new())
         {
             AssertExtensions.Throws<ArgumentException>(null, () => disposedRegion.Intersect(graphicsPath));
             AssertExtensions.Throws<ArgumentException>(null, () => disposedRegion.Intersect(new Rectangle()));
@@ -1401,7 +1409,7 @@ public class RegionTests
     [Fact]
     public void IsEmpty_NullGraphics_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("g", () => region.IsEmpty(null));
         }
@@ -1416,7 +1424,7 @@ public class RegionTests
     [Fact]
     public void IsInfinite_NullGraphics_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("g", () => region.IsInfinite(null));
         }
@@ -1425,8 +1433,8 @@ public class RegionTests
     [Fact]
     public void IsInfinite_DisposedGraphics_ThrowsArgumentException()
     {
-        using (var region = new Region())
-        using (var image = new Bitmap(10, 10))
+        using (Region region = new())
+        using (Bitmap image = new(10, 10))
         {
             var graphics = Graphics.FromImage(image);
             graphics.Dispose();
@@ -1442,7 +1450,7 @@ public class RegionTests
 
     public static IEnumerable<object[]> IsVisible_Rectangle_TestData()
     {
-        var infiniteExclude = new Region();
+        Region infiniteExclude = new();
         infiniteExclude.Exclude(new Rectangle(387, 292, 189, 133));
         infiniteExclude.Exclude(new Rectangle(387, 66, 189, 133));
 
@@ -1467,7 +1475,7 @@ public class RegionTests
     public void IsVisible_Rectangle_ReturnsExpected(Region region, Rectangle rectangle, bool expected)
     {
         using (region)
-        using (var image = new Bitmap(10, 10))
+        using (Bitmap image = new(10, 10))
         {
             var disposedGraphics = Graphics.FromImage(image);
             disposedGraphics.Dispose();
@@ -1494,7 +1502,7 @@ public class RegionTests
 
     public static IEnumerable<object[]> IsVisible_Point_TestData()
     {
-        var infiniteExclude = new Region();
+        Region infiniteExclude = new();
         infiniteExclude.Exclude(new Rectangle(387, 292, 189, 133));
         infiniteExclude.Exclude(new Rectangle(387, 66, 189, 133));
 
@@ -1521,7 +1529,7 @@ public class RegionTests
     public void IsVisible_Point_ReturnsExpected(Region region, Point point, bool expected)
     {
         using (region)
-        using (var image = new Bitmap(10, 10))
+        using (Bitmap image = new(10, 10))
         {
             var disposedGraphics = Graphics.FromImage(image);
             disposedGraphics.Dispose();
@@ -1586,7 +1594,7 @@ public class RegionTests
             Assert.False(region.IsInfinite(s_graphic));
             Assert.Equal(RectangleF.Empty, region.GetBounds(s_graphic));
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Empty(region.GetRegionScans(matrix));
             }
@@ -1823,13 +1831,13 @@ public class RegionTests
         {
             foreach (RectangleF rect in rectangles)
             {
-                using (var other = new Region(rect))
+                using (Region other = new(rect))
                 {
                     region.Union(other);
                 }
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -1839,9 +1847,9 @@ public class RegionTests
     [Fact]
     public void Union_InfiniteRegion_Success()
     {
-        using (var region = new Region(new Rectangle(1, 2, 3, 4)))
-        using (var other = new Region())
-        using (var matrix = new Matrix())
+        using (Region region = new(new Rectangle(1, 2, 3, 4)))
+        using (Region other = new())
+        using (Matrix matrix = new())
         {
             region.Union(other);
 
@@ -1852,7 +1860,7 @@ public class RegionTests
     [Fact]
     public void Union_NullRegion_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("region", () => region.Union((Region)null));
         }
@@ -1861,7 +1869,7 @@ public class RegionTests
     [Fact]
     public void Union_DisposedRegion_ThrowsArgumentException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentException>(null, () => region.Union(CreateDisposedRegion()));
         }
@@ -1870,7 +1878,7 @@ public class RegionTests
     [Fact]
     public void Union_SameRegion_ThrowsInvalidOperationException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             Assert.Throws<InvalidOperationException>(() => region.Union(region));
         }
@@ -1887,7 +1895,7 @@ public class RegionTests
                 region.Union(new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height));
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -1905,7 +1913,7 @@ public class RegionTests
                 region.Union(rect);
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -1920,14 +1928,14 @@ public class RegionTests
         {
             foreach (RectangleF rect in rectangles)
             {
-                using (var path = new GraphicsPath())
+                using (GraphicsPath path = new())
                 {
                     path.AddRectangle(rect);
                     region.Union(path);
                 }
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -1937,8 +1945,8 @@ public class RegionTests
     [Fact]
     public void Union_EmptyPathWithInfiniteRegion_MakesInfinite()
     {
-        using (var region = new Region())
-        using (var graphicsPath = new GraphicsPath())
+        using (Region region = new())
+        using (GraphicsPath graphicsPath = new())
         {
             region.Union(graphicsPath);
             Assert.True(region.IsInfinite(s_graphic));
@@ -1948,7 +1956,7 @@ public class RegionTests
     [Fact]
     public void Union_NullGraphicsPath_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("path", () => region.Union((GraphicsPath)null));
         }
@@ -1959,8 +1967,8 @@ public class RegionTests
     {
         Region disposedRegion = CreateDisposedRegion();
 
-        using (var graphicsPath = new GraphicsPath())
-        using (var other = new Region())
+        using (GraphicsPath graphicsPath = new())
+        using (Region other = new())
         {
             AssertExtensions.Throws<ArgumentException>(null, () => disposedRegion.Union(graphicsPath));
             AssertExtensions.Throws<ArgumentException>(null, () => disposedRegion.Union(new Rectangle()));
@@ -1972,8 +1980,8 @@ public class RegionTests
     [Fact]
     public void Transform_EmptyMatrix_Nop()
     {
-        using (var region = new Region(new RectangleF(1, 2, 3, 4)))
-        using (var matrix = new Matrix())
+        using (Region region = new(new RectangleF(1, 2, 3, 4)))
+        using (Matrix matrix = new())
         {
             region.Transform(matrix);
             Assert.Equal(new RectangleF[] { new(1, 2, 3, 4) }, region.GetRegionScans(matrix));
@@ -1983,9 +1991,9 @@ public class RegionTests
     [Fact]
     public void Transform_CustomMatrix_Success()
     {
-        using (var region = new Region(new RectangleF(1, 2, 3, 4)))
-        using (var matrix = new Matrix())
-        using (var emptyMatrix = new Matrix())
+        using (Region region = new(new RectangleF(1, 2, 3, 4)))
+        using (Matrix matrix = new())
+        using (Matrix emptyMatrix = new())
         {
             matrix.Translate(10, 11);
             matrix.Scale(5, 6);
@@ -2002,9 +2010,9 @@ public class RegionTests
     [InlineData(1, 1, 45)]
     public void Transform_Infinity_Nop(float scaleX, float scaleY, int angle)
     {
-        using (var region = new Region())
-        using (var matrix = new Matrix())
-        using (var emptyMatrix = new Matrix())
+        using (Region region = new())
+        using (Matrix matrix = new())
+        using (Matrix emptyMatrix = new())
         {
             matrix.Translate(10, 11);
             matrix.Scale(scaleX, scaleY);
@@ -2019,9 +2027,9 @@ public class RegionTests
     [Fact]
     public void Transform_InfinityIntersectScale_Success()
     {
-        using (var region = new Region())
-        using (var matrix = new Matrix())
-        using (var emptyMatrix = new Matrix())
+        using (Region region = new())
+        using (Matrix matrix = new())
+        using (Matrix emptyMatrix = new())
         {
             matrix.Scale(2, 0.5f);
 
@@ -2035,9 +2043,9 @@ public class RegionTests
     [Fact]
     public void Transform_InfinityIntersectTransform_Success()
     {
-        using (var region = new Region())
-        using (var matrix = new Matrix(2, 0, 0, 0.5f, 10, 10))
-        using (var emptyMatrix = new Matrix())
+        using (Region region = new())
+        using (Matrix matrix = new(2, 0, 0, 0.5f, 10, 10))
+        using (Matrix emptyMatrix = new())
         {
             region.Intersect(new Rectangle(-10, -10, 20, 20));
             region.Transform(matrix);
@@ -2050,7 +2058,7 @@ public class RegionTests
     [Fact]
     public void Transform_NullMatrix_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("matrix", () => region.Transform(null));
         }
@@ -2059,7 +2067,7 @@ public class RegionTests
     [Fact]
     public void Transform_Disposed_ThrowsArgumentException()
     {
-        using (var matrix = new Matrix())
+        using (Matrix matrix = new())
         {
             AssertExtensions.Throws<ArgumentException>(null, () => CreateDisposedRegion().Transform(matrix));
         }
@@ -2071,8 +2079,8 @@ public class RegionTests
     [InlineData(-2, -3)]
     public void Translate_Int_Success(float dx, float dy)
     {
-        using (var region = new Region(new RectangleF(1, 2, 3, 4)))
-        using (var matrix = new Matrix())
+        using (Region region = new(new RectangleF(1, 2, 3, 4)))
+        using (Matrix matrix = new())
         {
             region.Translate(dx, dy);
             Assert.Equal(new RectangleF[] { new(1 + dx, 2 + dy, 3, 4) }, region.GetRegionScans(matrix));
@@ -2082,8 +2090,8 @@ public class RegionTests
     [Fact]
     public void Translate_IntInfinityIntersect_Success()
     {
-        using (var region = new Region())
-        using (var matrix = new Matrix())
+        using (Region region = new())
+        using (Matrix matrix = new())
         {
             region.Intersect(new Rectangle(-10, -10, 20, 20));
             region.Translate(10, 10);
@@ -2098,8 +2106,8 @@ public class RegionTests
     [InlineData(2, 3)]
     public void Translate_Float_Success(int dx, int dy)
     {
-        using (var region = new Region(new RectangleF(1, 2, 3, 4)))
-        using (var matrix = new Matrix())
+        using (Region region = new(new RectangleF(1, 2, 3, 4)))
+        using (Matrix matrix = new())
         {
             region.Translate(dx, dy);
             Assert.Equal(new RectangleF[] { new(1 + dx, 2 + dy, 3, 4) }, region.GetRegionScans(matrix));
@@ -2109,8 +2117,8 @@ public class RegionTests
     [Fact]
     public void Translate_FloatInfinityIntersect_Success()
     {
-        using (var region = new Region())
-        using (var matrix = new Matrix())
+        using (Region region = new())
+        using (Matrix matrix = new())
         {
             region.Intersect(new Rectangle(-10, -10, 20, 20));
             region.Translate(10f, 10f);
@@ -2123,8 +2131,8 @@ public class RegionTests
     [Fact]
     public void Translate_Infinity_Nop()
     {
-        using (var region = new Region())
-        using (var matrix = new Matrix())
+        using (Region region = new())
+        using (Matrix matrix = new())
         {
             region.Translate(10, 10);
             region.Translate(10f, 10f);
@@ -2142,8 +2150,8 @@ public class RegionTests
     [InlineData(float.NegativeInfinity)]
     public void Translate_InvalidFloatValue_EmptiesRegion(float f)
     {
-        using (var region = new Region(new RectangleF(1, 2, 3, 4)))
-        using (var matrix = new Matrix())
+        using (Region region = new(new RectangleF(1, 2, 3, 4)))
+        using (Matrix matrix = new())
         {
             region.Translate(f, 0);
 
@@ -2227,13 +2235,13 @@ public class RegionTests
         {
             foreach (RectangleF rect in rectangles)
             {
-                using (var other = new Region(rect))
+                using (Region other = new(rect))
                 {
                     region.Xor(other);
                 }
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -2243,9 +2251,9 @@ public class RegionTests
     [Fact]
     public void Xor_InfiniteRegion_Success()
     {
-        using (var region = new Region(new Rectangle(1, 2, 3, 4)))
-        using (var other = new Region())
-        using (var matrix = new Matrix())
+        using (Region region = new(new Rectangle(1, 2, 3, 4)))
+        using (Region other = new())
+        using (Matrix matrix = new())
         {
             region.Xor(other);
 
@@ -2262,7 +2270,7 @@ public class RegionTests
     [Fact]
     public void Xor_NullRegion_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("region", () => region.Xor((Region)null));
         }
@@ -2271,7 +2279,7 @@ public class RegionTests
     [Fact]
     public void Xor_DisposedRegion_ThrowsArgumentException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentException>(null, () => region.Xor(CreateDisposedRegion()));
         }
@@ -2280,7 +2288,7 @@ public class RegionTests
     [Fact]
     public void Xor_SameRegion_ThrowsInvalidOperationException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             Assert.Throws<InvalidOperationException>(() => region.Xor(region));
         }
@@ -2297,7 +2305,7 @@ public class RegionTests
                 region.Xor(new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height));
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -2315,7 +2323,7 @@ public class RegionTests
                 region.Xor(rect);
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -2330,14 +2338,14 @@ public class RegionTests
         {
             foreach (RectangleF rect in rectangles)
             {
-                using (var path = new GraphicsPath())
+                using (GraphicsPath path = new())
                 {
                     path.AddRectangle(rect);
                     region.Xor(path);
                 }
             }
 
-            using (var matrix = new Matrix())
+            using (Matrix matrix = new())
             {
                 Assert.Equal(expectedScans, region.GetRegionScans(matrix));
             }
@@ -2347,8 +2355,8 @@ public class RegionTests
     [Fact]
     public void Xor_EmptyPathWithInfiniteRegion_MakesInfinite()
     {
-        using (var region = new Region())
-        using (var graphicsPath = new GraphicsPath())
+        using (Region region = new())
+        using (GraphicsPath graphicsPath = new())
         {
             region.Xor(graphicsPath);
             Assert.True(region.IsInfinite(s_graphic));
@@ -2358,7 +2366,7 @@ public class RegionTests
     [Fact]
     public void Xor_NullGraphicsPath_ThrowsArgumentNullException()
     {
-        using (var region = new Region())
+        using (Region region = new())
         {
             AssertExtensions.Throws<ArgumentNullException>("path", () => region.Xor((GraphicsPath)null));
         }
@@ -2369,8 +2377,8 @@ public class RegionTests
     {
         Region disposedRegion = CreateDisposedRegion();
 
-        using (var graphicsPath = new GraphicsPath())
-        using (var other = new Region())
+        using (GraphicsPath graphicsPath = new())
+        using (Region other = new())
         {
             AssertExtensions.Throws<ArgumentException>(null, () => disposedRegion.Xor(graphicsPath));
             AssertExtensions.Throws<ArgumentException>(null, () => disposedRegion.Xor(new Rectangle()));

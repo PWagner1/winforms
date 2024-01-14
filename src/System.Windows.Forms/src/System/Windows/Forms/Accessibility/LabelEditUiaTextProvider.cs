@@ -5,7 +5,6 @@ using System.Drawing;
 using System.Windows.Forms.Automation;
 using Windows.Win32.System.Com;
 using Windows.Win32.UI.Accessibility;
-using static Interop;
 
 namespace System.Windows.Forms;
 
@@ -58,7 +57,7 @@ internal sealed unsafe class LabelEditUiaTextProvider : UiaTextProvider
 
     public override int LinesPerPage => _owningChildEditAccessibilityObject.BoundingRectangle.IsEmpty ? 0 : OwnerChildEditLinesCount;
 
-    public override LOGFONTW Logfont => _owningControl.TryGetTarget(out Control? target) ? LOGFONTW.FromFont(target.Font) : default;
+    public override LOGFONTW Logfont => _owningControl.TryGetTarget(out Control? target) ? target.Font.ToLogicalFont() : default;
 
     public override SupportedTextSelection SupportedTextSelection => SupportedTextSelection.SupportedTextSelection_Single;
 
@@ -190,8 +189,8 @@ internal sealed unsafe class LabelEditUiaTextProvider : UiaTextProvider
 
         // Formatting rectangle is the boundary, which we need to inflate by 1
         // in order to read characters within the rectangle
-        Point ptStart = new Point(rectangle.X + 1, rectangle.Y + 1);
-        Point ptEnd = new Point(rectangle.Right - 1, rectangle.Bottom - 1);
+        Point ptStart = new(rectangle.X + 1, rectangle.Y + 1);
+        Point ptEnd = new(rectangle.Right - 1, rectangle.Bottom - 1);
 
         visibleStart = GetCharIndexFromPosition(ptStart);
         visibleEnd = GetCharIndexFromPosition(ptEnd) + 1; // Add 1 to get a caret position after received character

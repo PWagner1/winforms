@@ -9,7 +9,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Windows.Forms.Design.Behavior;
-using static Interop;
 
 namespace System.Windows.Forms.Design;
 
@@ -167,16 +166,16 @@ internal static class DesignerUtils
         s_selectionBorderBrush.Dispose();
         s_selectionBorderBrush = new HatchBrush(HatchStyle.Percent50, SystemColors.ControlDarkDark, Color.Transparent);
 
-        PInvoke.DeleteObject(s_grabHandleFillBrushPrimary);
+        PInvokeCore.DeleteObject(s_grabHandleFillBrushPrimary);
         s_grabHandleFillBrushPrimary = PInvoke.CreateSolidBrush((COLORREF)(uint)ColorTranslator.ToWin32(SystemColors.Window));
 
-        PInvoke.DeleteObject(s_grabHandleFillBrush);
+        PInvokeCore.DeleteObject(s_grabHandleFillBrush);
         s_grabHandleFillBrush = PInvoke.CreateSolidBrush((COLORREF)(uint)ColorTranslator.ToWin32(SystemColors.ControlText));
 
-        PInvoke.DeleteObject(s_grabHandlePenPrimary);
+        PInvokeCore.DeleteObject(s_grabHandlePenPrimary);
         s_grabHandlePenPrimary = PInvoke.CreatePen(PEN_STYLE.PS_SOLID, cWidth: 1, (COLORREF)(uint)ColorTranslator.ToWin32(SystemColors.ControlText));
 
-        PInvoke.DeleteObject(s_grabHandlePen);
+        PInvokeCore.DeleteObject(s_grabHandlePen);
         s_grabHandlePen = PInvoke.CreatePen(PEN_STYLE.PS_SOLID, cWidth: 1, (COLORREF)(uint)ColorTranslator.ToWin32(SystemColors.Window));
     }
 
@@ -239,17 +238,17 @@ internal static class DesignerUtils
     }
 
     /// <summary>
-    ///  Used for drawing the grabhandles around sizeable selected controls and components.
+    ///  Used for drawing the grab handles around sizeable selected controls and components.
     /// </summary>
     public static void DrawGrabHandle(Graphics graphics, Rectangle bounds, bool isPrimary, Glyph glyph)
     {
-        using var hDC = new DeviceContextHdcScope(graphics, applyGraphicsState: false);
+        using DeviceContextHdcScope hDC = new(graphics, applyGraphicsState: false);
 
         // Set our pen and brush based on primary selection
-        using PInvoke.SelectObjectScope brushSelection = new(hDC, isPrimary ? s_grabHandleFillBrushPrimary : s_grabHandleFillBrush);
-        using PInvoke.SelectObjectScope penSelection = new(hDC, isPrimary ? s_grabHandlePenPrimary : s_grabHandlePen);
+        using SelectObjectScope brushSelection = new(hDC, isPrimary ? s_grabHandleFillBrushPrimary : s_grabHandleFillBrush);
+        using SelectObjectScope penSelection = new(hDC, isPrimary ? s_grabHandlePenPrimary : s_grabHandlePen);
 
-        // Draw our rounded rect grabhandle
+        // Draw our rounded rect grab handle
         PInvoke.RoundRect(hDC, bounds.Left, bounds.Top, bounds.Right, bounds.Bottom, 2, 2);
     }
 
@@ -258,11 +257,11 @@ internal static class DesignerUtils
     /// </summary>
     public static void DrawNoResizeHandle(Graphics graphics, Rectangle bounds, bool isPrimary, Glyph glyph)
     {
-        using var hDC = new DeviceContextHdcScope(graphics, applyGraphicsState: false);
+        using DeviceContextHdcScope hDC = new(graphics, applyGraphicsState: false);
 
         // Set our pen and brush based on primary selection
-        using PInvoke.SelectObjectScope brushSelection = new(hDC, isPrimary ? s_grabHandleFillBrushPrimary : s_grabHandleFillBrush);
-        using PInvoke.SelectObjectScope penSelection = new(hDC, s_grabHandlePenPrimary);
+        using SelectObjectScope brushSelection = new(hDC, isPrimary ? s_grabHandleFillBrushPrimary : s_grabHandleFillBrush);
+        using SelectObjectScope penSelection = new(hDC, s_grabHandlePenPrimary);
 
         // Draw our rect no-resize handle
         PInvoke.Rectangle(hDC, bounds.Left, bounds.Top, bounds.Right, bounds.Bottom);
@@ -275,10 +274,10 @@ internal static class DesignerUtils
     {
         using DeviceContextHdcScope hDC = new(graphics, applyGraphicsState: false);
 
-        using PInvoke.SelectObjectScope penSelection = new(hDC, s_grabHandlePenPrimary);
+        using SelectObjectScope penSelection = new(hDC, s_grabHandlePenPrimary);
 
         // Upper rect - upper rect is always filled with the primary brush
-        using PInvoke.SelectObjectScope brushSelection = new(hDC, s_grabHandleFillBrushPrimary);
+        using SelectObjectScope brushSelection = new(hDC, s_grabHandleFillBrushPrimary);
         PInvoke.RoundRect(
             hDC,
             bounds.Left + LOCKHANDLEUPPER_OFFSET,
@@ -408,7 +407,7 @@ internal static class DesignerUtils
         using DeviceContextHdcScope destDC = new(gDest, applyGraphicsState: false);
 
         // Perform our bitblit operation to push the image into the dest bitmap
-        PInvoke.BitBlt(
+        PInvokeCore.BitBlt(
             destDC,
             x: 0,
             y: 0,
@@ -536,8 +535,8 @@ internal static class DesignerUtils
 
         using Graphics g = ctrl.CreateGraphics();
         using DeviceContextHdcScope dc = new(g, applyGraphicsState: false);
-        using PInvoke.ObjectScope hFont = new(ctrl.Font.ToHFONT());
-        using PInvoke.SelectObjectScope hFontOld = new(dc, hFont);
+        using ObjectScope hFont = new(ctrl.Font.ToHFONT());
+        using SelectObjectScope hFontOld = new(dc, hFont);
 
         TEXTMETRICW metrics = default;
         PInvoke.GetTextMetrics(dc, &metrics);

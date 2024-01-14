@@ -11,7 +11,7 @@ public class MaskedTextBoxAccessibilityObjectTests
     [WinFormsFact]
     public void MaskedTextBoxAccessibilityObject_Ctor_Default()
     {
-        using MaskedTextBox maskedTextBox = new MaskedTextBox();
+        using MaskedTextBox maskedTextBox = new();
         maskedTextBox.CreateControl();
 
         Assert.NotNull(maskedTextBox.AccessibilityObject);
@@ -21,7 +21,7 @@ public class MaskedTextBoxAccessibilityObjectTests
     [WinFormsFact]
     public void MaskedTextBoxAccessibilityObject_ControlType_IsEdit_IfAccessibleRoleIsDefault()
     {
-        using MaskedTextBox maskedTextBox = new MaskedTextBox();
+        using MaskedTextBox maskedTextBox = new();
         maskedTextBox.CreateControl();
         // AccessibleRole is not set = Default
 
@@ -34,7 +34,7 @@ public class MaskedTextBoxAccessibilityObjectTests
     [WinFormsFact]
     public void MaskedTextBoxAccessibilityObject_Role_IsText_ByDefault()
     {
-        using MaskedTextBox maskedTextBox = new MaskedTextBox();
+        using MaskedTextBox maskedTextBox = new();
         maskedTextBox.CreateControl();
         // AccessibleRole is not set = Default
 
@@ -63,7 +63,7 @@ public class MaskedTextBoxAccessibilityObjectTests
     [MemberData(nameof(MaskedTextBoxAccessibleObject_GetPropertyValue_ControlType_IsExpected_ForCustomRole_TestData))]
     public void MaskedTextBoxAccessibleObject_GetPropertyValue_ControlType_IsExpected_ForCustomRole(AccessibleRole role)
     {
-        using MaskedTextBox maskedTextBox = new MaskedTextBox();
+        using MaskedTextBox maskedTextBox = new();
         maskedTextBox.AccessibleRole = role;
 
         var actual = (UIA_CONTROLTYPE_ID)(int)maskedTextBox.AccessibilityObject.GetPropertyValue(UIA_PROPERTY_ID.UIA_ControlTypePropertyId);
@@ -78,7 +78,7 @@ public class MaskedTextBoxAccessibilityObjectTests
     [InlineData("Test", "Test")]
     public void MaskedTextBoxAccessibleObject_Name_IsExpected_WithoutMask(string accessibleName, string expectedAccessibleName)
     {
-        using MaskedTextBox maskedTextBox = new MaskedTextBox();
+        using MaskedTextBox maskedTextBox = new();
         maskedTextBox.Text = "000000";
         maskedTextBox.AccessibleName = accessibleName;
         VARIANT actual = maskedTextBox.AccessibilityObject.GetPropertyValue(UIA_PROPERTY_ID.UIA_NamePropertyId);
@@ -99,12 +99,12 @@ public class MaskedTextBoxAccessibilityObjectTests
     [InlineData("Test", "Test")]
     public void MaskedTextBoxAccessibleObject_Name_IsExpected_WithMask(string accessibleName, string expectedAccessibleName)
     {
-        using MaskedTextBox maskedTextBox = new MaskedTextBox();
+        using MaskedTextBox maskedTextBox = new();
         maskedTextBox.Text = "000000";
         maskedTextBox.Mask = "00/00/0000";
         maskedTextBox.AccessibleName = accessibleName;
 
-        var actual = ((BSTR)maskedTextBox.AccessibilityObject.GetPropertyValue(UIA_PROPERTY_ID.UIA_NamePropertyId)).ToStringAndFree();
+        string actual = ((BSTR)maskedTextBox.AccessibilityObject.GetPropertyValue(UIA_PROPERTY_ID.UIA_NamePropertyId)).ToStringAndFree();
 
         Assert.Equal(expectedAccessibleName, actual);
         Assert.False(maskedTextBox.IsHandleCreated);
@@ -115,11 +115,11 @@ public class MaskedTextBoxAccessibilityObjectTests
     [InlineData(false)]
     public void MaskedTextBoxAccessibleObject_GetPropertyValue_Value_IsExpected_WithMask(bool useMask)
     {
-        using MaskedTextBox maskedTextBox = new MaskedTextBox();
+        using MaskedTextBox maskedTextBox = new();
         maskedTextBox.Text = "000000";
         maskedTextBox.Mask = useMask ? "00/00/0000" : null;
 
-        var actual = ((BSTR)maskedTextBox.AccessibilityObject.GetPropertyValue(UIA_PROPERTY_ID.UIA_ValueValuePropertyId)).ToStringAndFree();
+        string actual = ((BSTR)maskedTextBox.AccessibilityObject.GetPropertyValue(UIA_PROPERTY_ID.UIA_ValueValuePropertyId)).ToStringAndFree();
 
         Assert.Equal(maskedTextBox.WindowText, actual);
         Assert.Equal(useMask, maskedTextBox.Mask?.Length == actual.Length);
@@ -129,7 +129,7 @@ public class MaskedTextBoxAccessibilityObjectTests
     [WinFormsFact]
     public void MaskedTextBoxAccessibleObject_GetPropertyValue_Value_AccessDenied_WithUseSystemPasswordChar()
     {
-        using MaskedTextBox maskedTextBox = new MaskedTextBox();
+        using MaskedTextBox maskedTextBox = new();
         maskedTextBox.UseSystemPasswordChar = true;
         maskedTextBox.Text = "some text";
 
@@ -144,10 +144,10 @@ public class MaskedTextBoxAccessibilityObjectTests
     [InlineData(false)]
     public void MaskedTextBoxAccessibleObject_IsPassword_IsExpected_WithUseSystemPasswordChar(bool useSystemPasswordChar)
     {
-        using MaskedTextBox maskedTextBox = new MaskedTextBox();
+        using MaskedTextBox maskedTextBox = new();
         maskedTextBox.UseSystemPasswordChar = useSystemPasswordChar;
 
-        var actual = (bool)maskedTextBox.AccessibilityObject.GetPropertyValue(UIA_PROPERTY_ID.UIA_IsPasswordPropertyId);
+        bool actual = (bool)maskedTextBox.AccessibilityObject.GetPropertyValue(UIA_PROPERTY_ID.UIA_IsPasswordPropertyId);
 
         Assert.Equal(useSystemPasswordChar, actual);
         Assert.False(maskedTextBox.IsHandleCreated);
@@ -158,10 +158,10 @@ public class MaskedTextBoxAccessibilityObjectTests
     [InlineData('*')]
     public void MaskedTextBoxAccessibleObject_IsPassword_IsExpected_WithPasswordChar(char passwordChar)
     {
-        using MaskedTextBox maskedTextBox = new MaskedTextBox();
+        using MaskedTextBox maskedTextBox = new();
         maskedTextBox.PasswordChar = passwordChar;
 
-        var actual = (bool)maskedTextBox.AccessibilityObject.GetPropertyValue(UIA_PROPERTY_ID.UIA_IsPasswordPropertyId);
+        bool actual = (bool)maskedTextBox.AccessibilityObject.GetPropertyValue(UIA_PROPERTY_ID.UIA_IsPasswordPropertyId);
         bool expected = passwordChar != '\0';
 
         Assert.Equal(expected, actual);

@@ -149,7 +149,7 @@ public partial class TabPage : Panel
 
     private protected override IList<Rectangle> GetNeighboringToolsRectangles()
     {
-        List<Rectangle> neighbors = new List<Rectangle>();
+        List<Rectangle> neighbors = new();
 
         if (ParentInternal is not TabControl tabControl)
         {
@@ -220,10 +220,7 @@ public partial class TabPage : Panel
         get => ImageIndexer.Index;
         set
         {
-            if (value < -1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ImageIndex), value, -1));
-            }
+            ArgumentOutOfRangeException.ThrowIfLessThan(value, -1);
 
             if (ParentInternal is TabControl parent)
             {
@@ -505,6 +502,8 @@ public partial class TabPage : Panel
         return (TabPage?)c;
     }
 
+    internal Rectangle GetPageRectangle() => base.GetToolNativeScreenRectangle();
+
     internal override Rectangle GetToolNativeScreenRectangle()
     {
         // Check SelectedIndex of the parental TabControl instead of SelectedTab
@@ -599,7 +598,7 @@ public partial class TabPage : Panel
             // To ensure that the TabPage draws correctly (the border will get clipped and
             // and gradient fill will match correctly with the tabcontrol). Unfortunately,
             // there is no good way to determine the padding used on the TabPage.
-            Rectangle rectWithBorder = new Rectangle(inflateRect.X - 4, inflateRect.Y - 2, inflateRect.Width + 8, inflateRect.Height + 6);
+            Rectangle rectWithBorder = new(inflateRect.X - 4, inflateRect.Y - 2, inflateRect.Width + 8, inflateRect.Height + 6);
 
             TabRenderer.DrawTabPage(e, rectWithBorder);
 

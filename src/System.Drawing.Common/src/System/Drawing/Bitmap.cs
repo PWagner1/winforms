@@ -15,7 +15,7 @@ namespace System.Drawing;
         $"System.Drawing.Design.UITypeEditor, {AssemblyRef.SystemDrawing}")]
 [Serializable]
 [System.Runtime.CompilerServices.TypeForwardedFrom(AssemblyRef.SystemDrawing)]
-public sealed class Bitmap : Image
+public unsafe sealed class Bitmap : Image
 {
     private static readonly Color s_defaultTransparentColor = Color.LightGray;
 
@@ -104,7 +104,7 @@ public sealed class Bitmap : Image
         ArgumentNullException.ThrowIfNull(g);
 
         IntPtr bitmap;
-        int status = Gdip.GdipCreateBitmapFromGraphics(width, height, new HandleRef(g, g.NativeGraphics), out bitmap);
+        int status = Gdip.GdipCreateBitmapFromGraphics(width, height, new HandleRef(g, (nint)g.NativeGraphics), out bitmap);
         Gdip.CheckStatus(status);
 
         SetNativeImage(bitmap);
@@ -254,7 +254,7 @@ public sealed class Bitmap : Image
         using var graphics = Graphics.FromImage(result);
 
         graphics.Clear(Color.Transparent);
-        Rectangle rectangle = new Rectangle(0, 0, size.Width, size.Height);
+        Rectangle rectangle = new(0, 0, size.Width, size.Height);
 
         using (ImageAttributes attributes = new())
         {

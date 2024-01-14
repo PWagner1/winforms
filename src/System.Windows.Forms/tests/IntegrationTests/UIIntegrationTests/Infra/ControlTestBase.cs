@@ -41,8 +41,8 @@ public abstract class ControlTestBase : IAsyncLifetime, IDisposable
 
         // Disable animations for maximum test performance
         bool disabled = false;
-        Assert.True(PInvoke.SystemParametersInfo(SYSTEM_PARAMETERS_INFO_ACTION.SPI_GETCLIENTAREAANIMATION, ref _clientAreaAnimation));
-        Assert.True(PInvoke.SystemParametersInfo(SYSTEM_PARAMETERS_INFO_ACTION.SPI_SETCLIENTAREAANIMATION, ref disabled, SPIF_SENDCHANGE));
+        Assert.True(PInvokeCore.SystemParametersInfo(SYSTEM_PARAMETERS_INFO_ACTION.SPI_GETCLIENTAREAANIMATION, ref _clientAreaAnimation));
+        Assert.True(PInvokeCore.SystemParametersInfo(SYSTEM_PARAMETERS_INFO_ACTION.SPI_SETCLIENTAREAANIMATION, ref disabled, SPIF_SENDCHANGE));
 
         ITest GetTest()
         {
@@ -107,7 +107,7 @@ public abstract class ControlTestBase : IAsyncLifetime, IDisposable
 
     public virtual void Dispose()
     {
-        Assert.True(PInvoke.SystemParametersInfo(SYSTEM_PARAMETERS_INFO_ACTION.SPI_SETCLIENTAREAANIMATION, ref _clientAreaAnimation));
+        Assert.True(PInvokeCore.SystemParametersInfo(SYSTEM_PARAMETERS_INFO_ACTION.SPI_SETCLIENTAREAANIMATION, ref _clientAreaAnimation));
         DataCollectionService.CurrentTest = null;
     }
 
@@ -227,10 +227,10 @@ public abstract class ControlTestBase : IAsyncLifetime, IDisposable
         await RunFormAsync(
             () =>
             {
-                var form = new Form();
+                Form form = new();
                 form.TopMost = true;
 
-                var control = new T();
+                T control = new();
                 form.Controls.Add(control);
 
                 return (form, control);
@@ -273,13 +273,13 @@ public abstract class ControlTestBase : IAsyncLifetime, IDisposable
         await RunFormAsync(
             () =>
             {
-                var form = new Form();
+                Form form = new();
                 form.TopMost = true;
 
                 var control1 = new T1();
                 var control2 = new T2();
 
-                var tableLayout = new TableLayoutPanel();
+                TableLayoutPanel tableLayout = new();
                 tableLayout.ColumnCount = 2;
                 tableLayout.RowCount = 1;
                 tableLayout.Controls.Add(control1, 0, 0);
@@ -296,7 +296,7 @@ public abstract class ControlTestBase : IAsyncLifetime, IDisposable
         Form? dialog = null;
         T? control = default;
 
-        TaskCompletionSource<VoidResult> gate = new TaskCompletionSource<VoidResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<VoidResult> gate = new(TaskCreationOptions.RunContinuationsAsynchronously);
         JoinableTask test = JoinableTaskFactory.RunAsync(async () =>
         {
             await gate.Task;
@@ -335,7 +335,7 @@ public abstract class ControlTestBase : IAsyncLifetime, IDisposable
     {
         TForm? dialog = null;
 
-        TaskCompletionSource<VoidResult> gate = new TaskCompletionSource<VoidResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<VoidResult> gate = new(TaskCreationOptions.RunContinuationsAsynchronously);
         JoinableTask test = JoinableTaskFactory.RunAsync(async () =>
         {
             await gate.Task;

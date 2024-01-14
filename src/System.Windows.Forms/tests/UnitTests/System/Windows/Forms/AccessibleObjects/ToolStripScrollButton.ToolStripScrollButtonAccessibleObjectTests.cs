@@ -31,7 +31,7 @@ public class ToolStripScrollButtonAccessibleObject_ToolStripScrollButtonAccessib
         }
 
         using ToolStripDropDownItem ownerItem = ReflectionHelper.InvokePublicConstructor<ToolStripDropDownItem>(itemType);
-        SubToolStripDropDownMenu dropDownMenu = new SubToolStripDropDownMenu(ownerItem, true, true);
+        SubToolStripDropDownMenu dropDownMenu = new(ownerItem, true, true);
 
         toolStrip.Items.Add(ownerItem);
         ownerItem.TestAccessor().Dynamic._dropDown = dropDownMenu;
@@ -93,7 +93,7 @@ public class ToolStripScrollButtonAccessibleObject_ToolStripScrollButtonAccessib
         }
 
         using ToolStripDropDownItem ownerItem = ReflectionHelper.InvokePublicConstructor<ToolStripDropDownItem>(itemType);
-        SubToolStripDropDownMenu dropDownMenu = new SubToolStripDropDownMenu(ownerItem, true, false);
+        SubToolStripDropDownMenu dropDownMenu = new(ownerItem, true, false);
 
         toolStrip.Items.Add(ownerItem);
         ownerItem.TestAccessor().Dynamic._dropDown = dropDownMenu;
@@ -131,7 +131,7 @@ public class ToolStripScrollButtonAccessibleObject_ToolStripScrollButtonAccessib
     {
         using ToolStrip toolStrip = new();
         using ToolStripDropDownItem ownerItem = new ToolStripDropDownButton();
-        SubToolStripDropDownMenu dropDownMenu = new SubToolStripDropDownMenu(ownerItem, true, true);
+        SubToolStripDropDownMenu dropDownMenu = new(ownerItem, true, true);
 
         toolStrip.Items.Add(ownerItem);
         ownerItem.TestAccessor().Dynamic._dropDown = dropDownMenu;
@@ -142,9 +142,9 @@ public class ToolStripScrollButtonAccessibleObject_ToolStripScrollButtonAccessib
         AccessibleObject upScrollButtonAccessibleObject = dropDownMenu.UpScrollButton.AccessibilityObject;
         AccessibleObject downScrollButtonAccessibleObject = dropDownMenu.DownScrollButton.AccessibilityObject;
 
-        var expectedUpButtonName = SR.ToolStripScrollButtonUpAccessibleName;
-        var expectedDownButtonName = SR.ToolStripScrollButtonDownAccessibleName;
-        var expectedDefaultAction = SR.AccessibleActionPress;
+        string expectedUpButtonName = SR.ToolStripScrollButtonUpAccessibleName;
+        string expectedDownButtonName = SR.ToolStripScrollButtonDownAccessibleName;
+        string expectedDefaultAction = SR.AccessibleActionPress;
         var expectedControlType = UIA_CONTROLTYPE_ID.UIA_ButtonControlTypeId;
 
         Assert.Equal(expectedUpButtonName, upScrollButtonAccessibleObject.Name);

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Collections;
-using static Interop;
 
 namespace System.Windows.Forms;
 
@@ -42,7 +41,7 @@ public partial class ListView
                 if (_owner.VirtualMode)
                 {
                     // if we are showing virtual items, we need to get the item from the user
-                    RetrieveVirtualItemEventArgs rVI = new RetrieveVirtualItemEventArgs(displayIndex);
+                    RetrieveVirtualItemEventArgs rVI = new(displayIndex);
                     _owner.OnRetrieveVirtualItem(rVI);
                     rVI.Item!.SetItemIndex(_owner, displayIndex);
                     return rVI.Item;

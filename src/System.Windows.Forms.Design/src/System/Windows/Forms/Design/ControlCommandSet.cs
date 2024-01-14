@@ -8,7 +8,6 @@ using System.Collections;
 using System.ComponentModel.Design;
 using System.Drawing;
 using System.Windows.Forms.Design.Behavior;
-using static Interop;
 
 namespace System.Windows.Forms.Design;
 
@@ -716,7 +715,7 @@ internal class ControlCommandSet : CommandSet
                                                 moveOffsetX *= -1;
                                             }
 
-                                            Rectangle dragRect = new Rectangle(primaryControl.Location.X, primaryControl.Location.Y,
+                                            Rectangle dragRect = new(primaryControl.Location.X, primaryControl.Location.Y,
                                                                                 primaryControl.Width + moveOffsetX, primaryControl.Height + moveOffsetY);
 
                                             Rectangle newRect = parentDesigner.GetSnappedRect(primaryControl.Bounds, dragRect, true);

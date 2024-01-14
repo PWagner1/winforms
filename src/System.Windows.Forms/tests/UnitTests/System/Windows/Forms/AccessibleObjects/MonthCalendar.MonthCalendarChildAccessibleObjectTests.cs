@@ -4,7 +4,6 @@
 using Windows.Win32.System.Variant;
 using Windows.Win32.UI.Accessibility;
 using static System.Windows.Forms.MonthCalendar;
-using static Interop;
 
 namespace System.Windows.Forms.Tests.AccessibleObjects;
 
@@ -19,7 +18,7 @@ public class MonthCalendar_MonthCalendarChildAccessibleObjectTests
     [WinFormsFact]
     public void MonthCalendarChildAccessibleObject_ctor_default()
     {
-        using MonthCalendar control = new MonthCalendar();
+        using MonthCalendar control = new();
 
         MonthCalendarAccessibleObject controlAccessibleObject = (MonthCalendarAccessibleObject)control.AccessibilityObject;
         MonthCalendarChildAccessibleObject accessibleObject = new SubObject(controlAccessibleObject);
@@ -38,7 +37,7 @@ public class MonthCalendar_MonthCalendarChildAccessibleObjectTests
     [InlineData((int)UIA_PROPERTY_ID.UIA_NamePropertyId, null)]
     public void MonthCalendarChildAccessibleObject_GetPropertyValue_ReturnsExpected(int property, object expected)
     {
-        using MonthCalendar control = new MonthCalendar();
+        using MonthCalendar control = new();
 
         MonthCalendarAccessibleObject controlAccessibleObject = (MonthCalendarAccessibleObject)control.AccessibilityObject;
         MonthCalendarChildAccessibleObject accessibleObject = new SubObject(controlAccessibleObject);
@@ -51,7 +50,7 @@ public class MonthCalendar_MonthCalendarChildAccessibleObjectTests
     [WinFormsFact]
     public void MonthCalendarChildAccessibleObject_LegacyIAccessiblePattern_IsSupported()
     {
-        using MonthCalendar control = new MonthCalendar();
+        using MonthCalendar control = new();
 
         MonthCalendarAccessibleObject controlAccessibleObject = (MonthCalendarAccessibleObject)control.AccessibilityObject;
         MonthCalendarChildAccessibleObject accessibleObject = new SubObject(controlAccessibleObject);
@@ -63,7 +62,7 @@ public class MonthCalendar_MonthCalendarChildAccessibleObjectTests
     [WinFormsFact]
     public void MonthCalendarChildAccessibleObject_FragmentRoot_IsControlAccessibleObject()
     {
-        using MonthCalendar control = new MonthCalendar();
+        using MonthCalendar control = new();
 
         MonthCalendarAccessibleObject controlAccessibleObject = (MonthCalendarAccessibleObject)control.AccessibilityObject;
         MonthCalendarChildAccessibleObject accessibleObject = new SubObject(controlAccessibleObject);
@@ -79,7 +78,7 @@ public class MonthCalendar_MonthCalendarChildAccessibleObjectTests
     [InlineData((int)NavigateDirection.NavigateDirection_PreviousSibling)]
     public void MonthCalendarChildAccessibleObject_FragmentNavigate_DoesntHaveChildrenAndSiblings(int direction)
     {
-        using MonthCalendar control = new MonthCalendar();
+        using MonthCalendar control = new();
 
         MonthCalendarAccessibleObject controlAccessibleObject = (MonthCalendarAccessibleObject)control.AccessibilityObject;
         MonthCalendarChildAccessibleObject accessibleObject = new SubObject(controlAccessibleObject);
@@ -91,7 +90,7 @@ public class MonthCalendar_MonthCalendarChildAccessibleObjectTests
     [WinFormsFact]
     public void MonthCalendarChildAccessibleObject_FragmentNavigate_Parent_IsNull()
     {
-        using MonthCalendar control = new MonthCalendar();
+        using MonthCalendar control = new();
 
         MonthCalendarAccessibleObject controlAccessibleObject = (MonthCalendarAccessibleObject)control.AccessibilityObject;
         MonthCalendarChildAccessibleObject accessibleObject = new SubObject(controlAccessibleObject);
@@ -103,7 +102,7 @@ public class MonthCalendar_MonthCalendarChildAccessibleObjectTests
     [WinFormsFact]
     public void MonthCalendarChildAccessibleObject_RuntimeId_HasThreeExpectedItems()
     {
-        using MonthCalendar control = new MonthCalendar();
+        using MonthCalendar control = new();
 
         control.CreateControl();
         MonthCalendarAccessibleObject controlAccessibleObject = (MonthCalendarAccessibleObject)control.AccessibilityObject;

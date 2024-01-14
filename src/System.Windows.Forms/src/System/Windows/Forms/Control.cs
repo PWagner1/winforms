@@ -82,7 +82,7 @@ public unsafe partial class Control :
                 int frameIndex = 1;
                 while (frameIndex < maxFrameCount)
                 {
-                    StackFrame sf = new StackFrame(frameIndex);
+                    StackFrame sf = new(frameIndex);
                     if (frameIndex == 2 && sf.GetMethod()!.Name.Equals("CanProcessMnemonic"))
                     {
                         // log immediate call if in a virtual/recursive call.
@@ -1402,7 +1402,7 @@ public unsafe partial class Control :
 
             if (oldValue != value)
             {
-                EventHandler disposedHandler = new EventHandler(DetachContextMenuStrip);
+                EventHandler disposedHandler = new(DetachContextMenuStrip);
 
                 if (oldValue is not null)
                 {
@@ -2117,7 +2117,7 @@ public unsafe partial class Control :
     internal Font GetScaledFont(Font font, int newDpi, int oldDpi)
     {
         Debug.Assert(
-            PInvoke.AreDpiAwarenessContextsEqualInternal(DpiAwarenessContext, DPI_AWARENESS_CONTEXT.DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2),
+            DpiAwarenessContext.IsEquivalent(DPI_AWARENESS_CONTEXT.DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2),
             $"Fonts need to be cached only for PerMonitorV2 mode applications : {ScaleHelper.IsThreadPerMonitorV2Aware} : {DpiAwarenessContext}");
 
         _dpiFonts ??= new Dictionary<int, Font>
@@ -3075,7 +3075,7 @@ public unsafe partial class Control :
 
         // If we're an ActiveX control, clone the region so it can potentially be modified
         using Region? regionCopy = IsActiveX ? ActiveXMergeRegion(region.Clone()) : null;
-        using PInvoke.RegionScope regionHandle = new(regionCopy ?? region, Handle);
+        using RegionScope regionHandle = new(regionCopy ?? region, HWND);
 
         if (PInvoke.SetWindowRgn(this, regionHandle, PInvoke.IsWindowVisible(this)) != 0)
         {
@@ -3382,10 +3382,7 @@ public unsafe partial class Control :
         get => _tabIndex == -1 ? 0 : _tabIndex;
         set
         {
-            if (value < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(TabIndex), value, 0));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegative(value);
 
             if (_tabIndex != value)
             {
@@ -3854,7 +3851,7 @@ public unsafe partial class Control :
             // If we didn't find the thread, or if GetExitCodeThread failed, we don't know the thread's state:
             // if we don't know, we shouldn't throw.
             if ((returnValue && exitCode != NTSTATUS.STILL_ACTIVE)
-                || (returnValue == false && Marshal.GetLastWin32Error() == ERROR.INVALID_HANDLE)
+                || (returnValue == false && Marshal.GetLastWin32Error() == (int)WIN32_ERROR.ERROR_INVALID_HANDLE)
                 || AppDomain.CurrentDomain.IsFinalizingForUnload())
             {
                 if (waitHandle.WaitOne(1, false))
@@ -5069,7 +5066,7 @@ public unsafe partial class Control :
                 HBRUSH p = (HBRUSH)backBrush;
                 if (!p.IsNull)
                 {
-                    PInvoke.DeleteObject(p);
+                    PInvokeCore.DeleteObject(p);
                 }
 
                 Properties.SetObject(s_backBrushProperty, value: null);
@@ -5269,7 +5266,7 @@ public unsafe partial class Control :
         int width = Math.Min(Width, targetBounds.Width);
         int height = Math.Min(Height, targetBounds.Height);
 
-        using Bitmap image = new Bitmap(width, height, bitmap.PixelFormat);
+        using Bitmap image = new(width, height, bitmap.PixelFormat);
         using Graphics g = Graphics.FromImage(image);
         using DeviceContextHdcScope hDc = new(g, applyGraphicsState: false);
 
@@ -5283,7 +5280,7 @@ public unsafe partial class Control :
         // Now BLT the result to the destination bitmap.
         using Graphics destGraphics = Graphics.FromImage(bitmap);
         using DeviceContextHdcScope desthDC = new(destGraphics, applyGraphicsState: false);
-        PInvoke.BitBlt(
+        PInvokeCore.BitBlt(
             desthDC,
             targetBounds.X,
             targetBounds.Y,
@@ -5558,7 +5555,7 @@ public unsafe partial class Control :
         if (MaximumSize != Size.Empty || MinimumSize != Size.Empty)
         {
             Size maximumSize = LayoutUtils.ConvertZeroToUnbounded(MaximumSize);
-            Rectangle newBounds = new Rectangle(suggestedX, suggestedY, 0, 0)
+            Rectangle newBounds = new(suggestedX, suggestedY, 0, 0)
             {
                 // Clip the size to maximum and inflate it to minimum as necessary.
                 Size = LayoutUtils.IntersectSizes(new Size(proposedWidth, proposedHeight), maximumSize)
@@ -5774,7 +5771,7 @@ public unsafe partial class Control :
     /// </summary>
     private int[] GetChildWindowsInTabOrder()
     {
-        List<ControlTabOrderHolder> holders = new List<ControlTabOrderHolder>();
+        List<ControlTabOrderHolder> holders = new();
 
         for (HWND hWndChild = PInvoke.GetWindow(this, GET_WINDOW_CMD.GW_CHILD);
             !hWndChild.IsNull;
@@ -6128,7 +6125,7 @@ public unsafe partial class Control :
             }
             else
             {
-                throw new Win32Exception(ERROR.INVALID_HANDLE);
+                throw new Win32Exception((int)WIN32_ERROR.ERROR_INVALID_HANDLE);
             }
         }
     }
@@ -6208,7 +6205,7 @@ public unsafe partial class Control :
             return BackColorBrush;
         }
 
-        return (HBRUSH)PInvoke.GetStockObject(GET_STOCK_OBJECT_FLAGS.NULL_BRUSH);
+        return (HBRUSH)PInvokeCore.GetStockObject(GET_STOCK_OBJECT_FLAGS.NULL_BRUSH);
     }
 
     /// <summary>
@@ -6237,7 +6234,7 @@ public unsafe partial class Control :
         else if (IsHandleCreated)
         {
             using Graphics graphics = CreateGraphicsInternal();
-            using PInvoke.RegionScope regionHandle = new(region, graphics);
+            using RegionScope regionHandle = new(region, graphics);
 
             if (invalidateChildren)
             {
@@ -6880,7 +6877,7 @@ public unsafe partial class Control :
             executionContext = ExecutionContext.Capture();
         }
 
-        ThreadMethodEntry tme = new ThreadMethodEntry(
+        ThreadMethodEntry tme = new(
             caller,
             this,
             method,
@@ -6995,7 +6992,7 @@ public unsafe partial class Control :
     // Used by form to notify the control that it is validating.
     private bool NotifyValidating()
     {
-        CancelEventArgs ev = new CancelEventArgs();
+        CancelEventArgs ev = new();
         OnValidating(ev);
         return ev.Cancel;
     }
@@ -7039,7 +7036,7 @@ public unsafe partial class Control :
                 HBRUSH p = (HBRUSH)backBrush;
                 if (!p.IsNull)
                 {
-                    PInvoke.DeleteObject(p);
+                    PInvokeCore.DeleteObject(p);
                 }
             }
 
@@ -7581,7 +7578,7 @@ public unsafe partial class Control :
             {
                 uint flags = PInvoke.PRF_CHILDREN | PInvoke.PRF_CLIENT | PInvoke.PRF_ERASEBKGND | PInvoke.PRF_NONCLIENT;
 
-                using DeviceContextHdcScope hdc = new DeviceContextHdcScope(e);
+                using DeviceContextHdcScope hdc = new(e);
                 Message m = Message.Create(HWND, PInvoke.WM_PRINTCLIENT, (WPARAM)hdc, (LPARAM)flags);
                 DefWndProc(ref m);
             }
@@ -7823,9 +7820,7 @@ public unsafe partial class Control :
 
         void HandleHighDpi()
         {
-            if (!PInvoke.AreDpiAwarenessContextsEqualInternal(
-                DpiAwarenessContext,
-                DPI_AWARENESS_CONTEXT.DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+            if (!DpiAwarenessContext.IsEquivalent(DPI_AWARENESS_CONTEXT.DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
             {
                 return;
             }
@@ -7943,7 +7938,7 @@ public unsafe partial class Control :
                     HBRUSH p = (HBRUSH)backBrush;
                     if (!p.IsNull)
                     {
-                        PInvoke.DeleteObject(p);
+                        PInvokeCore.DeleteObject(p);
                     }
                 }
             }
@@ -8651,7 +8646,7 @@ public unsafe partial class Control :
         if (!color.HasTransparency())
         {
             using DeviceContextHdcScope hdc = new(e);
-            using PInvoke.CreateBrushScope hbrush = new(hdc.FindNearestColor(color));
+            using CreateBrushScope hbrush = new(hdc.FindNearestColor(color));
             hdc.FillRectangle(rectangle, hbrush);
         }
         else if (!color.IsFullyTransparent())
@@ -8666,7 +8661,7 @@ public unsafe partial class Control :
     private void PaintException(PaintEventArgs e)
     {
         // As this is unusual we won't cache the pen.
-        using Pen pen = new Pen(Color.Red, width: 2);
+        using Pen pen = new(Color.Red, width: 2);
         Rectangle clientRectangle = ClientRectangle;
         Rectangle rectangle = clientRectangle;
         rectangle.X++;
@@ -8708,7 +8703,7 @@ public unsafe partial class Control :
             // For whatever reason, our parent can't paint our background, but we need some kind of background
             // since we're transparent.
             using DeviceContextHdcScope hdcNoParent = new(e);
-            using PInvoke.CreateBrushScope hbrush = new(SystemColors.Control);
+            using CreateBrushScope hbrush = new(SystemColors.Control);
             hdcNoParent.FillRectangle(rectangle, hbrush);
             return;
         }
@@ -8739,25 +8734,25 @@ public unsafe partial class Control :
         }
 
         // Move the rendering area and setup it's size (we want to translate it to the parent's origin).
-        Rectangle shift = new Rectangle(-Left, -Top, parent.Width, parent.Height);
+        Rectangle shift = new(-Left, -Top, parent.Width, parent.Height);
 
         // Moving the clipping rectangle to the parent coordinate system.
-        Rectangle newClipRect = new Rectangle(
+        Rectangle newClipRect = new(
             rectangle.Left + Left,
             rectangle.Top + Top,
             rectangle.Width,
             rectangle.Height);
 
         using DeviceContextHdcScope hdc = new(e);
-        using PInvoke.SaveDcScope savedc = new(hdc);
+        using SaveDcScope savedc = new(hdc);
 
-        PInvoke.OffsetViewportOrgEx(hdc, -Left, -Top, lppt: null);
+        PInvokeCore.OffsetViewportOrgEx(hdc, -Left, -Top, lppt: null);
 
-        using PaintEventArgs newArgs = new PaintEventArgs(hdc, newClipRect);
+        using PaintEventArgs newArgs = new(hdc, newClipRect);
 
         if (transparentRegion is not null)
         {
-            using GraphicsStateScope saveState = new GraphicsStateScope(newArgs.Graphics);
+            using GraphicsStateScope saveState = new(newArgs.Graphics);
 
             // Is this clipping something we can apply directly to the HDC?
             newArgs.Graphics.Clip = transparentRegion;
@@ -9015,7 +9010,7 @@ public unsafe partial class Control :
     }
 
     /// <summary>
-    ///  Computes the location of the screen point p in client coords.
+    ///  Computes the location of the screen point p in client coordinates.
     /// </summary>
     public Point PointToClient(Point p)
     {
@@ -9024,7 +9019,7 @@ public unsafe partial class Control :
     }
 
     /// <summary>
-    ///  Computes the location of the client point p in screen coords.
+    ///  Computes the location of the client point p in screen coordinates.
     /// </summary>
     public Point PointToScreen(Point p)
     {
@@ -9158,7 +9153,7 @@ public unsafe partial class Control :
             {
                 target.ProcessUICues(ref message);
 
-                PreviewKeyDownEventArgs args = new PreviewKeyDownEventArgs(keyData);
+                PreviewKeyDownEventArgs args = new(keyData);
                 target.OnPreviewKeyDown(args);
 
                 if (args.IsInputKey)
@@ -9239,21 +9234,21 @@ public unsafe partial class Control :
 
     private unsafe void PrintToMetaFile(HDC hDC, IntPtr lParam)
     {
-        Debug.Assert((OBJ_TYPE)PInvoke.GetObjectType(hDC) == OBJ_TYPE.OBJ_ENHMETADC,
+        Debug.Assert((OBJ_TYPE)PInvokeCore.GetObjectType(hDC) == OBJ_TYPE.OBJ_ENHMETADC,
             "PrintToMetaFile() called with a non-Enhanced MetaFile DC.");
         Debug.Assert((lParam & (long)PInvoke.PRF_CHILDREN) != 0,
             "PrintToMetaFile() called without PRF_CHILDREN.");
 
         // Strip the PRF_CHILDREN flag.  We will manually walk our children and print them.
-        lParam = (IntPtr)(lParam & (long)~PInvoke.PRF_CHILDREN);
+        lParam = (nint)(lParam & (long)~PInvoke.PRF_CHILDREN);
 
         // We're the root control, so we need to set up our clipping region.  Retrieve the
         // x-coordinates and y-coordinates of the viewport origin for the specified device context.
         Point viewportOrg = default;
-        bool success = PInvoke.GetViewportOrgEx(hDC, &viewportOrg);
+        bool success = PInvokeCore.GetViewportOrgEx(hDC, &viewportOrg);
         Debug.Assert(success, "GetViewportOrgEx() failed.");
 
-        using PInvoke.RegionScope hClippingRegion = new(
+        using RegionScope hClippingRegion = new(
             viewportOrg.X,
             viewportOrg.Y,
             viewportOrg.X + Width,
@@ -9262,9 +9257,9 @@ public unsafe partial class Control :
         Debug.Assert(!hClippingRegion.IsNull, "CreateRectRgn() failed.");
 
         // Select the new clipping region; make sure it's a SIMPLEREGION or NULLREGION
-        RegionType selectResult = (RegionType)PInvoke.SelectClipRgn(hDC, hClippingRegion);
+        GDI_REGION_TYPE selectResult = PInvokeCore.SelectClipRgn(hDC, hClippingRegion);
         Debug.Assert(
-            selectResult == RegionType.SIMPLEREGION || selectResult == RegionType.NULLREGION,
+            selectResult is GDI_REGION_TYPE.SIMPLEREGION or GDI_REGION_TYPE.NULLREGION,
             "SIMPLEREGION or NULLLREGION expected.");
 
         PrintToMetaFileRecursive(hDC, lParam, new Rectangle(Point.Empty, Size));
@@ -9324,7 +9319,7 @@ public unsafe partial class Control :
             // System controls must be painted into a temporary bitmap
             // which is then copied into the metafile.  (Old GDI line drawing
             // is 1px thin, which causes borders to disappear, etc.)
-            using MetafileDCWrapper dcWrapper = new MetafileDCWrapper(hDC, Size);
+            using MetafileDCWrapper dcWrapper = new(hDC, Size);
             PInvoke.SendMessage(this, PInvoke.WM_PRINT, (WPARAM)dcWrapper.HDC, (LPARAM)lParam);
         }
     }
@@ -9879,7 +9874,7 @@ public unsafe partial class Control :
     }
 
     /// <summary>
-    ///  Computes the location of the screen rectangle r in client coords.
+    ///  Computes the location of the screen rectangle r in client coordinates.
     /// </summary>
     public Rectangle RectangleToClient(Rectangle r)
     {
@@ -9889,7 +9884,7 @@ public unsafe partial class Control :
     }
 
     /// <summary>
-    ///  Computes the location of the client rectangle r in screen coords.
+    ///  Computes the location of the client rectangle r in screen coordinates.
     /// </summary>
     public Rectangle RectangleToScreen(Rectangle r)
     {
@@ -10762,7 +10757,7 @@ public unsafe partial class Control :
                         PInvoke.SetWindowPos(this, HWND.Null, x, y, width, height, flags);
 
                         // NOTE: SetWindowPos causes a WM_WINDOWPOSCHANGED which is processed
-                        // synchonously so we effectively end up in UpdateBounds immediately following
+                        // synchronously so we effectively end up in UpdateBounds immediately following
                         // SetWindowPos.
                         //
                         // UpdateBounds(x, y, width, height);
@@ -11881,7 +11876,7 @@ public unsafe partial class Control :
                 }
 
                 PInvoke.GetClientRect(this, out RECT rc);
-                using PaintEventArgs pevent = new PaintEventArgs(dc, rc);
+                using PaintEventArgs pevent = new(dc, rc);
                 PaintWithErrorHandling(pevent, PaintLayerBackground);
             }
 
@@ -12450,7 +12445,7 @@ public unsafe partial class Control :
         HDC dc = (HDC)(nint)m.WParamInternal;
 
         bool usingBeginPaint = dc.IsNull;
-        using var paintScope = usingBeginPaint ? new PInvoke.BeginPaintScope(HWND) : default;
+        using var paintScope = usingBeginPaint ? new BeginPaintScope(HWND) : default;
 
         if (usingBeginPaint)
         {
@@ -12473,7 +12468,7 @@ public unsafe partial class Control :
         PaintEventArgs? pevent = null;
 
         using var paletteScope = doubleBuffered || usingBeginPaint
-            ? PInvoke.SelectPaletteScope.HalftonePalette(dc, forceBackground: false, realizePalette: false)
+            ? SelectPaletteScope.HalftonePalette(dc, forceBackground: false, realizePalette: false)
             : default;
 
         bool paintBackground = (usingBeginPaint && GetStyle(ControlStyles.AllPaintingInWmPaint)) || doubleBuffered;
@@ -12576,7 +12571,7 @@ public unsafe partial class Control :
         using GetDcScope dc = new(HWND);
 
         // We don't want to unset the palette in this case so we don't do this in a using
-        var paletteScope = PInvoke.SelectPaletteScope.HalftonePalette(
+        var paletteScope = SelectPaletteScope.HalftonePalette(
             dc,
             forceBackground: true,
             realizePalette: true);
@@ -13512,7 +13507,7 @@ public unsafe partial class Control :
             return Array.Empty<Rectangle>();
         }
 
-        List<Rectangle> neighboringControlsRectangles = new List<Rectangle>(4);
+        List<Rectangle> neighboringControlsRectangles = new(4);
 
         // Next and previous control which are accessible with Tab and Shift+Tab
         AddIfCreated(controlParent.GetNextSelectableControl(this, true, true, true, false));

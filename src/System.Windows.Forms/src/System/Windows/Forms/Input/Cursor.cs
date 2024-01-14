@@ -18,7 +18,7 @@ namespace System.Windows.Forms;
 /// </summary>
 [TypeConverter(typeof(CursorConverter))]
 [Editor($"System.Drawing.Design.CursorEditor, {AssemblyRef.SystemDrawingDesign}", typeof(UITypeEditor))]
-public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle<HANDLE>
+public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle<HANDLE>, IHandle<HCURSOR>
 {
     private static Size s_cursorSize = Size.Empty;
 
@@ -33,6 +33,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
 
     internal unsafe Cursor(PCWSTR nResourceId, string cursorsProperty)
     {
+        GC.SuppressFinalize(this);
         _freeHandle = false;
         CursorsProperty = cursorsProperty;
         _handle = PInvoke.LoadCursor((HINSTANCE)0, nResourceId);
@@ -45,6 +46,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
     internal Cursor(string resource, string cursorsProperty)
         : this(typeof(Cursors).Assembly.GetManifestResourceStream(typeof(Cursor), resource).OrThrowIfNull())
     {
+        GC.SuppressFinalize(this);
         CursorsProperty = cursorsProperty;
         _freeHandle = false;
     }
@@ -54,6 +56,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
     /// </summary>
     public Cursor(IntPtr handle)
     {
+        GC.SuppressFinalize(this);
         if (handle == 0)
         {
             throw new ArgumentException(string.Format(SR.InvalidGDIHandle, (typeof(Cursor)).Name), nameof(handle));
@@ -167,7 +170,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
     {
         get
         {
-            using ICONINFO info = PInvoke.GetIconInfo(this);
+            using ICONINFO info = PInvokeCore.GetIconInfo(this);
             return new Point((int)info.xHotspot, (int)info.yHotspot);
         }
     }
@@ -212,6 +215,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
     HICON IHandle<HICON>.Handle => (HICON)Handle;
 
     HANDLE IHandle<HANDLE>.Handle => (HANDLE)Handle;
+    HCURSOR IHandle<HCURSOR>.Handle => _handle;
 
     /// <summary>
     ///  Duplicates this the Win32 handle of this <see cref="Cursor"/>.
@@ -219,7 +223,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
     public IntPtr CopyHandle()
     {
         Size sz = Size;
-        return PInvoke.CopyImage(this, GDI_IMAGE_TYPE.IMAGE_CURSOR, sz.Width, sz.Height, IMAGE_FLAGS.LR_DEFAULTCOLOR);
+        return (nint)PInvokeCore.CopyCursor(this, sz.Width, sz.Height, IMAGE_FLAGS.LR_DEFAULTCOLOR);
     }
 
     /// <summary>
@@ -304,7 +308,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
                 && imageX == 0 && imageY == 0
                 && imageWidth == cursorSize.Width && imageHeight == cursorSize.Height)
             {
-                PInvoke.DrawIcon(dc, targetX, targetY, this);
+                PInvokeCore.DrawIcon(dc, targetX, targetY, this);
                 return;
             }
 
@@ -320,7 +324,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
                 && cursorSize.Width <= targetWidth && cursorSize.Height <= targetHeight
                 && cursorSize.Width == imageWidth && cursorSize.Height == imageHeight)
             {
-                PInvoke.DrawIcon(dc, targetX, targetY, this);
+                PInvokeCore.DrawIcon(dc, targetX, targetY, this);
                 return;
             }
 
@@ -333,7 +337,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
         // The ROP is SRCCOPY, so we can be simple here and take advantage of clipping regions.
         // Drawing the cursor is merely a matter of offsetting and clipping.
         PInvoke.IntersectClipRect(dc, targetX, targetY, targetX + clipWidth, targetY + clipHeight);
-        PInvoke.DrawIconEx(
+        PInvokeCore.DrawIconEx(
             (HDC)dc,
             targetX - imageX,
             targetY - imageY,
@@ -380,15 +384,15 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
     {
         // this code is adapted from Icon.GetIconSize please take this into account when changing this
 
-        using ICONINFO info = PInvoke.GetIconInfo(iconHandle);
+        using ICONINFO info = PInvokeCore.GetIconInfo(iconHandle);
         if (!info.hbmColor.IsNull)
         {
-            PInvoke.GetObject(info.hbmColor, out BITMAP bitmap);
+            PInvokeCore.GetObject(info.hbmColor, out BITMAP bitmap);
             return new Size(bitmap.bmWidth, bitmap.bmHeight);
         }
         else if (!info.hbmMask.IsNull)
         {
-            PInvoke.GetObject(info.hbmMask, out BITMAP bitmap);
+            PInvokeCore.GetObject(info.hbmMask, out BITMAP bitmap);
             return new Size(bitmap.bmWidth, bitmap.bmHeight / 2);
         }
         else
@@ -420,7 +424,7 @@ public sealed class Cursor : IDisposable, ISerializable, IHandle<HICON>, IHandle
                 HICON cursorHandle = (HICON)picture.Value->Handle;
                 Size picSize = ScaleHelper.ScaleToDpi(GetIconSize(cursorHandle), ScaleHelper.InitialSystemDpi);
 
-                _handle = (HCURSOR)PInvoke.CopyImage(
+                _handle = (HCURSOR)PInvokeCore.CopyImage(
                     (HANDLE)cursorHandle.Value,
                     GDI_IMAGE_TYPE.IMAGE_CURSOR,
                     picSize.Width,

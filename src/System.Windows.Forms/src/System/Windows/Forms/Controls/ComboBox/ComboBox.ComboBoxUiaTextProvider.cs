@@ -6,7 +6,6 @@ using System.Windows.Forms.Automation;
 using Windows.Win32.System.Com;
 using Windows.Win32.System.Variant;
 using Windows.Win32.UI.Accessibility;
-using static Interop;
 
 namespace System.Windows.Forms;
 
@@ -91,7 +90,7 @@ public partial class ComboBox
 
         public override LOGFONTW Logfont
             => _owningComboBox.IsHandleCreated
-                ? LOGFONTW.FromFont(_owningComboBox.Font)
+                ? _owningComboBox.Font.ToLogicalFont()
                 : default;
 
         public override SupportedTextSelection SupportedTextSelection => SupportedTextSelection.SupportedTextSelection_Single;

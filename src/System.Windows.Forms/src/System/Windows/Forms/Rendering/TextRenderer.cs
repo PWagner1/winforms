@@ -20,7 +20,7 @@ public static class TextRenderer
 
     internal static FONT_QUALITY DefaultQuality { get; } = GetDefaultFontQuality();
 
-    internal static Size MaxSize { get; } = new Size(int.MaxValue, int.MaxValue);
+    internal static Size MaxSize { get; } = new(int.MaxValue, int.MaxValue);
 
     public static void DrawText(IDeviceContext dc, string? text, Font? font, Point pt, Color foreColor)
         => DrawTextInternal(dc, text, font, pt, foreColor, Color.Empty);
@@ -304,7 +304,7 @@ public static class TextRenderer
         // This MUST come before retrieving the HDC, which locks the Graphics object
         FONT_QUALITY quality = FontQualityFromTextRenderingHint(dc);
 
-        using DeviceContextHdcScope hdc = new(dc, GetApplyStateFlags(dc, flags));
+        using DeviceContextHdcScope hdc = dc.ToHdcScope(GetApplyStateFlags(dc, flags));
 
         DrawTextInternal(hdc, text, font, bounds, foreColor, quality, backColor, flags);
     }
@@ -538,7 +538,7 @@ public static class TextRenderer
 
         // Applying state may not impact text size measurements. Rather than risk missing some
         // case we'll apply as we have historically to avoid surprise regressions.
-        using DeviceContextHdcScope hdc = new(dc, GetApplyStateFlags(dc, flags));
+        using DeviceContextHdcScope hdc = dc.ToHdcScope(GetApplyStateFlags(dc, flags));
         using var hfont = GdiCache.GetHFONT(font, quality, hdc);
         return hdc.HDC.MeasureText(text, hfont, proposedSize, flags);
     }

@@ -193,7 +193,7 @@ public partial class ErrorProvider
                 PInvoke.GetViewportExtEx(hdc, &originalExtents);
                 PInvoke.SetViewportExtEx(hdc, -originalExtents.Width, originalExtents.Height, lpsz: null);
                 Point originalOrigin = default;
-                PInvoke.GetViewportOrgEx(hdc, &originalOrigin);
+                PInvokeCore.GetViewportOrgEx(hdc, &originalOrigin);
                 PInvoke.SetViewportOrgEx(hdc, originalOrigin.X + _windowBounds.Width - 1, originalOrigin.Y, lppt: null);
             }
         }
@@ -203,8 +203,8 @@ public partial class ErrorProvider
         /// </summary>
         private unsafe void OnPaint()
         {
-            using PInvoke.BeginPaintScope hdc = new((HWND)Handle);
-            using PInvoke.SaveDcScope save = new(hdc);
+            using BeginPaintScope hdc = new(HWND);
+            using SaveDcScope save = new(hdc);
 
             MirrorDcIfNeeded(hdc);
 
@@ -212,7 +212,7 @@ public partial class ErrorProvider
             {
                 ControlItem item = _items[i];
                 Rectangle bounds = item.GetIconBounds(_provider.Region.Size);
-                PInvoke.DrawIconEx(
+                PInvokeCore.DrawIconEx(
                     hdc,
                     bounds.X - _windowBounds.X,
                     bounds.Y - _windowBounds.Y,
@@ -396,11 +396,11 @@ public partial class ErrorProvider
             }
 
             using GetDcScope hdc = new(HWND);
-            using PInvoke.SaveDcScope save = new(hdc);
+            using SaveDcScope save = new(hdc);
             MirrorDcIfNeeded(hdc);
 
             using Graphics g = hdc.CreateGraphics();
-            using PInvoke.RegionScope windowRegionHandle = new(windowRegion, g);
+            using RegionScope windowRegionHandle = new(windowRegion, g);
             if (PInvoke.SetWindowRgn(this, windowRegionHandle, fRedraw: true) != 0)
             {
                 // The HWnd owns the region.

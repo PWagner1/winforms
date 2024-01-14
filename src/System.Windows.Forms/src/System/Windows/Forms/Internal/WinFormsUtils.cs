@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Text;
-using static Interop;
 
 namespace System.Windows.Forms;
 
@@ -133,7 +132,7 @@ internal sealed partial class WindowsFormsUtils
             return text;
         }
 
-        StringBuilder str = new StringBuilder(text.Length);
+        StringBuilder str = new(text.Length);
         str.Append(text.AsSpan(0, index));
         for (; index < text.Length; ++index)
         {
@@ -253,7 +252,7 @@ internal sealed partial class WindowsFormsUtils
             return text;
         }
 
-        StringBuilder str = new StringBuilder(text.Length);
+        StringBuilder str = new(text.Length);
         str.Append(text.AsSpan(0, index));
         for (; index < text.Length; ++index)
         {

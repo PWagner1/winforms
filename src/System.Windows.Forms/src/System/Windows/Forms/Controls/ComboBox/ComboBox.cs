@@ -11,7 +11,6 @@ using System.Windows.Forms.Layout;
 using Windows.Win32.System.Variant;
 using Windows.Win32.UI.Accessibility;
 using static System.Windows.Forms.ComboBox.ObjectCollection;
-using static Interop;
 
 namespace System.Windows.Forms;
 
@@ -455,13 +454,7 @@ public partial class ComboBox : ListControl
         }
         set
         {
-            if (value < 1)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(value),
-                    value,
-                    string.Format(SR.InvalidArgument, nameof(DropDownWidth), value));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
 
             if (Properties.GetInteger(PropDropDownWidth) != value)
             {
@@ -498,13 +491,7 @@ public partial class ComboBox : ListControl
         }
         set
         {
-            if (value < 1)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(value),
-                    value,
-                    string.Format(SR.InvalidArgument, nameof(DropDownHeight), value));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
 
             if (Properties.GetInteger(PropDropDownHeight) != value)
             {
@@ -673,10 +660,7 @@ public partial class ComboBox : ListControl
         }
         set
         {
-            if (value < 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidArgument, nameof(ItemHeight), value));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
 
             ResetHeightCache();
 
@@ -744,10 +728,8 @@ public partial class ComboBox : ListControl
         }
         set
         {
-            if (value < 1 || value > 100)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidBoundArgument, nameof(MaxDropDownItems), value, 1, 100));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 100);
 
             _maxDropDownItems = (short)value;
         }
@@ -985,16 +967,8 @@ public partial class ComboBox : ListControl
                 return;
             }
 
-            int itemCount = 0;
-            if (_itemsCollection is not null)
-            {
-                itemCount = _itemsCollection.Count;
-            }
-
-            if (value < -1 || value >= itemCount)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidArgument, nameof(SelectedIndex), value));
-            }
+            ArgumentOutOfRangeException.ThrowIfLessThan(value, -1);
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(value, _itemsCollection?.Count ?? 0);
 
             if (IsHandleCreated)
             {
@@ -1126,13 +1100,7 @@ public partial class ComboBox : ListControl
         }
         set
         {
-            if (value < 0)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(value),
-                    value,
-                    string.Format(SR.InvalidArgument, nameof(SelectionStart), value));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegative(value);
 
             Select(value, SelectionLength);
         }
@@ -3403,14 +3371,10 @@ public partial class ComboBox : ListControl
         ArgumentOutOfRangeException.ThrowIfNegative(start);
 
         // the Length can be negative to support Selecting in the "reverse" direction..
+        // but start + length cannot be negative... this means Length is far negative...
+        ArgumentOutOfRangeException.ThrowIfLessThan(length, -start);
+
         int end = start + length;
-
-        // but end cannot be negative... this means Length is far negative...
-        if (end < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(length), length, string.Format(SR.InvalidArgument, nameof(length), length));
-        }
-
         PInvoke.SendMessage(this, PInvoke.CB_SETEDITSEL, (WPARAM)0, LPARAM.MAKELPARAM(start, end));
     }
 
@@ -3570,7 +3534,7 @@ public partial class ComboBox : ListControl
             for (int i = 0; i < Items.Count; i++)
             {
                 int original = (int)PInvoke.SendMessage(this, PInvoke.CB_GETITEMHEIGHT, (WPARAM)i);
-                MeasureItemEventArgs mievent = new MeasureItemEventArgs(graphics, i, original);
+                MeasureItemEventArgs mievent = new(graphics, i, original);
                 OnMeasureItem(mievent);
                 if (mievent.ItemHeight != original)
                 {
@@ -3628,7 +3592,7 @@ public partial class ComboBox : ListControl
         {
             PInvoke.GetClientRect(this, out RECT rect);
             HDC hdc = (HDC)m.WParamInternal;
-            using var hbrush = new PInvoke.CreateBrushScope(ParentInternal?.BackColor ?? SystemColors.Control);
+            using var hbrush = new CreateBrushScope(ParentInternal?.BackColor ?? SystemColors.Control);
             hdc.FillRectangle(rect, hbrush);
             m.ResultInternal = (LRESULT)1;
             return;
@@ -3909,27 +3873,27 @@ public partial class ComboBox : ListControl
                     && (FlatStyle == FlatStyle.Flat || FlatStyle == FlatStyle.Popup)
                     && !(SystemInformation.HighContrast && BackColor == SystemColors.Window))
                 {
-                    using PInvoke.RegionScope dropDownRegion = new(FlatComboBoxAdapter._dropDownRect);
-                    using PInvoke.RegionScope windowRegion = new(Bounds);
+                    using RegionScope dropDownRegion = new(FlatComboBoxAdapter._dropDownRect);
+                    using RegionScope windowRegion = new(Bounds);
 
                     // Stash off the region we have to update (the base is going to clear this off in BeginPaint)
                     bool getRegionSucceeded = PInvoke.GetUpdateRgn(HWND, windowRegion, bErase: true) != GDI_REGION_TYPE.RGN_ERROR;
 
-                    PInvoke.CombineRgn(dropDownRegion, windowRegion, dropDownRegion, RGN_COMBINE_MODE.RGN_DIFF);
+                    PInvokeCore.CombineRgn(dropDownRegion, windowRegion, dropDownRegion, RGN_COMBINE_MODE.RGN_DIFF);
                     RECT updateRegionBoundingRect = default;
                     PInvoke.GetRgnBox(windowRegion, &updateRegionBoundingRect);
 
                     // Call the base class to do its painting (with a clipped DC).
                     bool useBeginPaint = m.WParamInternal == 0u;
-                    using var paintScope = useBeginPaint ? new PInvoke.BeginPaintScope((HWND)Handle) : default;
+                    using var paintScope = useBeginPaint ? new BeginPaintScope(HWND) : default;
 
                     HDC dc = useBeginPaint ? paintScope! : (HDC)m.WParamInternal;
 
-                    using PInvoke.SaveDcScope savedDcState = new(dc);
+                    using SaveDcScope savedDcState = new(dc);
 
                     if (getRegionSucceeded)
                     {
-                        PInvoke.SelectClipRgn(dc, dropDownRegion);
+                        PInvokeCore.SelectClipRgn(dc, dropDownRegion);
                     }
 
                     m.WParamInternal = (WPARAM)dc;
@@ -3937,7 +3901,7 @@ public partial class ComboBox : ListControl
 
                     if (getRegionSucceeded)
                     {
-                        PInvoke.SelectClipRgn(dc, windowRegion);
+                        PInvokeCore.SelectClipRgn(dc, windowRegion);
                     }
 
                     using Graphics g = Graphics.FromHdcInternal((IntPtr)dc);

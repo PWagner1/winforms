@@ -4,7 +4,6 @@
 using System.Globalization;
 using Microsoft.Win32;
 using Windows.Win32.UI.TextServices;
-using static Interop;
 
 namespace System.Windows.Forms;
 
@@ -61,7 +60,7 @@ public sealed class InputLanguage
         get
         {
             nint handle = 0;
-            PInvoke.SystemParametersInfo(SYSTEM_PARAMETERS_INFO_ACTION.SPI_GETDEFAULTINPUTLANG, ref handle);
+            PInvokeCore.SystemParametersInfo(SYSTEM_PARAMETERS_INFO_ACTION.SPI_GETDEFAULTINPUTLANG, ref handle);
             return new InputLanguage(handle);
         }
     }

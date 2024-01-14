@@ -6,7 +6,6 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms.TestUtilities;
-using static Interop;
 using Point = System.Drawing.Point;
 using Size = System.Drawing.Size;
 
@@ -18,7 +17,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Ctor_Default()
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         Assert.Null(control.ActiveXInstance);
         Assert.False(control.AllowDrop);
         Assert.True(control.AllowNavigation);
@@ -103,7 +102,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_CreateParams_GetDefault_ReturnsExpected()
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         CreateParams createParams = control.CreateParams;
         Assert.Null(createParams.Caption);
         Assert.Null(createParams.ClassName);
@@ -123,7 +122,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ActiveXInstance_GetWithHandle_ReturnsNull()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.NotEqual(IntPtr.Zero, control.Handle);
         Assert.Null(control.ActiveXInstance);
     }
@@ -132,7 +131,7 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_AllowNavigation_Set_GetReturnsExpected(bool value)
     {
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             AllowNavigation = value
         };
@@ -157,8 +156,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_AllowNavigation_SetWithInstance_GetReturnsExpected(bool value)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -185,8 +184,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_AllowNavigation_SetWithSink_GetReturnsExpected(bool value)
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -215,7 +214,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_AllowWebBrowserDrop_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.True(control.AllowWebBrowserDrop);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -224,8 +223,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_AllowWebBrowserDrop_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -238,8 +237,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_AllowWebBrowserDrop_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -250,8 +249,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_AllowWebBrowserDrop_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -263,7 +262,7 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_AllowWebBrowserDrop_Set_GetReturnsExpected(bool value)
     {
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             AllowWebBrowserDrop = value
         };
@@ -288,8 +287,8 @@ public class WebBrowserTests
     [BoolData]
     public unsafe void WebBrowser_AllowWebBrowserDrop_SetWithInstance_GetReturnsExpected(bool value)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -324,8 +323,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_AllowWebBrowserDrop_SetDisposed_ThrowsObjectDisposedException(bool value)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -337,8 +336,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_AllowWebBrowserDrop_SetDetached_ThrowsInvalidOperationException(bool value)
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -349,8 +348,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_CanGoBack_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -369,12 +368,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_CanGoBack_GetWithDocument_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
         int canGoBackChangedCallCount = 0;
         control.CanGoBackChanged += (sender, e) => canGoBackChangedCallCount++;
@@ -394,8 +393,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_CanGoForward_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -408,12 +407,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_CanGoForward_GetWithDocument_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         const string Html = "<html><head><title>NewDocument</title></head></html>";
@@ -427,7 +426,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Document_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.Null(control.Document);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -436,8 +435,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Document_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -452,12 +451,12 @@ public class WebBrowserTests
     [InlineData("<title></title>", "")]
     public async Task WebBrowser_Document_GetWithDocument_ReturnsExpected(string titleHtml, string expectedTitle)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         string html = $"<html><head>{titleHtml}</head></html>";
@@ -474,8 +473,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Document_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -486,8 +485,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Document_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -498,7 +497,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentStream_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.Null(control.DocumentStream);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -507,8 +506,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentStream_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -521,12 +520,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_DocumentStream_GetWithDocument_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         const string Html = "<html><head><title>NewDocument</title></head></html>";
@@ -542,8 +541,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentStream_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -554,8 +553,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentStream_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -566,16 +565,16 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_DocumentStream_Set_GetReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         const string Html = "<html><head><title>NewDocument</title></head></html>";
-        using var value = new MemoryStream(Encoding.UTF8.GetBytes(Html));
+        using MemoryStream value = new(Encoding.UTF8.GetBytes(Html));
         await Task.Run(() => control.DocumentStream = value);
         Assert.True(await source.Task);
         Assert.Equal(Html, control.DocumentText);
@@ -591,8 +590,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentStream_SetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -603,8 +602,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentStream_SetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -615,7 +614,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentText_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.Empty(control.DocumentText);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -624,8 +623,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentText_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -638,12 +637,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_DocumentText_GetWithDocument_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         const string Html = "<html><head><title>NewDocument</title></head></html>";
@@ -659,8 +658,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentText_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -671,8 +670,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentText_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -684,7 +683,7 @@ public class WebBrowserTests
     [StringWithNullData]
     public void WebBrowser_DocumentText_Set_GetReturnsExpected(string value)
     {
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             DocumentText = value
         };
@@ -705,8 +704,8 @@ public class WebBrowserTests
     [StringWithNullData]
     public void WebBrowser_DocumentText_SetWithInstance_GetReturnsExpected(string value)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -728,13 +727,13 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_DocumentText_SetValidHtml_GetReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
         const string Html = "<html><head><title>NewDocument</title></head></html>";
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         int navigatingCallCount = 0;
         control.Navigating += (sender, e) =>
         {
@@ -827,8 +826,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentText_SetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -839,8 +838,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentText_SetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -851,7 +850,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentTitle_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.Empty(control.DocumentTitle);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -860,8 +859,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentTitle_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -877,12 +876,12 @@ public class WebBrowserTests
     [InlineData("", "")]
     public async Task WebBrowser_DocumentTitle_GetWithDocument_ReturnsExpected(string titleHtml, string expected)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         string html = $"<html><head>{titleHtml}</head></html>";
@@ -896,8 +895,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentTitle_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -908,8 +907,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentTitle_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -920,7 +919,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentType_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.Empty(control.DocumentType);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -929,8 +928,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentType_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -943,12 +942,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_DocumentType_GetWithDocument_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         const string Html = "<html><head><title>NewDocument</title></head></html>";
@@ -963,8 +962,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentType_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -975,8 +974,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DocumentType_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -987,7 +986,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_EncryptionLevel_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.Equal(WebBrowserEncryptionLevel.Unknown, control.EncryptionLevel);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -996,8 +995,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_EncryptionLevel_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1010,12 +1009,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_EncryptionLevel_GetWithDocument_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         const string Html = "<html><head><title>NewDocument</title></head></html>";
@@ -1029,8 +1028,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_EncryptionLevel_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1041,8 +1040,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_EncryptionLevel_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -1053,7 +1052,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Focused_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.False(control.Focused);
         Assert.Null(control.ActiveXInstance);
         Assert.False(control.IsHandleCreated);
@@ -1062,8 +1061,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Focused_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1076,7 +1075,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Focused_GetWithHandle_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.NotEqual(IntPtr.Zero, control.Handle);
         int invalidatedCallCount = 0;
         control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -1096,7 +1095,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_IsBusy_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.False(control.IsBusy);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -1105,8 +1104,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_IsBusy_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1119,12 +1118,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_IsBusy_GetWithDocument_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         const string Html = "<html><head><title>NewDocument</title></head></html>";
@@ -1138,8 +1137,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_IsBusy_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1150,8 +1149,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_IsBusy_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -1162,7 +1161,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_IsOffline_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.False(control.IsOffline);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -1171,8 +1170,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_IsOffline_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1185,8 +1184,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_IsOffline_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1197,8 +1196,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_IsOffline_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -1210,7 +1209,7 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_IsWebBrowserContextMenuEnabled_Set_GetReturnsExpected(bool value)
     {
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             IsWebBrowserContextMenuEnabled = value
         };
@@ -1235,8 +1234,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_IsWebBrowserContextMenuEnabled_SetWithInstance_GetReturnsExpected(bool value)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1269,7 +1268,7 @@ public class WebBrowserTests
     [MemberData(nameof(ObjectForScripting_Set_TestData))]
     public void WebBrowser_ObjectForScripting_Set_GetReturnsExpected(object value)
     {
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             ObjectForScripting = value
         };
@@ -1288,8 +1287,8 @@ public class WebBrowserTests
     [MemberData(nameof(ObjectForScripting_Set_TestData))]
     public void WebBrowser_ObjectForScripting_SetWithInstance_GetReturnsExpected(object value)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent,
             ObjectForScripting = value
@@ -1308,7 +1307,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ObjectForScripting_SetNotComVisible_ThrowsArgumentException()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.Throws<ArgumentException>("value", () => control.ObjectForScripting = new PrivateClass());
     }
 
@@ -1316,7 +1315,7 @@ public class WebBrowserTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetPaddingNormalizedTheoryData))]
     public void WebBrowser_Padding_Set_GetReturnsExpected(Padding value, Padding expected)
     {
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             Padding = value
         };
@@ -1333,7 +1332,7 @@ public class WebBrowserTests
     [CommonMemberData(typeof(CommonTestHelperEx), nameof(CommonTestHelperEx.GetPaddingNormalizedTheoryData))]
     public void WebBrowser_Padding_SetWithHandle_GetReturnsExpected(Padding value, Padding expected)
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.NotEqual(IntPtr.Zero, control.Handle);
         int invalidatedCallCount = 0;
         control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -1361,7 +1360,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Padding_SetWithHandler_CallsPaddingChanged()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         int callCount = 0;
         EventHandler handler = (sender, e) =>
         {
@@ -1372,7 +1371,7 @@ public class WebBrowserTests
         control.PaddingChanged += handler;
 
         // Set different.
-        var padding1 = new Padding(1);
+        Padding padding1 = new(1);
         control.Padding = padding1;
         Assert.Equal(padding1, control.Padding);
         Assert.Equal(1, callCount);
@@ -1383,7 +1382,7 @@ public class WebBrowserTests
         Assert.Equal(1, callCount);
 
         // Set different.
-        var padding2 = new Padding(2);
+        Padding padding2 = new(2);
         control.Padding = padding2;
         Assert.Equal(padding2, control.Padding);
         Assert.Equal(2, callCount);
@@ -1398,8 +1397,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Parent_SetNonNull_AddsToControls()
     {
-        using var parent = new WebBrowser();
-        using var control = new WebBrowser
+        using WebBrowser parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1415,8 +1414,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Parent_SetParent_GetReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1434,11 +1433,11 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Parent_SetParentNotVisible_GetReturnsExpected()
     {
-        using var parent = new Control
+        using Control parent = new()
         {
             Visible = false
         };
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1456,8 +1455,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Parent_SetChildNotVisible_GetReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Visible = false,
             Parent = parent
@@ -1476,8 +1475,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Parent_SetWithHandle_GetReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser();
+        using Control parent = new();
+        using WebBrowser control = new();
         Assert.NotEqual(IntPtr.Zero, control.Handle);
 
         control.Parent = parent;
@@ -1495,11 +1494,11 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Parent_SetWithHandleParentNotVisible_GetReturnsExpected()
     {
-        using var parent = new Control
+        using Control parent = new()
         {
             Visible = false
         };
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.NotEqual(IntPtr.Zero, control.Handle);
 
         control.Parent = parent;
@@ -1517,10 +1516,10 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Parent_SetWithHandleChildNotVisible_GetReturnsExpected()
     {
-        using var parent = new Control();
+        using Control parent = new();
         Assert.NotEqual(IntPtr.Zero, parent.Handle);
 
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             Visible = false,
             Parent = parent
@@ -1539,8 +1538,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Parent_SetWithHandler_CallsParentChanged()
     {
-        using var parent = new WebBrowser();
-        using var control = new WebBrowser();
+        using WebBrowser parent = new();
+        using WebBrowser control = new();
         int callCount = 0;
         EventHandler handler = (sender, e) =>
         {
@@ -1575,7 +1574,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Parent_SetSame_ThrowsArgumentException()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.Throws<ArgumentException>(() => control.Parent = control);
         Assert.Null(control.Parent);
     }
@@ -1583,7 +1582,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ReadyState_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.Equal(WebBrowserReadyState.Uninitialized, control.ReadyState);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -1592,8 +1591,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ReadyState_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1606,12 +1605,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_ReadyState_GetWithDocument_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         const string Html = "<html><head><title>NewDocument</title></head></html>";
@@ -1625,8 +1624,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ReadyState_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1637,8 +1636,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ReadyState_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -1649,7 +1648,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ScriptErrorsSuppressed_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.False(control.ScriptErrorsSuppressed);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -1658,8 +1657,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ScriptErrorsSuppressed_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1672,8 +1671,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ScriptErrorsSuppressed_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1684,8 +1683,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ScriptErrorsSuppressed_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -1697,7 +1696,7 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_ScriptErrorsSuppressed_Set_GetReturnsExpected(bool value)
     {
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             ScriptErrorsSuppressed = value
         };
@@ -1722,8 +1721,8 @@ public class WebBrowserTests
     [BoolData]
     public unsafe void WebBrowser_ScriptErrorsSuppressed_SetWithInstance_GetReturnsExpected(bool value)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1756,8 +1755,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_ScriptErrorsSuppressed_SetDisposed_ThrowsObjectDisposedException(bool value)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1769,8 +1768,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_ScriptErrorsSuppressed_SetDetached_ThrowsInvalidOperationException(bool value)
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -1782,7 +1781,7 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_ScrollBarsEnabled_Set_GetReturnsExpected(bool value)
     {
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             ScrollBarsEnabled = value
         };
@@ -1807,8 +1806,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_ScrollBarsEnabled_SetWithInstance_GetReturnsExpected(bool value)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1834,7 +1833,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_StatusText_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.Empty(control.StatusText);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -1843,8 +1842,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_StatusText_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1857,12 +1856,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_StatusText_GetWithDocument_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         const string Html = "<html><head><title>NewDocument</title></head></html>";
@@ -1876,8 +1875,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_StatusText_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1888,8 +1887,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_StatusText_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -1900,7 +1899,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Url_Get_ReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.Null(control.Url);
         Assert.NotNull(control.ActiveXInstance);
         Assert.True(control.IsHandleCreated);
@@ -1909,8 +1908,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Url_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1923,12 +1922,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_Url_GetWithDocument_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         const string Html = "<html><head><title>NewDocument</title></head></html>";
@@ -1942,8 +1941,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Url_GetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -1954,8 +1953,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Url_GetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -1966,14 +1965,14 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_Url_Set_GetReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
         const string Html = "<html><head><title>NewDocument</title></head></html>";
         using var file = CreateTempFile(Html);
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         int navigatingCallCount = 0;
         control.Navigating += (sender, e) =>
         {
@@ -2061,14 +2060,14 @@ public class WebBrowserTests
     [MemberData(nameof(Url_Set_NullOrEmpty_TestData))]
     public async Task WebBrowser_Url_SetNullOrEmpty_GoesToBlank(Uri nullOrEmptyUri)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
         const string Html = "<html><head><title>NewDocument</title></head></html>";
         using var file = CreateTempFile(Html);
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         await Task.Run(() => control.Url = new Uri(file.Path));
@@ -2084,16 +2083,16 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Url_SetRelativeUri_ThrowsArgumentException()
     {
-        using var control = new WebBrowser();
-        var relativeUri = new Uri("/path", UriKind.Relative);
+        using WebBrowser control = new();
+        Uri relativeUri = new("/path", UriKind.Relative);
         Assert.Throws<ArgumentException>(() => control.Url = relativeUri);
     }
 
     [WinFormsFact]
     public void WebBrowser_Url_SetDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -2104,8 +2103,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Url_SetDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -2116,8 +2115,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Version_GetWithInstance_ReturnsExpected()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -2132,7 +2131,7 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_Visible_Set_GetReturnsExpected(bool value)
     {
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             Visible = value
         };
@@ -2156,7 +2155,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Visible_SetTrue_GetReturnsExpected()
     {
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             Visible = false
         };
@@ -2174,7 +2173,7 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_Visible_SetWithHandle_GetReturnsExpected(bool value)
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.NotEqual(IntPtr.Zero, control.Handle);
 
         control.Visible = value;
@@ -2192,7 +2191,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Visible_SetTrueWithHandle_GetReturnsExpected()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.NotEqual(IntPtr.Zero, control.Handle);
 
         control.Visible = false;
@@ -2210,7 +2209,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Visible_SetWithHandler_CallsVisibleChanged()
     {
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             Visible = true
         };
@@ -2249,7 +2248,7 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_WebBrowserShortcutsEnabled_Set_GetReturnsExpected(bool value)
     {
-        using var control = new WebBrowser
+        using WebBrowser control = new()
         {
             WebBrowserShortcutsEnabled = value
         };
@@ -2274,8 +2273,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_WebBrowserShortcutsEnabled_SetWithInstance_GetReturnsExpected(bool value)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -2320,7 +2319,7 @@ public class WebBrowserTests
             return;
         }
 
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         control.AttachInterfaces(nativeActiveXObject);
 
         // Attach again.
@@ -2354,8 +2353,8 @@ public class WebBrowserTests
             return;
         }
 
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -2373,7 +2372,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_AttachInterfaces_InvalidNativeActiveXObject_ThrowsInvalidCastException()
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         Assert.Throws<InvalidCastException>(() => control.AttachInterfaces(new object()));
     }
 
@@ -2381,8 +2380,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_CreateSink_InvokeWithInstance_Success(bool allowNavigation)
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             AllowNavigation = allowNavigation,
             Parent = parent
@@ -2400,7 +2399,7 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_CreateSink_InvokeWithoutInstance_Nop(bool allowNavigation)
     {
-        using var control = new SubWebBrowser
+        using SubWebBrowser control = new()
         {
             AllowNavigation = allowNavigation
         };
@@ -2416,7 +2415,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_CreateWebBrowserSiteBase_Invoke_ReturnsExpected()
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         WebBrowserSiteBase siteBase = control.CreateWebBrowserSiteBase();
         Assert.NotNull(siteBase);
         Assert.NotSame(siteBase, control.CreateWebBrowserSiteBase());
@@ -2425,7 +2424,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DetachInterfaces_Invoke_Success()
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         control.DetachInterfaces();
         Assert.Null(control.ActiveXInstance);
         Assert.False(control.IsHandleCreated);
@@ -2439,8 +2438,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_DetachInterfaces_InvokeWithInstance_Success()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -2459,8 +2458,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_DetachSink_InvokeWithCreatedSink_Success(bool allowNavigation)
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             AllowNavigation = allowNavigation,
             Parent = parent
@@ -2483,8 +2482,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_DetachSink_InvokeWithInstance_Success(bool allowNavigation)
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             AllowNavigation = allowNavigation,
             Parent = parent
@@ -2504,7 +2503,7 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_DetachSink_InvokeWithoutInstance_Nop(bool allowNavigation)
     {
-        using var control = new SubWebBrowser
+        using SubWebBrowser control = new()
         {
             AllowNavigation = allowNavigation
         };
@@ -2521,7 +2520,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Dispose_Invoke_Success()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         int callCount = 0;
         void handler(object sender, EventArgs e)
         {
@@ -2570,8 +2569,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowser_Dispose_InvokeWithInstance_Success(bool allowNavigation)
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             AllowNavigation = allowNavigation,
             Parent = parent
@@ -2624,7 +2623,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowserDispose_InvokeDisposing_Success()
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         void handler(object sender, EventArgs e)
         {
@@ -2673,8 +2672,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowserDispose_InvokeNotDisposing_Success(bool allowNavigation)
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             AllowNavigation = allowNavigation,
             Parent = parent
@@ -2717,8 +2716,8 @@ public class WebBrowserTests
     [BoolData]
     public void WebBrowserDispose_InvokeDisposingWithInstance_Success(bool allowNavigation)
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             AllowNavigation = allowNavigation,
             Parent = parent
@@ -2771,7 +2770,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowserDispose_InvokeNotDisposingWithInstance_Success()
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         void handler(object sender, EventArgs e) => callCount++;
         control.Disposed += handler;
@@ -2808,7 +2807,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GetAutoSizeMode_Invoke_ReturnsExpected()
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         Assert.Equal(AutoSizeMode.GrowOnly, control.GetAutoSizeMode());
     }
 
@@ -2835,7 +2834,7 @@ public class WebBrowserTests
     [InlineData((ControlStyles)(-1), false)]
     public void WebBrowser_GetStyle_Invoke_ReturnsExpected(ControlStyles flag, bool expected)
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         Assert.Equal(expected, control.GetStyle(flag));
 
         // Call again to test caching.
@@ -2845,7 +2844,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoBack_InvokeCantGoBack_Nop()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         int canGoBackChangedCallCount = 0;
         control.CanGoBackChanged += (sender, e) => canGoBackChangedCallCount++;
         int canGoForwardChangedCallCount = 0;
@@ -2862,8 +2861,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoBack_InvokeCantGoBackWithInstance_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -2883,12 +2882,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_GoBack_Invoke_CallsCanGoBackChanged()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
         int canGoBackChangedCallCount = 0;
         control.CanGoBackChanged += (sender, e) =>
@@ -2963,8 +2962,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoBack_InvokeDisposed_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -2975,7 +2974,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoForward_InvokeCantGoForward_Nop()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         Assert.False(control.GoForward());
         Assert.Null(control.Url);
         Assert.NotNull(control.ActiveXInstance);
@@ -2985,8 +2984,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoForward_InvokeCantGoForwardWithInstance_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -3000,12 +2999,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_GoForward_Invoke_CallsCanGoForwardChanged()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
         int canGoBackChangedCallCount = 0;
         control.CanGoBackChanged += (sender, e) =>
@@ -3078,8 +3077,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoForward_InvokeDisposed_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -3090,7 +3089,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoHome_InvokeCantGoHome_Nop()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         control.GoHome();
         Assert.Null(control.Url);
         Assert.NotNull(control.ActiveXInstance);
@@ -3100,8 +3099,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoHome_InvokeCantGoHomeWithInstance_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -3115,8 +3114,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoHome_InvokeDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -3127,8 +3126,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoHome_InvokeDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -3139,7 +3138,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoSearch_InvokeCantGoSearch_Nop()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         control.GoSearch();
         Assert.Null(control.Url);
         Assert.NotNull(control.ActiveXInstance);
@@ -3149,8 +3148,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoSearch_InvokeCantGoSearchWithInstance_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -3164,8 +3163,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoSearch_InvokeDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -3176,8 +3175,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_GoSearch_InvokeDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -3188,14 +3187,14 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_Navigate_InvokeString_CallsMethods()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
         const string Html = "<html><head><title>NewDocument</title></head></html>";
         using var file = CreateTempFile(Html);
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         int navigatingCallCount = 0;
         control.Navigating += (sender, e) =>
         {
@@ -3277,14 +3276,14 @@ public class WebBrowserTests
     [NullAndEmptyStringData]
     public async Task WebBrowser_Navigate_NullOrEmptyString_GoesToBlank(string nullOrEmptyString)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
         const string Html = "<html><head><title>NewDocument</title></head></html>";
         using var file = CreateTempFile(Html);
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         await Task.Run(() => control.Navigate(new Uri(file.Path)));
@@ -3300,14 +3299,14 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_Navigate_InvokeUri_CallsMethods()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
         const string Html = "<html><head><title>NewDocument</title></head></html>";
         using var file = CreateTempFile(Html);
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         int navigatingCallCount = 0;
         control.Navigating += (sender, e) =>
         {
@@ -3395,14 +3394,14 @@ public class WebBrowserTests
     [MemberData(nameof(Navigate_NullOrEmptyUri_TestData))]
     public async Task WebBrowser_Navigate_NullOrEmptyUri_GoesToBlank(Uri nullOrEmptyUri)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
         const string Html = "<html><head><title>NewDocument</title></head></html>";
         using var file = CreateTempFile(Html);
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
 
         await Task.Run(() => control.Navigate(new Uri(file.Path)));
@@ -3418,12 +3417,12 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_Navigate_InvokeWithDocument_CallsCanGoBackChanged()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         control.DocumentCompleted += (sender, e) => source.SetResult(true);
         int canGoBackChangedCallCount = 0;
         control.CanGoBackChanged += (sender, e) =>
@@ -3455,8 +3454,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Navigate_RelativeUri_ThrowsArgumentException()
     {
-        using var control = new WebBrowser();
-        var relativeUri = new Uri("/path", UriKind.Relative);
+        using WebBrowser control = new();
+        Uri relativeUri = new("/path", UriKind.Relative);
         Assert.Throws<ArgumentException>(() => control.Navigate(relativeUri));
         Assert.Throws<ArgumentException>(() => control.Navigate(relativeUri, "targetFrameName"));
         Assert.Throws<ArgumentException>(() => control.Navigate(relativeUri, false));
@@ -3466,8 +3465,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Navigate_InvokeDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -3482,8 +3481,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Navigate_InvokeDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -3499,7 +3498,7 @@ public class WebBrowserTests
     [NewAndDefaultData<EventArgs>]
     public void WebBrowser_OnCanGoBackChanged_Invoke_CallsCanGoBackChanged(EventArgs eventArgs)
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         EventHandler handler = (sender, e) =>
         {
@@ -3527,7 +3526,7 @@ public class WebBrowserTests
     [NewAndDefaultData<EventArgs>]
     public void WebBrowser_OnCanGoForwardChanged_Invoke_CallsCanGoForwardChanged(EventArgs eventArgs)
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         EventHandler handler = (sender, e) =>
         {
@@ -3562,7 +3561,7 @@ public class WebBrowserTests
     [MemberData(nameof(OnDocumentCompleted_TestData))]
     public void WebBrowser_OnDocumentCompleted_Invoke_CallsDocumentCompleted(WebBrowserDocumentCompletedEventArgs eventArgs)
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         WebBrowserDocumentCompletedEventHandler handler = (sender, e) =>
         {
@@ -3600,8 +3599,8 @@ public class WebBrowserTests
     [MemberData(nameof(OnDocumentCompleted_WithInstance_TestData))]
     public unsafe void WebBrowser_OnDocumentCompleted_InvokeWithInstance_CallsDocumentCompleted(bool allowWebBrowserDrop, WebBrowserDocumentCompletedEventArgs eventArgs)
     {
-        var parent = new Control();
-        var control = new SubWebBrowser
+        Control parent = new();
+        SubWebBrowser control = new()
         {
             Parent = parent,
             AllowWebBrowserDrop = allowWebBrowserDrop
@@ -3640,8 +3639,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_OnDocumentCompleted_InvokeDisposed_ThrowsObjectDisposedException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -3652,8 +3651,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_OnDocumentCompleted_InvokeDetached_ThrowsInvalidOperationException()
     {
-        using var parent = new Control();
-        using var control = new SubWebBrowser
+        using Control parent = new();
+        using SubWebBrowser control = new()
         {
             Parent = parent
         };
@@ -3665,7 +3664,7 @@ public class WebBrowserTests
     [NewAndDefaultData<EventArgs>]
     public void WebBrowser_OnDocumentTitleChanged_Invoke_CallsDocumentTitleChanged(EventArgs eventArgs)
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         EventHandler handler = (sender, e) =>
         {
@@ -3693,7 +3692,7 @@ public class WebBrowserTests
     [NewAndDefaultData<EventArgs>]
     public void WebBrowser_OnEncryptionLevelChanged_Invoke_CallsEncryptionLevelChanged(EventArgs eventArgs)
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         EventHandler handler = (sender, e) =>
         {
@@ -3721,7 +3720,7 @@ public class WebBrowserTests
     [NewAndDefaultData<EventArgs>]
     public void WebBrowser_OnFileDownload_Invoke_CallsFileDownload(EventArgs eventArgs)
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         EventHandler handler = (sender, e) =>
         {
@@ -3756,7 +3755,7 @@ public class WebBrowserTests
     [MemberData(nameof(OnNavigated_TestData))]
     public void WebBrowser_OnNavigated_Invoke_CallsNavigated(WebBrowserNavigatedEventArgs eventArgs)
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         WebBrowserNavigatedEventHandler handler = (sender, e) =>
         {
@@ -3791,7 +3790,7 @@ public class WebBrowserTests
     [MemberData(nameof(OnNavigating_TestData))]
     public void WebBrowser_OnNavigating_Invoke_CallsNavigating(WebBrowserNavigatingEventArgs eventArgs)
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         WebBrowserNavigatingEventHandler handler = (sender, e) =>
         {
@@ -3826,7 +3825,7 @@ public class WebBrowserTests
     [MemberData(nameof(OnNewWindow_TestData))]
     public void WebBrowser_OnNewWindow_Invoke_CallsNewWindow(CancelEventArgs eventArgs)
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         CancelEventHandler handler = (sender, e) =>
         {
@@ -3862,7 +3861,7 @@ public class WebBrowserTests
     [MemberData(nameof(OnProgressChanged_TestData))]
     public void WebBrowser_OnProgressChanged_Invoke_CallsProgressChanged(WebBrowserProgressChangedEventArgs eventArgs)
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         WebBrowserProgressChangedEventHandler handler = (sender, e) =>
         {
@@ -3890,7 +3889,7 @@ public class WebBrowserTests
     [NewAndDefaultData<EventArgs>]
     public void WebBrowser_OnStatusTextChanged_Invoke_CallsStatusTextChanged(EventArgs eventArgs)
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         int callCount = 0;
         EventHandler handler = (sender, e) =>
         {
@@ -3917,8 +3916,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Print_InvokeDisposed_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -3929,7 +3928,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Refresh_InvokeCantRefresh_Nop()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         control.Refresh();
         Assert.Null(control.Url);
         Assert.NotNull(control.ActiveXInstance);
@@ -3939,8 +3938,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Refresh_InvokeCantRefreshWithInstance_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -3954,14 +3953,14 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_Refresh_InvokeWithDocument_Success()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
         const string Html = "<html><head><title>NewDocument</title></head></html>";
         using var file = CreateTempFile(Html);
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         void oldHandler(object sender, WebBrowserDocumentCompletedEventArgs e) => source.SetResult(true);
         control.DocumentCompleted += oldHandler;
         await Task.Run(() => control.Navigate(file.Path));
@@ -4012,14 +4011,14 @@ public class WebBrowserTests
     [WinFormsFact]
     public async Task WebBrowser_Refresh_InvokeWithDocumentText_Success()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
         const string Html = "<html><head><title>NewDocument</title></head></html>";
         using var file = CreateTempFile(Html);
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         void oldHandler(object sender, WebBrowserDocumentCompletedEventArgs e) => source.SetResult(true);
         control.DocumentCompleted += oldHandler;
         await Task.Run(() => control.DocumentText = Html);
@@ -4072,7 +4071,7 @@ public class WebBrowserTests
     [InvalidEnumData<WebBrowserRefreshOption>]
     public void WebBrowser_Refresh_InvokeWebBrowserRefreshOptionCantRefresh_Nop(WebBrowserRefreshOption opt)
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         control.Refresh(opt);
         Assert.Null(control.Url);
         Assert.NotNull(control.ActiveXInstance);
@@ -4084,8 +4083,8 @@ public class WebBrowserTests
     [InvalidEnumData<WebBrowserRefreshOption>]
     public void WebBrowser_Refresh_InvokeWebBrowserRefreshOptionCantRefreshWithInstance_Nop(WebBrowserRefreshOption opt)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4101,14 +4100,14 @@ public class WebBrowserTests
     [InvalidEnumData<WebBrowserRefreshOption>]
     public async Task WebBrowser_Refresh_InvokeWebBrowserRefreshOptionWithDocument_Success(WebBrowserRefreshOption opt)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
         const string Html = "<html><head><title>NewDocument</title></head></html>";
         using var file = CreateTempFile(Html);
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         void oldHandler(object sender, WebBrowserDocumentCompletedEventArgs e) => source.SetResult(true);
         control.DocumentCompleted += oldHandler;
         await Task.Run(() => control.Navigate(file.Path));
@@ -4161,14 +4160,14 @@ public class WebBrowserTests
     [InvalidEnumData<WebBrowserRefreshOption>]
     public async Task WebBrowser_Refresh_InvokeWebBrowserRefreshOptionWithDocumentText_Success(WebBrowserRefreshOption opt)
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
         const string Html = "<html><head><title>NewDocument</title></head></html>";
         using var file = CreateTempFile(Html);
-        var source = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> source = new();
         void oldHandler(object sender, WebBrowserDocumentCompletedEventArgs e) => source.SetResult(true);
         control.DocumentCompleted += oldHandler;
         await Task.Run(() => control.DocumentText = Html);
@@ -4219,8 +4218,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Refresh_InvokeDisposed_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4232,7 +4231,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowPageSetupDialog_Invoke_Nop()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         control.ShowPageSetupDialog();
         Assert.Null(control.Url);
         Assert.NotNull(control.ActiveXInstance);
@@ -4242,8 +4241,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowPageSetupDialog_InvokeWithInstance_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4257,8 +4256,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowPageSetupDialog_InvokeDisposed_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4269,7 +4268,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowPrintDialog_Invoke_Nop()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         control.ShowPrintDialog();
         Assert.Null(control.Url);
         Assert.NotNull(control.ActiveXInstance);
@@ -4279,8 +4278,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowPrintDialog_InvokeWithInstance_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4294,8 +4293,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowPrintDialog_InvokeDisposed_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4306,7 +4305,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowPrintPreviewDialog_Invoke_Nop()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         control.ShowPrintPreviewDialog();
         Assert.Null(control.Url);
         Assert.NotNull(control.ActiveXInstance);
@@ -4316,8 +4315,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowPrintPreviewDialog_InvokeWithInstance_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4331,8 +4330,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowPrintPreviewDialog_InvokeDisposed_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4343,7 +4342,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowPropertiesDialog_Invoke_Nop()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         control.ShowPropertiesDialog();
         Assert.Null(control.Url);
         Assert.NotNull(control.ActiveXInstance);
@@ -4353,8 +4352,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowPropertiesDialog_InvokeWithInstance_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4368,8 +4367,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowPropertiesDialog_InvokeDisposed_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4380,7 +4379,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowSaveAsDialog_Invoke_Nop()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         control.ShowSaveAsDialog();
         Assert.Null(control.Url);
         Assert.NotNull(control.ActiveXInstance);
@@ -4390,8 +4389,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowSaveAsDialog_InvokeWithInstance_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4405,8 +4404,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_ShowSaveAsDialog_InvokeDisposed_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4417,7 +4416,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Stop_InvokeCantStop_Nop()
     {
-        using var control = new WebBrowser();
+        using WebBrowser control = new();
         control.Stop();
         Assert.Null(control.Url);
         Assert.NotNull(control.ActiveXInstance);
@@ -4427,8 +4426,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Stop_InvokeCantStopWithInstance_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4442,8 +4441,8 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_Stop_InvokeDisposed_Nop()
     {
-        using var parent = new Control();
-        using var control = new WebBrowser
+        using Control parent = new();
+        using WebBrowser control = new()
         {
             Parent = parent
         };
@@ -4454,7 +4453,7 @@ public class WebBrowserTests
     [WinFormsFact]
     public void WebBrowser_WndProc_InvokeMouseHoverWithHandle_Success()
     {
-        using var control = new SubWebBrowser();
+        using SubWebBrowser control = new();
         Assert.NotEqual(IntPtr.Zero, control.Handle);
         int invalidatedCallCount = 0;
         control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -4470,7 +4469,7 @@ public class WebBrowserTests
             Assert.Same(EventArgs.Empty, e);
             callCount++;
         };
-        var m = new Message
+        Message m = new()
         {
             Msg = (int)PInvoke.WM_MOUSEHOVER,
             Result = (IntPtr)250
@@ -4503,11 +4502,11 @@ public class WebBrowserTests
     {
         using (new NoAssertContext())
         {
-            using var control = new SubWebBrowser
+            using SubWebBrowser control = new()
             {
                 Size = size
             };
-            var m = new Message
+            Message m = new()
             {
                 Msg = (int)PInvoke.WM_CONTEXTMENU,
                 LParam = lParam,
@@ -4521,7 +4520,7 @@ public class WebBrowserTests
 
     public static IEnumerable<object[]> WndProc_ContextMenuWithContextMenuStripWithoutHandle_TestData()
     {
-        using var control = new Control();
+        using Control control = new();
         Point p = control.PointToScreen(new Point(5, 5));
 
         yield return new object[] { new Size(10, 20), (IntPtr)(-1), (IntPtr)250, true };
@@ -4543,13 +4542,13 @@ public class WebBrowserTests
     {
         using (new NoAssertContext())
         {
-            using var menu = new ContextMenuStrip();
-            using var control = new SubWebBrowser
+            using ContextMenuStrip menu = new();
+            using SubWebBrowser control = new()
             {
                 ContextMenuStrip = menu,
                 Size = size
             };
-            var m = new Message
+            Message m = new()
             {
                 Msg = (int)PInvoke.WM_CONTEXTMENU,
                 LParam = lParam,
@@ -4567,7 +4566,7 @@ public class WebBrowserTests
     [MemberData(nameof(WndProc_ContextMenuWithoutContextMenuStrip_TestData))]
     public void WebBrowser_WndProc_InvokeContextMenuWithoutContextMenuStripWithHandle_Success(Size size, IntPtr lParam)
     {
-        using var control = new SubWebBrowser
+        using SubWebBrowser control = new()
         {
             Size = size
         };
@@ -4579,7 +4578,7 @@ public class WebBrowserTests
         int createdCallCount = 0;
         control.HandleCreated += (sender, e) => createdCallCount++;
 
-        var m = new Message
+        Message m = new()
         {
             Msg = (int)PInvoke.WM_CONTEXTMENU,
             LParam = lParam,
@@ -4595,7 +4594,7 @@ public class WebBrowserTests
 
     public static IEnumerable<object[]> WndProc_ContextMenuWithContextMenuStripWithHandle_TestData()
     {
-        using var control = new Control();
+        using Control control = new();
         Point p = control.PointToScreen(new Point(5, 5));
 
         yield return new object[] { new Size(10, 20), (IntPtr)(-1), (IntPtr)250 };
@@ -4615,8 +4614,8 @@ public class WebBrowserTests
     [MemberData(nameof(WndProc_ContextMenuWithContextMenuStripWithHandle_TestData))]
     public void WebBrowser_WndProc_InvokeContextMenuWithContextMenuStripWithHandle_Success(Size size, IntPtr lParam, IntPtr expectedResult)
     {
-        using var menu = new ContextMenuStrip();
-        using var control = new SubWebBrowser
+        using ContextMenuStrip menu = new();
+        using SubWebBrowser control = new()
         {
             ContextMenuStrip = menu,
             Size = size
@@ -4629,7 +4628,7 @@ public class WebBrowserTests
         int createdCallCount = 0;
         control.HandleCreated += (sender, e) => createdCallCount++;
 
-        var m = new Message
+        Message m = new()
         {
             Msg = (int)PInvoke.WM_CONTEXTMENU,
             LParam = lParam,

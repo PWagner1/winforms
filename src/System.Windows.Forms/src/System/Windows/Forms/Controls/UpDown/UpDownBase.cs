@@ -522,12 +522,12 @@ public abstract partial class UpDownBase : ContainerControl
                 Rectangle clipBounds = e.ClipRectangle;
 
                 // Draw a themed textbox-like border, which is what the spin control does
-                VisualStyleRenderer vsr = new VisualStyleRenderer(VisualStyleElement.TextBox.TextEdit.Normal);
+                VisualStyleRenderer vsr = new(VisualStyleElement.TextBox.TextEdit.Normal);
                 int border = ThemedBorderWidth;
-                Rectangle clipLeft = new Rectangle(bounds.Left, bounds.Top, border, bounds.Height);
-                Rectangle clipTop = new Rectangle(bounds.Left, bounds.Top, bounds.Width, border);
-                Rectangle clipRight = new Rectangle(bounds.Right - border, bounds.Top, border, bounds.Height);
-                Rectangle clipBottom = new Rectangle(bounds.Left, bounds.Bottom - border, bounds.Width, border);
+                Rectangle clipLeft = new(bounds.Left, bounds.Top, border, bounds.Height);
+                Rectangle clipTop = new(bounds.Left, bounds.Top, bounds.Width, border);
+                Rectangle clipRight = new(bounds.Right - border, bounds.Top, border, bounds.Height);
+                Rectangle clipBottom = new(bounds.Left, bounds.Bottom - border, bounds.Width, border);
                 clipLeft.Intersect(clipBounds);
                 clipTop.Intersect(clipBounds);
                 clipRight.Intersect(clipBounds);
@@ -545,7 +545,7 @@ public abstract partial class UpDownBase : ContainerControl
                 backRect.Y--;
                 backRect.Width += 2;
                 backRect.Height += 2;
-                using PInvoke.CreatePenScope hpen = new(backColor);
+                using CreatePenScope hpen = new(backColor);
                 hdc.DrawRectangle(backRect, hpen);
             }
         }
@@ -567,13 +567,13 @@ public abstract partial class UpDownBase : ContainerControl
             backRect.Width++;
             backRect.Height++;
             using DeviceContextHdcScope hdc = new(e);
-            using PInvoke.CreatePenScope hpen = new(backColor, width);
+            using CreatePenScope hpen = new(backColor, width);
             hdc.DrawRectangle(backRect, hpen);
         }
 
         if (!Enabled && BorderStyle != BorderStyle.None && !_upDownEdit.ShouldSerializeBackColor())
         {
-            // Draws a grayed rectangled around the upDownEdit, since otherwise we will have a white
+            // Draws a grayed rectangle around the upDownEdit, since otherwise we will have a white
             // border around the upDownEdit, which is inconsistent with Windows' behavior
             // we only want to do this when BackColor is not serialized, since otherwise
             // we should display the backcolor instead of the usual grayed textbox.
@@ -830,7 +830,7 @@ public abstract partial class UpDownBase : ContainerControl
         Rectangle upDownEditBounds = Rectangle.Empty;
         Rectangle upDownButtonsBounds = Rectangle.Empty;
 
-        Rectangle clientArea = new Rectangle(Point.Empty, ClientSize);
+        Rectangle clientArea = new(Point.Empty, ClientSize);
         int totalClientWidth = clientArea.Width;
         bool themed = Application.RenderWithVisualStyles;
         BorderStyle borderStyle = BorderStyle;

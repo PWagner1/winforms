@@ -4135,8 +4135,8 @@ Bu varsayılan iletişim kutusunu değiştirmek için, lütfen DataError olayın
         <note />
       </trans-unit>
       <trans-unit id="DataGridView_SortedDescr">
-        <source>Occurs when the DataGridView compares two cell values to perform a sort operation.</source>
-        <target state="translated">DataGridView sıralama işlemi gerçekleştirmek için iki hücre değerini karşılaştırdığında gerçekleşir.</target>
+        <source>Occurs when the DataGridView control completes a sorting operation.</source>
+        <target state="needs-review-translation">DataGridView sıralama işlemi gerçekleştirmek için iki hücre değerini karşılaştırdığında gerçekleşir.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridView_StandardTabDescr">
@@ -5205,6 +5205,11 @@ Bunu değiştirmek istiyor musunuz?</target>
         <target state="translated">İletişim kutusundaki ağaç görünümü denetiminin üstünde görüntülenen dize. Bu dize kullanıcıya yönergeleri bildirmek için kullanılabilir.</target>
         <note />
       </trans-unit>
+      <trans-unit id="FolderBrowserDialogMultiSelectDescr">
+        <source>Controls whether multiple folders can be selected in the dialog.</source>
+        <target state="translated">İletişim kutusunda birden fazla klasörün seçilip seçilemeyeceğini kontrol eder.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FolderBrowserDialogOkRequiresInteraction">
         <source>Controls whether the OK button of the dialog box is disabled until the user navigates the view or edits the filename (if applicable). Note: Disabling of the OK button does not prevent the dialog from being submitted by the Enter key.</source>
         <target state="translated">Kullanıcı görünümde gezinene veya dosya adını düzenleyene (yapabiliyorsa) kadar iletişim kutusunun Tamam düğmesinin devre dışı bırakılıp bırakılmadığını kontrol eder. Not: Tamam düğmesinin devre dışı bırakılması, iletişim kutusunun Enter tuşuyla gönderilmesini engellemez.</target>
@@ -5218,6 +5223,11 @@ Bunu değiştirmek istiyor musunuz?</target>
       <trans-unit id="FolderBrowserDialogSelectedPath">
         <source>The path of the folder first selected in the dialog or the last one selected by the user.</source>
         <target state="translated">İletişim kutusunda ilk seçili olan klasörün veya kullanıcı tarafından son seçilen klasörün yolu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FolderBrowserDialogSelectedPathsDescr">
+        <source>Retrieves the paths of all selected folders in the dialog box.</source>
+        <target state="translated">İletişim kutusunda seçilen tüm klasörlerin yollarını alır.</target>
         <note />
       </trans-unit>
       <trans-unit id="FolderBrowserDialogShowHiddenFiles">
@@ -5849,11 +5859,6 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">Bu denetim üzerinde gerçekleştirilen eylem yanlış iş parçacığı tarafından çağrılıyor. Bu eylemi gerçekleştirmek için Control.Invoke veya Control.BeginInvoke kullanarak doğru iş parçacığına göre sıralayın.</target>
         <note />
       </trans-unit>
-      <trans-unit id="InvalidExBoundArgument">
-        <source>Value of '{1}' is not valid for '{0}'. '{0}' should be greater than {2} and less than {3}.</source>
-        <target state="translated">'{1}' değeri '{0}' için geçerli değil. '{0}' değeri {2} değerinden büyük ve {3} değerinden küçük olmalıdır.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="InvalidFileFormat">
         <source>File format is not valid.</source>
         <target state="translated">Dosya biçimi geçerli değil.</target>
@@ -5872,26 +5877,6 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       <trans-unit id="InvalidHdcType">
         <source>Invalid HDC type: {0}</source>
         <target state="translated">Geçersiz HDC türü: {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidHighBoundArgument">
-        <source>Value of '{1}' is not valid for '{0}'. '{0}' must be less than {2}.</source>
-        <target state="translated">'{1}' değeri '{0}' için geçerli değil. '{0}' değerinin {2} değerinden küçük olması gerekir.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidHighBoundArgumentEx">
-        <source>Value of '{1}' is not valid for '{0}'. '{0}' must be less than or equal to {2}.</source>
-        <target state="translated">'{1}' değeri '{0}' için geçerli değil. '{0}' değerinin {2} değerinden küçük veya eşit olması gerekir.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidLowBoundArgument">
-        <source>Value of '{1}' is not valid for '{0}'. '{0}' must be greater than {2}.</source>
-        <target state="translated">'{1}' değeri '{0}' için geçerli değil. '{0}', {2} değerinden büyük olmalıdır.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidLowBoundArgumentEx">
-        <source>Value of '{1}' is not valid for '{0}'. '{0}' must be greater than or equal to {2}.</source>
-        <target state="translated">'{1}' değeri '{0}' için geçerli değil. '{0}' değerinin {2} değerinden büyük veya eşit olması gerekir.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidNullArgument">

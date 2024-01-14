@@ -1080,8 +1080,8 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
                 return HRESULT.E_FAIL;
             }
 
-            s_logPixelsX = PInvoke.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSX);
-            s_logPixelsY = PInvoke.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSY);
+            s_logPixelsX = PInvokeCore.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSX);
+            s_logPixelsY = PInvokeCore.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSY);
         }
 
         return HRESULT.S_OK;
@@ -3638,7 +3638,7 @@ public abstract unsafe partial class AxHost : Control, ISupportInitialize, ICust
             return (FONTDESC)cachedFDesc;
         }
 
-        LOGFONTW logfont = LOGFONTW.FromFont(font);
+        LOGFONTW logfont = font.ToLogicalFont();
         FONTDESC fdesc = new()
         {
             cbSizeofstruct = (uint)sizeof(FONTDESC),

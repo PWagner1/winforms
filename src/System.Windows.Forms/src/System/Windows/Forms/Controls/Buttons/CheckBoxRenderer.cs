@@ -55,7 +55,7 @@ public static class CheckBoxRenderer
         }
         else
         {
-            Rectangle glyphBounds = new Rectangle(glyphLocation, GetGlyphSize(g, state));
+            Rectangle glyphBounds = new(glyphLocation, GetGlyphSize(g, state));
             if (IsMixed(state))
             {
                 ControlPaint.DrawMixedCheckBox(g, glyphBounds, ConvertToButtonState(state));
@@ -75,8 +75,8 @@ public static class CheckBoxRenderer
     {
         InitializeRenderer((int)state);
 
-        using DeviceContextHdcScope hdc = new(deviceContext);
-        Rectangle glyphBounds = new Rectangle(glyphLocation, GetGlyphSize(hdc, state, hwnd));
+        using DeviceContextHdcScope hdc = deviceContext.ToHdcScope();
+        Rectangle glyphBounds = new(glyphLocation, GetGlyphSize(hdc, state, hwnd));
         t_visualStyleRenderer.DrawBackground(hdc, glyphBounds, hwnd);
     }
 
@@ -120,7 +120,7 @@ public static class CheckBoxRenderer
         CheckBoxState state,
         HWND hwnd)
     {
-        Rectangle glyphBounds = new Rectangle(glyphLocation, GetGlyphSize(g, state, hwnd));
+        Rectangle glyphBounds = new(glyphLocation, GetGlyphSize(g, state, hwnd));
         Color textColor;
 
         if (RenderWithVisualStyles)
@@ -189,7 +189,7 @@ public static class CheckBoxRenderer
         bool focused,
         CheckBoxState state)
     {
-        Rectangle glyphBounds = new Rectangle(glyphLocation, GetGlyphSize(g, state));
+        Rectangle glyphBounds = new(glyphLocation, GetGlyphSize(g, state));
         Color textColor;
 
         if (RenderWithVisualStyles)
@@ -236,7 +236,7 @@ public static class CheckBoxRenderer
             return new Size(13, 13);
         }
 
-        using DeviceContextHdcScope hdc = new(deviceContext);
+        using DeviceContextHdcScope hdc = deviceContext.ToHdcScope();
         return GetGlyphSize(hdc, state, hwnd);
     }
 

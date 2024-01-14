@@ -78,7 +78,7 @@ public class ButtonRenderingTests
         }
 
         using Button button = new();
-        using EmfScope emf = new EmfScope();
+        using EmfScope emf = new();
         DeviceContextState state = new(emf);
         Rectangle bounds = button.Bounds;
 
@@ -216,7 +216,7 @@ public class ButtonRenderingTests
         using EmfScope emf = new();
         form.PrintToMetafile(emf);
 
-        var details = emf.RecordsToString();
+        string details = emf.RecordsToString();
     }
 
     [WinFormsFact]

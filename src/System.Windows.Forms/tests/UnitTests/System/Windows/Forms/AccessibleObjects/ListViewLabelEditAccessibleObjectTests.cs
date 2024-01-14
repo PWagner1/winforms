@@ -5,7 +5,6 @@ using System.Drawing;
 using Windows.Win32.System.Variant;
 using Windows.Win32.UI.Accessibility;
 using static System.Windows.Forms.ListViewItem;
-using static Interop;
 
 namespace System.Windows.Forms.Tests.AccessibleObjects;
 
@@ -162,7 +161,7 @@ public class ListViewLabelEditAccessibleObjectTests
         listView.Columns.Add(new ColumnHeader() { Text = "Column 1", Width = 100 });
 
         ListViewItem item = new("Test", 0);
-        ListViewSubItem subItem = new ListViewSubItem(item, "Test");
+        ListViewSubItem subItem = new(item, "Test");
         item.SubItems.Add(subItem);
         listView.Items.Add(item);
         listView._listViewSubItem = subItem;

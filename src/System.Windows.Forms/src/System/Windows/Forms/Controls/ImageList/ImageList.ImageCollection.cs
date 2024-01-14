@@ -35,7 +35,7 @@ public sealed partial class ImageList
             get
             {
                 // pass back a copy of the current state.
-                StringCollection keysCollection = new StringCollection();
+                StringCollection keysCollection = new();
 
                 for (int i = 0; i < _imageInfoCollection.Count; i++)
                 {
@@ -164,8 +164,8 @@ public sealed partial class ImageList
                     }
                     finally
                     {
-                        PInvoke.DeleteObject((HGDIOBJ)hBitmap);
-                        PInvoke.DeleteObject((HGDIOBJ)hMask);
+                        PInvokeCore.DeleteObject((HGDIOBJ)hBitmap);
+                        PInvokeCore.DeleteObject((HGDIOBJ)hMask);
                     }
 
                     if (!ok)

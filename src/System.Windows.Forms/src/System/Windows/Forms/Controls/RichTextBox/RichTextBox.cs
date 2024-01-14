@@ -236,10 +236,7 @@ public partial class RichTextBox : TextBoxBase
 
         set
         {
-            if (value < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidArgument, nameof(BulletIndent), value));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegative(value);
 
             _bulletIndent = value;
 
@@ -573,17 +570,14 @@ public partial class RichTextBox : TextBoxBase
     [DefaultValue(0)]
     [Localizable(true)]
     [SRDescription(nameof(SR.RichTextBoxRightMargin))]
-    public int RightMargin
+    public unsafe int RightMargin
     {
         get => _rightMargin;
         set
         {
             if (_rightMargin != value)
             {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(RightMargin), value, 0));
-                }
+                ArgumentOutOfRangeException.ThrowIfNegative(value);
 
                 _rightMargin = value;
 
@@ -595,7 +589,7 @@ public partial class RichTextBox : TextBoxBase
                 }
                 else if (IsHandleCreated)
                 {
-                    using PInvoke.CreateDcScope hdc = new("DISPLAY");
+                    using CreateDcScope hdc = new("DISPLAY");
                     PInvoke.SendMessage(this, PInvoke.EM_SETTARGETDEVICE, (WPARAM)hdc, Pixel2Twip(value, true));
                 }
             }
@@ -831,13 +825,8 @@ public partial class RichTextBox : TextBoxBase
         }
         set
         {
-            if (value > 2000 || value < -2000)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(value),
-                    value,
-                    string.Format(SR.InvalidBoundArgument, nameof(SelectionCharOffset), value, -2000, 2000));
-            }
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 2000);
+            ArgumentOutOfRangeException.ThrowIfLessThan(value, -2000);
 
             ForceHandleCreate();
             CHARFORMAT2W cf = new()
@@ -1171,13 +1160,7 @@ public partial class RichTextBox : TextBoxBase
         }
         set
         {
-            if (value < 0)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(value),
-                    value,
-                    string.Format(SR.InvalidLowBoundArgumentEx, nameof(SelectionRightIndent), value, 0));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegative(value);
 
             ForceHandleCreate();
             PARAFORMAT pf = new()
@@ -1508,12 +1491,10 @@ public partial class RichTextBox : TextBoxBase
 
         set
         {
-            if (value <= 0.015625f || value >= 64.0f)
+            if (!float.IsNaN(value))
             {
-                throw new ArgumentOutOfRangeException(
-                    nameof(value),
-                    value,
-                    string.Format(SR.InvalidExBoundArgument, nameof(ZoomFactor), value, 0.015625f, 64.0f));
+                ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(value, 0.015625f);
+                ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(value, 64.0f);
             }
 
             if (value != _zoomMultiplier)
@@ -1988,9 +1969,9 @@ public partial class RichTextBox : TextBoxBase
         ArgumentOutOfRangeException.ThrowIfNegative(start);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(start, textLength);
 
-        if (end < start && end != -1)
+        if (end != -1)
         {
-            throw new ArgumentOutOfRangeException(nameof(end), end, string.Format(SR.InvalidLowBoundArgumentEx, nameof(end), end, nameof(start)));
+            ArgumentOutOfRangeException.ThrowIfLessThan(end, start);
         }
 
         // Don't do anything if we get nothing to look for
@@ -2026,7 +2007,7 @@ public partial class RichTextBox : TextBoxBase
         };
 
         // Characters we have slurped into memory in order to search
-        var charBuffer = new UnicodeCharBuffer(CHAR_BUFFER_LEN + 1);
+        UnicodeCharBuffer charBuffer = new(CHAR_BUFFER_LEN + 1);
         txrg.lpstrText = charBuffer.AllocCoTaskMem();
         if (txrg.lpstrText == IntPtr.Zero)
         {
@@ -2806,7 +2787,7 @@ public partial class RichTextBox : TextBoxBase
             dwEffects |= CFE_EFFECTS.CFE_UNDERLINE;
         }
 
-        LOGFONTW logFont = LOGFONTW.FromFont(value);
+        LOGFONTW logFont = value.ToLogicalFont();
         CHARFORMAT2W charFormat = new()
         {
             cbSize = (uint)sizeof(CHARFORMAT2W),
@@ -2814,22 +2795,22 @@ public partial class RichTextBox : TextBoxBase
             dwEffects = dwEffects,
             yHeight = (int)(value.SizeInPoints * 20),
             bCharSet = (byte)logFont.lfCharSet,
-            bPitchAndFamily = (byte)logFont.lfPitchAndFamily,
+            bPitchAndFamily = logFont.lfPitchAndFamily,
             FaceName = logFont.FaceName
         };
 
         PInvoke.SendMessage(
             this,
             PInvoke.EM_SETCHARFORMAT,
-            (WPARAM)(uint)(selectionOnly ? PInvoke.SCF_SELECTION : PInvoke.SCF_ALL),
+            (WPARAM)(selectionOnly ? PInvoke.SCF_SELECTION : PInvoke.SCF_ALL),
             ref charFormat);
     }
 
     private static void SetupLogPixels()
     {
         using var dc = GetDcScope.ScreenDC;
-        s_logPixelsX = PInvoke.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSX);
-        s_logPixelsY = PInvoke.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSY);
+        s_logPixelsX = PInvokeCore.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSX);
+        s_logPixelsY = PInvokeCore.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSY);
     }
 
     private static int Pixel2Twip(int v, bool xDirection)

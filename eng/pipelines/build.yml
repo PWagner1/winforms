@@ -28,8 +28,11 @@ jobs:
             _BuildConfig: Debug
             # override some variables for debug
             _SignType: test
-            # Code coverage uploads fail on internal PRs
-            ${{ if eq(variables['System.TeamProject'], 'public') }}:
+            # Only collect coverage for external Debug-x64 builds. Uploads fail on internal builds, and coverage
+            # collection on additional legs produces unnecessary performance overhead.
+            ${{ if and(eq(variables['System.TeamProject'], 'public'), eq(parameters.targetArchitecture, 'x64')) }}:
+              _Coverage: true
+            ${{ else }}:
               _Coverage: false
         Release:
           _BuildConfig: Release
@@ -141,7 +144,17 @@ jobs:
         $(_InternalRuntimeDownloadArgs)
         /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\CodeCoverage-${{ parameters.targetArchitecture }}.binlog
       displayName: Upload coverage to codecov.io
-      condition: and(succeeded(), eq(variables._Coverage, 'true'))
+      condition: and(succeeded(), eq(variables._Coverage, 'true'), eq('${{ parameters.targetArchitecture }}', 'x64'))
+
+    #Publish code coverage results
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: 'cobertura'
+        summaryFileLocation: '$(Build.SourcesDirectory)\artifacts\bin\CodeCoverage\coverage\Cobertura.xml'
+        pathToSources: '$(Build.SourcesDirectory)'
+        reportDirectory: '$(Build.SourcesDirectory)\artifacts\bin\CodeCoverage\coverage'
+      displayName: PublishCodeCoverageResults
+      condition: and(eq(variables['_BuildConfig'], 'Debug'), eq('${{ parameters.targetArchitecture }}', 'x64'))
 
     # Generate SBOM for the internal leg only
     - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:

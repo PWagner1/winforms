@@ -91,7 +91,7 @@ public class FontConverter : TypeConverter
                 {
                     argCount = 6;
                 }
-                else if (font.GdiCharSet != SafeNativeMethods.DEFAULT_CHARSET)
+                else if (font.GdiCharSet != (byte)FONT_CHARSET.DEFAULT_CHARSET)
                 {
                     argCount = 5;
                 }
@@ -277,7 +277,7 @@ public class FontConverter : TypeConverter
                 }
             }
 
-            char[] trimChars = new char[] { separator, ' ' };
+            char[] trimChars = [separator, ' '];
 
             if (splitPoint > 0)
             {
@@ -499,7 +499,7 @@ public class FontConverter : TypeConverter
             {
                 base.GetStandardValues(context); // sets "values"
                 Debug.Assert(Values is not null);
-                ArrayList filteredValues = new ArrayList(Values);
+                ArrayList filteredValues = new(Values);
                 filteredValues.Remove(GraphicsUnit.Display);
                 Values = new StandardValuesCollection(filteredValues);
             }

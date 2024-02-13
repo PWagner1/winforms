@@ -4493,7 +4493,7 @@ public unsafe partial class Control :
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     protected void AccessibilityNotifyClients(AccessibleEvents accEvent, int objectID, int childID)
     {
-        if (IsHandleCreated && AccessibleObject.CanNotifyClients)
+        if (IsHandleCreated && !LocalAppContextSwitches.NoClientNotifications)
         {
             PInvoke.NotifyWinEvent((uint)accEvent, this, objectID, childID + 1);
         }
@@ -6927,7 +6927,9 @@ public unsafe partial class Control :
         {
             if (!tme.IsCompleted)
             {
-                WaitForWaitHandle(tme.AsyncWaitHandle);
+                // In synchronous call we not need waitHandle after wait.
+                using WaitHandle waitHandle = tme.AsyncWaitHandle;
+                WaitForWaitHandle(waitHandle);
             }
 
             if (tme._exception is not null)

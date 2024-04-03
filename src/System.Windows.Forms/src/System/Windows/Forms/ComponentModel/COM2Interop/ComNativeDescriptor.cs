@@ -96,6 +96,7 @@ internal sealed unsafe partial class ComNativeDescriptor : TypeDescriptionProvid
 
     internal static TypeConverter GetIComponentConverter() => TypeDescriptor.GetConverter(typeof(IComponent));
 
+    [RequiresUnreferencedCode("Design-time attributes are not preserved when trimming. Types referenced by attributes like EditorAttribute and DesignerAttribute may not be available after trimming.")]
     internal static object? GetEditor(object component, Type baseEditorType)
         => TypeDescriptor.GetEditor(component.GetType(), baseEditorType);
 
@@ -166,7 +167,7 @@ internal sealed unsafe partial class ComNativeDescriptor : TypeDescriptionProvid
     internal static bool IsNameDispId(object? @object, int dispid)
     {
         using var dispatch = ComHelpers.TryGetComScope<IDispatch>(@object, out HRESULT hr);
-        return hr.Failed ? false : dispid == Com2TypeInfoProcessor.GetNameDispId(dispatch);
+        return !hr.Failed && dispid == Com2TypeInfoProcessor.GetNameDispId(dispatch);
     }
 
     /// <summary>

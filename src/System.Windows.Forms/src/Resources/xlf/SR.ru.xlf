@@ -288,8 +288,8 @@
         <note />
       </trans-unit>
       <trans-unit id="BinaryFormatterNotSupported">
-        <source>Using the BinaryFormatter is not supported in trimmed applications.</source>
-        <target state="translated">Использование BinaryFormatter не поддерживается в обрезанных приложениях.</target>
+        <source>BinaryFormatter serialization and deserialization are disabled within this application. See https://aka.ms/binaryformatter for more information.</source>
+        <target state="needs-review-translation">Использование BinaryFormatter не поддерживается в обрезанных приложениях.</target>
         <note />
       </trans-unit>
       <trans-unit id="BindableComponentBindingContextChangedDescr">
@@ -9703,6 +9703,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="TooManyResumeUpdateMenuHandles">
         <source>Too many calls to ResumeUpdateMenuHandles.</source>
         <target state="translated">Недопустимо большое число вызовов ResumeUpdateMenuHandles.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ToolStripAllowClickThrough">
+        <source>Allows the control to be interacted when window does not have focus.</source>
+        <target state="new">Allows the control to be interacted when window does not have focus.</target>
         <note />
       </trans-unit>
       <trans-unit id="ToolStripAllowItemReorderAndAllowDropCannotBeSetToTrue">

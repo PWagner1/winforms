@@ -571,7 +571,7 @@ public partial class LinkLabel : Label, IButtonControl
                 padding = TextPaddingOptions.LeftAndRightPadding;
             }
 
-            using var hfont = GdiCache.GetHFONT(Font);
+            using var hfont = GdiCache.GetHFONTScope(Font);
             DRAWTEXTPARAMS dtParams = hfont.GetTextMargins(padding);
 
             iLeftMargin = dtParams.iLeftMargin;
@@ -613,7 +613,7 @@ public partial class LinkLabel : Label, IButtonControl
     }
 
     /// <summary>
-    ///  Calculate character ranges taking into account the locale.  Provided for surrogate chars support.
+    ///  Calculate character ranges taking into account the locale. Provided for surrogate chars support.
     /// </summary>
     private CharacterRange[] AdjustCharacterRangesForSurrogateChars()
     {

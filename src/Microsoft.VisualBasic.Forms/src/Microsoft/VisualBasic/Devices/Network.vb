@@ -6,11 +6,11 @@ Imports System.Net
 Imports System.Security
 Imports System.Threading
 Imports Microsoft.VisualBasic.CompilerServices
-Imports Microsoft.VisualBasic.CompilerServices.ExceptionUtils
-Imports Microsoft.VisualBasic.CompilerServices.Utils
 Imports Microsoft.VisualBasic.FileIO
 Imports Microsoft.VisualBasic.MyServices.Internal
 Imports NetInfoAlias = System.Net.NetworkInformation
+
+Imports VbUtils = Microsoft.VisualBasic.CompilerServices.Utils
 
 Namespace Microsoft.VisualBasic.Devices
 
@@ -52,7 +52,7 @@ Namespace Microsoft.VisualBasic.Devices
                 Catch ex As PlatformNotSupportedException
                     Return
                 End Try
-                SyncLock _syncObject 'we don't want our event firing before we've finished setting up the infrastructure.  Also, need to assure there are no races in here so we don't hook up the OS listener twice, etc.
+                SyncLock _syncObject 'we don't want our event firing before we've finished setting up the infrastructure. Also, need to assure there are no races in here so we don't hook up the OS listener twice, etc.
                     If _networkAvailabilityEventHandlers Is Nothing Then _networkAvailabilityEventHandlers = New List(Of NetworkAvailableEventHandler)
                     _networkAvailabilityEventHandlers.Add(handler)
 
@@ -374,7 +374,7 @@ Namespace Microsoft.VisualBasic.Devices
 
                 'Throw if the file exists and the user doesn't want to overwrite
                 If IO.File.Exists(fullFilename) And Not overwrite Then
-                    Throw New IO.IOException(GetResourceString(SR.IO_FileExists_Path, destinationFileName))
+                    Throw New IO.IOException(VbUtils.GetResourceString(SR.IO_FileExists_Path, destinationFileName))
                 End If
 
                 ' Set credentials if we have any
@@ -385,8 +385,8 @@ Namespace Microsoft.VisualBasic.Devices
                 Dim dialog As ProgressDialog = Nothing
                 If showUI AndAlso Environment.UserInteractive Then
                     dialog = New ProgressDialog With {
-                        .Text = GetResourceString(SR.ProgressDialogDownloadingTitle, address.AbsolutePath),
-                        .LabelText = GetResourceString(SR.ProgressDialogDownloadingLabel, address.AbsolutePath, fullFilename)
+                        .Text = VbUtils.GetResourceString(SR.ProgressDialogDownloadingTitle, address.AbsolutePath),
+                        .LabelText = VbUtils.GetResourceString(SR.ProgressDialogDownloadingLabel, address.AbsolutePath, fullFilename)
                     }
                 End If
 
@@ -594,7 +594,7 @@ Namespace Microsoft.VisualBasic.Devices
 
             'Make sure the file exists
             If Not IO.File.Exists(sourceFileName) Then
-                Throw New IO.FileNotFoundException(GetResourceString(SR.IO_FileNotFound_Path, sourceFileName))
+                Throw New IO.FileNotFoundException(VbUtils.GetResourceString(SR.IO_FileNotFound_Path, sourceFileName))
             End If
 
             If connectionTimeout <= 0 Then
@@ -616,8 +616,8 @@ Namespace Microsoft.VisualBasic.Devices
                 Dim Dialog As ProgressDialog = Nothing
                 If showUI AndAlso Environment.UserInteractive Then
                     Dialog = New ProgressDialog With {
-                        .Text = GetResourceString(SR.ProgressDialogUploadingTitle, sourceFileName),
-                        .LabelText = GetResourceString(SR.ProgressDialogUploadingLabel, sourceFileName, address.AbsolutePath)
+                        .Text = VbUtils.GetResourceString(SR.ProgressDialogUploadingTitle, sourceFileName),
+                        .LabelText = VbUtils.GetResourceString(SR.ProgressDialogUploadingLabel, sourceFileName, address.AbsolutePath)
                     }
                 End If
 
@@ -644,9 +644,9 @@ Namespace Microsoft.VisualBasic.Devices
         'Listens to the AddressChanged event from the OS which comes in on an arbitrary thread
         Private Sub OS_NetworkAvailabilityChangedListener(sender As Object, e As EventArgs)
             SyncLock _syncObject 'Ensure we don't handle events until after we've finished setting up the event marshalling infrastructure
-                'Don't call AsyncOperationManager.OperationSynchronizationContext.Post.  The reason we want to go through m_SynchronizationContext is that
-                'the OperationSynchronizationContext is thread static.  Since we are getting called on some random thread, the context that was
-                'in place when the Network object was created won't be available (it is on the original thread).  To hang on to the original
+                'Don't call AsyncOperationManager.OperationSynchronizationContext.Post. The reason we want to go through m_SynchronizationContext is that
+                'the OperationSynchronizationContext is thread static. Since we are getting called on some random thread, the context that was
+                'in place when the Network object was created won't be available (it is on the original thread). To hang on to the original
                 'context associated with the thread that the network object is created on, I use m_SynchronizationContext.
                 _synchronizationContext.Post(_networkAvailabilityChangedCallback, Nothing)
             End SyncLock

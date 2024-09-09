@@ -306,6 +306,93 @@ public class ComboBoxTests
     }
 
     [WinFormsFact]
+    public void ComboBox_MeasureItem_AddHandler()
+    {
+        using ComboBox control = new();
+        int initialItemHeight = control.ItemHeight;
+
+        MeasureItemEventHandler handler = (sender, e) => { };
+        control.MeasureItem += handler;
+
+        control.ItemHeight.Should().NotBe(initialItemHeight);
+    }
+
+    private class TestComboBox : ComboBox
+    {
+        public void TriggerMeasureItem(MeasureItemEventArgs e) =>
+            base.OnMeasureItem(e);
+    }
+
+    [WinFormsFact]
+    public void ComboBox_MeasureItem_RemoveHandler()
+    {
+        using TestComboBox control = new();
+        int handlerCallCount = 0;
+        MeasureItemEventHandler handler = (sender, e) => { handlerCallCount++; };
+
+        control.MeasureItem += handler;
+
+        // Simulate the MeasureItem event
+        control.TriggerMeasureItem(new MeasureItemEventArgs(Graphics.FromHwnd(IntPtr.Zero), 0, 0));
+
+        control.MeasureItem -= handler;
+
+        // Simulate the MeasureItem event again to ensure the handler was removed
+        control.TriggerMeasureItem(new MeasureItemEventArgs(Graphics.FromHwnd(IntPtr.Zero), 0, 0));
+
+        handlerCallCount.Should().Be(1, "The MeasureItem event handler was not removed as expected.");
+    }
+
+    private class TestableComboBox : ComboBox
+    {
+        public void InvokeOnPaint(PaintEventArgs e) => base.OnPaint(e);
+    }
+
+    [WinFormsFact]
+    public void ComboBox_Paint_AddHandler_ShouldSubscribeEvent()
+    {
+        using TestableComboBox comboBox = new();
+        int callCount = 0;
+
+        PaintEventHandler handler = (sender, e) => callCount++;
+
+        comboBox.Paint += handler;
+        comboBox.TestAccessor().Dynamic.OnPaint(new PaintEventArgs(Graphics.FromHwnd(comboBox.Handle), new Rectangle()));
+
+        callCount.Should().Be(1);
+    }
+
+    [WinFormsFact]
+    public void ComboBox_Paint_RemoveHandler_ShouldUnsubscribeEvent()
+    {
+        using TestableComboBox comboBox = new();
+        int callCount = 0;
+
+        PaintEventHandler handler = (sender, e) => callCount++;
+        comboBox.Paint += handler;
+        comboBox.InvokeOnPaint(new PaintEventArgs(Graphics.FromHwnd(comboBox.Handle), new Rectangle()));
+        callCount.Should().Be(1);
+
+        comboBox.Paint -= handler;
+        comboBox.InvokeOnPaint(new PaintEventArgs(Graphics.FromHwnd(comboBox.Handle), new Rectangle()));
+        callCount.Should().Be(1);
+    }
+
+    [WinFormsFact]
+    public void ComboBox_Paint_EventHandlerCalledOnPaint()
+    {
+        using TestableComboBox comboBox = new();
+        using Bitmap bitmap = new(100, 100);
+        Graphics graphics = Graphics.FromImage(bitmap);
+        bool handlerCalled = false;
+
+        comboBox.Paint += (sender, e) => handlerCalled = true;
+        comboBox.InvokeOnPaint(new PaintEventArgs(graphics, new Rectangle(0, 0, 100, 100)));
+
+        handlerCalled.Should().BeTrue();
+    }
+
+    [WinFormsFact]
     public void VerifyAutoCompleteEntries()
     {
         void AssertAutoCompleteCustomSource(string[] items, bool isHandleCreated)
@@ -616,6 +703,120 @@ public class ComboBoxTests
         Assert.Equal(0, dataSourceCallCount);
         Assert.Equal(0, displayMemberCallCount);
     }
+
+    public class CustomComboBox : ComboBox
+    {
+        // Make methods private to improve encapsulation
+        private void RaiseOnDrawItem(DrawItemEventArgs e) => base.OnDrawItem(e);
+
+        private void TriggerDoubleClick() => base.OnDoubleClick(EventArgs.Empty);
+
+        // Public methods to trigger the private methods for testing purposes
+        public void TestRaiseOnDrawItem(DrawItemEventArgs e) => RaiseOnDrawItem(e);
+
+        public void TestTriggerDoubleClick() => TriggerDoubleClick();
+    }
+
+    [WinFormsFact]
+    public void ComboBox_DrawItem_AddHandler_ShouldCallHandler()
+    {
+        using CustomComboBox control = new();
+        using Bitmap bitmap = new(1, 1);
+        Graphics graphics = Graphics.FromImage(bitmap);
+        int callCount = 0;
+
+        DrawItemEventHandler handler = (sender, e) => callCount++;
+
+        control.DrawItem += handler;
+        control.TestRaiseOnDrawItem(new DrawItemEventArgs(graphics, control.Font, new Rectangle(), 0, DrawItemState.Default));
+
+        callCount.Should().Be(1);
+        control.DrawItem -= handler;
+    }
+
+    [WinFormsFact]
+    public void ComboBox_DrawItem_RemoveHandler_ShouldNotCallHandler()
+    {
+        using CustomComboBox control = new();
+        int callCount = 0;
+
+        DrawItemEventHandler handler = (sender, e) => callCount++;
+
+        control.DrawItem += handler;
+        control.DrawItem -= handler;
+        using Bitmap bitmap = new(1, 1);
+        control.TestRaiseOnDrawItem(new DrawItemEventArgs(Graphics.FromImage(bitmap), control.Font, new Rectangle(), 0, DrawItemState.Default));
+
+        callCount.Should().Be(0);
+    }
+
+    [WinFormsFact]
+    public void ComboBox_DrawItem_AddNullHandler_ShouldNotThrow()
+    {
+        using CustomComboBox control = new();
+
+        // No exception means the test passed.
+        control.DrawItem += null;
+        control.DrawItem -= null;
+    }
+
+    [WinFormsFact]
+    public void ComboBox_DrawItem_AddRemoveMultipleHandlers_ShouldCallHandlers()
+    {
+        using CustomComboBox control = new();
+        using Bitmap bitmap = new(1, 1);
+        Graphics graphics = Graphics.FromImage(bitmap);
+        int callCount1 = 0;
+        int callCount2 = 0;
+
+        DrawItemEventHandler handler1 = (sender, e) => callCount1++;
+        DrawItemEventHandler handler2 = (sender, e) => callCount2++;
+
+        control.DrawItem += handler1;
+        control.DrawItem += handler2;
+        control.TestRaiseOnDrawItem(new DrawItemEventArgs(graphics, control.Font, new Rectangle(), 0, DrawItemState.Default));
+
+        callCount1.Should().Be(1);
+        callCount2.Should().Be(1);
+
+        control.DrawItem -= handler1;
+        control.TestRaiseOnDrawItem(new DrawItemEventArgs(graphics, control.Font, new Rectangle(), 0, DrawItemState.Default));
+
+        callCount1.Should().Be(1); // Should not increase
+        callCount2.Should().Be(2); // Should increase
+    }
+
+    [WinFormsFact]
+    public void ComboBox_DrawItem_RemoveNonExistentHandler_ShouldNotThrow()
+    {
+        using CustomComboBox control = new();
+        DrawItemEventHandler handler = (sender, e) => { };
+
+        // No exception means the test passed.
+        control.DrawItem -= handler;
+    }
+
+    [WinFormsTheory]
+    [InlineData(1)]
+    [InlineData(0)]
+    public void ComboBox_DoubleClick_AddRemoveEvent_Success(int expectedCallCount)
+    {
+        using CustomComboBox control = new();
+        int callCount = 0;
+        EventHandler handler = (sender, e) => callCount++;
+
+        if (expectedCallCount == 1)
+        {
+            control.DoubleClick += handler;
+        }
+
+        control.TestTriggerDoubleClick();
+        callCount.Should().Be(expectedCallCount);
+
+        control.DoubleClick -= handler;
+        control.TestTriggerDoubleClick();
+        callCount.Should().Be(expectedCallCount);
+    } 
 
     [WinFormsTheory]
     [EnumData<ComboBoxStyle>]
@@ -2511,6 +2712,33 @@ public class ComboBoxTests
 
         control.SelectionStart.Should().Be(0);
         control.SelectionLength.Should().Be(control.Text.Length);
+    }
+
+    // Unit test for https://github.com/microsoft/winforms-designer/issues/2707
+    [WinFormsFact]
+    public void ComboBox_CorrectHeightAfterSetDropDownStyleSimple()
+    {
+        using ComboBox comboBox = new();
+
+        int handleCreatedInvoked = 0;
+        comboBox.HandleCreated += (s, e) =>
+        {
+            handleCreatedInvoked++;
+        };
+
+        comboBox.Height.Should().Be(23);
+
+        comboBox.CreateControl();
+
+        comboBox.Height.Should().Be(23);
+        comboBox.DropDownStyle.Should().Be(ComboBoxStyle.DropDown);
+
+        comboBox.DropDownStyle = ComboBoxStyle.Simple;
+
+        // DefaultSimpleStyleHeight is 150 in ComboBox class
+        comboBox.Height.Should().Be(150);
+        comboBox.DropDownStyle.Should().Be(ComboBoxStyle.Simple);
+        handleCreatedInvoked.Should().Be(2);
     }
 
     private void InitializeItems(ComboBox comboBox, int numItems)

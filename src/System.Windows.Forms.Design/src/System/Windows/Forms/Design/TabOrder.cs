@@ -186,7 +186,7 @@ internal class TabOrder : Control, IMouseHandler, IMenuStatusHandler
 
     /// <summary>
     ///  This function does double duty: it draws the tabs if fRegion is false, or it
-    ///  computes control region rects if fRegion is true (both require that we essentially
+    ///  computes control region rectangles if fRegion is true (both require that we essentially
     ///  "draw" the tabs)
     /// </summary>
     private void DrawTabs(List<Control> tabs, Graphics graphics, bool fRegion)
@@ -553,7 +553,7 @@ internal class TabOrder : Control, IMouseHandler, IMenuStatusHandler
 
     /// <summary>
     ///  This is called when a mouse button is depressed. This will perform
-    ///  the default drag action for the selected components,  which is to
+    ///  the default drag action for the selected components, which is to
     ///  move those components around by the mouse.
     /// </summary>
     public virtual void OnMouseDown(IComponent component, MouseButtons button, int x, int y)

@@ -206,7 +206,9 @@ internal unsafe partial struct IMsoComponentManager : IComIID
     ///   state of the component manager's state context at its root.
     ///  </para>
     ///  <para>
-    ///   <see href="https://learn.microsoft.com/previous-versions/office/developer/office-2007/ff518963(v=office.12)">Microsoft documentation</see>
+    ///   <see href="https://learn.microsoft.com/previous-versions/office/developer/office-2007/ff518963(v=office.12)">
+    ///    Microsoft documentation
+    ///   </see>
     ///  </para>
     /// </remarks>
     [ComImport]
@@ -455,8 +457,9 @@ internal unsafe partial struct IMsoComponentManager : IComIID
         /// </summary>
         /// <remarks>
         ///  <para>
-        ///   The component manager should push its message loop, calling <see cref="IMsoComponent.FContinueMessageLoop(msoloop, void*, MSG*)"/>
-        ///   during each loop iteration. When <see cref="IMsoComponent.FContinueMessageLoop(msoloop, void*, MSG*)"/> returns <see cref="BOOL.FALSE"/>,
+        ///   The component manager should push its message loop, calling
+        ///   <see cref="IMsoComponent.FContinueMessageLoop(msoloop, void*, MSG*)"/> during each loop iteration.
+        ///   When <see cref="IMsoComponent.FContinueMessageLoop(msoloop, void*, MSG*)"/> returns <see cref="BOOL.FALSE"/>,
         ///   the component manager terminates the loop.
         ///  </para>
         /// </remarks>
@@ -474,7 +477,7 @@ internal unsafe partial struct IMsoComponentManager : IComIID
             void* pvLoopData);
 
         /// <summary>
-        ///  Cause the component manager to create a "sub" component manager, which  will be one of its
+        ///  Cause the component manager to create a "sub" component manager, which will be one of its
         ///  children in the hierarchical tree of component managers used to maintain state contexts
         ///  (see "Comments on State Contexts" in <see cref="IMsoComponentManager"/> remarks).
         /// </summary>

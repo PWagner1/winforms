@@ -236,11 +236,13 @@ internal unsafe struct IMsoComponent : IComIID, IVTable<IMsoComponent, IMsoCompo
     ///   should be returned from WM_MOUSEACTIVATE, so that the active (or tracking) comp will be able to process the
     ///   resulting mouse message. If one does not want to examine the reg info, no MA_xxxANDEAT value
     ///   should be returned from WM_MOUSEACTIVATE if any comp is active (or tracking). One
-    ///   can query the reg info  of the active (or tracking) component at any time via
+    ///   can query the reg info of the active (or tracking) component at any time via
     ///   <see cref="IMsoComponentManager.FGetActiveComponent"/>.
     ///  </para>
     ///  <para>
-    ///   <see href="https://learn.microsoft.com/previous-versions/office/developer/office-2007/ff518955(v=office.12)">Microsoft documentation</see>
+    ///   <see href="https://learn.microsoft.com/previous-versions/office/developer/office-2007/ff518955(v=office.12)">
+    ///    Microsoft documentation
+    ///   </see>
     ///  </para>
     /// </remarks>
     [ComImport]

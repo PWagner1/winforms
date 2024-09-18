@@ -210,7 +210,7 @@ public partial class Form : ContainerControl
 
 #pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         SetStyle(ControlStyles.ApplyThemingImplicitly, true);
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore WFO5001
     }
 
     /// <summary>
@@ -2397,7 +2397,7 @@ public partial class Form : ContainerControl
 
 #pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     private unsafe void SetFormCornerPreferenceInternal(FormCornerPreference cornerPreference)
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore WFO5001
     {
         DWM_WINDOW_CORNER_PREFERENCE dwmCornerPreference = cornerPreference switch
         {
@@ -3950,7 +3950,7 @@ public partial class Form : ContainerControl
     }
 
     /// <summary>
-    ///  Override since CanProcessMnemonic is overriden too (base.CanSelectCore calls CanProcessMnemonic).
+    ///  Override since CanProcessMnemonic is overridden too (base.CanSelectCore calls CanProcessMnemonic).
     /// </summary>
     internal override bool CanSelectCore()
     {
@@ -3979,7 +3979,7 @@ public partial class Form : ContainerControl
     }
 
     /// <summary>
-    ///  Overriden to handle MDI mnemonic processing properly.
+    ///  Overridden to handle MDI mnemonic processing properly.
     /// </summary>
     internal override bool CanProcessMnemonic()
     {
@@ -3996,7 +3996,7 @@ public partial class Form : ContainerControl
     }
 
     /// <summary>
-    ///  Overriden to handle MDI mnemonic processing properly.
+    ///  Overridden to handle MDI mnemonic processing properly.
     /// </summary>
     protected internal override bool ProcessMnemonic(char charCode)
     {
@@ -4357,7 +4357,7 @@ public partial class Form : ContainerControl
         {
             SetFormCornerPreferenceInternal(cornerPreference.Value);
         }
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore WFO5001
 
         UpdateLayered();
     }
@@ -4477,7 +4477,7 @@ public partial class Form : ContainerControl
             {
                 PInvoke.SetWindowTheme(HWND, $"{DarkModeIdentifier}_{ExplorerThemeIdentifier}", null);
             }
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore WFO5001
 
             BeginInvoke(new MethodInvoker(CallShownEvent));
         }
@@ -5993,7 +5993,8 @@ public partial class Form : ContainerControl
     ///  Shows the form as a modal dialog box with the specified owner asynchronously.
     /// </summary>
     /// <param name="owner">
-    ///  Any object that implements <see cref="IWin32Window"/> that represents the top-level window that will own the modal dialog box.
+    ///  Any object that implements <see cref="IWin32Window"/>
+    ///  that represents the top-level window that will own the modal dialog box.
     /// </param>
     /// <returns>
     ///  A <see cref="Task{DialogResult}"/> representing the outcome of the dialog.

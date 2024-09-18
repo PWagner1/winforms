@@ -57,7 +57,7 @@ public partial class TrackBar : Control, ISupportInitialize
 
 #pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         SetStyle(ControlStyles.ApplyThemingImplicitly, true);
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore WFO5001
         _requestedDim = PreferredDimension;
     }
 
@@ -79,7 +79,7 @@ public partial class TrackBar : Control, ISupportInitialize
         set
         {
             // Note that we intentionally do not call base.AutoSize. Labels size themselves by
-            // overriding SetBoundsCore (legacy behaviour). We let CommonProperties.GetAutoSize
+            // overriding SetBoundsCore (legacy behavior). We let CommonProperties.GetAutoSize
             // continue to return false to keep our LayoutEngines from messing with TextBoxes.
             // This is done for backwards compatibility since the new AutoSize behavior differs.
             if (_autoSize != value)

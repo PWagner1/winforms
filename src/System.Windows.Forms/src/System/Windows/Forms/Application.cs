@@ -46,7 +46,7 @@ public sealed partial class Application
 
 #pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     private static SystemColorMode? s_colorMode;
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore WFO5001
 
     private const string DarkModeKeyPath = "HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
     private const string DarkModeKey = "AppsUseLightTheme";
@@ -258,8 +258,12 @@ public sealed partial class Application
     ///  </para>
     /// </remarks>
     [Experimental(DiagnosticIDs.ExperimentalDarkMode, UrlFormat = DiagnosticIDs.UrlFormat)]
-    public static SystemColorMode ColorMode =>
-        s_colorMode ?? SystemColorMode.Classic;
+    public static SystemColorMode ColorMode => s_colorMode ?? SystemColorMode.Classic;
+
+    /// <summary>
+    ///  True if the <see cref="ColorMode"/> has been set at least once.
+    /// </summary>
+    internal static bool ColorModeSet => s_colorMode is not null;
 
     /// <summary>
     ///  Sets the default color mode (dark mode) for the application.
@@ -873,7 +877,7 @@ public sealed partial class Application
     }
 
     /// <summary>
-    ///  Occurs when an untrapped thread exception is thrown.
+    ///  Occurs when an un-trapped thread exception is thrown.
     /// </summary>
     public static event ThreadExceptionEventHandler? ThreadException
     {

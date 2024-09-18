@@ -151,7 +151,8 @@ internal class DesignerFrame : Control, IOverlayService, ISplitWindowService, IC
     }
 
     /// <summary>
-    ///  We override this to do nothing. Otherwise, all the nice keyboard messages we want would get run through the Form's keyboard handling procedure.
+    ///  We override this to do nothing. Otherwise, all the nice keyboard messages we want would get run through
+    ///  the Form's keyboard handling procedure.
     /// </summary>
     protected override bool ProcessDialogKey(Keys keyData)
     {
@@ -389,7 +390,7 @@ internal class DesignerFrame : Control, IOverlayService, ISplitWindowService, IC
             Rectangle client = DisplayRectangle;
 
             // Loop through all of the overlays and size them. Also make sure that they are still on top of the
-            // zorder, because a handle recreate could have changed this.
+            // Z-order, because a handle recreate could have changed this.
             foreach (Control c in _overlayList)
             {
                 c.Bounds = client;

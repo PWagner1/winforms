@@ -98,8 +98,8 @@ public partial class ListView : Control
     private const int MAXTILECOLUMNS = 20;
 
     // PERF: take all the bools and put them into a state variable
-    private Collections.Specialized.BitVector32 _listViewState; // see LISTVIEWSTATE_ consts above
-    private Collections.Specialized.BitVector32 _listViewState1; // see LISTVIEWSTATE1_ consts above
+    private Collections.Specialized.BitVector32 _listViewState; // see LISTVIEWSTATE_ constants above
+    private Collections.Specialized.BitVector32 _listViewState1; // see LISTVIEWSTATE1_ constants above
 
     // Ownerdraw data caches... Only valid inside WM_PAINT.
 
@@ -3291,7 +3291,8 @@ public partial class ListView : Control
             Rectangle itemBounds = lvi.Bounds;
             // LVM_FINDITEM is a nightmare
             // LVM_FINDITEM will use the top left corner of icon rectangle to determine the closest item
-            // What happens if there is no icon for this item? then the top left corner of the icon rectangle falls INSIDE the item label (???)
+            // What happens if there is no icon for this item? then the top left corner of the icon rectangle
+            // falls INSIDE the item label (???)
 
             Rectangle iconBounds = GetItemRect(lvi.Index, ItemBoundsPortion.Icon);
 
@@ -4451,8 +4452,9 @@ public partial class ListView : Control
         if (Items.Count > 0)
         {
             // APPCOMPAT
-            // V1.* users implement virtualization by communicating directly to the native ListView and by passing our virtualization implementation.
-            // In that case, the native list view may have an item under the mouse even if our wrapper thinks the item count is 0.
+            // V1.* users implement virtualization by communicating directly to the native ListView
+            // and by passing our virtualization implementation. In that case, the native list view may
+            // have an item under the mouse even if our wrapper thinks the item count is 0.
             // And that may cause GetItemAt to throw an out of bounds exception.
 
             Point pos = Cursor.Position;
@@ -4622,7 +4624,7 @@ public partial class ListView : Control
             HWND columnHeaderHandle = (HWND)PInvoke.SendMessage(this, PInvoke.LVM_GETHEADER, (WPARAM)0, (LPARAM)0);
             PInvoke.SetWindowTheme(columnHeaderHandle, $"{DarkModeIdentifier}_{ItemsViewThemeIdentifier}", null);
         }
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore WFO5001
 
         UpdateExtendedStyles();
         RealizeProperties();
@@ -5031,7 +5033,7 @@ public partial class ListView : Control
         {
             PInvoke.SendMessage(this, PInvoke.LVM_SETTEXTCOLOR, (WPARAM)0, (LPARAM)c);
         }
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore WFO5001
 
         if (_imageListLarge is not null)
         {
@@ -5963,7 +5965,7 @@ public partial class ListView : Control
 
     private void WmMouseDown(ref Message m, MouseButtons button, int clicks)
     {
-        // Always Reset the MouseupFired....
+        // Always Reset the MouseUpFired....
         _listViewState[LISTVIEWSTATE_mouseUpFired] = false;
         _listViewState[LISTVIEWSTATE_expectingMouseUp] = true;
 
@@ -6046,7 +6048,7 @@ public partial class ListView : Control
                 return false;
             }
         }
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore WFO5001
 
         if (nmhdr->code == PInvoke.NM_CUSTOMDRAW && PInvoke.UiaClientsAreListening())
         {
@@ -6676,7 +6678,7 @@ public partial class ListView : Control
                         // Windows common control always fires
                         // this event twice, once with newState, oldState, and again with
                         // oldState, newState.
-                        // Changing this affects the behaviour as the control never
+                        // Changing this affects the behavior as the control never
                         // fires the event on a Deselect of an Items from multiple selections.
                         // So leave it as it is...
                         if (newState != oldState)

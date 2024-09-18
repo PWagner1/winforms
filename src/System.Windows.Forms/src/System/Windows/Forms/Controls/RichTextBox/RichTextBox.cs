@@ -1803,7 +1803,7 @@ public partial class RichTextBox : TextBoxBase
                 cpMin = position
             };
 
-            // Look for kashidas in the string. A kashida is an arabic visual justification character
+            // Look for kashidas in the string. A kashida is an Arabic visual justification character
             // that's not semantically meaningful. Searching for ABC might find AB_C (where A,B, and C
             // represent Arabic characters and _ represents a kashida). We should highlight the text
             // including the kashida.
@@ -2898,7 +2898,7 @@ public partial class RichTextBox : TextBoxBase
             EDITSTREAMCALLBACK callback = EditStreamProc;
             es.pfnCallback = Marshal.GetFunctionPointerForDelegate(callback);
 
-            // gives us TextBox compatible behavior, programatic text change shouldn't
+            // gives us TextBox compatible behavior, programmatic text change shouldn't
             // be limited...
             PInvoke.SendMessage(this, PInvoke.EM_EXLIMITTEXT, 0, int.MaxValue);
 
@@ -3061,10 +3061,11 @@ public partial class RichTextBox : TextBoxBase
         {
             int actualLength = (int)PInvoke.SendMessage(this, PInvoke.EM_GETTEXTEX, (WPARAM)pGt, (LPARAM)b);
 
-            // The default behaviour of EM_GETTEXTEX is to normalise line endings to '\r'
+            // The default behavior of EM_GETTEXTEX is to normalize line endings to '\r'
             // (see: GT_DEFAULT, https://docs.microsoft.com/windows/win32/api/richedit/ns-richedit-gettextex#members),
-            // whereas previously we would normalise to '\n'. Unfortunately we can only ask for '\r\n' line endings via GT.USECRLF,
-            // but unable to ask for '\n'. Unless GT.USECRLF was set, convert '\r' with '\n' to retain the original behaviour.
+            // whereas previously we would normalize to '\n'. Unfortunately we can only ask for '\r\n' line endings
+            // via GT.USECRLF, but unable to ask for '\n'. Unless GT.USECRLF was set,
+            // convert '\r' with '\n' to retain the original behavior.
             if (!flags.HasFlag(GETTEXTEX_FLAGS.GT_USECRLF))
             {
                 int index = 0;

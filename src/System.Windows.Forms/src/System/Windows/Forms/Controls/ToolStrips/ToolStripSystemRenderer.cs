@@ -37,7 +37,8 @@ public class ToolStripSystemRenderer : ToolStripRenderer
     {
         get
         {
-            // If system in high contrast mode 'false' flag should be passed to render filled selected button background. This is in consistence with ToolStripProfessionalRenderer.
+            // If system in high contrast mode 'false' flag should be passed to render filled selected button background.
+            // This is in consistence with ToolStripProfessionalRenderer.
             _toolStripHighContrastRenderer ??= new ToolStripHighContrastRenderer(systemRenderMode: false);
 
             return _toolStripHighContrastRenderer;
@@ -574,6 +575,17 @@ public class ToolStripSystemRenderer : ToolStripRenderer
             if (rightToLeft || splitButton.BackgroundImage is not null)
             {
                 DrawArrow(new ToolStripArrowRenderEventArgs(g, splitButton, splitButton.DropDownButtonBounds, arrowColor, ArrowDirection.Down));
+            }
+
+            ToolBarState state = GetToolBarState(e.Item);
+            if (e.Item is ToolStripSplitButton item && !SystemInformation.HighContrast &&
+                (state == ToolBarState.Hot || state == ToolBarState.Pressed || state == ToolBarState.Checked))
+            {
+                var clientBounds = item.ClientBounds;
+                bounds.Height -= 1;
+                ControlPaint.DrawBorderSimple(g, clientBounds, SystemColors.Highlight);
+                using var brush = SystemColors.Highlight.GetCachedSolidBrushScope();
+                g.FillRectangle(brush, item.SplitterBounds);
             }
         }
         else

@@ -286,10 +286,12 @@ public unsafe partial class Control :
     // Contains a collection of calculated fonts for various Dpi values of the control in the PerMonV2 mode.
     private Dictionary<int, Font>? _dpiFonts;
 
-    // Flag to signify whether any child controls necessitate the calculation of AnchorsInfo, particularly in cases involving nested containers.
+    // Flag to signify whether any child controls necessitate the calculation of AnchorsInfo,
+    // particularly in cases involving nested containers.
     internal bool _childControlsNeedAnchorLayout;
 
-    // Inform whether the AnchorsInfo needs to be reevaluated, especially when the control's bounds have been altered explicitly.
+    // Inform whether the AnchorsInfo needs to be reevaluated,
+    // especially when the control's bounds have been altered explicitly.
     internal bool _forceAnchorCalculations;
 
     internal byte LayoutSuspendCount { get; private set; }
@@ -1398,7 +1400,7 @@ public unsafe partial class Control :
                 cp.Style |= (int)WINDOW_STYLE.WS_VISIBLE;
             }
 
-            // Unlike Visible, Windows doesn't correctly inherit disabledness from its parent -- an enabled child
+            // Unlike Visible, Windows doesn't correctly inherit disabled state from its parent -- an enabled child
             // of a disabled parent will look enabled but not get mouse events
             if (!Enabled)
             {
@@ -2448,7 +2450,7 @@ public unsafe partial class Control :
     // If the control on which GetContainerControl( ) is called is a ContainerControl, then we don't return the parent
     // but return the same control. This is Everett behavior so we cannot change this since this would be a breaking change.
     // Hence we have a new internal property IsContainerControl which returns false for all Everett control, but
-    // this property is overidden in SplitContainer to return true so that we skip the SplitContainer
+    // this property is overridden in SplitContainer to return true so that we skip the SplitContainer
     // and the correct Parent ContainerControl is returned by GetContainerControl().
     internal virtual bool IsContainerControl => false;
 
@@ -2687,7 +2689,7 @@ public unsafe partial class Control :
 
     /// <summary>
     ///  Name of this control. The designer will set this to the same
-    ///  as the programatic Id "(name)" of the control. The name can be
+    ///  as the programmatic Id "(name)" of the control. The name can be
     ///  used as a key into the ControlCollection.
     /// </summary>
     [Browsable(false)]
@@ -3340,7 +3342,7 @@ public unsafe partial class Control :
         }
     }
 
-    // This auto upgraded v1 client to per-process doublebuffering logic
+    // This auto upgraded v1 client to per-process double buffering logic
     private static BufferedGraphicsContext BufferContext => BufferedGraphicsManager.Current;
 
     /// <summary>
@@ -3377,14 +3379,15 @@ public unsafe partial class Control :
             // Why? Well the way the API seems to work is that it stores in a bit flag for the hidden
             // state.
 
-            // Details from the Menu keydown to changed value of _uiCuesState.
+            // Details from the Menu keyDown to changed value of _uiCuesState.
 
             // When someone does press the ALT (Menu)/F10 key we will
             //   Call ProcessUICues on the control that had focus at the time
             //          ProcessUICues will check the current state of the control using WM_QUERYUISTATE
             //          If WM_QUERYUISTATE indicates that the accelerators are hidden we will
             //                  either call WM_UPDATEUISTATE or WM_CHANGEUISTATE depending on whether we're hosted or not.
-            //          All controls in the heirarchy will be individually called back on WM_UPDATEUISTATE, which will go into WmUpdateUIState.
+            //          All controls in the hierarchy will be individually called back on WM_UPDATEUISTATE,
+            //          which will go into WmUpdateUIState.
             //   In WmUpdateUIState, we will update our uiCuesState cached value, which
             //   changes the public value of what we return here for ShowKeyboardCues/ShowFocusCues.
 
@@ -3603,7 +3606,8 @@ public unsafe partial class Control :
         HANDLE threadHandle = ctx.Handle;
         bool processed = false;
 
-        // setting default exitcode to 0, though it won't be accessed in current code below due to short-circuit logic in condition (returnValue will be false when exitCode is undefined)
+        // setting default exitcode to 0, though it won't be accessed in current code below due to short-circuit logic
+        // in condition (returnValue will be false when exitCode is undefined)
         uint exitCode = 0;
         bool returnValue = false;
         while (!processed)
@@ -4396,8 +4400,8 @@ public unsafe partial class Control :
     ///  exist yet, this will follow up the control's parent chain until it finds a
     ///  control or form that does have a window handle. If no appropriate handle
     ///  can be found, BeginInvoke will throw an exception. Exceptions within the
-    ///  delegate method are considered untrapped and will be sent to the
-    ///  application's untrapped exception handler.
+    ///  delegate method are considered un-trapped and will be sent to the
+    ///  application's un-trapped exception handler.
     ///
     ///  There are five functions on a control that are safe to call from any
     ///  thread:  GetInvokeRequired, Invoke, BeginInvoke, EndInvoke and CreateGraphics.
@@ -4428,7 +4432,7 @@ public unsafe partial class Control :
     }
 
     /// <summary>
-    ///  Brings this control to the front of the zorder.
+    ///  Brings this control to the front of the Z-order.
     /// </summary>
     public void BringToFront()
     {
@@ -4448,7 +4452,7 @@ public unsafe partial class Control :
 
     /// <summary>
     ///  Specifies whether this control can process the mnemonic or not. A condition to process a mnemonic is that
-    ///  all controls in the parent chain can do it too, but since the semantics for this function can be overriden,
+    ///  all controls in the parent chain can do it too, but since the semantics for this function can be overridden,
     ///  we need to call the method on the parent 'recursively' (not exactly since it is not necessarily the same method).
     /// </summary>
     internal virtual bool CanProcessMnemonic()
@@ -7516,7 +7520,7 @@ public unsafe partial class Control :
                     pszSubAppName: $"{DarkModeIdentifier}_{ExplorerThemeIdentifier}",
                     pszSubIdList: null);
             }
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
+#pragma warning restore WFO5001
 
             if (this is not ScrollableControl
                 && !IsMirrored
@@ -10585,7 +10589,9 @@ public unsafe partial class Control :
                 // bit and call CreateControl()
                 if (IsHandleCreated || value)
                 {
-                    if (value)
+                    // We shouldn't mess with the color mode if users haven't specifically set it.
+                    // https://github.com/dotnet/winforms/issues/12014
+                    if (value && Application.ColorModeSet)
                     {
                         PrepareDarkMode(HWND, Application.IsDarkModeEnabled);
                     }
@@ -10593,7 +10599,7 @@ public unsafe partial class Control :
                     PInvoke.ShowWindow(HWND, value ? ShowParams : SHOW_WINDOW_CMD.SW_HIDE);
                 }
             }
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
+#pragma warning restore WFO5001
             else if (IsHandleCreated || (value && _parent?.Created == true))
             {
                 // We want to mark the control as visible so that CreateControl
@@ -11179,7 +11185,7 @@ public unsafe partial class Control :
     }
 
     /// <summary>
-    ///  Updates this control in it's parent's zorder.
+    ///  Updates this control in it's parent's Z-order.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     protected void UpdateZOrder()
@@ -11188,7 +11194,7 @@ public unsafe partial class Control :
     }
 
     /// <summary>
-    ///  Syncs the ZOrder of child control to the index we want it to be.
+    ///  Syncs the Z-order of child control to the index we want it to be.
     /// </summary>
     private void UpdateChildZOrder(Control control)
     {
@@ -12461,7 +12467,7 @@ public unsafe partial class Control :
     ///  <para>
     ///   The <see cref="WndProc(ref Message)"/> method corresponds exactly to the Windows <c>WindowProc</c>
     ///   function. For more information about processing Windows messages see the
-    ///   <see href="https://go.microsoft.com/fwlink/?LinkId=181565">WindowProc function</see>.
+    ///   <see href="https://go.microsoft.com/fwlink/?LinkId=181565">WindowProc function.</see>
     ///  </para>
     /// </remarks>
     /// <notesToInheritors>

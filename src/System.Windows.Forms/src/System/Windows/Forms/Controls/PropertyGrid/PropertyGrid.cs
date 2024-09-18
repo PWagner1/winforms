@@ -1619,7 +1619,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
     [Conditional("DEBUG")]
 #pragma warning disable CA1822 // Mark members as static
     internal void CheckInCreate()
-#pragma warning restore CA1822 // Mark members as static
+#pragma warning restore CA1822
     {
 #if DEBUG
         if (_inGridViewCreate)
@@ -2948,7 +2948,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
             return;
         }
 
-        // Announce the property value change like standalone combobox control does: "[something] selected".
+        // Announce the property value change like standalone ComboBox control does: "[something] selected".
         bool dropDown = false;
         if (changedItem.PropertyDescriptor?.PropertyType is { } propertyType
             && TypeDescriptor.GetEditor(propertyType, typeof(UITypeEditor)) is UITypeEditor editor)

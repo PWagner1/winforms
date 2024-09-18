@@ -633,9 +633,11 @@ internal class ControlCommandSet : CommandSet
                                     // ask our snapline engine to find the nearest snap position with the given direction
                                     Point snappedOffset = dragManager.OffsetToNearestSnapLocation(primaryControl, targetSnaplines, new Point(moveOffsetX, moveOffsetY));
 
-                                    // update the offset according to the snapline engine - but only if the new size is not smaller than the minimum control size
+                                    // update the offset according to the snapline engine
+                                    // - but only if the new size is not smaller than the minimum control size
                                     // E.g. Say button 1 is above button 2 (in the y direction). Button 2 is selected.
-                                    // If the user does a ctrl-shift-up arrow, then OffsetToNearestSnapLocation would return a match to the bottom snapline for button 1
+                                    // If the user does a ctrl-shift-up arrow, then OffsetToNearestSnapLocation
+                                    // would return a match to the bottom snapline for button 1
                                     // resulting in button2's size to be negative
 
                                     Size primaryControlsize = primaryControl.Size;
@@ -957,7 +959,7 @@ internal class ControlCommandSet : CommandSet
     }
 
     /// <summary>
-    ///  Called when the zorder->send to back menu item is selected.
+    ///  Called when the Z-order->send to back menu item is selected.
     /// </summary>
     private void OnMenuZOrderSelection(object sender, EventArgs e)
     {
@@ -1084,7 +1086,7 @@ internal class ControlCommandSet : CommandSet
                     {
                         if (cmdID == StandardCommands.BringToFront)
                         {
-                            // we do this backwards to maintain zorder
+                            // we do this backwards to maintain Z-order
                             Control otherControl = selectedComponents[len - i - 1] as Control;
 
                             otherControl?.BringToFront();

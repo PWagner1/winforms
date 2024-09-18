@@ -75,7 +75,7 @@ public partial class TreeView : Control
     private const int TREEVIEWSTATE_doubleBufferedPropertySet = 0x00020000;
 
     // PERF: take all the bools and put them into a state variable
-    private Collections.Specialized.BitVector32 _treeViewState; // see TREEVIEWSTATE_ consts above
+    private Collections.Specialized.BitVector32 _treeViewState; // see TREEVIEWSTATE_ constants above
 
     private static bool s_isScalingInitialized;
     private static Size? s_stateImageSize;
@@ -172,7 +172,7 @@ public partial class TreeView : Control
         SetStyle(ControlStyles.UseTextForAccessibility, false);
 #pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         SetStyle(ControlStyles.ApplyThemingImplicitly, true);
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore WFO5001
     }
 
     internal override void ReleaseUiaProvider(HWND handle)
@@ -1893,7 +1893,7 @@ public partial class TreeView : Control
         {
             PInvoke.SendMessage(this, PInvoke.TVM_SETTEXTCOLOR, 0, c.ToWin32());
         }
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore WFO5001
 
         // Put the LineColor into the native control only if set.
         if (_lineColor != Color.Empty)
@@ -3119,7 +3119,8 @@ public partial class TreeView : Control
         }
     }
 
-    // Need to send TVM_SELECTITEM to reset the node-highlighting while the contextMenuStrip is being closed so that the treeView reselects the SelectedNode.
+    // Need to send TVM_SELECTITEM to reset the node-highlighting while the contextMenuStrip is being closed so that the
+    // treeView reselects the SelectedNode.
     private void ContextMenuStripClosing(object? sender, ToolStripDropDownClosingEventArgs e)
     {
         ContextMenuStrip strip = (ContextMenuStrip)sender!;

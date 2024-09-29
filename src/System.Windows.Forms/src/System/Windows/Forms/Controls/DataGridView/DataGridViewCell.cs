@@ -86,11 +86,10 @@ public abstract partial class DataGridViewCell : DataGridViewElement, ICloneable
     {
         get
         {
-            AccessibleObject? result = (AccessibleObject?)Properties.GetObject(s_propCellAccessibilityObject);
-            if (result is null)
+            if (!Properties.TryGetValue(s_propCellAccessibilityObject, out AccessibleObject? result))
             {
                 result = CreateAccessibilityInstance();
-                Properties.SetObject(s_propCellAccessibilityObject, result);
+                Properties.AddValue(s_propCellAccessibilityObject, result);
             }
 
             return result;
@@ -114,22 +113,20 @@ public abstract partial class DataGridViewCell : DataGridViewElement, ICloneable
 
     private ContextMenuStrip? ContextMenuStripInternal
     {
-        get => (ContextMenuStrip?)Properties.GetObject(s_propCellContextMenuStrip);
+        get => Properties.GetValueOrDefault<ContextMenuStrip>(s_propCellContextMenuStrip);
         set
         {
-            ContextMenuStrip? oldValue = (ContextMenuStrip?)Properties.GetObject(s_propCellContextMenuStrip);
+            ContextMenuStrip? oldValue = Properties.AddOrRemoveValue(s_propCellContextMenuStrip, value);
             if (oldValue != value)
             {
-                EventHandler disposedHandler = new(DetachContextMenuStrip);
                 if (oldValue is not null)
                 {
-                    oldValue.Disposed -= disposedHandler;
+                    oldValue.Disposed -= DetachContextMenuStrip;
                 }
 
-                Properties.SetObject(s_propCellContextMenuStrip, value);
                 if (value is not null)
                 {
-                    value.Disposed += disposedHandler;
+                    value.Disposed += DetachContextMenuStrip;
                 }
 
                 DataGridView?.OnCellContextMenuStripChanged(this);
@@ -211,12 +208,9 @@ public abstract partial class DataGridViewCell : DataGridViewElement, ICloneable
         get => Properties.GetStringOrEmptyString(s_propCellErrorText);
         set
         {
-            string errorText = ErrorTextInternal;
-            Properties.AddOrRemoveString(s_propCellErrorText, value);
-
-            if (DataGridView is not null && !errorText.Equals(ErrorTextInternal))
+            if (Properties.AddOrRemoveString(s_propCellErrorText, value))
             {
-                DataGridView.OnCellErrorTextChanged(this);
+                DataGridView?.OnCellErrorTextChanged(this);
             }
         }
     }
@@ -280,22 +274,16 @@ public abstract partial class DataGridViewCell : DataGridViewElement, ICloneable
         }
     }
 
-    private bool HasErrorText
-    {
-        get => Properties.ContainsObjectThatIsNotNull(s_propCellErrorText);
-    }
+    private bool HasErrorText => Properties.ContainsKey(s_propCellErrorText);
 
     [Browsable(false)]
-    public bool HasStyle => Properties.ContainsObjectThatIsNotNull(s_propCellStyle);
+    public bool HasStyle => Properties.ContainsKey(s_propCellStyle);
 
-    internal bool HasToolTipText => Properties.ContainsObjectThatIsNotNull(s_propCellToolTipText);
+    internal bool HasToolTipText => Properties.ContainsKey(s_propCellToolTipText);
 
-    internal bool HasValue => Properties.ContainsObjectThatIsNotNull(s_propCellValue);
+    internal bool HasValue => Properties.ContainsKey(s_propCellValue);
 
-    private protected virtual bool HasValueType
-    {
-        get => Properties.ContainsObjectThatIsNotNull(s_propCellValueType);
-    }
+    private protected virtual bool HasValueType => Properties.ContainsKey(s_propCellValueType);
 
     #region IKeyboardToolTip implementation
     bool IKeyboardToolTip.CanShowToolTipsNow() => Visible && DataGridView is not null;
@@ -392,7 +380,7 @@ public abstract partial class DataGridViewCell : DataGridViewElement, ICloneable
         }
     }
 
-    internal bool IsAccessibilityObjectCreated => Properties.GetObject(s_propCellAccessibilityObject) is AccessibleObject;
+    internal bool IsAccessibilityObjectCreated => Properties.ContainsKey(s_propCellAccessibilityObject);
 
     /// <summary>
     ///  Indicates whether or not the parent grid view for this element has an accessible object associated with it.
@@ -631,12 +619,11 @@ public abstract partial class DataGridViewCell : DataGridViewElement, ICloneable
     {
         get
         {
-            DataGridViewCellStyle? dataGridViewCellStyle = (DataGridViewCellStyle?)Properties.GetObject(s_propCellStyle);
-            if (dataGridViewCellStyle is null)
+            if (!Properties.TryGetValue(s_propCellStyle, out DataGridViewCellStyle? dataGridViewCellStyle))
             {
                 dataGridViewCellStyle = new DataGridViewCellStyle();
                 dataGridViewCellStyle.AddScope(DataGridView, DataGridViewCellStyleScopes.Cell);
-                Properties.SetObject(s_propCellStyle, dataGridViewCellStyle);
+                Properties.AddValue(s_propCellStyle, dataGridViewCellStyle);
             }
 
             return dataGridViewCellStyle;
@@ -653,9 +640,7 @@ public abstract partial class DataGridViewCell : DataGridViewElement, ICloneable
             value?.AddScope(DataGridView, DataGridViewCellStyleScopes.Cell);
             Properties.AddOrRemoveValue(s_propCellStyle, value);
 
-            if (((dataGridViewCellStyle is not null && value is null) ||
-                (dataGridViewCellStyle is null && value is not null) ||
-                (dataGridViewCellStyle is not null && value is not null && !dataGridViewCellStyle.Equals(Style))) && DataGridView is not null)
+            if (DataGridView is not null && !Equals(dataGridViewCellStyle, value))
             {
                 DataGridView.OnCellStyleChanged(this);
             }
@@ -693,10 +678,9 @@ public abstract partial class DataGridViewCell : DataGridViewElement, ICloneable
         get => Properties.GetStringOrEmptyString(s_propCellToolTipText);
         set
         {
-            string toolTipText = Properties.AddOrRemoveString(s_propCellToolTipText, value);
-            if (DataGridView is not null && !toolTipText.Equals(ToolTipTextInternal))
+            if (Properties.AddOrRemoveString(s_propCellToolTipText, value))
             {
-                DataGridView.OnCellToolTipTextChanged(this);
+                DataGridView?.OnCellToolTipTextChanged(this);
             }
         }
     }
@@ -1555,23 +1539,25 @@ public abstract partial class DataGridViewCell : DataGridViewElement, ICloneable
     protected internal virtual string GetErrorText(int rowIndex)
     {
         string errorText = string.Empty;
-        object? objErrorText = Properties.GetObject(s_propCellErrorText);
+        string? objErrorText = Properties.GetValueOrDefault<string>(s_propCellErrorText);
         if (objErrorText is not null)
         {
-            errorText = (string)objErrorText;
+            errorText = objErrorText;
         }
-        else if (DataGridView is not null &&
-                 rowIndex != -1 &&
-                 rowIndex != DataGridView.NewRowIndex &&
-                 OwningColumn is not null &&
-                 OwningColumn.IsDataBound &&
-                 DataGridView.DataConnection is not null)
+        else if (DataGridView is not null
+            && rowIndex != -1
+            && rowIndex != DataGridView.NewRowIndex
+            && OwningColumn is not null
+            && OwningColumn.IsDataBound
+            && DataGridView.DataConnection is not null)
         {
             errorText = DataGridView.DataConnection.GetError(OwningColumn.BoundColumnIndex, ColumnIndex, rowIndex);
         }
 
-        if (DataGridView is not null && (DataGridView.VirtualMode || DataGridView.DataSource is not null) &&
-            ColumnIndex >= 0 && rowIndex >= 0)
+        if (DataGridView is not null
+            && (DataGridView.VirtualMode || DataGridView.DataSource is not null)
+            && ColumnIndex >= 0
+            && rowIndex >= 0)
         {
             errorText = DataGridView.OnCellErrorTextNeeded(ColumnIndex, rowIndex, errorText);
         }
@@ -2437,13 +2423,13 @@ public abstract partial class DataGridViewCell : DataGridViewElement, ICloneable
             Debug.Assert(ColumnIndex < dataGridView.Columns.Count);
         }
 
-        if (dataGridView is null ||
-            (dataGridView.AllowUserToAddRowsInternal && rowIndex > -1 && rowIndex == dataGridView.NewRowIndex && rowIndex != dataGridView.CurrentCellAddress.Y) ||
-            (!dataGridView.VirtualMode && OwningColumn is not null && !OwningColumn.IsDataBound) ||
-            rowIndex == -1 ||
-            ColumnIndex == -1)
+        if (dataGridView is null
+            || (dataGridView.AllowUserToAddRowsInternal && rowIndex > -1 && rowIndex == dataGridView.NewRowIndex && rowIndex != dataGridView.CurrentCellAddress.Y)
+            || (!dataGridView.VirtualMode && OwningColumn is not null && !OwningColumn.IsDataBound)
+            || rowIndex == -1
+            || ColumnIndex == -1)
         {
-            return Properties.GetObject(s_propCellValue);
+            return Properties.GetValueOrDefault<object>(s_propCellValue);
         }
         else if (OwningColumn is not null && OwningColumn.IsDataBound)
         {
@@ -2454,7 +2440,7 @@ public abstract partial class DataGridViewCell : DataGridViewElement, ICloneable
             }
             else if ((dataConnection.CurrencyManager?.Count ?? 0) <= rowIndex)
             {
-                return Properties.GetObject(s_propCellValue);
+                return Properties.GetValueOrDefault<object>(s_propCellValue);
             }
             else
             {
@@ -3881,7 +3867,7 @@ public abstract partial class DataGridViewCell : DataGridViewElement, ICloneable
         }
 
         PInvoke.UiaDisconnectProvider(AccessibilityObject);
-        Properties.SetObject(s_propCellAccessibilityObject, null);
+        Properties.RemoveValue(s_propCellAccessibilityObject);
     }
 
     protected virtual bool SetValue(int rowIndex, object? value)

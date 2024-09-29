@@ -80,8 +80,7 @@ public partial class Control
     {
         get
         {
-            ActiveXImpl? activeXImpl = (ActiveXImpl?)Properties.GetObject(s_activeXImplProperty);
-            if (activeXImpl is null)
+            if (!Properties.TryGetValue(s_activeXImplProperty, out ActiveXImpl? activeXImpl))
             {
                 // Don't allow top level objects to be hosted as activeX controls.
                 if (GetState(States.TopLevel))
@@ -89,12 +88,10 @@ public partial class Control
                     throw new NotSupportedException(SR.AXTopLevelSource);
                 }
 
-                activeXImpl = new ActiveXImpl(this);
-
                 // PERF: IsActiveX is called quite a bit - checked everywhere from sizing to event raising. Using a
                 // state bit to track instead of fetching from the property store.
                 SetExtendedState(ExtendedStates.IsActiveX, true);
-                Properties.SetObject(s_activeXImplProperty, activeXImpl);
+                activeXImpl = Properties.AddValue(s_activeXImplProperty, new ActiveXImpl(this));
             }
 
             return activeXImpl;
@@ -1827,7 +1824,7 @@ public partial class Control
             // merge our region automatically.
             if (setRegion)
             {
-                _control.SetRegion(_control.Region);
+                _control.SetRegionInternal(_control.Region);
             }
 
             // Forms^3 uses transparent overlay windows that appear to cause painting artifacts.

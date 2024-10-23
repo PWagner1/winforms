@@ -4471,7 +4471,7 @@ public class WebBrowserTests
         };
         Message m = new()
         {
-            Msg = (int)PInvoke.WM_MOUSEHOVER,
+            Msg = (int)PInvokeCore.WM_MOUSEHOVER,
             Result = 250
         };
         control.WndProc(ref m);
@@ -4508,7 +4508,7 @@ public class WebBrowserTests
             };
             Message m = new()
             {
-                Msg = (int)PInvoke.WM_CONTEXTMENU,
+                Msg = (int)PInvokeCore.WM_CONTEXTMENU,
                 LParam = lParam,
                 Result = 250
             };
@@ -4550,7 +4550,7 @@ public class WebBrowserTests
             };
             Message m = new()
             {
-                Msg = (int)PInvoke.WM_CONTEXTMENU,
+                Msg = (int)PInvokeCore.WM_CONTEXTMENU,
                 LParam = lParam,
                 Result = 250
             };
@@ -4580,7 +4580,7 @@ public class WebBrowserTests
 
         Message m = new()
         {
-            Msg = (int)PInvoke.WM_CONTEXTMENU,
+            Msg = (int)PInvokeCore.WM_CONTEXTMENU,
             LParam = lParam,
             Result = 250
         };
@@ -4630,7 +4630,7 @@ public class WebBrowserTests
 
         Message m = new()
         {
-            Msg = (int)PInvoke.WM_CONTEXTMENU,
+            Msg = (int)PInvokeCore.WM_CONTEXTMENU,
             LParam = lParam,
             Result = 250
         };
@@ -4750,5 +4750,33 @@ public class WebBrowserTests
         public new void OnStatusTextChanged(EventArgs e) => base.OnStatusTextChanged(e);
 
         public new void WndProc(ref Message m) => base.WndProc(ref m);
+    }
+
+    [WinFormsFact]
+    public void WebBrowser_NavigateToFileFolder()
+    {
+        using Form form = new();
+        using WebBrowser browser = new()
+        {
+            Dock = DockStyle.Fill
+        };
+
+        string navigated = null;
+        browser.Navigated += (sender, e) =>
+        {
+            navigated = browser.Url.ToString();
+            form.Close();
+        };
+
+        form.Controls.Add(browser);
+
+        form.Load += (sender, e) =>
+        {
+            browser.Navigate(@"file://C:/");
+        };
+
+        form.Show();
+
+        navigated.Should().Be(@"file:///C:/");
     }
 }

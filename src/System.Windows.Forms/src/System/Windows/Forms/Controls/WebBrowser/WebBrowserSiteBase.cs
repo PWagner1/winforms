@@ -140,7 +140,7 @@ public unsafe class WebBrowserSiteBase :
         Debug.Assert(!Host.GetAXHostState(WebBrowserHelper.s_siteProcessedInputKey), "Re-entering IOleControlSite.TranslateAccelerator!!!");
         Host.SetAXHostState(WebBrowserHelper.s_siteProcessedInputKey, true);
 
-        Message msg = *pMsg;
+        Message msg = Message.Create(pMsg);
         try
         {
             bool f = Host.PreProcessControlMessage(ref msg) == PreProcessControlState.MessageProcessed;
@@ -381,11 +381,18 @@ public unsafe class WebBrowserSiteBase :
         {
             try
             {
-                _connectionPoint = new AxHost.ConnectionPointCookie(nativeObject, this, typeof(IPropertyNotifySink));
+                _connectionPoint = new AxHost.ConnectionPointCookie(nativeObject, this, typeof(IPropertyNotifySink.Interface));
             }
+#if DEBUG
+            catch (Exception)
+            {
+                throw;
+            }
+#else
             catch (Exception ex) when (!ex.IsCriticalException())
             {
             }
+#endif
         }
     }
 

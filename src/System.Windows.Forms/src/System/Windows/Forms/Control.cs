@@ -4694,6 +4694,12 @@ public unsafe partial class Control :
             }
         }
 
+        // Unsubscribes from the Disposed event of the ContextMenuStrip.
+        if (ContextMenuStrip is ContextMenuStrip menu)
+        {
+            menu.Disposed -= DetachContextMenuStrip;
+        }
+
         ReflectParent = null;
 
         if (disposing)
@@ -5193,13 +5199,8 @@ public unsafe partial class Control :
     /// </summary>
     public IContainerControl? GetContainerControl()
     {
-        Control? c = this;
-
         // Refer to IsContainerControl property for more details.
-        if (c is not null && IsContainerControl)
-        {
-            c = c.ParentInternal;
-        }
+        Control? c = IsContainerControl ? ParentInternal : this;
 
         while (c is not null && !IsFocusManagingContainerControl(c))
         {

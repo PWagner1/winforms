@@ -1,6 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-//
+
 // Authors:
 //  Jordi Mas i Hernandez (jordi@ximian.com)
 //  Sebastien Pouliot  <sebastien@ximian.com>
@@ -87,7 +87,7 @@ public class ImageCodecInfoTests
         }
     }
 
-    private void CheckImageCodecInfo(ImageFormat format, string CodecName, string DllName, string FilenameExtension, ImageCodecFlags Flags, string FormatDescription, string MimeType, int signatureLength, string mask, string pattern, string pattern2, ImageCodecInfo codecInfo)
+    private static void CheckImageCodecInfo(ImageFormat format, string CodecName, string DllName, string FilenameExtension, ImageCodecFlags Flags, string FormatDescription, string MimeType, int signatureLength, string mask, string pattern, string pattern2, ImageCodecInfo codecInfo)
     {
         Regex extRegex = new(@"^(\*\.\w+(;(\*\.\w+))*;)?" +
             Regex.Escape(FilenameExtension) + @"(;\*\.\w+(;(\*\.\w+))*)?$",

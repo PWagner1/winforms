@@ -1,6 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-//
+
 // Copyright (C) 2005-2007 Novell, Inc (http://www.novell.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining
@@ -69,7 +69,7 @@ public class ColorMatrixTests
         get
         {
             yield return new object[] { null, typeof(NullReferenceException) };
-            yield return new object[] { new float[][] { }, typeof(IndexOutOfRangeException) };
+            yield return new object[] { Array.Empty<float[]>(), typeof(IndexOutOfRangeException) };
             yield return new object[] { new float[][] { [0.0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f] }, typeof(IndexOutOfRangeException) };
             yield return new object[]
             {
@@ -81,8 +81,8 @@ public class ColorMatrixTests
                 [3.0f],
                 [4.0f],
                 [5.0f]
-            }
-            , typeof(IndexOutOfRangeException)
+            },
+            typeof(IndexOutOfRangeException)
             };
         }
     }

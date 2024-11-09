@@ -1,4 +1,7 @@
-﻿using System.Drawing;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System.Drawing;
 using System.Windows.Forms;
 using System.ComponentModel.Design;
 
@@ -124,22 +127,35 @@ public partial class MainForm : Form
                         // - create some Controls at DesignTime
                         TextBox t1 = surface.CreateControl<TextBox>(new Size(200, 23), new Point(172, 12));
                         Button b1 = surface.CreateControl<Button>(new Size(200, 40), new Point(172, 63));
-                        CustomButton b2 = surface.CreateControl<CustomButton>(new Size(200, 40), new Point(100, 200));
+                        CustomButton b2 = surface.CreateControl<CustomButton>(new Size(200, 40), new Point(172, 200));
                         b1.Text = "I'm the first Button";
                         b2.Text = "I'm the second Button";
                         b1.BackColor = Color.LightGray;
                         b2.BackColor = Color.LightGreen;
 
-                        RadioButton rb1 = surface.CreateControl<RadioButton>(new Size(120, 22), new Point(12, 21));
+                        RadioButton rb1 = surface.CreateControl<RadioButton>(new Size(120, 22), new Point(12, 10));
                         rb1.Text = "Check me!";
-                        RadioButton rb2 = surface.CreateControl<RadioButton>(new Size(120, 22), new Point(12, 50));
+                        RadioButton rb2 = surface.CreateControl<RadioButton>(new Size(120, 22), new Point(12, 35));
                         rb2.Text = "No, check me!";
                         rb2.Checked = true;
 
-                        Panel pnl = surface.CreateControl<Panel>(new Size(130, 100), new Point(12, 21));
+                        CheckBox checkbox1 = surface.CreateControl<CheckBox>(new Size(120, 22), new Point(12, 60));
+                        checkbox1.Text = "I'm Unchecked!";
+                        CheckBox checkbox2 = surface.CreateControl<CheckBox>(new Size(120, 22), new Point(12, 85));
+                        checkbox2.Text = "I'm Indeterminate!";
+                        checkbox2.AutoSize = true;
+                        checkbox2.CheckState = CheckState.Indeterminate;
+                        CheckBox checkbox3 = surface.CreateControl<CheckBox>(new Size(120, 22), new Point(12, 110));
+                        checkbox3.Text = "I'm Checked!";
+                        checkbox3.CheckState = CheckState.Checked;
+
+                        Panel pnl = surface.CreateControl<Panel>(new Size(140, 140), new Point(12, 12));
                         pnl.BackColor = Color.Aquamarine;
                         rb1.Parent = pnl;
                         rb2.Parent = pnl;
+                        checkbox1.Parent = pnl;
+                        checkbox2.Parent = pnl;
+                        checkbox3.Parent = pnl;
 
                         Label l1 = surface.CreateControl<Label>(new Size(100, 25), new Point(12, 12));
                         Label l2 = surface.CreateControl<Label>(new Size(120, 25), new Point(12, 12));
@@ -154,7 +170,7 @@ public partial class MainForm : Form
                         l1.Parent = sct.Panel1;
                         l2.Parent = sct.Panel2;
 
-                        PictureBox pb1 = surface.CreateControl<PictureBox>(new Size(64, 64), new Point(24, 166));
+                        PictureBox pb1 = surface.CreateControl<PictureBox>(new Size(64, 64), new Point(12, 176));
                         pb1.Image = new Icon("painter.ico").ToBitmap();
 
                         ContextMenuStrip cm1 = surface.CreateComponent<ContextMenuStrip>();
@@ -333,7 +349,7 @@ public partial class MainForm : Form
                         splitter.BackColor = Color.Green;
                         splitter.Dock = DockStyle.Bottom;
 
-                        Panel panel = surface.CreateControl<Panel>(new(0, tabPage6.Height/2), new(0, 0));
+                        Panel panel = surface.CreateControl<Panel>(new(0, tabPage6.Height / 2), new(0, 0));
                         panel.Dock = DockStyle.Bottom;
                         NumericUpDown numericUpDown = surface.CreateControl<NumericUpDown>(new(50, 10), new(10, 10));
                         panel.Controls.Add(numericUpDown);

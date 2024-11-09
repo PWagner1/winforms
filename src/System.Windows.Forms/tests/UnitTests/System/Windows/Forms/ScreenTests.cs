@@ -96,17 +96,10 @@ public class ScreenTests
     [WinFormsFact]
     public void Screen_FromHandle_RealHandle_ReturnsExpected()
     {
-        Control control = new();
-        try
-        {
-            Screen screen = Screen.FromHandle(control.Handle);
-            Assert.NotNull(screen);
-            VerifyScreen(screen);
-        }
-        finally
-        {
-            control?.Dispose();
-        }
+        using Control control = new();
+        Screen screen = Screen.FromHandle(control.Handle);
+        Assert.NotNull(screen);
+        VerifyScreen(screen);
     }
 
     public static IEnumerable<object[]> FromPoint_TestData()
@@ -213,8 +206,8 @@ public class ScreenTests
     private static void VerifyScreen(Screen screen)
     {
         Assert.Contains(screen.BitsPerPixel, new int[] { 1, 2, 4, 8, 16, 24, 32, 48, 64 });
-        Assert.True(screen.Bounds.Width != 0);
-        Assert.True(screen.Bounds.Height != 0);
+        Assert.NotEqual(0, screen.Bounds.Width);
+        Assert.NotEqual(0, screen.Bounds.Height);
         Assert.InRange(screen.DeviceName.Length, 1, 32);
         Assert.Equal(screen.DeviceName, screen.DeviceName.Trim('\0'));
         Assert.InRange(screen.WorkingArea.Width, 0, screen.Bounds.Width);

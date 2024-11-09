@@ -2845,14 +2845,7 @@ internal sealed partial class PropertyGridView :
                         if (GetScrollOffset() != (start + offset))
                         {
                             // We didn't make a full page.
-                            if (next)
-                            {
-                                row = _visibleRows - 1;
-                            }
-                            else
-                            {
-                                row = 0;
-                            }
+                            row = next ? _visibleRows - 1 : 0;
                         }
                     }
 
@@ -2917,17 +2910,19 @@ internal sealed partial class PropertyGridView :
             }
         }
 
-        if (entry is not null && e.KeyData == (Keys.C | Keys.Alt | Keys.Shift | Keys.Control))
+        if (e.KeyData == (Keys.C | Keys.Alt | Keys.Shift | Keys.Control))
         {
             Clipboard.SetDataObject(entry.GetTestingInfo());
             return;
         }
 
-        if (_selectedGridEntry is not null && _selectedGridEntry.Enumerable &&
-            _dropDownHolder is not null && _dropDownHolder.Visible &&
-            (keyCode == Keys.Up || keyCode == Keys.Down))
+        if (_selectedGridEntry is not null
+            && _selectedGridEntry.Enumerable
+            && _dropDownHolder is not null
+            && _dropDownHolder.Visible
+            && (keyCode == Keys.Up || keyCode == Keys.Down))
         {
-            ProcessEnumUpAndDown(_selectedGridEntry, keyCode, false);
+            ProcessEnumUpAndDown(_selectedGridEntry, keyCode, closeDropDown: false);
         }
 
         e.Handled = false;
@@ -4018,7 +4013,10 @@ internal sealed partial class PropertyGridView :
             if (oldLength > 0 && !_flags.HasFlag(Flags.NoDefault))
             {
                 _positionData = CaptureGridPositionData();
-                CommonEditorHide(true);
+                if (!fullRefresh)
+                {
+                    CommonEditorHide(true);
+                }
             }
 
             UpdateHelpAttributes(_selectedGridEntry, newEntry: null);
@@ -4299,17 +4297,10 @@ internal sealed partial class PropertyGridView :
             return;
         }
 
-        bool newRow = false;
         int oldSelectedRow = _selectedRow;
-        if (_selectedRow != row || !gridEntry.Equals(_selectedGridEntry))
+        if (_selectedRow != row || (_selectedGridEntry is not null && !gridEntry.Equals(_selectedGridEntry)))
         {
             CommonEditorHide();
-            newRow = true;
-        }
-
-        if (!newRow)
-        {
-            CloseDropDown();
         }
 
         Rectangle rect = GetRectangle(row, RowValue);
@@ -4400,7 +4391,7 @@ internal sealed partial class PropertyGridView :
             _selectedGridEntry.HasFocus = FocusInside;
         }
 
-        if (!_flags.HasFlag(Flags.IsNewSelection))
+        if (!_flags.HasFlag(Flags.IsNewSelection) && !_flags.HasFlag(Flags.InPropertySet))
         {
             Focus();
         }
@@ -5375,12 +5366,6 @@ internal sealed partial class PropertyGridView :
                 }
 
                 break;
-            case AutomationMessages.PGM_GETSELECTEDROW:
-                m.ResultInternal = (LRESULT)GetRowFromGridEntry(_selectedGridEntry);
-                return;
-            case AutomationMessages.PGM_GETVISIBLEROWCOUNT:
-                m.ResultInternal = (LRESULT)Math.Min(_visibleRows, TotalProperties);
-                return;
         }
 
         base.WndProc(ref m);

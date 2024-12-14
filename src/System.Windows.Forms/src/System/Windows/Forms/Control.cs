@@ -12,6 +12,7 @@ using System.Windows.Forms.Automation;
 using System.Windows.Forms.Layout;
 using System.Windows.Forms.Primitives;
 using Windows.Win32.Graphics.Dwm;
+using Windows.Win32.Graphics.GdiPlus;
 using Windows.Win32.System.Ole;
 using Windows.Win32.UI.Accessibility;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
@@ -2742,7 +2743,7 @@ public unsafe partial class Control :
 
         // If we're an ActiveX control, clone the region so it can potentially be modified
         using Region? regionCopy = IsActiveX ? ActiveXMergeRegion(region.Clone()) : null;
-        using RegionScope regionHandle = new(regionCopy ?? region, HWND);
+        using RegionScope regionHandle = (regionCopy ?? region).GetRegionScope(HWND);
 
         if (PInvoke.SetWindowRgn(this, regionHandle, PInvoke.IsWindowVisible(this)) != 0)
         {
@@ -5774,7 +5775,7 @@ public unsafe partial class Control :
         else if (IsHandleCreated)
         {
             using Graphics graphics = CreateGraphicsInternal();
-            using RegionScope regionHandle = new(region, graphics);
+            using RegionScope regionHandle = region.GetRegionScope(graphics);
 
             if (invalidateChildren)
             {
@@ -9664,32 +9665,22 @@ public unsafe partial class Control :
         Size minSize = MinimumSize;
         Size maxSize = MaximumSize;
 
-        // clear out min and max size, otherwise this could affect the scaling logic.
+        // Clear out min and max size, otherwise this could affect the scaling logic.
         MinimumSize = Size.Empty;
         MaximumSize = Size.Empty;
 
-        // this is raw because Min/Max size have been cleared at this point.
+        // This is raw because Min/Max size have been cleared at this point.
         Rectangle rawScaledBounds = GetScaledBounds(Bounds, factor, specified);
 
         //
         // Scale Padding and Margin
         //
+
         float dx = factor.Width;
         float dy = factor.Height;
 
         Padding padding = Padding;
         Padding margins = Margin;
-
-        // Clear off specified bits for 1.0 scaling factors
-        if (dx == 1.0F)
-        {
-            specified &= ~(BoundsSpecified.X | BoundsSpecified.Width);
-        }
-
-        if (dy == 1.0F)
-        {
-            specified &= ~(BoundsSpecified.Y | BoundsSpecified.Height);
-        }
 
         if (dx != 1.0F)
         {
@@ -9722,17 +9713,19 @@ public unsafe partial class Control :
         if (!minSize.IsEmpty)
         {
             minSize -= adornmentSize;
-            minSize = ScaleSize(LayoutUtils.UnionSizes(Size.Empty, minSize), // make sure we don't go below 0.
-                                    factor.Width,
-                                    factor.Height) + adornmentSize;
+            minSize = ScaleSize(
+                LayoutUtils.UnionSizes(Size.Empty, minSize), // make sure we don't go below 0.
+                factor.Width,
+                factor.Height) + adornmentSize;
         }
 
         if (!maxSize.IsEmpty)
         {
             maxSize -= adornmentSize;
-            maxSize = ScaleSize(LayoutUtils.UnionSizes(Size.Empty, maxSize), // make sure we don't go below 0.
-                                    factor.Width,
-                                    factor.Height) + adornmentSize;
+            maxSize = ScaleSize(
+                LayoutUtils.UnionSizes(Size.Empty, maxSize), // make sure we don't go below 0.
+                factor.Width,
+                factor.Height) + adornmentSize;
         }
 
         // Apply the min/max size constraints - don't call ApplySizeConstraints
@@ -11721,7 +11714,7 @@ public unsafe partial class Control :
         PaintEventArgs? pevent = null;
 
         using var paletteScope = doubleBuffered || usingBeginPaint
-            ? SelectPaletteScope.HalftonePalette(dc, forceBackground: false, realizePalette: false)
+            ? dc.HalftonePalette(forceBackground: false, realizePalette: false)
             : default;
 
         bool paintBackground = (usingBeginPaint && GetStyle(ControlStyles.AllPaintingInWmPaint)) || doubleBuffered;
@@ -11822,8 +11815,7 @@ public unsafe partial class Control :
         using GetDcScope dc = new(HWND);
 
         // We don't want to unset the palette in this case so we don't do this in a using.
-        var paletteScope = SelectPaletteScope.HalftonePalette(
-            dc,
+        var paletteScope = dc.HalftonePalette(
             forceBackground: true,
             realizePalette: true);
 
@@ -12466,7 +12458,7 @@ public unsafe partial class Control :
                     SYSTEM_PARAMETERS_INFO_ACTION action = (SYSTEM_PARAMETERS_INFO_ACTION)(uint)m.WParamInternal;
 
                     // Left here for debugging purposes.
-                    string? text = m.LParamInternal == 0 ? null : new((char*)m.LParamInternal);
+                    // string? text = m.LParamInternal == 0 ? null : new((char*)m.LParamInternal);
 
                     if (action is SYSTEM_PARAMETERS_INFO_ACTION.SPI_SETNONCLIENTMETRICS && m.LParamInternal == 0)
                     {

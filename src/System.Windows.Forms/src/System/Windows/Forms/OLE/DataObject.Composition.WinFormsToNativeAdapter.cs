@@ -29,11 +29,12 @@ public unsafe partial class DataObject
             }
 
             /// <summary>
-            ///  Returns true if the tymed is useable.
+            ///  Returns true if the tymed is usable.
             /// </summary>
-            private static bool GetTymedUseable(TYMED tymed) => (tymed & AllowedTymeds) != 0;
+            private static bool GetTymedUsable(TYMED tymed) => (tymed & AllowedTymeds) != 0;
 
-            HRESULT Com.IDataObject.Interface.GetData(FORMATETC* pformatetcIn, STGMEDIUM* pmedium)
+            #region  Com.IDataObject.Interface
+            public HRESULT GetData(FORMATETC* pformatetcIn, STGMEDIUM* pmedium)
             {
                 if (pformatetcIn is null)
                 {
@@ -63,7 +64,7 @@ public unsafe partial class DataObject
 
                 *pmedium = default;
 
-                if (!GetTymedUseable((TYMED)pformatetcIn->tymed))
+                if (!GetTymedUsable((TYMED)pformatetcIn->tymed))
                 {
                     return HRESULT.DV_E_TYMED;
                 }
@@ -71,7 +72,7 @@ public unsafe partial class DataObject
                 if (!((TYMED)pformatetcIn->tymed).HasFlag(TYMED.TYMED_HGLOBAL))
                 {
                     pmedium->tymed = (TYMED)pformatetcIn->tymed;
-                    return ((Com.IDataObject.Interface)this).GetDataHere(pformatetcIn, pmedium);
+                    return GetDataHere(pformatetcIn, pmedium);
                 }
 
                 pmedium->tymed = TYMED.TYMED_HGLOBAL;
@@ -82,7 +83,7 @@ public unsafe partial class DataObject
                     return HRESULT.E_OUTOFMEMORY;
                 }
 
-                HRESULT result = ((Com.IDataObject.Interface)this).GetDataHere(pformatetcIn, pmedium);
+                HRESULT result = GetDataHere(pformatetcIn, pmedium);
                 if (result.Failed)
                 {
                     PInvokeCore.GlobalFree(pmedium->hGlobal);
@@ -92,7 +93,7 @@ public unsafe partial class DataObject
                 return result;
             }
 
-            HRESULT Com.IDataObject.Interface.GetDataHere(FORMATETC* pformatetc, STGMEDIUM* pmedium)
+            public HRESULT GetDataHere(FORMATETC* pformatetc, STGMEDIUM* pmedium)
             {
                 if (pformatetc is null)
                 {
@@ -104,7 +105,7 @@ public unsafe partial class DataObject
                     return HRESULT.E_POINTER;
                 }
 
-                if (!GetTymedUseable((TYMED)pformatetc->tymed) || !GetTymedUseable(pmedium->tymed))
+                if (!GetTymedUsable((TYMED)pformatetc->tymed) || !GetTymedUsable(pmedium->tymed))
                 {
                     return HRESULT.DV_E_TYMED;
                 }
@@ -116,13 +117,16 @@ public unsafe partial class DataObject
                     return HRESULT.DV_E_FORMATETC;
                 }
 
-                object? data = _dataObject.GetData(format);
+                if (_dataObject.GetData(format) is not object data)
+                {
+                    return HRESULT.E_UNEXPECTED;
+                }
 
                 if (((TYMED)pformatetc->tymed).HasFlag(TYMED.TYMED_HGLOBAL))
                 {
                     try
                     {
-                        return SaveDataToHGLOBAL(data!, format, ref *pmedium);
+                        return SaveDataToHGLOBAL(data, format, ref *pmedium);
                     }
                     catch (NotSupportedException ex)
                     {
@@ -130,6 +134,13 @@ public unsafe partial class DataObject
                         // clipboard so consumers can get some indication as to what is wrong. (We handle the binary formatting
                         // of this exception, so it will always work.)
                         return SaveDataToHGLOBAL(ex, format, ref *pmedium);
+                    }
+                    catch (Exception) when (!pmedium->hGlobal.IsNull)
+                    {
+                        PInvokeCore.GlobalFree(pmedium->hGlobal);
+                        pmedium->hGlobal = HGLOBAL.Null;
+
+                        throw;
                     }
                 }
 
@@ -179,7 +190,7 @@ public unsafe partial class DataObject
                 }
             }
 
-            HRESULT Com.IDataObject.Interface.QueryGetData(FORMATETC* pformatetc)
+            public HRESULT QueryGetData(FORMATETC* pformatetc)
             {
                 if (pformatetc is null)
                 {
@@ -191,7 +202,7 @@ public unsafe partial class DataObject
                     return HRESULT.DV_E_DVASPECT;
                 }
 
-                if (!GetTymedUseable((TYMED)pformatetc->tymed))
+                if (!GetTymedUsable((TYMED)pformatetc->tymed))
                 {
                     return HRESULT.DV_E_TYMED;
                 }
@@ -209,7 +220,7 @@ public unsafe partial class DataObject
                 return HRESULT.S_OK;
             }
 
-            HRESULT Com.IDataObject.Interface.GetCanonicalFormatEtc(FORMATETC* pformatectIn, FORMATETC* pformatetcOut)
+            public HRESULT GetCanonicalFormatEtc(FORMATETC* pformatectIn, FORMATETC* pformatetcOut)
             {
                 if (pformatetcOut is null)
                 {
@@ -220,7 +231,7 @@ public unsafe partial class DataObject
                 return (HRESULT)DATA_S_SAMEFORMATETC;
             }
 
-            HRESULT Com.IDataObject.Interface.SetData(FORMATETC* pformatetc, STGMEDIUM* pmedium, BOOL fRelease)
+            public HRESULT SetData(FORMATETC* pformatetc, STGMEDIUM* pmedium, BOOL fRelease)
             {
                 if (pformatetc is null)
                 {
@@ -250,7 +261,7 @@ public unsafe partial class DataObject
                 return HRESULT.E_NOTIMPL;
             }
 
-            HRESULT Com.IDataObject.Interface.EnumFormatEtc(uint dwDirection, IEnumFORMATETC** ppenumFormatEtc)
+            public HRESULT EnumFormatEtc(uint dwDirection, IEnumFORMATETC** ppenumFormatEtc)
             {
                 if (ppenumFormatEtc is null)
                 {
@@ -266,7 +277,7 @@ public unsafe partial class DataObject
                 return HRESULT.E_NOTIMPL;
             }
 
-            HRESULT Com.IDataObject.Interface.DAdvise(FORMATETC* pformatetc, uint advf, IAdviseSink* pAdvSink, uint* pdwConnection)
+            public HRESULT DAdvise(FORMATETC* pformatetc, uint advf, IAdviseSink* pAdvSink, uint* pdwConnection)
             {
                 if (pdwConnection is null)
                 {
@@ -277,9 +288,9 @@ public unsafe partial class DataObject
                 return HRESULT.E_NOTIMPL;
             }
 
-            HRESULT Com.IDataObject.Interface.DUnadvise(uint dwConnection) => HRESULT.E_NOTIMPL;
+            public HRESULT DUnadvise(uint dwConnection) => HRESULT.E_NOTIMPL;
 
-            HRESULT Com.IDataObject.Interface.EnumDAdvise(IEnumSTATDATA** ppenumAdvise)
+            public HRESULT EnumDAdvise(IEnumSTATDATA** ppenumAdvise)
             {
                 if (ppenumAdvise is null)
                 {
@@ -289,6 +300,7 @@ public unsafe partial class DataObject
                 *ppenumAdvise = null;
                 return HRESULT.OLE_E_ADVISENOTSUPPORTED;
             }
+            #endregion
 
             private HRESULT SaveDataToHGLOBAL(object data, string format, ref STGMEDIUM medium) => format switch
             {
@@ -314,7 +326,7 @@ public unsafe partial class DataObject
                 _ when format == DataFormats.SerializableConstant || data is ISerializable || data.GetType().IsSerializable
 #pragma warning restore
                     => SaveObjectToHGLOBAL(ref medium.hGlobal, data, RestrictDeserializationToSafeTypes(format)),
-                _ => HRESULT.E_FAIL
+                _ => HRESULT.E_UNEXPECTED
             };
 
             private static HRESULT SaveObjectToHGLOBAL(ref HGLOBAL hglobal, object data, bool restrictSerialization)
@@ -330,14 +342,14 @@ public unsafe partial class DataObject
 
             private static HRESULT SaveStreamToHGLOBAL(ref HGLOBAL hglobal, Stream stream)
             {
-                if (hglobal != 0)
+                if (!hglobal.IsNull)
                 {
                     PInvokeCore.GlobalFree(hglobal);
                 }
 
                 int size = checked((int)stream.Length);
                 hglobal = PInvokeCore.GlobalAlloc(GLOBAL_ALLOC_FLAGS.GMEM_MOVEABLE, (uint)size);
-                if (hglobal == 0)
+                if (hglobal.IsNull)
                 {
                     return HRESULT.E_OUTOFMEMORY;
                 }
@@ -352,7 +364,7 @@ public unsafe partial class DataObject
                 {
                     Span<byte> span = new(buffer, size);
                     stream.Position = 0;
-                    stream.Read(span);
+                    stream.ReadExactly(span);
                 }
                 finally
                 {

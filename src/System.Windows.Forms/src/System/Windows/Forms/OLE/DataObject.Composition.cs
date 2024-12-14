@@ -1,6 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Reflection.Metadata;
 using System.Runtime.InteropServices.ComTypes;
 using Com = Windows.Win32.System.Com;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
@@ -13,7 +14,7 @@ public unsafe partial class DataObject
     ///  Contains the logic to move between <see cref="IDataObject"/>, <see cref="Com.IDataObject.Interface"/>,
     ///  and <see cref="ComTypes.IDataObject"/> calls.
     /// </summary>
-    internal unsafe partial class Composition : IDataObject, Com.IDataObject.Interface, ComTypes.IDataObject
+    internal unsafe partial class Composition : ITypedDataObject, Com.IDataObject.Interface, ComTypes.IDataObject
     {
         private const Com.TYMED AllowedTymeds = Com.TYMED.TYMED_HGLOBAL | Com.TYMED.TYMED_ISTREAM | Com.TYMED.TYMED_GDI;
 
@@ -104,42 +105,66 @@ public unsafe partial class DataObject
                 or DataFormats.WmfConstant;
 
         #region IDataObject
-        object? IDataObject.GetData(string format, bool autoConvert) => _winFormsDataObject.GetData(format, autoConvert);
-        object? IDataObject.GetData(string format) => _winFormsDataObject.GetData(format);
-        object? IDataObject.GetData(Type format) => _winFormsDataObject.GetData(format);
-        bool IDataObject.GetDataPresent(string format, bool autoConvert) => _winFormsDataObject.GetDataPresent(format, autoConvert);
-        bool IDataObject.GetDataPresent(string format) => _winFormsDataObject.GetDataPresent(format);
-        bool IDataObject.GetDataPresent(Type format) => _winFormsDataObject.GetDataPresent(format);
-        string[] IDataObject.GetFormats(bool autoConvert) => _winFormsDataObject.GetFormats(autoConvert);
-        string[] IDataObject.GetFormats() => _winFormsDataObject.GetFormats();
-        void IDataObject.SetData(string format, bool autoConvert, object? data) => _winFormsDataObject.SetData(format, autoConvert, data);
-        void IDataObject.SetData(string format, object? data) => _winFormsDataObject.SetData(format, data);
-        void IDataObject.SetData(Type format, object? data) => _winFormsDataObject.SetData(format, data);
-        void IDataObject.SetData(object? data) => _winFormsDataObject.SetData(data);
+        public object? GetData(string format, bool autoConvert) => _winFormsDataObject.GetData(format, autoConvert);
+        public object? GetData(string format) => _winFormsDataObject.GetData(format);
+        public object? GetData(Type format) => _winFormsDataObject.GetData(format);
+        public bool GetDataPresent(string format, bool autoConvert) => _winFormsDataObject.GetDataPresent(format, autoConvert);
+        public bool GetDataPresent(string format) => _winFormsDataObject.GetDataPresent(format);
+        public bool GetDataPresent(Type format) => _winFormsDataObject.GetDataPresent(format);
+        public string[] GetFormats(bool autoConvert) => _winFormsDataObject.GetFormats(autoConvert);
+        public string[] GetFormats() => _winFormsDataObject.GetFormats();
+        public void SetData(string format, bool autoConvert, object? data) => _winFormsDataObject.SetData(format, autoConvert, data);
+        public void SetData(string format, object? data) => _winFormsDataObject.SetData(format, data);
+        public void SetData(Type format, object? data) => _winFormsDataObject.SetData(format, data);
+        public void SetData(object? data) => _winFormsDataObject.SetData(data);
+        #endregion
+
+        #region ITypedDataObject
+        public bool TryGetData<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(
+            string format,
+            Func<TypeName, Type> resolver,
+            bool autoConvert,
+            [NotNullWhen(true), MaybeNullWhen(false)] out T data) =>
+                _winFormsDataObject.TryGetData(format, resolver, autoConvert, out data);
+
+        public bool TryGetData<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(
+            string format,
+            bool autoConvert,
+            [NotNullWhen(true), MaybeNullWhen(false)] out T data) =>
+                _winFormsDataObject.TryGetData(format, autoConvert, out data);
+
+        public bool TryGetData<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(
+            string format,
+            [NotNullWhen(true), MaybeNullWhen(false)] out T data) =>
+                _winFormsDataObject.TryGetData(format, out data);
+
+        public bool TryGetData<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(
+            [NotNullWhen(true), MaybeNullWhen(false)] out T data) =>
+                _winFormsDataObject.TryGetData(typeof(T).FullName!, out data);
         #endregion
 
         #region Com.IDataObject.Interface
-        HRESULT Com.IDataObject.Interface.DAdvise(Com.FORMATETC* pformatetc, uint advf, Com.IAdviseSink* pAdvSink, uint* pdwConnection) => _nativeDataObject.DAdvise(pformatetc, advf, pAdvSink, pdwConnection);
-        HRESULT Com.IDataObject.Interface.DUnadvise(uint dwConnection) => _nativeDataObject.DUnadvise(dwConnection);
-        HRESULT Com.IDataObject.Interface.EnumDAdvise(Com.IEnumSTATDATA** ppenumAdvise) => _nativeDataObject.EnumDAdvise(ppenumAdvise);
-        HRESULT Com.IDataObject.Interface.EnumFormatEtc(uint dwDirection, Com.IEnumFORMATETC** ppenumFormatEtc) => _nativeDataObject.EnumFormatEtc(dwDirection, ppenumFormatEtc);
-        HRESULT Com.IDataObject.Interface.GetCanonicalFormatEtc(Com.FORMATETC* pformatectIn, Com.FORMATETC* pformatetcOut) => _nativeDataObject.GetCanonicalFormatEtc(pformatectIn, pformatetcOut);
-        HRESULT Com.IDataObject.Interface.GetData(Com.FORMATETC* pformatetcIn, Com.STGMEDIUM* pmedium) => _nativeDataObject.GetData(pformatetcIn, pmedium);
-        HRESULT Com.IDataObject.Interface.GetDataHere(Com.FORMATETC* pformatetc, Com.STGMEDIUM* pmedium) => _nativeDataObject.GetDataHere(pformatetc, pmedium);
-        HRESULT Com.IDataObject.Interface.QueryGetData(Com.FORMATETC* pformatetc) => _nativeDataObject.QueryGetData(pformatetc);
-        HRESULT Com.IDataObject.Interface.SetData(Com.FORMATETC* pformatetc, Com.STGMEDIUM* pmedium, BOOL fRelease) => _nativeDataObject.SetData(pformatetc, pmedium, fRelease);
+        public HRESULT DAdvise(Com.FORMATETC* pformatetc, uint advf, Com.IAdviseSink* pAdvSink, uint* pdwConnection) => _nativeDataObject.DAdvise(pformatetc, advf, pAdvSink, pdwConnection);
+        public HRESULT DUnadvise(uint dwConnection) => _nativeDataObject.DUnadvise(dwConnection);
+        public HRESULT EnumDAdvise(Com.IEnumSTATDATA** ppenumAdvise) => _nativeDataObject.EnumDAdvise(ppenumAdvise);
+        public HRESULT EnumFormatEtc(uint dwDirection, Com.IEnumFORMATETC** ppenumFormatEtc) => _nativeDataObject.EnumFormatEtc(dwDirection, ppenumFormatEtc);
+        public HRESULT GetCanonicalFormatEtc(Com.FORMATETC* pformatectIn, Com.FORMATETC* pformatetcOut) => _nativeDataObject.GetCanonicalFormatEtc(pformatectIn, pformatetcOut);
+        public HRESULT GetData(Com.FORMATETC* pformatetcIn, Com.STGMEDIUM* pmedium) => _nativeDataObject.GetData(pformatetcIn, pmedium);
+        public HRESULT GetDataHere(Com.FORMATETC* pformatetc, Com.STGMEDIUM* pmedium) => _nativeDataObject.GetDataHere(pformatetc, pmedium);
+        public HRESULT QueryGetData(Com.FORMATETC* pformatetc) => _nativeDataObject.QueryGetData(pformatetc);
+        public HRESULT SetData(Com.FORMATETC* pformatetc, Com.STGMEDIUM* pmedium, BOOL fRelease) => _nativeDataObject.SetData(pformatetc, pmedium, fRelease);
         #endregion
 
-        #region ComTypes.IDataObject
-        int ComTypes.IDataObject.DAdvise(ref FORMATETC pFormatetc, ADVF advf, IAdviseSink adviseSink, out int connection) => _runtimeDataObject.DAdvise(ref pFormatetc, advf, adviseSink, out connection);
-        void ComTypes.IDataObject.DUnadvise(int connection) => _runtimeDataObject.DUnadvise(connection);
-        int ComTypes.IDataObject.EnumDAdvise(out IEnumSTATDATA? enumAdvise) => _runtimeDataObject.EnumDAdvise(out enumAdvise);
-        IEnumFORMATETC ComTypes.IDataObject.EnumFormatEtc(DATADIR direction) => _runtimeDataObject.EnumFormatEtc(direction);
-        int ComTypes.IDataObject.GetCanonicalFormatEtc(ref FORMATETC formatIn, out FORMATETC formatOut) => _runtimeDataObject.GetCanonicalFormatEtc(ref formatIn, out formatOut);
-        void ComTypes.IDataObject.GetData(ref FORMATETC format, out STGMEDIUM medium) => _runtimeDataObject.GetData(ref format, out medium);
-        void ComTypes.IDataObject.GetDataHere(ref FORMATETC format, ref STGMEDIUM medium) => _runtimeDataObject.GetDataHere(ref format, ref medium);
-        int ComTypes.IDataObject.QueryGetData(ref FORMATETC format) => _runtimeDataObject.QueryGetData(ref format);
-        void ComTypes.IDataObject.SetData(ref FORMATETC formatIn, ref STGMEDIUM medium, bool release) => _runtimeDataObject.SetData(ref formatIn, ref medium, release);
+        #region ComTypes.IDataObject.Interface
+        public int DAdvise(ref FORMATETC pFormatetc, ADVF advf, IAdviseSink adviseSink, out int connection) => _runtimeDataObject.DAdvise(ref pFormatetc, advf, adviseSink, out connection);
+        public void DUnadvise(int connection) => _runtimeDataObject.DUnadvise(connection);
+        public int EnumDAdvise(out IEnumSTATDATA? enumAdvise) => _runtimeDataObject.EnumDAdvise(out enumAdvise);
+        public IEnumFORMATETC EnumFormatEtc(DATADIR direction) => _runtimeDataObject.EnumFormatEtc(direction);
+        public int GetCanonicalFormatEtc(ref FORMATETC formatIn, out FORMATETC formatOut) => _runtimeDataObject.GetCanonicalFormatEtc(ref formatIn, out formatOut);
+        public void GetData(ref FORMATETC format, out STGMEDIUM medium) => _runtimeDataObject.GetData(ref format, out medium);
+        public void GetDataHere(ref FORMATETC format, ref STGMEDIUM medium) => _runtimeDataObject.GetDataHere(ref format, ref medium);
+        public int QueryGetData(ref FORMATETC format) => _runtimeDataObject.QueryGetData(ref format);
+        public void SetData(ref FORMATETC formatIn, ref STGMEDIUM medium, bool release) => _runtimeDataObject.SetData(ref formatIn, ref medium, release);
         #endregion
     }
 }

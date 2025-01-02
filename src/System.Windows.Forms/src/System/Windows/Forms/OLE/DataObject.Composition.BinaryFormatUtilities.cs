@@ -104,14 +104,10 @@ public unsafe partial class DataObject
                 Type type = typeof(T);
                 if (!legacyMode && !type.MatchExceptAssemblyVersion(record.TypeName))
                 {
-#if false // TODO (TanyaSo): - modify TryGetObjectFromJson to take a resolver and rename to HasJsonData???
-                    // Return true if the payload contains valid JsonData<T> struct, type matches or not
-                    // run IsAssignable in the JSON method
-                    if (record.TryGetObjectFromJson(binder.GetType, out object? data))
+                    if (record.TryGetObjectFromJson<T>((ITypeResolver)binder, out object? data))
                     {
                         return data;
                     }
-#endif
 
                     if (!TypeNameIsAssignableToType(record.TypeName, type, (ITypeResolver)binder))
                     {
@@ -143,7 +139,8 @@ public unsafe partial class DataObject
                 // 1. Doesn't allow arrays that have a non-zero base index (can't create these in C# or VB)
                 // 2. Only allows IObjectReference types that contain primitives (to avoid observable cycle
                 //    dependencies to indeterminate state)
-                // But it usually requires a resolver.
+                // But it usually requires a resolver. Resolver is not available in the legacy mode,
+                // so we will fall back to BinaryFormatter in that case.
                 if (LocalAppContextSwitches.ClipboardDragDropEnableNrbfSerialization)
                 {
                     try

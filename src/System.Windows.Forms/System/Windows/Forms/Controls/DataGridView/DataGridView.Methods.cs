@@ -3335,11 +3335,9 @@ public partial class DataGridView
             return true;
         }
 
-        /////////////////////////////////////////////////////////////////////////////////////////////////
-        //                                                                                             //
-        // FROM HERE DOWN THE DATA CONNECTION DETERMINES IF THE DATAGRIDVIEW SHOULD VALIDATE THE CELL. //
-        //                                                                                             //
-        /////////////////////////////////////////////////////////////////////////////////////////////////
+        //
+        // FROM HERE DOWN THE DATA CONNECTION DETERMINES IF THE DATAGRIDVIEW SHOULD VALIDATE THE CELL.
+        //
         if (DataConnection.ProcessingMetaDataChanges)
         {
             // don't validate a cell in a data bound column while the property descriptors change under us
@@ -16473,10 +16471,7 @@ public partial class DataGridView
             return; // Do not scroll when the corresponding scrollbar is invisible or disabled
         }
 
-        if (hme is not null)
-        {
-            hme.Handled = true;
-        }
+        hme?.Handled = true;
 
         int wheelScrollLines = SystemInformation.MouseWheelScrollLines;
         if (wheelScrollLines == 0)
@@ -19760,10 +19755,7 @@ public partial class DataGridView
                 DisplayedBandsInfo.NumTotallyDisplayedScrollingRows = 0;
                 DisplayedBandsInfo.LastDisplayedScrollingRow = -1;
                 DisplayedBandsInfo.LastTotallyDisplayedScrollingCol = -1;
-                if (_layout is not null)
-                {
-                    _layout._dirty = true;
-                }
+                _layout?._dirty = true;
             }
         }
         finally
@@ -29882,10 +29874,7 @@ public partial class DataGridView
                 int absYOffset = Math.Abs(yOffset), normOffset = yOffset / absYOffset;
                 ScrollRowsByCount(normOffset, normOffset < 0 ? ScrollEventType.SmallDecrement : ScrollEventType.SmallIncrement);
 
-                if (_vertScrollTimer is not null)
-                {
-                    _vertScrollTimer.Interval = GetRowScrollRate(absYOffset);
-                }
+                _vertScrollTimer?.Interval = GetRowScrollRate(absYOffset);
 
                 if (_dataGridViewOper[OperationTrackRowSelect])
                 {

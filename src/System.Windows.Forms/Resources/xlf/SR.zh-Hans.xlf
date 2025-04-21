@@ -299,7 +299,7 @@
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop_UseTypedAPI">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations. Please enable it and use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">剪贴板或拖放操作不支持 BinaryFormatter。请启用它，并将 “TryGetData&lt;T&gt;” API 与定义一组允许类型的 “resolver” 函数一起使用，以反序列化 '{0}'。</target>
+        <target state="translated">剪贴板或拖放操作不支持 BinaryFormatter。请启用它，并将 'TryGetData&lt;T&gt;' API 与定义一组允许类型的 ‘resolver’ 函数配合使用以反序列化“{0}”。</target>
         <note />
       </trans-unit>
       <trans-unit id="BindableComponentBindingContextChangedDescr">
@@ -969,27 +969,27 @@
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_CannotJsonSerializeDataObject">
         <source>An object of type 'DataObject' will serialize as empty. Use 'DataObject.SetDataAsJson' APIs on your object to JSON-serialize the data within your object, then use the '{0}' API with your object.</source>
-        <target state="translated">类型为 “DataObject” 的对象将序列化为空。使用对象上的 “DataObject.SetDataAsJson” API 对对象中的数据进行 JSON 序列化，然后将 '{0}' API 与对象一起使用。</target>
+        <target state="translated">类型为 ‘DataObject’ 的对象将会序列化为空。在对象上使用 ‘DataObject.SetDataAsJson’ API，以 JSON 序列化对象中的数据，然后将“{0}”API 用于对象。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidFormatTypeCombination">
         <source>The specified type '{0}' is not compatible with the specified format '{1}'.</source>
-        <target state="translated">指定的类型 '{0}' 与指定的格式 '{1}' 不兼容。</target>
+        <target state="translated">指定的类型“{0}”与指定的格式“{1}”不兼容。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidType">
         <source>'{0}' is not a concrete type, and could result in an unbounded deserialization attempt. Please use a concrete type or alternatively define a 'resolver' function that supports types that you are expecting to retrieve from the clipboard or use in drag-and-drop operations.</source>
-        <target state="translated">'{0}' 不是具体类型，可能导致未绑定的反序列化尝试。请使用具体类型，或者定义支持希望从剪贴板检索的类型或用于拖放操作的“解析程序”函数。</target>
+        <target state="translated">“{0}”不是具体的类型，可能会导致未绑定的反序列化尝试。请使用具体类型，或定义一个 'resolver' 函数，它支持应从剪贴板检索的类型或应在拖放操作中使用的类型。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_TypedAPI_InvalidResolver">
         <source>Type {0} is not found. If this type is allowed, please ensure that the 'resolver' function provided in 'TryGetData&lt;T&gt;' APIs supports it.</source>
-        <target state="translated">找不到类型 {0}。如果允许此类型，请确保 “TryGetData&lt;T&gt;” API 中提供的 “resolver” 函数支持它。</target>
+        <target state="translated">找不到类型 {0}。如果允许使用此类型，请确保 ‘TryGetData&lt;T&gt;’ API 中提供的 ‘resolver’ 函数支持它。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_UseTypedAPI">
         <source>Please use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">请将 “TryGetData&lt;T&gt;” API 与定义一组允许类型的 “resolver” 函数一起使用，以反序列化 '{0}'。</target>
+        <target state="translated">请将 ‘TryGetData&lt;T&gt;’ API 与定义一组允许类型的 ‘resolver’ 函数配合使用来反序列化“{0}”。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardSecurityException">
@@ -2409,7 +2409,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardFalse">
         <source>False</source>
-        <target state="new">False</target>
+        <target state="translated">False</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardIndeterminate">
@@ -2419,7 +2419,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardTrue">
         <source>True</source>
-        <target state="new">True</target>
+        <target state="translated">True</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardUnchecked">
@@ -4389,12 +4389,12 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">未找到启用视觉样式所需的默认清单文件。</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewButtonCellTollTipText">
+      <trans-unit id="DefaultDataGridViewButtonCellToolTipText">
         <source>Button</source>
         <target state="translated">按钮</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewComboBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewComboBoxCellToolTipText">
         <source>ComboBox</source>
         <target state="translated">组合框</target>
         <note />
@@ -4404,12 +4404,12 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">图像</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewLinkCellTollTipText">
+      <trans-unit id="DefaultDataGridViewLinkCellToolTipText">
         <source>Link</source>
         <target state="translated">链接</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewTextBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewTextBoxCellToolTipText">
         <source>Edit</source>
         <target state="translated">编辑</target>
         <note />
@@ -4882,9 +4882,9 @@ To replace this default dialog please handle the DataError event.</source>
 debugging. Contact the application author for more
 information.
 </source>
-        <target state="translated">应用程序不支持 Windows 窗体实时(JIT)
-调试。有关更多
-信息，请与应用程序的作者联系。
+        <target state="translated">应用程序不支持 Windows 窗体即时(JIT)
+调试。请与应用程序作者联系，以了解详细
+信息。
 </target>
         <note />
       </trans-unit>
@@ -4892,8 +4892,8 @@ information.
         <source>Application does not support just-in-time (JIT)
 debugging. See the end of this message for details.
 </source>
-        <target state="translated">应用程序不支持实时(JIT)调试。
-有关详细信息，请参见此消息的结尾。
+        <target state="translated">应用程序不支持即时(JIT)
+调试。请查看此消息的结尾以了解详细信息。
 </target>
         <note />
       </trans-unit>
@@ -4901,8 +4901,8 @@ debugging. See the end of this message for details.
         <source>See the end of this message for details on invoking 
 just-in-time (JIT) debugging instead of this dialog box.
 </source>
-        <target state="translated">有关调用实时(JIT)调试而不是此对话框的详细信息，
-请参见此消息的结尾。
+        <target state="translated">请查看此消息的结尾，以了解有关调用有关调用 
+即时(JIT)调试而不是此对话框的详细信息。
 </target>
         <note />
       </trans-unit>
@@ -5115,7 +5115,7 @@ Do you want to create it?</source>
         <source>File {0} does not exist.
 Verify that the correct file name was given.</source>
         <target state="translated">文件 {0} 不存在。
-请验证是否给出了正确的文件名。</target>
+请验证提供的文件名是否正确。</target>
         <note />
       </trans-unit>
       <trans-unit id="FileDialogInvalidFileName">
@@ -5142,7 +5142,7 @@ Verify that the correct file name was given.</source>
         <source>File {0} already exists.
 Do you want to replace it?</source>
         <target state="translated">文件 {0} 已存在。
-是否替换文件?</target>
+是否要替换它?</target>
         <note />
       </trans-unit>
       <trans-unit id="FileDialogShowHiddenFilesDescr">
@@ -5812,7 +5812,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="ITypeDataObject_Not_Implemented">
         <source>Data object '{0}' doesn't implement the 'ITypedDataObject' interface and can't be read using 'TryGetData&lt;T&gt;(string, out T)' methods.</source>
-        <target state="translated">数据对象 '{0}' 未实现 “ITypedDataObject” 接口，无法使用 “TryGetData&lt;T&gt;(string， out T)” 方法进行读取。</target>
+        <target state="translated">数据对象“{0}”未实现 ‘ITypedDataObject’ 接口，无法使用 ‘TryGetData&lt;T&gt;(string, out T)’ 方法读取。</target>
         <note />
       </trans-unit>
       <trans-unit id="IllegalCrossThreadCall">
@@ -5824,8 +5824,8 @@ Do you want to replace it?</source>
         <source>Cross-thread operation not valid: Control '{0}' accessed from a thread other than the thread it was created on.
 Stack trace where the illegal operation occurred was:
 {1}"</source>
-        <target state="translated">线程间操作无效: 从不是创建控件“{0}”的线程访问它。
-发生非法操作的堆栈跟踪是:
+        <target state="translated">跨线程操作无效: 不是从创建控件“{0}”的线程访问它。
+发生非法操作的堆栈跟踪为:
 “{1}”</target>
         <note />
       </trans-unit>
@@ -7421,7 +7421,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="NotSupportedExceptionOnClipboard">
         <source>Clipboard contains a 'NotSupportedException' that indicates that write operation failed. '{0}'.</source>
-        <target state="translated">剪贴板包含“NotSupportedException”，指示写入操作失败。'{0}'。</target>
+        <target state="translated">剪贴板包含指示写入操作失败的 ‘NotSupportedException’。“{0}”。</target>
         <note />
       </trans-unit>
       <trans-unit id="NotifyIconBalloonTipIconDescr">

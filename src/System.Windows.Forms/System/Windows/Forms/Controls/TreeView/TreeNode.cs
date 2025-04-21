@@ -1329,10 +1329,7 @@ public partial class TreeNode : MarshalByRefObject, ICloneable, ISerializable
         }
         finally
         {
-            if (tv is not null)
-            {
-                tv._nodesCollectionClear = false;
-            }
+            tv?._nodesCollectionClear = false;
 
             _nodesCleared = true;
         }
@@ -2048,8 +2045,6 @@ public partial class TreeNode : MarshalByRefObject, ICloneable, ISerializable
     /// <summary>
     ///  Saves this TreeNode object to the given data stream.
     /// </summary>
-    ///  Review: Changing this would break VB users. so suppressing this message.
-    ///
     protected virtual void Serialize(SerializationInfo si, StreamingContext context)
     {
         if (_propBag is not null)

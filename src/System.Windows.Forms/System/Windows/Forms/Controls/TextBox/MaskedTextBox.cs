@@ -30,7 +30,7 @@ public partial class MaskedTextBox : TextBoxBase
     // menu behavior will be a bit different (for instance Copy option is enabled when PasswordChar is set).
     // To provide Undo functionality and make the context menu behave like the Edit control, we would have
     // to implement our own. For more info about how to do this, see:
-    // https://docs.microsoft.com/en-us/archive/msdn-magazine/2000/november/c-q-a-filetype-icon-detector-app-custom-context-menus-unreferenced-variables-and-string-conversions
+    // https://docs.microsoft.com/archive/msdn-magazine/2000/november/c-q-a-filetype-icon-detector-app-custom-context-menus-unreferenced-variables-and-string-conversions
 
     private const bool Forward = true;
     private const bool Backward = false;
@@ -50,8 +50,6 @@ public partial class MaskedTextBox : TextBoxBase
     private const byte ImeConversionNone = 0;       // no conversion has been performed in the composition string.
     private const byte ImeConversionUpdate = 1;     // the char being composed has been updated but not converted yet.
     private const byte ImeConversionCompleted = 2;  // the char being composed has been fully converted.
-
-    /////////  Instance fields
 
     // Used for keeping selection when prompt is hidden on leave (text changes).
     private int _lastSelLength;
@@ -93,7 +91,7 @@ public partial class MaskedTextBox : TextBoxBase
     private static readonly int s_cutCopyIncludePrompt = BitVector32.CreateMask(s_insertToggled);
     private static readonly int s_cutCopyIncludeLiterals = BitVector32.CreateMask(s_cutCopyIncludePrompt);
 
-    /////////  Properties backend fields. See corresponding property comments for more info.
+    // Properties backend fields. See corresponding property comments for more info.
 
     private char _passwordChar; // control's pwd char, it could be different from the one displayed if using system password.
     private Type? _validatingType;
@@ -174,8 +172,6 @@ public partial class MaskedTextBox : TextBoxBase
         _caretTestPos = 0;
     }
 
-    ///////////////////  Properties
-    ///
     /// <summary>
     ///  Unsupported method/property.
     /// </summary>
@@ -1465,8 +1461,6 @@ public partial class MaskedTextBox : TextBoxBase
         set { }
     }
 
-    //////////////  Methods
-
     /// <summary>
     ///  Clears information about the most recent operation from the undo buffer of the control.
     ///  Unsupported property/method.
@@ -2362,10 +2356,7 @@ public partial class MaskedTextBox : TextBoxBase
             TypeValidationEventArgs tve = new(_validatingType, isValidInput, parseRetVal, message);
             OnTypeValidationCompleted(tve);
 
-            if (e is not null)
-            {
-                e.Cancel = tve.Cancel;
-            }
+            e?.Cancel = tve.Cancel;
         }
 
         return parseRetVal;

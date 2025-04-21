@@ -77,10 +77,7 @@ public unsafe partial class WebBrowser : WebBrowserBase
         set
         {
             _webBrowserState[WEBBROWSERSTATE_allowNavigation] = value;
-            if (_webBrowserEvent is not null)
-            {
-                _webBrowserEvent.AllowNavigation = value;
-            }
+            _webBrowserEvent?.AllowNavigation = value;
         }
     }
 
@@ -612,7 +609,7 @@ public unsafe partial class WebBrowser : WebBrowserBase
     {
         get
         {
-            string mshtmlPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "mshtml.dll");
+            string mshtmlPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.System), "mshtml.dll");
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(mshtmlPath);
             return new Version(fvi.FileMajorPart, fvi.FileMinorPart, fvi.FileBuildPart, fvi.FilePrivatePart);
         }
@@ -695,10 +692,12 @@ public unsafe partial class WebBrowser : WebBrowserBase
     /// <summary>
     ///  String overload for Navigate(Uri)
     /// </summary>
+    /// <devdoc>
     ///  Note: We intentionally have a string overload (apparently Mort wants one). We don't have
     ///  string overloads call Uri overloads because that breaks Uris that aren't fully qualified
     ///  (things like "www.microsoft.com") that the underlying objects support and we don't want to
     ///  break.
+    /// </devdoc>
     public void Navigate(string urlString)
     {
         PerformNavigateHelper(
@@ -727,10 +726,10 @@ public unsafe partial class WebBrowser : WebBrowserBase
     /// <summary>
     ///  String overload for Navigate(Uri, string)
     /// </summary>
-    ///  Note: We intentionally have a string overload (apparently Mort wants one). We don't have
-    ///  string overloads call Uri overloads because that breaks Uris that aren't fully qualified
-    ///  (things like "www.microsoft.com") that the underlying objects support and we don't want to
-    ///  break.
+    /// Note: We intentionally have a string overload (apparently Mort wants one). We don't have
+    /// string overloads call Uri overloads because that breaks Uris that aren't fully qualified
+    /// (things like "www.microsoft.com") that the underlying objects support and we don't want to
+    /// break.
     public void Navigate(string urlString, string? targetFrameName)
     {
         PerformNavigateHelper(
@@ -757,10 +756,10 @@ public unsafe partial class WebBrowser : WebBrowserBase
     /// <summary>
     ///  String overload for Navigate(Uri, bool)
     /// </summary>
-    ///  Note: We intentionally have a string overload (apparently Mort wants one). We don't have
-    ///  string overloads call Uri overloads because that breaks Uris that aren't fully qualified
-    ///  (things like "www.microsoft.com") that the underlying objects support and we don't want to
-    ///  break.
+    /// Note: We intentionally have a string overload (apparently Mort wants one). We don't have
+    /// string overloads call Uri overloads because that breaks Uris that aren't fully qualified
+    /// (things like "www.microsoft.com") that the underlying objects support and we don't want to
+    /// break.
     public void Navigate(string urlString, bool newWindow)
     {
         PerformNavigateHelper(
@@ -787,10 +786,10 @@ public unsafe partial class WebBrowser : WebBrowserBase
     /// <summary>
     ///  String overload for Navigate(Uri, string, byte[], string)
     /// </summary>
-    ///  Note: We intentionally have a string overload (apparently Mort wants one). We don't have
-    ///  string overloads call Uri overloads because that breaks Uris that aren't fully qualified
-    ///  (things like "www.microsoft.com") that the underlying objects support and we don't want to
-    ///  break.
+    /// Note: We intentionally have a string overload (apparently Mort wants one). We don't have
+    /// string overloads call Uri overloads because that breaks Uris that aren't fully qualified
+    /// (things like "www.microsoft.com") that the underlying objects support and we don't want to
+    /// break.
     public void Navigate(
         string urlString,
         string? targetFrameName,

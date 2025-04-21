@@ -184,7 +184,7 @@
       </trans-unit>
       <trans-unit id="AccessibleActionCheck">
         <source>Check</source>
-        <target state="translated">Пометить</target>
+        <target state="translated">Установить</target>
         <note />
       </trans-unit>
       <trans-unit id="AccessibleActionClick">
@@ -214,7 +214,7 @@
       </trans-unit>
       <trans-unit id="AccessibleActionUncheck">
         <source>Uncheck</source>
-        <target state="translated">Снять пометку</target>
+        <target state="translated">Снять</target>
         <note />
       </trans-unit>
       <trans-unit id="AccessibleObjectLiveRegionNotSupported">
@@ -289,17 +289,17 @@
       </trans-unit>
       <trans-unit id="BinaryFormatterNotSupported">
         <source>BinaryFormatter serialization and deserialization are disabled within this application. See https://aka.ms/binaryformatter for more information.</source>
-        <target state="translated">Сериализация и десериализация BinaryFormatter отключены в этом приложении. Дополнительные сведения см. https://aka.ms/binaryformatter.</target>
+        <target state="translated">Сериализация и десериализация BinaryFormatter в этом приложении отключены. Подробнее см. https://aka.ms/binaryformatter.</target>
         <note />
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations.</source>
-        <target state="translated">BinaryFormatter не поддерживается в буфере обмена или операциях перетаскивания.</target>
+        <target state="translated">Работа с BinaryFormatter в буфере обмена и его перетаскивание не поддерживается.</target>
         <note />
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop_UseTypedAPI">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations. Please enable it and use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">BinaryFormatter не поддерживается в буфере обмена или операциях перетаскивания. Включите его и используйте API "TryGetData&lt;T&gt;" с функцией "resolver", которая определяет набор разрешенных типов для десериализации '{0}'.</target>
+        <target state="translated">Работа с BinaryFormatter в буфере обмена и его перетаскивание не поддерживается. Включите его и используйте API "TryGetData&lt;T&gt;" с функцией-разрешителем, определяющей набор разрешенных типов для десериализации "{0}".</target>
         <note />
       </trans-unit>
       <trans-unit id="BindableComponentBindingContextChangedDescr">
@@ -334,7 +334,7 @@
       </trans-unit>
       <trans-unit id="BindingNavigatorCountItemFormat">
         <source>of {0}</source>
-        <target state="translated">из {0}</target>
+        <target state="translated">для {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="BindingNavigatorCountItemFormatPropDescr">
@@ -804,7 +804,7 @@
       </trans-unit>
       <trans-unit id="CatAsynchronous">
         <source>Asynchronous</source>
-        <target state="translated">Асинхронный</target>
+        <target state="translated">Асинхронные</target>
         <note />
       </trans-unit>
       <trans-unit id="CatBehavior">
@@ -824,7 +824,7 @@
       </trans-unit>
       <trans-unit id="CatDisplay">
         <source>Display</source>
-        <target state="translated">Экран</target>
+        <target state="translated">Показать</target>
         <note />
       </trans-unit>
       <trans-unit id="CatDragDrop">
@@ -969,27 +969,27 @@
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_CannotJsonSerializeDataObject">
         <source>An object of type 'DataObject' will serialize as empty. Use 'DataObject.SetDataAsJson' APIs on your object to JSON-serialize the data within your object, then use the '{0}' API with your object.</source>
-        <target state="translated">Объект типа "DataObject" будет сериализован как пустой. Используйте API-интерфейсы "DataObject.SetDataAsJson" на объекте для сериализации данных в объекте JSON, а затем используйте API '{0}' с объектом.</target>
+        <target state="translated">Объект типа "DataObject" будет сериализован как пустой. Используйте API "DataObject.SetDataAsJson" для JSON-сериализации данных в объекте, а затем используйте API "{0}" с этим объектом.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidFormatTypeCombination">
         <source>The specified type '{0}' is not compatible with the specified format '{1}'.</source>
-        <target state="translated">Указанный тип '{0}' несовместим с указанным форматом '{1}'.</target>
+        <target state="translated">Указанный тип "{0}" несовместим с указанным форматом "{1}".</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidType">
         <source>'{0}' is not a concrete type, and could result in an unbounded deserialization attempt. Please use a concrete type or alternatively define a 'resolver' function that supports types that you are expecting to retrieve from the clipboard or use in drag-and-drop operations.</source>
-        <target state="translated">'{0}' не является конкретным типом и может привести к нео привязанной попытке десериализации. Используйте конкретный тип или определите функцию "resolver", которая поддерживает типы, которые вы ожидаете получить из буфера обмена, или используйте в операциях перетаскивания.</target>
+        <target state="translated">"{0}" не является конкретным типом и может привести к попытке неограниченной десериализации. Используйте конкретный тип или определите функцию-разрешитель, поддерживающую типы, которые вы ожидаете получить из буфера обмена или использовать в операциях перетаскивания.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_TypedAPI_InvalidResolver">
         <source>Type {0} is not found. If this type is allowed, please ensure that the 'resolver' function provided in 'TryGetData&lt;T&gt;' APIs supports it.</source>
-        <target state="translated">Тип {0} не найден. Если этот тип разрешен, убедитесь, что функция "resolver", указанная в API "TryGetData&lt;T&gt;", поддерживает ее.</target>
+        <target state="translated">Тип {0} не найден. Если этот тип разрешен, убедитесь, что функция-разрешитель, указанная в API "TryGetData&lt;T&gt;", поддерживает его.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_UseTypedAPI">
         <source>Please use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">Используйте API"TryGetData&lt;T&gt;" с функцией "resolver", которая определяет набор разрешенных типов для десериализации '{0}'.</target>
+        <target state="translated">Используйте API "TryGetData&lt;T&gt;" с функцией-разрешителем, определяющей набор разрешенных типов для десериализации "{0}".</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardSecurityException">
@@ -1564,7 +1564,7 @@
       </trans-unit>
       <trans-unit id="ControlDarkModeDescr">
         <source>Determines the dark mode setting for the control. This ambient property inherits its value from its parent control or from the Application class.</source>
-        <target state="translated">Определяет настройку темного режима для элемента управления. Это внешнее свойство наследует свое значение от родительского элемента управления или от класса приложения.</target>
+        <target state="translated">Определяет настройку темного режима для элемента управления. Это свойство окружения наследует свое значение от родительского элемента управления или от класса приложения.</target>
         <note />
       </trans-unit>
       <trans-unit id="ControlDataContextChangedDescr">
@@ -2224,7 +2224,7 @@
       </trans-unit>
       <trans-unit id="DarkModeNotSupported">
         <source>Dark mode cannot be activated, either because of an activated High-Contrast mode or because the underlying OS does not support it.</source>
-        <target state="translated">Темный режим не удается активировать из-за включенного режима высокой контрастности или из-за того, что базовая ОС не поддерживает его.</target>
+        <target state="translated">Темный режим не удается активировать: либо из-за включенного режима высокой контрастности, либо из-за того, что базовая ОС не поддерживает его.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataBindingAddNewNotSupportedOnPropertyManager">
@@ -2409,7 +2409,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardFalse">
         <source>False</source>
-        <target state="new">False</target>
+        <target state="translated">Ложь</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardIndeterminate">
@@ -2419,7 +2419,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardTrue">
         <source>True</source>
-        <target state="new">True</target>
+        <target state="translated">Истина</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardUnchecked">
@@ -3676,9 +3676,9 @@
         <source>Exception occurred in the DataGridView.
 
 To replace this default dialog box, handle the DataError event.</source>
-        <target state="translated">Исключение в DataGridView.
+        <target state="translated">В DataGridView возникло исключение.
 
-Чтобы заменить это окно, включите обработку события DataError.</target>
+Чтобы заменить это диалоговое окно по умолчанию, включите обработку события DataError.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridView_ErrorMessageText_WithException">
@@ -3687,11 +3687,11 @@ To replace this default dialog box, handle the DataError event.</source>
 {0}
 
 To replace this default dialog please handle the DataError event.</source>
-        <target state="translated">Исключение в DataGridView:
+        <target state="translated">В DataGridView возникло следующее исключение:
 
 {0}
 
-Для замены этого окна по умолчанию обработайте событие DataError.</target>
+Для замены этого диалогового окна по умолчанию обработайте событие DataError.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridView_FirstDisplayedCellCannotBeAHeaderOrSharedCell">
@@ -4389,12 +4389,12 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">Не найден файл манифеста по умолчанию, необходимый для подключения визуальных стилей.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewButtonCellTollTipText">
+      <trans-unit id="DefaultDataGridViewButtonCellToolTipText">
         <source>Button</source>
         <target state="translated">Кнопка</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewComboBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewComboBoxCellToolTipText">
         <source>ComboBox</source>
         <target state="translated">Поле со списком</target>
         <note />
@@ -4404,14 +4404,14 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">Изображение</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewLinkCellTollTipText">
+      <trans-unit id="DefaultDataGridViewLinkCellToolTipText">
         <source>Link</source>
-        <target state="translated">Связь</target>
+        <target state="translated">Ссылка</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewTextBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewTextBoxCellToolTipText">
         <source>Edit</source>
-        <target state="translated">Изменить</target>
+        <target state="translated">Редактировать</target>
         <note />
       </trans-unit>
       <trans-unit id="DefaultNumericUpDownAccessibleName">
@@ -4848,7 +4848,7 @@ To replace this default dialog please handle the DataError event.</source>
         <source>Unhandled exception has occurred in a component in your application. If you click Continue, the application will ignore this error and attempt to continue.
 
 {0}.</source>
-        <target state="translated">Необрабатываемое исключение в компоненте приложения. При нажатии кнопки "Продолжить" приложение проигнорирует ошибку и попытается продолжить работу.
+        <target state="translated">В компоненте приложения возникло необработанное исключение. При нажатии кнопки "Продолжить" приложение проигнорирует ошибку и попытается продолжить работу.
 
 {0}.</target>
         <note />
@@ -4862,7 +4862,7 @@ To replace this default dialog please handle the DataError event.</source>
         <source>Unhandled exception has occurred in your application. If you click Continue, the application will ignore this error and attempt to continue. If you click Quit, the application will close immediately.
 
 {0}.</source>
-        <target state="translated">Необрабатываемое исключение в приложении. При нажатии кнопки "Продолжить" приложение проигнорирует ошибку и попытается продолжить работу. При нажатии кнопки "Выход" приложение немедленно завершит работу.
+        <target state="translated">В приложении возникло необработанное исключение. При нажатии кнопки "Продолжить" приложение проигнорирует ошибку и попытается продолжить работу. При нажатии кнопки "Выход" приложение немедленно завершит работу.
 
 {0}.</target>
         <note />
@@ -4882,9 +4882,9 @@ To replace this default dialog please handle the DataError event.</source>
 debugging. Contact the application author for more
 information.
 </source>
-        <target state="translated">Приложение не поддерживает оперативную (JIT) отладку Windows Forms.
-Для получения дополнительной информации свяжитесь с разработчиком
-приложения.
+        <target state="translated">Приложение не поддерживает JIT-отладку Windows Forms
+. Свяжитесь с автором приложения для получения дополнительной
+информации.
 </target>
         <note />
       </trans-unit>
@@ -4892,8 +4892,8 @@ information.
         <source>Application does not support just-in-time (JIT)
 debugging. See the end of this message for details.
 </source>
-        <target state="translated">Приложение не поддерживает оперативную (JIT)
-отладку. Подробная информацию приводится в конце данного сообщения.
+        <target state="translated">Приложение не поддерживает JIT-
+отладку. Подробная информация содержится в конце данного сообщения.
 </target>
         <note />
       </trans-unit>
@@ -4901,9 +4901,8 @@ debugging. See the end of this message for details.
         <source>See the end of this message for details on invoking 
 just-in-time (JIT) debugging instead of this dialog box.
 </source>
-        <target state="translated">Подробная информация об использовании оперативной 
-(JIT) отладки вместо данного диалогового 
-окна содержится в конце этого сообщения.
+        <target state="translated">Подробная информация о вызове 
+отладки JIT вместо данного диалогового окна содержится в конце этого сообщения.
 </target>
         <note />
       </trans-unit>
@@ -5116,7 +5115,7 @@ Do you want to create it?</source>
         <source>File {0} does not exist.
 Verify that the correct file name was given.</source>
         <target state="translated">Файл {0} не существует.
-Убедитесь в правильности указанного имени файла.</target>
+Проверьте правильность указанного имени файла.</target>
         <note />
       </trans-unit>
       <trans-unit id="FileDialogInvalidFileName">
@@ -5353,7 +5352,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="FormBorderColorChangedDescr">
         <source>Occurs whenever the FormBorderColor property is changed.</source>
-        <target state="translated">Происходит при смене свойства FormBorderColor.</target>
+        <target state="translated">Происходит при изменении свойства FormBorderColor.</target>
         <note />
       </trans-unit>
       <trans-unit id="FormBorderColorDescr">
@@ -5373,7 +5372,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="FormCaptionBackColorChangedDescr">
         <source>Occurs whenever the FormCaptionBackColor property is changed.</source>
-        <target state="translated">Происходит при смене свойства FormCaptionBackColor.</target>
+        <target state="translated">Происходит при изменении свойства FormCaptionBackColor.</target>
         <note />
       </trans-unit>
       <trans-unit id="FormCaptionBackColorDescr">
@@ -5388,7 +5387,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="FormCaptionTextColorDescr">
         <source>The color of the Form's text caption (title bar text).</source>
-        <target state="translated">Цвет текстовой надписи формы (текст заголовка).</target>
+        <target state="translated">Цвет шрифта названия формы (шрифта строки заголовка).</target>
         <note />
       </trans-unit>
       <trans-unit id="FormControlBoxDescr">
@@ -5398,7 +5397,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="FormCornerPreferenceChangedDescr">
         <source>Occurs whenever the FormCornerPreference property is changed.</source>
-        <target state="translated">Происходит при смене свойства FormCornerPreference.</target>
+        <target state="translated">Происходит при изменении свойства FormCornerPreference.</target>
         <note />
       </trans-unit>
       <trans-unit id="FormCornerPreferenceDescr">
@@ -5608,7 +5607,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="FormOrTaskDialog_NoSyncContextForShowAsync">
         <source>Failed to retrieve the Synchronization Context for showing the Form asynchronously.</source>
-        <target state="translated">Не удалось получить контекст синхронизации для асинхронного отображения формы.</target>
+        <target state="translated">Не удалось получить контекст синхронизации для асинхронной отрисовки формы.</target>
         <note />
       </trans-unit>
       <trans-unit id="FormOwnedFormsDescr">
@@ -5658,7 +5657,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="Form_HasAlreadyBeenShownAsync">
         <source>The form has already been shown asynchronously.</source>
-        <target state="translated">Форма уже была показана асинхронно.</target>
+        <target state="translated">Форма уже отрисовывается асинхронно.</target>
         <note />
       </trans-unit>
       <trans-unit id="FormatControlFormatDescr">
@@ -5813,7 +5812,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="ITypeDataObject_Not_Implemented">
         <source>Data object '{0}' doesn't implement the 'ITypedDataObject' interface and can't be read using 'TryGetData&lt;T&gt;(string, out T)' methods.</source>
-        <target state="translated">Объекты '{0}' не реализуют интерфейс "ITypedDataObject" и не могут быть прочитаны с помощью методов "TryGetData&lt;T&gt;(string, out T)".</target>
+        <target state="translated">В объекте данных "{0}" не реализован интерфейс "ITypedDataObject", и объект нельзя прочитать с помощью методов "TryGetData&lt;T&gt;(string, out T)".</target>
         <note />
       </trans-unit>
       <trans-unit id="IllegalCrossThreadCall">
@@ -5825,7 +5824,7 @@ Do you want to replace it?</source>
         <source>Cross-thread operation not valid: Control '{0}' accessed from a thread other than the thread it was created on.
 Stack trace where the illegal operation occurred was:
 {1}"</source>
-        <target state="translated">Недопустимая операция в нескольких потоках: попытка доступа к элементу управления '{0}' не из того потока, в котором он был создан.
+        <target state="translated">Недопустимая операция в нескольких потоках: попытка доступа к элементу управления "{0}" не из того потока, в котором он был создан.
 Трассировка стека, в котором произошла недопустимая операция:
 {1}"</target>
         <note />
@@ -7422,7 +7421,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="NotSupportedExceptionOnClipboard">
         <source>Clipboard contains a 'NotSupportedException' that indicates that write operation failed. '{0}'.</source>
-        <target state="translated">Буфер обмена содержит исключение NotSupportedException, которое указывает на сбой операции записи. '{0}'.</target>
+        <target state="translated">Буфер обмена содержит исключение "NotSupportedException", указывающее на сбой операции записи. "{0}".</target>
         <note />
       </trans-unit>
       <trans-unit id="NotifyIconBalloonTipIconDescr">
@@ -9217,7 +9216,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="StandardOleMarshalObjectGetMarshalerFailed">
         <source>Failed to get marshaler for IID {0}.</source>
-        <target state="translated">Не удалось получить упаковщик ("маршалер") для IID {0}.</target>
+        <target state="translated">Не удалось получить маршализатор для IID {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="StatusStripPanelBorderSidesDescr">

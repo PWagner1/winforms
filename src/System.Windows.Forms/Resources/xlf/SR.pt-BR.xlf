@@ -184,7 +184,7 @@
       </trans-unit>
       <trans-unit id="AccessibleActionCheck">
         <source>Check</source>
-        <target state="translated">Seleção</target>
+        <target state="translated">Marcar</target>
         <note />
       </trans-unit>
       <trans-unit id="AccessibleActionClick">
@@ -294,12 +294,12 @@
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations.</source>
-        <target state="translated">Não há suporte para BinaryFormatter em operações de área de transferência ou de arrastar e soltar.</target>
+        <target state="translated">Há suporte para o BinaryFormatter em operações de área de transferência ou do tipo "arrastar e soltar".</target>
         <note />
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop_UseTypedAPI">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations. Please enable it and use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">Não há suporte para BinaryFormatter em operações de área de transferência ou de arrastar e soltar. Habilite-o e use as APIs 'TryGetData&lt;T&gt;' com uma função 'resolver' que define um conjunto de tipos permitidos para desserializar '{0}'.</target>
+        <target state="translated">Há suporte para o BinaryFormatter em operações de área de transferência ou do tipo "arrastar e soltar". Habilite-o e use APIs 'TryGetData&lt;T&gt;' com uma função 'resolver' que defina um conjunto de tipos permitidos para desserializar '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="BindableComponentBindingContextChangedDescr">
@@ -969,27 +969,27 @@
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_CannotJsonSerializeDataObject">
         <source>An object of type 'DataObject' will serialize as empty. Use 'DataObject.SetDataAsJson' APIs on your object to JSON-serialize the data within your object, then use the '{0}' API with your object.</source>
-        <target state="translated">Um objeto do tipo 'DataObject' será serializado como vazio. Use as APIs 'DataObject.SetDataAsJson' no objeto para serializar os dados em JSON no objeto e use a API de '{0}' com o objeto.</target>
+        <target state="translated">Um objeto do tipo “DataObject” será serializado como vazio. Use as APIs 'DataObject.SetDataAsJson' em seu objeto para serializar os dados em JSON dentro do objeto e, em seguida, use a API '{0}' com seu objeto.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidFormatTypeCombination">
         <source>The specified type '{0}' is not compatible with the specified format '{1}'.</source>
-        <target state="translated">O tipo especificado '{0}' não é compatível com o formato especificado '{1}'.</target>
+        <target state="translated">O tipo especificado '{0}' não é compatível com o formato especificado '{1}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidType">
         <source>'{0}' is not a concrete type, and could result in an unbounded deserialization attempt. Please use a concrete type or alternatively define a 'resolver' function that supports types that you are expecting to retrieve from the clipboard or use in drag-and-drop operations.</source>
-        <target state="translated">'{0}' não é um tipo concreto e pode resultar em uma tentativa de desserialização não associado. Use um tipo concreto ou, como alternativa, defina uma função 'resolver' que dê suporte aos tipos que você está esperando recuperar da área de transferência ou use em operações de arrastar e soltar.</target>
+        <target state="translated">'{0}' não é um tipo concreto e pode resultar em uma tentativa de desserialização sem limites. Use um tipo concreto ou, alternativamente, defina uma função “resolver” que dê suporte aos tipos que você espera recuperar da área de transferência ou usar em operações do tipo "arrastar e soltar".</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_TypedAPI_InvalidResolver">
         <source>Type {0} is not found. If this type is allowed, please ensure that the 'resolver' function provided in 'TryGetData&lt;T&gt;' APIs supports it.</source>
-        <target state="translated">Tipo {0} não encontrado. Se esse tipo for permitido, verifique se a função 'resolver' fornecida nas APIs 'TryGetData&lt;T&gt;' dá suporte a ela.</target>
+        <target state="translated">O tipo {0} não foi encontrado. Se esse tipo for permitido, certifique-se de que a função “resolver” fornecida nas APIs “TryGetData&lt;T&gt;” dê suporte a ele.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_UseTypedAPI">
         <source>Please use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">Use apIs 'TryGetData&lt;T&gt;' com uma função 'resolver' que define um conjunto de tipos permitidos para desserializar '{0}'.</target>
+        <target state="translated">Use as APIs 'TryGetData&lt;T&gt;' com uma função 'resolver' que defina um conjunto de tipos permitidos para desserializar '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardSecurityException">
@@ -1314,7 +1314,7 @@
       </trans-unit>
       <trans-unit id="ConstructorArgumentInvalidValueType">
         <source>Argument '{0}' cannot be converted to type '{1}'.</source>
-        <target state="translated">O argumento '{0}' não pode ser convertido no tipo '{1}'.</target>
+        <target state="translated">O argumento '{0}' não pode ser convertido para o tipo '{1}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainerControlActiveControlDescr">
@@ -2409,7 +2409,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardFalse">
         <source>False</source>
-        <target state="new">False</target>
+        <target state="translated">Falso</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardIndeterminate">
@@ -2419,7 +2419,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardTrue">
         <source>True</source>
-        <target state="new">True</target>
+        <target state="translated">Verdadeiro</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardUnchecked">
@@ -4389,12 +4389,12 @@ Para substituir a caixa de diálogo padrão, manipule o evento DataError.</targe
         <target state="translated">Não foi possível encontrar o arquivo de manifesto padrão, necessário para habilitar estilos visuais.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewButtonCellTollTipText">
+      <trans-unit id="DefaultDataGridViewButtonCellToolTipText">
         <source>Button</source>
         <target state="translated">Botão</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewComboBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewComboBoxCellToolTipText">
         <source>ComboBox</source>
         <target state="translated">ComboBox</target>
         <note />
@@ -4404,12 +4404,12 @@ Para substituir a caixa de diálogo padrão, manipule o evento DataError.</targe
         <target state="translated">Imagem</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewLinkCellTollTipText">
+      <trans-unit id="DefaultDataGridViewLinkCellToolTipText">
         <source>Link</source>
         <target state="translated">Link</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewTextBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewTextBoxCellToolTipText">
         <source>Edit</source>
         <target state="translated">Editar</target>
         <note />
@@ -4882,8 +4882,8 @@ Para substituir a caixa de diálogo padrão, manipule o evento DataError.</targe
 debugging. Contact the application author for more
 information.
 </source>
-        <target state="translated">O aplicativo não oferece suporte à depuração just-in time (JIT) do
-Windows Forms. Contate o criador do aplicativo para obter mais
+        <target state="translated">O aplicativo não dá suporte à depuração just-in time (JIT) do Windows Forms
+depuração. Contate o criador do aplicativo para obter mais
 informações.
 </target>
         <note />
@@ -4892,8 +4892,8 @@ informações.
         <source>Application does not support just-in-time (JIT)
 debugging. See the end of this message for details.
 </source>
-        <target state="translated">O aplicativo não oferece suporte à depuração
-just-in-time (JIT). Consulte o final desta mensagem para obter detalhes.
+        <target state="translated">O aplicativo não dá suporte à depuração
+depuração. Consulte o final dessa mensagem para obter detalhes.
 </target>
         <note />
       </trans-unit>
@@ -4901,8 +4901,8 @@ just-in-time (JIT). Consulte o final desta mensagem para obter detalhes.
         <source>See the end of this message for details on invoking 
 just-in-time (JIT) debugging instead of this dialog box.
 </source>
-        <target state="translated">Consulte o final desta mensagem para obter detalhes sobre como chamar a 
-depuração just-in-time (JIT) em vez desta caixa de diálogo.
+        <target state="translated">Consulte o final dessa mensagem para obter detalhes sobre como chamar a 
+depuração just-in-time (JIT) em vez dessa caixa de diálogo.
 </target>
         <note />
       </trans-unit>
@@ -5115,7 +5115,7 @@ Deseja criá-lo?</target>
         <source>File {0} does not exist.
 Verify that the correct file name was given.</source>
         <target state="translated">O arquivo {0} não existe.
-Verifique se o nome de arquivo correto foi fornecido.</target>
+Verifique se o nome do arquivo está correto.</target>
         <note />
       </trans-unit>
       <trans-unit id="FileDialogInvalidFileName">
@@ -5272,7 +5272,7 @@ Deseja substituí-lo?</target>
       </trans-unit>
       <trans-unit id="FolderBrowserDialogMultiSelectDescr">
         <source>Controls whether multiple folders can be selected in the dialog.</source>
-        <target state="translated">Controla se várias pastas podem ser selecionadas na caixa de diálogo.</target>
+        <target state="translated">Controla se várias pastas podem ser selecionadas no diálogo.</target>
         <note />
       </trans-unit>
       <trans-unit id="FolderBrowserDialogOkRequiresInteraction">
@@ -5812,7 +5812,7 @@ Deseja substituí-lo?</target>
       </trans-unit>
       <trans-unit id="ITypeDataObject_Not_Implemented">
         <source>Data object '{0}' doesn't implement the 'ITypedDataObject' interface and can't be read using 'TryGetData&lt;T&gt;(string, out T)' methods.</source>
-        <target state="translated">O objeto de '{0}' não implementa a interface 'ITypedDataObject' e não pode ser lido usando os métodos 'TryGetData&lt;T&gt;(string, out T)'.</target>
+        <target state="translated">O objeto de dados '{0}' não implementa a interface 'ITypedDataObject' e não pode ser lido usando métodos 'TryGetData&lt;T&gt;(string, out T)'.</target>
         <note />
       </trans-unit>
       <trans-unit id="IllegalCrossThreadCall">
@@ -5824,8 +5824,8 @@ Deseja substituí-lo?</target>
         <source>Cross-thread operation not valid: Control '{0}' accessed from a thread other than the thread it was created on.
 Stack trace where the illegal operation occurred was:
 {1}"</source>
-        <target state="translated">Operação entre threads inválida: controle '{0}' acessado de um thread que não é aquele no qual foi criado.
-Rastreamento de pilha em que a operação ilegal ocorreu:
+        <target state="translated">A operação entre threads não é válida: o controle '{0}' foi acessado a partir de um thread diferente do thread no qual foi criado.
+O rastreamento de pilha em que a operação ilegal ocorreu foi:
 {1}"</target>
         <note />
       </trans-unit>
@@ -7421,7 +7421,7 @@ Rastreamento de pilha em que a operação ilegal ocorreu:
       </trans-unit>
       <trans-unit id="NotSupportedExceptionOnClipboard">
         <source>Clipboard contains a 'NotSupportedException' that indicates that write operation failed. '{0}'.</source>
-        <target state="translated">A área de transferência contém uma 'NotSupportedException' que indica que a operação de gravação falhou. '{0}'.</target>
+        <target state="translated">A área de transferência contém uma 'NotSupportedException' que indica que a operação de gravação falhou. '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="NotifyIconBalloonTipIconDescr">

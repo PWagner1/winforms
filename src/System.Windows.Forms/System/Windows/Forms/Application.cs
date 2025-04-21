@@ -422,8 +422,10 @@ public sealed partial class Application
     ///  Gets the path for the application data specific to a local, non-roaming user.
     /// </summary>
     /// <remarks>
-    ///  <para>Don't obsolete these. GetDataPath isn't on SystemInformation, and it provides
-    ///  the Windows logo required adornments to the directory (Company\Product\Version)</para>
+    ///  <para>
+    ///   Don't obsolete these. GetDataPath isn't on SystemInformation, and it provides
+    ///   the Windows logo required adornments to the directory (Company\Product\Version)
+    ///  </para>
     /// </remarks>
     public static string LocalUserAppDataPath
         => GetDataPath(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
@@ -619,8 +621,10 @@ public sealed partial class Application
     ///  Gets the path for the application data specific to the roaming user.
     /// </summary>
     /// <remarks>
-    ///  <para>Don't obsolete these. GetDataPath isn't on SystemInformation, and it provides
-    ///  the Windows logo required adornments to the directory (Company\Product\Version)</para>
+    ///  <para>
+    ///   Don't obsolete these. GetDataPath isn't on SystemInformation, and it provides
+    ///   the Windows logo required adornments to the directory (Company\Product\Version)
+    ///  </para>
     /// </remarks>
     public static string UserAppDataPath
         => GetDataPath(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData));
@@ -967,10 +971,7 @@ public sealed partial class Application
             if (s_exiting)
             {
                 // Recursive call to Exit
-                if (e is not null)
-                {
-                    e.Cancel = false;
-                }
+                e?.Cancel = false;
 
                 return;
             }
@@ -998,10 +999,7 @@ public sealed partial class Application
                         if (form.RaiseFormClosingOnAppExit())
                         {
                             // A form refused to close
-                            if (e is not null)
-                            {
-                                e.Cancel = true;
-                            }
+                            e?.Cancel = true;
 
                             processedForms.Clear();
                             return;
@@ -1036,10 +1034,7 @@ public sealed partial class Application
                 }
 
                 ThreadContext.ExitApplication();
-                if (e is not null)
-                {
-                    e.Cancel = false;
-                }
+                e?.Cancel = false;
             }
             finally
             {
@@ -1352,13 +1347,13 @@ public sealed partial class Application
     ///  You can only call this method before the first window is created by your Windows Forms application.
     /// </exception>
     /// <remarks>
-    /// <para>
-    ///  The system text scale factor will be applied to the font, i.e. if the default font is set to "Calibri, 11f"
-    ///  and the text scale factor is set to 150% the resulting default font will be set to "Calibri, 16.5f".
-    /// </para>
-    /// <para>
-    ///  Users can adjust text scale with the Make text bigger slider on the Settings -> Ease of Access -> Vision/Display screen.
-    /// </para>
+    ///  <para>
+    ///   The system text scale factor will be applied to the font, i.e. if the default font is set to "Calibri, 11f"
+    ///   and the text scale factor is set to 150% the resulting default font will be set to "Calibri, 16.5f".
+    ///  </para>
+    ///  <para>
+    ///   Users can adjust text scale with the Make text bigger slider on the Settings -> Ease of Access -> Vision/Display screen.
+    ///  </para>
     /// </remarks>
     /// <seealso href="https://docs.microsoft.com/windows/uwp/design/input/text-scaling">Windows Text scaling</seealso>
     public static void SetDefaultFont(Font font)

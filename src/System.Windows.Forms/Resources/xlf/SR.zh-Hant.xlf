@@ -294,12 +294,12 @@
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations.</source>
-        <target state="translated">剪貼簿或拖放操作不支援 BinaryFormatter。</target>
+        <target state="translated">剪貼簿或拖放功能作業不支援 BinaryFormatter。</target>
         <note />
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop_UseTypedAPI">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations. Please enable it and use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">剪貼簿或拖放操作不支援 BinaryFormatter。請加以啟用，並使用 『TryGetData&lt;T&gt;』 API 搭配 『resolver』 函式，定義一組允許的類型，以還原串行化 '{0}'。</target>
+        <target state="translated">剪貼簿或拖放功能作業不支援 BinaryFormatter。請啟用它，並使用 'TryGetData&lt;T&gt;' API 搭配 'resolver' 函式，其定義一組允許的類型以將 '{0}' 還原序列化。</target>
         <note />
       </trans-unit>
       <trans-unit id="BindableComponentBindingContextChangedDescr">
@@ -969,7 +969,7 @@
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_CannotJsonSerializeDataObject">
         <source>An object of type 'DataObject' will serialize as empty. Use 'DataObject.SetDataAsJson' APIs on your object to JSON-serialize the data within your object, then use the '{0}' API with your object.</source>
-        <target state="translated">類型 『DataObject』 的物件將串行化為空白。使用物件上的 'DataObject.SetDataAsJson' API 將對象內的數據 JSON 串行化，然後在物件中使用 '{0}' API。</target>
+        <target state="translated">類型 'DataObject' 的物件將序列化為空白。請使用物件上的 'DataObject.SetDataAsJson' API 將物件內的資料 JSON 序列化，然後搭配物件使用 '{0}' API。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidFormatTypeCombination">
@@ -979,17 +979,17 @@
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidType">
         <source>'{0}' is not a concrete type, and could result in an unbounded deserialization attempt. Please use a concrete type or alternatively define a 'resolver' function that supports types that you are expecting to retrieve from the clipboard or use in drag-and-drop operations.</source>
-        <target state="translated">'{0}' 不是實體類型，可能會導致未繫結的還原串行化嘗試。請使用實體類型，或是定義 『resolver』 函式，以支援您預期要從剪貼簿擷取的類型，或是用於拖放操作。</target>
+        <target state="translated">'{0}' 不是具體類型，可能會導致未界定的還原序列化嘗試。請使用具體類型，或者定義 'resolver' 函式，以支援您期望從剪貼簿擷取或在拖放功能作業中使用的類型。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_TypedAPI_InvalidResolver">
         <source>Type {0} is not found. If this type is allowed, please ensure that the 'resolver' function provided in 'TryGetData&lt;T&gt;' APIs supports it.</source>
-        <target state="translated">找不到類型 {0}。如果允許此類型，請確定 'TryGetData&lt;T&gt;' API 中提供的 'resolver' 函式支援。</target>
+        <target state="translated">找不到類型 {0}。如果系統允許此類型，請確保 'TryGetData&lt;T&gt;' API 中提供的 'resolver' 函式支援它。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_UseTypedAPI">
         <source>Please use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">請使用 『TryGetData&lt;T&gt;』 API 搭配 『resolver』 函式，定義一組允許的類型，以還原串行化 '{0}'。</target>
+        <target state="translated">請使用 'TryGetData&lt;T&gt;' API 搭配 'resolver' 函式，其定義一組允許的類型以將 '{0}' 還原序列化。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardSecurityException">
@@ -2409,7 +2409,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardFalse">
         <source>False</source>
-        <target state="new">False</target>
+        <target state="translated">False</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardIndeterminate">
@@ -2419,7 +2419,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardTrue">
         <source>True</source>
-        <target state="new">True</target>
+        <target state="translated">True</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardUnchecked">
@@ -4389,12 +4389,12 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">找不到啟用視覺化樣式所需的預設資訊清單檔。</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewButtonCellTollTipText">
+      <trans-unit id="DefaultDataGridViewButtonCellToolTipText">
         <source>Button</source>
         <target state="translated">按鈕</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewComboBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewComboBoxCellToolTipText">
         <source>ComboBox</source>
         <target state="translated">ComboBox</target>
         <note />
@@ -4404,12 +4404,12 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">影像</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewLinkCellTollTipText">
+      <trans-unit id="DefaultDataGridViewLinkCellToolTipText">
         <source>Link</source>
         <target state="translated">連結</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewTextBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewTextBoxCellToolTipText">
         <source>Edit</source>
         <target state="translated">編輯</target>
         <note />
@@ -4864,7 +4864,7 @@ To replace this default dialog please handle the DataError event.</source>
 {0}.</source>
         <target state="translated">您的應用程式發生未處理的例外狀況。如果您按一下 [繼續]，應用程式會忽略錯誤並嘗試繼續。如果您按一下 [結束]，則會立即關閉應用程式。
 
-{0}</target>
+{0}。</target>
         <note />
       </trans-unit>
       <trans-unit id="ExDlgHelp">
@@ -4882,9 +4882,9 @@ To replace this default dialog please handle the DataError event.</source>
 debugging. Contact the application author for more
 information.
 </source>
-        <target state="translated">應用程式不支援 Windows Form JIT (Just-In-Time) 
-偵錯功能。如需詳細資訊，請洽詢該應用程式
-的作者。
+        <target state="translated">應用程式不支援 Windows Form Just-In-Time (JIT)
+偵錯功能。請聯繫該應用程式的作者，以獲取詳細
+資訊。
 </target>
         <note />
       </trans-unit>
@@ -4892,8 +4892,8 @@ information.
         <source>Application does not support just-in-time (JIT)
 debugging. See the end of this message for details.
 </source>
-        <target state="translated">應用程式不支援 Just-In-Time (JIT) 偵錯功能。
-如需詳細資料，請參閱本訊息結尾處。
+        <target state="translated">應用程式不支援 Just-In-Time (JIT)
+偵錯功能。請參閱此訊息結尾處，以獲取詳細資料。
 </target>
         <note />
       </trans-unit>
@@ -4902,7 +4902,7 @@ debugging. See the end of this message for details.
 just-in-time (JIT) debugging instead of this dialog box.
 </source>
         <target state="translated">如需叫用 Just-In-Time (JIT) 偵錯的詳細資料，
-請參閱本訊息結尾處 (而非這個對話方塊) 的資訊。
+請參閱本訊息結尾處的詳細資訊，而非這個對話方塊。
 </target>
         <note />
       </trans-unit>
@@ -5141,7 +5141,7 @@ Verify that the correct file name was given.</source>
       <trans-unit id="FileDialogOverwritePrompt">
         <source>File {0} already exists.
 Do you want to replace it?</source>
-        <target state="translated">檔案 {0} 已經存在。
+        <target state="translated">檔案 {0} 已存在。
 您要取代它嗎?</target>
         <note />
       </trans-unit>
@@ -5812,7 +5812,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="ITypeDataObject_Not_Implemented">
         <source>Data object '{0}' doesn't implement the 'ITypedDataObject' interface and can't be read using 'TryGetData&lt;T&gt;(string, out T)' methods.</source>
-        <target state="translated">數據物件 '{0}' 未實作 『ITypedDataObject』 介面，因此無法使用 『TryGetData&lt;T&gt;(string， out T)』 方法讀取。</target>
+        <target state="translated">資料物件 '{0}' 未實作 'ITypedDataObject' 介面，因此無法使用 'TryGetData&lt;T&gt;(string, out T)' 方法進行讀取。</target>
         <note />
       </trans-unit>
       <trans-unit id="IllegalCrossThreadCall">
@@ -7421,7 +7421,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="NotSupportedExceptionOnClipboard">
         <source>Clipboard contains a 'NotSupportedException' that indicates that write operation failed. '{0}'.</source>
-        <target state="translated">剪貼簿包含表示寫入作業失敗的 『NotSupportedException』。'{0}'。</target>
+        <target state="translated">剪貼簿包含 'NotSupportedException'，表示寫入作業失敗。'{0}'。</target>
         <note />
       </trans-unit>
       <trans-unit id="NotifyIconBalloonTipIconDescr">

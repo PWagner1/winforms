@@ -299,7 +299,7 @@
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop_UseTypedAPI">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations. Please enable it and use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">BinaryFormatter non è supportato negli Appunti o nelle operazioni di trascinamento della selezione. Abilitarlo e usare le API 'TryGetData&lt;T&gt;' con una funzione 'resolver' che definisce un set di tipi consentiti da deserializzare '{0}'.</target>
+        <target state="translated">BinaryFormatter non è supportato negli Appunti o nelle operazioni di trascinamento della selezione. Abilitarlo e usare le API 'TryGetData&lt;T&gt;' con una funzione 'resolver' che definisca un set di tipi consentiti per deserializzare '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="BindableComponentBindingContextChangedDescr">
@@ -969,7 +969,7 @@
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_CannotJsonSerializeDataObject">
         <source>An object of type 'DataObject' will serialize as empty. Use 'DataObject.SetDataAsJson' APIs on your object to JSON-serialize the data within your object, then use the '{0}' API with your object.</source>
-        <target state="translated">Un oggetto di tipo 'DataObject' verrà serializzato come vuoto. Usare le API 'DataObject.SetDataAsJson' nell'oggetto per serializzare in formato JSON i dati all'interno dell'oggetto, quindi usare l'API '{0}' con l'oggetto.</target>
+        <target state="translated">Un oggetto di tipo 'DataObject' verrà serializzato come vuoto. Usare le API 'DataObject.SetDataAsJson' nell'oggetto per serializzare in JSON i dati all'interno dell'oggetto, quindi usare l'API '{0}' con l'oggetto.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidFormatTypeCombination">
@@ -979,17 +979,17 @@
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidType">
         <source>'{0}' is not a concrete type, and could result in an unbounded deserialization attempt. Please use a concrete type or alternatively define a 'resolver' function that supports types that you are expecting to retrieve from the clipboard or use in drag-and-drop operations.</source>
-        <target state="translated">'{0}' non è un tipo concreto e potrebbe causare un tentativo di deserializzazione senza limitazioni. Usare un tipo concreto o in alternativa definire una funzione 'resolver' che supporta tipi che si prevede di recuperare dagli Appunti o da usare nelle operazioni di trascinamento della selezione.</target>
+        <target state="translated">'{0}' non è un tipo concreto e potrebbe comportare un tentativo di deserializzazione senza vincoli. Usare un tipo concreto o in alternativa definire una funzione 'resolver' che supporti i tipi che si prevede di recuperare dagli Appunti o di usare nelle operazioni di trascinamento della selezione.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_TypedAPI_InvalidResolver">
         <source>Type {0} is not found. If this type is allowed, please ensure that the 'resolver' function provided in 'TryGetData&lt;T&gt;' APIs supports it.</source>
-        <target state="translated">Tipo {0} non trovato. Se questo tipo è consentito, assicurarsi che sia supportata dalla funzione 'resolver' fornita nelle API 'TryGetData&lt;T&gt;'.</target>
+        <target state="translated">Tipo {0} non trovato. Se questo tipo è consentito, assicurarsi che la funzione 'resolver' fornita nelle API 'TryGetData&lt;T&gt;' lo supporti.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_UseTypedAPI">
         <source>Please use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">Usare le API 'TryGetData&lt;T&gt;' con una funzione 'resolver' che definisce un set di tipi consentiti per deserializzare '{0}'.</target>
+        <target state="translated">Usare le API 'TryGetData&lt;T&gt;' con una funzione 'resolver' che definisca un set di tipi consentiti per deserializzare '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardSecurityException">
@@ -2319,7 +2319,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCellAccessibleObject_OwnerWrongType">
         <source>DataGridViewCell of type {0} does not provide the Toggle pattern.</source>
-        <target state="translated">DataGridViewCell di tipo {0} non fornisce il pattern Toggle.</target>
+        <target state="translated">L'oggetto DataGridViewCell di tipo {0} non fornisce il criterio Toggle.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCellCollection_AtLeastOneCellIsNull">
@@ -2394,7 +2394,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCellIndeterminateStateDescription">
         <source>{0} check box indeterminate</source>
-        <target state="translated">{0} casella di controllo indeterminato</target>
+        <target state="translated">Casella di controllo {0} indeterminata</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCellUncheckedStateDescription">
@@ -2409,7 +2409,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardFalse">
         <source>False</source>
-        <target state="new">False</target>
+        <target state="translated">Falso</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardIndeterminate">
@@ -2419,7 +2419,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardTrue">
         <source>True</source>
-        <target state="new">True</target>
+        <target state="translated">Vero</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardUnchecked">
@@ -3678,7 +3678,7 @@
 To replace this default dialog box, handle the DataError event.</source>
         <target state="translated">Si è verificata un'eccezione in DataGridView.
 
-Per sostituire questa finestra di dialogo predefinita, gestire l'evento DataError.</target>
+Per sostituire questa finestra di dialogo predefinita, gestisci l'evento DataError.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridView_ErrorMessageText_WithException">
@@ -3691,7 +3691,7 @@ To replace this default dialog please handle the DataError event.</source>
 
 {0}
 
-Per sostituire questa finestra di dialogo predefinita, gestire l'evento DataError.</target>
+Per sostituire questa finestra di dialogo, gestisci l'evento DataError.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridView_FirstDisplayedCellCannotBeAHeaderOrSharedCell">
@@ -4389,12 +4389,12 @@ Per sostituire questa finestra di dialogo predefinita, gestire l'evento DataErro
         <target state="translated">Il file manifesto predefinito necessario per abilitare gli stili di visualizzazione non è stato trovato.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewButtonCellTollTipText">
+      <trans-unit id="DefaultDataGridViewButtonCellToolTipText">
         <source>Button</source>
         <target state="translated">Pulsante</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewComboBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewComboBoxCellToolTipText">
         <source>ComboBox</source>
         <target state="translated">ComboBox</target>
         <note />
@@ -4404,12 +4404,12 @@ Per sostituire questa finestra di dialogo predefinita, gestire l'evento DataErro
         <target state="translated">Immagine</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewLinkCellTollTipText">
+      <trans-unit id="DefaultDataGridViewLinkCellToolTipText">
         <source>Link</source>
         <target state="translated">Collegamento</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewTextBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewTextBoxCellToolTipText">
         <source>Edit</source>
         <target state="translated">Modifica</target>
         <note />
@@ -4848,7 +4848,7 @@ Per sostituire questa finestra di dialogo predefinita, gestire l'evento DataErro
         <source>Unhandled exception has occurred in a component in your application. If you click Continue, the application will ignore this error and attempt to continue.
 
 {0}.</source>
-        <target state="translated">Eccezione non gestita in un componente dell'applicazione. Fare clic su Continua per ignorare l'errore e tentare di proseguire.
+        <target state="translated">Si è verificata un'eccezione non gestita in un componente nell'applicazione. Facendo clic su Continua, l'applicazione ignorerà questo errore e tenterà di continuare.
 
 {0}.</target>
         <note />
@@ -4862,14 +4862,14 @@ Per sostituire questa finestra di dialogo predefinita, gestire l'evento DataErro
         <source>Unhandled exception has occurred in your application. If you click Continue, the application will ignore this error and attempt to continue. If you click Quit, the application will close immediately.
 
 {0}.</source>
-        <target state="translated">Eccezione non gestita nell'applicazione. Fare clic su Continua per ignorare l'errore e tentare di proseguire. Fare clic su Esci per arrestare l'applicazione immediatamente.
+        <target state="translated">Si è verificata un'eccezione non gestita nell'applicazione. Facendo clic su Continua, l'applicazione ignorerà questo errore e tenterà di continuare. Facendo clic su Esci, l'applicazione si chiuderà immediatamente.
 
 {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExDlgHelp">
         <source>&amp;Help</source>
-        <target state="translated">&amp;Guida</target>
+        <target state="translated">&amp;?</target>
         <note />
       </trans-unit>
       <trans-unit id="ExDlgMsgExceptionSection">
@@ -4882,9 +4882,9 @@ Per sostituire questa finestra di dialogo predefinita, gestire l'evento DataErro
 debugging. Contact the application author for more
 information.
 </source>
-        <target state="translated">L'applicazione non supporta il debug JIT
-di Windows Form. Per ulteriori informazioni, contattare l'autore
-dell'applicazione.
+        <target state="translated">L'applicazione non supporta il debug JIT (just-in-time)
+di Windows Forms. Contatta l'autore per altre
+informazioni.
 </target>
         <note />
       </trans-unit>
@@ -4892,8 +4892,8 @@ dell'applicazione.
         <source>Application does not support just-in-time (JIT)
 debugging. See the end of this message for details.
 </source>
-        <target state="translated">L'applicazione non supporta il debug JIT.
-Ulteriori informazioni sono riportate in fondo al messaggio.
+        <target state="translated">L'applicazione non supporta il debug JIT
+di Windows Forms. Per i dettagli, vedi la fine di questo messaggio.
 </target>
         <note />
       </trans-unit>
@@ -4901,8 +4901,8 @@ Ulteriori informazioni sono riportate in fondo al messaggio.
         <source>See the end of this message for details on invoking 
 just-in-time (JIT) debugging instead of this dialog box.
 </source>
-        <target state="translated">Le informazioni su come richiamare il debug JIT (Just-In-Time) anziché questa finestra
-sono riportate in fondo al messaggio.
+        <target state="translated">Vedi la fine di questo messaggio per i dettagli sul richiamo del 
+debug JIT (just-in-time) invece di questa finestra di dialogo.
 </target>
         <note />
       </trans-unit>
@@ -5115,7 +5115,7 @@ Crearlo?</target>
         <source>File {0} does not exist.
 Verify that the correct file name was given.</source>
         <target state="translated">Il file {0} non esiste.
-Verificare che si sia specificato il nome di file corretto.</target>
+Verifica che sia stato specificato il nome file corretto.</target>
         <note />
       </trans-unit>
       <trans-unit id="FileDialogInvalidFileName">
@@ -5812,7 +5812,7 @@ Sostituirlo?</target>
       </trans-unit>
       <trans-unit id="ITypeDataObject_Not_Implemented">
         <source>Data object '{0}' doesn't implement the 'ITypedDataObject' interface and can't be read using 'TryGetData&lt;T&gt;(string, out T)' methods.</source>
-        <target state="translated">L'oggetto dati '{0}' non implementa l'interfaccia 'ITypedDataObject' e non può essere letto con i metodi 'TryGetData&lt;T&gt;(string, out T)'.</target>
+        <target state="translated">L'oggetto dati '{0}' non implementa l'interfaccia 'ITypedDataObject' e non può essere letto usando i metodi 'TryGetData&lt;T&gt;(string, out T)'.</target>
         <note />
       </trans-unit>
       <trans-unit id="IllegalCrossThreadCall">
@@ -5825,7 +5825,7 @@ Sostituirlo?</target>
 Stack trace where the illegal operation occurred was:
 {1}"</source>
         <target state="translated">Operazione cross-thread non valida: è stato eseguito l'accesso al controllo '{0}' da un thread diverso da quello da cui è stata eseguita la creazione.
-Traccia dello stack da cui si è verificata l'operazione non valida:
+Analisi dello stack dove si è verificata l'operazione non valida:
 {1}"</target>
         <note />
       </trans-unit>
@@ -7421,7 +7421,7 @@ Traccia dello stack da cui si è verificata l'operazione non valida:
       </trans-unit>
       <trans-unit id="NotSupportedExceptionOnClipboard">
         <source>Clipboard contains a 'NotSupportedException' that indicates that write operation failed. '{0}'.</source>
-        <target state="translated">Gli Appunti contengono un'eccezione 'NotSupportedException' che indica che l'operazione di scrittura non è riuscita. '{0}'.</target>
+        <target state="translated">Gli Appunti contengono un'eccezione 'NotSupportedException' indicante che l'operazione di scrittura non è riuscita. '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="NotifyIconBalloonTipIconDescr">

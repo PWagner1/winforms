@@ -294,12 +294,12 @@
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations.</source>
-        <target state="translated">BinaryFormatter n’est pas pris en charge dans les opérations de presse-papiers ou de glisser-déplacer.</target>
+        <target state="translated">BinaryFormatter n’est pas pris en charge dans les opérations de Presse-papiers ou de glisser-déplacer.</target>
         <note />
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop_UseTypedAPI">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations. Please enable it and use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">BinaryFormatter n’est pas pris en charge dans les opérations de presse-papiers ou de glisser-déplacer. Activez-la et utilisez les API 'TryGetData&lt;T&gt;' avec une fonction 'resolver' qui définit un ensemble de types autorisés pour désérialiser '{0}'.</target>
+        <target state="translated">BinaryFormatter n’est pas pris en charge dans les opérations de Presse-papiers ou de glisser-déplacer. Veuillez l’activer et utiliser les API « TryGetData&lt;T&gt; » avec une fonction « resolver » qui définit un ensemble de types autorisés pour désérialiser « {0} ».</target>
         <note />
       </trans-unit>
       <trans-unit id="BindableComponentBindingContextChangedDescr">
@@ -969,27 +969,27 @@
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_CannotJsonSerializeDataObject">
         <source>An object of type 'DataObject' will serialize as empty. Use 'DataObject.SetDataAsJson' APIs on your object to JSON-serialize the data within your object, then use the '{0}' API with your object.</source>
-        <target state="translated">Un objet de type 'DataObject' va sérialiser comme vide. Utilisez les API « DataObject.SetDataAsJson » sur votre objet pour sérialiser les données au sein de votre objet, puis utilisez l’API '{0}' avec votre objet.</target>
+        <target state="translated">Un objet de type « DataObject » sera sérialisé comme vide. Utilisez les API « DataObject.SetDataAsJson » sur votre objet pour sérialiser les données au format JSON au sein de votre objet, puis utilisez l’API « {0} » avec votre objet.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidFormatTypeCombination">
         <source>The specified type '{0}' is not compatible with the specified format '{1}'.</source>
-        <target state="translated">Le type spécifié '{0}' n’est pas compatible avec le format spécifié '{1}'.</target>
+        <target state="translated">Le type spécifié « {0} » n’est pas compatible avec le format spécifié « {1} ».</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidType">
         <source>'{0}' is not a concrete type, and could result in an unbounded deserialization attempt. Please use a concrete type or alternatively define a 'resolver' function that supports types that you are expecting to retrieve from the clipboard or use in drag-and-drop operations.</source>
-        <target state="translated">'{0}' n’est pas un type concret et peut entraîner une tentative de désérialisation non liée. Utilisez un type concret ou définissez une fonction « resolver » qui prend en charge les types que vous voulez récupérer à partir du Presse-papiers ou utilisez-la dans les opérations de glisser-déplacer.</target>
+        <target state="translated">« {0} » n’est pas un type concret et peut entraîner une tentative de désérialisation illimitée. Veuillez utiliser un type concret ou définir une fonction « resolver » qui prend en charge les types que vous attendez de récupérer depuis le Presse-papiers ou d’utiliser dans des opérations de glisser-déposer.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_TypedAPI_InvalidResolver">
         <source>Type {0} is not found. If this type is allowed, please ensure that the 'resolver' function provided in 'TryGetData&lt;T&gt;' APIs supports it.</source>
-        <target state="translated">Type {0} introuvable. Si ce type est autorisé, vérifiez que la fonction « resolver » fournie dans les API « TryGetData&lt;T&gt; » le prend en charge.</target>
+        <target state="translated">Le type {0} est introuvable. Si ce type est autorisé, veuillez vérifier que la fonction « resolver » fournie dans les API « TryGetData&lt;T&gt; » le prend en charge.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_UseTypedAPI">
         <source>Please use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">Utilisez les API 'TryGetData&lt;T&gt;' avec une fonction 'resolver' qui définit un ensemble de types autorisés pour désérialiser '{0}'.</target>
+        <target state="translated">Veuillez utiliser les API « TryGetData&lt;T&gt; » avec une fonction « resolver » qui définit un ensemble de types autorisés pour désérialiser « {0} ».</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardSecurityException">
@@ -1214,7 +1214,7 @@
       </trans-unit>
       <trans-unit id="ComboBoxValueSelectedFormat">
         <source>{0} selected</source>
-        <target state="translated">{0} sélectionné(s)</target>
+        <target state="translated">{0} est sélectionné</target>
         <note />
       </trans-unit>
       <trans-unit id="ComboboxDropDownButtonCloseName">
@@ -2409,7 +2409,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardFalse">
         <source>False</source>
-        <target state="new">False</target>
+        <target state="translated">Faux</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardIndeterminate">
@@ -2419,7 +2419,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardTrue">
         <source>True</source>
-        <target state="new">True</target>
+        <target state="translated">Vrai</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardUnchecked">
@@ -4389,14 +4389,14 @@ Pour remplacer cette boîte de dialogue par défaut, traitez l'événement DataE
         <target state="translated">Le fichier manifeste par défaut requis pour activer les styles visuels est introuvable.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewButtonCellTollTipText">
+      <trans-unit id="DefaultDataGridViewButtonCellToolTipText">
         <source>Button</source>
-        <target state="translated">Bouton</target>
+        <target state="translated">Button</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewComboBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewComboBoxCellToolTipText">
         <source>ComboBox</source>
-        <target state="translated">Zone de liste déroulante</target>
+        <target state="translated">ComboBox</target>
         <note />
       </trans-unit>
       <trans-unit id="DefaultDataGridViewImageCellToolTipText">
@@ -4404,14 +4404,14 @@ Pour remplacer cette boîte de dialogue par défaut, traitez l'événement DataE
         <target state="translated">Image</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewLinkCellTollTipText">
+      <trans-unit id="DefaultDataGridViewLinkCellToolTipText">
         <source>Link</source>
-        <target state="translated">Lier</target>
+        <target state="translated">Link</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewTextBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewTextBoxCellToolTipText">
         <source>Edit</source>
-        <target state="translated">Modifier</target>
+        <target state="translated">Edit</target>
         <note />
       </trans-unit>
       <trans-unit id="DefaultNumericUpDownAccessibleName">
@@ -4848,7 +4848,7 @@ Pour remplacer cette boîte de dialogue par défaut, traitez l'événement DataE
         <source>Unhandled exception has occurred in a component in your application. If you click Continue, the application will ignore this error and attempt to continue.
 
 {0}.</source>
-        <target state="translated">Une exception non gérée s'est produite dans un composant de votre application. Si vous cliquez sur Continuer, votre application va ignorer cette erreur et essayer de continuer.
+        <target state="translated">Une exception non prise en charge s'est produite dans un composant de votre application. Si vous cliquez sur Continuer, votre application va ignorer cette erreur et essayer de continuer.
 
 {0}.</target>
         <note />
@@ -4862,7 +4862,7 @@ Pour remplacer cette boîte de dialogue par défaut, traitez l'événement DataE
         <source>Unhandled exception has occurred in your application. If you click Continue, the application will ignore this error and attempt to continue. If you click Quit, the application will close immediately.
 
 {0}.</source>
-        <target state="translated">Une exception non gérée s'est produite dans votre application. Si vous cliquez sur Continuer, l'application va ignorer cette erreur et essayer de continuer. Si vous cliquez sur Quitter, l'application va s'arrêter immédiatement.
+        <target state="translated">Une exception non prise en charge s'est produite dans votre application. Si vous cliquez sur Continuer, l'application va ignorer cette erreur et essayer de continuer. Si vous cliquez sur Quitter, l'application va s'arrêter immédiatement.
 
 {0}.</target>
         <note />
@@ -4882,8 +4882,8 @@ Pour remplacer cette boîte de dialogue par défaut, traitez l'événement DataE
 debugging. Contact the application author for more
 information.
 </source>
-        <target state="translated">L'application ne prend pas en charge le débogage juste-à-temps (JIT)
-Windows Forms. Contactez l'auteur de l'application pour plus
+        <target state="translated">L'application ne prend pas en charge le débogage
+juste-à-temps (JIT). Contactez l'auteur de l'application pour plus
 d'informations.
 </target>
         <note />
@@ -5812,7 +5812,7 @@ Voulez-vous le remplacer ?</target>
       </trans-unit>
       <trans-unit id="ITypeDataObject_Not_Implemented">
         <source>Data object '{0}' doesn't implement the 'ITypedDataObject' interface and can't be read using 'TryGetData&lt;T&gt;(string, out T)' methods.</source>
-        <target state="translated">L’objet de données '{0}' n’implémente pas l’interface 'ITypedDataObject' et ne peut pas être lu à l’aide des méthodes 'TryGetData&lt;T&gt;(string, out T)'.</target>
+        <target state="translated">L’objet de données « {0} » n’implémente pas l’interface « ITypedDataObject » et ne peut pas être lu à l’aide des méthodes « TryGetData&lt;T&gt;(string, out T) ».</target>
         <note />
       </trans-unit>
       <trans-unit id="IllegalCrossThreadCall">
@@ -5824,8 +5824,8 @@ Voulez-vous le remplacer ?</target>
         <source>Cross-thread operation not valid: Control '{0}' accessed from a thread other than the thread it was created on.
 Stack trace where the illegal operation occurred was:
 {1}"</source>
-        <target state="translated">Opération inter-threads non valide : le contrôle '{0}' a fait l'objet d'un accès à partir d'un thread autre que celui sur lequel il a été créé.
-Cette opération non conforme s'est produite sur la trace de la pile :
+        <target state="translated">Opération inter-threads non valide : le contrôle « {0} » a fait l'objet d'un accès à partir d'un thread autre que celui sur lequel il a été créé.
+Cette opération non conforme s'est produite sur la trace de la pile :
 {1}"</target>
         <note />
       </trans-unit>
@@ -7421,7 +7421,7 @@ Cette opération non conforme s'est produite sur la trace de la pile :
       </trans-unit>
       <trans-unit id="NotSupportedExceptionOnClipboard">
         <source>Clipboard contains a 'NotSupportedException' that indicates that write operation failed. '{0}'.</source>
-        <target state="translated">Le Presse-papiers contient un élément NotSupportedException qui indique l’échec de l’opération d’écriture. '{0}'.</target>
+        <target state="translated">Le Presse-papiers contient une exception NotSupportedException qui indique que l’opération d’écriture a échoué. « {0} ».</target>
         <note />
       </trans-unit>
       <trans-unit id="NotifyIconBalloonTipIconDescr">
@@ -11506,7 +11506,7 @@ Cette opération non conforme s'est produite sur la trace de la pile :
       </trans-unit>
       <trans-unit id="toStringNone">
         <source>(none)</source>
-        <target state="translated">(aucun)</target>
+        <target state="translated">(aucune)</target>
         <note />
       </trans-unit>
       <trans-unit id="toStringPageDown">

@@ -665,7 +665,7 @@ public unsafe partial class Control :
     /// <summary>
     ///  The GDI brush for our background color.
     ///  Whidbey Note: Made this internal, since we need to use this in ButtonStandardAdapter. Also, renamed
-    ///         from BackBrush to BackColorBrush due to a naming conflict with DataGrid's BackBrush.
+    ///  from BackBrush to BackColorBrush due to a naming conflict with DataGrid's BackBrush.
     /// </summary>
     internal HBRUSH BackColorBrush
     {
@@ -4798,8 +4798,8 @@ public unsafe partial class Control :
     /// </exception>
     /// <remarks>
     ///  <para>
-    ///  The data will be stored as JSON if the data is not an intrinsically handled type. Otherwise, it will be stored
-    ///  the same as <see cref="DoDragDrop(object, DragDropEffects)"/>.
+    ///   The data will be stored as JSON if the data is not an intrinsically handled type. Otherwise, it will be stored
+    ///   the same as <see cref="DoDragDrop(object, DragDropEffects)"/>.
     ///  </para>
     /// </remarks>
     public DragDropEffects DoDragDropAsJson<T>(
@@ -6976,10 +6976,7 @@ public unsafe partial class Control :
         }
         finally
         {
-            if (container is not null)
-            {
-                container.IsDpiChangeScalingRequired = false;
-            }
+            container?.IsDpiChangeScalingRequired = false;
         }
     }
 
@@ -7590,10 +7587,7 @@ public unsafe partial class Control :
 
             // Mark the event as handled so that the event isn't raised for the
             // control's parent.
-            if (hevent is not null)
-            {
-                hevent.Handled = true;
-            }
+            hevent?.Handled = true;
         }
 
         if (hevent is not null && !hevent.Handled)
@@ -9855,10 +9849,7 @@ public unsafe partial class Control :
     {
         IContainerControl? c = GetContainerControl();
 
-        if (c is not null)
-        {
-            c.ActiveControl = this;
-        }
+        c?.ActiveControl = this;
     }
 
     /// <summary>
@@ -11502,10 +11493,7 @@ public unsafe partial class Control :
 
             // Mark the container as needing to rescale when its parent is scaled.
             // This flag is reset when scaling is done on Container in "OnParentFontChanged".
-            if (container is not null)
-            {
-                container.IsDpiChangeScalingRequired = true;
-            }
+            container?.IsDpiChangeScalingRequired = true;
 
             RescaleConstantsForDpi(_oldDeviceDpi, _deviceDpi);
         }
@@ -12691,7 +12679,7 @@ public unsafe partial class Control :
     internal virtual bool SupportsUiaProviders => false;
 
     ///
-    ///  Explicit support of DropTarget
+    /// Explicit support of DropTarget
     ///
     void IDropTarget.OnDragEnter(DragEventArgs drgEvent) => OnDragEnter(drgEvent);
 
@@ -12702,7 +12690,7 @@ public unsafe partial class Control :
     void IDropTarget.OnDragDrop(DragEventArgs drgEvent) => OnDragDrop(drgEvent);
 
     ///
-    ///  Explicit support of DropSource
+    /// Explicit support of DropSource
     ///
     void ISupportOleDropSource.OnGiveFeedback(GiveFeedbackEventArgs giveFeedbackEventArgs) => OnGiveFeedback(giveFeedbackEventArgs);
 

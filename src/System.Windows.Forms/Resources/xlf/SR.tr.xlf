@@ -294,12 +294,12 @@
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations.</source>
-        <target state="translated">BinaryFormatter panoda veya sürükle ve bırak işlemlerinde desteklenmiyor.</target>
+        <target state="translated">BinaryFormatter, pano veya sürükle-bırak işlemlerinde desteklenmez.</target>
         <note />
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop_UseTypedAPI">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations. Please enable it and use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">BinaryFormatter panoda veya sürükle ve bırak işlemlerinde desteklenmiyor. Lütfen etkinleştirin ve 'TryGetData&lt;T&gt;' API'lerini, seri durumdan çıkarma için izin verilen türler kümesi tanımlayan bir 'çözümleyici' işleviyle '{0}'.</target>
+        <target state="translated">BinaryFormatter, pano veya sürükle-bırak işlemlerinde desteklenmez. Lütfen etkinleştirin ve 'TryGetData&lt;T&gt;' API'lerini, '{0}' öğesini serileştirmek için izin verilen türler kümesini tanımlayan bir 'çözümleyici' işleviyle kullanın.</target>
         <note />
       </trans-unit>
       <trans-unit id="BindableComponentBindingContextChangedDescr">
@@ -969,27 +969,27 @@
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_CannotJsonSerializeDataObject">
         <source>An object of type 'DataObject' will serialize as empty. Use 'DataObject.SetDataAsJson' APIs on your object to JSON-serialize the data within your object, then use the '{0}' API with your object.</source>
-        <target state="translated">'DataObject' türündeki bir nesne boş olarak seri hale getirilebilir. Nesnenizin içindeki verileri JSON ile serileştirmek için nesneniz üzerinde 'DataObject.SetDataAsJson' API'lerini kullanın ve ardından nesneniz '{0}' API'sini kullanın.</target>
+        <target state="translated">'DataObject' türündeki bir nesne boş olarak seri hale getirilebilir. Nesnenizdeki verileri JSON türünde serileştirmek için nesnenizde 'DataObject.SetDataAsJson' API'lerini kullanın, ardından nesnenizle '{0}' API'sini kullanın.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidFormatTypeCombination">
         <source>The specified type '{0}' is not compatible with the specified format '{1}'.</source>
-        <target state="translated">Belirtilen tür '{0}' belirtilen biçim türüyle uyumlu '{1}'.</target>
+        <target state="translated">Belirtilen '{0}' türü belirtilen '{1}' biçimiyle uyumlu değil.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidType">
         <source>'{0}' is not a concrete type, and could result in an unbounded deserialization attempt. Please use a concrete type or alternatively define a 'resolver' function that supports types that you are expecting to retrieve from the clipboard or use in drag-and-drop operations.</source>
-        <target state="translated">'{0}' somut bir tür değil ve bir unbounded deserialization girişimine neden olabilir. Lütfen somut bir tür kullanın veya alternatif olarak panodan almayı bekleyen türleri destekleyen bir 'çözümleyici' işlevi ya da sürükle ve bırak işlemleri içinde kullanın.</target>
+        <target state="translated">'{0}' somut bir tür değildir ve sınırlanmamış bir seri durumundan çıkarma girişimine neden olabilir. Lütfen somut bir tür kullanın veya buna alternatif olarak, panodan almayı veya sürükle-bırak işlemlerinde kullanmayı beklediğiniz türleri destekleyen bir 'çözümleyici' işlevi tanımlayın.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_TypedAPI_InvalidResolver">
         <source>Type {0} is not found. If this type is allowed, please ensure that the 'resolver' function provided in 'TryGetData&lt;T&gt;' APIs supports it.</source>
-        <target state="translated">Tür {0} bulunamadı. Bu türe izin verilirse lütfen 'TryGetData&lt;T&gt;' API'lerinde sağlanan 'resolver' işlevinin bunu desteklediğinden emin olun.</target>
+        <target state="translated">'{0}' türü bulunamadı. Bu türe izin veriliyorsa, lütfen 'TryGetData&lt;T&gt;' API'lerinde sağlanan 'çözümleyici' işlevinin bunu desteklediğinden emin olun.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_UseTypedAPI">
         <source>Please use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">Lütfen 'TryGetData&lt;T&gt;' API'lerini, seri durumdan çıkarma için izin verilen türler kümesi tanımlayan bir 'çözümleyici' işleviyle '{0}'.</target>
+        <target state="translated">Lütfen 'TryGetData&lt;T&gt;' API'lerini, '{0}' öğesini serileştirmek için izin verilen türler kümesini tanımlayan bir 'çözümleyici' işleviyle kullanın.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardSecurityException">
@@ -2409,7 +2409,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardFalse">
         <source>False</source>
-        <target state="new">False</target>
+        <target state="translated">Yanlış</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardIndeterminate">
@@ -2419,7 +2419,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardTrue">
         <source>True</source>
-        <target state="new">True</target>
+        <target state="translated">Doğru</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardUnchecked">
@@ -4389,12 +4389,12 @@ Bu varsayılan iletişim kutusunu değiştirmek için, lütfen DataError olayın
         <target state="translated">Görsel stilleri etkinleştirmek için gerekli olan varsayılan bildirim dosyası bulunamıyor.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewButtonCellTollTipText">
+      <trans-unit id="DefaultDataGridViewButtonCellToolTipText">
         <source>Button</source>
         <target state="translated">Düğme</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewComboBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewComboBoxCellToolTipText">
         <source>ComboBox</source>
         <target state="translated">Birleşik Giriş Kutusu</target>
         <note />
@@ -4404,12 +4404,12 @@ Bu varsayılan iletişim kutusunu değiştirmek için, lütfen DataError olayın
         <target state="translated">Resim</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewLinkCellTollTipText">
+      <trans-unit id="DefaultDataGridViewLinkCellToolTipText">
         <source>Link</source>
         <target state="translated">Bağlantı</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewTextBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewTextBoxCellToolTipText">
         <source>Edit</source>
         <target state="translated">Düzenle</target>
         <note />
@@ -4848,7 +4848,7 @@ Bu varsayılan iletişim kutusunu değiştirmek için, lütfen DataError olayın
         <source>Unhandled exception has occurred in a component in your application. If you click Continue, the application will ignore this error and attempt to continue.
 
 {0}.</source>
-        <target state="translated">Uygulamanızdaki bir bileşende işlenmemiş özel durum oluştu. Devam'ı tıklatırsanız, uygulama bu hatayı yok sayar ve devam etmeyi dener.
+        <target state="translated">Uygulamanızdaki bir bileşende işlenmemiş özel durum oluştu. Devam tuşuna tıklarsanız, uygulama bu hatayı yok sayacak ve devam etmeyi deneyecektir.
 
 {0}.</target>
         <note />
@@ -4862,7 +4862,7 @@ Bu varsayılan iletişim kutusunu değiştirmek için, lütfen DataError olayın
         <source>Unhandled exception has occurred in your application. If you click Continue, the application will ignore this error and attempt to continue. If you click Quit, the application will close immediately.
 
 {0}.</source>
-        <target state="translated">Uygulamanızda işlenmemiş özel durum oluştu. Devam'ı tıklatırsanız, uygulama bu hatayı yok sayar ve devam etmeyi dener. Çıkış'ı tıklatırsanız, uygulama hemen kapatılır.
+        <target state="translated">Uygulamanızda işlenmemiş özel durum oluştu. Devam tuşuna tıklarsanız, uygulama bu hatayı yok sayacak ve devam etmeyi deneyecektir. Çıkış tuşuna tıklarsanız, uygulama hemen kapatılır.
 
 {0}.</target>
         <note />
@@ -4882,8 +4882,8 @@ Bu varsayılan iletişim kutusunu değiştirmek için, lütfen DataError olayın
 debugging. Contact the application author for more
 information.
 </source>
-        <target state="translated">Uygulama Windows Forms JIT hata ayıklamayı desteklemiyor.
-Daha fazla bilgi için uygulama geliştiricisine
+        <target state="translated">Uygulama Windows Forms tam zamanında (JIT) hata ayıklamayı
+desteklemiyor. Daha fazla bilgi için uygulama geliştiricisine
 başvurun.
 </target>
         <note />
@@ -4892,8 +4892,8 @@ başvurun.
         <source>Application does not support just-in-time (JIT)
 debugging. See the end of this message for details.
 </source>
-        <target state="translated">Uygulama JIT hata ayıklamayı desteklemiyor.
-Ayrıntılı bilgi için bu iletinin sonuna bakın.
+        <target state="translated">Uygulama tam zamanında (JIT) hata ayıklamayı
+desteklemiyor. Ayrıntılı bilgi için bu iletinin sonuna bakın.
 </target>
         <note />
       </trans-unit>
@@ -4901,8 +4901,8 @@ Ayrıntılı bilgi için bu iletinin sonuna bakın.
         <source>See the end of this message for details on invoking 
 just-in-time (JIT) debugging instead of this dialog box.
 </source>
-        <target state="translated">Bu iletişim kutusu yerine JIT hata ayıklamayı çağırma
-hakkında detaylı bilgi için bu iletinin sonuna bakın.
+        <target state="translated">Bu iletişim kutusu yerine tam zamanında (JIT) hata ayıklamanın 
+çağrılmasıyla ilgili ayrıntılar için bu mesajın sonuna bakın.
 </target>
         <note />
       </trans-unit>
@@ -5107,14 +5107,14 @@ Devam'a tıkladığınızda uygulama bu hatayı yoksayar ve işlemi sürdürmeye
       <trans-unit id="FileDialogCreatePrompt">
         <source>File {0} does not exist.
 Do you want to create it?</source>
-        <target state="translated">{0} dosyası yok.
+        <target state="translated">{0} dosyası mevcut değil.
 Oluşturmak istiyor musunuz?</target>
         <note />
       </trans-unit>
       <trans-unit id="FileDialogFileNotFound">
         <source>File {0} does not exist.
 Verify that the correct file name was given.</source>
-        <target state="translated">{0} dosyası yok.
+        <target state="translated">{0} dosyası mevcut değil.
 Doğru dosya adının verildiğinden emin olun.</target>
         <note />
       </trans-unit>
@@ -5141,8 +5141,8 @@ Doğru dosya adının verildiğinden emin olun.</target>
       <trans-unit id="FileDialogOverwritePrompt">
         <source>File {0} already exists.
 Do you want to replace it?</source>
-        <target state="translated">{0} dosyası zaten var.
-Bunu değiştirmek istiyor musunuz?</target>
+        <target state="translated">{0} dosyası zaten mevcut.
+Değiştirmek istiyor musunuz?</target>
         <note />
       </trans-unit>
       <trans-unit id="FileDialogShowHiddenFilesDescr">
@@ -5812,7 +5812,7 @@ Bunu değiştirmek istiyor musunuz?</target>
       </trans-unit>
       <trans-unit id="ITypeDataObject_Not_Implemented">
         <source>Data object '{0}' doesn't implement the 'ITypedDataObject' interface and can't be read using 'TryGetData&lt;T&gt;(string, out T)' methods.</source>
-        <target state="translated">Veri nesnesi '{0}' 'ITypedDataObject' arabirimini uygulamıyor ve 'TryGetData&lt;T&gt;(string, out T)' yöntemleri kullanılarak okunamıyor.</target>
+        <target state="translated">'{0}' veri nesnesi 'ITypedDataObject' arayüzünü uygulamıyor ve 'TryGetData&lt;T&gt;(string, out T)' yöntemleri kullanılarak okunamıyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="IllegalCrossThreadCall">
@@ -7421,7 +7421,7 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       </trans-unit>
       <trans-unit id="NotSupportedExceptionOnClipboard">
         <source>Clipboard contains a 'NotSupportedException' that indicates that write operation failed. '{0}'.</source>
-        <target state="translated">Pano, yazma işleminin başarısız olduğunu gösteren bir 'NotSupportedException' içeriyor. '{0}'.</target>
+        <target state="translated">Pano, yazma işleminin başarısız olduğunu belirten bir 'NotSupportedException' hatası içeriyor. '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="NotifyIconBalloonTipIconDescr">
@@ -7946,7 +7946,7 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       </trans-unit>
       <trans-unit id="PrintPreviewDialog_PrintPreview">
         <source>Print preview</source>
-        <target state="translated">Baskı önizleme</target>
+        <target state="translated">Baskı Önizleme</target>
         <note />
       </trans-unit>
       <trans-unit id="PrintPreviewDocumentDescr">
@@ -11151,7 +11151,7 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       </trans-unit>
       <trans-unit id="UnsafeNativeMethodsNotImplemented">
         <source>Not implemented.</source>
-        <target state="translated">Uygulanmadı.</target>
+        <target state="translated">Uygulanmıyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="UpDownBaseAlignmentDescr">
@@ -11426,7 +11426,7 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       </trans-unit>
       <trans-unit id="collectionChangedEventDescr">
         <source>Occurs whenever this collection's membership changes.</source>
-        <target state="translated">Bu koleksiyonun üyeliği her değiştiğinde ortaya çıkar.</target>
+        <target state="translated">Bu koleksiyonun üyeliği her değiştiğinde gerçekleşir.</target>
         <note />
       </trans-unit>
       <trans-unit id="collectionChangingEventDescr">
@@ -11466,7 +11466,7 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       </trans-unit>
       <trans-unit id="toStringBack">
         <source>Back</source>
-        <target state="translated">Geri</target>
+        <target state="translated">Geri Al</target>
         <note />
       </trans-unit>
       <trans-unit id="toStringControl">

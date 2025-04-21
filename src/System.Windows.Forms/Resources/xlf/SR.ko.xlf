@@ -299,7 +299,7 @@
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop_UseTypedAPI">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations. Please enable it and use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">BinaryFormatter는 클립보드 또는 끌어서 놓기 작업에서 지원되지 않습니다. 사용하도록 설정하고 '{0}' deserialize할 수 있는 형식 집합을 정의하는 'resolver' 함수와 함께 'TryGetData&lt;T&gt;' API를 사용하세요.</target>
+        <target state="translated">BinaryFormatter는 클립보드 또는 끌어서 놓기 작업에서 지원되지 않습니다. 사용하도록 설정하고 '{0}'을 역직렬화할 수 있는 형식 집합을 정의하는 'resolver' 함수와 함께 'TryGetData&lt;T&gt;' API를 사용하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="BindableComponentBindingContextChangedDescr">
@@ -969,27 +969,27 @@
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_CannotJsonSerializeDataObject">
         <source>An object of type 'DataObject' will serialize as empty. Use 'DataObject.SetDataAsJson' APIs on your object to JSON-serialize the data within your object, then use the '{0}' API with your object.</source>
-        <target state="translated">'DataObject' 형식의 개체는 비어 있는 것으로 직렬화됩니다. 개체에서 'DataObject.SetDataAsJson' API를 사용하여 개체 내에서 데이터를 JSON으로 직렬화한 다음 개체와 함께 '{0}' API를 사용합니다.</target>
+        <target state="translated">'DataObject' 형식의 개체는 비어 있는 것으로 직렬화됩니다. 개체에서 'DataObject.SetDataAsJson' API를 사용하여 개체 내의 데이터를 JSON으로 serialize한 다음 개체와 함께 '{0}' API를 사용합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidFormatTypeCombination">
         <source>The specified type '{0}' is not compatible with the specified format '{1}'.</source>
-        <target state="translated">지정한 형식 '{0}' 지정한 형식 '{1}' 호환되지 않습니다.</target>
+        <target state="translated">지정한 '{0}' 형식이 지정된 형식 '{1}'과(와) 호환되지 않습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidType">
         <source>'{0}' is not a concrete type, and could result in an unbounded deserialization attempt. Please use a concrete type or alternatively define a 'resolver' function that supports types that you are expecting to retrieve from the clipboard or use in drag-and-drop operations.</source>
-        <target state="translated">'{0}' 구체적인 형식이 아니므로 바인딩되지 않은 역직렬화를 시도할 수 있습니다. 구체적인 형식을 사용하거나 클립보드에서 검색하거나 끌어서 놓기 작업에 사용할 형식을 지원하는 'resolver' 함수를 정의하십시오.</target>
+        <target state="translated">'{0}'은(는) 구체적인 형식이 아니며 바인딩되지 않은 역직렬화 시도가 발생할 수 있습니다. 구체적인 형식을 사용하거나 클립보드에서 검색하거나 끌어서 놓기 작업에 사용할 형식을 지원하는 'resolver' 함수를 정의하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_TypedAPI_InvalidResolver">
         <source>Type {0} is not found. If this type is allowed, please ensure that the 'resolver' function provided in 'TryGetData&lt;T&gt;' APIs supports it.</source>
-        <target state="translated">{0} 형식을 찾을 수 없습니다. 이 형식이 허용되는 경우 'TryGetData&lt;T&gt;' API에 제공된 'resolver' 함수가 이를 지원하는지 확인하세요.</target>
+        <target state="translated">형식 {0}을(를) 찾을 수 없습니다. 이 형식이 허용되는 경우 'TryGetData&lt;T&gt;' API에 제공된 'resolver' 함수가 지원하는지 확인하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_UseTypedAPI">
         <source>Please use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">'{0}' 역직렬화할 수 있는 형식 집합을 정의하는 'resolver' 함수와 함께 'TryGetData&lt;T&gt;' API를 사용하세요.</target>
+        <target state="translated">'{0}'을(를) 역직렬화할 수 있는 형식 집합을 정의하는 'resolver' 함수와 함께 'TryGetData&lt;T&gt;' API를 사용하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardSecurityException">
@@ -1334,7 +1334,7 @@
       </trans-unit>
       <trans-unit id="ContainerControlBindingContextDescr">
         <source>The binding manager for the container control.  This manages all bindings of child controls to lists.</source>
-        <target state="translated">컨테이너 컨트롤의 바인딩 관리자이며, 자식 컨트롤의 모든 바인딩을 목록으로 관리합니다.</target>
+        <target state="translated">컨테이너 컨트롤의 바인딩 관리자입니다.  이것은 자식 컨트롤의 모든 바인딩을 목록으로 관리합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainerControlInvalidAutoScaleDimensions">
@@ -2124,7 +2124,7 @@
       </trans-unit>
       <trans-unit id="ControlTabStopDescr">
         <source>Indicates whether the user can use the TAB key to give focus to the control.</source>
-        <target state="translated">&lt;Tab&gt; 키를 사용하여 컨트롤의 포커스를 이동할 수 있는지 여부를 나타냅니다.</target>
+        <target state="translated">Tab 키를 사용하여 컨트롤의 포커스를 이동할 수 있는지 여부를 나타냅니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ControlTagDescr">
@@ -2409,7 +2409,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardFalse">
         <source>False</source>
-        <target state="new">False</target>
+        <target state="translated">False</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardIndeterminate">
@@ -2419,7 +2419,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardTrue">
         <source>True</source>
-        <target state="new">True</target>
+        <target state="translated">True</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardUnchecked">
@@ -4389,12 +4389,12 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">비주얼 스타일을 사용하는 데 필요한 기본 매니페스트 파일을 찾을 수 없습니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewButtonCellTollTipText">
+      <trans-unit id="DefaultDataGridViewButtonCellToolTipText">
         <source>Button</source>
-        <target state="translated">단추</target>
+        <target state="translated">버튼</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewComboBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewComboBoxCellToolTipText">
         <source>ComboBox</source>
         <target state="translated">ComboBox</target>
         <note />
@@ -4404,12 +4404,12 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">이미지</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewLinkCellTollTipText">
+      <trans-unit id="DefaultDataGridViewLinkCellToolTipText">
         <source>Link</source>
         <target state="translated">링크</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewTextBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewTextBoxCellToolTipText">
         <source>Edit</source>
         <target state="translated">편집</target>
         <note />
@@ -4696,7 +4696,7 @@ To replace this default dialog please handle the DataError event.</source>
       </trans-unit>
       <trans-unit id="DispInvokeFailed">
         <source>Operation {0} on the component did not succeed, generating the error code 0x{1:X}.</source>
-        <target state="translated">구성 요소의 {0} 작업이 실패했습니다. 오류 코드 0x{1:X}를 생성합니다.</target>
+        <target state="translated">구성 요소의 {0} 작업이 실패했습니다. 오류 코드 0x{1:X}을(를) 생성합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DomainUpDownItemsDescr">
@@ -4850,7 +4850,7 @@ To replace this default dialog please handle the DataError event.</source>
 {0}.</source>
         <target state="translated">애플리케이션의 구성 요소에서 처리되지 않은 예외가 발생했습니다. [계속]을 클릭하면 애플리케이션에서 이 오류를 무시하고 계속합니다.
 
-{0}</target>
+{0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExDlgDetailsText">
@@ -4864,7 +4864,7 @@ To replace this default dialog please handle the DataError event.</source>
 {0}.</source>
         <target state="translated">애플리케이션에서 처리되지 않은 예외가 발생했습니다. [계속]을 클릭하면 애플리케이션에서 이 오류를 무시하고 계속합니다. [끝내기]를 클릭하면 애플리케이션이 즉시 닫힙니다.
 
-{0}</target>
+{0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExDlgHelp">
@@ -4883,7 +4883,7 @@ debugging. Contact the application author for more
 information.
 </source>
         <target state="translated">애플리케이션에서는 Windows JIT(Just In Time) 디버깅을 지원하지
-않습니다. 자세한 내용은 애플리케이션 작성자에게 
+않습니다. 자세한 내용은 애플리케이션 작성자에게
 문의하십시오.
 </target>
         <note />
@@ -5107,15 +5107,15 @@ If you click Continue, the application will ignore this error and attempt to con
       <trans-unit id="FileDialogCreatePrompt">
         <source>File {0} does not exist.
 Do you want to create it?</source>
-        <target state="translated">{0} 파일이 없습니다.
+        <target state="translated">파일 {0}이(가) 없습니다.
 새로 만드시겠습니까?</target>
         <note />
       </trans-unit>
       <trans-unit id="FileDialogFileNotFound">
         <source>File {0} does not exist.
 Verify that the correct file name was given.</source>
-        <target state="translated">{0} 파일이 없습니다.
-파일 이름이 올바른지 확인하십시오.</target>
+        <target state="translated">파일 {0}이(가) 없습니다.
+올바른 파일 이름이 지정되었는지 확인합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="FileDialogInvalidFileName">
@@ -5141,8 +5141,8 @@ Verify that the correct file name was given.</source>
       <trans-unit id="FileDialogOverwritePrompt">
         <source>File {0} already exists.
 Do you want to replace it?</source>
-        <target state="translated">{0} 파일이 이미 있습니다.
-바꾸시겠습니까?</target>
+        <target state="translated">파일 {0}이(가) 이미 있습니다.
+경로를 바꾸시겠습니까?</target>
         <note />
       </trans-unit>
       <trans-unit id="FileDialogShowHiddenFilesDescr">
@@ -5317,12 +5317,12 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="FormAcceptButtonDescr">
         <source>The accept button of the form. If this is set, the button is 'clicked' whenever the user presses the 'ENTER' key.</source>
-        <target state="translated">폼의 적용 단추입니다. 설정하면 &lt;Enter&gt; 키를 누를 때마다 단추가 '클릭'됩니다.</target>
+        <target state="translated">양식의 수락 단추입니다. 설정하면 Enter 키를 누를 때마다 단추가 '클릭'됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="FormActiveMDIChildDescr">
         <source>The currently active MDI child form.</source>
-        <target state="translated">현재 활성화된 MDI 자식 폼입니다.</target>
+        <target state="translated">현재 활성화된 MDI 자식 양식입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="FormAutoScaleDescr">
@@ -5367,7 +5367,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="FormCancelButtonDescr">
         <source>The cancel button of the form. If this property is set, the button is 'clicked' whenever the user presses the 'ESC' key.</source>
-        <target state="translated">폼의 취소 단추입니다. 이 속성을 설정하면 &lt;Esc&gt; 키를 누를 때마다 단추가 '클릭'됩니다.</target>
+        <target state="translated">양식의 취소 단추입니다. 이 속성을 설정하면 Esc 키를 누를 때마다 단추가 '클릭'됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="FormCaptionBackColorChangedDescr">
@@ -5812,7 +5812,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="ITypeDataObject_Not_Implemented">
         <source>Data object '{0}' doesn't implement the 'ITypedDataObject' interface and can't be read using 'TryGetData&lt;T&gt;(string, out T)' methods.</source>
-        <target state="translated">데이터 개체 '{0}' 'ITypedDataObject' 인터페이스를 구현하지 않으며 'TryGetData&lt;T&gt;(string, out T)' 메서드를 사용하여 읽을 수 없습니다.</target>
+        <target state="translated">데이터 개체 '{0}'은(는) 'ITypedDataObject' 인터페이스를 구현하지 않으며 'TryGetData&lt;T&gt;(string, out T)' 메서드를 사용하여 읽을 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IllegalCrossThreadCall">
@@ -7006,7 +7006,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="MDIChildAddToNonMDIParent">
         <source>MDI child forms can be added only to an MdiClient.</source>
-        <target state="translated">MDI 자식 폼은 MdiClient에만 추가할 수 있습니다.</target>
+        <target state="translated">MDI 자식 양식은 MdiClient에만 추가할 수 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="MDIChildSystemMenuItemAccessibleName">
@@ -7276,7 +7276,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="MonthCalendarRangeSelected">
         <source> {0} to {1} selected.</source>
-        <target state="translated"> {0}~{1}이(가) 선택되었습니다.</target>
+        <target state="translated"> {0}~007E;{1}이(가) 선택되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarScrollChangeDescr">
@@ -7371,7 +7371,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="MonthCalendarYearRangeSelected">
         <source>Year {0} to {1} selected.</source>
-        <target state="translated">{0}년~{1}년이 선택되었습니다.</target>
+        <target state="translated">{0}년~007E;{1}년이 선택되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoAllowNewOnReadOnlyList">
@@ -7421,7 +7421,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="NotSupportedExceptionOnClipboard">
         <source>Clipboard contains a 'NotSupportedException' that indicates that write operation failed. '{0}'.</source>
-        <target state="translated">클립보드에 쓰기 작업이 실패했음을 나타내는 'NotSupportedException'이 있습니다. '{0}'.</target>
+        <target state="translated">클립보드에 쓰기 작업이 실패했음을 나타내는 'NotSupportedException'이 포함되어 있습니다. '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="NotifyIconBalloonTipIconDescr">
@@ -8971,7 +8971,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="ScrollBarLargeChangeDescr">
         <source>The amount by which the scroll box position changes when the user clicks in the scroll bar or presses the PAGE UP or PAGE DOWN keys.</source>
-        <target state="translated">스크롤 막대를 클릭하거나 &lt;Page Up&gt; 또는 &lt;Page Down&gt; 키를 누를 때 스크롤 상자 위치가 변경되는 정도입니다.</target>
+        <target state="translated">스크롤 막대를 클릭하거나 Page Up 또는 Page Down 키를 누를 때 스크롤 상자 위치가 변경되는 정도입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ScrollBarMaximumDescr">
@@ -9816,7 +9816,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="ToolStripAllowItemReorderDescr">
         <source>Allows the items to be reordered when the ALT key is pressed.</source>
-        <target state="translated">&lt;ALT&gt; 키를 누르면 항목을 다시 정렬할 수 있습니다.</target>
+        <target state="translated">ALT 키를 누르면 항목을 다시 정렬할 수 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ToolStripAllowMergeDescr">
@@ -10721,7 +10721,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="TrackBarLargeChangeDescr">
         <source>The number of positions the slider moves in response to mouse clicks or the PAGE UP and PAGE DOWN keys.</source>
-        <target state="translated">마우스 클릭이나 &lt;Page Up&gt; 및 &lt;Page Down&gt; 키에 대한 응답으로 슬라이더 위치가 이동되는 값입니다.</target>
+        <target state="translated">마우스 클릭이나 Page Up 및 Page Down 키에 대한 응답으로 슬라이더 위치가 이동되는 값입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TrackBarLargeChangeError">
@@ -11171,7 +11171,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="UpDownBaseInterceptArrowKeysDescr">
         <source>Indicates whether the up-down control will increment and decrement the value when the UP ARROW and DOWN ARROW keys are pressed.</source>
-        <target state="translated">&lt;위쪽 화살표&gt; 및 &lt;아래쪽 화살표&gt; 키를 눌렀을 때 up-down 컨트롤 값이 증가하고 감소하는지 여부를 나타냅니다.</target>
+        <target state="translated">위쪽 화살표 및 아래쪽 화살표 키를 눌렀을 때 up-down 컨트롤 값이 증가하고 감소하는지 여부를 나타냅니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UpDownBasePreferredHeightDescr">

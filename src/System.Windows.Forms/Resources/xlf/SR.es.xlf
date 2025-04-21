@@ -184,7 +184,7 @@
       </trans-unit>
       <trans-unit id="AccessibleActionCheck">
         <source>Check</source>
-        <target state="translated">Activar</target>
+        <target state="translated">Comprobar</target>
         <note />
       </trans-unit>
       <trans-unit id="AccessibleActionClick">
@@ -294,12 +294,12 @@
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations.</source>
-        <target state="translated">BinaryFormatter no se admite en el Portapapeles ni en operaciones de arrastrar y colocar.</target>
+        <target state="translated">BinaryFormatter no se admite en el portapapeles ni en las operaciones de arrastrar y colocar.</target>
         <note />
       </trans-unit>
       <trans-unit id="BinaryFormatter_NotSupported_InClipboardOrDragDrop_UseTypedAPI">
         <source>BinaryFormatter is not supported in clipboard or drag-and-drop operations. Please enable it and use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">BinaryFormatter no se admite en el Portapapeles ni en operaciones de arrastrar y colocar. Habilítelo y use las API "TryGetData&lt;T&gt;" con una función "resolver" que defina un conjunto de tipos permitidos para deserializar '{0}'.</target>
+        <target state="translated">BinaryFormatter no se admite en el portapapeles ni en las operaciones de arrastrar y colocar. Habilítelo y use las API "TryGetData&lt;T&gt;" con una función "resolver" que define un conjunto de tipos permitidos para deserializar "{0}".</target>
         <note />
       </trans-unit>
       <trans-unit id="BindableComponentBindingContextChangedDescr">
@@ -969,27 +969,27 @@
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_CannotJsonSerializeDataObject">
         <source>An object of type 'DataObject' will serialize as empty. Use 'DataObject.SetDataAsJson' APIs on your object to JSON-serialize the data within your object, then use the '{0}' API with your object.</source>
-        <target state="translated">Un objeto de tipo "DataObject" se serializará como vacío. Use las API "DataObject.SetDataAsJson" del objeto para serializar json los datos del objeto y, a continuación, use la API de '{0}' con el objeto.</target>
+        <target state="translated">Un objeto de tipo "DataObject" se serializará como vacío. Use las API "DataObject.SetDataAsJson" en el objeto para serializar en JSON los datos dentro del objeto y luego use la API "{0}" con el objeto.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidFormatTypeCombination">
         <source>The specified type '{0}' is not compatible with the specified format '{1}'.</source>
-        <target state="translated">El '{0}' de tipo especificado no es compatible con el formato especificado '{1}'.</target>
+        <target state="translated">El tipo especificado "{0}" no es compatible con el formato especificado "{1}".</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_InvalidType">
         <source>'{0}' is not a concrete type, and could result in an unbounded deserialization attempt. Please use a concrete type or alternatively define a 'resolver' function that supports types that you are expecting to retrieve from the clipboard or use in drag-and-drop operations.</source>
-        <target state="translated">'{0}' no es un tipo concreto y podría dar lugar a un intento de deserialización no enlazado. Use un tipo concreto o bien defina una función "resolver" que admita los tipos que espera recuperar del Portapapeles o use en operaciones de arrastrar y colocar.</target>
+        <target state="translated">"{0}" no es un tipo concreto y podría dar lugar a un intento de deserialización sin enlazar. Use un tipo concreto o, alternativamente, defina una función de "resolución" que admita los tipos que espera recuperar del portapapeles o usar en operaciones de arrastrar y soltar.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_TypedAPI_InvalidResolver">
         <source>Type {0} is not found. If this type is allowed, please ensure that the 'resolver' function provided in 'TryGetData&lt;T&gt;' APIs supports it.</source>
-        <target state="translated">No se encuentra el tipo {0}. Si se permite este tipo, asegúrese de que la función "resolver" proporcionada en las API "TryGetData&lt;T&gt;" la admite.</target>
+        <target state="translated">No se encuentra el tipo {0}. Si se permite este tipo, asegúrese de que la función "resolución" proporcionada en las API "TryGetData&lt;T&gt;" la admite.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardOrDragDrop_UseTypedAPI">
         <source>Please use 'TryGetData&lt;T&gt;' APIs with a 'resolver' function that defines a set of allowed types to deserialize '{0}'.</source>
-        <target state="translated">Use las API "TryGetData&lt;T&gt;" con una función "resolver" que defina un conjunto de tipos permitidos para deserializar '{0}'.</target>
+        <target state="translated">Use las API "TryGetData&lt;T&gt;" con una función "resolver" que defina un conjunto de tipos permitidos para deserializar "{0}".</target>
         <note />
       </trans-unit>
       <trans-unit id="ClipboardSecurityException">
@@ -2409,7 +2409,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardFalse">
         <source>False</source>
-        <target state="new">False</target>
+        <target state="translated">Falso</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardIndeterminate">
@@ -2419,7 +2419,7 @@
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardTrue">
         <source>True</source>
-        <target state="new">True</target>
+        <target state="translated">Verdadero</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridViewCheckBoxCell_ClipboardUnchecked">
@@ -2844,7 +2844,7 @@
       </trans-unit>
       <trans-unit id="DataGridView_AccLinkCellDefaultAction">
         <source>Click</source>
-        <target state="translated">Clic</target>
+        <target state="translated">Haga clic en</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridView_AccNullValue">
@@ -4389,14 +4389,14 @@ Para reemplazar este cuadro de diálogo predeterminado controle el evento DataEr
         <target state="translated">No se encuentra el archivo de manifiesto predeterminado necesario para habilitar los estilos visuales.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewButtonCellTollTipText">
+      <trans-unit id="DefaultDataGridViewButtonCellToolTipText">
         <source>Button</source>
         <target state="translated">Botón</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewComboBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewComboBoxCellToolTipText">
         <source>ComboBox</source>
-        <target state="translated">Cuadro combinado</target>
+        <target state="translated">ComboBox</target>
         <note />
       </trans-unit>
       <trans-unit id="DefaultDataGridViewImageCellToolTipText">
@@ -4404,12 +4404,12 @@ Para reemplazar este cuadro de diálogo predeterminado controle el evento DataEr
         <target state="translated">Imagen</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewLinkCellTollTipText">
+      <trans-unit id="DefaultDataGridViewLinkCellToolTipText">
         <source>Link</source>
         <target state="translated">Vínculo</target>
         <note />
       </trans-unit>
-      <trans-unit id="DefaultDataGridViewTextBoxCellTollTipText">
+      <trans-unit id="DefaultDataGridViewTextBoxCellToolTipText">
         <source>Edit</source>
         <target state="translated">Editar</target>
         <note />
@@ -4862,7 +4862,7 @@ Para reemplazar este cuadro de diálogo predeterminado controle el evento DataEr
         <source>Unhandled exception has occurred in your application. If you click Continue, the application will ignore this error and attempt to continue. If you click Quit, the application will close immediately.
 
 {0}.</source>
-        <target state="translated">Excepción no controlada en la aplicación. Si hace clic en Continuar, la aplicación omitirá este error e intentará continuar. Si hace clic en Salir, la aplicación se cerrará inmediatamente.
+        <target state="translated">Se ha producido una excepción no controlada en la aplicación. Si hace clic en Continuar, la aplicación omitirá este error e intentará continuar. Si hace clic en Salir, la aplicación se cerrará inmediatamente.
 
 {0}.</target>
         <note />
@@ -4883,7 +4883,7 @@ debugging. Contact the application author for more
 information.
 </source>
         <target state="translated">La aplicación no admite la depuración Just In Time (JIT)
-de Windows Forms. Póngase en contacto con el autor de la aplicación para obtener más
+depuración. Póngase en contacto con el autor de la aplicación para obtener más
 información.
 </target>
         <note />
@@ -4893,7 +4893,7 @@ información.
 debugging. See the end of this message for details.
 </source>
         <target state="translated">La aplicación no admite la depuración Just-In-Time (JIT)
-. Consulte el final de este mensaje para obtener más información.
+depuración. Consulte el final de este mensaje para obtener más información.
 </target>
         <note />
       </trans-unit>
@@ -5135,13 +5135,13 @@ Compruebe que ha proporcionado el nombre correcto del archivo.</target>
       </trans-unit>
       <trans-unit id="FileDialogOkRequiresInteractionDescr">
         <source>Controls whether the OK button of the dialog box is disabled until the user navigates the view or edits the filename (if applicable). Note: Disabling of the OK button does not prevent the dialog from being submitted by the Enter key.</source>
-        <target state="translated">Controla si el botón Aceptar del cuadro de diálogo está deshabilitado hasta que el usuario navega por la vista o edita el nombre de archivo (si corresponde). Nota: Deshabilitar el botón Aceptar no impide que la tecla Entrar envíe el cuadro de diálogo.</target>
+        <target state="translated">Controla si el botón Aceptar del cuadro de diálogo está deshabilitado hasta que el usuario navegue por la vista o edite el nombre de archivo (si procede). Nota: Deshabilitar el botón Aceptar no impide que la tecla Entrar envíe el cuadro de diálogo.</target>
         <note />
       </trans-unit>
       <trans-unit id="FileDialogOverwritePrompt">
         <source>File {0} already exists.
 Do you want to replace it?</source>
-        <target state="translated">El archivo '{0}' ya existe.
+        <target state="translated">El archivo {0} ya existe.
 ¿Desea reemplazarlo?</target>
         <note />
       </trans-unit>
@@ -5277,7 +5277,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="FolderBrowserDialogOkRequiresInteraction">
         <source>Controls whether the OK button of the dialog box is disabled until the user navigates the view or edits the filename (if applicable). Note: Disabling of the OK button does not prevent the dialog from being submitted by the Enter key.</source>
-        <target state="translated">Controla si el botón Aceptar del cuadro de diálogo está deshabilitado hasta que el usuario navega por la vista o edita el nombre de archivo (si corresponde). Nota: Deshabilitar el botón Aceptar no impide que la tecla Entrar envíe el cuadro de diálogo.</target>
+        <target state="translated">Controla si el botón Aceptar del cuadro de diálogo está deshabilitado hasta que el usuario navegue por la vista o edite el nombre de archivo (si procede). Nota: Deshabilitar el botón Aceptar no impide que la tecla Entrar envíe el cuadro de diálogo.</target>
         <note />
       </trans-unit>
       <trans-unit id="FolderBrowserDialogRootFolder">
@@ -5307,7 +5307,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="FolderBrowserDialogShowPinnedPlaces">
         <source>Controls whether the items shown by default in the view's navigation pane are shown.</source>
-        <target state="translated">Controla si se muestran los elementos que aparecen por defecto en el panel de navegación de la vista.</target>
+        <target state="translated">Controla si se muestran los elementos que se muestran de forma predeterminada en el panel de navegación de la vista.</target>
         <note />
       </trans-unit>
       <trans-unit id="FolderBrowserDialogUseDescriptionForTitle">
@@ -5812,7 +5812,7 @@ Do you want to replace it?</source>
       </trans-unit>
       <trans-unit id="ITypeDataObject_Not_Implemented">
         <source>Data object '{0}' doesn't implement the 'ITypedDataObject' interface and can't be read using 'TryGetData&lt;T&gt;(string, out T)' methods.</source>
-        <target state="translated">El objeto de datos '{0}' no implementa la interfaz 'ITypedDataObject' y no se puede leer con los métodos 'TryGetData&lt;T&gt;(string, out T)'.</target>
+        <target state="translated">El objeto de datos '{0}' no implementa la interfaz 'ITypedDataObject' y no se puede leer utilizando los métodos 'TryGetData&lt;T&gt;(string, out T)'.</target>
         <note />
       </trans-unit>
       <trans-unit id="IllegalCrossThreadCall">
@@ -7421,7 +7421,7 @@ El seguimiento de la pila donde tuvo lugar la operación no válida fue:
       </trans-unit>
       <trans-unit id="NotSupportedExceptionOnClipboard">
         <source>Clipboard contains a 'NotSupportedException' that indicates that write operation failed. '{0}'.</source>
-        <target state="translated">El Portapapeles contiene una excepción "NotSupportedException" que indica que se produjo un error en la operación de escritura. '{0}'.</target>
+        <target state="translated">Portapapeles contiene una excepción 'NotSupportedException' que indica que la operación de escritura falló. '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="NotifyIconBalloonTipIconDescr">
@@ -8771,7 +8771,7 @@ El seguimiento de la pila donde tuvo lugar la operación no válida fue:
       </trans-unit>
       <trans-unit id="RichTextBoxIMEChange">
         <source>Occurs when the control's IME conversion status changes. (East Asian versions of OS only.)</source>
-        <target state="translated">Tiene lugar cuando cambia el estado de conversión de IME del control (solo la versión asiática del este del sistema operativo [OS]5D;).</target>
+        <target state="translated">Tiene lugar cuando cambia el estado de conversión de IME del control (sólo la versión asiática oriental del sistema operativo [OS]).</target>
         <note />
       </trans-unit>
       <trans-unit id="RichTextBoxLinkClick">

@@ -28,22 +28,25 @@ internal sealed class NameCreationService : INameCreationService
         int i = 0;
         while (i < cc.Count)
         {
-            if (cc[i] is Component comp && comp.GetType() == type)
+            if (cc[i] is Component comp)
             {
                 string name = comp.Site.Name;
                 if (name.StartsWith(type.Name, StringComparison.Ordinal))
                 {
-                    count++;
-                    try
+                    string suffix = name[type.Name.Length..];
+                    if (!string.IsNullOrEmpty(suffix) && suffix.All(char.IsDigit))
                     {
-                        int value;
-                        value = int.Parse(name[type.Name.Length..]);
-                        if (value < min)
-                            min = value;
-                        if (value > max)
-                            max = value;
+                        count++;
+                        try
+                        {
+                            int value = int.Parse(suffix);
+                            if (value < min)
+                                min = value;
+                            if (value > max)
+                                max = value;
+                        }
+                        catch (Exception) { }
                     }
-                    catch (Exception) { }
                 }
             }
 

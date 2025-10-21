@@ -137,12 +137,11 @@ public partial class MonthCalendar : Control
         _focusedDate = _todaysDate;
         SetStyle(ControlStyles.UserPaint, false);
         SetStyle(ControlStyles.StandardClick, false);
-#pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        SetStyle(ControlStyles.ApplyThemingImplicitly, true);
-#pragma warning restore WFO5001
 
         TabStop = true;
     }
+
+    private protected override void InitializeControl() => ScaleConstants();
 
     protected override AccessibleObject CreateAccessibilityInstance()
         => new MonthCalendarAccessibleObject(this);
@@ -152,8 +151,6 @@ public partial class MonthCalendar : Control
         base.RescaleConstantsForDpi(deviceDpiOld, deviceDpiNew);
         ScaleConstants();
     }
-
-    private protected override void InitializeConstantsForInitialDpi(int initialDpi) => ScaleConstants();
 
     private void ScaleConstants()
     {
@@ -191,7 +188,6 @@ public partial class MonthCalendar : Control
         }
     }
 
-#pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     [SRDescription(nameof(SR.MonthCalendarMonthBackColorDescr))]
     public override Color BackColor
     {
@@ -206,7 +202,6 @@ public partial class MonthCalendar : Control
         }
         set => base.BackColor = value;
     }
-#pragma warning restore WFO5001
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -287,6 +282,8 @@ public partial class MonthCalendar : Control
     {
         get
         {
+            SetStyle(ControlStyles.ApplyThemingImplicitly, true);
+
             CreateParams cp = base.CreateParams;
             cp.ClassName = PInvoke.MONTHCAL_CLASS;
             cp.Style |= (int)PInvoke.MCS_MULTISELECT | (int)PInvoke.MCS_DAYSTATE;
@@ -407,7 +404,6 @@ public partial class MonthCalendar : Control
         }
     }
 
-#pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     [SRDescription(nameof(SR.MonthCalendarForeColorDescr))]
     public override Color ForeColor
     {
@@ -422,7 +418,6 @@ public partial class MonthCalendar : Control
         }
         set => base.ForeColor = value;
     }
-#pragma warning restore WFO5001
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]

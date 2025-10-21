@@ -92,7 +92,7 @@ runtime_source_feed=''
 runtime_source_feed_key=''
 
 properties=()
-while [[ $# > 0 ]]; do
+while [[ $# -gt 0 ]]; do
   opt="$(echo "${1/#--/-}" | tr "[:upper:]" "[:lower:]")"
   case "$opt" in
     -help|-h)
@@ -257,7 +257,7 @@ function Build {
     /p:Sign=$sign \
     /p:Publish=$publish \
     /p:RestoreStaticGraphEnableBinaryLogger=$binary_log \
-    "${properties[@]}"
+    ${properties[@]+"${properties[@]}"}
 
   ExitWithExitCode 0
 }
